@@ -7,7 +7,7 @@
 
 import * as crypto from "node:crypto";
 import { toSafeError } from "../../lib/error-type-utils";
-import type { MexcServiceResponse, UnifiedMexcConfig } from "../mexc-schemas";
+import type { MexcServiceResponse, UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 import type {
   ApiRequestConfig,
   HttpResponse,

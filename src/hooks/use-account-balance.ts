@@ -20,6 +20,15 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
   // Use the provided userId or fallback to authenticated user ID or default
   const effectiveUserId = userId || user?.id || "default-user";
 
+  // Debug logging
+  console.debug("[useAccountBalance] Hook initialized:", {
+    providedUserId: userId,
+    authenticatedUserId: user?.id,
+    effectiveUserId,
+    isAuthenticated,
+    enabled
+  });
+
   return useQuery({
     queryKey: ["account-balance", effectiveUserId, "active"],
     queryFn: async (): Promise<{
@@ -28,6 +37,8 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       lastUpdated: string;
     }> => {
       const url = `/api/account/balance?userId=${encodeURIComponent(effectiveUserId)}`;
+      console.debug("[useAccountBalance] Fetching from:", url);
+      
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -36,9 +47,12 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         credentials: "include", // Include authentication cookies
       });
 
+      console.debug("[useAccountBalance] Response status:", response.status);
+
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated - return empty data instead
         if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+          console.debug("[useAccountBalance] Auth error, returning empty data");
           return {
             balances: [],
             totalUsdtValue: 0,
@@ -49,10 +63,12 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       }
 
       const data = await response.json();
+      console.debug("[useAccountBalance] Response data:", data);
 
       if (!data.success) {
         // For auth errors, return empty data instead of throwing
         if (data.error?.includes("401") || data.error?.includes("403")) {
+          console.debug("[useAccountBalance] Auth error in response, returning empty data");
           return {
             balances: [],
             totalUsdtValue: 0,
@@ -62,11 +78,14 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
         throw new Error(data.error || "Failed to fetch account balance");
       }
 
-      return {
+      const result = {
         balances: data.data.balances || [],
         totalUsdtValue: data.data.totalUsdtValue || 0,
         lastUpdated: data.data.lastUpdated || new Date().toISOString(),
       };
+      
+      console.debug("[useAccountBalance] Returning balance data:", result);
+      return result;
     },
     // Enable the query when enabled flag is true
     enabled: enabled,

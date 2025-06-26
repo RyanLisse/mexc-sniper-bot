@@ -22,7 +22,7 @@ import type { EnhancedUnifiedCacheSystem } from "@/src/lib/enhanced-unified-cach
 import type { PerformanceMonitoringService } from "@/src/lib/performance-monitoring-service";
 import type { MexcResponseCache } from "./mexc-cache-manager";
 import type { CircuitBreaker } from "../risk/circuit-breaker";
-import type { UnifiedMexcConfig } from "./mexc-schemas";
+import type { UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 
 // Export all types for backward compatibility
 export type {

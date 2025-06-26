@@ -16,7 +16,7 @@ import type {
   RiskAssessment,
   SymbolEntry,
   Ticker,
-} from "../mexc-schemas";
+} from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Optimized Query Key Factory

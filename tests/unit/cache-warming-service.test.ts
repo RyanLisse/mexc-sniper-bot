@@ -21,7 +21,7 @@ vi.mock("@/src/lib/enhanced-unified-cache", () => ({
   })),
 }));
 
-vi.mock("@/src/services/unified-mexc-service-v2", () => ({
+vi.mock("@/src/services/api/unified-mexc-service-v2", () => ({
   UnifiedMexcServiceV2: vi.fn(() => ({
     getSymbolInfoBasic: vi
       .fn()

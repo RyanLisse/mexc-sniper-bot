@@ -5,7 +5,7 @@
  * These interfaces ensure clean architecture and testability.
  */
 
-import type { ActivityData } from "../../schemas/mexc-schemas";
+import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 
 // ============================================================================

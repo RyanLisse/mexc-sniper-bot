@@ -15,7 +15,7 @@ import {
   OrderBookSchema,
   OrderParametersSchema,
   MexcServiceResponseSchema,
-} from '@/src/schemas/mexc-schemas';
+} from "@/src/schemas/unified/mexc-api-schemas"
 
 describe('MEXC Schemas - TDD Extraction Tests', () => {
   describe('CalendarEntrySchema', () => {

@@ -21,7 +21,7 @@ import {
 } from "vitest";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { MultiPhaseTradingBot } from "@/src/services/multi-phase-trading-bot";
-import { UnifiedMexcServiceV2 } from "@/src/services/unified-mexc-service-v2";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { AdvancedRiskEngine } from "@/src/services/advanced-risk-engine";
 import { EmergencySafetySystem } from "@/src/services/emergency-safety-system";
 import type { SymbolEntry } from "@/src/services/mexc-unified-exports";

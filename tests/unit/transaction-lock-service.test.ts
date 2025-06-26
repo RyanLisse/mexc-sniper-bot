@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { TransactionLockService } from "@/src/services/transaction-lock-service";
+import { TransactionLockService } from "@/src/services/data/transaction-lock-service";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
 import { eq, sql } from "drizzle-orm";

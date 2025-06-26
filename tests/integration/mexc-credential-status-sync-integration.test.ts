@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { db, apiCredentials, user } from '@/src/db';
 import { eq } from 'drizzle-orm';
-import { getEncryptionService } from '@/src/services/secure-encryption-service';
+import { getEncryptionService } from '@/src/services/api/secure-encryption-service';
 import { UnifiedStatusResolver } from '@/src/services/unified-status-resolver';
 import { apiCredentialsTestService } from '@/src/services/api-credentials-test-service';
 

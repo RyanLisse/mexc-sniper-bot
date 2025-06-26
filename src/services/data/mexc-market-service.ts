@@ -12,7 +12,7 @@ import {
   TickerSchema,
   type UnifiedMexcConfig,
   validateMexcData,
-} from "./mexc-schemas";
+} from "@/src/schemas/unified/mexc-api-schemas";
 
 /**
  * MEXC Market Data Service

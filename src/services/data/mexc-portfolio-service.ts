@@ -11,7 +11,7 @@ import {
   type Ticker,
   type UnifiedMexcConfig,
   validateMexcData,
-} from "./mexc-schemas";
+} from "@/src/schemas/unified/mexc-api-schemas";
 
 /**
  * MEXC Portfolio Service

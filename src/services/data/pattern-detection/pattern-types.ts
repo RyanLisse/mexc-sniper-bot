@@ -6,7 +6,7 @@
  */
 
 import type { PatternEmbedding } from "../../db/schemas/patterns";
-import type { ActivityData } from "../../schemas/mexc-schemas";
+import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
 import type { CalendarEntry, SymbolEntry } from "../mexc-unified-exports";
 
 // ============================================================================

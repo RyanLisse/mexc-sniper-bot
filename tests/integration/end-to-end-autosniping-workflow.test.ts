@@ -28,7 +28,7 @@ import {
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { MultiPhaseTradingBot } from "@/src/services/multi-phase-trading-bot";
 import { ComprehensiveSafetyCoordinator } from "@/src/services/comprehensive-safety-coordinator";
-import { UnifiedMexcServiceV2 } from "@/src/services/unified-mexc-service-v2";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { AdvancedRiskEngine } from "@/src/services/advanced-risk-engine";
 import { MultiPhaseExecutor } from "@/src/services/multi-phase-executor";
 import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
@@ -36,7 +36,7 @@ import type {
   SymbolEntry,
   CalendarEntry,
 } from "@/src/services/mexc-unified-exports";
-import type { ActivityData } from "@/src/schemas/mexc-schemas";
+import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 
 describe("End-to-End Autosniping Workflow Integration", () => {
   let patternEngine: PatternDetectionCore;

@@ -91,8 +91,8 @@ export default function DashboardPage() {
   };
   const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance(
     {
-      userId,
-      enabled: !!userId && !userLoading,
+      userId: userId || "default-user", // Always provide a userId fallback
+      enabled: true, // Always enable the query
     },
   );
   const { data: portfolio } = usePortfolio(userId || "");
@@ -122,6 +122,14 @@ export default function DashboardPage() {
   const newListings = Array.isArray(calendarData) ? calendarData.length : 0;
   const activeTargets = Array.isArray(readyTargets) ? readyTargets.length : 0;
   const winRate = 0; // TODO: Calculate win rate from portfolio data
+
+  // Debug logging
+  console.debug("[Dashboard] Balance data:", {
+    accountBalance,
+    totalBalance,
+    balanceLoading,
+    userId
+  });
 
   return (
     <DashboardLayout>
@@ -227,7 +235,7 @@ export default function DashboardPage() {
                 <OptimizedActivityFeed />
               </div>
               <div className="space-y-4">
-                <OptimizedAccountBalance userId={userId} />
+                <OptimizedAccountBalance userId={userId || "default-user"} />
                 <OptimizedTradingTargets
                   onExecuteSnipe={handleExecuteSnipe}
                   onRemoveTarget={handleRemoveTarget}

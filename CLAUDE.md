@@ -6,6 +6,7 @@
 - `bun run lint`: Run ESLint and format checks
 - `bun run type-check`: Run TypeScript type checking
 - `./claude-flow --help`: Show all available commands
+
 - **Always run vercel build before git push**
   - Keep files under 500 lines of code
     - Remove redundant code
@@ -18,37 +19,6 @@
     - Write conventional commits
 
 try to use the make commands to run, test and build the project
-
-## Recent Improvements
-
-### Logger System Cleanup and OpenTelemetry Integration (2025-06)
-- **Major Cleanup**: Removed complex `createSafeLogger` system that was causing circular dependency issues
-- **Simplified Logging**: Replaced with clean console-based logging for better build compatibility
-- **OpenTelemetry Enhancement**: Added distributed tracing spans to critical operations:
-  - Circuit breaker safety operations (`trading.safety_check`, `trading.circuit_breaker_recovery`)
-  - AI intelligence operations (`ai.generate_embedding`) 
-  - Notification system operations (`notification.send_alert`)
-- **Build Improvements**: Fixed webpack bundling issues and reduced build complexity
-- **Performance**: Eliminated logger initialization delays and improved startup time
-- **Benefits**: 
-  - Clean vercel builds without bundling conflicts
-  - Better observability with OpenTelemetry spans
-  - Simpler debugging with direct console output
-  - Reduced memory footprint and initialization overhead
-- **Location**: Multiple service files cleaned and `src/lib/opentelemetry-setup.ts` enhanced
-
-### API Credentials Dynamic Response Implementation (2025-06)
-- **Fixed**: Replaced hardcoded API credentials test responses with dynamic MEXC API data
-- **Before**: Hardcoded `accountType: "spot"` and `canTrade: true` in test endpoint
-- **After**: Dynamic extraction from MEXC API via `getAccountInfo()` method
-- **Features**: 
-  - Dynamic account type detection (SPOT, MARGIN, FUTURES)
-  - Real-time permissions validation from MEXC API
-  - Smart canTrade derivation from permissions or explicit field
-  - Balance count from actual account balances
-  - Comprehensive error handling for authentication failures
-- **Tests**: Added comprehensive test suite for dynamic response verification
-- **Location**: `/app/api/api-credentials/test/route.ts`
 ## Claude-Flow Complete Command Reference
 
 Claude-Flow Complete Command Reference
@@ -201,7 +171,7 @@ TodoWrite([
     assignedAgent: "architect"
   },
   {
-    id: "frontend_development", 
+    id: "frontend_development",
     content: "Develop React components and user interface",
     status: "pending",
     priority: "medium",

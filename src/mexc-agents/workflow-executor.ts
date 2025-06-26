@@ -1,5 +1,5 @@
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { CalendarEntry } from "../schemas/mexc-schemas";
+import type { CalendarEntry } from "@/src/services/api/mexc-unified-exports";
 import type { AgentManager } from "./agent-manager";
 import { CalendarWorkflow } from "./calendar-workflow";
 import type { DataFetcher } from "./data-fetcher";

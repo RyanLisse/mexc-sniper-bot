@@ -110,7 +110,7 @@ vi.mock('@/src/db', () => {
 });
 
 // Mock the TransactionLockService to properly simulate lock behavior
-vi.mock('@/src/services/transaction-lock-service', () => {
+vi.mock('@/src/services/data/transaction-lock-service', () => {
   const mockLocks = new Map();
   const mockQueue = new Map();
 
@@ -272,7 +272,7 @@ vi.mock('@/src/services/transaction-lock-service', () => {
 
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
-import { TransactionLockService } from "@/src/services/transaction-lock-service";
+import { TransactionLockService } from "@/src/services/data/transaction-lock-service";
 
 // Mock fetch for API testing without server
 const mockFetch = vi.fn();

@@ -7,7 +7,7 @@ import {
   type SniperStats,
   type SnipeTarget,
   type SymbolV2Entry,
-} from "../schemas/mexc-schemas";
+} from "@/src/schemas/unified/mexc-api-schemas";
 import type { UserTradingPreferences } from "./use-user-preferences";
 
 // API client functions that use backend routes

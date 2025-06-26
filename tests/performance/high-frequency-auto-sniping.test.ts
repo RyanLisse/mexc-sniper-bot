@@ -20,7 +20,7 @@ import {
 } from '../utils/timeout-utilities';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { MultiPhaseTradingBot } from '@/src/services/multi-phase-trading-bot';
-import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { ComprehensiveSafetyCoordinator } from '@/src/services/comprehensive-safety-coordinator';
 import { webSocketClient } from '@/src/services/websocket-client';
 import { 

@@ -9,7 +9,7 @@ import { and, eq, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import { coinActivities } from "@/src/db/schemas/patterns";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { ActivityData } from "@/src/schemas/mexc-schemas";
+import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 
 /**
  * Activity Data Integration - Query activity data for confidence enhancement

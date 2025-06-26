@@ -8,7 +8,7 @@ import {
   vi,
 } from "vitest";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { UnifiedMexcServiceV2 } from "@/src/services/unified-mexc-service-v2";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { db } from "@/src/db";
 import { coinActivities } from "@/src/db/schemas/patterns";
 import { eq } from "drizzle-orm";
@@ -16,7 +16,7 @@ import type {
   SymbolEntry,
   CalendarEntry,
 } from "@/src/services/mexc-unified-exports";
-import type { ActivityData } from "@/src/schemas/mexc-schemas";
+import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 
 describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => {
   let patternEngine: PatternDetectionCore;

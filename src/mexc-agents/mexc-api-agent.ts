@@ -1,6 +1,6 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type { SymbolV2Entry } from "../schemas/mexc-schemas";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-client-types";
+import type { SymbolEntry } from "@/src/schemas/unified/mexc-api-schemas";
+import type { CalendarEntry } from "@/src/services/api/mexc-client-types";
 import { getRecommendedMexcService, type ServiceResponse } from "@/src/services/api/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
@@ -686,7 +686,7 @@ Focus on actionable trading signals with performance-aware recommendations.
   }
 
   // Analyze pattern distribution across all symbols
-  private analyzePatternDistribution(symbols: SymbolV2Entry[]): Record<string, number> {
+  private analyzePatternDistribution(symbols: SymbolEntry[]): Record<string, number> {
     const distribution: Record<string, number> = {};
 
     symbols.forEach((symbol) => {

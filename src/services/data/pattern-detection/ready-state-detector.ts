@@ -10,7 +10,7 @@ import {
   calculateActivityBoost,
   getUniqueActivityTypes,
   hasHighPriorityActivity,
-} from "../../schemas/mexc-schemas";
+} from "../../schemas/unified/mexc-api-schemas";
 import type { CalendarEntry, SymbolEntry } from "../mexc-unified-exports";
 import { getActivityDataForSymbol } from "./activity-integration";
 import type { PatternMatch } from "./pattern-types";

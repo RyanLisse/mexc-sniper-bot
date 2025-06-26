@@ -41,7 +41,7 @@ import type {
   SymbolEntry,
   Ticker,
   TradingOpportunity,
-} from "./mexc-schemas";
+} from "@/src/schemas/unified/mexc-api-schemas";
 // Import the new unified V2 service
 import {
   getUnifiedMexcServiceV2,

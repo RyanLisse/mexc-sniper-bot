@@ -16,7 +16,7 @@ import type {
   CalendarEntry,
   ServiceResponse,
 } from "@/src/services/mexc-unified-exports";
-import type { ActivityData } from "@/src/schemas/mexc-schemas";
+import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Mock Data Generators

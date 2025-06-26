@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
 import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
-import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 
 describe('Pattern Monitoring Integration', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');

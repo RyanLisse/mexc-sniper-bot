@@ -15,7 +15,7 @@ import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
 import { AutoSnipingExecutionService } from '@/src/services/auto-sniping-execution-service';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
-import { UnifiedMexcServiceV2 } from '@/src/services/unified-mexc-service-v2';
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { EmergencySafetySystem } from '@/src/services/emergency-safety-system';
 
 describe('Auto-Sniping Execution Integration', () => {

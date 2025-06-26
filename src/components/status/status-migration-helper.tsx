@@ -63,7 +63,7 @@ import { WorkflowStatusCardV2 } from '@/src/components/dashboard/workflow-status
 const { data: connectivity } = useMexcConnectivity();
 
 // New way (single source of truth)
-import { useStatus, useCredentialStatus } from '@/src/contexts/status-context';
+import { useStatus, useCredentialStatus } from '@/src/contexts/status-context-v2';
 
 const { status, refreshCredentials } = useStatus();
 const credentials = useCredentialStatus();`,
@@ -92,7 +92,7 @@ const credentials = useCredentialStatus();`,
       title: "Update custom status components",
       description: "Modify any custom status components to use the centralized context",
       code: `// In your custom component
-import { useStatus } from '@/src/contexts/status-context';
+import { useStatus } from '@/src/contexts/status-context-v2';
 
 function MyCustomStatus() {
   const { status, getOverallStatus, refreshAll } = useStatus();

@@ -110,9 +110,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
       case 'trigger_pattern_to_targets':
         // NEW ACTION: Trigger pattern detection and create snipe targets
-        const { patternStrategyOrchestrator } = await import('@/src/services/pattern-strategy-orchestrator');
-        const { patternTargetIntegrationService } = await import('@/src/services/pattern-target-integration-service');
-        const { UnifiedMexcServiceV2 } = await import('@/src/services/unified-mexc-service-v2');
+        const { patternStrategyOrchestrator } = await import('@/src/services/data/pattern-detection/pattern-strategy-orchestrator');
+        const { patternTargetIntegrationService } = await import('@/src/services/data/pattern-detection/pattern-target-integration-service');
+        const { UnifiedMexcServiceV2 } = await import('@/src/services/api/unified-mexc-service-v2');
 
         const mexcService = new UnifiedMexcServiceV2();
         const userId = body.userId || "system";

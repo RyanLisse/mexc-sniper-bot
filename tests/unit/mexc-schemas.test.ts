@@ -11,7 +11,7 @@ import {
   READY_STATE_PATTERN,
   type CalendarEntry,
   type SymbolV2Entry
-} from '@/src/schemas/mexc-schemas'
+} from "@/src/schemas/unified/mexc-api-schemas"
 
 describe('MEXC Schemas', () => {
   describe('CalendarEntrySchema', () => {

@@ -6,7 +6,7 @@
  */
 
 import * as crypto from "node:crypto";
-import type { UnifiedMexcConfig } from "../mexc-schemas";
+import type { UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 import type { ApiParams, AuthenticationContext } from "./mexc-api-types";
 
 export class MexcAuthService {

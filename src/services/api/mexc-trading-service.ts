@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import type { MexcServiceResponse } from "../mexc-schemas";
+import type { MexcServiceResponse } from "@/src/schemas/unified/mexc-api-schemas";
 import type { MexcApiClient } from "./mexc-api-client-refactored";
 
 export interface OrderParams {

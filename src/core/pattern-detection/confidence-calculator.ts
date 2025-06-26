@@ -12,8 +12,8 @@
  */
 
 import { toSafeError } from "../../lib/error-type-utils";
-import type { ActivityData } from "../../schemas/mexc-schemas";
-import { calculateActivityBoost, hasHighPriorityActivity } from "../../schemas/mexc-schemas";
+import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
+import { calculateActivityBoost, hasHighPriorityActivity } from "../../schemas/unified/mexc-api-schemas";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IConfidenceCalculator } from "./interfaces";
 

@@ -330,6 +330,137 @@ export type AccountInfo = z.infer<typeof AccountInfoSchema>;
 export type Kline = z.infer<typeof KlineSchema>;
 export type ActivityData = z.infer<typeof ActivityDataSchema>;
 
+export const ActivityResponseSchema = z.object({
+  data: z.array(ActivityDataSchema),
+  code: z.number(),
+  msg: z.string(),
+  timestamp: z.number(),
+});
+
+export type ActivityResponse = z.infer<typeof ActivityResponseSchema>;
+
+// ============================================================================
+// Activity Helper Functions
+// ============================================================================
+
+export const calculateActivityBoost = (activities: ActivityData[]): number => {
+  if (activities.length === 0) return 0;
+
+  const activityScores = {
+    SUN_SHINE: 15,
+    PROMOTION: 12,
+    LAUNCH_EVENT: 18,
+    TRADING_COMPETITION: 10,
+    AIRDROP: 8,
+    STAKING_EVENT: 10,
+    LISTING_EVENT: 20,
+  };
+
+  const maxBoost = Math.max(
+    ...activities.map(
+      (activity) => activityScores[activity.activityType as keyof typeof activityScores] || 5
+    )
+  );
+
+  const multipleActivitiesBonus = activities.length > 1 ? 5 : 0;
+
+  return Math.min(maxBoost + multipleActivitiesBonus, 20);
+};
+
+export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => {
+  return [...new Set(activities.map((activity) => activity.activityType))];
+};
+
+// ============================================================================
+// Additional Legacy Schemas
+// ============================================================================
+
+export const SymbolV2EntrySchema = SymbolEntrySchema; // Legacy alias
+
+export const SnipeTargetSchema = z.object({
+  vcoinId: z.string(),
+  symbol: z.string(),
+  projectName: z.string(),
+  priceDecimalPlaces: z.number(),
+  quantityDecimalPlaces: z.number(),
+  launchTime: z.date(),
+  discoveredAt: z.date(),
+  hoursAdvanceNotice: z.number(),
+  orderParameters: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+  confidence: z.number().optional(),
+});
+
+export const ActivityEnhancementSchema = z.object({
+  baseConfidence: z.number(),
+  enhancedConfidence: z.number(),
+  activityBoost: z.number(),
+  activities: z.number(),
+  activityTypes: z.array(z.string()),
+  multipleActivitiesBonus: z.number().optional(),
+  recentActivityBonus: z.number().optional(),
+});
+
+export type SymbolV2Entry = z.infer<typeof SymbolV2EntrySchema>;
+export type SnipeTarget = z.infer<typeof SnipeTargetSchema>;
+export type ActivityEnhancement = z.infer<typeof ActivityEnhancementSchema>;
+
+// ============================================================================
+// Validation Helper Functions
+// ============================================================================
+
+export const validateCalendarEntry = (data: unknown): CalendarEntry => {
+  return CalendarEntrySchema.parse(data);
+};
+
+export const validateSymbolEntry = (data: unknown): SymbolEntry => {
+  return SymbolEntrySchema.parse(data);
+};
+
+export const validateSymbolV2Entry = (data: unknown): SymbolV2Entry => {
+  return SymbolV2EntrySchema.parse(data);
+};
+
+export const validateSnipeTarget = (data: unknown): SnipeTarget => {
+  return SnipeTargetSchema.parse(data);
+};
+
+export const validateActivityData = (data: unknown): ActivityData => {
+  return ActivityDataSchema.parse(data);
+};
+
+export const validateActivityResponse = (data: unknown): ActivityResponse => {
+  return ActivityResponseSchema.parse(data);
+};
+
+export const validateActivityEnhancement = (data: unknown): ActivityEnhancement => {
+  return ActivityEnhancementSchema.parse(data);
+};
+
+export const validateTickerData = (data: unknown): Ticker => {
+  return TickerSchema.parse(data);
+};
+
+export const validateMexcData = <T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: boolean; data?: T; error?: string } => {
+  try {
+    const result = schema.parse(data);
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown validation error",
+    };
+  }
+};
+
 // ============================================================================
 // Schema Collections
 // ============================================================================
@@ -365,32 +496,8 @@ export const MEXC_API_SCHEMAS = {
 } as const;
 
 // ============================================================================
-// Validation Utilities
+// Additional Validation Utilities
 // ============================================================================
-
-/**
- * Validate data against a MEXC schema
- */
-export function validateMexcData<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-): { success: boolean; data?: T; error?: string } {
-  try {
-    const result = schema.parse(data);
-    return { success: true, data: result };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
-      };
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown validation error",
-    };
-  }
-}
 
 /**
  * Validate service response structure

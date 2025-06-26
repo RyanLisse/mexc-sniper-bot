@@ -18,7 +18,7 @@ export {
   SymbolEntrySchema,
   type Ticker,
   TickerSchema,
-} from "../../schemas/mexc-schemas-extracted";
+} from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Core Configuration

@@ -14,7 +14,7 @@
  */
 
 import { z } from "zod";
-import type { UnifiedMexcConfig } from "./mexc-schemas";
+import type { UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Configuration Schemas and Validation

@@ -18,7 +18,7 @@ describe("MEXC Client Schema Consolidation - TDD Tests", () => {
     vi.clearAllMocks();
 
     // Dynamic imports to avoid static import issues
-    schemas = await import("@/src/schemas/mexc-schemas");
+    schemas = await import("@/src/schemas/unified/mexc-api-schemas");
     unifiedExports = await import("@/src/services/mexc-unified-exports");
 
     try {

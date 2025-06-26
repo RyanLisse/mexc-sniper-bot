@@ -12,7 +12,7 @@ import type {
   ExchangeInfo,
   MexcServiceResponse,
   UnifiedMexcConfig,
-} from "../mexc-schemas";
+} from "@/src/schemas/unified/mexc-api-schemas";
 
 // Test schemas using Zod for type safety
 const TestConfigSchema = z.object({

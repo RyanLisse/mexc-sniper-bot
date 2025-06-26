@@ -14,7 +14,7 @@ import {
 import { z } from "zod";
 
 // Import schemas from MEXC schemas module
-import { CalendarEntrySchema, SymbolEntrySchema } from "@/src/services/api/mexc-schemas";
+import { CalendarEntrySchema, SymbolEntrySchema } from "@/src/schemas/unified/mexc-api-schemas";
 
 // Request schemas
 const PatternDetectionRequestSchema = z.object({

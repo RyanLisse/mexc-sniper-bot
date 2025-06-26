@@ -24,7 +24,7 @@ import {
   withApiTimeout,
 } from "../utils/timeout-utilities";
 import { MexcConfigValidator } from "@/src/services/mexc-config-validator";
-import { UnifiedMexcServiceV2 } from "@/src/services/unified-mexc-service-v2";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 describe("Configuration Validation Integration", () => {
   const TEST_TIMEOUT = setTestTimeout("integration");

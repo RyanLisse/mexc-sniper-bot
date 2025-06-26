@@ -24,7 +24,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { db, apiCredentials } from "@/src/db";
 import { eq } from "drizzle-orm";
-import { getEncryptionService } from "@/src/services/secure-encryption-service";
+import { getEncryptionService } from "@/src/services/api/secure-encryption-service";
 // Instead of importing the complex route handlers, let's create simplified mock implementations
 // that demonstrate the issues without the complex dependency chains
 
@@ -214,7 +214,7 @@ vi.mock("@/src/db", () => ({
 }));
 
 // Mock encryption service
-vi.mock("@/src/services/secure-encryption-service", () => ({
+vi.mock("@/src/services/api/secure-encryption-service", () => ({
   getEncryptionService: vi.fn(() => ({
     encrypt: vi.fn((data) => `encrypted_${data}`),
     decrypt: vi.fn((data) => data.replace("encrypted_", "")),
