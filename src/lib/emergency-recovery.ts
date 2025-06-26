@@ -370,13 +370,12 @@ export class EmergencyRecoveryService {
   // Recovery action implementations
   private async retryMexcApiConnection(): Promise<RecoveryResult> {
     try {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 5000);
+      
       const response = await fetch("https://api.mexc.com/api/v3/ping", {
         method: "GET",
-        signal: (() => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 5000);
-          return controller.signal;
-        })()
+        signal: controller.signal
       });
 
       if (response.ok) {
@@ -410,16 +409,15 @@ export class EmergencyRecoveryService {
         };
       }
 
+      const openaiController = new AbortController();
+      setTimeout(() => openaiController.abort(), 5000);
+      
       const response = await fetch("https://api.openai.com/v1/models", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         },
-        signal: (() => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 5000);
-          return controller.signal;
-        })()
+        signal: openaiController.signal
       });
 
       if (response.ok) {

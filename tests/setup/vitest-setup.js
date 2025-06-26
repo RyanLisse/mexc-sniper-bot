@@ -9,7 +9,7 @@
  */
 
 import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
-import { db } from '@/src/db'
+import { db } from '../../src/db'
 import '@testing-library/jest-dom'
 import { globalTimeoutMonitor } from '../utils/timeout-utilities'
 

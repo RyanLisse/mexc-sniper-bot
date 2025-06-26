@@ -10,7 +10,7 @@
  */
 
 import * as crypto from "node:crypto";
-import { toSafeError } from "@/src/lib/error-type-utils";
+import { toSafeError } from "../../lib/error-type-utils";
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
@@ -466,17 +466,16 @@ export class EnhancedCredentialValidator {
     const url = `${baseUrl}${endpoint}?${queryString}&signature=${signature}`;
 
     try {
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), this.config.requestTimeout);
+      
       const response = await fetch(url, {
         method: "GET",
         headers: {
           "X-MEXC-APIKEY": credentials.apiKey,
           "Content-Type": "application/json",
         },
-        signal: (() => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), this.config.requestTimeout);
-          return controller.signal;
-        })()
+        signal: controller.signal
       });
 
       if (!response.ok) {

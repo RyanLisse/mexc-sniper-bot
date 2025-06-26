@@ -9,12 +9,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
-import { db, apiCredentials } from "@/src/db";
+import { db, apiCredentials } from "../../src/db";
 import { eq, and } from "drizzle-orm";
-import { getEncryptionService } from "@/src/services/secure-encryption-service";
+import { getEncryptionService } from "../../src/services/api/secure-encryption-service";
 import { GET as accountBalanceEndpoint } from "../../app/api/account/balance/route";
-import { OptimizedAccountBalance } from "@/src/components/optimized-account-balance";
-import type { BalanceEntry } from "@/src/services/mexc-unified-exports";
+import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
+import type { BalanceEntry } from "../../src/services/api/mexc-unified-exports";
 
 // Ensure React is available globally for JSX
 globalThis.React = React;
@@ -66,7 +66,7 @@ globalThis.fetch = vi
   });
 
 // Mock auth
-vi.mock("@/src/lib/kinde-auth-client", () => ({
+vi.mock("../../src/lib/kinde-auth-client", () => ({
   useAuth: () => ({
     user: { id: "test-user-balance" },
     isAuthenticated: true,
@@ -75,7 +75,7 @@ vi.mock("@/src/lib/kinde-auth-client", () => ({
 }));
 
 // Mock currency formatting
-vi.mock("@/src/hooks/use-currency-formatting", () => ({
+vi.mock("../../src/hooks/use-currency-formatting", () => ({
   useCurrencyFormatting: () => ({
     formatCurrency: (amount: number) => amount.toFixed(2),
     formatTokenAmount: (amount: number, asset: string) =>
@@ -91,7 +91,7 @@ const mockMexcService = vi.hoisted(() => ({
   getAccountInfo: vi.fn(),
 }));
 
-vi.mock("@/src/services/unified-mexc-service-factory", () => ({
+vi.mock("../../src/services/api/unified-mexc-service-factory", () => ({
   getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService),
 }));
 

@@ -126,7 +126,31 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         "Account Balances"
       );
 
-      if (!accountResponse.success || !accountResponse.data?.balances) {
+      console.info("[MexcAccountApi] Raw account response:", {
+        success: accountResponse.success,
+        hasData: !!accountResponse.data,
+        hasBalances: !!accountResponse.data?.balances,
+        balancesLength: accountResponse.data?.balances?.length,
+        error: accountResponse.error,
+        timestamp: accountResponse.timestamp
+      });
+
+      // Handle nested MEXC API response structure: response.data.data.balances
+      // MEXC API returns data.data = null when account has no balances (valid case)
+      const actualBalances = accountResponse.data?.data?.balances || accountResponse.data?.balances || [];
+      const hasValidData = accountResponse.success && accountResponse.data;
+      
+      if (!hasValidData) {
+        console.error("[MexcAccountApi] Account response validation failed:", {
+          success: accountResponse.success,
+          hasData: !!accountResponse.data,
+          hasNestedBalances: !!accountResponse.data?.data?.balances,
+          hasDirectBalances: !!accountResponse.data?.balances,
+          hasActualBalances: !!actualBalances,
+          error: accountResponse.error,
+          data: accountResponse.data
+        });
+        
         return {
           success: false,
           data: {
@@ -146,7 +170,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       );
 
       // Filter non-zero balances first
-      const nonZeroBalances = accountResponse.data.balances.filter((balance) => {
+      const nonZeroBalances = actualBalances.filter((balance) => {
         const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
         return total > 0;
       });

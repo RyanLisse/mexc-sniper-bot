@@ -225,6 +225,9 @@ export class MexcClientCore {
                   }
                 });
 
+                const controller = new AbortController();
+                setTimeout(() => controller.abort(), this.config.timeout);
+                
                 response = await fetch(urlObj.toString(), {
                   method: "GET",
                   headers: {
@@ -233,11 +236,7 @@ export class MexcClientCore {
                     "X-Request-ID": headers["X-Request-ID"],
                     // Do NOT set Content-Type for GET requests to avoid "Invalid content Type" error
                   },
-                  signal: (() => {
-                    const controller = new AbortController();
-                    setTimeout(() => controller.abort(), this.config.timeout);
-                    return controller.signal;
-                  })(),
+                  signal: controller.signal,
                 });
               } else {
                 // Trading endpoints: POST with form data
@@ -248,6 +247,9 @@ export class MexcClientCore {
                   }
                 });
 
+                const postController = new AbortController();
+                setTimeout(() => postController.abort(), this.config.timeout);
+                
                 response = await fetch(url, {
                   method: "POST",
                   headers: {
@@ -255,23 +257,18 @@ export class MexcClientCore {
                     "Content-Type": "application/x-www-form-urlencoded",
                   },
                   body: body.toString(),
-                  signal: (() => {
-                    const controller = new AbortController();
-                    setTimeout(() => controller.abort(), this.config.timeout);
-                    return controller.signal;
-                  })(),
+                  signal: postController.signal,
                 });
               }
             } else {
               // Public requests remain as GET with query parameters
+              const publicController = new AbortController();
+              setTimeout(() => publicController.abort(), this.config.timeout);
+              
               response = await fetch(urlObj.toString(), {
                 method: "GET",
                 headers,
-                signal: (() => {
-                  const controller = new AbortController();
-                  setTimeout(() => controller.abort(), this.config.timeout);
-                  return controller.signal;
-                })(),
+                signal: publicController.signal,
               });
             }
 

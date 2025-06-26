@@ -450,17 +450,16 @@ export class MexcCoreClient {
   ): Promise<MexcApiResponse> {
     const { timeout = this.config.timeout, ...fetchOptions } = options;
 
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), timeout);
+    
     const response = await fetch(url, {
       ...fetchOptions,
       headers: {
         ...this.baseHeaders,
         ...fetchOptions.headers,
       },
-      signal: (() => {
-        const controller = new AbortController();
-        setTimeout(() => controller.abort(), timeout);
-        return controller.signal;
-      })(),
+      signal: controller.signal,
     });
 
     if (!response.ok) {

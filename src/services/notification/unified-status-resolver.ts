@@ -180,16 +180,15 @@ export class UnifiedStatusResolver {
 
       // Fallback to HTTP request only if direct call fails
       const url = this.resolveApiUrl("/api/mexc/enhanced-connectivity");
+      const enhancedController = new AbortController();
+      setTimeout(() => enhancedController.abort(), 2000);
+      
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         // Add timeout to prevent hanging during startup
-        signal: (() => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 2000);
-          return controller.signal;
-        })()
+        signal: enhancedController.signal
       });
 
       if (!response.ok) {
@@ -221,16 +220,15 @@ export class UnifiedStatusResolver {
   private async tryLegacyEndpoint(): Promise<StatusResolutionResult | null> {
     try {
       const url = this.resolveApiUrl("/api/mexc/connectivity");
+      const legacyController = new AbortController();
+      setTimeout(() => legacyController.abort(), 2000);
+      
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         // Add timeout to prevent hanging during startup
-        signal: (() => {
-          const controller = new AbortController();
-          setTimeout(() => controller.abort(), 2000);
-          return controller.signal;
-        })()
+        signal: legacyController.signal
       });
 
       if (!response.ok) {

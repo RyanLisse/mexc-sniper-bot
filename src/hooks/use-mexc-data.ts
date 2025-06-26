@@ -157,12 +157,11 @@ export function useMexcConnectivity() {
     queryFn: async () => {
       // Single attempt only to prevent storms - no custom retry loop
       try {
+        const connectivityController = new AbortController();
+        setTimeout(() => connectivityController.abort(), 10000); // 10 seconds timeout
+        
         const response = await fetch("/api/mexc/connectivity", {
-          signal: (() => {
-            const controller = new AbortController();
-            setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
-            return controller.signal;
-          })(),
+          signal: connectivityController.signal,
           credentials: "include", // Include authentication cookies
         });
 

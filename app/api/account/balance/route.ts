@@ -31,19 +31,29 @@ export async function GET(request: NextRequest) {
 
     const { userId: validUserId } = validationResult.data;
 
+    console.info("[BalanceAPI] Starting balance request", {
+      userId: validUserId,
+      hasApiKey: !!process.env.MEXC_API_KEY,
+      hasSecretKey: !!process.env.MEXC_SECRET_KEY,
+    });
+
     // Get real MEXC account balances using credentials from environment
     const mexcClient = getMexcService();
+    console.info("[BalanceAPI] MEXC client created, calling getAccountBalances");
     const balanceResponse = await mexcClient.getAccountBalances();
 
     if (!balanceResponse.success) {
       console.error("[BalanceAPI] Failed to fetch real balance data", {
         error: balanceResponse.error,
         userId: validUserId,
+        responseData: balanceResponse.data,
+        timestamp: balanceResponse.timestamp,
       });
 
       return NextResponse.json({
         success: false,
         error: balanceResponse.error || "Failed to fetch account balance data",
+        details: "Check server logs for more information",
       }, { status: 500 });
     }
 
@@ -65,11 +75,16 @@ export async function GET(request: NextRequest) {
     console.error("[BalanceAPI] Unexpected error", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
+      type: typeof error,
+      name: error instanceof Error ? error.name : "unknown",
+      hasApiKey: !!process.env.MEXC_API_KEY,
+      hasSecretKey: !!process.env.MEXC_SECRET_KEY,
     });
 
     return NextResponse.json({
       success: false,
       error: "Internal server error - please check MEXC API credentials",
+      details: error instanceof Error ? error.message : String(error),
     }, { status: 500 });
   }
 }
