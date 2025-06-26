@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       services: {
         database: {
           status: 'operational',
-          responseTime: Math.floor(Math.random() * 10) + 5, // Simulated
+          responseTime: responseTime, // Actual API response time
         },
         mexcApi: {
           status: healthCheck.issues.includes('MEXC API connectivity failed') ? 'degraded' : 'operational',
