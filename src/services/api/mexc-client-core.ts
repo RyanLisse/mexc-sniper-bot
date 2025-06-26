@@ -6,7 +6,7 @@
  */
 
 import * as crypto from "node:crypto";
-import { mexcApiBreaker } from "../circuit-breaker";
+import { mexcApiBreaker } from "../risk/circuit-breaker";
 import type { UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
 import { MexcClientError } from "./mexc-client-types";
 import { MexcRequestCache } from "./mexc-request-cache";

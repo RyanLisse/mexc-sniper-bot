@@ -5,7 +5,7 @@
  * Extracted from unified-mexc-client.ts for better modularity.
  */
 
-import { getGlobalErrorRecoveryService } from "../mexc-error-recovery-service";
+import { getGlobalErrorRecoveryService } from "../risk/mexc-error-recovery-service";
 import { MexcClientCore } from "./mexc-client-core";
 import type { BalanceEntry, UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
 import { BalanceEntrySchema } from "./mexc-client-types";
