@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { PatternDetectionCore } from "../../../src/core/pattern-detection";
-import { patternStrategyOrchestrator } from "../../../src/services/pattern-strategy-orchestrator";
-import { patternEmbeddingService } from "../../../src/services/pattern-embedding-service";
+import { patternStrategyOrchestrator } from "../../../src/services/data/pattern-detection/pattern-strategy-orchestrator";
+import { patternEmbeddingService } from "../../../src/services/data/pattern-embedding-service";
 import { apiAuthWrapper } from "../../../src/lib/api-auth";
 import { createApiResponse } from "../../../src/lib/api-response";
 import { 
@@ -14,7 +14,7 @@ import {
 import { z } from "zod";
 
 // Import schemas from MEXC schemas module
-import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/mexc-schemas";
+import { CalendarEntrySchema, SymbolEntrySchema } from "../../../src/services/api/mexc-schemas";
 
 // Request schemas
 const PatternDetectionRequestSchema = z.object({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "../../../../src/lib/kinde-auth";
 import { apiResponse } from "../../../../src/lib/api-response";
-import { AdvancedRiskEngine } from "../../../../src/services/advanced-risk-engine";
+import { AdvancedRiskEngine } from "../../../../src/services/risk/advanced-risk-engine";
 import { SafetyMonitorAgent } from "../../../../src/mexc-agents/safety-monitor-agent";
 
 /**

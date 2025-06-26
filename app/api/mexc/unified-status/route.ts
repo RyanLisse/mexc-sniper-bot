@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { apiResponse, handleApiError } from "../../../../src/lib/api-response";
-import { getUnifiedStatus } from "../../../../src/services/unified-status-resolver";
+import { getUnifiedStatus } from "../../../../src/services/notification/unified-status-resolver";
 import { toSafeError } from "../../../../src/lib/error-type-utils";
 interface UnifiedStatusResponse {
   // Core Status
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     if (forceRefresh) {
       // Force refresh the unified status
-      const { refreshUnifiedStatus } = await import("../../../../src/services/unified-status-resolver");
+      const { refreshUnifiedStatus } = await import("../../../../src/services/notification/unified-status-resolver");
       const unifiedStatus = await refreshUnifiedStatus();
       
       const recommendations = generateRecommendations(unifiedStatus);
