@@ -17,9 +17,9 @@ import type {
   MexcReliabilityConfig,
   MexcServiceResponse,
   SymbolEntry,
-} from "./modules/mexc-api-types";
-import { MexcCacheLayer } from "./modules/mexc-cache-layer";
-import { MexcCoreClient } from "./modules/mexc-core-client";
+} from "../data/modules/mexc-api-types";
+import { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
+import { MexcCoreClient } from "../data/modules/mexc-core-client";
 
 // ============================================================================
 // Service Configuration

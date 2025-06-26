@@ -5,7 +5,7 @@
  * for MEXC API operations. Addresses 500 errors and connectivity issues.
  */
 
-import { toSafeError } from "../lib/error-type-utils";
+import { toSafeError } from "../../lib/error-type-utils";
 // ============================================================================
 // Types and Interfaces
 // ============================================================================
