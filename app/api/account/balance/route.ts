@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trace } from "@opentelemetry/api";
-import { getMexcService } from "@/src/services/api/mexc-unified-exports";
+import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 
 // Request validation schema
 const BalanceRequestSchema = z.object({
@@ -37,9 +37,9 @@ export async function GET(request: NextRequest) {
       hasSecretKey: !!process.env.MEXC_SECRET_KEY,
     });
 
-    // Get real MEXC account balances using credentials from environment
-    const mexcClient = getMexcService();
-    console.info("[BalanceAPI] MEXC client created, calling getAccountBalances");
+    // Get real MEXC account balances using user-specific credentials
+    const mexcClient = await getUnifiedMexcService({ userId: validUserId });
+    console.info("[BalanceAPI] MEXC client created with user credentials, calling getAccountBalances");
     const balanceResponse = await mexcClient.getAccountBalances();
 
     if (!balanceResponse.success) {
