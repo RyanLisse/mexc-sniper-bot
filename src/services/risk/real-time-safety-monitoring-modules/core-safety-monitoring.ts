@@ -18,15 +18,12 @@ import {
   validateRiskMetrics,
   validateSafetyThresholds,
 } from "../../schemas/safety-monitoring-schemas";
-import type {
-  AutoSnipingExecutionService,
-  ExecutionPosition,
-} from "../auto-sniping-execution-service";
+import type { OptimizedAutoSnipingExecutionEngine } from "../../trading/optimized-auto-sniping-execution-engine";
 import type { PatternMonitoringService } from "../pattern-monitoring-service";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;
-  executionService: AutoSnipingExecutionService;
+  executionService: OptimizedAutoSnipingExecutionEngine;
   patternMonitoring: PatternMonitoringService;
   onAlert?: (alert: Omit<SafetyAlert, "id" | "timestamp" | "acknowledged">) => void;
 }

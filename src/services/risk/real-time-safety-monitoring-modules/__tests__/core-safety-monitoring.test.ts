@@ -7,7 +7,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SafetyAlert, SafetyConfiguration } from "../../../schemas/safety-monitoring-schemas";
-import type { AutoSnipingExecutionService } from "../../auto-sniping-execution-service";
+import type { OptimizedAutoSnipingExecutionEngine } from "../../../trading/optimized-auto-sniping-execution-engine";
 import type { PatternMonitoringService } from "../../pattern-monitoring-service";
 import {
   CoreSafetyMonitoring,
@@ -21,7 +21,7 @@ vi.mock("../../pattern-monitoring-service");
 
 describe("CoreSafetyMonitoring", () => {
   let coreMonitoring: CoreSafetyMonitoring;
-  let mockExecutionService: vi.Mocked<AutoSnipingExecutionService>;
+  let mockExecutionService: vi.Mocked<OptimizedAutoSnipingExecutionEngine>;
   let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
   let mockConfig: CoreSafetyMonitoringConfig;
   let alertsReceived: Array<Omit<SafetyAlert, "id" | "timestamp" | "acknowledged">>;

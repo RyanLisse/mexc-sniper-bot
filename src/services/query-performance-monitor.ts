@@ -1,381 +1,176 @@
 /**
- * Query Performance Monitor
- * Tracks database query performance and identifies slow queries
- * Provides insights for optimization opportunities
+ * Query Performance Monitor Service
+ * 
+ * Monitors database query performance and provides metrics for optimization.
+ * Integrates with OpenTelemetry for distributed tracing.
  */
 
-interface QueryMetric {
+import { trace } from "@opentelemetry/api";
+
+interface QueryMetrics {
   queryName: string;
-  query: string;
-  duration: number;
+  executionTime: number;
   timestamp: Date;
+  success: boolean;
+  error?: string;
+  operationType?: "select" | "insert" | "update" | "delete";
+  tableName?: string;
+}
+
+interface QueryOptions {
+  query?: string;
   parameters?: unknown[];
-  stackTrace?: string;
   userId?: string;
+  operationType?: "select" | "insert" | "update" | "delete";
+  tableName?: string;
 }
 
-interface PerformanceStats {
-  totalQueries: number;
-  averageDuration: number;
-  slowQueries: number;
-  fastQueries: number;
-  errorQueries: number;
-  recentSlowQueries: QueryMetric[];
-}
-
-interface QueryPattern {
-  pattern: string;
-  count: number;
-  totalDuration: number;
-  averageDuration: number;
-  slowestDuration: number;
-  lastExecuted: Date;
-}
-
-export class QueryPerformanceMonitor {
-  private logger = {
-    info: (message: string, context?: any) =>
-      console.info("[query-performance-monitor]", message, context || ""),
-    warn: (message: string, context?: any) =>
-      console.warn("[query-performance-monitor]", message, context || ""),
-    error: (message: string, context?: any, error?: Error) =>
-      console.error("[query-performance-monitor]", message, context || "", error || ""),
-    debug: (message: string, context?: any) =>
-      console.debug("[query-performance-monitor]", message, context || ""),
-  };
-
-  private static instance: QueryPerformanceMonitor;
-  private metrics: QueryMetric[] = [];
-  private readonly maxMetrics = 10000; // Keep last 10k queries
-  private readonly slowQueryThreshold = 1000; // 1 second
-  private readonly verySlowQueryThreshold = 5000; // 5 seconds
+class QueryPerformanceMonitor {
+  private metrics: QueryMetrics[] = [];
   private isMonitoring = false;
+  private maxMetrics = 1000; // Keep last 1000 queries in memory
 
-  private constructor() {}
-
-  public static getInstance(): QueryPerformanceMonitor {
-    if (!QueryPerformanceMonitor.instance) {
-      QueryPerformanceMonitor.instance = new QueryPerformanceMonitor();
-    }
-    return QueryPerformanceMonitor.instance;
-  }
-
-  /**
-   * Start monitoring query performance
-   */
   startMonitoring(): void {
     this.isMonitoring = true;
-    console.info("📊 Query performance monitoring started");
+    console.info("[QueryPerformanceMonitor] Performance monitoring started");
   }
 
-  /**
-   * Stop monitoring query performance
-   */
   stopMonitoring(): void {
     this.isMonitoring = false;
-    console.info("📊 Query performance monitoring stopped");
+    console.info("[QueryPerformanceMonitor] Performance monitoring stopped");
   }
 
-  /**
-   * Wrap a query function with performance monitoring
-   */
-  wrapQuery<T>(
+  async wrapQuery<T>(
     queryName: string,
     queryFn: () => Promise<T>,
-    options?: {
-      query?: string;
-      parameters?: unknown[];
-      userId?: string;
-    }
+    options?: QueryOptions
   ): Promise<T> {
     if (!this.isMonitoring) {
+      // If monitoring is disabled, just execute the query
       return queryFn();
     }
 
-    const startTime = performance.now();
-    const stackTrace = this.captureStackTrace();
+    const tracer = trace.getTracer("query-performance-monitor");
+    
+    return tracer.startActiveSpan(`db_query_${queryName}`, async (span) => {
+      const startTime = Date.now();
+      let success = true;
+      let error: string | undefined;
 
-    return queryFn()
-      .then((result) => {
-        const duration = performance.now() - startTime;
-        this.recordMetric({
-          queryName,
-          query: options?.query || queryName,
-          duration,
-          timestamp: new Date(),
-          parameters: options?.parameters,
-          stackTrace,
-          userId: options?.userId,
+      try {
+        // Set span attributes
+        span.setAttributes({
+          "db.operation": options?.operationType || "unknown",
+          "db.table": options?.tableName || "unknown",
+          "db.query_name": queryName,
+          "db.user_id": options?.userId || "unknown",
         });
 
-        // Log slow queries immediately
-        if (duration > this.slowQueryThreshold) {
-          const level = duration > this.verySlowQueryThreshold ? "ERROR" : "WARN";
-          console.info(
-            `[${level}] Slow query detected: ${queryName} took ${duration.toFixed(2)}ms`
-          );
-
-          if (options?.query) {
-            console.info(`Query: ${options.query}`);
-          }
-
-          if (options?.parameters) {
-            console.info(`Parameters:`, options.parameters);
-          }
-        }
+        const result = await queryFn();
+        
+        span.setAttributes({
+          "db.success": true,
+          "db.execution_time_ms": Date.now() - startTime,
+        });
 
         return result;
-      })
-      .catch((error) => {
-        const duration = performance.now() - startTime;
-        this.recordMetric({
-          queryName: `${queryName}_ERROR`,
-          query: options?.query || queryName,
-          duration,
+      } catch (err) {
+        success = false;
+        error = err instanceof Error ? err.message : String(err);
+        
+        span.setAttributes({
+          "db.success": false,
+          "db.error": error,
+          "db.execution_time_ms": Date.now() - startTime,
+        });
+
+        throw err;
+      } finally {
+        const executionTime = Date.now() - startTime;
+        
+        // Record metrics
+        this.recordMetrics({
+          queryName,
+          executionTime,
           timestamp: new Date(),
-          parameters: options?.parameters,
-          stackTrace,
-          userId: options?.userId,
+          success,
+          error,
+          operationType: options?.operationType,
+          tableName: options?.tableName,
         });
 
-        console.error(`❌ Query failed: ${queryName} took ${duration.toFixed(2)}ms`, error);
-        throw error;
-      });
-  }
-
-  /**
-   * Record a query metric
-   */
-  private recordMetric(metric: QueryMetric): void {
-    this.metrics.push(metric);
-
-    // Keep only the most recent metrics
-    if (this.metrics.length > this.maxMetrics) {
-      this.metrics = this.metrics.slice(-this.maxMetrics);
-    }
-  }
-
-  /**
-   * Get performance statistics
-   */
-  getPerformanceStats(timeframeMinutes = 60): PerformanceStats {
-    const cutoffTime = new Date(Date.now() - timeframeMinutes * 60 * 1000);
-    const recentMetrics = this.metrics.filter((m) => m.timestamp >= cutoffTime);
-
-    if (recentMetrics.length === 0) {
-      return {
-        totalQueries: 0,
-        averageDuration: 0,
-        slowQueries: 0,
-        fastQueries: 0,
-        errorQueries: 0,
-        recentSlowQueries: [],
-      };
-    }
-
-    const totalDuration = recentMetrics.reduce((sum, m) => sum + m.duration, 0);
-    const slowQueries = recentMetrics.filter((m) => m.duration > this.slowQueryThreshold);
-    const fastQueries = recentMetrics.filter((m) => m.duration <= this.slowQueryThreshold);
-    const errorQueries = recentMetrics.filter((m) => m.queryName.endsWith("_ERROR"));
-
-    return {
-      totalQueries: recentMetrics.length,
-      averageDuration: totalDuration / recentMetrics.length,
-      slowQueries: slowQueries.length,
-      fastQueries: fastQueries.length,
-      errorQueries: errorQueries.length,
-      recentSlowQueries: slowQueries.sort((a, b) => b.duration - a.duration).slice(0, 10), // Top 10 slowest
-    };
-  }
-
-  /**
-   * Analyze query patterns
-   */
-  analyzeQueryPatterns(timeframeMinutes = 60): QueryPattern[] {
-    const cutoffTime = new Date(Date.now() - timeframeMinutes * 60 * 1000);
-    const recentMetrics = this.metrics.filter((m) => m.timestamp >= cutoffTime);
-
-    const patterns = new Map<string, QueryPattern>();
-
-    for (const metric of recentMetrics) {
-      // Normalize query name for pattern analysis
-      const pattern = this.normalizeQueryName(metric.queryName);
-
-      if (!patterns.has(pattern)) {
-        patterns.set(pattern, {
-          pattern,
-          count: 0,
-          totalDuration: 0,
-          averageDuration: 0,
-          slowestDuration: 0,
-          lastExecuted: metric.timestamp,
-        });
+        span.end();
       }
-
-      const patternData = patterns.get(pattern);
-      if (!patternData) continue;
-      patternData.count++;
-      patternData.totalDuration += metric.duration;
-      patternData.slowestDuration = Math.max(patternData.slowestDuration, metric.duration);
-      patternData.lastExecuted =
-        metric.timestamp > patternData.lastExecuted ? metric.timestamp : patternData.lastExecuted;
-    }
-
-    // Calculate averages
-    for (const pattern of patterns.values()) {
-      pattern.averageDuration = pattern.totalDuration / pattern.count;
-    }
-
-    return Array.from(patterns.values()).sort((a, b) => b.totalDuration - a.totalDuration); // Sort by total time spent
-  }
-
-  /**
-   * Get slow query recommendations
-   */
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex recommendation logic with multiple conditions and patterns
-  getOptimizationRecommendations(timeframeMinutes = 60): {
-    recommendation: string;
-    queryPattern: string;
-    impact: "high" | "medium" | "low";
-    frequency: number;
-    averageDuration: number;
-  }[] {
-    const patterns = this.analyzeQueryPatterns(timeframeMinutes);
-    const recommendations: {
-      recommendation: string;
-      queryPattern: string;
-      impact: "high" | "medium" | "low";
-      frequency: number;
-      averageDuration: number;
-    }[] = [];
-
-    for (const pattern of patterns) {
-      if (pattern.averageDuration > this.slowQueryThreshold) {
-        let recommendation = "";
-        let impact: "high" | "medium" | "low" = "low";
-
-        // Analyze query pattern and suggest optimizations
-        if (pattern.pattern.includes("execution_history") && pattern.count > 50) {
-          recommendation =
-            "Consider adding indexes on execution_history table for frequent queries";
-          impact = "high";
-        } else if (pattern.pattern.includes("snipe_targets") && pattern.averageDuration > 2000) {
-          recommendation = "Optimize snipe_targets queries with compound indexes";
-          impact = "high";
-        } else if (pattern.pattern.includes("user_preferences") && pattern.count > 100) {
-          recommendation = "Cache user preferences to reduce database load";
-          impact = "medium";
-        } else if (pattern.averageDuration > this.verySlowQueryThreshold) {
-          recommendation = "Query is very slow and needs immediate optimization";
-          impact = "high";
-        } else {
-          recommendation = "Consider query optimization or caching";
-          impact = "medium";
-        }
-
-        recommendations.push({
-          recommendation,
-          queryPattern: pattern.pattern,
-          impact,
-          frequency: pattern.count,
-          averageDuration: pattern.averageDuration,
-        });
-      }
-    }
-
-    return recommendations.sort((a, b) => {
-      // Sort by impact first, then by frequency
-      const impactOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
-      const aImpact = impactOrder[a.impact] || 1;
-      const bImpact = impactOrder[b.impact] || 1;
-      if (aImpact !== bImpact) {
-        return bImpact - aImpact;
-      }
-      return b.frequency - a.frequency;
     });
   }
 
-  /**
-   * Clear all metrics
-   */
+  private recordMetrics(metrics: QueryMetrics): void {
+    this.metrics.push(metrics);
+    
+    // Keep only the last maxMetrics entries
+    if (this.metrics.length > this.maxMetrics) {
+      this.metrics = this.metrics.slice(-this.maxMetrics);
+    }
+
+    // Log slow queries (over 1 second)
+    if (metrics.executionTime > 1000) {
+      console.warn("[QueryPerformanceMonitor] Slow query detected", {
+        queryName: metrics.queryName,
+        executionTime: metrics.executionTime,
+        operationType: metrics.operationType,
+        tableName: metrics.tableName,
+        success: metrics.success,
+        error: metrics.error,
+      });
+    }
+  }
+
+  getMetrics(): QueryMetrics[] {
+    return [...this.metrics];
+  }
+
+  getSlowQueries(thresholdMs = 1000): QueryMetrics[] {
+    return this.metrics.filter(m => m.executionTime > thresholdMs);
+  }
+
+  getAverageExecutionTime(queryName?: string): number {
+    const relevantMetrics = queryName 
+      ? this.metrics.filter(m => m.queryName === queryName)
+      : this.metrics;
+    
+    if (relevantMetrics.length === 0) return 0;
+    
+    const totalTime = relevantMetrics.reduce((sum, m) => sum + m.executionTime, 0);
+    return totalTime / relevantMetrics.length;
+  }
+
+  getQueryStats(): {
+    totalQueries: number;
+    successRate: number;
+    averageExecutionTime: number;
+    slowQueries: number;
+  } {
+    const total = this.metrics.length;
+    const successful = this.metrics.filter(m => m.success).length;
+    const slowQueries = this.getSlowQueries().length;
+    const avgTime = this.getAverageExecutionTime();
+
+    return {
+      totalQueries: total,
+      successRate: total > 0 ? (successful / total) * 100 : 0,
+      averageExecutionTime: avgTime,
+      slowQueries,
+    };
+  }
+
   clearMetrics(): void {
     this.metrics = [];
-    console.info("📊 Query performance metrics cleared");
-  }
-
-  /**
-   * Export metrics for analysis
-   */
-  exportMetrics(timeframeMinutes = 60): {
-    exportedAt: Date;
-    timeframeMinutes: number;
-    metrics: QueryMetric[];
-    stats: PerformanceStats;
-    patterns: QueryPattern[];
-  } {
-    const cutoffTime = new Date(Date.now() - timeframeMinutes * 60 * 1000);
-    const recentMetrics = this.metrics.filter((m) => m.timestamp >= cutoffTime);
-
-    return {
-      exportedAt: new Date(),
-      timeframeMinutes,
-      metrics: recentMetrics,
-      stats: this.getPerformanceStats(timeframeMinutes),
-      patterns: this.analyzeQueryPatterns(timeframeMinutes),
-    };
-  }
-
-  /**
-   * Capture stack trace for debugging
-   */
-  private captureStackTrace(): string {
-    const error = new Error();
-    return error.stack?.split("\n").slice(2, 6).join("\n") || "";
-  }
-
-  /**
-   * Normalize query name for pattern analysis
-   */
-  private normalizeQueryName(queryName: string): string {
-    // Remove specific IDs and parameters to group similar queries
-    return queryName
-      .replace(/\d+/g, "N") // Replace numbers with N
-      .replace(/_ERROR$/, "") // Remove error suffix
-      .replace(/user-\w+/g, "user-X"); // Replace user IDs
-  }
-
-  /**
-   * Get monitoring status
-   */
-  getStatus(): {
-    isMonitoring: boolean;
-    totalMetrics: number;
-    slowQueryThreshold: number;
-    verySlowQueryThreshold: number;
-    maxMetrics: number;
-  } {
-    return {
-      isMonitoring: this.isMonitoring,
-      totalMetrics: this.metrics.length,
-      slowQueryThreshold: this.slowQueryThreshold,
-      verySlowQueryThreshold: this.verySlowQueryThreshold,
-      maxMetrics: this.maxMetrics,
-    };
+    console.info("[QueryPerformanceMonitor] Metrics cleared");
   }
 }
 
-// Export singleton instance
-export const queryPerformanceMonitor = QueryPerformanceMonitor.getInstance();
+// Singleton instance
+export const queryPerformanceMonitor = new QueryPerformanceMonitor();
 
-// Convenience wrapper for database operations
-export function monitorQuery<T>(
-  queryName: string,
-  queryFn: () => Promise<T>,
-  options?: {
-    query?: string;
-    parameters?: unknown[];
-    userId?: string;
-  }
-): Promise<T> {
-  return queryPerformanceMonitor.wrapQuery(queryName, queryFn, options);
-}
+// Default export for compatibility
+export default queryPerformanceMonitor;

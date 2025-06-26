@@ -11,7 +11,7 @@ import type {
   SafetyAlert,
   SafetyConfiguration,
 } from "../../../schemas/safety-monitoring-schemas";
-import { AutoSnipingExecutionService } from "../../auto-sniping-execution-service";
+import { OptimizedAutoSnipingExecutionEngine } from "../../../trading/optimized-auto-sniping-execution-engine";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { PatternMonitoringService } from "../../pattern-monitoring-service";
 import type { UnifiedMexcServiceV2 } from "../../unified-mexc-service-v2";
@@ -25,7 +25,7 @@ vi.mock("../../unified-mexc-service");
 
 describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   let safetyService: RealTimeSafetyMonitoringService;
-  let mockExecutionService: vi.Mocked<AutoSnipingExecutionService>;
+  let mockExecutionService: vi.Mocked<OptimizedAutoSnipingExecutionEngine>;
   let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
   let mockEmergencySystem: vi.Mocked<EmergencySafetySystem>;
   let mockMexcService: vi.Mocked<UnifiedMexcServiceV2>;
@@ -77,7 +77,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
     } as any;
 
     // Mock the getInstance methods
-    vi.mocked(AutoSnipingExecutionService.getInstance).mockReturnValue(mockExecutionService);
+    vi.mocked(OptimizedAutoSnipingExecutionEngine.getInstance).mockReturnValue(mockExecutionService);
     vi.mocked(PatternMonitoringService.getInstance).mockReturnValue(mockPatternMonitoring);
 
     // Create service instance

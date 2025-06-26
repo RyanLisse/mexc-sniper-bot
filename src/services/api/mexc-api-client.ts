@@ -21,7 +21,7 @@
 import type { EnhancedUnifiedCacheSystem } from "../lib/enhanced-unified-cache";
 import type { PerformanceMonitoringService } from "../lib/performance-monitoring-service";
 import type { MexcResponseCache } from "./mexc-cache-manager";
-import type { MexcReliabilityManager } from "./mexc-circuit-breaker";
+import type { CircuitBreaker } from "../risk/circuit-breaker";
 import type { UnifiedMexcConfig } from "./mexc-schemas";
 
 // Export all types for backward compatibility
@@ -69,13 +69,13 @@ export class MexcApiClient {
   private requestService: MexcRequestService;
   private tradingService: MexcTradingService;
   private cache: MexcResponseCache;
-  private reliabilityManager: MexcReliabilityManager;
+  private reliabilityManager: CircuitBreaker;
   private stats: ApiClientStats;
 
   constructor(
     config: Required<UnifiedMexcConfig>,
     cache: MexcResponseCache,
-    reliabilityManager: MexcReliabilityManager,
+    reliabilityManager: CircuitBreaker,
     enhancedCache?: EnhancedUnifiedCacheSystem,
     performanceMonitoring?: PerformanceMonitoringService
   ) {

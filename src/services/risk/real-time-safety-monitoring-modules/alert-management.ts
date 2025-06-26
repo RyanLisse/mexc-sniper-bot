@@ -13,11 +13,11 @@ import type {
   SafetyConfiguration,
 } from "../../schemas/safety-monitoring-schemas";
 import { validateSafetyAction, validateSafetyAlert } from "../../schemas/safety-monitoring-schemas";
-import type { AutoSnipingExecutionService } from "../auto-sniping-execution-service";
+import type { OptimizedAutoSnipingExecutionEngine } from "../../trading/optimized-auto-sniping-execution-engine";
 
 export interface AlertManagementConfig {
   configuration: SafetyConfiguration;
-  executionService: AutoSnipingExecutionService;
+  executionService: OptimizedAutoSnipingExecutionEngine;
   onStatsUpdate?: (stats: { alertsGenerated: number; actionsExecuted: number }) => void;
 }
 

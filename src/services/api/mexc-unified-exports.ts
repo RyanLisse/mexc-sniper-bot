@@ -23,7 +23,7 @@ import {
   getUnifiedMexcClient as getUnifiedMexcClientFactory,
   resetUnifiedMexcClient,
   type UnifiedMexcClient,
-} from "./api/mexc-client-factory";
+} from "./mexc-client-factory";
 // Import types from schemas module
 import type {
   BalanceEntry,
