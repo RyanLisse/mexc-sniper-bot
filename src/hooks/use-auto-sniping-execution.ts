@@ -247,7 +247,7 @@ export function useAutoSnipingExecution(
         setState((prev) => ({
           ...prev,
           report: report,
-          config: report.config || {},
+          config: report.config || null,
           stats: report.stats || {
             totalTrades: 0,
             successfulTrades: 0,

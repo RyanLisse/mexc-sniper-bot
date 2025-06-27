@@ -48,14 +48,14 @@ function createOptimizedLazy<T extends ComponentType<any>>(
     PerformanceUtils.trackComponentLoad(componentName, factory).catch((error) => {
       console.warn(`Failed to load ${componentName}:`, error);
       // Return performance-optimized fallback
+      const FallbackComponent = fallbackComponent || (() => (
+        <div className="p-4 text-center text-gray-500 rounded-lg border">
+          {componentName} temporarily unavailable
+        </div>
+      ));
+      
       return {
-        default:
-          fallbackComponent ||
-          ((() => (
-            <div className="p-4 text-center text-gray-500 rounded-lg border">
-              {componentName} temporarily unavailable
-            </div>
-          )) as T),
+        default: FallbackComponent as T,
       };
     })
   );

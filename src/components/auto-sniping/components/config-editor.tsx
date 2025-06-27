@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
+import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading.types";
 import { type AutoSnipingConfigForm, configFormSchema } from "../schemas/validation-schemas";
 
 interface ConfigEditorProps {
@@ -61,14 +62,14 @@ export function ConfigEditor({
       const mappedField = fieldMapping[field];
       if (mappedField) {
         return configEditMode
-          ? (tempConfig[mappedField] ?? config?.[mappedField])
-          : config?.[mappedField];
+          ? ((tempConfig as any)?.[mappedField] ?? (config as any)?.[mappedField])
+          : (config as any)?.[mappedField];
       }
       // Fallback for direct field access
       return configEditMode
-        ? (tempConfig[field as keyof CoreTradingConfig] ??
-            config?.[field as keyof CoreTradingConfig])
-        : config?.[field as keyof CoreTradingConfig];
+        ? ((tempConfig as any)?.[field as keyof CoreTradingConfig] ??
+            (config as any)?.[field as keyof CoreTradingConfig])
+        : (config as any)?.[field as keyof CoreTradingConfig];
     },
     [configEditMode, tempConfig, config]
   );

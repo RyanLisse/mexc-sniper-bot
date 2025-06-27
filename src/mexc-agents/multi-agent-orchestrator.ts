@@ -6,7 +6,7 @@
  */
 
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { tradingAnalytics } from "@/src/services/trading-analytics-service";
+import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 import type { AgentResponse, AgentStatus, BaseAgent } from "./base-agent";
 import { CalendarAgent } from "./calendar-agent";
 import { MexcApiAgent } from "./mexc-api-agent";

@@ -513,7 +513,14 @@ export function useConnectivityHealth() {
  * Trading-focused hook for trading interfaces
  */
 export function useTradingConnectivity() {
-  const { connectivity, analysis, actions } = useEnhancedConnectivity();
+  const { 
+    connectivity, 
+    analysis, 
+    refresh, 
+    forceRefresh,
+    resetCircuitBreaker,
+    testCredentials 
+  } = useEnhancedConnectivity();
 
   return {
     canTrade: analysis?.canTrade || false,
@@ -521,6 +528,9 @@ export function useTradingConnectivity() {
     blockingIssues: analysis?.criticalIssues || [],
     credentialSource: connectivity?.credentialSource || "none",
     isTestMode: connectivity?.isTestCredentials || false,
-    ...actions,
+    refresh,
+    forceRefresh,
+    resetCircuitBreaker,
+    testCredentials,
   };
 }

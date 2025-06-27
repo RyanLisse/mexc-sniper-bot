@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoSnipingExecution } from "@/src/hooks/use-auto-sniping-execution";
 import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
+import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading.types";
 import { AlertsList } from "./components/alerts-list";
 import { ConfigEditor } from "./components/config-editor";
 import { ExecutionControls } from "./components/execution-controls";

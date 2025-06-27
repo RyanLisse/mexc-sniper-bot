@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": [
+    "src/domain/**/*",
+    "src/application/**/*", 
+    "src/infrastructure/**/*",
+    "src/presentation/**/*",
+    "tests/unit/**/*",
+    "tests/integration/clean-architecture/**/*"
+  ],
+  "exclude": [
+    "src/components/**/*",
+    "src/services/**/*",
+    "src/lib/**/*",
+    "tests/integration/**/*",
+    "tests/e2e/**/*"
+  ]
+}

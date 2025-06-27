@@ -14,17 +14,20 @@ const ResponsiveContainer = lazy(async () => {
     return { default: module.ResponsiveContainer };
   } catch (error) {
     console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
-    // Return fallback component that renders safely
-    const FallbackComponent: React.FC<{ children?: React.ReactNode; className?: string }> = ({ children, className }) => (
-      <div
-        className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
-      >
-        Chart temporarily unavailable
-        {children && <div style={{ display: "none" }}>{children}</div>}
-      </div>
+    // Return fallback component that renders safely with forwardRef to match ResponsiveContainer type
+    const FallbackComponent = React.forwardRef<HTMLDivElement, { children?: React.ReactNode; className?: string }>(
+      ({ children, className }, ref) => (
+        <div
+          ref={ref}
+          className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
+        >
+          Chart temporarily unavailable
+          {children && <div style={{ display: "none" }}>{children}</div>}
+        </div>
+      )
     );
     FallbackComponent.displayName = "ChartFallback";
-    return { default: FallbackComponent };
+    return { default: FallbackComponent as any };
   }
 });
 

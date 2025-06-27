@@ -110,7 +110,7 @@ export function useRealTimeSafetyMonitoring(
   const alertsCount = activeAlerts.length;
   const criticalAlertsCount = activeAlerts.filter((alert) => alert.severity === "critical").length;
   const systemHealthScore = report?.systemHealth?.overallHealth || 0;
-  const monitoringActive = report?.status !== "safe" && report?.monitoringStats?.systemUptime > 0;
+  const monitoringActive = report?.status !== "safe" && (report?.monitoringStats?.systemUptime || 0) > 0;
 
   // Load safety monitoring report
   const loadSafetyReport = useCallback(async () => {

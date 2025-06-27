@@ -22,7 +22,7 @@ import {
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
-import type { OrderParameters } from "./unified-mexc-client";
+import type { OrderParameters } from "@/src/services/api/mexc-client-types";
 
 // ============================================================================
 // Types & Interfaces

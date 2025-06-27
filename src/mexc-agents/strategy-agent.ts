@@ -119,14 +119,18 @@ Always provide detailed, actionable insights with proper risk management conside
     for (const symbol of symbols) {
       try {
         // Import market data services
-        const { mexcApiClient } = await import("../services/api/mexc-api-client");
-        const { PatternDetectionEngine } = await import(
+        const { MexcApiClient } = await import("../services/api/mexc-api-client");
+        const { PatternDetectionCore } = await import(
           "../services/data/pattern-detection/pattern-detection-engine"
         );
 
+        // Create instances
+        const mexcApiClient = new MexcApiClient();
+        const patternEngine = PatternDetectionCore.getInstance();
+
         // Get current market data
         const ticker = await mexcApiClient.getSymbolTicker(symbol);
-        const patterns = await PatternDetectionEngine.getInstance().detectReadyStatePattern({
+        const patterns = await patternEngine.detectReadyStatePattern({
           cd: symbol,
           sts: 2,
           st: 2,

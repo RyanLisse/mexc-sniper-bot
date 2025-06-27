@@ -217,7 +217,7 @@ export const usePatternSniper = () => {
         symbol: symbol.ca,
         side: "BUY",
         type: "MARKET",
-        quoteOrderQty: 100, // Default $100 USDT
+        quantity: "100", // Default $100 USDT (as string)
       };
 
       return {
