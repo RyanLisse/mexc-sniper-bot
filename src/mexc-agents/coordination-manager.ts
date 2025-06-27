@@ -82,8 +82,26 @@ export class CoordinationSystemManager {
       // Create coordination system
       this.coordinationSystem = await createCoordinationSystem(systemConfig);
 
-      // Register existing agents with the coordination system
+      // CRITICAL: Register existing agents BEFORE orchestrator initialization
+      // This prevents workflow validation warnings about missing agents
       registerCommonAgents(this.coordinationSystem.agentRegistry, agentManager);
+
+      // Initialize orchestrator AFTER agents are registered to avoid validation warnings
+      await this.coordinationSystem.orchestrator.initialize();
+
+      // Validate all registered workflows now that agents are properly registered
+      // This will resolve any deferred warnings and confirm all agents are available
+      const validationResult = this.coordinationSystem.workflowEngine.validateRegisteredWorkflows();
+      if (validationResult.resolvedWarnings.length > 0) {
+        this.logger.info(
+          `[CoordinationSystemManager] Resolved ${validationResult.resolvedWarnings.length} agent registration warnings`
+        );
+      }
+      if (validationResult.remainingWarnings.length > 0) {
+        this.logger.warn(
+          `[CoordinationSystemManager] ${validationResult.remainingWarnings.length} agent registration warnings still remain`
+        );
+      }
 
       this.isEnabled = true;
 

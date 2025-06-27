@@ -50,6 +50,8 @@ export class MexcOrchestrator {
   private coordinationManager: CoordinationSystemManager;
   private metricsManager: OrchestrationMetricsManager;
   private workflowExecutionService: WorkflowExecutionService;
+  private enhancedCoordinationEnabled = false;
+  private coordinationInitializationPromise: Promise<void> | null = null;
 
   constructor(options: MexcOrchestratorOptions = {}) {
     // Initialize core components
@@ -66,14 +68,20 @@ export class MexcOrchestrator {
       this.metricsManager
     );
 
-    // Optionally enable enhanced coordination
+    // Optionally enable enhanced coordination with improved error handling
     if (options.useEnhancedCoordination) {
-      this.initializeEnhancedCoordination(options.coordinationConfig).catch((error) => {
-        logger.warn(
-          "[MexcOrchestrator] Failed to initialize coordination system, using legacy mode:",
-          error
-        );
-      });
+      this.coordinationInitializationPromise = this.initializeEnhancedCoordination(options.coordinationConfig)
+        .then(() => {
+          this.enhancedCoordinationEnabled = true;
+          this.logger.info("[MexcOrchestrator] Enhanced coordination system successfully activated");
+        })
+        .catch((error) => {
+          this.enhancedCoordinationEnabled = false;
+          this.logger.warn(
+            "[MexcOrchestrator] Failed to initialize coordination system, using legacy mode:",
+            error
+          );
+        });
     }
   }
 
@@ -135,7 +143,7 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationManager.getAgentHealth();
       } catch (error) {
-        logger.warn(
+        this.logger.warn(
           "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
           error
         );
@@ -155,7 +163,7 @@ export class MexcOrchestrator {
       try {
         return this.coordinationManager.getOrchestrationMetrics();
       } catch (error) {
-        logger.warn(
+        this.logger.warn(
           "[MexcOrchestrator] Enhanced metrics failed, falling back to legacy mode:",
           error
         );
@@ -178,7 +186,7 @@ export class MexcOrchestrator {
       try {
         return this.coordinationManager.getAgentSummary();
       } catch (error) {
-        logger.warn(
+        this.logger.warn(
           "[MexcOrchestrator] Enhanced summary failed, falling back to legacy mode:",
           error
         );
@@ -197,7 +205,7 @@ export class MexcOrchestrator {
       try {
         return await this.coordinationManager.healthCheck();
       } catch (error) {
-        logger.warn(
+        this.logger.warn(
           "[MexcOrchestrator] Enhanced health check failed, falling back to legacy mode:",
           error
         );
@@ -211,9 +219,32 @@ export class MexcOrchestrator {
 
       return Object.values(agentHealth).some((healthy) => healthy) && dataFetcherHealth;
     } catch (error) {
-      logger.error("[MexcOrchestrator] Health check failed:", error);
+      this.logger.error("[MexcOrchestrator] Health check failed:", error);
       return false;
     }
+  }
+
+  /**
+   * Wait for enhanced coordination initialization to complete
+   */
+  async waitForCoordinationInitialization(): Promise<boolean> {
+    if (this.coordinationInitializationPromise) {
+      try {
+        await this.coordinationInitializationPromise;
+        return this.enhancedCoordinationEnabled;
+      } catch (error) {
+        this.logger.error("[MexcOrchestrator] Coordination initialization failed:", error);
+        return false;
+      }
+    }
+    return this.enhancedCoordinationEnabled;
+  }
+
+  /**
+   * Check if enhanced coordination is available and fully initialized
+   */
+  isEnhancedCoordinationReady(): boolean {
+    return this.enhancedCoordinationEnabled && this.coordinationManager.isCoordinationEnabled();
   }
 
   /**
@@ -221,18 +252,33 @@ export class MexcOrchestrator {
    */
   async enableEnhancedCoordination(config?: CoordinationSystemConfig): Promise<void> {
     if (this.coordinationManager.isCoordinationEnabled()) {
-      logger.warn("[MexcOrchestrator] Enhanced coordination is already enabled");
+      this.logger.warn("[MexcOrchestrator] Enhanced coordination is already enabled");
       return;
     }
 
-    await this.coordinationManager.initialize(this.agentManager, config);
+    try {
+      await this.coordinationManager.initialize(this.agentManager, config);
+      this.enhancedCoordinationEnabled = true;
+      this.logger.info("[MexcOrchestrator] Enhanced coordination system successfully enabled");
+    } catch (error) {
+      this.enhancedCoordinationEnabled = false;
+      this.logger.error("[MexcOrchestrator] Failed to enable enhanced coordination:", error);
+      throw error;
+    }
   }
 
   /**
    * Disable enhanced coordination system
    */
   async disableEnhancedCoordination(): Promise<void> {
-    await this.coordinationManager.shutdown();
+    try {
+      await this.coordinationManager.shutdown();
+      this.enhancedCoordinationEnabled = false;
+      this.logger.info("[MexcOrchestrator] Enhanced coordination system disabled");
+    } catch (error) {
+      this.logger.error("[MexcOrchestrator] Failed to disable enhanced coordination:", error);
+      throw error;
+    }
   }
 
   /**

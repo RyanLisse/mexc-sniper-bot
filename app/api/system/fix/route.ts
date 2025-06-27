@@ -14,7 +14,7 @@ import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/l
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { MexcConfigValidator } from '@/src/services/api/mexc-config-validator';
-import { multiPhaseTradingService } from '@/src/services/trading/multi-phase-trading-service';
+import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 import { circuitBreakerRegistry } from '@/src/services/risk/circuit-breaker';
 
 interface SystemFixReport {

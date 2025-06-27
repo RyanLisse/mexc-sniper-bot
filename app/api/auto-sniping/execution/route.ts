@@ -7,13 +7,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 // Using simple console logger to avoid webpack bundling issues
-import { OptimizedAutoSnipingCore } from '@/src/services/trading/optimized-auto-sniping-core';
+import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
 import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
 
 function getExecutionService() {
-  return OptimizedAutoSnipingCore.getInstance();
+  return getCoreTrading();
 }
 
 /**

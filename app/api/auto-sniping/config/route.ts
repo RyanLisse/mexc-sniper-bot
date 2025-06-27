@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
@@ -8,11 +8,24 @@ import {
 } from "@/src/lib/api-response";
 import { handleApiError } from "@/src/lib/error-handler";
 
-const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
+const coreTrading = getCoreTrading();
 
 export async function GET() {
   try {
-    const report = await autoSnipingService.getExecutionReport();
+    // Initialize core trading service if needed
+    let report;
+    try {
+      report = await coreTrading.getPerformanceMetrics();
+    } catch (error) {
+      // If service is not initialized, initialize it first
+      if (error instanceof Error && error.message.includes('not initialized')) {
+        console.info('[API] Core trading service not initialized, initializing...');
+        await coreTrading.initialize();
+        report = await coreTrading.getPerformanceMetrics();
+      } else {
+        throw error;
+      }
+    }
     
     return apiResponse(
       createSuccessResponse(report, {
@@ -43,14 +56,27 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case "enable":
         console.info("🚀 Auto-sniping is always enabled. Updating config:", { context: config });
-        if (config) {
-          autoSnipingService.updateConfig(config);
-        }
         
-        const enabledReport = await autoSnipingService.getExecutionReport();
+        // Initialize if needed
+        try {
+          if (config) {
+            await coreTrading.updateConfig(config);
+          }
+          var enabledStatus = await coreTrading.getServiceStatus();
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('not initialized')) {
+            await coreTrading.initialize();
+            if (config) {
+              await coreTrading.updateConfig(config);
+            }
+            var enabledStatus = await coreTrading.getServiceStatus();
+          } else {
+            throw error;
+          }
+        }
         return apiResponse(
           createSuccessResponse(
-            { enabled: true, config: enabledReport.config },
+            { enabled: true, config: enabledStatus },
             { message: "Auto-sniping is always enabled. Configuration updated successfully." }
           ),
           HTTP_STATUS.OK
@@ -58,7 +84,7 @@ export async function POST(request: NextRequest) {
 
       case "disable":
         console.info("⏹️ Auto-sniping cannot be disabled. Stopping execution instead.");
-        autoSnipingService.stopExecution();
+        await coreTrading.stopAutoSniping();
         
         return apiResponse(
           createSuccessResponse(
@@ -79,12 +105,12 @@ export async function POST(request: NextRequest) {
         }
         
         console.info("⚙️ Updating auto-sniping config:", { context: config });
-        autoSnipingService.updateConfig(config);
+        await coreTrading.updateConfig(config);
         
-        const updatedReport = await autoSnipingService.getExecutionReport();
+        const updatedStatus = await coreTrading.getServiceStatus();
         return apiResponse(
           createSuccessResponse(
-            { config: updatedReport.config },
+            { config: updatedStatus },
             { message: "Auto-sniping configuration updated successfully" }
           ),
           HTTP_STATUS.OK
@@ -93,18 +119,27 @@ export async function POST(request: NextRequest) {
       case "start":
         console.info("▶️ Starting auto-sniping execution");
         
-        if (!autoSnipingService.isReadyForTrading()) {
-          const currentReport = await autoSnipingService.getExecutionReport();
+        const currentStatus = await coreTrading.getServiceStatus();
+        if (currentStatus.autoSnipingEnabled) {
           return apiResponse(
-            createErrorResponse("Auto-sniping is not ready for trading", {
-              message: "Auto-sniping must not be already running",
-              currentStatus: currentReport.status
+            createErrorResponse("Auto-sniping is already running", {
+              message: "Auto-sniping is already active",
+              currentStatus: currentStatus
             }),
             HTTP_STATUS.BAD_REQUEST
           );
         }
         
-        await autoSnipingService.startExecution();
+        const startResult = await coreTrading.startAutoSniping();
+        if (!startResult.success) {
+          return apiResponse(
+            createErrorResponse("Failed to start auto-sniping", {
+              message: startResult.error,
+              currentStatus: currentStatus
+            }),
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
         
         return apiResponse(
           createSuccessResponse(
@@ -116,7 +151,7 @@ export async function POST(request: NextRequest) {
 
       case "stop":
         console.info("⏹️ Stopping auto-sniping execution");
-        autoSnipingService.stopExecution();
+        await coreTrading.stopAutoSniping();
         
         return apiResponse(
           createSuccessResponse(

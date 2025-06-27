@@ -242,9 +242,9 @@ export class ErrorLoggingService {
         await db.insert(errorLogs).values(batch);
       }
 
-      logger.info(`Successfully stored ${entries.length} error logs in database`);
+      this.getLogger().info(`Successfully stored ${entries.length} error logs in database`);
     } catch (error) {
-      logger.error("Failed to store error logs in database:", {
+      this.getLogger().error("Failed to store error logs in database:", {
         error: error instanceof Error ? error.message : "Unknown error",
         entryCount: entries.length,
       });
@@ -258,7 +258,7 @@ export class ErrorLoggingService {
   private startFlushInterval(): void {
     this.flushInterval = setInterval(() => {
       this.flush().catch((error) => {
-        logger.error("Error during automatic flush:", error);
+        this.getLogger().error("Error during automatic flush:", error);
       });
     }, this.flushIntervalMs);
   }
@@ -338,7 +338,7 @@ export class ErrorLoggingService {
         severity: row.level === "error" ? "high" : "medium",
       }));
     } catch (error) {
-      logger.error("Failed to query error logs:", {
+      this.getLogger().error("Failed to query error logs:", {
         error: error instanceof Error ? error.message : "Unknown error",
         filter,
       });
@@ -430,7 +430,7 @@ export class ErrorLoggingService {
 
       return { total, byLevel, byCode, byHour };
     } catch (error) {
-      logger.error("Failed to calculate error statistics:", {
+      this.getLogger().error("Failed to calculate error statistics:", {
         error: error instanceof Error ? error.message : "Unknown error",
       });
 
@@ -464,19 +464,19 @@ export class ErrorLoggingService {
       const logsToDelete = countResult[0]?.count || 0;
 
       if (logsToDelete === 0) {
-        logger.info("No old error logs to clean up");
+        this.getLogger().info("No old error logs to clean up");
         return 0;
       }
 
       // Delete old logs
       await db.delete(errorLogs).where(lt(errorLogs.timestamp, cutoffDate));
 
-      logger.info(
+      this.getLogger().info(
         `Successfully deleted ${logsToDelete} error logs older than ${cutoffDate.toISOString()}`
       );
       return logsToDelete;
     } catch (error) {
-      logger.error("Failed to clean up old error logs:", {
+      this.getLogger().error("Failed to clean up old error logs:", {
         error: error instanceof Error ? error.message : "Unknown error",
         daysToKeep,
       });
@@ -505,7 +505,7 @@ export function errorLoggingMiddleware(error: Error, req: any, _res: any, next: 
   };
 
   errorLogger.logError(error, context).catch((logError) => {
-    logger.error("Failed to log error:", logError);
+    console.error("[error-logging-middleware] Failed to log error:", logError);
   });
 
   next(error);

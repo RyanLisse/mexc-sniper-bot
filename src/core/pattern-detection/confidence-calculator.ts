@@ -436,18 +436,16 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
   private async getHistoricalSuccessBoost(): Promise<number> {
     try {
       // Real implementation: query historical success rates from database
-      const { multiPhaseTradingService } = await import(
-        "../../services/trading/multi-phase-trading-service"
+      const { getCoreTrading } = await import(
+        "../../services/trading/consolidated/core-trading/base-service"
       );
 
-      const historicalData = await multiPhaseTradingService.getHistoricalSuccessRates({
-        timeframeDays: 30,
-        minConfidence: 70,
-      });
+      const coreTrading = getCoreTrading();
+      const performanceMetrics = await coreTrading.getPerformanceMetrics();
 
-      if (historicalData.totalExecutions > 10) {
+      if (performanceMetrics.totalTrades > 10) {
         // Use actual historical success rate
-        return historicalData.successRate;
+        return performanceMetrics.successRate;
       }
 
       // Fallback for insufficient data

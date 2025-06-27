@@ -7,10 +7,13 @@ import {
   Download,
   Pause,
   Play,
+  RotateCcw,
   Settings,
   Target,
   TrendingUp,
   Upload,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -28,111 +31,145 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// Import the trading strategy types and manager
-import {
-  TRADING_STRATEGIES,
-  type TradingStrategy,
-  TradingStrategyManager,
-} from "../services/trading/trading-strategy-manager";
-
-interface StrategyPerformance {
-  strategyId: string;
-  successRate: number;
-  averageProfit: number;
-  totalTrades: number;
-  winRate: number;
-  maxDrawdown: number;
-  sharpeRatio: number;
-}
-
-interface ActivePosition {
-  symbol: string;
-  entryPrice: number;
-  currentPrice: number;
-  quantity: number;
-  currentPnL: number;
-  currentPnLPercentage: number;
-  triggeredLevels: number;
-  nextTarget: number;
-}
+import { useToast } from "@/components/ui/use-toast";
+// Import the new strategy management hook
+import { useStrategyManagement, useActivePositionsMonitor } from "@/src/hooks/use-strategy-management";
 
 export function StrategyManager() {
-  const [strategyManager] = useState(() => new TradingStrategyManager());
-  const [activeStrategy, setActiveStrategy] = useState<TradingStrategy>(
-    strategyManager.getActiveStrategy()
-  );
-  const [selectedStrategyId, setSelectedStrategyId] = useState(activeStrategy.id);
-  const [isActive, setIsActive] = useState(false);
-  const [_loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  
+  // Use the new strategy management hook
+  const {
+    strategyData,
+    activeStrategy,
+    availableStrategies,
+    strategyPerformance,
+    tradingStatus,
+    metrics,
+    isLoading,
+    error,
+    switchStrategy,
+    toggleTrading,
+    isRealTimeEnabled,
+    enableRealTime,
+    disableRealTime,
+    forceRefresh,
+    isUpdating,
+    updateError,
+  } = useStrategyManagement();
 
-  // Mock data for demonstration
-  const [strategyPerformance] = useState<Record<string, StrategyPerformance>>({
-    normal: {
-      strategyId: "normal",
-      successRate: 78.5,
-      averageProfit: 45.2,
-      totalTrades: 127,
-      winRate: 68.5,
-      maxDrawdown: 12.3,
-      sharpeRatio: 1.8,
-    },
-    highPriceIncrease: {
-      strategyId: "highPriceIncrease",
-      successRate: 65.2,
-      averageProfit: 89.7,
-      totalTrades: 89,
-      winRate: 58.4,
-      maxDrawdown: 22.1,
-      sharpeRatio: 1.4,
-    },
-    conservative: {
-      strategyId: "conservative",
-      successRate: 85.3,
-      averageProfit: 18.9,
-      totalTrades: 203,
-      winRate: 79.8,
-      maxDrawdown: 6.7,
-      sharpeRatio: 2.1,
-    },
-  });
+  // Use positions monitoring hook
+  const {
+    positions: activePositions,
+    totalPnL,
+    positionCount,
+  } = useActivePositionsMonitor();
 
-  const [activePositions] = useState<ActivePosition[]>([
-    {
-      symbol: "BTCUSDT",
-      entryPrice: 45000,
-      currentPrice: 67500,
-      quantity: 0.1,
-      currentPnL: 2250,
-      currentPnLPercentage: 50,
-      triggeredLevels: 1,
-      nextTarget: 90000,
-    },
-    {
-      symbol: "ETHUSDT",
-      entryPrice: 3200,
-      currentPrice: 3840,
-      quantity: 1.5,
-      currentPnL: 960,
-      currentPnLPercentage: 20,
-      triggeredLevels: 0,
-      nextTarget: 4800,
-    },
-  ]);
+  const selectedStrategyId = activeStrategy?.id || 'normal';
 
   const handleStrategySwitch = async (strategyId: string) => {
     setLoading(true);
     try {
-      const success = strategyManager.switchStrategy(strategyId);
-      if (success) {
-        setActiveStrategy(strategyManager.getActiveStrategy());
-        setSelectedStrategyId(strategyId);
-      }
+      await switchStrategy(strategyId);
+      
+      toast({
+        title: "Strategy Updated",
+        description: `Successfully switched to ${availableStrategies.find(s => s.id === strategyId)?.name || strategyId}`,
+      });
     } catch (error) {
       console.error("Failed to switch strategy:", error);
+      toast({
+        title: "Strategy Switch Failed",
+        description: error instanceof Error ? error.message : "Failed to switch strategy",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  const handleToggleTrading = async () => {
+    try {
+      await toggleTrading(!tradingStatus.isActive);
+      
+      toast({
+        title: tradingStatus.isActive ? "Trading Stopped" : "Trading Started",
+        description: tradingStatus.isActive 
+          ? "Auto-sniping has been stopped" 
+          : "Auto-sniping has been started",
+      });
+    } catch (error) {
+      console.error("Failed to toggle trading:", error);
+      toast({
+        title: "Trading Toggle Failed",
+        description: error instanceof Error ? error.message : "Failed to toggle trading",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Show loading state
+  if (isLoading && !strategyData) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
+            <p className="text-muted-foreground">Loading strategy data...</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="h-4 bg-muted animate-pulse rounded mb-2"></div>
+                <div className="h-8 bg-muted animate-pulse rounded"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
+            <p className="text-muted-foreground">Failed to load strategy data</p>
+          </div>
+          <Button onClick={forceRefresh} variant="outline">
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {error instanceof Error ? error.message : "Failed to load strategy data"}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Fallback to empty state if no data
+  if (!activeStrategy) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
+            <p className="text-muted-foreground">No strategy data available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getStrategyBadgeColor = (strategyId: string) => {
     const performance = strategyPerformance[strategyId];
@@ -165,17 +202,70 @@ export function StrategyManager() {
           <p className="text-muted-foreground">
             Manage and optimize your multi-phase trading strategies
           </p>
+          {/* Real-time status indicator */}
+          <div className="flex items-center space-x-2 mt-2">
+            <div className="flex items-center space-x-1">
+              {isRealTimeEnabled ? (
+                <Wifi className="h-3 w-3 text-green-500" />
+              ) : (
+                <WifiOff className="h-3 w-3 text-gray-500" />
+              )}
+              <span className="text-xs text-muted-foreground">
+                {isRealTimeEnabled ? "Live Updates" : "Static Data"}
+              </span>
+            </div>
+            {updateError && (
+              <span className="text-xs text-red-500">
+                Update Failed
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex items-center space-x-2">
-          <Badge variant={isActive ? "default" : "secondary"}>
-            {isActive ? "Active" : "Inactive"}
-          </Badge>
+          {/* Real-time toggle */}
           <Button
-            onClick={() => setIsActive(!isActive)}
-            variant={isActive ? "destructive" : "default"}
+            onClick={isRealTimeEnabled ? disableRealTime : enableRealTime}
+            variant="outline"
+            size="sm"
           >
-            {isActive ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-            {isActive ? "Pause Trading" : "Start Trading"}
+            {isRealTimeEnabled ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+          </Button>
+          
+          {/* Refresh button */}
+          <Button
+            onClick={forceRefresh}
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+          >
+            <RotateCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+          
+          {/* Health status badge */}
+          <Badge variant={tradingStatus.healthStatus ? "default" : "destructive"}>
+            {tradingStatus.healthStatus ? "Healthy" : "Unhealthy"}
+          </Badge>
+          
+          {/* Trading status badge */}
+          <Badge variant={tradingStatus.isActive ? "default" : "secondary"}>
+            {tradingStatus.isActive ? "Active" : "Inactive"}
+          </Badge>
+          
+          {/* Paper trading indicator */}
+          {tradingStatus.paperTradingMode && (
+            <Badge variant="outline">
+              Paper Trading
+            </Badge>
+          )}
+          
+          {/* Main trading toggle */}
+          <Button
+            onClick={handleToggleTrading}
+            variant={tradingStatus.isActive ? "destructive" : "default"}
+            disabled={isUpdating || !tradingStatus.tradingEnabled}
+          >
+            {tradingStatus.isActive ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+            {tradingStatus.isActive ? "Pause Trading" : "Start Trading"}
           </Button>
         </div>
       </div>
@@ -201,10 +291,9 @@ export function StrategyManager() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activePositions.length}</div>
+            <div className="text-2xl font-bold">{positionCount}</div>
             <p className="text-xs text-muted-foreground">
-              {formatCurrency(activePositions.reduce((sum, pos) => sum + pos.currentPnL, 0))} total
-              PnL
+              {formatCurrency(totalPnL)} total PnL
             </p>
           </CardContent>
         </Card>
@@ -216,10 +305,10 @@ export function StrategyManager() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatPercentage(strategyPerformance[selectedStrategyId]?.successRate || 0)}
+              {formatPercentage(metrics.successRate)}
             </div>
             <Progress
-              value={strategyPerformance[selectedStrategyId]?.successRate || 0}
+              value={metrics.successRate}
               className="mt-2"
             />
           </CardContent>
@@ -227,15 +316,15 @@ export function StrategyManager() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Profit</CardTitle>
+            <CardTitle className="text-sm font-medium">Total PnL</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatPercentage(strategyPerformance[selectedStrategyId]?.averageProfit || 0)}
+            <div className={`text-2xl font-bold ${metrics.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatCurrency(metrics.totalPnL)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {strategyPerformance[selectedStrategyId]?.totalTrades || 0} total trades
+              {metrics.totalTrades} total trades
             </p>
           </CardContent>
         </Card>
@@ -253,7 +342,7 @@ export function StrategyManager() {
         {/* Strategy Selection Tab */}
         <TabsContent value="strategies" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Object.values(TRADING_STRATEGIES).map((strategy) => {
+            {availableStrategies.map((strategy) => {
               const performance = strategyPerformance[strategy.id];
               const isSelected = strategy.id === selectedStrategyId;
 
@@ -262,15 +351,20 @@ export function StrategyManager() {
                   key={strategy.id}
                   className={`cursor-pointer transition-colors ${
                     isSelected ? "ring-2 ring-primary" : "hover:bg-muted/50"
-                  }`}
-                  onClick={() => handleStrategySwitch(strategy.id)}
+                  } ${(loading || isUpdating) ? "opacity-50 pointer-events-none" : ""}`}
+                  onClick={() => !loading && !isUpdating && handleStrategySwitch(strategy.id)}
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{strategy.name}</CardTitle>
-                      <Badge variant={getStrategyBadgeColor(strategy.id)}>
-                        {isSelected ? "Active" : "Available"}
-                      </Badge>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={getStrategyBadgeColor(strategy.id)}>
+                          {isSelected ? "Active" : "Available"}
+                        </Badge>
+                        {(loading || isUpdating) && isSelected && (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-r-transparent" />
+                        )}
+                      </div>
                     </div>
                     <CardDescription>{strategy.description}</CardDescription>
                   </CardHeader>
@@ -300,7 +394,18 @@ export function StrategyManager() {
                               {formatPercentage(performance.averageProfit)}
                             </span>
                           </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Total Trades:</span>
+                            <span className="font-medium">
+                              {performance.totalTrades}
+                            </span>
+                          </div>
                         </>
+                      )}
+                      {!performance && (
+                        <div className="text-xs text-muted-foreground">
+                          No performance data available
+                        </div>
                       )}
                     </div>
 
@@ -435,13 +540,59 @@ export function StrategyManager() {
 
         {/* Performance Tab */}
         <TabsContent value="performance" className="space-y-4">
+          {/* Overall Performance Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Overall Performance Summary</CardTitle>
+              <CardDescription>
+                Real-time performance metrics from Core Trading Service
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {formatCurrency(metrics.totalPnL)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Total PnL</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {formatPercentage(metrics.successRate)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Success Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {metrics.totalTrades}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Total Trades</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {Math.floor(metrics.uptime / 1000 / 60)} min
+                  </div>
+                  <div className="text-sm text-muted-foreground">Uptime</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Individual Strategy Performance */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Object.values(strategyPerformance).map((perf) => {
-              const strategy = TRADING_STRATEGIES[perf.strategyId];
+              const strategy = availableStrategies.find(s => s.id === perf.strategyId);
+              const isActiveStrategy = perf.strategyId === selectedStrategyId;
+              
               return (
-                <Card key={perf.strategyId}>
+                <Card key={perf.strategyId} className={isActiveStrategy ? "ring-2 ring-primary" : ""}>
                   <CardHeader>
-                    <CardTitle className="text-lg">{strategy?.name || perf.strategyId}</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{strategy?.name || perf.strategyId}</CardTitle>
+                      {isActiveStrategy && (
+                        <Badge variant="default">Active</Badge>
+                      )}
+                    </div>
                     <CardDescription>Performance Metrics</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -492,6 +643,25 @@ export function StrategyManager() {
               );
             })}
           </div>
+
+          {/* Performance Notice */}
+          {Object.keys(strategyPerformance).length === 0 && (
+            <Card>
+              <CardContent className="text-center py-8">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Performance Data Yet</h3>
+                <p className="text-muted-foreground mb-4">
+                  Performance metrics will appear here once trading strategies start executing trades.
+                </p>
+                <Button 
+                  onClick={handleToggleTrading} 
+                  disabled={tradingStatus.isActive || !tradingStatus.tradingEnabled}
+                >
+                  {tradingStatus.isActive ? "Trading Active" : "Start Trading"}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Settings Tab */}

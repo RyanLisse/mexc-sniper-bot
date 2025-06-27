@@ -7,8 +7,8 @@
 
 import type { EventEmitter } from "events";
 import { z } from "zod";
-import type { ComprehensiveSafetyCoordinator } from "../../../risk/comprehensive-safety-coordinator";
-import type { UnifiedMexcServiceV2 } from "../../api/unified-mexc-service-v2";
+import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
+import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 // ============================================================================
 // Core Configuration Types

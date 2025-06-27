@@ -279,11 +279,11 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       );
     }
 
-    // Validate configuration using the auto-sniping core
-    const { OptimizedAutoSnipingCore } = await import(
-      "@/src/services/trading/optimized-auto-sniping-core"
+    // Validate configuration using the consolidated core trading service
+    const { getCoreTrading } = await import(
+      "@/src/services/trading/consolidated/core-trading/base-service"
     );
-    const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
+    const coreTrading = getCoreTrading();
 
     // Perform validation
     const validationResult = await validateAutoSnipingConfig(config);
@@ -311,16 +311,16 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
 
     // Update the configuration
     try {
-      autoSnipingService.updateConfig(config);
+      await coreTrading.updateConfig(config);
 
       // Get updated configuration to confirm changes
-      const updatedConfig = await autoSnipingService.getConfig();
+      const status = await coreTrading.getServiceStatus();
 
       return Response.json(
         createSuccessResponse({
           message: "Configuration updated successfully",
           updatedFields: Object.keys(config),
-          currentConfig: updatedConfig,
+          currentStatus: status,
           validation: validationResult,
         }),
       );

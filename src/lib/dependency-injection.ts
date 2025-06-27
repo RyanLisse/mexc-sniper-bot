@@ -336,7 +336,6 @@ export const ServiceIdentifiers = {
   // Trading services
   MEXC_SERVICE: Symbol("MexcService"),
   TRADING_STRATEGY_MANAGER: Symbol("TradingStrategyManager"),
-  MULTI_PHASE_EXECUTOR: Symbol("MultiPhaseExecutor"),
 
   // Data services
   DATA_FETCHER: Symbol("DataFetcher"),

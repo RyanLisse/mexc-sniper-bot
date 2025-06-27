@@ -13,13 +13,13 @@ import type {
   SafetyAlert,
   SafetyConfiguration,
 } from "../../../schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingCore } from "../../../trading/optimized-auto-sniping-core";
+import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
 
 describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   let safetyService: RealTimeSafetyMonitoringService;
-  let mockExecutionService: Partial<OptimizedAutoSnipingCore>;
+  let mockCoreTrading: Partial<CoreTradingService>;
   let mockPatternMonitoring: Partial<PatternMonitoringService>;
   let mockEmergencySystem: Partial<EmergencySafetySystem>;
   let mockMexcService: Partial<UnifiedMexcServiceV2>;
@@ -29,41 +29,28 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
     vi.clearAllMocks();
 
     // Create mock instances using partial objects
-    mockExecutionService = {
-      getExecutionReport: vi.fn().mockResolvedValue({
-        stats: {
-          currentDrawdown: 5,
-          maxDrawdown: 10,
-          successRate: 75,
-          averageSlippage: 0.5,
-          totalPnl: "500",
-        },
-        activePositions: [],
-        recentExecutions: [],
-        systemHealth: {
-          apiConnection: true,
-        },
+    mockCoreTrading = {
+      getPerformanceMetrics: vi.fn().mockResolvedValue({
+        totalTrades: 100,
+        successfulTrades: 75,
+        failedTrades: 25,
+        successRate: 75,
+        totalPnL: 500,
+        maxDrawdown: 10,
+        averageExecutionTime: 1500,
       }),
       getActivePositions: vi.fn().mockReturnValue([]),
-      getConfig: vi.fn().mockReturnValue({
-        thresholds: {
-          maxDrawdownPercentage: 20,
-          maxPortfolioConcentration: 10,
-          minSuccessRatePercentage: 70,
-          maxConsecutiveLosses: 5,
-          maxSlippagePercentage: 2,
-          minPatternConfidence: 70,
-          maxPatternDetectionFailures: 3,
-          maxApiLatencyMs: 1000,
-          minApiSuccessRate: 95,
-          maxMemoryUsagePercentage: 80,
-        },
-        enabled: true,
-        autoActionEnabled: false,
-        emergencyMode: false,
+      getStatus: vi.fn().mockReturnValue({
+        tradingEnabled: true,
+        autoSnipingEnabled: true,
+        maxPositions: 5,
+        paperTradingMode: true,
+        currentRiskLevel: "low",
+        dailyPnL: 0,
+        dailyVolume: 0,
       }),
-      stopExecution: vi.fn().mockResolvedValue(undefined),
-      emergencyCloseAll: vi.fn().mockResolvedValue(0),
+      stopAutoSniping: vi.fn().mockResolvedValue({ success: true }),
+      closeAllPositions: vi.fn().mockResolvedValue({ success: true, data: { closedCount: 0 } }),
     };
 
     mockPatternMonitoring = {
@@ -92,7 +79,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
     // Inject mocked dependencies
     safetyService.injectDependencies({
-      executionService: mockExecutionService as OptimizedAutoSnipingCore,
+      coreTrading: mockCoreTrading as CoreTradingService,
       patternMonitoring: mockPatternMonitoring as PatternMonitoringService,
       emergencySystem: mockEmergencySystem as EmergencySafetySystem,
       mexcService: mockMexcService as UnifiedMexcServiceV2,
@@ -283,8 +270,8 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
       expect(actions.length).toBeGreaterThan(0);
 
       // Check that emergency actions were executed
-      expect(mockExecutionService.stopExecution).toHaveBeenCalled();
-      expect(mockExecutionService.emergencyCloseAll).toHaveBeenCalled();
+      expect(mockCoreTrading.stopAutoSniping).toHaveBeenCalled();
+      expect(mockCoreTrading.closeAllPositions).toHaveBeenCalled();
 
       // Verify action properties
       actions.forEach((action) => {
@@ -298,8 +285,8 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
     it("should handle emergency response failures gracefully", async () => {
       // Mock service failure
-      mockExecutionService.stopExecution.mockRejectedValue(new Error("Service unavailable"));
-      mockExecutionService.emergencyCloseAll.mockRejectedValue(new Error("Service unavailable"));
+      mockCoreTrading.stopAutoSniping.mockRejectedValue(new Error("Service unavailable"));
+      mockCoreTrading.closeAllPositions.mockRejectedValue(new Error("Service unavailable"));
 
       const actions = await safetyService.triggerEmergencyResponse("Test failure handling");
 
@@ -318,20 +305,15 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
     });
 
     it("should return false for high risk scenarios", async () => {
-      // Mock high-risk execution report
-      mockExecutionService.getExecutionReport.mockResolvedValue({
-        stats: {
-          currentDrawdown: 50, // High drawdown
-          maxDrawdown: 60,
-          successRate: 30, // Low success rate
-          averageSlippage: 5, // High slippage
-          totalPnl: "-2000", // Losses
-        },
-        activePositions: [],
-        recentExecutions: [],
-        systemHealth: {
-          apiConnection: false, // Poor connectivity
-        },
+      // Mock high-risk performance metrics
+      mockCoreTrading.getPerformanceMetrics.mockResolvedValue({
+        totalTrades: 100,
+        successfulTrades: 30,
+        failedTrades: 70,
+        successRate: 30, // Low success rate
+        totalPnL: -2000, // Losses
+        maxDrawdown: 60, // High drawdown
+        averageExecutionTime: 5000, // High latency
       });
 
       const isSafe = await safetyService.isSystemSafe();
@@ -456,7 +438,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   describe("Error Handling and Resilience", () => {
     it("should handle service failures gracefully", async () => {
       // Mock service failures
-      mockExecutionService.getExecutionReport.mockRejectedValue(new Error("Service unavailable"));
+      mockCoreTrading.getPerformanceMetrics.mockRejectedValue(new Error("Service unavailable"));
       mockPatternMonitoring.getMonitoringReport.mockRejectedValue(
         new Error("Pattern service down")
       );

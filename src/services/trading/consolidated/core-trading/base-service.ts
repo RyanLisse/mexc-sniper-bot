@@ -6,9 +6,9 @@
  */
 
 import { EventEmitter } from "events";
-import { toSafeError } from "../../../lib/error-type-utils";
-import { ComprehensiveSafetyCoordinator } from "../../../risk/comprehensive-safety-coordinator";
-import { UnifiedMexcServiceV2 } from "../../api/unified-mexc-service-v2";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { AutoSnipingModule } from "./auto-sniping";
 // Import modules
 import { ManualTradingModule } from "./manual-trading";

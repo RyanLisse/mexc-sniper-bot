@@ -78,8 +78,8 @@ export async function createCoordinationSystem(options?: {
     performanceCollector
   );
 
-  // Initialize the orchestrator (registers workflows and starts monitoring)
-  await orchestrator.initialize();
+  // Note: Orchestrator initialization is now handled by the coordination manager
+  // to ensure proper timing with agent registration (prevents workflow validation warnings)
 
   return {
     agentRegistry,

@@ -293,6 +293,10 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
 // Export schema for use in other files
 export * from "./schema";
 
+// Import necessary schema elements for user preferences
+import { userPreferences } from "./schemas/auth";
+import { eq } from "drizzle-orm";
+
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
@@ -426,6 +430,68 @@ export async function monitoredQuery<T>(
       includeQuery: !!options?.query,
     }
   );
+}
+
+// User Preferences Database Operations
+export async function getUserPreferences(userId: string): Promise<any | null> {
+  try {
+    const result = await executeWithRetry(
+      async () => db
+        .select()
+        .from(userPreferences)
+        .where(eq(userPreferences.userId, userId))
+        .limit(1),
+      'getUserPreferences'
+    ) as any[];
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    const prefs = result[0];
+    
+    // Safe pattern parsing with fallbacks
+    let patternParts: number[] = [2, 2, 4]; // Default fallback
+    try {
+      if (prefs.readyStatePattern && typeof prefs.readyStatePattern === 'string') {
+        const parts = prefs.readyStatePattern.split(",").map(Number);
+        if (parts.length >= 3 && parts.every((p: number) => !isNaN(p) && p > 0)) {
+          patternParts = parts;
+        }
+      }
+    } catch (error) {
+      getLogger().warn('Failed to parse readyStatePattern, using defaults:', { 
+        pattern: prefs.readyStatePattern, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+
+    // Safe JSON parsing helper
+    const safeJsonParse = (jsonString: string | null | undefined, fallback: any = undefined) => {
+      if (!jsonString || typeof jsonString !== 'string') return fallback;
+      try {
+        return JSON.parse(jsonString);
+      } catch (error) {
+        getLogger().warn('Failed to parse JSON field:', { 
+          jsonString: jsonString.substring(0, 100), 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        });
+        return fallback;
+      }
+    };
+
+    return {
+      ...prefs,
+      // Parse JSON fields safely
+      takeProfitLevelsConfig: safeJsonParse(prefs.takeProfitLevelsConfig),
+      customExitStrategy: safeJsonParse(prefs.customExitStrategy),
+      // Include parsed pattern for convenience
+      readyStatePatternParts: patternParts,
+    };
+  } catch (error) {
+    getLogger().error('Failed to get user preferences:', { userId, error });
+    throw error;
+  }
 }
 
 export async function closeDatabase() {

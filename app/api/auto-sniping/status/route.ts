@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { OptimizedAutoSnipingCore } from "@/src/services/trading/auto-sniping/core-orchestrator";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
@@ -8,14 +8,26 @@ import {
 } from "@/src/lib/api-response";
 import { handleApiError } from "@/src/lib/error-handler";
 
-const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
+const coreTrading = getCoreTrading();
 
 export async function GET() {
   try {
     console.info('[API] Auto-sniping status request received');
     
     // Get current execution report which includes unified status
-    const report = await autoSnipingService.getExecutionReport();
+    let report;
+    try {
+      report = await coreTrading.getServiceStatus();
+    } catch (error) {
+      // If service is not initialized, initialize it first
+      if (error instanceof Error && error.message.includes('not initialized')) {
+        console.info('[API] Core trading service not initialized, initializing...');
+        await coreTrading.initialize();
+        report = await coreTrading.getServiceStatus();
+      } else {
+        throw error;
+      }
+    }
     
     // Structure the status response to match frontend expectations
     const statusData = {

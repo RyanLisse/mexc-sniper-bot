@@ -6,9 +6,9 @@
  */
 
 import { and, eq, lt } from "drizzle-orm";
-import { db } from "../../../db";
-import { snipeTargets } from "../../../db/schemas/trading";
-import { toSafeError } from "../../../lib/error-type-utils";
+import { db } from "@/src/db";
+import { snipeTargets } from "@/src/db/schemas/trading";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import type {
   AutoSnipeTarget,
   ModuleContext,

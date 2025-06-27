@@ -17,7 +17,12 @@ import {
   Settings,
   AlertCircle,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Zap,
+  CheckCircle,
+  XCircle,
+  Wifi,
+  WifiOff
 } from "lucide-react";
 import { useUserPreferences, useUpdateUserPreferences } from "@/src/hooks/use-user-preferences";
 
@@ -27,6 +32,7 @@ import { UnifiedTakeProfitSettings } from "@/src/components/unified-take-profit-
 import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "@/src/hooks/use-user-preferences";
 import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "@/src/types/take-profit-strategies";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useTradingSettingsSync, formatSyncStatus, calculateSyncHealthScore } from "@/src/hooks/use-trading-settings-sync";
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, isLoading: userLoading } = useKindeBrowserClient();
@@ -43,6 +49,20 @@ export default function SettingsPage() {
   // Multi-level take profit hooks
   const { config: multiLevelConfig } = useMultiLevelTakeProfit(userId || "");
   const updateMultiLevelTakeProfit = useUpdateMultiLevelTakeProfit();
+
+  // Trading settings sync hooks
+  const {
+    settingsStatus,
+    syncToExecutionSystem,
+    updateExecutionSettings,
+    isInSync,
+    syncHealth,
+    isUpdating: isSyncing,
+    updateError: syncError,
+    forceRefresh: refreshSyncStatus,
+    isExecutionSystemActive,
+    isAutoSnipingActive,
+  } = useTradingSettingsSync(userId);
 
   // State for form values
   const [isDirty, setIsDirty] = useState(false);
@@ -185,6 +205,25 @@ export default function SettingsPage() {
     userId
   ]);
 
+  // Sync settings to execution system
+  const handleSyncToExecution = useCallback(async () => {
+    try {
+      await syncToExecutionSystem();
+      
+      toast({
+        title: "Settings synced",
+        description: "Your settings have been applied to the trading execution system.",
+      });
+    } catch (error) {
+      console.error("Failed to sync settings:", error);
+      toast({
+        title: "Sync failed",
+        description: error instanceof Error ? error.message : "Failed to sync settings to execution system.",
+        variant: "destructive",
+      });
+    }
+  }, [syncToExecutionSystem, toast]);
+
   if (prefsLoading) {
     return (
       <DashboardLayout>
@@ -208,13 +247,84 @@ export default function SettingsPage() {
             <p className="text-muted-foreground mt-1">
               Configure your trading parameters, risk management, and automation preferences
             </p>
+            {/* Sync status indicator */}
+            <div className="flex items-center space-x-4 mt-3">
+              <div className="flex items-center space-x-2">
+                {isInSync ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-orange-500" />
+                )}
+                <span className="text-sm text-muted-foreground">
+                  Execution System: {formatSyncStatus(settingsStatus?.syncStatus)}
+                </span>
+              </div>
+              
+              {isExecutionSystemActive && (
+                <div className="flex items-center space-x-2">
+                  <Wifi className="h-4 w-4 text-green-500" />
+                  <span className="text-sm text-green-600 font-medium">
+                    Trading Active
+                  </span>
+                </div>
+              )}
+              
+              {isAutoSnipingActive && (
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm text-blue-600 font-medium">
+                    Auto-Sniping Active
+                  </span>
+                </div>
+              )}
+              
+              {syncError && (
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-sm text-red-600">
+                    Sync Error
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Sync health indicator */}
+            <div className="flex items-center gap-2">
+              {settingsStatus && (
+                <Badge 
+                  variant={calculateSyncHealthScore(syncHealth) > 80 ? "default" : "destructive"}
+                  className="text-xs"
+                >
+                  Health: {calculateSyncHealthScore(syncHealth)}%
+                </Badge>
+              )}
+            </div>
+            
             {isDirty && (
               <Badge variant="outline" className="border-yellow-500 text-yellow-600">
                 Unsaved changes
               </Badge>
             )}
+            
+            {!isInSync && !isDirty && (
+              <Badge variant="outline" className="border-orange-500 text-orange-600">
+                Out of sync
+              </Badge>
+            )}
+            
+            {/* Sync to execution button */}
+            <Button
+              onClick={handleSyncToExecution}
+              disabled={isSyncing || !userId}
+              variant="outline"
+              size="sm"
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              {isSyncing ? "Syncing..." : "Sync to Execution"}
+            </Button>
+            
+            {/* Save settings button */}
             <Button
               onClick={handleSave}
               disabled={updatePreferencesMutation.isPending || !isDirty}

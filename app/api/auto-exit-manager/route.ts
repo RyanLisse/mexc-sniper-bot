@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exitManagerService } from "@/src/services/trading/optimized-auto-exit-manager";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
 export async function GET() {
   try {
-    const status = exitManagerService.getStatus();
+    const coreTrading = getCoreTrading();
+    const status = await coreTrading.getStatus();
     
     return NextResponse.json({
       success: true,

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { Position } from "@/src/services/trading/consolidated/core-trading.types";
+import type { ExecutionPosition } from "../schemas/validation-schemas";
 import { PnLIndicator } from "./pnl-indicator";
 
 interface PositionsTabProps {

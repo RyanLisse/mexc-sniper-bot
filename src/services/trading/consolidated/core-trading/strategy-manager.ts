@@ -5,7 +5,7 @@
  * Extracted from the original monolithic core-trading.service.ts for modularity.
  */
 
-import { toSafeError } from "../../../lib/error-type-utils";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import type { ModuleContext, ModuleState, ServiceResponse, TradingStrategy } from "./types";
 
 export class StrategyManager {

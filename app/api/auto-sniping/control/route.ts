@@ -14,7 +14,7 @@
 import { NextRequest } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
-import { AutoSnipingOrchestrator } from '@/src/services/trading/auto-sniping-orchestrator';
+import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 
 /**
  * POST /api/auto-sniping/control
@@ -34,12 +34,12 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       );
     }
 
-    const orchestrator = AutoSnipingOrchestrator.getInstance();
+    const coreTrading = getCoreTrading();
 
     switch (action) {
       case 'start': {
         console.info('[Auto-Sniping Control] Starting auto-sniping...');
-        const result = await orchestrator.startAutoSniping();
+        const result = await coreTrading.startAutoSniping();
         
         if (result.success) {
           return Response.json(createSuccessResponse({
@@ -63,7 +63,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
       case 'stop': {
         console.info('[Auto-Sniping Control] Stopping auto-sniping...');
-        const result = await orchestrator.stopAutoSniping();
+        const result = await coreTrading.stopAutoSniping();
         
         if (result.success) {
           return Response.json(createSuccessResponse({
@@ -171,7 +171,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
   try {
-    const orchestrator = AutoSnipingOrchestrator.getInstance();
+    const coreTrading = getCoreTrading();
     const status = orchestrator.getStatus();
     const metrics = orchestrator.getMetrics();
 
@@ -209,7 +209,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
   try {
     const config = await request.json();
     
-    const orchestrator = AutoSnipingOrchestrator.getInstance();
+    const coreTrading = getCoreTrading();
     const result = await orchestrator.updateConfiguration(config);
     
     if (result.success) {
@@ -252,7 +252,7 @@ export const DELETE = apiAuthWrapper(async (request: NextRequest) => {
     const stopReason = reason || 'Emergency stop via DELETE endpoint';
     console.warn(`[Auto-Sniping Control] Emergency stop via DELETE: ${stopReason}`);
     
-    const orchestrator = AutoSnipingOrchestrator.getInstance();
+    const coreTrading = getCoreTrading();
     await orchestrator.emergencyStop(stopReason);
     
     return Response.json(createSuccessResponse({

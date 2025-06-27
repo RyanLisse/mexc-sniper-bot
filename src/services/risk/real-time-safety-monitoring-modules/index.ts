@@ -34,7 +34,7 @@ import {
   EmergencyStopCoordinator,
   type EmergencyStopEvent,
 } from "@/src/services/risk/emergency-stop-coordinator";
-import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 import {
   type AlertGenerationData,
   AlertManagement,

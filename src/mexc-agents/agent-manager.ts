@@ -28,6 +28,13 @@ export class AgentManager {
       console.debug("[agent-manager]", message, context || ""),
   };
 
+  // Health check optimization: cache health status for 30 seconds
+  private healthCache: {
+    timestamp: number;
+    data: any;
+  } | null = null;
+  private readonly HEALTH_CACHE_TTL = 30000; // 30 seconds
+
   // Core trading agents
   private mexcApiAgent: MexcApiAgent;
   private patternDiscoveryAgent: PatternDiscoveryAgent;
@@ -93,7 +100,7 @@ export class AgentManager {
     return this.errorRecoveryAgent;
   }
 
-  // Health check for all agents
+  // Health check for all agents with caching optimization
   async checkAgentHealth(): Promise<{
     // Core trading agents
     mexcApi: boolean;
@@ -111,67 +118,74 @@ export class AgentManager {
       openAiStatus: string;
       databaseStatus: string;
     };
+    cached?: boolean;
+    responseTime?: number;
   }> {
-    try {
-      // Get real health status for core dependencies
-      const [mexcHealth, openAiHealth, dbHealth] = await Promise.allSettled([
-        checkMexcApiHealth(),
-        checkOpenAiHealth(),
-        checkDatabaseHealth(),
-      ]);
+    const startTime = Date.now();
 
-      const mexcApiStatus =
-        mexcHealth.status === "fulfilled" ? mexcHealth.value.status : "unhealthy";
-      const openAiStatus =
-        openAiHealth.status === "fulfilled" ? openAiHealth.value.status : "unhealthy";
-      const databaseStatus = dbHealth.status === "fulfilled" ? dbHealth.value.status : "unhealthy";
-
-      // Check individual agent health based on their dependencies
-      const agentHealthChecks = await Promise.allSettled([
-        // Core trading agents
-        Promise.resolve(mexcApiStatus !== "unhealthy"), // mexcApiAgent depends on MEXC API
-        Promise.resolve(openAiStatus !== "unhealthy"), // patternDiscoveryAgent depends on OpenAI
-        Promise.resolve(mexcApiStatus !== "unhealthy"), // calendarAgent depends on MEXC API
-        Promise.resolve(mexcApiStatus !== "unhealthy" && openAiStatus !== "unhealthy"), // symbolAnalysisAgent depends on both
-        Promise.resolve(openAiStatus !== "unhealthy"), // strategyAgent depends on OpenAI
-        // Safety agents (self-contained, can work independently)
-        this.simulationAgent
-          .checkAgentHealth()
-          .then((result) => result.healthy),
-        this.riskManagerAgent.checkAgentHealth().then((result) => result.healthy),
-        this.reconciliationAgent.checkAgentHealth().then((result) => result.healthy),
-        this.errorRecoveryAgent.checkAgentHealth().then((result) => result.healthy),
-      ]);
-
+    // Check cache first for performance optimization
+    if (this.healthCache && (Date.now() - this.healthCache.timestamp) < this.HEALTH_CACHE_TTL) {
+      this.logger.debug("[AgentManager] Returning cached health status");
       return {
-        // Core trading agents
-        mexcApi: agentHealthChecks[0].status === "fulfilled" && agentHealthChecks[0].value === true,
-        patternDiscovery:
-          agentHealthChecks[1].status === "fulfilled" && agentHealthChecks[1].value === true,
-        calendar:
-          agentHealthChecks[2].status === "fulfilled" && agentHealthChecks[2].value === true,
-        symbolAnalysis:
-          agentHealthChecks[3].status === "fulfilled" && agentHealthChecks[3].value === true,
-        strategy:
-          agentHealthChecks[4].status === "fulfilled" && agentHealthChecks[4].value === true,
-        // Safety agents
-        simulation:
-          agentHealthChecks[5].status === "fulfilled" && agentHealthChecks[5].value === true,
-        riskManager:
-          agentHealthChecks[6].status === "fulfilled" && agentHealthChecks[6].value === true,
-        reconciliation:
-          agentHealthChecks[7].status === "fulfilled" && agentHealthChecks[7].value === true,
-        errorRecovery:
-          agentHealthChecks[8].status === "fulfilled" && agentHealthChecks[8].value === true,
-        details: {
-          mexcApiStatus,
-          openAiStatus,
-          databaseStatus,
-        },
+        ...this.healthCache.data,
+        cached: true,
+        responseTime: Date.now() - startTime
       };
+    }
+
+    try {
+      // Optimized batch health checks with timeout
+      const healthCheckPromises = Promise.allSettled([
+        this.checkCoreSystemsHealth(),
+        this.checkSafetyAgentsHealth(),
+      ]);
+
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Health check timeout")), 3000)
+      );
+
+      const [coreSystemsResult, safetyAgentsResult] = await Promise.race([
+        healthCheckPromises,
+        timeoutPromise
+      ]) as PromiseSettledResult<any>[];
+
+      const coreSystemsHealth = coreSystemsResult.status === "fulfilled" ? coreSystemsResult.value : null;
+      const safetyAgentsHealth = safetyAgentsResult.status === "fulfilled" ? safetyAgentsResult.value : null;
+
+      const result = {
+        // Core trading agents (based on system dependencies)
+        mexcApi: coreSystemsHealth?.mexcApiStatus !== "unhealthy",
+        patternDiscovery: coreSystemsHealth?.openAiStatus !== "unhealthy",
+        calendar: coreSystemsHealth?.mexcApiStatus !== "unhealthy",
+        symbolAnalysis: coreSystemsHealth?.mexcApiStatus !== "unhealthy" && coreSystemsHealth?.openAiStatus !== "unhealthy",
+        strategy: coreSystemsHealth?.openAiStatus !== "unhealthy",
+        // Safety agents
+        simulation: safetyAgentsHealth?.simulation || false,
+        riskManager: safetyAgentsHealth?.riskManager || false,
+        reconciliation: safetyAgentsHealth?.reconciliation || false,
+        errorRecovery: safetyAgentsHealth?.errorRecovery || false,
+        details: {
+          mexcApiStatus: coreSystemsHealth?.mexcApiStatus || "error",
+          openAiStatus: coreSystemsHealth?.openAiStatus || "error",
+          databaseStatus: coreSystemsHealth?.databaseStatus || "error",
+        },
+        cached: false,
+        responseTime: Date.now() - startTime
+      };
+
+      // Cache the result for future requests
+      this.healthCache = {
+        timestamp: Date.now(),
+        data: result
+      };
+
+      this.logger.debug(`[AgentManager] Health check completed in ${result.responseTime}ms`);
+      return result;
+
     } catch (error) {
-      logger.error("[AgentManager] Health check failed:", error);
-      return {
+      this.logger.error("[AgentManager] Health check failed:", error);
+      const errorResult = {
         // Core trading agents
         mexcApi: false,
         patternDiscovery: false,
@@ -188,8 +202,76 @@ export class AgentManager {
           openAiStatus: "error",
           databaseStatus: "error",
         },
+        cached: false,
+        responseTime: Date.now() - startTime
       };
+
+      // Cache error result for a shorter time (5 seconds)
+      this.healthCache = {
+        timestamp: Date.now() - (this.HEALTH_CACHE_TTL - 5000),
+        data: errorResult
+      };
+
+      return errorResult;
     }
+  }
+
+  /**
+   * Optimized core systems health check
+   */
+  private async checkCoreSystemsHealth(): Promise<{
+    mexcApiStatus: string;
+    openAiStatus: string;
+    databaseStatus: string;
+  }> {
+    const [mexcHealth, openAiHealth, dbHealth] = await Promise.allSettled([
+      checkMexcApiHealth(),
+      checkOpenAiHealth(),
+      checkDatabaseHealth(),
+    ]);
+
+    return {
+      mexcApiStatus: mexcHealth.status === "fulfilled" ? mexcHealth.value.status : "unhealthy",
+      openAiStatus: openAiHealth.status === "fulfilled" ? openAiHealth.value.status : "unhealthy",
+      databaseStatus: dbHealth.status === "fulfilled" ? dbHealth.value.status : "unhealthy",
+    };
+  }
+
+  /**
+   * Optimized safety agents health check
+   */
+  private async checkSafetyAgentsHealth(): Promise<{
+    simulation: boolean;
+    riskManager: boolean;
+    reconciliation: boolean;
+    errorRecovery: boolean;
+  }> {
+    // Batch safety agent health checks with shorter timeout
+    const agentHealthChecks = await Promise.allSettled([
+      Promise.race([
+        this.simulationAgent.checkAgentHealth().then((result) => result.healthy),
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+      ]),
+      Promise.race([
+        this.riskManagerAgent.checkAgentHealth().then((result) => result.healthy),
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+      ]),
+      Promise.race([
+        this.reconciliationAgent.checkAgentHealth().then((result) => result.healthy),
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+      ]),
+      Promise.race([
+        this.errorRecoveryAgent.checkAgentHealth().then((result) => result.healthy),
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+      ]),
+    ]);
+
+    return {
+      simulation: agentHealthChecks[0].status === "fulfilled" && agentHealthChecks[0].value === true,
+      riskManager: agentHealthChecks[1].status === "fulfilled" && agentHealthChecks[1].value === true,
+      reconciliation: agentHealthChecks[2].status === "fulfilled" && agentHealthChecks[2].value === true,
+      errorRecovery: agentHealthChecks[3].status === "fulfilled" && agentHealthChecks[3].value === true,
+    };
   }
 
   // Get agent status summary
@@ -293,6 +375,36 @@ export class AgentManager {
     }
   }
 
+  /**
+   * Clear health cache to force fresh health check
+   */
+  clearHealthCache(): void {
+    this.healthCache = null;
+    this.logger.debug("[AgentManager] Health cache cleared");
+  }
+
+  /**
+   * Get health cache status for monitoring
+   */
+  getHealthCacheStatus(): {
+    isCached: boolean;
+    cacheAge: number;
+    cacheValid: boolean;
+  } {
+    if (!this.healthCache) {
+      return { isCached: false, cacheAge: 0, cacheValid: false };
+    }
+
+    const cacheAge = Date.now() - this.healthCache.timestamp;
+    const cacheValid = cacheAge < this.HEALTH_CACHE_TTL;
+
+    return {
+      isCached: true,
+      cacheAge,
+      cacheValid
+    };
+  }
+
   // Toggle simulation mode across all relevant systems
   async toggleSimulationMode(enabled: boolean): Promise<void> {
     this.simulationAgent.toggleSimulation(enabled);
@@ -307,6 +419,9 @@ export class AgentManager {
         },
       });
     }
+
+    // Clear health cache after configuration changes
+    this.clearHealthCache();
   }
 
   // Emergency halt coordination across all safety systems
@@ -318,6 +433,6 @@ export class AgentManager {
 
     // Get current system health for monitoring
     const systemHealth = this.errorRecoveryAgent.getSystemHealth();
-    logger.info(`[Emergency Mode] System health status:`, systemHealth);
+    this.logger.info(`[Emergency Mode] System health status:`, systemHealth);
   }
 }

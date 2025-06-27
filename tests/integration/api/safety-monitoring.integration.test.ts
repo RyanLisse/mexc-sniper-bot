@@ -52,35 +52,30 @@ describe("Safety Monitoring API Integration Tests", () => {
       getDb: vi.fn().mockReturnValue({}),
     }));
 
-    vi.mock("@/src/services/trading/optimized-auto-sniping-core", () => ({
-      OptimizedAutoSnipingCore: {
-        getInstance: vi.fn().mockReturnValue({
-          getActivePositions: vi.fn().mockReturnValue([]),
-          stopExecution: vi.fn().mockResolvedValue(true),
-          emergencyCloseAll: vi.fn().mockResolvedValue(0),
-          getConfig: vi.fn().mockReturnValue({
-            enabled: true,
-            maxPositions: 5,
-            maxDailyTrades: 10,
-            positionSizeUSDT: 100,
-            minConfidence: 80,
-            allowedPatternTypes: ["ready_state"],
-            emergencyStopEnabled: true,
-            riskManagement: {
-              maxDrawdown: 10,
-              maxDailyLoss: 5,
-              positionSizing: "fixed"
-            }
-          }),
-          getExecutionReport: vi.fn().mockResolvedValue({
-            status: 'idle',
-            stats: { totalTrades: 0, successfulTrades: 0, failedTrades: 0 },
-            activePositions: [],
-            config: {},
-            health: { overall: 'healthy', apiConnection: true, patternEngine: true }
-          }),
+    vi.mock("@/src/services/trading/consolidated/core-trading/base-service", () => ({
+      getCoreTrading: vi.fn().mockReturnValue({
+        getActivePositions: vi.fn().mockResolvedValue([]),
+        stopAutoSniping: vi.fn().mockResolvedValue({ success: true }),
+        closeAllPositions: vi.fn().mockResolvedValue({ success: true, data: { closedCount: 0 }}),
+        getServiceStatus: vi.fn().mockResolvedValue({
+          tradingEnabled: true,
+          autoSnipingEnabled: true,
+          maxPositions: 5,
+          paperTradingMode: true,
+          currentRiskLevel: "low",
+          dailyPnL: 0,
+          dailyVolume: 0
         }),
-      },
+        getPerformanceMetrics: vi.fn().mockResolvedValue({
+          totalTrades: 0,
+          successfulTrades: 0,
+          failedTrades: 0,
+          successRate: 0,
+          totalPnL: 0,
+          maxDrawdown: 0,
+          averageExecutionTime: 0
+        }),
+      }),
     }));
 
     vi.mock("@/src/services/notification/pattern-monitoring-service", () => ({

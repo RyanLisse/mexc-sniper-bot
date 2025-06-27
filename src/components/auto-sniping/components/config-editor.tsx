@@ -12,13 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import type { AutoSnipingConfig } from "@/src/services/optimized-auto-sniping-core";
+import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading.types";
 import { type AutoSnipingConfigForm, configFormSchema } from "../schemas/validation-schemas";
 
 interface ConfigEditorProps {
-  config: AutoSnipingConfig | null;
+  config: CoreTradingConfig | null;
   configEditMode: boolean;
-  tempConfig: Partial<AutoSnipingConfig>;
+  tempConfig: Partial<CoreTradingConfig>;
   isUpdatingConfig: boolean;
   onConfigChange: (field: string, value: string | number | boolean) => void;
   onSaveConfig: () => void;
@@ -43,7 +43,7 @@ export function ConfigEditor({
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   const getConfigValue = useCallback(
-    <K extends keyof AutoSnipingConfig>(field: K): AutoSnipingConfig[K] | undefined => {
+    <K extends keyof CoreTradingConfig>(field: K): CoreTradingConfig[K] | undefined => {
       return configEditMode ? (tempConfig[field] ?? config?.[field]) : config?.[field];
     },
     [configEditMode, tempConfig, config]
