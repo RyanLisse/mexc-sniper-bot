@@ -8,6 +8,144 @@
 import { vi } from 'vitest';
 
 // ============================================================================
+// Next.js Router Mocks
+// ============================================================================
+
+/**
+ * Initialize Next.js navigation mocks
+ */
+export function initializeNextJSMocks(): void {
+  vi.mock('next/navigation', () => ({
+    useRouter: vi.fn(() => ({
+      push: vi.fn(),
+      replace: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+      prefetch: vi.fn(),
+    })),
+    usePathname: vi.fn(() => '/'),
+    useSearchParams: vi.fn(() => new URLSearchParams()),
+    useParams: vi.fn(() => ({})),
+    notFound: vi.fn(),
+    redirect: vi.fn(),
+  }));
+}
+
+// ============================================================================
+// Kinde Auth SDK Mocks (to prevent Node.js environment errors)
+// ============================================================================
+
+/**
+ * Initialize Kinde TypeScript SDK mocks to prevent Node.js environment check failures
+ */
+export function initializeKindeSDKMocks(): void {
+  // Mock core Kinde TypeScript SDK
+  vi.mock('@kinde-oss/kinde-typescript-sdk', () => ({
+    createKindeServerClient: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null),
+      getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
+      getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
+      getOrganization: vi.fn().mockResolvedValue(null),
+      getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
+      getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+      getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+      getIdToken: vi.fn().mockResolvedValue(null),
+      getIdTokenRaw: vi.fn().mockResolvedValue(null),
+      getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+      getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+      getRoles: vi.fn().mockResolvedValue({ roles: [] }),
+      logout: vi.fn().mockResolvedValue(null),
+      createOrg: vi.fn().mockResolvedValue(null)
+    })),
+    createKindeBrowserClient: vi.fn(() => ({
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+      error: null
+    }))
+  }));
+
+  // Mock Kinde Auth NextJS server
+  vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
+    getKindeServerSession: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null),
+      getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
+      getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
+      getOrganization: vi.fn().mockResolvedValue(null),
+      getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
+      getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+      getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+      getIdToken: vi.fn().mockResolvedValue(null),
+      getIdTokenRaw: vi.fn().mockResolvedValue(null),
+      getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+      getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+      getRoles: vi.fn().mockResolvedValue({ roles: [] }),
+      logout: vi.fn().mockResolvedValue(null),
+      createOrg: vi.fn().mockResolvedValue(null)
+    }))
+  }));
+
+  // Mock Kinde Auth NextJS client
+  vi.mock('@kinde-oss/kinde-auth-nextjs', () => ({
+    useKindeBrowserClient: vi.fn(() => ({
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+      error: null,
+      getUser: vi.fn().mockReturnValue(null),
+      getUserOrganizations: vi.fn().mockReturnValue({ orgCodes: [] }),
+      getPermissions: vi.fn().mockReturnValue({ permissions: [] }),
+      getPermission: vi.fn().mockReturnValue({ isGranted: false }),
+      getOrganization: vi.fn().mockReturnValue(null),
+      getClaim: vi.fn().mockReturnValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockReturnValue(null),
+      getBooleanFlag: vi.fn().mockReturnValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockReturnValue({ value: null, isDefault: true }),
+      getStringFlag: vi.fn().mockReturnValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockReturnValue({ value: 0, isDefault: true })
+    })),
+    getKindeServerSession: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null),
+      getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
+      getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
+      getOrganization: vi.fn().mockResolvedValue(null),
+      getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
+      getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+      getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+      getIdToken: vi.fn().mockResolvedValue(null),
+      getIdTokenRaw: vi.fn().mockResolvedValue(null),
+      getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+      getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+      getRoles: vi.fn().mockResolvedValue({ roles: [] }),
+      logout: vi.fn().mockResolvedValue(null),
+      createOrg: vi.fn().mockResolvedValue(null)
+    }))
+  }));
+}
+
+// ============================================================================
 // External API Mocks
 // ============================================================================
 
@@ -61,6 +199,330 @@ export function initializeMexcApiMocks(): void {
       }),
       testConnectivity: vi.fn().mockResolvedValue(true)
     }))
+  }));
+
+  // Mock safety coordinator and risk management services
+  vi.mock('@/src/services/risk/comprehensive-safety-coordinator', () => ({
+    ComprehensiveSafetyCoordinator: vi.fn().mockImplementation(() => ({
+      assessSystemSafety: vi.fn().mockResolvedValue({
+        overallSafety: 'SAFE',
+        riskScore: 20,
+        alerts: [],
+        recommendations: []
+      }),
+      activateEmergencyProcedures: vi.fn().mockResolvedValue({
+        success: true,
+        proceduresActivated: ['circuit_breaker', 'position_halt']
+      }),
+      checkSystemHealth: vi.fn().mockResolvedValue({
+        status: 'healthy',
+        uptime: 99.9,
+        criticalIssues: []
+      }),
+      monitorAgentBehavior: vi.fn().mockResolvedValue({
+        agentHealth: 'good',
+        anomalies: []
+      }),
+      coordinateRiskAssessment: vi.fn().mockResolvedValue({
+        riskLevel: 'LOW',
+        assessmentScore: 25
+      }),
+      validateSystemReadiness: vi.fn().mockResolvedValue({
+        ready: true,
+        validationResults: []
+      }),
+      initiateSafetyShutdown: vi.fn().mockResolvedValue({
+        success: true,
+        shutdownTime: Date.now()
+      }),
+      // Add EventEmitter methods required by integration tests
+      on: vi.fn(),
+      emit: vi.fn(),
+      off: vi.fn(),
+      removeListener: vi.fn(),
+      removeAllListeners: vi.fn(),
+      // Add methods used in integration tests  
+      getStatus: vi.fn().mockReturnValue({
+        overall: 'healthy',
+        alerts: [],
+        metrics: {},
+        lastCheck: Date.now(),
+        emergencyProceduresActive: false
+      }),
+      createAlert: vi.fn().mockResolvedValue('alert-123'),
+      triggerEmergencyProcedure: vi.fn().mockResolvedValue(undefined),
+      isEmergencyActive: vi.fn().mockReturnValue(false)
+    }))
+  }));
+
+  vi.mock('@/src/services/risk/advanced-risk-engine', () => ({
+    AdvancedRiskEngine: vi.fn().mockImplementation(() => ({
+      assessRisk: vi.fn().mockResolvedValue({
+        riskScore: 30,
+        riskLevel: 'LOW',
+        factors: []
+      }),
+      validatePosition: vi.fn().mockResolvedValue({
+        valid: true,
+        warnings: []
+      }),
+      calculateMaxPosition: vi.fn().mockResolvedValue({
+        maxSize: 1000,
+        currency: 'USDT'
+      }),
+      // Add methods required by integration tests
+      validatePositionSize: vi.fn().mockResolvedValue({
+        approved: true,
+        adjustedPositionSize: 1000,
+        warnings: [],
+        riskScore: 25
+      }),
+      updatePortfolioRisk: vi.fn().mockResolvedValue(undefined),
+      updatePortfolioMetrics: vi.fn().mockResolvedValue(undefined),
+      isEmergencyStopActive: vi.fn().mockReturnValue(false),
+      assessTradeRisk: vi.fn().mockResolvedValue({
+        approved: true,
+        riskScore: 30,
+        reasons: [],
+        warnings: [],
+        maxAllowedSize: 1000,
+        estimatedImpact: 0.1,
+        advancedMetrics: {}
+      })
+    }))
+  }));
+
+  vi.mock('@/src/services/trading/multi-phase-trading-bot', () => ({
+    MultiPhaseTradingBot: vi.fn().mockImplementation(() => ({
+      executeStrategy: vi.fn().mockResolvedValue({
+        success: true,
+        result: {
+          orderId: 'mock-order-123',
+          status: 'FILLED'
+        }
+      }),
+      getPositions: vi.fn().mockResolvedValue([]),
+      updatePosition: vi.fn().mockResolvedValue({
+        success: true
+      }),
+      // Add methods required by integration tests
+      calculateOptimalEntry: vi.fn().mockReturnValue({
+        entryPrice: 0.001,
+        confidence: 85,
+        adjustments: ['market_conditions_favorable'],
+        symbol: 'TESTUSDT'
+      }),
+      initializePosition: vi.fn().mockReturnValue({
+        success: true,
+        details: {
+          symbol: 'TESTUSDT',
+          entryPrice: 0.001,
+          amount: 1000,
+          timestamp: new Date().toISOString()
+        },
+        message: 'Position initialized successfully'
+      }),
+      onPriceUpdate: vi.fn().mockReturnValue({
+        actions: ['MONITOR'],
+        status: { 
+          priceIncrease: 0,
+          summary: { completedPhases: 0, totalRemaining: 1000, realizedProfit: 0, unrealizedProfit: 0 },
+          nextTarget: '25% gain'
+        }
+      }),
+      getPositionInfo: vi.fn().mockReturnValue({
+        symbol: 'TESTUSDT',
+        entryPrice: 0.001,
+        currentPosition: 1000,
+        realizedPnL: 0,
+        unrealizedPnL: 0
+      }),
+      getPhaseStatus: vi.fn().mockReturnValue({
+        phaseDetails: [{ status: 'pending' }],
+        completedPhases: 0
+      }),
+      handlePartialFill: vi.fn().mockReturnValue({
+        success: true,
+        executedAmount: 200,
+        remainingAmount: 800
+      }),
+      performMaintenanceCleanup: vi.fn().mockReturnValue({
+        success: true,
+        cleanupTime: Date.now()
+      }),
+      getPendingPersistenceOperations: vi.fn().mockReturnValue({
+        operations: []
+      })
+    }))
+  }));
+
+  // Mock the unified MEXC service
+  vi.mock('@/src/services/api/unified-mexc-service-v2', () => ({
+    UnifiedMexcServiceV2: vi.fn().mockImplementation(() => ({
+      // Market data methods
+      getSymbols: vi.fn().mockResolvedValue({
+        success: true,
+        data: [
+          { symbol: 'BTCUSDT', status: 'TRADING' },
+          { symbol: 'ETHUSDT', status: 'TRADING' },
+          { symbol: 'AUTOSNIPERXUSDT', status: 'TRADING' },
+          { symbol: 'ADVANCEAUTOSNIPEUSDT', status: 'TRADING' }
+        ]
+      }),
+      getSymbolInfo: vi.fn().mockResolvedValue({
+        success: true,
+        data: { symbol: 'BTCUSDT', status: 'TRADING' }
+      }),
+      
+      // Activity data methods
+      getRecentActivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          activities: [
+            {
+              activityId: 'mock-activity-1',
+              currency: 'AUTOSNIPER',
+              currencyId: 'autosniper-id',
+              activityType: 'SUN_SHINE'
+            }
+          ]
+        }
+      }),
+      
+      // Account methods
+      getAccountInfo: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          balances: [
+            { asset: 'USDT', free: '10000.00', locked: '0.00' }
+          ]
+        }
+      }),
+      
+      // Trading methods
+      placeOrder: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          orderId: 'mock-order-123',
+          symbol: 'BTCUSDT',
+          side: 'BUY',
+          type: 'MARKET',
+          quantity: '0.001',
+          status: 'FILLED'
+        }
+      }),
+      
+      // Calendar methods
+      getCalendarListings: vi.fn().mockResolvedValue({
+        success: true,
+        data: [
+          {
+            symbol: 'NEWCOINUSDT',
+            vcoinId: 'newcoin-id',
+            firstOpenTime: Date.now() + 3600000, // 1 hour from now
+            projectName: 'New Coin Project'
+          }
+        ]
+      }),
+      
+      // Portfolio methods
+      getPortfolio: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          totalValue: 10000,
+          assets: [
+            { asset: 'USDT', amount: 10000, value: 10000 }
+          ]
+        }
+      }),
+      
+      // Health and status
+      testConnectivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: { status: 'OK', timestamp: Date.now() }
+      }),
+      
+      // Cache management
+      clearCache: vi.fn().mockResolvedValue(undefined),
+      destroy: vi.fn().mockImplementation(() => {})
+    })),
+    
+    // Factory functions
+    createUnifiedMexcServiceV2: vi.fn().mockImplementation(() => ({
+      getRecentActivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: { activities: [] }
+      }),
+      getSymbols: vi.fn().mockResolvedValue({
+        success: true,
+        data: []
+      }),
+      getAccountInfo: vi.fn().mockResolvedValue({
+        success: true,
+        data: { balances: [] }
+      }),
+      testConnectivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: { status: 'OK' }
+      })
+    })),
+    
+    getUnifiedMexcServiceV2: vi.fn().mockImplementation(() => ({
+      getRecentActivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: { activities: [] }
+      }),
+      getSymbols: vi.fn().mockResolvedValue({
+        success: true,
+        data: []
+      }),
+      getAccountInfo: vi.fn().mockResolvedValue({
+        success: true,
+        data: { balances: [] }
+      }),
+      testConnectivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: { status: 'OK' }
+      })
+    })),
+    
+    // Export singleton instance
+    unifiedMexcService: {
+      getRecentActivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          activities: [
+            {
+              activityId: 'mock-activity-global',
+              currency: 'AUTOSNIPER',
+              currencyId: 'autosniper-global-id',
+              activityType: 'SUN_SHINE'
+            }
+          ]
+        }
+      }),
+      getSymbols: vi.fn().mockResolvedValue({
+        success: true,
+        data: [
+          { symbol: 'BTCUSDT', status: 'TRADING' },
+          { symbol: 'ETHUSDT', status: 'TRADING' }
+        ]
+      }),
+      getAccountInfo: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          balances: [
+            { asset: 'USDT', free: '10000.00', locked: '0.00' }
+          ]
+        }
+      }),
+      testConnectivity: vi.fn().mockResolvedValue({
+        success: true,
+        data: { status: 'OK', timestamp: Date.now() }
+      }),
+      clearCache: vi.fn().mockResolvedValue(undefined),
+      destroy: vi.fn().mockImplementation(() => {})
+    }
   }));
 }
 
@@ -130,6 +592,30 @@ export function initializeBrowserMocks(): void {
 export function initializeFetchMock(): void {
   global.fetch = vi.fn().mockImplementation((url: string | URL, options?: RequestInit) => {
     const urlString = typeof url === 'string' ? url : url.toString();
+
+    // Handle API routes that need authentication (internal API)
+    if (urlString.includes('/api/') && !urlString.includes('api.mexc.com') && !urlString.includes('kinde')) {
+      // Mock successful authentication for internal API routes
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        json: () => Promise.resolve({
+          success: true,
+          data: {},
+          message: 'Mock API response'
+        }),
+        text: () => Promise.resolve(JSON.stringify({
+          success: true,
+          data: {},
+          message: 'Mock API response'
+        })),
+        headers: new Headers({
+          'content-type': 'application/json',
+          'authorization': 'Bearer mock-token'
+        })
+      });
+    }
 
     // Handle Kinde-specific endpoints
     if (urlString.includes('kinde.com') || urlString.includes('kinde')) {
@@ -240,7 +726,7 @@ export function initializeFetchMock(): void {
 // ============================================================================
 
 /**
- * Initialize database mocks for unit tests
+ * Initialize database mocks for unit tests with enhanced Drizzle ORM support
  */
 export async function initializeDatabaseMocks(isIntegrationTest: boolean): Promise<void> {
   if (isIntegrationTest) {
@@ -250,118 +736,9 @@ export async function initializeDatabaseMocks(isIntegrationTest: boolean): Promi
     return;
   }
 
-  // In-memory data store for database mocks
-  const mockDataStore = {
-    snipeTargets: [] as any[],
-    user: [] as any[],
-    apiCredentials: [] as any[],
-    userPreferences: [] as any[],
-    patternEmbeddings: [] as any[],
-    coinActivities: [] as any[],
-    executionHistory: [] as any[],
-    transactionLocks: [] as any[],
-    workflowActivity: [] as any[],
-    monitoredListings: [] as any[],
-    tradingStrategies: [] as any[],
-    transactions: [] as any[],
-    reset() {
-      this.snipeTargets = [];
-      this.user = [];
-      this.apiCredentials = [];
-      this.userPreferences = [];
-      this.patternEmbeddings = [];
-      this.coinActivities = [];
-      this.executionHistory = [];
-      this.transactionLocks = [];
-      this.workflowActivity = [];
-      this.monitoredListings = [];
-      this.tradingStrategies = [];
-      this.transactions = [];
-    }
-  };
-
-  global.mockDataStore = mockDataStore;
-
-  // Create mock database with proper TypeScript types
-  const createMockDb = () => ({
-    execute: vi.fn().mockResolvedValue([{ test_value: 1, count: '1' }]),
-    query: vi.fn().mockResolvedValue([]),
-    insert: vi.fn().mockImplementation((table: any) => ({
-      values: vi.fn().mockImplementation((data: any) => ({
-        returning: vi.fn().mockImplementation(async () => {
-          const tableName = table?._?.name || table?.name || 'unknown';
-          const insertedData = Array.isArray(data) ? data : [data];
-          
-          // Handle different table types with mock data
-          const results = insertedData.map((item: any, index: number) => ({
-            id: `mock-${tableName}-${Date.now()}-${index}`,
-            ...item,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          }));
-          
-          // Store in appropriate mock data store
-          if (tableName in mockDataStore) {
-            (mockDataStore as any)[tableName].push(...results);
-          }
-          
-          return results;
-        })
-      }))
-    })),
-    select: vi.fn().mockImplementation(() => ({
-      from: vi.fn().mockImplementation((table: any) => ({
-        where: vi.fn().mockImplementation(() => ({
-          orderBy: vi.fn().mockImplementation(() => {
-            const tableName = table?._?.name || table?.name || 'unknown';
-            return Promise.resolve((mockDataStore as any)[tableName] || []);
-          }),
-          limit: vi.fn().mockImplementation(() => {
-            const tableName = table?._?.name || table?.name || 'unknown';
-            return Promise.resolve((mockDataStore as any)[tableName] || []);
-          })
-        })),
-        limit: vi.fn().mockImplementation(() => {
-          const tableName = table?._?.name || table?.name || 'unknown';
-          return Promise.resolve((mockDataStore as any)[tableName] || []);
-        }),
-        orderBy: vi.fn().mockImplementation(() => {
-          const tableName = table?._?.name || table?.name || 'unknown';
-          return Promise.resolve((mockDataStore as any)[tableName] || []);
-        })
-      }))
-    })),
-    update: vi.fn().mockReturnValue({
-      set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([])
-      })
-    }),
-    delete: vi.fn().mockImplementation(() => ({
-      where: vi.fn().mockImplementation(async () => {
-        mockDataStore.reset();
-        return [];
-      })
-    })),
-    transaction: vi.fn().mockImplementation(async (cb: (tx: any) => any) => {
-      return cb(createMockDb());
-    })
-  });
-
-  const mockDb = createMockDb();
-
-  // Mock database modules
-  vi.mock('@/src/db', () => ({
-    db: mockDb,
-    getDb: vi.fn().mockReturnValue(mockDb),
-    clearDbCache: vi.fn(),
-    initializeDatabase: vi.fn().mockResolvedValue(true),
-    healthCheck: vi.fn().mockResolvedValue({
-      status: 'healthy',
-      responseTime: 50,
-      database: 'mock-neondb',
-      timestamp: new Date().toISOString()
-    })
-  }));
+  // Use enhanced database mocking system
+  const { initializeEnhancedDatabaseMocks } = await import('./enhanced-database-mocks');
+  initializeEnhancedDatabaseMocks();
 }
 
 // ============================================================================
@@ -372,6 +749,12 @@ export async function initializeDatabaseMocks(isIntegrationTest: boolean): Promi
  * Initialize all test mocks for external dependencies
  */
 export async function initializeTestMocks(): Promise<void> {
+  // Initialize Next.js navigation mocks
+  initializeNextJSMocks();
+  
+  // Initialize Kinde Auth SDK mocks (must be first to prevent Node.js environment errors)
+  initializeKindeSDKMocks();
+  
   // Initialize all external API mocks
   initializeOpenAIMocks();
   initializeMexcApiMocks();

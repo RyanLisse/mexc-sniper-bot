@@ -139,6 +139,23 @@ export class AutoSnipingAlertManager {
   }
 
   /**
+   * Clear acknowledged alerts
+   */
+  clearAcknowledgedAlerts(): number {
+    const initialCount = this.alerts.length;
+    this.alerts = this.alerts.filter((alert) => !alert.acknowledged);
+    
+    const removed = initialCount - this.alerts.length;
+    if (removed > 0) {
+      console.info(`Cleared ${removed} acknowledged alerts`, {
+        remaining: this.alerts.length,
+      });
+    }
+
+    return removed;
+  }
+
+  /**
    * Get alert statistics
    */
   getAlertStats(): {

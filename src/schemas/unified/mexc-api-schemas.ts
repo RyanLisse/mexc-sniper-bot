@@ -97,10 +97,10 @@ export const SymbolEntrySchema = z.object({
   sts: z.number(), // Symbol Trading Status
   st: z.number(), // Symbol State
   tt: z.number(), // Trading Time
-  ca: z.number().optional(),
+  ca: z.string().optional(), // Contract Address - string for hex addresses
   ps: z.number().optional(),
   qs: z.number().optional(),
-  ot: z.record(z.unknown()).optional(),
+  ot: z.number().optional(), // Open Time - number timestamp
 });
 
 /**
@@ -313,13 +313,19 @@ export const ExchangeInfoSchema = z.object({
 // ============================================================================
 
 export const ActivityDataSchema = z.object({
-  symbol: z.string().optional(),
+  activityId: z.string(),
+  currency: z.string(),
+  currencyId: z.string(),
   activityType: z.string(),
-  timestamp: z.number(),
-  volume: z.number().optional(),
-  price: z.number().optional(),
-  significance: z.number().optional(),
-  description: z.string().optional(),
+});
+
+/**
+ * Activity Query Options Schema - Configuration for activity API queries
+ */
+export const ActivityQueryOptions = z.object({
+  batchSize: z.number().default(5),
+  maxRetries: z.number().default(3),
+  rateLimitDelay: z.number().default(200),
 });
 
 // ============================================================================
@@ -340,6 +346,7 @@ export type OrderBook = z.infer<typeof OrderBookSchema>;
 export type AccountInfo = z.infer<typeof AccountInfoSchema>;
 export type Kline = z.infer<typeof KlineSchema>;
 export type ActivityData = z.infer<typeof ActivityDataSchema>;
+export type ActivityQueryOptionsType = z.infer<typeof ActivityQueryOptions>;
 
 export const ActivityResponseSchema = z.object({
   data: z.array(ActivityDataSchema),
@@ -387,18 +394,29 @@ export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => 
   return activities.some((activity) => highPriorityTypes.includes(activity.activityType));
 };
 
-export const isValidForSnipe = (entry: CalendarEntry): boolean => {
-  // Check if the calendar entry is valid for sniping
-  if (!entry.symbol || !entry.vcoinId || !entry.firstOpenTime) {
-    return false;
+// Overloaded function for both CalendarEntry and SymbolV2Entry
+export function isValidForSnipe(entry: CalendarEntry): boolean;
+export function isValidForSnipe(symbol: SymbolV2Entry): boolean;
+export function isValidForSnipe(item: CalendarEntry | SymbolV2Entry): boolean {
+  // Check if it's a CalendarEntry (has firstOpenTime property)
+  if ('firstOpenTime' in item) {
+    const entry = item as CalendarEntry;
+    // Check if the calendar entry is valid for sniping
+    if (!entry.symbol || !entry.vcoinId || !entry.firstOpenTime) {
+      return false;
+    }
+
+    // Check if the launch time is in the future (at least 5 minutes)
+    const now = Date.now();
+    const launchTime = entry.firstOpenTime;
+    const fiveMinutes = 5 * 60 * 1000;
+
+    return launchTime > now + fiveMinutes;
+  } else {
+    // It's a SymbolV2Entry
+    const symbol = item as SymbolV2Entry;
+    return matchesReadyPattern(symbol) && hasCompleteData(symbol);
   }
-
-  // Check if the launch time is in the future (at least 5 minutes)
-  const now = Date.now();
-  const launchTime = entry.firstOpenTime;
-  const fiveMinutes = 5 * 60 * 1000;
-
-  return launchTime > now + fiveMinutes;
 };
 
 // ============================================================================
@@ -553,3 +571,37 @@ export function validateServiceResponse<T>(
 
   return validateMexcData(baseResponseSchema, data);
 }
+
+// ============================================================================
+// Ready State Pattern Utilities
+// ============================================================================
+
+/**
+ * Ready State Pattern Schema - for symbols ready for trading
+ */
+export const ReadyStatePatternSchema = z.object({
+  sts: z.literal(2), // Symbol Trading Status = 2 (ready)
+  st: z.literal(2),  // Symbol State = 2 (active)
+  tt: z.literal(4),  // Trading Time = 4 (ready for trading)
+});
+
+/**
+ * Ready State Pattern Constant
+ */
+export const READY_STATE_PATTERN = { sts: 2, st: 2, tt: 4 } as const;
+
+/**
+ * Check if a symbol matches the ready state pattern
+ */
+export const matchesReadyPattern = (symbol: SymbolV2Entry): boolean => {
+  return symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4;
+};
+
+/**
+ * Check if a symbol has complete data for sniping
+ */
+export const hasCompleteData = (symbol: SymbolV2Entry): boolean => {
+  return !!(symbol.ca && symbol.ps !== undefined && symbol.qs !== undefined && symbol.ot !== undefined);
+};
+
+export type ReadyStatePattern = z.infer<typeof ReadyStatePatternSchema>;

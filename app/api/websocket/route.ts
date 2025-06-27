@@ -63,9 +63,9 @@ export const GET = publicHandler({
       mexcStream: {
         healthy: mexcHealthy,
         connected: mexcStreamStatus.connected,
-        running: mexcStreamStatus.running,
+        connecting: mexcStreamStatus.connecting,
         subscriptions: mexcStreamStatus.subscriptions,
-        reconnectAttempts: mexcStreamStatus.reconnectAttempts,
+        lastMessage: mexcStreamStatus.lastMessage,
       },
       agentBridge: {
         initialized: bridgeStatus.initialized,
@@ -133,7 +133,7 @@ export const POST = authenticatedHandler({
         });
 
       case 'start_mexc_stream':
-        if (!mexcWebSocketStream.isConnected()) {
+        if (!mexcWebSocketStream.isConnected) {
           await mexcWebSocketStream.start();
         }
         return context.success({ 
@@ -142,7 +142,7 @@ export const POST = authenticatedHandler({
         });
 
       case 'stop_mexc_stream':
-        if (mexcWebSocketStream.isConnected()) {
+        if (mexcWebSocketStream.isConnected) {
           mexcWebSocketStream.stop();
         }
         return context.success({ 
@@ -378,7 +378,7 @@ export const PATCH = authenticatedHandler({
           webSocketAgentBridge.stop();
         }
         
-        if (mexcWebSocketStream.isConnected()) {
+        if (mexcWebSocketStream.isConnected) {
           mexcWebSocketStream.stop();
         }
 
@@ -431,7 +431,7 @@ export const PATCH = authenticatedHandler({
           mexcStream: {
             connected: mexcStatus.connected,
             subscriptions: mexcStatus.subscriptions,
-            reconnectAttempts: mexcStatus.reconnectAttempts,
+            connecting: mexcStatus.connecting,
           },
           recommendations: generatePerformanceRecommendations(serverMetrics, connectionMetrics),
         };

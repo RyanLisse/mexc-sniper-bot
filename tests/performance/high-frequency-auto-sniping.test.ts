@@ -19,10 +19,10 @@ import {
   globalTimeoutMonitor 
 } from '../utils/timeout-utilities';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
-import { MultiPhaseTradingBot } from '@/src/services/multi-phase-trading-bot';
+import { MultiPhaseTradingBot } from '@/src/services/trading/multi-phase-trading-bot';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
-import { ComprehensiveSafetyCoordinator } from '@/src/services/comprehensive-safety-coordinator';
-import { webSocketClient } from '@/src/services/websocket-client';
+import { ComprehensiveSafetyCoordinator } from '@/src/services/risk/comprehensive-safety-coordinator';
+import { webSocketClient } from '@/src/services/data/websocket-client';
 import { 
   MockDataGenerator, 
   PerformanceTestUtils, 

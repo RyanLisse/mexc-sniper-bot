@@ -131,8 +131,10 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
     }
   } catch (error: any) {
     console.error('[SafetyMonitoringAPI] GET action failed:', { error });
+    // Pass through specific error messages for test compatibility
+    const errorMessage = error.message || 'Safety monitoring GET action failed';
     return NextResponse.json(createErrorResponse(
-      'Safety monitoring GET action failed',
+      errorMessage,
       { code: 'GET_ACTION_FAILED', details: error.message }
     ), { status: 500 });
   }
@@ -349,8 +351,10 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       ), { status: 400 });
     }
     
+    // Pass through specific error messages for test compatibility
+    const errorMessage = error.message || 'Safety monitoring action failed';
     return NextResponse.json(createErrorResponse(
-      'Safety monitoring action failed',
+      errorMessage,
       { code: 'ACTION_FAILED', details: error.message }
     ), { status: 500 });
   }

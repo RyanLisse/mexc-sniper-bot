@@ -67,30 +67,51 @@ export class MultiPhasePerformanceAnalytics {
    * Get performance summary
    */
   getPerformanceSummary(currentPrice: number): PerformanceSummary {
-    const analytics = this.executor.getExecutionAnalytics();
-    const summary = this.executor.calculateSummary(currentPrice);
+    // Safely get analytics if available, fallback to defaults
+    let analytics = null;
+    try {
+      if (this.executor && typeof this.executor.getExecutionAnalytics === 'function') {
+        analytics = this.executor.getExecutionAnalytics();
+      }
+    } catch (error) {
+      this.logger.warn("Failed to get execution analytics, using defaults", error);
+    }
 
-    const totalPnL = summary.realizedProfit + summary.unrealizedProfit;
+    // Safely get summary if available, fallback to defaults
+    let summary = null;
+    try {
+      if (this.executor && typeof this.executor.calculateSummary === 'function') {
+        summary = this.executor.calculateSummary(currentPrice);
+      }
+    } catch (error) {
+      this.logger.warn("Failed to get execution summary, using defaults", error);
+    }
+
+    // Use fallback values if summary is not available
+    const realizedProfit = summary?.realizedProfit || 0;
+    const unrealizedProfit = summary?.unrealizedProfit || (currentPrice - this.entryPrice) * this.position;
+    
+    const totalPnL = realizedProfit + unrealizedProfit;
     const totalPnLPercent = (totalPnL / (this.entryPrice * this.position)) * 100;
 
     return {
       totalPnL,
       totalPnLPercent,
-      realizedPnL: summary.realizedProfit,
-      unrealizedPnL: summary.unrealizedProfit,
-      bestPhase: analytics.bestExecution
+      realizedPnL: realizedProfit,
+      unrealizedPnL: unrealizedProfit,
+      bestPhase: analytics?.bestExecution
         ? {
             phase: analytics.bestExecution.phase,
             profit: analytics.bestExecution.profit,
           }
         : null,
-      worstPhase: analytics.worstExecution
+      worstPhase: analytics?.worstExecution
         ? {
             phase: analytics.worstExecution.phase,
             profit: analytics.worstExecution.profit,
           }
         : null,
-      efficiency: analytics.successRate || 0,
+      efficiency: analytics?.successRate || 0,
     };
   }
 
@@ -103,10 +124,19 @@ export class MultiPhasePerformanceAnalytics {
     const initialValue = this.position * this.entryPrice;
     const currentDrawdown = priceChange < 0 ? Math.abs(priceChange) : 0;
 
-    // Calculate max potential reward vs risk
-    const maxReward = this.executor
-      .getPhaseStatus()
-      .phaseDetails.reduce((max, phase) => Math.max(max, phase.percentage), 0);
+    // Calculate max potential reward vs risk with safe method checking
+    let maxReward = 15; // Default 15% reward
+    try {
+      if (this.executor && typeof this.executor.getPhaseStatus === 'function') {
+        const phaseStatus = this.executor.getPhaseStatus();
+        if (phaseStatus && phaseStatus.phaseDetails && Array.isArray(phaseStatus.phaseDetails)) {
+          maxReward = phaseStatus.phaseDetails.reduce((max, phase) => Math.max(max, phase.percentage || 0), 0);
+        }
+      }
+    } catch (error) {
+      this.logger.warn("Failed to get phase status, using default reward", error);
+    }
+
     const stopLossPercent = 10; // Default 10% stop loss
     const riskRewardRatio = maxReward / stopLossPercent;
 
@@ -296,13 +326,26 @@ export class MultiPhasePerformanceAnalytics {
     successRate: number;
     costEfficiency: number;
   } {
-    const analytics = this.executor.getExecutionAnalytics();
+    // Safely get analytics if available, fallback to defaults
+    let analytics = null;
+    try {
+      if (this.executor && typeof this.executor.getExecutionAnalytics === 'function') {
+        analytics = this.executor.getExecutionAnalytics();
+      }
+    } catch (error) {
+      this.logger.warn("Failed to get execution analytics for efficiency metrics, using defaults", error);
+    }
+
+    // Use fallback values if analytics is not available
+    const avgSlippage = analytics?.avgSlippage || 0;
+    const avgExecutionTime = analytics?.avgExecutionTime || 0;
+    const successRate = analytics?.successRate || 0;
 
     return {
-      averageSlippage: analytics.avgSlippage,
-      averageLatency: analytics.avgExecutionTime,
-      successRate: analytics.successRate,
-      costEfficiency: 100 - analytics.avgSlippage * 100, // Simplified cost efficiency
+      averageSlippage: avgSlippage,
+      averageLatency: avgExecutionTime,
+      successRate: successRate,
+      costEfficiency: 100 - avgSlippage * 100, // Simplified cost efficiency
     };
   }
 }

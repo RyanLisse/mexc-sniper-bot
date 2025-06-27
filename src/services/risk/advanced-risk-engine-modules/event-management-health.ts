@@ -325,7 +325,7 @@ export class EventManagementHealth extends EventEmitter {
       }
 
       // Trigger emergency protocols if risk is critical (lowered threshold)
-      if (riskLevel > 15) {
+      if (riskLevel >= 15) {
         // 15% risk threshold (matching test expectation)
         this.emergencyStopActive = true;
         const alert = this.createAlert(

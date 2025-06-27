@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
           success: true,
           data: {
             optimization: databaseOptimizationManager.getOptimizationStatus(),
-            performance: queryPerformanceMonitor.getPerformanceStats(60),
+            performance: queryPerformanceMonitor.getPerformanceStats(),
             connections: databaseConnectionPool.getConnectionMetrics(),
             cache: databaseConnectionPool.getCacheMetrics(),
             monitoring: queryPerformanceMonitor.getStatus()
@@ -43,13 +43,13 @@ export async function GET(request: NextRequest) {
         });
 
       case "recommendations":
-        const recommendations = queryPerformanceMonitor.getOptimizationRecommendations(60);
+        const recommendations = queryPerformanceMonitor.getOptimizationRecommendations();
         return NextResponse.json({
           success: true,
           data: {
             recommendations,
             timestamp: new Date().toISOString(),
-            count: recommendations.length
+            count: recommendations.recommendations.length
           }
         });
 

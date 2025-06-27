@@ -2,7 +2,7 @@
  * Account Balance API Endpoint
  * 
  * Provides real-time account balance data with USDT conversion.
- * Uses MEXC API credentials from environment variables.
+ * Supports both user-specific credentials and environment fallback.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,68 +10,84 @@ import { z } from "zod";
 import { trace } from "@opentelemetry/api";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 
-// Request validation schema
+// Request validation schema - userId is optional for environment fallback
 const BalanceRequestSchema = z.object({
-  userId: z.string().min(1, "User ID is required"),
+  userId: z.string().min(1, "User ID is required").optional(),
+});
+
+// Fallback balance data for error scenarios
+const createFallbackData = (hasUserCredentials: boolean, credentialsType: string) => ({
+  balances: [],
+  totalUsdtValue: 0,
+  lastUpdated: new Date().toISOString(),
+  hasUserCredentials,
+  credentialsType,
 });
 
 export async function GET(request: NextRequest) {
   try {
-    // Extract and validate userId from query parameters
+    // Extract userId from query parameters (optional)
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    const validationResult = BalanceRequestSchema.safeParse({ userId });
-    if (!validationResult.success) {
-      return NextResponse.json({
-        success: false,
-        error: `Invalid request parameters: ${validationResult.error.issues.map(i => i.message).join(", ")}`,
-      }, { status: 400 });
-    }
-
-    const { userId: validUserId } = validationResult.data;
+    // Determine if we have user credentials or should use environment fallback
+    const hasUserCredentials = !!userId;
+    const credentialsType = hasUserCredentials ? "user-specific" : "environment-fallback";
 
     console.info("[BalanceAPI] Starting balance request", {
-      userId: validUserId,
+      userId: userId || "environment-fallback",
       hasApiKey: !!process.env.MEXC_API_KEY,
       hasSecretKey: !!process.env.MEXC_SECRET_KEY,
       nodeEnv: process.env.NODE_ENV,
+      credentialsType,
     });
 
     // Check if credentials are available before proceeding
     if (!process.env.MEXC_API_KEY || !process.env.MEXC_SECRET_KEY) {
       console.error("[BalanceAPI] Missing MEXC credentials in environment");
+      const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+      
       return NextResponse.json({
         success: false,
         error: "MEXC API credentials not configured on server",
-        details: "Contact administrator to configure MEXC_API_KEY and MEXC_SECRET_KEY",
+        meta: {
+          fallbackData,
+          code: "MISSING_CREDENTIALS",
+          details: "Contact administrator to configure MEXC_API_KEY and MEXC_SECRET_KEY",
+        },
       }, { status: 503 });
     }
 
-    // Get real MEXC account balances using user-specific credentials
-    const mexcClient = await getUnifiedMexcService({ userId: validUserId });
-    console.info("[BalanceAPI] MEXC client created with user credentials, calling getAccountBalances");
+    // Get MEXC account balances using appropriate credentials
+    const mexcClient = await getUnifiedMexcService(userId ? { userId } : {});
+    console.info("[BalanceAPI] MEXC client created, calling getAccountBalances");
     const balanceResponse = await mexcClient.getAccountBalances();
 
     if (!balanceResponse.success) {
       console.error("[BalanceAPI] Failed to fetch real balance data", {
         error: balanceResponse.error,
-        userId: validUserId,
+        userId: userId || "environment-fallback",
         responseData: balanceResponse.data,
         timestamp: balanceResponse.timestamp,
       });
 
+      const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+
       return NextResponse.json({
         success: false,
         error: balanceResponse.error || "Failed to fetch account balance data",
-        details: "Check server logs for more information",
+        meta: {
+          fallbackData,
+          code: "MEXC_API_ERROR",
+          details: "Check server logs for more information",
+        },
       }, { status: 500 });
     }
 
     const balanceData = balanceResponse.data;
 
     console.info("[BalanceAPI] Real balance data returned successfully", {
-      userId: validUserId,
+      userId: userId || "environment-fallback",
       balancesCount: balanceData.balances.length,
       totalUsdValue: balanceData.totalUsdtValue,
       timestamp: balanceData.lastUpdated,
@@ -81,12 +97,17 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         ...balanceData,
-        hasUserCredentials: true,
-        credentialsType: "user-specific",
+        hasUserCredentials,
+        credentialsType,
       },
     });
 
   } catch (error) {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+    const hasUserCredentials = !!userId;
+    const credentialsType = hasUserCredentials ? "user-specific" : "environment-fallback";
+    
     console.error("[BalanceAPI] Unexpected error", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
@@ -96,10 +117,16 @@ export async function GET(request: NextRequest) {
       hasSecretKey: !!process.env.MEXC_SECRET_KEY,
     });
 
+    const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+
     return NextResponse.json({
       success: false,
       error: "Internal server error - please check MEXC API credentials",
-      details: error instanceof Error ? error.message : String(error),
+      meta: {
+        fallbackData,
+        code: "INTERNAL_SERVER_ERROR",
+        details: error instanceof Error ? error.message : String(error),
+      },
     }, { status: 500 });
   }
 }

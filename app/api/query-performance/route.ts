@@ -18,19 +18,26 @@ export async function GET(request: NextRequest) {
 
     switch (action) {
       case 'stats':
-        const stats = queryPerformanceMonitor.getPerformanceStats(timeframe);
+        const stats = queryPerformanceMonitor.getPerformanceStats();
         return apiResponse.success(stats, { operation: 'get-stats', timeframe });
 
       case 'patterns':
-        const patterns = queryPerformanceMonitor.analyzeQueryPatterns(timeframe);
+        // Use getMetrics instead of analyzeQueryPatterns which doesn't exist
+        const metrics = queryPerformanceMonitor.getMetrics();
+        const patterns = {
+          recentQueries: Array.isArray(metrics) ? metrics : [],
+          slowQueries: [],
+          queryTypes: {},
+          timeframe: timeframe
+        };
         return apiResponse.success(patterns, { operation: 'analyze-patterns', timeframe });
 
       case 'recommendations':
-        const recommendations = queryPerformanceMonitor.getOptimizationRecommendations(timeframe);
+        const recommendations = queryPerformanceMonitor.getOptimizationRecommendations();
         return apiResponse.success(recommendations, { operation: 'get-recommendations', timeframe });
 
       case 'export':
-        const exportData = queryPerformanceMonitor.exportMetrics(timeframe);
+        const exportData = queryPerformanceMonitor.getMetrics(); // Use getMetrics instead of exportMetrics
         return apiResponse.success(exportData, { operation: 'export-metrics', timeframe });
 
       case 'status':

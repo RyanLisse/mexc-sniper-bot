@@ -169,3 +169,43 @@ export interface ExecutionResult {
   slippage?: number;
   error?: string;
 }
+
+// ============================================================================
+// Validation Functions
+// ============================================================================
+
+/**
+ * Validate Execution Position
+ * 
+ * Validates an ExecutionPosition object against the schema
+ */
+export function validateExecutionPosition(position: unknown): ExecutionPosition {
+  return ExecutionPositionSchema.parse(position);
+}
+
+/**
+ * Validate Auto-Sniping Configuration
+ * 
+ * Validates an AutoSnipingConfig object against the schema
+ */
+export function validateAutoSnipingConfig(config: unknown): AutoSnipingConfig {
+  return AutoSnipingConfigSchema.parse(config);
+}
+
+/**
+ * Validate Execution Stats
+ * 
+ * Validates an ExecutionStats object against the schema
+ */
+export function validateExecutionStats(stats: unknown): ExecutionStats {
+  return ExecutionStatsSchema.parse(stats);
+}
+
+/**
+ * Validate Execution Alert
+ * 
+ * Validates an ExecutionAlert object against the schema
+ */
+export function validateExecutionAlert(alert: unknown): ExecutionAlert {
+  return ExecutionAlertSchema.parse(alert);
+}

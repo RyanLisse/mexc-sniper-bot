@@ -380,13 +380,14 @@ export class PatternDetectionCore extends EventEmitter {
   /**
    * Detect ready state patterns in symbols
    */
-  async detectReadyStatePattern(symbols: SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectReadyStatePattern(symbols: SymbolEntry | SymbolEntry[]): Promise<PatternMatch[]> {
     try {
       return await this.patternAnalyzer.detectReadyStatePattern(symbols);
     } catch (error) {
       const safeError = toSafeError(error);
+      const symbolCount = Array.isArray(symbols) ? symbols.length : 1;
       console.error("Ready state pattern detection failed", {
-        symbolCount: symbols.length,
+        symbolCount,
         error: safeError.message,
       });
       return [];

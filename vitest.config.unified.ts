@@ -69,9 +69,9 @@ export default defineConfig({
     // Test execution configuration - removed duplicate, see poolOptions below
     
     // Comprehensive timeout configuration to prevent hanging tests
-    testTimeout: 10000, // 10 seconds default (conservative for unit tests)
-    hookTimeout: 20000, // 20 seconds for hooks (database setup needs more time)
-    teardownTimeout: 15000, // 15 seconds for teardown (database cleanup)
+    testTimeout: 8000, // 8 seconds default (reduced to prevent hanging)
+    hookTimeout: 12000, // 12 seconds for hooks (reduced for faster cleanup)
+    teardownTimeout: 8000, // 8 seconds for teardown (reduced for quicker cleanup)
     
     // NOTE: Per-file timeout overrides handled via individual test files
     // Different test types should configure their own timeouts as needed:

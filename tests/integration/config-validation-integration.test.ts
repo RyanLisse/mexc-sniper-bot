@@ -23,7 +23,7 @@ import {
   withTimeout,
   withApiTimeout,
 } from "../utils/timeout-utilities";
-import { MexcConfigValidator } from "@/src/services/mexc-config-validator";
+import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 describe("Configuration Validation Integration", () => {

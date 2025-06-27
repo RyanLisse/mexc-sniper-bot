@@ -240,13 +240,13 @@ export async function GET(request: NextRequest) {
       recentActivity: recentExecutions.map((exec: any) => ({
         id: exec?.id || 'unknown',
         symbol: exec?.symbolName || 'N/A',
-        action: exec?.action || 'unknown',
-        status: exec?.status || 'unknown',
-        quantity: safeParseFloat(exec?.executedQuantity),
-        price: safeParseFloat(exec?.executedPrice),
-        totalCost: safeParseFloat(exec?.totalCost),
+        action: (exec?.action as 'buy' | 'sell') || 'buy',
+        status: (exec?.status as 'success' | 'failed' | 'pending') || 'pending',
+        quantity: safeParseFloat(exec?.executedQuantity) || 0,
+        price: safeParseFloat(exec?.executedPrice) || 0,
+        totalCost: safeParseFloat(exec?.totalCost) || 0,
         timestamp: exec?.executedAt || new Date().toISOString(),
-        orderId: exec?.exchangeOrderId || null,
+        orderId: exec?.exchangeOrderId || 'unknown',
       })),
     };
 

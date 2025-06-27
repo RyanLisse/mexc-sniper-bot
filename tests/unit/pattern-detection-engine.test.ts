@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SymbolEntry, CalendarEntry } from '@/src/services/mexc-unified-exports';
+import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas"
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 
@@ -18,7 +18,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'TESTUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -41,7 +41,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'FCATUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -85,7 +85,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'NOACTIVITYUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -202,7 +202,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'AIENHANCEDUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -245,7 +245,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'AIFAILUREUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -276,7 +276,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'DBERRORUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -299,7 +299,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: `BATCH${i}USDT`,
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       }));
@@ -352,7 +352,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'ACTIVITYBOOSTUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };
@@ -396,7 +396,7 @@ describe('PatternDetectionCore - Phase 1 Week 2 Enhancement', () => {
         st: 2,
         tt: 4,
         cd: 'HIGHPRIORITYUSDT',
-        ca: 1000,
+        ca: '0x1000',
         ps: 100,
         qs: 50,
       };

@@ -13,8 +13,8 @@
  */
 
 import { z } from "zod";
-import { toSafeError } from "../../lib/error-type-utils";
-import { instrumentServiceMethod } from "../../lib/opentelemetry-service-instrumentation";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import { instrumentServiceMethod } from "@/src/lib/opentelemetry-service-instrumentation";
 
 // ============================================================================
 // Zod Schemas for Type Safety

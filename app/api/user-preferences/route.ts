@@ -27,7 +27,7 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
       .where(eq(userPreferences.userId, userId))
       .limit(1),
     'fetch user preferences'
-  );
+  ) as any[];
 
   if (result.length === 0) {
     return apiResponse(
@@ -44,7 +44,7 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
   try {
     if (prefs.readyStatePattern && typeof prefs.readyStatePattern === 'string') {
       const parts = prefs.readyStatePattern.split(",").map(Number);
-      if (parts.length >= 3 && parts.every(p => !isNaN(p) && p > 0)) {
+      if (parts.length >= 3 && parts.every((p: number) => !isNaN(p) && p > 0)) {
         patternParts = parts;
       }
     }
@@ -271,7 +271,7 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
       .where(eq(userPreferences.userId, validatedUserId))
       .returning(),
     'update user preferences'
-  );
+  ) as any[];
 
   if (result.length === 0) {
     // If no rows were updated, create a new record

@@ -120,6 +120,55 @@ beforeAll(async () => {
     }
   }))
 
+  // Mock all Kinde TypeScript SDK paths to prevent Node.js environment check
+  vi.mock('@kinde-oss/kinde-typescript-sdk', () => ({
+    createKindeServerClient: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null),
+      getPermissions: vi.fn().mockResolvedValue({ permissions: [] }),
+      getPermission: vi.fn().mockResolvedValue({ isGranted: false }),
+      getOrganization: vi.fn().mockResolvedValue(null),
+      getUserOrganizations: vi.fn().mockResolvedValue({ orgCodes: [] }),
+      getClaim: vi.fn().mockResolvedValue({ name: 'test', value: null }),
+      getAccessToken: vi.fn().mockResolvedValue(null),
+      refreshTokens: vi.fn().mockRejectedValue(new Error('Not authenticated')),
+      getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
+      getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
+      getIdToken: vi.fn().mockResolvedValue(null),
+      getIdTokenRaw: vi.fn().mockResolvedValue(null),
+      getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
+      getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
+      getAccessTokenRaw: vi.fn().mockResolvedValue(null),
+      getRoles: vi.fn().mockResolvedValue({ roles: [] }),
+      logout: vi.fn().mockResolvedValue(null),
+      createOrg: vi.fn().mockResolvedValue(null)
+    })),
+    createKindeBrowserClient: vi.fn(() => ({
+      login: vi.fn(),
+      logout: vi.fn(),
+      register: vi.fn(),
+      isAuthenticated: false,
+      user: null,
+      isLoading: false,
+      error: null
+    }))
+  }))
+
+  // Mock specific Kinde SDK paths that might be imported directly
+  vi.mock('@kinde-oss/kinde-typescript-sdk/dist/sdk/clients/server/index.js', () => ({
+    createKindeServerClient: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null)
+    }))
+  }))
+
+  vi.mock('@kinde-oss/kinde-typescript-sdk/dist/sdk/clients/server', () => ({
+    createKindeServerClient: vi.fn(() => ({
+      isAuthenticated: vi.fn().mockResolvedValue(false),
+      getUser: vi.fn().mockResolvedValue(null)
+    }))
+  }))
+
   // Mock Kinde Auth SDK to prevent real network calls
   vi.mock('@kinde-oss/kinde-auth-nextjs/server', () => ({
     getKindeServerSession: vi.fn(() => ({

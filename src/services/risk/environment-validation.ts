@@ -315,6 +315,96 @@ export class EnvironmentValidation {
       issues,
     };
   }
+
+  /**
+   * Get health summary of environment variables
+   */
+  getHealthSummary(): {
+    status: "healthy" | "warning" | "critical";
+    configured: number;
+    missing: number;
+    invalid: number;
+    total: number;
+    criticalMissing: string[];
+    recommendations: string[];
+  } {
+    const result = this.validateEnvironment();
+    const criticalMissing = result.results
+      .filter((r) => r.required && r.status === "missing")
+      .map((r) => r.key);
+
+    let status: "healthy" | "warning" | "critical" = "healthy";
+    if (criticalMissing.length > 0) {
+      status = "critical";
+    } else if (result.summary.missing > 0 || result.summary.invalid > 0) {
+      status = "warning";
+    }
+
+    return {
+      status,
+      configured: result.summary.configured,
+      missing: result.summary.missing,
+      invalid: result.summary.invalid,
+      total: result.summary.total,
+      criticalMissing,
+      recommendations: result.recommendations,
+    };
+  }
+
+  /**
+   * Get missing variables by category
+   */
+  getMissingByCategory(): Record<string, string[]> {
+    const result = this.validateEnvironment();
+    const missingByCategory: Record<string, string[]> = {};
+
+    result.results
+      .filter((r) => r.status === "missing")
+      .forEach((r) => {
+        if (!missingByCategory[r.category]) {
+          missingByCategory[r.category] = [];
+        }
+        missingByCategory[r.category].push(r.key);
+      });
+
+    return missingByCategory;
+  }
+
+  /**
+   * Generate development template with default values
+   */
+  generateDevelopmentTemplate(): string {
+    let template = "# Development Environment Template\n";
+    template += "# Copy this file to .env and configure your values\n\n";
+
+    const categories = Array.from(new Set(ENVIRONMENT_VARIABLES.map((v) => v.category)));
+
+    categories.forEach((category) => {
+      template += `# ${category.toUpperCase()} SETTINGS\n`;
+      
+      const vars = ENVIRONMENT_VARIABLES.filter((v) => v.category === category);
+      vars.forEach((envVar) => {
+        template += `# ${envVar.description}\n`;
+        
+        if (envVar.required) {
+          template += `# REQUIRED\n`;
+        }
+        
+        if (envVar.example) {
+          template += `# Example: ${envVar.example}\n`;
+        }
+        
+        if (envVar.warningIfMissing) {
+          template += `# Note: ${envVar.warningIfMissing}\n`;
+        }
+        
+        const value = envVar.defaultValue || (envVar.example || "");
+        template += `${envVar.key}=${value}\n\n`;
+      });
+    });
+
+    return template;
+  }
 }
 
 // Export singleton instance and backward compatibility

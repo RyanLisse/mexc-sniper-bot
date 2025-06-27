@@ -15,7 +15,7 @@ import type {
   SymbolEntry,
   CalendarEntry,
   ServiceResponse,
-} from "@/src/services/mexc-unified-exports";
+} from "@/src/services/api/mexc-unified-exports";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================

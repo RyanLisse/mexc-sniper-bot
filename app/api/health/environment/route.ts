@@ -64,9 +64,13 @@ export async function GET(request: NextRequest) {
         status: validation.status,
         summary: validation.summary,
         health: {
-          score: healthSummary.score,
-          issues: healthSummary.issues,
-          recommendedActions: healthSummary.recommendedActions,
+          status: healthSummary.status,
+          configured: healthSummary.configured,
+          missing: healthSummary.missing,
+          invalid: healthSummary.invalid,
+          total: healthSummary.total,
+          criticalMissing: healthSummary.criticalMissing,
+          recommendations: healthSummary.recommendations,
         },
       },
       categories: {
@@ -101,18 +105,8 @@ export async function GET(request: NextRequest) {
           missing: validation.results.filter(r => r.category === 'security' && r.status === 'missing').length,
         },
       },
-      missingByCategory: Object.keys(missingByCategory).reduce((acc, category) => {
-        acc[category] = missingByCategory[category].map(v => ({
-          key: v.key,
-          description: v.description,
-          required: v.required,
-          defaultValue: v.defaultValue,
-          warning: v.warningIfMissing,
-        }));
-        return acc;
-      }, {} as Record<string, any>),
+      missingByCategory: missingByCategory,
       recommendations: validation.recommendations,
-      developmentDefaults: validation.developmentDefaults,
     };
     
     const message = healthSummary.status === 'healthy' 

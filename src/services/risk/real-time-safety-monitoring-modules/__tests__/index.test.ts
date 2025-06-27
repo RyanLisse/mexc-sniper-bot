@@ -13,15 +13,30 @@ import type {
 } from "../../../schemas/safety-monitoring-schemas";
 import { OptimizedAutoSnipingExecutionEngine } from "../../../trading/optimized-auto-sniping-execution-engine";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
-import { PatternMonitoringService } from "../../pattern-monitoring-service";
+import { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
 import type { UnifiedMexcServiceV2 } from "../../unified-mexc-service-v2";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
 
-// Mock all dependencies
-vi.mock("../../auto-sniping-execution-service");
-vi.mock("../../pattern-monitoring-service");
-vi.mock("../../emergency-safety-system");
-vi.mock("../../unified-mexc-service");
+// Mock all dependencies with proper getInstance methods
+vi.mock("../../../trading/optimized-auto-sniping-execution-engine", () => ({
+  OptimizedAutoSnipingExecutionEngine: {
+    getInstance: vi.fn(),
+  },
+}));
+
+vi.mock("../../../notification/pattern-monitoring-service", () => ({
+  PatternMonitoringService: {
+    getInstance: vi.fn(),
+  },
+}));
+
+vi.mock("../../emergency-safety-system", () => ({
+  EmergencySafetySystem: vi.fn(),
+}));
+
+vi.mock("../../unified-mexc-service-v2", () => ({
+  UnifiedMexcServiceV2: vi.fn(),
+}));
 
 describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   let safetyService: RealTimeSafetyMonitoringService;
@@ -98,9 +113,17 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   });
 
   afterEach(() => {
-    if (safetyService.getMonitoringStatus()) {
-      safetyService.stopMonitoring();
+    try {
+      if (safetyService?.getMonitoringStatus?.()) {
+        safetyService.stopMonitoring();
+      }
+    } catch (error) {
+      // Ignore cleanup errors in tests
+      console.warn("Test cleanup warning:", error);
     }
+    // Reset all mocks after each test
+    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   describe("Initialization and Configuration", () => {

@@ -133,7 +133,27 @@ export class UnifiedMexcServiceV2 {
     currency: string,
     timeframeMs: number = 24 * 60 * 60 * 1000
   ): Promise<boolean> {
-    return this.coreModule.hasRecentActivity(currency, timeframeMs);
+    try {
+      const activityResponse = await this.getActivityData(currency);
+      
+      // If the response failed, no recent activity
+      if (!activityResponse.success || !activityResponse.data) {
+        return false;
+      }
+
+      // Check if the activity data indicates recent activity within timeframe
+      const currentTime = Date.now();
+      const cutoffTime = currentTime - timeframeMs;
+
+      // Check if the response timestamp is within the timeframe
+      // This represents when the activity data was last updated/fetched
+      const hasRecent = activityResponse.timestamp > cutoffTime;
+
+      return hasRecent;
+    } catch (error) {
+      console.warn(`Failed to check recent activity for ${currency}:`, error);
+      return false;
+    }
   }
 
   // Account & Portfolio (Portfolio Module)
@@ -325,3 +345,6 @@ export function resetUnifiedMexcServiceV2(): void {
 
 export default UnifiedMexcServiceV2;
 export type { UnifiedMexcConfigV2 };
+
+// Export singleton instance for use in pattern detection and other services
+export const unifiedMexcService = getUnifiedMexcServiceV2();

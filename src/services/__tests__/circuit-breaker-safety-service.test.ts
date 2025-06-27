@@ -4,7 +4,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CircuitBreakerSafetyService } from "../circuit-breaker-safety-service";
+import { CircuitBreakerSafetyService } from "../risk/circuit-breaker-safety-service";
 
 describe("Circuit Breaker Safety Service", () => {
   let safetyService: CircuitBreakerSafetyService;

@@ -24,8 +24,10 @@
 
 export type {
   AccountInfo,
+  ActivityEnhancement,
   // Activity Type
   ActivityData,
+  ActivityResponse,
   BalanceEntry,
   // Core Data Types
   CalendarEntry,
@@ -43,21 +45,33 @@ export type {
   OrderParameters,
   OrderResult,
   OrderStatus,
+  ReadyStatePattern,
+  SnipeTarget,
   SymbolEntry,
+  // Legacy aliases
+  SymbolV2Entry,
   Ticker,
   TradingFilter,
 } from "./mexc-api-schemas";
 export {
   AccountInfoSchema,
+  ActivityEnhancementSchema,
   // Activity Schema
   ActivityDataSchema,
+  ActivityResponseSchema,
   BalanceEntrySchema,
   // Core Data Schemas
   CalendarEntrySchema,
   ExchangeInfoSchema,
   ExchangeSymbolSchema,
+  // Ready state helpers
+  hasCompleteData,
+  isValidForSnipe,
   // Market Data Schemas
   KlineSchema,
+  matchesReadyPattern,
+  // Constants
+  READY_STATE_PATTERN,
   // Schema Collection
   MEXC_API_SCHEMAS,
   // Configuration Schemas
@@ -70,12 +84,25 @@ export {
   OrderParametersSchema,
   OrderResultSchema,
   OrderStatusSchema,
+  ReadyStatePatternSchema,
+  SnipeTargetSchema,
   SymbolEntrySchema,
+  // Legacy aliases
+  SymbolV2EntrySchema,
   TickerSchema,
   TradingFilterSchema,
+  // Validation helpers
+  validateActivityData,
+  validateActivityEnhancement,
+  validateActivityResponse,
+  validateCalendarEntry,
   // Utilities
   validateMexcData,
   validateServiceResponse,
+  validateSnipeTarget,
+  validateSymbolEntry,
+  validateSymbolV2Entry,
+  validateTickerData,
 } from "./mexc-api-schemas";
 
 // ============================================================================

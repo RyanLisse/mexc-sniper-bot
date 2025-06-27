@@ -103,7 +103,7 @@ describe("MexcCoreClient", () => {
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
       expect(result.data![0].vcoinId).toBe("BTC123");
-      expect(result.source).toBe("mexc-core-client");
+      expect(result.source).toBe("mexc-core-market");
     });
 
     it("should handle calendar API errors", async () => {
@@ -185,13 +185,11 @@ describe("MexcCoreClient", () => {
   describe("Account API", () => {
     it("should get account balance successfully", async () => {
       const mockData = {
-        data: {
-          balances: [
-            { asset: "BTC", free: "1.00000000", locked: "0.00000000" },
-            { asset: "USDT", free: "1000.00000000", locked: "0.00000000" },
-            { asset: "ETH", free: "0.00000000", locked: "0.00000000" }, // Should be filtered out
-          ],
-        },
+        balances: [
+          { asset: "BTC", free: "1.00000000", locked: "0.00000000" },
+          { asset: "USDT", free: "1000.00000000", locked: "0.00000000" },
+          { asset: "ETH", free: "0.00000000", locked: "0.00000000" }, // Should be filtered out
+        ],
       };
 
       mockFetch.mockResolvedValue(createMockResponse(mockData));

@@ -101,10 +101,9 @@ export class UnifiedMexcCoreModule {
    * Get activity data for a currency
    */
   async getActivityData(currency: string): Promise<MexcServiceResponse<any>> {
-    return this.cacheLayer.getOrSet(
+    return this.cacheLayer.getOrSetWithCustomTTL(
       `activity:${currency}`,
-      () => this.coreClient.getActivityData(currency),
-      "semiStatic" // 5 minute cache for activity data
+      () => this.coreClient.getActivityData(currency)
     );
   }
 
@@ -214,6 +213,8 @@ export class UnifiedMexcCoreModule {
   ): Promise<boolean> {
     try {
       const activityResponse = await this.getActivityData(currency);
+      
+      // If the response failed, no recent activity
       if (!activityResponse.success || !activityResponse.data) {
         return false;
       }
@@ -222,8 +223,8 @@ export class UnifiedMexcCoreModule {
       const currentTime = Date.now();
       const cutoffTime = currentTime - timeframeMs;
 
-      // For now, assume activity data has a timestamp field
-      // In practice, you'd check the actual structure of the activity data
+      // Check if the response timestamp is within the timeframe
+      // This represents when the activity data was last updated/fetched
       const hasRecent = activityResponse.timestamp > cutoffTime;
 
       return hasRecent;

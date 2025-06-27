@@ -7,7 +7,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PatternMatch } from "../../core/pattern-detection/interfaces";
-import { PatternToDatabaseBridge } from "../pattern-to-database-bridge";
+import { PatternToDatabaseBridge } from "../data/pattern-detection/pattern-to-database-bridge";
 
 // Mock dependencies
 vi.mock("../../lib/database-connection-pool", () => ({

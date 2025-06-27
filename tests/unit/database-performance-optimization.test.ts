@@ -16,9 +16,9 @@ import { db, clearDbCache } from '@/src/db';
 import { patternEmbeddings, snipeTargets, userPreferences } from '@/src/db/schema';
 
 // Import services to test
-import { OptimizedPatternService } from '@/src/services/optimized-pattern-service';
-import { EnhancedVectorService } from '@/src/services/enhanced-vector-service';
-import { BatchDatabaseService } from '@/src/services/batch-database-service';
+import { OptimizedPatternService } from '@/src/services/data/pattern-detection/optimized-pattern-service';
+import { EnhancedVectorService } from '@/src/services/data/enhanced-vector-service';
+import { BatchDatabaseService } from '@/src/services/data/batch-database-service';
 import { DatabaseQueryOptimizer } from '@/src/lib/database-query-optimizer';
 import { user } from '@/src/db/schema';
 

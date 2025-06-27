@@ -167,6 +167,114 @@ class QueryPerformanceMonitor {
     this.metrics = [];
     console.info("[QueryPerformanceMonitor] Metrics cleared");
   }
+
+  /**
+   * Get performance statistics
+   */
+  getPerformanceStats(): {
+    totalQueries: number;
+    averageExecutionTime: number;
+    slowQueriesCount: number;
+    errorRate: number;
+    successRate: number;
+    recentQueries: QueryMetrics[];
+  } {
+    const total = this.metrics.length;
+    const successful = this.metrics.filter((m) => m.success).length;
+    const failed = total - successful;
+    const slowQueries = this.getSlowQueries().length;
+    const avgTime = this.getAverageExecutionTime();
+    const recentQueries = this.metrics.slice(-10); // Last 10 queries
+
+    return {
+      totalQueries: total,
+      averageExecutionTime: avgTime,
+      slowQueriesCount: slowQueries,
+      errorRate: total > 0 ? (failed / total) * 100 : 0,
+      successRate: total > 0 ? (successful / total) * 100 : 0,
+      recentQueries,
+    };
+  }
+
+  /**
+   * Get current status
+   */
+  getStatus(): {
+    isMonitoring: boolean;
+    metricsCount: number;
+    lastQuery?: QueryMetrics;
+    status: "healthy" | "warning" | "error";
+  } {
+    const lastQuery = this.metrics[this.metrics.length - 1];
+    const recentErrors = this.metrics.slice(-10).filter((m) => !m.success).length;
+    const recentSlowQueries = this.metrics.slice(-10).filter((m) => m.executionTime > 1000).length;
+
+    let status: "healthy" | "warning" | "error" = "healthy";
+    if (recentErrors > 3) {
+      status = "error";
+    } else if (recentSlowQueries > 5 || recentErrors > 0) {
+      status = "warning";
+    }
+
+    return {
+      isMonitoring: this.isMonitoring,
+      metricsCount: this.metrics.length,
+      lastQuery,
+      status,
+    };
+  }
+
+  /**
+   * Get optimization recommendations
+   */
+  getOptimizationRecommendations(): {
+    recommendations: string[];
+    priority: "low" | "medium" | "high";
+    slowQueries: QueryMetrics[];
+    frequentlyFailingQueries: string[];
+  } {
+    const slowQueries = this.getSlowQueries();
+    const recommendations: string[] = [];
+    const failingQueries = this.metrics
+      .filter((m) => !m.success)
+      .reduce((acc, m) => {
+        acc[m.queryName] = (acc[m.queryName] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+    const frequentlyFailingQueries = Object.entries(failingQueries)
+      .filter(([, count]) => count > 2)
+      .map(([queryName]) => queryName);
+
+    if (slowQueries.length > 10) {
+      recommendations.push("Consider adding database indexes for frequently slow queries");
+      recommendations.push("Review query execution plans for optimization opportunities");
+    }
+
+    if (frequentlyFailingQueries.length > 0) {
+      recommendations.push("Investigate and fix frequently failing queries");
+    }
+
+    const avgTime = this.getAverageExecutionTime();
+    if (avgTime > 500) {
+      recommendations.push("Overall query performance is slow - consider database optimization");
+    }
+
+    const errorRate = this.getPerformanceStats().errorRate;
+    let priority: "low" | "medium" | "high" = "low";
+    if (errorRate > 10 || avgTime > 1000) {
+      priority = "high";
+    } else if (errorRate > 5 || avgTime > 500) {
+      priority = "medium";
+    }
+
+    return {
+      recommendations,
+      priority,
+      slowQueries: slowQueries.slice(-5), // Last 5 slow queries
+      frequentlyFailingQueries,
+    };
+  }
 }
 
 // Singleton instance

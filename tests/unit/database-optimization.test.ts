@@ -378,8 +378,6 @@ describe("Database Optimization", () => {
         `✅ Phase 4: Pool metrics - ${metrics.activeConnections}/${metrics.totalConnections} connections, ${metrics.connectionPoolHealth}`,
       );
     });
-
-    console.log(`✅ Phase 4: Optimized select: ${executionTime.toFixed(2)}ms`);
   });
 
   it("should execute optimized write queries with cache invalidation", async () => {

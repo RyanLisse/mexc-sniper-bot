@@ -133,6 +133,23 @@ export class MexcCacheLayer {
   }
 
   /**
+   * Set data in cache with custom TTL
+   */
+  setWithCustomTTL<T>(key: string, data: T, customTTL?: number): void {
+    const ttl = customTTL ?? this.config.cacheTTL ?? CACHE_TTL_PROFILES.semiStatic;
+
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: Date.now(),
+      ttl,
+      key,
+    };
+
+    this.cache.set(key, entry);
+    this.metrics.sets++;
+  }
+
+  /**
    * Delete specific cache entry
    */
   delete(key: string): boolean {
@@ -195,6 +212,36 @@ export class MexcCacheLayer {
   }
 
   /**
+   * Wrap function with custom TTL caching logic
+   */
+  wrapWithCacheCustomTTL<T>(
+    key: string,
+    fn: () => Promise<MexcServiceResponse<T>>,
+    customTTL?: number
+  ): () => Promise<MexcServiceResponse<T>> {
+    return async () => {
+      // Try cache first
+      const cached = this.get<MexcServiceResponse<T>>(key);
+      if (cached) {
+        return {
+          ...cached,
+          source: `${cached.source}-cached`,
+        };
+      }
+
+      // Execute function and cache result
+      const result = await fn();
+
+      // Only cache successful responses
+      if (result.success) {
+        this.setWithCustomTTL(key, result, customTTL);
+      }
+
+      return result;
+    };
+  }
+
+  /**
    * Get or set pattern for common cache operations
    */
   async getOrSet<T>(
@@ -203,6 +250,18 @@ export class MexcCacheLayer {
     ttlType: keyof typeof CACHE_TTL_PROFILES = "semiStatic"
   ): Promise<MexcServiceResponse<T>> {
     const wrapped = this.wrapWithCache(key, fn, ttlType);
+    return wrapped();
+  }
+
+  /**
+   * Get data from cache or execute function with custom TTL
+   */
+  async getOrSetWithCustomTTL<T>(
+    key: string,
+    fn: () => Promise<MexcServiceResponse<T>>,
+    customTTL?: number
+  ): Promise<MexcServiceResponse<T>> {
+    const wrapped = this.wrapWithCacheCustomTTL(key, fn, customTTL);
     return wrapped();
   }
 

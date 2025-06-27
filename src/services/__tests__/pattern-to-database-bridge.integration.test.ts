@@ -20,7 +20,7 @@ import {
   createTestUser,
   createTestUserPreferences,
 } from "../../test-utils/database-helpers";
-import { PatternToDatabaseBridge } from "../pattern-to-database-bridge";
+import { PatternToDatabaseBridge } from "../data/pattern-detection/pattern-to-database-bridge";
 
 describe("PatternToDatabaseBridge Integration Tests", () => {
   let bridge: PatternToDatabaseBridge;

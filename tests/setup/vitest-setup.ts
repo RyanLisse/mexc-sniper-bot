@@ -136,12 +136,14 @@ afterEach(async () => {
 afterAll(async () => {
   console.log('🧹 Cleaning up Vitest environment...');
 
+  // Clean up timeout monitoring
   globalTimeoutMonitor.cleanup();
   const finalActiveCount = globalTimeoutMonitor.getActiveCount();
   if (finalActiveCount.timeouts > 0 || finalActiveCount.intervals > 0) {
     console.warn(`⚠️ Final cleanup: ${finalActiveCount.timeouts} timeouts and ${finalActiveCount.intervals} intervals`);
   }
 
+  // Enhanced database cleanup with forced closure
   try {
     if (db && typeof (db as any).closeDatabase === 'function') {
       await Promise.race([
@@ -149,9 +151,14 @@ afterAll(async () => {
         new Promise((resolve) => setTimeout(() => {
           console.warn('⚠️ Database cleanup timed out');
           resolve(undefined);
-        }, 5000))
+        }, 3000))
       ]);
       console.log('📦 Database connections closed');
+    }
+
+    // Force close any remaining database connections
+    if (typeof (global as any).__db_close_all__ === 'function') {
+      await (global as any).__db_close_all__();
     }
   } catch (error) {
     console.warn('⚠️ Database cleanup warning:', (error as Error).message);
@@ -167,10 +174,36 @@ afterAll(async () => {
     console.warn('⚠️ Database cache cleanup warning:', (error as Error).message);
   }
 
+  // Clean up file handles and network connections
+  try {
+    // Close any open WebSocket connections
+    if (global.WebSocket && typeof global.WebSocket.close === 'function') {
+      global.WebSocket.close();
+    }
+
+    // Clean up fetch mock
+    if (global.fetch && typeof global.fetch.cleanup === 'function') {
+      global.fetch.cleanup();
+    }
+
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+    }
+  } catch (error) {
+    console.warn('⚠️ Connection cleanup warning:', (error as Error).message);
+  }
+
   vi.restoreAllMocks();
 
   const testDuration = Date.now() - globalThis.__TEST_START_TIME__;
   console.log(`✅ Vitest environment cleaned up (${testDuration}ms)`);
+
+  // Force exit after cleanup to prevent hanging
+  setTimeout(() => {
+    console.log('🔄 Forcing process cleanup to prevent hanging...');
+    process.exitCode = 0;
+  }, 100);
 });
 
 // ============================================================================

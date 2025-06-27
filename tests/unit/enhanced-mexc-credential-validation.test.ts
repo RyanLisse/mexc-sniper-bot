@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import type { MexcApiClient } from "@/src/services/mexc-api-client";
-import type { MexcAuthenticationService } from "@/src/services/mexc-authentication-service";
+import type { MexcApiClient } from "@/src/services/api/mexc-api-client";
+import type { MexcAuthenticationService } from "@/src/services/api/mexc-authentication-service";
 import type { MockedFunction } from "vitest";
 
 // Test implementation will be built incrementally following TDD
@@ -37,7 +37,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
       // Test that the system correctly identifies missing credentials
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator();
 
@@ -54,7 +54,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
       process.env.MEXC_SECRET_KEY = "0351d73e5a444d5ea5de2d527bd2a07a"; // Current test key
 
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator();
 
@@ -71,7 +71,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
       process.env.MEXC_SECRET_KEY = "abcdef1234567890abcdef1234567890ab"; // 32 character hex
 
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator();
 
@@ -88,7 +88,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
       process.env.MEXC_SECRET_KEY = "abcdef1234567890abcdef1234567890ab";
 
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator();
 
@@ -114,7 +114,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
   describe("Circuit Breaker Pattern", () => {
     it("should implement circuit breaker for failed credentials", async () => {
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator({
         circuitBreakerThreshold: 3, // Lower threshold for testing
@@ -146,7 +146,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
       process.env.MEXC_SECRET_KEY = "abcdef1234567890abcdef1234567890ab";
 
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator({
         circuitBreakerThreshold: 3,
@@ -185,7 +185,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
   describe("Connection Health Monitoring", () => {
     it("should track connection health metrics", async () => {
       const { ConnectionHealthMonitor } = await import(
-        "@/src/services/connection-health-monitor"
+        "@/src/services/data/connection-health-monitor"
       );
       const monitor = new ConnectionHealthMonitor();
 
@@ -220,7 +220,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
     it("should calculate connection quality score", async () => {
       const { ConnectionHealthMonitor } = await import(
-        "@/src/services/connection-health-monitor"
+        "@/src/services/data/connection-health-monitor"
       );
       const monitor = new ConnectionHealthMonitor();
 
@@ -259,7 +259,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
       global.fetch = mockFetch;
 
       const { RealTimeCredentialMonitor } = await import(
-        "@/src/services/real-time-credential-monitor"
+        "@/src/services/notification/real-time-credential-monitor"
       );
       const monitor = new RealTimeCredentialMonitor({
         checkInterval: 50, // Fast interval for testing
@@ -302,7 +302,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
   describe("Error Handling and Recovery", () => {
     it("should handle network errors gracefully", async () => {
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator();
 
@@ -318,7 +318,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
     it("should handle rate limiting with exponential backoff", async () => {
       const { EnhancedCredentialValidator } = await import(
-        "@/src/services/enhanced-mexc-credential-validator"
+        "@/src/services/api/enhanced-mexc-credential-validator"
       );
       const validator = new EnhancedCredentialValidator();
 
@@ -348,14 +348,14 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
 describe("MEXC API Client Enhanced Features", () => {
   it("should implement proper timeout handling", async () => {
-    const { MexcApiClient } = await import("@/src/services/mexc-api-client");
+    const { MexcApiClient } = await import("@/src/services/api/mexc-api-client");
 
     // This test would verify timeout implementation
     // Implementation to be added
   });
 
   it("should implement proper retry logic with exponential backoff", async () => {
-    const { MexcApiClient } = await import("@/src/services/mexc-api-client");
+    const { MexcApiClient } = await import("@/src/services/api/mexc-api-client");
 
     // This test would verify retry logic
     // Implementation to be added

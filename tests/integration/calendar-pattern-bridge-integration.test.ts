@@ -4,8 +4,8 @@
  * Tests the automated pipeline: Calendar Monitoring → Pattern Detection → Target Creation
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { calendarPatternBridgeService } from "@/src/services/calendar-pattern-bridge-service";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { calendarPatternBridgeService } from "@/src/services/data/pattern-detection/calendar-pattern-bridge-service";
 
 describe("Calendar-Pattern Bridge Service Integration", () => {
   beforeEach(() => {

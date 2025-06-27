@@ -408,6 +408,12 @@ export class AdvancedRiskEngine extends EventEmitter {
    */
   async updatePortfolioMetrics(update: PortfolioUpdate): Promise<void> {
     await this.marketConditionsManager.updatePortfolioMetrics(update);
+    
+    // Check for emergency conditions if currentRisk is provided
+    if (update.currentRisk !== undefined) {
+      await this.eventManagementHealth.updatePortfolioRisk(update.currentRisk);
+    }
+    
     this.updateAllModules();
   }
 

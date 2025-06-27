@@ -12,11 +12,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
-import { RealTimeSafetyMonitoringService } from '@/src/services/real-time-safety-monitoring-modules';
-import { AutoSnipingExecutionService } from '@/src/services/auto-sniping-execution-service';
-import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
+import { RealTimeSafetyMonitoringService } from '@/src/services/risk/real-time-safety-monitoring-service';
+import { AutoSnipingExecutionService } from '@/src/services/trading/optimized-auto-sniping-execution-engine';
+import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
-import { EmergencySafetySystem } from '@/src/services/emergency-safety-system';
+import { EmergencySafetySystem } from '@/src/services/risk/emergency-safety-system';
 
 describe('Real-time Safety Monitoring Integration', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');

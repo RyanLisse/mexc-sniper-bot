@@ -9,29 +9,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
 import type { IPatternAnalyzer } from "../interfaces";
 
-// Mock the dependencies
-vi.mock("../../../db", () => ({
-  db: {
-    select: vi.fn().mockReturnValue({
-      from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue([]),
-        }),
-      }),
-    }),
-  },
-}));
-
 describe("PatternAnalyzer - TDD Implementation", () => {
   let patternAnalyzer: IPatternAnalyzer;
 
   beforeEach(async () => {
-    // Import the actual implementation once it exists
+    // Import the actual implementation
     try {
       const { PatternAnalyzer } = await import("../pattern-analyzer");
-
       patternAnalyzer = new PatternAnalyzer();
-    } catch {
+    } catch (error) {
+      console.error("Failed to import PatternAnalyzer:", error);
       // Skip tests if implementation doesn't exist yet
       patternAnalyzer = {} as IPatternAnalyzer;
     }

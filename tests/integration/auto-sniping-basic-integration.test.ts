@@ -4,9 +4,14 @@
  * Tests core auto-sniping functionality without complex dependencies
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 describe('Auto-Sniping Basic Integration', () => {
+  
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.resetAllMocks();
+  });
   
   it('should validate auto-sniping configuration schema', () => {
     const validConfig = {

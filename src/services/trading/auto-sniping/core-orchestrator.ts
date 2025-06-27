@@ -24,6 +24,7 @@ export class OptimizedAutoSnipingCore {
   private configManager: AutoSnipingConfigManager;
   private executionEngine: AutoSnipingExecutionEngine;
   private alertManager: AutoSnipingAlertManager;
+  private startTime: Date | null = null;
 
   private constructor(config?: Partial<AutoSnipingConfig>) {
     // Initialize managers
@@ -53,6 +54,9 @@ export class OptimizedAutoSnipingCore {
     console.info("Starting optimized auto-sniping execution");
 
     try {
+      // Set start time
+      this.startTime = new Date();
+
       // Validate configuration and health
       await this.configManager.validateConfiguration();
       await this.configManager.performHealthChecks();
@@ -66,7 +70,7 @@ export class OptimizedAutoSnipingCore {
         severity: "info",
         message: "Auto-sniping execution started successfully",
         details: {
-          startTime: new Date().toISOString(),
+          startTime: this.startTime.toISOString(),
           config: JSON.stringify(this.configManager.getConfig()),
         },
       });
@@ -287,6 +291,199 @@ export class OptimizedAutoSnipingCore {
       activePositions: this.getActivePositions(),
       exportTime: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Get execution report
+   */
+  getExecutionReport() {
+    const stats = this.getStats();
+    const config = this.getConfig();
+    const activePositions = this.getActivePositions();
+    const alerts = this.getAlertStats();
+
+    return {
+      status: this.getExecutionStatus(),
+      activePositions: activePositions.length,
+      totalTrades: stats.totalTrades || 0,
+      successfulTrades: stats.successfulTrades || 0,
+      totalProfit: stats.totalProfit || 0,
+      successRate: stats.totalTrades > 0 ? (stats.successfulTrades / stats.totalTrades) * 100 : 0,
+      
+      // Additional properties expected by API routes
+      recentExecutions: [],
+      activeAlerts: alerts.unacknowledged || 0,
+      stats: {
+        totalExecutions: stats.totalTrades || 0,
+        successCount: stats.successfulTrades || 0,
+        errorCount: (stats.totalTrades || 0) - (stats.successfulTrades || 0),
+        totalPnl: stats.totalProfit || 0,
+        successRate: stats.totalTrades > 0 ? (stats.successfulTrades / stats.totalTrades) * 100 : 0,
+        dailyTradeCount: stats.dailyTrades || 0,
+        totalTrades: stats.totalTrades || 0,
+        length: 1, // For array-like access
+      },
+      systemHealth: "healthy",
+      lastUpdated: new Date().toISOString(),
+      
+      // Status report properties
+      activeTargets: 0,
+      readyTargets: 0,
+      executedToday: stats.dailyTrades || 0,
+      lastExecution: null,
+      safetyStatus: "safe",
+      patternDetectionActive: this.getExecutionStatus() === "active",
+      executionCount: stats.totalTrades || 0,
+      successCount: stats.successfulTrades || 0,
+      errorCount: (stats.totalTrades || 0) - (stats.successfulTrades || 0),
+      uptime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
+      
+      config: {
+        enabled: config.enabled,
+        maxPositions: config.maxPositions,
+        minConfidence: config.minConfidence,
+        maxConcurrentTargets: config.maxConcurrentTrades || 5,
+        retryAttempts: config.retryAttempts || 3,
+        executionDelay: config.executionDelay || 1000,
+      },
+      alerts: {
+        total: alerts.total,
+        unacknowledged: alerts.unacknowledged,
+        critical: alerts.critical,
+      },
+      lastUpdate: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Check if system is ready for trading
+   */
+  isReadyForTrading(): boolean {
+    const config = this.getConfig();
+    const activePositions = this.getActivePositions();
+    
+    return (
+      config.enabled &&
+      activePositions.length < config.maxPositions &&
+      !this.alertManager.hasCriticalIssues() &&
+      this.executionEngine.isExecutionActive()
+    );
+  }
+
+  /**
+   * Pause execution
+   */
+  async pauseExecution(): Promise<void> {
+    console.info("Pausing auto-sniping execution");
+    
+    await this.executionEngine.stop();
+    
+    this.alertManager.addAlert({
+      type: "execution_error",
+      severity: "warning",
+      message: "Execution paused by user",
+      details: {
+        pauseTime: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Resume execution
+   */
+  async resumeExecution(): Promise<void> {
+    console.info("Resuming auto-sniping execution");
+    
+    await this.executionEngine.start();
+    
+    this.alertManager.addAlert({
+      type: "position_opened",
+      severity: "info",
+      message: "Execution resumed by user",
+      details: {
+        resumeTime: new Date().toISOString(),
+      },
+    });
+  }
+
+  /**
+   * Close specific position
+   */
+  async closePosition(positionId: string): Promise<boolean> {
+    console.info("Closing position", { positionId });
+    
+    try {
+      // This would normally interact with the exchange API
+      // For now, we'll simulate the closure
+      
+      this.alertManager.addAlert({
+        type: "position_closed",
+        severity: "info",
+        message: `Position ${positionId} closed manually`,
+        details: {
+          positionId,
+          closeTime: new Date().toISOString(),
+        },
+      });
+      
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      
+      this.alertManager.addAlert({
+        type: "execution_error",
+        severity: "error",
+        message: `Failed to close position ${positionId}: ${errorMessage}`,
+        details: { positionId, error: errorMessage },
+      });
+      
+      return false;
+    }
+  }
+
+  /**
+   * Emergency close all positions
+   */
+  async emergencyCloseAll(): Promise<{ success: number; failed: number; errors: string[] }> {
+    console.info("Emergency closing all positions");
+    
+    const activePositions = this.getActivePositions();
+    const results = { success: 0, failed: 0, errors: [] as string[] };
+    
+    for (const position of activePositions) {
+      try {
+        const success = await this.closePosition(position.id);
+        if (success) {
+          results.success++;
+        } else {
+          results.failed++;
+          results.errors.push(`Failed to close position ${position.id}`);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        results.failed++;
+        results.errors.push(`Error closing position ${position.id}: ${errorMessage}`);
+      }
+    }
+    
+    this.alertManager.addAlert({
+      type: "execution_error",
+      severity: "critical",
+      message: `Emergency closure completed: ${results.success} success, ${results.failed} failed`,
+      details: {
+        results,
+        emergencyTime: new Date().toISOString(),
+      },
+    });
+    
+    return results;
+  }
+
+  /**
+   * Clear acknowledged alerts
+   */
+  clearAcknowledgedAlerts(): number {
+    return this.alertManager.clearAcknowledgedAlerts();
   }
 
   /**

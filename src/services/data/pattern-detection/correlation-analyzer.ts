@@ -382,34 +382,396 @@ export function generateMLCorrelationRecommendations(
 }
 
 // ============================================================================
-// Helper Methods - To be implemented
+// Real Implementation of Helper Methods
 // ============================================================================
 
+/**
+ * Group symbols by their status patterns for correlation analysis
+ */
 function groupSymbolsByStatus(symbols: SymbolEntry[]): Record<string, SymbolEntry[]> {
-  // Implementation placeholder
-  return {};
+  const groups: Record<string, SymbolEntry[]> = {
+    ready_state: [],
+    pre_ready_stage_1: [], // sts:1, st:1
+    pre_ready_stage_2: [], // sts:2, st:1  
+    pre_ready_stage_3: [], // sts:2, st:2, tt:!4
+    inactive: [],
+    unknown: [],
+  };
+
+  for (const symbol of symbols) {
+    try {
+      // Ready state pattern (sts:2, st:2, tt:4)
+      if (symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4) {
+        groups.ready_state.push(symbol);
+      }
+      // Pre-ready stages
+      else if (symbol.sts === 1 && symbol.st === 1) {
+        groups.pre_ready_stage_1.push(symbol);
+      }
+      else if (symbol.sts === 2 && symbol.st === 1) {
+        groups.pre_ready_stage_2.push(symbol);
+      }
+      else if (symbol.sts === 2 && symbol.st === 2 && symbol.tt !== 4) {
+        groups.pre_ready_stage_3.push(symbol);
+      }
+      // Inactive symbols
+      else if (symbol.sts === 0 || symbol.st === 0) {
+        groups.inactive.push(symbol);
+      }
+      // Unknown patterns
+      else {
+        groups.unknown.push(symbol);
+      }
+    } catch (error) {
+      groups.unknown.push(symbol);
+    }
+  }
+
+  return groups;
 }
 
+/**
+ * Analyze launch timing correlations with real crypto market patterns
+ */
 async function analyzeLaunchTimingCorrelations(
   symbols: SymbolEntry[]
 ): Promise<CorrelationAnalysis> {
-  // Implementation placeholder
-  return {
-    symbols: symbols.map((s) => s.cd || "unknown"),
-    correlationType: "launch_timing",
-    strength: 0.3,
-    insights: ["Launch timing correlation analysis"],
-    recommendations: ["Monitor launch timing patterns"],
-  };
+  try {
+    const insights: string[] = [];
+    const recommendations: string[] = [];
+    
+    // Group symbols by status patterns
+    const statusGroups = groupSymbolsByStatus(symbols);
+    
+    // Calculate correlation strength based on status distribution
+    const totalSymbols = symbols.length;
+    const readyStateCount = statusGroups.ready_state.length;
+    const preReadyCount = statusGroups.pre_ready_stage_1.length + 
+                         statusGroups.pre_ready_stage_2.length + 
+                         statusGroups.pre_ready_stage_3.length;
+
+    // Strong correlation if many symbols are in similar stages
+    let correlationStrength = 0;
+    
+    if (readyStateCount / totalSymbols > 0.6) {
+      correlationStrength = 0.8;
+      insights.push(`High concentration: ${readyStateCount}/${totalSymbols} symbols in ready state`);
+      recommendations.push("Strong batch trading opportunity - consider coordinated entries");
+    } else if (preReadyCount / totalSymbols > 0.5) {
+      correlationStrength = 0.6;
+      insights.push(`Pre-ready cluster: ${preReadyCount}/${totalSymbols} symbols approaching ready state`);
+      recommendations.push("Monitor cluster for synchronized ready state transitions");
+    } else if (statusGroups.pre_ready_stage_2.length > 2 && statusGroups.pre_ready_stage_2.length / totalSymbols > 0.3) {
+      correlationStrength = 0.5;
+      insights.push(`Stage 2 cluster: ${statusGroups.pre_ready_stage_2.length} symbols in advanced pre-ready`);
+      recommendations.push("Set up monitoring for imminent ready state transitions");
+    } else {
+      correlationStrength = 0.2;
+      insights.push("Mixed status distribution - no strong timing correlation detected");
+      recommendations.push("Analyze symbols individually for optimal entry timing");
+    }
+
+    // Time-based analysis for symbols with known launch times
+    const symbolsWithTiming = symbols.filter(s => (s as any).estimatedReadyTime);
+    if (symbolsWithTiming.length > 1) {
+      const timeDifferences = calculateTimingClusters(symbolsWithTiming);
+      if (timeDifferences.hasCluster) {
+        correlationStrength = Math.max(correlationStrength, 0.6);
+        insights.push(`Timing cluster detected: ${timeDifferences.clusterSize} symbols expected within ${timeDifferences.timeWindow} hours`);
+        recommendations.push("Prepare for coordinated market activity during cluster window");
+      }
+    }
+
+    // Market session analysis
+    const marketSession = getCurrentMarketSession();
+    if (marketSession === "peak" && correlationStrength > 0.4) {
+      correlationStrength += 0.1; // Boost during peak hours
+      insights.push("Peak market session amplifies correlation strength");
+    }
+
+    return {
+      symbols: symbols.map((s) => s.cd || "unknown"),
+      correlationType: "launch_timing",
+      strength: Math.min(correlationStrength, 1.0),
+      insights,
+      recommendations,
+    };
+  } catch (error) {
+    getLogger().error("Launch timing correlation analysis failed", { error });
+    return {
+      symbols: symbols.map((s) => s.cd || "unknown"),
+      correlationType: "launch_timing",
+      strength: 0.1,
+      insights: ["Analysis failed - using fallback correlation"],
+      recommendations: ["Monitor individual symbols due to analysis error"],
+    };
+  }
 }
 
+/**
+ * Analyze sector correlations based on project types and market movements
+ */
 async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<CorrelationAnalysis> {
-  // Implementation placeholder
-  return {
-    symbols: symbols.map((s) => s.cd || "unknown"),
-    correlationType: "market_sector",
-    strength: 0.2,
-    insights: ["Sector correlation analysis"],
-    recommendations: ["Monitor sector-wide movements"],
+  try {
+    const insights: string[] = [];
+    const recommendations: string[] = [];
+    
+    // Classify symbols by project type (extracted from symbol names/patterns)
+    const sectorGroups = classifySymbolsBySector(symbols);
+    const sectorCounts = Object.values(sectorGroups).map(group => group.length);
+    const maxSectorSize = Math.max(...sectorCounts);
+    const totalSymbols = symbols.length;
+
+    let correlationStrength = 0;
+
+    // Strong sector correlation if dominant sector
+    if (maxSectorSize / totalSymbols > 0.6) {
+      correlationStrength = 0.7;
+      const dominantSector = Object.keys(sectorGroups).find(
+        sector => sectorGroups[sector].length === maxSectorSize
+      );
+      insights.push(`Dominant sector: ${dominantSector} (${maxSectorSize}/${totalSymbols} symbols)`);
+      recommendations.push(`Sector-wide ${dominantSector} movement likely - use sector trading strategy`);
+    }
+    // Moderate correlation with multiple sectors
+    else if (Object.keys(sectorGroups).filter(sector => sectorGroups[sector].length > 1).length > 2) {
+      correlationStrength = 0.4;
+      insights.push("Multi-sector distribution with moderate clustering");
+      recommendations.push("Monitor sector-specific trends for differentiated strategies");
+    }
+    // Low correlation - diverse projects
+    else {
+      correlationStrength = 0.2;
+      insights.push("Diverse project portfolio - low sector correlation");
+      recommendations.push("Apply individual project analysis rather than sector-wide strategy");
+    }
+
+    // Technical indicator correlation within sectors
+    const technicalCorrelation = analyzeTechnicalIndicatorCorrelation(symbols);
+    if (technicalCorrelation.strength > 0.5) {
+      correlationStrength = Math.max(correlationStrength, technicalCorrelation.strength);
+      insights.push(...technicalCorrelation.insights);
+      recommendations.push(...technicalCorrelation.recommendations);
+    }
+
+    // Quality score correlation analysis
+    const qualityScores = symbols.filter(s => s.qs !== undefined).map(s => s.qs!);
+    if (qualityScores.length > 1) {
+      const qualityCorrelation = calculateQualityScoreCorrelation(qualityScores);
+      if (qualityCorrelation > 0.5) {
+        correlationStrength = Math.max(correlationStrength, qualityCorrelation);
+        insights.push(`Quality score correlation: ${(qualityCorrelation * 100).toFixed(1)}%`);
+        recommendations.push("Similar quality projects - expect correlated performance");
+      }
+    }
+
+    return {
+      symbols: symbols.map((s) => s.cd || "unknown"),
+      correlationType: "market_sector",
+      strength: Math.min(correlationStrength, 1.0),
+      insights,
+      recommendations,
+    };
+  } catch (error) {
+    getLogger().error("Sector correlation analysis failed", { error });
+    return {
+      symbols: symbols.map((s) => s.cd || "unknown"),
+      correlationType: "market_sector",
+      strength: 0.1,
+      insights: ["Sector analysis failed - using minimal correlation"],
+      recommendations: ["Apply individual analysis due to correlation error"],
+    };
+  }
+}
+
+// ============================================================================
+// Advanced Helper Functions for Real Analysis
+// ============================================================================
+
+/**
+ * Calculate timing clusters for launch coordination analysis
+ */
+function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
+  hasCluster: boolean;
+  clusterSize: number;
+  timeWindow: number;
+} {
+  try {
+    const times = symbolsWithTiming
+      .map(s => (s as any).estimatedReadyTime)
+      .filter(t => t && typeof t === "number")
+      .sort((a, b) => a - b);
+
+    if (times.length < 2) {
+      return { hasCluster: false, clusterSize: 0, timeWindow: 0 };
+    }
+
+    // Look for clusters within 2-hour windows
+    const CLUSTER_WINDOW = 2 * 60 * 60 * 1000; // 2 hours in ms
+    let maxClusterSize = 1;
+    let bestTimeWindow = 0;
+
+    for (let i = 0; i < times.length - 1; i++) {
+      let clusterSize = 1;
+      const startTime = times[i];
+      
+      for (let j = i + 1; j < times.length; j++) {
+        if (times[j] - startTime <= CLUSTER_WINDOW) {
+          clusterSize++;
+        } else {
+          break;
+        }
+      }
+
+      if (clusterSize > maxClusterSize) {
+        maxClusterSize = clusterSize;
+        bestTimeWindow = Math.min(times[i + clusterSize - 1] - startTime, CLUSTER_WINDOW) / (60 * 60 * 1000);
+      }
+    }
+
+    return {
+      hasCluster: maxClusterSize >= 3,
+      clusterSize: maxClusterSize,
+      timeWindow: bestTimeWindow,
+    };
+  } catch (error) {
+    return { hasCluster: false, clusterSize: 0, timeWindow: 0 };
+  }
+}
+
+/**
+ * Get current market session for timing analysis
+ */
+function getCurrentMarketSession(): string {
+  const hour = new Date().getUTCHours();
+  
+  if (hour >= 8 && hour < 16) return "peak";
+  if (hour >= 0 && hour < 8) return "asia";
+  if (hour >= 16 && hour < 24) return "america";
+  return "off-hours";
+}
+
+/**
+ * Classify symbols by sector based on naming patterns and metadata
+ */
+function classifySymbolsBySector(symbols: SymbolEntry[]): Record<string, SymbolEntry[]> {
+  const sectors: Record<string, SymbolEntry[]> = {
+    AI: [],
+    DeFi: [],
+    GameFi: [],
+    Meme: [],
+    Infrastructure: [],
+    Utility: [],
+    Other: [],
   };
+
+  for (const symbol of symbols) {
+    try {
+      const symbolName = (symbol.cd || "").toLowerCase();
+      const projectName = ((symbol as any).projectName || "").toLowerCase();
+      const combined = `${symbolName} ${projectName}`;
+
+      if (combined.includes("ai") || combined.includes("gpt") || combined.includes("artificial")) {
+        sectors.AI.push(symbol);
+      } else if (combined.includes("defi") || combined.includes("swap") || combined.includes("dex") || combined.includes("yield")) {
+        sectors.DeFi.push(symbol);
+      } else if (combined.includes("game") || combined.includes("metaverse") || combined.includes("nft") || combined.includes("play")) {
+        sectors.GameFi.push(symbol);
+      } else if (combined.includes("meme") || combined.includes("doge") || combined.includes("shib") || combined.includes("pepe")) {
+        sectors.Meme.push(symbol);
+      } else if (combined.includes("chain") || combined.includes("layer") || combined.includes("protocol") || combined.includes("network")) {
+        sectors.Infrastructure.push(symbol);
+      } else if (combined.includes("oracle") || combined.includes("data") || combined.includes("api") || combined.includes("bridge")) {
+        sectors.Utility.push(symbol);
+      } else {
+        sectors.Other.push(symbol);
+      }
+    } catch (error) {
+      sectors.Other.push(symbol);
+    }
+  }
+
+  return sectors;
+}
+
+/**
+ * Analyze technical indicator correlation
+ */
+function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
+  strength: number;
+  insights: string[];
+  recommendations: string[];
+} {
+  try {
+    const priceScores = symbols.filter(s => s.ps !== undefined).map(s => s.ps!);
+    const qualityScores = symbols.filter(s => s.qs !== undefined).map(s => s.qs!);
+
+    let strength = 0;
+    const insights: string[] = [];
+    const recommendations: string[] = [];
+
+    // Price score correlation
+    if (priceScores.length > 1) {
+      const priceVariance = calculateVariance(priceScores);
+      const priceAvg = priceScores.reduce((sum, score) => sum + score, 0) / priceScores.length;
+      
+      if (priceVariance < 100 && priceAvg > 70) { // Low variance, high average
+        strength = 0.7;
+        insights.push(`High price score correlation: avg ${priceAvg.toFixed(1)}, low variance`);
+        recommendations.push("Strong technical setup - consider coordinated entries");
+      } else if (priceVariance < 200) {
+        strength = 0.4;
+        insights.push(`Moderate price score correlation detected`);
+      }
+    }
+
+    // Quality score correlation
+    if (qualityScores.length > 1) {
+      const qualityVariance = calculateVariance(qualityScores);
+      const qualityAvg = qualityScores.reduce((sum, score) => sum + score, 0) / qualityScores.length;
+      
+      if (qualityVariance < 50 && qualityAvg > 60) {
+        strength = Math.max(strength, 0.6);
+        insights.push(`Quality score correlation: avg ${qualityAvg.toFixed(1)}, consistent quality`);
+        recommendations.push("High-quality symbol cluster - prioritize for trading");
+      }
+    }
+
+    return { strength, insights, recommendations };
+  } catch (error) {
+    return { strength: 0, insights: ["Technical analysis failed"], recommendations: [] };
+  }
+}
+
+/**
+ * Calculate quality score correlation coefficient
+ */
+function calculateQualityScoreCorrelation(scores: number[]): number {
+  try {
+    if (scores.length < 2) return 0;
+    
+    const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    const variance = calculateVariance(scores);
+    const standardDeviation = Math.sqrt(variance);
+    
+    // High correlation when low standard deviation relative to mean
+    if (standardDeviation / mean < 0.2) return 0.8;
+    if (standardDeviation / mean < 0.3) return 0.6;
+    if (standardDeviation / mean < 0.4) return 0.4;
+    
+    return 0.2;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Calculate variance for correlation analysis
+ */
+function calculateVariance(values: number[]): number {
+  if (values.length === 0) return 0;
+  
+  const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+  const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+  return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
 }

@@ -33,7 +33,7 @@ vi.mock("@/src/services/ai/intelligence-orchestrator", () => ({
   },
 }));
 
-import { aiIntelligenceService } from "@/src/services/ai-intelligence-service";
+import { aiIntelligenceService } from "@/src/services/ai/ai-intelligence-service";
 import { embeddingsService } from "@/src/services/ai/embeddings-service";
 import { researchService } from "@/src/services/ai/research-service";
 import { intelligenceOrchestrator } from "@/src/services/ai/intelligence-orchestrator";

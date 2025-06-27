@@ -76,23 +76,47 @@ export class PatternStorage implements IPatternStorage {
       const isSymbolEntry = "sts" in data && "st" in data && "tt" in data;
       const symbolName = "symbol" in data ? data.symbol : isSymbolEntry ? data.cd : "unknown";
 
+      // Generate unique pattern ID
+      const timestamp = Date.now();
+      const randomSuffix = Math.random().toString(36).substring(2, 8);
+      const patternId = `embed-${timestamp}-${randomSuffix}`;
+
+      // Create pattern data JSON
+      const patternDataJson = JSON.stringify({
+        sts: isSymbolEntry ? (data as SymbolEntry).sts : undefined,
+        st: isSymbolEntry ? (data as SymbolEntry).st : undefined,
+        tt: isSymbolEntry ? (data as SymbolEntry).tt : undefined,
+        firstOpenTime: "firstOpenTime" in data ? data.firstOpenTime : undefined,
+        projectName: "projectName" in data ? data.projectName : undefined,
+        symbol: symbolName,
+        type,
+        confidence,
+      });
+
+      // Generate a simple mock embedding (in a real implementation, this would use OpenAI)
+      const mockEmbedding = this.generateMockEmbedding(patternDataJson);
+
+      const now = new Date();
+
       // Prepare pattern data for storage
       const patternData = {
+        patternId,
         symbolName,
         vcoinId: "vcoinId" in data ? data.vcoinId : undefined,
         patternType: type,
+        patternData: patternDataJson,
+        embedding: JSON.stringify(mockEmbedding),
+        embeddingDimension: 1536,
+        embeddingModel: "text-embedding-ada-002",
         confidence: Math.round(confidence * 100) / 100, // Round to 2 decimal places
-        data: JSON.stringify({
-          sts: isSymbolEntry ? (data as SymbolEntry).sts : undefined,
-          st: isSymbolEntry ? (data as SymbolEntry).st : undefined,
-          tt: isSymbolEntry ? (data as SymbolEntry).tt : undefined,
-          firstOpenTime: "firstOpenTime" in data ? data.firstOpenTime : undefined,
-          projectName: "projectName" in data ? data.projectName : undefined,
-        }),
-        createdAt: new Date(),
-        isActive: true,
+        occurrences: 1,
+        discoveredAt: now,
+        lastSeenAt: now,
+        similarityThreshold: 0.85,
         truePositives: 1,
         falsePositives: 0,
+        isActive: true,
+        createdAt: now,
       };
 
       // Store in database
@@ -303,6 +327,40 @@ export class PatternStorage implements IPatternStorage {
     return (
       typeof score === "number" && !isNaN(score) && isFinite(score) && score >= 0 && score <= 100
     );
+  }
+
+  private generateMockEmbedding(data: string): number[] {
+    // Generate a mock embedding vector of 1536 dimensions (matching OpenAI's ada-002)
+    // In a real implementation, this would use OpenAI's API
+    const dimension = 1536;
+    const embedding: number[] = [];
+    
+    // Create a deterministic but varied embedding based on the data
+    let seed = 0;
+    for (let i = 0; i < data.length; i++) {
+      seed += data.charCodeAt(i);
+    }
+    
+    // Simple pseudo-random number generator for consistent mock embeddings
+    const random = (index: number) => {
+      const x = Math.sin(seed + index) * 10000;
+      return x - Math.floor(x);
+    };
+    
+    for (let i = 0; i < dimension; i++) {
+      // Generate values between -1 and 1 (typical for embeddings)
+      embedding.push((random(i) - 0.5) * 2);
+    }
+    
+    // Normalize the vector (optional, but often done for embeddings)
+    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+    if (magnitude > 0) {
+      for (let i = 0; i < embedding.length; i++) {
+        embedding[i] /= magnitude;
+      }
+    }
+    
+    return embedding;
   }
 
   private getCachedValue(key: string): any {

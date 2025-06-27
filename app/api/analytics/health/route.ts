@@ -472,8 +472,11 @@ async function checkMexcApiHealth(userId?: string): Promise<any> {
       : await getUnifiedMexcService();
 
     // Use a basic ping or server time check as health indicator
+    const serverTimeStart = Date.now();
     const serverTimeResponse = await mexcService.getServerTime();
-    const isHealthy = serverTimeResponse.success;
+    const responseTime = Date.now() - serverTimeStart;
+    
+    const isHealthy = typeof serverTimeResponse === 'number' && serverTimeResponse > 0;
 
     const score = isHealthy ? 100 : 20;
     const status = isHealthy ? 'healthy' : 'critical';
@@ -482,7 +485,7 @@ async function checkMexcApiHealth(userId?: string): Promise<any> {
       status,
       score,
       connectivity: isHealthy ? 'connected' : 'failed',
-      latency: serverTimeResponse.responseTime || 'unknown',
+      latency: `${responseTime}ms`,
       lastUpdated: new Date().toISOString(),
       credentialSource: userId ? 'user-specific' : 'environment',
       issues: !isHealthy ? [{

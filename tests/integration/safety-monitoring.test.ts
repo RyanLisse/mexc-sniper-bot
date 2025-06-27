@@ -15,9 +15,19 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
 import { NextRequest } from "next/server";
 
-// Mock auth decorators to bypass authentication in tests
-vi.mock("@/src/lib/auth-decorators", () => ({
-  authenticatedRoute: (handler: (...args: any[]) => any) => handler,
+// Mock the entire api-auth module to bypass authentication and rate limiting
+vi.mock("@/src/lib/api-auth", () => ({
+  apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+    // Return a wrapper that directly calls the handler without auth checks
+    return async (request, ...args) => {
+      return await handler(request, ...args);
+    };
+  }),
+  requireApiAuth: vi.fn().mockResolvedValue({
+    id: "test-user-123",
+    email: "test@example.com",
+    name: "Test User",
+  }),
 }));
 
 // Mock logger to avoid logging noise during tests
@@ -34,7 +44,7 @@ vi.mock("@/src/lib/structured-logger", () => ({
 // Mock the safety service at module level first
 let mockSafetyService: any;
 
-// Create comprehensive mock safety service
+// Create comprehensive mock safety service with consistent return values
 const createMockSafetyService = () => ({
   // Core monitoring methods
   getMonitoringStatus: vi.fn().mockReturnValue(false),
@@ -167,8 +177,8 @@ const createMockSafetyService = () => ({
   clearAcknowledgedAlerts: vi.fn().mockReturnValue(5),
 });
 
-// Mock the safety monitoring service module
-vi.mock("@/src/services/real-time-safety-monitoring-modules", () => ({
+// Mock the real-time safety monitoring modules to use our mock service
+vi.mock("@/src/services/risk/real-time-safety-monitoring-modules", () => ({
   RealTimeSafetyMonitoringService: {
     getInstance: vi.fn(() => mockSafetyService),
   },
@@ -176,18 +186,13 @@ vi.mock("@/src/services/real-time-safety-monitoring-modules", () => ({
 
 // Import after mocking
 const { GET, POST } = await import(
-  "@/src/app/api/auto-sniping/safety-monitoring/route"
+  "../../app/api/auto-sniping/safety-monitoring/route"
 );
 
 describe("Safety Monitoring API Integration", () => {
   const TEST_TIMEOUT = setTestTimeout("integration");
 
-  // Mock user for authenticated requests
-  const mockUser = {
-    id: "test-user-123",
-    email: "test@example.com",
-    name: "Test User",
-  };
+  // Authentication is handled by mocked Kinde auth
 
   beforeEach(() => {
     // Clear all mocks
@@ -211,7 +216,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /status request",
         );
@@ -235,7 +240,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /report request",
         );
@@ -262,7 +267,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /risk-metrics request",
         );
@@ -287,7 +292,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /system-health request",
         );
@@ -312,7 +317,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /configuration request",
         );
@@ -337,7 +342,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /check-safety request",
         );
@@ -371,7 +376,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /start_monitoring request",
         );
@@ -401,7 +406,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /stop_monitoring request",
         );
@@ -437,7 +442,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /update_configuration request",
         );
@@ -469,7 +474,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /emergency_response request",
         );
@@ -497,7 +502,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /invalid_action request",
         );
@@ -523,7 +528,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST with missing action",
         );
@@ -549,7 +554,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST with invalid JSON",
         );
@@ -576,7 +581,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /report with service error",
         );
@@ -605,7 +610,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /start_monitoring when active",
         );
@@ -634,7 +639,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /stop_monitoring when not active",
         );
@@ -666,7 +671,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /acknowledge_alert for non-existent alert",
         );
@@ -695,7 +700,7 @@ describe("Safety Monitoring API Integration", () => {
         const responses = await Promise.all(
           requests.map((request) =>
             withApiTimeout(
-              () => GET(request, mockUser),
+              () => GET(request),
               10000,
               "Concurrent GET /status request",
             ),
@@ -729,7 +734,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /report for validation",
         );
@@ -781,7 +786,7 @@ describe("Safety Monitoring API Integration", () => {
         // This should timeout and handle gracefully
         try {
           const response = await withApiTimeout(
-            () => GET(request, mockUser),
+            () => GET(request),
             2000, // 2 second timeout
             "GET /report with timeout",
           );
@@ -803,7 +808,7 @@ describe("Safety Monitoring API Integration", () => {
       async () => {
         // Mock getInstance to throw an error for this test
         const { RealTimeSafetyMonitoringService } = await import(
-          "@/src/services/real-time-safety-monitoring-modules"
+          "@/src/services/risk/real-time-safety-monitoring-modules"
         );
         vi.mocked(
           RealTimeSafetyMonitoringService.getInstance,
@@ -817,7 +822,7 @@ describe("Safety Monitoring API Integration", () => {
         const request = new NextRequest(url.toString());
 
         const response = await withApiTimeout(
-          () => GET(request, mockUser),
+          () => GET(request),
           5000,
           "GET /status with service init failure",
         );
@@ -847,7 +852,7 @@ describe("Safety Monitoring API Integration", () => {
         );
 
         const response = await withApiTimeout(
-          () => POST(request, mockUser),
+          () => POST(request),
           5000,
           "POST /start_monitoring with async failure",
         );

@@ -106,11 +106,11 @@ import { tradingStrategies, strategyTemplates } from "@/src/db/schemas/strategie
 // Import strategyPhaseExecutions separately to avoid duplicate identifier
 import { strategyPhaseExecutions } from "@/src/db/schemas/strategies";
 import { user } from "@/src/db/schema";
-import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
-import { MultiPhaseExecutor, createExecutorFromStrategy } from "@/src/services/multi-phase-executor";
+import { multiPhaseTradingService } from "@/src/services/trading/multi-phase-trading-service";
+import { MultiPhaseExecutor, createExecutorFromStrategy } from "@/src/services/trading/multi-phase-executor";
 import { TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
-import { AdvancedTradingStrategy } from "@/src/services/advanced-trading-strategy";
-import { MultiPhaseTradingBot } from "@/src/services/multi-phase-trading-bot";
+import { AdvancedTradingStrategy } from "@/src/services/trading/advanced-trading-strategy";
+import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 import { eq } from 'drizzle-orm';
 
 describe('Multi-Phase Trading System Integration', () => {

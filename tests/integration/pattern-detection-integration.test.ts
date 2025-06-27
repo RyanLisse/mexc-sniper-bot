@@ -5,6 +5,7 @@ import {
   beforeAll,
   afterAll,
   beforeEach,
+  afterEach,
   vi,
 } from "vitest";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
@@ -17,220 +18,49 @@ import type {
   CalendarEntry,
 } from "@/src/services/mexc-unified-exports";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
+import * as activityIntegration from "@/src/services/data/pattern-detection/activity-integration";
+import {
+  setupServiceMocks,
+  standardTestCleanup,
+  standardMockData,
+} from "../setup/standardized-mocks";
+
+// Note: Using real activity integration without mocking to avoid mocking issues
 
 describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => {
   let patternEngine: PatternDetectionCore;
   let mexcService: UnifiedMexcServiceV2;
 
-  beforeAll(async () => {
-    // Initialize services
+  beforeAll(() => {
+    // Initialize services with test configuration
     patternEngine = PatternDetectionCore.getInstance();
     mexcService = new UnifiedMexcServiceV2({
+      apiKey: 'test-api-key',
+      secretKey: 'test-secret-key',
       enableCaching: false, // Disable caching for tests
       enableCircuitBreaker: false,
+      enableMetrics: false,
     });
 
-    // Mock AI services to speed up tests and avoid API calls
-    const { aiIntelligenceService } = await import(
-      "@/src/services/ai-intelligence-service"
-    );
-    vi.spyOn(aiIntelligenceService, "enhancePatternWithAI").mockResolvedValue({
-      symbolName: "TESTUSDT",
-      type: "ready_state" as const,
-      data: { sts: 2, st: 2, tt: 4 },
-      confidence: 85,
-      cohereEmbedding: new Array(1024).fill(0.1),
-      perplexityInsights: {
-        summary: "Mock research summary for testing",
-        keyFindings: ["Bullish momentum", "Increasing volume"],
-        marketContext: {
-          sentiment: "bullish",
-          volatility: "medium",
-          volume: "high",
-          technicalOutlook: "positive",
-        },
-        riskAssessment: {
-          level: "low" as const,
-          factors: ["market stability"],
-          mitigation: ["position sizing"],
-        },
-        opportunities: {
-          shortTerm: ["breakout potential"],
-          mediumTerm: ["trend continuation"],
-          longTerm: ["strong fundamentals"],
-        },
-        citations: [],
-        researchTimestamp: Date.now(),
-        confidence: 0.8,
-      },
-      aiContext: {
-        marketSentiment: "neutral",
-        opportunityScore: 85,
-        researchInsights: ["Test AI insight"],
-        timeframe: "immediate",
-        volumeProfile: "medium",
-        liquidityScore: 0.75,
-      },
+    // Setup standardized service mocks (excluding pattern engine to test real implementation)
+    setupServiceMocks({
+      mexcService,
+      // patternEngine, // Comment out to use real pattern detection implementation
     });
-
-    // Note: enhanceConfidence method doesn't exist on aiIntelligenceService
-    // Global mock will handle this method call
-
-    // Setup global mock services to prevent API failures
-    if (typeof global !== "undefined") {
-      // Mock Activity Service
-      (global as any).activityService = {
-        getRecentActivity: vi.fn().mockResolvedValue([
-          {
-            activityId: "mock-activity-1",
-            currency: "TEST",
-            currencyId: "test-currency-id",
-            activityType: "SUN_SHINE",
-          },
-        ]),
-      };
-
-      // Mock Multi-Phase Trading Service
-      (global as any).multiPhaseTradingService = {
-        getHistoricalSuccessRates: vi.fn().mockResolvedValue({
-          timeframeDays: 30,
-          totalTrades: 120,
-          successRate: 0.82,
-          averageReturn: 0.148,
-        }),
-      };
-
-      // Mock AI Intelligence Service globally
-      (global as any).aiIntelligenceService = {
-        enhanceConfidence: vi.fn().mockResolvedValue({
-          enhancedConfidence: 90,
-          boost: 5,
-          reasoning: "Mock AI confidence enhancement",
-        }),
-        enhancePatternWithAI: vi.fn().mockResolvedValue({
-          symbolName: "TESTUSDT",
-          type: "ready_state" as const,
-          confidence: 85,
-          aiContext: {
-            marketSentiment: "neutral",
-            opportunityScore: 85,
-            researchInsights: ["Mock AI insight"],
-            timeframe: "immediate",
-          },
-        }),
-      };
-    }
-
-    // Clean up test data - works with mocked database
-    await db.delete(coinActivities);
-  }, 60000); // Increase timeout to 60 seconds
+  });
 
   afterAll(async () => {
     // Clean up test data - works with mocked database
     await db.delete(coinActivities);
-
-    // Clean up global mock services
-    if (typeof global !== "undefined") {
-      delete (global as any).activityService;
-      delete (global as any).multiPhaseTradingService;
-      delete (global as any).aiIntelligenceService;
-    }
   });
 
-  beforeEach(async () => {
-    // Clear call history but preserve mocks for AI services
+  beforeEach(() => {
+    // Reset mocks before each test
     vi.clearAllMocks();
+  });
 
-    // Re-establish AI service mocks to prevent external API calls
-    const { aiIntelligenceService } = await import(
-      "@/src/services/ai-intelligence-service"
-    );
-    vi.spyOn(aiIntelligenceService, "enhancePatternWithAI").mockResolvedValue({
-      symbolName: "TESTUSDT",
-      type: "ready_state" as const,
-      data: { sts: 2, st: 2, tt: 4 },
-      confidence: 85,
-      cohereEmbedding: new Array(1024).fill(0.1),
-      perplexityInsights: {
-        summary: "Mock research summary for testing",
-        keyFindings: ["Bullish momentum", "Increasing volume"],
-        marketContext: {
-          sentiment: "bullish",
-          volatility: "medium",
-          volume: "high",
-          technicalOutlook: "positive",
-        },
-        riskAssessment: {
-          level: "low" as const,
-          factors: ["market stability"],
-          mitigation: ["position sizing"],
-        },
-        opportunities: {
-          shortTerm: ["breakout potential"],
-          mediumTerm: ["trend continuation"],
-          longTerm: ["strong fundamentals"],
-        },
-        citations: [],
-        researchTimestamp: Date.now(),
-        confidence: 0.8,
-      },
-      aiContext: {
-        marketSentiment: "neutral",
-        opportunityScore: 85,
-        researchInsights: ["Test AI insight"],
-        timeframe: "immediate",
-        volumeProfile: "medium",
-        liquidityScore: 0.75,
-      },
-    });
-
-    // Note: enhanceConfidence method doesn't exist on aiIntelligenceService
-    // Global mock will handle this method call
-
-    // Re-establish global mock services to prevent API failures
-    if (typeof global !== "undefined") {
-      // Re-mock Activity Service
-      (global as any).activityService = {
-        getRecentActivity: vi.fn().mockResolvedValue([
-          {
-            activityId: "mock-activity-1",
-            currency: "TEST",
-            currencyId: "test-currency-id",
-            activityType: "SUN_SHINE",
-          },
-        ]),
-      };
-
-      // Re-mock Multi-Phase Trading Service
-      (global as any).multiPhaseTradingService = {
-        getHistoricalSuccessRates: vi.fn().mockResolvedValue({
-          timeframeDays: 30,
-          totalTrades: 120,
-          successRate: 0.82,
-          averageReturn: 0.148,
-        }),
-      };
-
-      // Re-mock AI Intelligence Service globally
-      (global as any).aiIntelligenceService = {
-        enhanceConfidence: vi.fn().mockResolvedValue({
-          enhancedConfidence: 90,
-          boost: 5,
-          reasoning: "Mock AI confidence enhancement",
-        }),
-        enhancePatternWithAI: vi.fn().mockResolvedValue({
-          symbolName: "TESTUSDT",
-          type: "ready_state" as const,
-          confidence: 85,
-          aiContext: {
-            marketSentiment: "neutral",
-            opportunityScore: 85,
-            researchInsights: ["Mock AI insight"],
-            timeframe: "immediate",
-          },
-        }),
-      };
-    }
+  afterEach(() => {
+    standardTestCleanup();
   });
 
   describe("End-to-End Pattern Detection with Activity Data", () => {
@@ -290,7 +120,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "FCATUSDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };
@@ -320,7 +150,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
           st: 2,
           tt: 4,
           cd: "BULK1USDT",
-          ca: 1000,
+          ca: "0x1000",
           ps: 100,
           qs: 50,
         },
@@ -329,7 +159,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
           st: 2,
           tt: 4,
           cd: "BULK2USDT",
-          ca: 1000,
+          ca: "0x1000",
           ps: 100,
           qs: 50,
         },
@@ -338,7 +168,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
           st: 2,
           tt: 4,
           cd: "BULK3USDT",
-          ca: 1000,
+          ca: "0x1000",
           ps: 100,
           qs: 50,
         },
@@ -462,7 +292,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "PERF50USDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };
@@ -484,7 +314,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "DBERRORUSDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };
@@ -518,7 +348,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "INVALIDUSDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };
@@ -538,7 +368,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "LEGACYUSDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };
@@ -559,7 +389,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "APICONTRACTUSDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };
@@ -588,7 +418,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         st: 2,
         tt: 4,
         cd: "IMPROVEMENTUSDT",
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };

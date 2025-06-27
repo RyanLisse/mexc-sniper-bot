@@ -25,18 +25,24 @@ import {
   vi,
   beforeAll,
 } from "vitest";
-import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { MultiPhaseTradingBot } from "@/src/services/multi-phase-trading-bot";
-import { ComprehensiveSafetyCoordinator } from "@/src/services/comprehensive-safety-coordinator";
-import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
-import { AdvancedRiskEngine } from "@/src/services/advanced-risk-engine";
-import { MultiPhaseExecutor } from "@/src/services/multi-phase-executor";
-import { multiPhaseTradingService } from "@/src/services/multi-phase-trading-service";
+import { PatternDetectionCore } from "../../src/core/pattern-detection/pattern-detection-core";
+import { MultiPhaseTradingBot } from "../../src/services/trading/multi-phase-trading-bot";
+import { ComprehensiveSafetyCoordinator } from "../../src/services/risk/comprehensive-safety-coordinator";
+import { UnifiedMexcServiceV2 } from "../../src/services/api/unified-mexc-service-v2";
+import { AdvancedRiskEngine } from "../../src/services/risk/advanced-risk-engine";
+import { MultiPhaseExecutor } from "../../src/services/multi-phase-executor";
 import type {
   SymbolEntry,
   CalendarEntry,
-} from "@/src/services/mexc-unified-exports";
-import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
+} from "../../src/services/mexc-unified-exports";
+import type { ActivityData } from "../../src/schemas/unified/mexc-api-schemas";
+import * as activityIntegration from "../../src/services/data/pattern-detection/activity-integration";
+import {
+  setupStandardizedTests,
+  setupServiceMocks,
+  standardTestCleanup,
+  standardMockData,
+} from "../setup/standardized-mocks";
 
 describe("End-to-End Autosniping Workflow Integration", () => {
   let patternEngine: PatternDetectionCore;
@@ -56,58 +62,16 @@ describe("End-to-End Autosniping Workflow Integration", () => {
     orderExecutionTimeout: 5000, // 5 second order execution timeout
   };
 
-  // Mock data for realistic market scenarios
-  const mockMarketData = {
-    // High-confidence ready state pattern
-    readyStateSymbol: {
-      sts: 2,
-      st: 2,
-      tt: 4,
-      cd: "AUTOSNIPERXUSDT",
-      ca: 50000,
-      ps: 10000,
-      qs: 5000,
-    } as SymbolEntry,
-
-    // High-priority activity data
-    highPriorityActivity: {
-      activityId: "auto-snipe-activity-001",
-      currency: "AUTOSNIPERX",
-      currencyId: "autosniperx-currency-id",
-      activityType: "SUN_SHINE",
-    } as ActivityData,
-
-    // Advance launch opportunity
-    advanceLaunchEntry: {
-      symbol: "ADVANCEAUTOSNIPEUSDT",
-      vcoinId: "advance-auto-snipe-vcoin",
-      firstOpenTime: Date.now() + 4 * 60 * 60 * 1000, // 4 hours future
-      projectName: "Advanced Auto Snipe Project",
-    } as CalendarEntry,
-  };
+  // Use standardized mock data
+  const mockMarketData = standardMockData;
 
   beforeAll(() => {
-    // Setup comprehensive service mocking
-    vi.mock("@/src/db", () => ({
-      db: {
-        insert: vi.fn().mockReturnValue({
-          values: vi.fn().mockReturnValue({
-            returning: vi
-              .fn()
-              .mockResolvedValue([{ id: "1", createdAt: new Date() }]),
-          }),
-        }),
-        select: vi.fn().mockReturnValue({
-          from: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
-              orderBy: vi.fn().mockResolvedValue([]),
-            }),
-          }),
-        }),
-        transaction: vi.fn().mockImplementation(async (cb) => cb(this)),
-      },
-    }));
+    // Setup standardized test mocks
+    setupStandardizedTests({
+      enableActivityMocks: true,
+      enableAIMocks: true,
+      enableDatabaseMocks: true,
+    });
   });
 
   beforeEach(async () => {
@@ -165,49 +129,18 @@ describe("End-to-End Autosniping Workflow Integration", () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    standardTestCleanup();
   });
 
   function setupApiMocks() {
-    // Mock realistic ticker data
-    vi.spyOn(mexcService, "getTicker").mockImplementation(
-      async (symbol: string) => ({
-        success: true,
-        data: {
-          symbol,
-          lastPrice: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
-          price: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
-          priceChange: "0.000001",
-          priceChangePercent: "5.5",
-          volume: "1000000",
-          quoteVolume: "1000",
-          openPrice: symbol.includes("AUTOSNIPER") ? "0.0009" : "47500",
-          highPrice: symbol.includes("AUTOSNIPER") ? "0.0012" : "52000",
-          lowPrice: symbol.includes("AUTOSNIPER") ? "0.0008" : "46000",
-          count: "12500",
-        },
-        timestamp: new Date().toISOString(),
-      }),
-    );
-
-    // Mock successful order placement
-    vi.spyOn(mexcService, "placeOrder").mockResolvedValue({
-      success: true,
-      data: {
-        orderId: `order-${Date.now()}`,
-        symbol: "AUTOSNIPERXUSDT",
-        status: "FILLED",
-        price: "0.00125",
-        quantity: "8000000", // $10k position at $0.00125
-      },
-      timestamp: new Date().toISOString(),
+    // Use standardized service mocks
+    setupServiceMocks({
+      mexcService,
+      patternEngine,
+      tradingBot,
+      riskEngine,
+      safetyCoordinator,
     });
-
-    // Mock activity data for pattern enhancement
-    vi.spyOn(
-      patternEngine as any,
-      "getActivityDataForSymbol",
-    ).mockResolvedValue([mockMarketData.highPriorityActivity]);
   }
 
   describe("Complete Autosniping Workflow", () => {
@@ -640,7 +573,7 @@ describe("End-to-End Autosniping Workflow Integration", () => {
         st: 2,
         tt: 4,
         cd: "NEWLISTINGUSDT",
-        ca: 100000, // Large cap allocation
+        ca: "0x100000", // Large cap allocation
         ps: 50000, // High position score
         qs: 25000, // Quality score
       } as SymbolEntry;

@@ -99,8 +99,8 @@ export async function GET(request: NextRequest) {
         safetyViolations: safetyMonitorStatus.activeViolations,
       } : undefined,
       recommendations: [
-        ...riskEngineHealth.issues.map(issue => `Risk Engine: ${issue}`),
-        ...systemHealthCheck.criticalIssues.map(issue => `System: ${issue}`),
+        ...riskEngineHealth.issues.map((issue: string) => `Risk Engine: ${issue}`),
+        ...systemHealthCheck.criticalIssues.map((issue: string) => `System: ${issue}`),
         ...safetyMonitorStatus.recommendations,
       ],
     };

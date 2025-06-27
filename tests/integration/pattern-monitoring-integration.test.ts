@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
-import { PatternMonitoringService } from '@/src/services/pattern-monitoring-service';
+import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 

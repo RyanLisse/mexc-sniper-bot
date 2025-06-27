@@ -84,7 +84,7 @@ export async function GET() {
     console.error("[Health Check] Unexpected error:", error);
     
     const criticalHealthResult = {
-      status: 'critical' as const,
+      status: 'error' as const,
       message: 'Database health check failed completely',
       timestamp: new Date().toISOString(),
       details: {

@@ -82,7 +82,7 @@ beforeEach(async () => {
   // Mock error logging service by directly mocking the static getInstance method
   try {
     const { ErrorLoggingService } = await import(
-      "@/src/services/error-logging-service"
+      "@/src/services/notification/error-logging-service"
     );
     vi.spyOn(ErrorLoggingService, "getInstance").mockReturnValue({
       logError: vi.fn().mockResolvedValue(undefined),

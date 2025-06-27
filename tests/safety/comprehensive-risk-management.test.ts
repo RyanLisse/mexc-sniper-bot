@@ -20,10 +20,10 @@ import {
   vi,
   beforeAll,
 } from "vitest";
-import { AdvancedRiskEngine } from "@/src/services/advanced-risk-engine";
-import { ComprehensiveSafetyCoordinator } from "@/src/services/comprehensive-safety-coordinator";
-import { EmergencySafetySystem } from "@/src/services/emergency-safety-system";
-import { MultiPhaseTradingBot } from "@/src/services/multi-phase-trading-bot";
+import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
+import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
+import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
+import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 import { TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { TransactionLockService } from "@/src/services/data/transaction-lock-service";

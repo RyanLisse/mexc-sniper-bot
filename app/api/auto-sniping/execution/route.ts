@@ -49,7 +49,7 @@ export const GET = instrumentedTradingRoute(
       execution: {
         isActive: report.status === 'active',
         status: report.status,
-        activePositionsCount: report.activePositions.length,
+        activePositionsCount: typeof report.activePositions === 'number' ? report.activePositions : (report.activePositions && Array.isArray(report.activePositions) ? report.activePositions.length : 0),
         totalPnl: report.stats.totalPnl,
         successRate: report.stats.successRate,
         dailyTrades: report.stats.dailyTradeCount,
@@ -142,7 +142,7 @@ export const POST = instrumentedTradingRoute(
         }
 
         try {
-          const success = await getExecutionService().closePosition(positionId, reason || 'manual');
+          const success = await getExecutionService().closePosition(positionId);
           if (!success) {
             return NextResponse.json(createErrorResponse(
               'Failed to close position',
@@ -236,7 +236,7 @@ export const POST = instrumentedTradingRoute(
         return NextResponse.json(createSuccessResponse({
           status: report.status,
           isActive: report.status === 'active',
-          activePositions: report.activePositions.length,
+          activePositions: typeof report.activePositions === 'number' ? report.activePositions : (report.activePositions && Array.isArray(report.activePositions) ? report.activePositions.length : 0),
           totalTrades: report.stats.totalTrades,
           successRate: report.stats.successRate,
           totalPnl: report.stats.totalPnl,

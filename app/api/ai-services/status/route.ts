@@ -105,7 +105,7 @@ async function checkPerplexityStatus() {
     }
 
     // Test Perplexity API with a simple research request
-    const testResult = await getAiIntelligenceService().conductMarketResearch("BTC", "sentiment");
+    const testResult = await getAiIntelligenceService().conductMarketResearch("BTC", "technical");
 
     return {
       name: "Perplexity",
@@ -115,7 +115,7 @@ async function checkPerplexityStatus() {
       capabilities: ["market-research", "sentiment-analysis", "news-analysis"],
       lastCheck: new Date().toISOString(),
       metrics: {
-        researchQuality: testResult?.confidence || 0,
+        researchQuality: testResult?.confidenceBoost || 0,
         responseTime: "< 5s",
       },
     };

@@ -14,9 +14,9 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db, executeWithRetry, monitoredQuery } from "../db";
-import { patternEmbeddings, snipeTargets, userPreferences } from "../db/schema";
-import { toSafeError } from "../lib/error-type-utils";
+import { db, executeWithRetry, monitoredQuery } from "@/src/db";
+import { patternEmbeddings, snipeTargets, userPreferences } from "@/src/db/schema";
+import { toSafeError } from "@/src/lib/error-type-utils";
 
 // ============================================================================
 // Types and Schemas

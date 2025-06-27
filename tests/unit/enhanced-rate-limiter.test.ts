@@ -24,7 +24,7 @@ vi.spyOn(console, "debug").mockImplementation(() => {});
 beforeEach(async () => {
   // Mock the adaptive rate limiter service to avoid dependency issues
   const { adaptiveRateLimiter } = await import(
-    "@/src/services/adaptive-rate-limiter"
+    "@/src/services/api/adaptive-rate-limiter"
   );
 
   // Replace methods with mocks that always allow requests (for testing traditional rate limiter)

@@ -61,7 +61,7 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
       st: 2,
       tt: 4,
       cd: 'AUTOSNIPERXUSDT',
-      ca: 50000,
+      ca: "0x50000",
       ps: 10000,
       qs: 5000
     } as SymbolEntry,
@@ -140,45 +140,184 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+    // Reset any singleton instances
+    if (PatternDetectionCore.getInstance) {
+      (PatternDetectionCore as any).instance = undefined;
+    }
   });
 
   function setupApiMocks() {
-    // Mock realistic ticker data
-    vi.spyOn(mexcService, 'getTicker').mockImplementation(async (symbol: string) => ({
-      success: true,
-      data: {
-        symbol,
-        lastPrice: symbol.includes('AUTOSNIPER') ? '0.001' : '50000',
-        price: symbol.includes('AUTOSNIPER') ? '0.001' : '50000',
-        priceChange: '0.000001',
-        priceChangePercent: '5.5',
-        volume: '1000000',
-        quoteVolume: '1000',
-        openPrice: symbol.includes('AUTOSNIPER') ? '0.0009' : '47500',
-        highPrice: symbol.includes('AUTOSNIPER') ? '0.0012' : '52000',
-        lowPrice: symbol.includes('AUTOSNIPER') ? '0.0008' : '46000',
-        count: '12500'
-      },
-      timestamp: new Date().toISOString()
-    }));
+    // Use standardized service mocking approach
+    
+    // Mock getActivityData method
+    if (mexcService && typeof mexcService.getActivityData === 'function') {
+      vi.spyOn(mexcService, "getActivityData").mockImplementation(
+        async (currency: string) => ({
+          success: true,
+          data: [mockMarketData.highPriorityActivity],
+          timestamp: Date.now(),
+          executionTimeMs: 100,
+        }),
+      );
+    } else if (mexcService) {
+      mexcService.getActivityData = vi.fn().mockImplementation(
+        async (currency: string) => ({
+          success: true,
+          data: [mockMarketData.highPriorityActivity],
+          timestamp: Date.now(),
+          executionTimeMs: 100,
+        }),
+      );
+    }
 
-    // Mock successful order placement
-    vi.spyOn(mexcService, 'placeOrder').mockResolvedValue({
-      success: true,
-      data: {
-        orderId: `order-${Date.now()}`,
-        symbol: 'AUTOSNIPERXUSDT',
-        status: 'FILLED',
-        price: '0.00125',
-        quantity: '8000000' // $10k position at $0.00125
-      },
-      timestamp: new Date().toISOString()
-    });
+    // Mock hasRecentActivity method
+    if (mexcService && typeof mexcService.hasRecentActivity === 'function') {
+      vi.spyOn(mexcService, "hasRecentActivity").mockResolvedValue(true);
+    } else if (mexcService) {
+      mexcService.hasRecentActivity = vi.fn().mockResolvedValue(true);
+    }
 
-    // Mock activity data for pattern enhancement
-    vi.spyOn(patternEngine as any, 'getActivityDataForSymbol').mockResolvedValue([
-      mockMarketData.highPriorityActivity
-    ]);
+    // Mock getSymbolData method
+    if (mexcService && typeof mexcService.getSymbolData === 'function') {
+      vi.spyOn(mexcService, "getSymbolData").mockImplementation(
+        async (symbol: string) => ({
+          success: true,
+          data: {
+            symbol,
+            lastPrice: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            price: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            priceChange: "0.000001",
+            priceChangePercent: "5.5",
+            volume: "1000000",
+            quoteVolume: "1000",
+            openPrice: symbol.includes("AUTOSNIPER") ? "0.0009" : "47500",
+            highPrice: symbol.includes("AUTOSNIPER") ? "0.0012" : "52000",
+            lowPrice: symbol.includes("AUTOSNIPER") ? "0.0008" : "46000",
+            count: "12500",
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 150,
+        }),
+      );
+    } else if (mexcService) {
+      mexcService.getSymbolData = vi.fn().mockImplementation(
+        async (symbol: string) => ({
+          success: true,
+          data: {
+            symbol,
+            lastPrice: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            price: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            priceChange: "0.000001",
+            priceChangePercent: "5.5",
+            volume: "1000000",
+            quoteVolume: "1000",
+            openPrice: symbol.includes("AUTOSNIPER") ? "0.0009" : "47500",
+            highPrice: symbol.includes("AUTOSNIPER") ? "0.0012" : "52000",
+            lowPrice: symbol.includes("AUTOSNIPER") ? "0.0008" : "46000",
+            count: "12500",
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 150,
+        }),
+      );
+    }
+
+    // Mock getServerTime method
+    if (mexcService && typeof mexcService.getServerTime === 'function') {
+      vi.spyOn(mexcService, "getServerTime").mockResolvedValue({
+        success: true,
+        data: Date.now(),
+        timestamp: Date.now(),
+        executionTimeMs: 50,
+      });
+    } else if (mexcService) {
+      mexcService.getServerTime = vi.fn().mockResolvedValue({
+        success: true,
+        data: Date.now(),
+        timestamp: Date.now(),
+        executionTimeMs: 50,
+      });
+    }
+
+    // Mock placeOrder method for trading tests
+    if (mexcService && typeof mexcService.placeOrder === 'function') {
+      vi.spyOn(mexcService, "placeOrder").mockImplementation(
+        async (orderData: any) => ({
+          success: true,
+          data: {
+            orderId: `order-${Date.now()}`,
+            symbol: orderData.symbol || "AUTOSNIPERXUSDT",
+            status: "FILLED",
+            price: orderData.price || "0.001",
+            quantity: orderData.quantity || "1000000"
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 200,
+        }),
+      );
+    } else if (mexcService) {
+      mexcService.placeOrder = vi.fn().mockImplementation(
+        async (orderData: any) => ({
+          success: true,
+          data: {
+            orderId: `order-${Date.now()}`,
+            symbol: orderData.symbol || "AUTOSNIPERXUSDT",
+            status: "FILLED",
+            price: orderData.price || "0.001",
+            quantity: orderData.quantity || "1000000"
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 200,
+        }),
+      );
+    }
+
+    // Mock getTicker method for price data
+    if (mexcService && typeof mexcService.getTicker === 'function') {
+      vi.spyOn(mexcService, "getTicker").mockImplementation(
+        async (symbol: string) => ({
+          success: true,
+          data: {
+            symbol,
+            lastPrice: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            price: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            priceChange: "0.000001",
+            priceChangePercent: "5.5",
+            volume: "1000000",
+            quoteVolume: "1000",
+            openPrice: symbol.includes("AUTOSNIPER") ? "0.0009" : "47500",
+            highPrice: symbol.includes("AUTOSNIPER") ? "0.0012" : "52000",
+            lowPrice: symbol.includes("AUTOSNIPER") ? "0.0008" : "46000",
+            count: "12500",
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 150,
+        }),
+      );
+    } else if (mexcService) {
+      mexcService.getTicker = vi.fn().mockImplementation(
+        async (symbol: string) => ({
+          success: true,
+          data: {
+            symbol,
+            lastPrice: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            price: symbol.includes("AUTOSNIPER") ? "0.001" : "50000",
+            priceChange: "0.000001",
+            priceChangePercent: "5.5",
+            volume: "1000000",
+            quoteVolume: "1000",
+            openPrice: symbol.includes("AUTOSNIPER") ? "0.0009" : "47500",
+            highPrice: symbol.includes("AUTOSNIPER") ? "0.0012" : "52000",
+            lowPrice: symbol.includes("AUTOSNIPER") ? "0.0008" : "46000",
+            count: "12500",
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 150,
+        }),
+      );
+    }
+
+    // Activity integration is mocked globally in vitest-setup.ts
 
     // Mock missing service dependencies to reduce warning messages and provide fallbacks
     // Create mock services for runtime access to prevent undefined errors
@@ -223,6 +362,9 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
 
       // STEP 2: Entry Point Calculation - Calculate optimal entry
       console.log('🎯 Step 2: Entry Calculation');
+      console.log('tradingBot instance:', tradingBot);
+      console.log('tradingBot.calculateOptimalEntry exists:', typeof tradingBot.calculateOptimalEntry);
+      console.log('tradingBot methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(tradingBot)));
       const entryStrategy = tradingBot.calculateOptimalEntry(mockMarketData.readyStateSymbol.cd, {
         volatility: 0.25, // Low volatility for stable entry
         volume: 2.8, // High volume for good liquidity
@@ -655,7 +797,7 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
         st: 2,  
         tt: 4,
         cd: 'NEWLISTINGUSDT',
-        ca: 100000, // Large cap allocation
+        ca: "0x100000", // Large cap allocation
         ps: 50000,  // High position score
         qs: 25000   // Quality score
       } as SymbolEntry;
