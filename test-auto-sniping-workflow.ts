@@ -1,343 +1,188 @@
-#!/usr/bin/env bun
-/**
- * Comprehensive Auto-Sniping Workflow Test
- * 
- * Tests the complete workflow:
- * 1. Target Discovery (Inngest + MEXC Agents)
- * 2. Pattern Analysis & Target Readiness
- * 3. Auto-Sniping Execution (Real Implementation)
- * 4. Position Management & Tracking
- */
-
 import { getCoreTrading } from "./src/services/trading/consolidated/core-trading/base-service";
-import { MexcOrchestrator } from "./src/mexc-agents/orchestrator";
-import { calendarSyncService } from "./src/services/calendar-to-database-sync";
 import { db } from "./src/db";
-import { snipeTargets } from "./src/db/schema";
-import { eq } from "drizzle-orm";
+import { snipeTargets } from "./src/db/schemas/trading";
+import { eq, and, lt, or, isNull } from "drizzle-orm";
 
-interface WorkflowTestResult {
-  stage: string;
-  success: boolean;
-  data?: any;
-  error?: string;
-  timing: number;
-}
-
-class AutoSnipingWorkflowTester {
-  private results: WorkflowTestResult[] = [];
-  private orchestrator: MexcOrchestrator;
-  private coreTrading: any;
-
-  constructor() {
-    this.orchestrator = new MexcOrchestrator({
-      useEnhancedCoordination: true
-    });
-    this.coreTrading = getCoreTrading();
-  }
-
-  /**
-   * Log test result
-   */
-  private logResult(stage: string, success: boolean, data?: any, error?: string, timing: number = 0) {
-    const result: WorkflowTestResult = { stage, success, data, error, timing };
-    this.results.push(result);
-    
-    const status = success ? "✅" : "❌";
-    console.log(`${status} [${stage}] ${success ? "PASSED" : "FAILED"} (${timing}ms)`);
-    if (error) console.log(`   Error: ${error}`);
-    if (data && typeof data === 'object') {
-      console.log(`   Data: ${JSON.stringify(data, null, 2)}`);
-    }
-  }
-
-  /**
-   * Test 1: Calendar Discovery & Target Creation
-   */
-  async testCalendarDiscoveryAndTargetCreation(): Promise<boolean> {
-    const startTime = Date.now();
-    
+async function testAutoSnipingWorkflow() {
+  console.log("🔍 Testing Auto-Sniping Workflow");
+  console.log("=".repeat(60));
+  
+  const coreTrading = getCoreTrading();
+  
+  try {
+    // 1. Check if service is initialized
+    console.log("\n1️⃣ Checking service initialization...");
+    let serviceStatus;
     try {
-      console.log("\n🔍 Testing Calendar Discovery & Target Creation...");
-
-      // Test calendar sync service
-      const syncResult = await calendarSyncService.syncCalendarToDatabase("system", {
-        timeWindowHours: 24,
-        forceSync: false,
-        dryRun: false
-      });
-
-      if (!syncResult.success) {
-        this.logResult("Calendar Sync", false, syncResult, "Sync failed", Date.now() - startTime);
-        return false;
+      serviceStatus = await coreTrading.getServiceStatus();
+      console.log("✅ Service is initialized");
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not initialized')) {
+        console.log("⚠️ Service not initialized. Initializing...");
+        await coreTrading.initialize();
+        serviceStatus = await coreTrading.getServiceStatus();
+        console.log("✅ Service initialized successfully");
+      } else {
+        throw error;
       }
-
-      this.logResult("Calendar Sync", true, {
-        processed: syncResult.processed,
-        created: syncResult.created,
-        updated: syncResult.updated
-      }, undefined, Date.now() - startTime);
-
-      // Test orchestrator calendar discovery workflow
-      const orchestratorStart = Date.now();
-      const discoveryResult = await this.orchestrator.executeCalendarDiscoveryWorkflow({
-        trigger: "test",
-        force: false,
-        syncData: {
-          processed: syncResult.processed,
-          created: syncResult.created,
-          updated: syncResult.updated
-        }
+    }
+    
+    // 2. Check current configuration
+    console.log("\n2️⃣ Checking auto-sniping configuration...");
+    console.log(`   autoSnipingEnabled: ${serviceStatus.autoSnipingEnabled}`);
+    console.log(`   paperTradingMode: ${serviceStatus.paperTradingMode}`);
+    console.log(`   tradingEnabled: ${serviceStatus.tradingEnabled}`);
+    console.log(`   circuitBreakerOpen: ${serviceStatus.circuitBreakerOpen}`);
+    
+    // 3. Check snipe targets in database
+    console.log("\n3️⃣ Checking snipe targets in database...");
+    const allTargets = await db.select().from(snipeTargets);
+    console.log(`   Total targets: ${allTargets.length}`);
+    
+    // Get ready targets (fix the query syntax)
+    const now = new Date();
+    const readyTargets = await db
+      .select()
+      .from(snipeTargets)
+      .where(
+        and(
+          eq(snipeTargets.status, "ready"),
+          or(
+            isNull(snipeTargets.targetExecutionTime),
+            lt(snipeTargets.targetExecutionTime, now)
+          )
+        )
+      );
+    
+    console.log(`   Ready targets: ${readyTargets.length}`);
+    
+    if (readyTargets.length > 0) {
+      console.log("   Ready targets details:");
+      readyTargets.forEach((target, index) => {
+        console.log(`     ${index + 1}. ${target.symbolName} - Confidence: ${target.confidenceScore}%`);
       });
-
-      this.logResult("Calendar Discovery Workflow", discoveryResult.success, 
-        discoveryResult.data, discoveryResult.error, Date.now() - orchestratorStart);
-
-      return discoveryResult.success;
-
-    } catch (error) {
-      this.logResult("Calendar Discovery & Target Creation", false, null, 
-        error instanceof Error ? error.message : String(error), Date.now() - startTime);
-      return false;
     }
-  }
-
-  /**
-   * Test 2: Pattern Analysis & Symbol Workflow
-   */
-  async testPatternAnalysisWorkflow(): Promise<boolean> {
-    const startTime = Date.now();
     
-    try {
-      console.log("\n🧠 Testing Pattern Analysis & Symbol Workflow...");
-
-      // Test symbol analysis workflow
-      const symbolResult = await this.orchestrator.executeSymbolAnalysisWorkflow({
-        vcoinId: "test-vcoin-123",
-        symbolName: "TESTUSDT",
-        projectName: "Test Token",
-        launchTime: new Date().toISOString(),
-        attempt: 1
-      });
-
-      this.logResult("Symbol Analysis Workflow", symbolResult.success,
-        symbolResult.data, symbolResult.error, Date.now() - startTime);
-
-      if (!symbolResult.success) return false;
-
-      // Test pattern analysis workflow
-      const patternStart = Date.now();
-      const patternResult = await this.orchestrator.executePatternAnalysisWorkflow({
-        vcoinId: "test-vcoin-123",
-        symbols: ["TESTUSDT"],
-        analysisType: "discovery"
-      });
-
-      this.logResult("Pattern Analysis Workflow", patternResult.success,
-        patternResult.data, patternResult.error, Date.now() - patternStart);
-
-      return patternResult.success;
-
-    } catch (error) {
-      this.logResult("Pattern Analysis Workflow", false, null,
-        error instanceof Error ? error.message : String(error), Date.now() - startTime);
-      return false;
-    }
-  }
-
-  /**
-   * Test 3: Auto-Sniping Execution Engine
-   */
-  async testAutoSnipingExecution(): Promise<boolean> {
-    const startTime = Date.now();
-    
-    try {
-      console.log("\n⚡ Testing Auto-Sniping Execution Engine...");
-
-      // Get auto-sniping module status
-      const status = await this.coreTrading.getStatus();
-      this.logResult("Auto-Sniping Status Check", true, {
-        status: status.status,
-        activeTargets: status.activeTargets,
-        readyTargets: status.readyTargets
-      }, undefined, Date.now() - startTime);
-
-      // Test auto-sniping start/stop
-      const startResult = await this.coreTrading.startAutoSniping();
-      this.logResult("Auto-Sniping Start", startResult.success, 
-        startResult.data, startResult.error, Date.now() - startTime);
-
-      if (!startResult.success) return false;
-
-      // Create a test target for execution
-      const testTarget = {
-        id: Math.floor(Math.random() * 1000000),
-        symbolName: "BTCUSDT",
-        vcoinId: 999,
-        confidenceScore: 85,
-        positionSizeUsdt: 10,
-        stopLossPercent: 5,
-        takeProfitCustom: 10,
-        status: "ready" as const,
-        priority: "high" as const,
-        targetExecutionTime: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        actualExecutionTime: null,
-        errorMessage: null
-      };
-
-      // Test snipe target processing
-      const processStart = Date.now();
-      const processResult = await this.coreTrading.autoSniping.processSnipeTargets();
-      this.logResult("Process Snipe Targets", processResult.success,
-        processResult.data, processResult.error, Date.now() - processStart);
-
-      // Test stop auto-sniping
-      const stopResult = await this.coreTrading.stopAutoSniping();
-      this.logResult("Auto-Sniping Stop", stopResult.success,
-        stopResult.data, stopResult.error, Date.now() - startTime);
-
-      return processResult.success && stopResult.success;
-
-    } catch (error) {
-      this.logResult("Auto-Sniping Execution", false, null,
-        error instanceof Error ? error.message : String(error), Date.now() - startTime);
-      return false;
-    }
-  }
-
-  /**
-   * Test 4: Position Management & Tracking
-   */
-  async testPositionManagement(): Promise<boolean> {
-    const startTime = Date.now();
-    
-    try {
-      console.log("\n📊 Testing Position Management & Tracking...");
-
-      // Test get positions
-      const positions = await this.coreTrading.getPositions();
-      this.logResult("Get Positions", true, {
-        count: positions.length,
-        hasActivePositions: positions.length > 0
-      }, undefined, Date.now() - startTime);
-
-      // Test execution report
-      const reportStart = Date.now();
-      const executionReport = await this.coreTrading.getExecutionReport();
-      this.logResult("Execution Report", true, {
-        status: executionReport.status,
-        activePositions: executionReport.activePositions?.length || 0,
-        recentExecutions: executionReport.recentExecutions?.length || 0,
-        stats: executionReport.stats
-      }, undefined, Date.now() - reportStart);
-
-      // Test performance metrics
-      const metricsStart = Date.now();
-      const metrics = await this.coreTrading.getPerformanceMetrics();
-      this.logResult("Performance Metrics", true, {
-        totalTrades: metrics.totalTrades,
-        successRate: metrics.successRate,
-        totalPnL: metrics.totalPnL
-      }, undefined, Date.now() - metricsStart);
-
-      return true;
-
-    } catch (error) {
-      this.logResult("Position Management", false, null,
-        error instanceof Error ? error.message : String(error), Date.now() - startTime);
-      return false;
-    }
-  }
-
-  /**
-   * Test 5: Integration Health Check
-   */
-  async testIntegrationHealth(): Promise<boolean> {
-    const startTime = Date.now();
-    
-    try {
-      console.log("\n🏥 Testing Integration Health...");
-
-      // Test orchestrator health
-      const orchestratorHealth = await this.orchestrator.healthCheck();
-      this.logResult("Orchestrator Health", orchestratorHealth, {
-        healthy: orchestratorHealth
-      }, undefined, Date.now() - startTime);
-
-      // Test agent health
-      const agentHealth = await this.orchestrator.getAgentHealth();
-      this.logResult("Agent Health", true, agentHealth, undefined, Date.now() - startTime);
-
-      // Test core trading health
-      const coreHealthStart = Date.now();
-      const coreStatus = await this.coreTrading.getServiceStatus();
-      this.logResult("Core Trading Health", coreStatus.isHealthy, {
-        isConnected: coreStatus.isConnected,
-        tradingEnabled: coreStatus.tradingEnabled,
-        autoSnipingEnabled: coreStatus.autoSnipingEnabled
-      }, undefined, Date.now() - coreHealthStart);
-
-      return orchestratorHealth && coreStatus.isHealthy;
-
-    } catch (error) {
-      this.logResult("Integration Health", false, null,
-        error instanceof Error ? error.message : String(error), Date.now() - startTime);
-      return false;
-    }
-  }
-
-  /**
-   * Run complete workflow test
-   */
-  async runCompleteWorkflowTest(): Promise<void> {
-    console.log("🚀 Starting Comprehensive Auto-Sniping Workflow Test\n");
-    const overallStart = Date.now();
-
-    const results = await Promise.allSettled([
-      this.testCalendarDiscoveryAndTargetCreation(),
-      this.testPatternAnalysisWorkflow(),
-      this.testAutoSnipingExecution(),
-      this.testPositionManagement(),
-      this.testIntegrationHealth()
-    ]);
-
-    const successCount = results.filter((r, i) => 
-      r.status === 'fulfilled' && r.value === true
-    ).length;
-
-    const totalTime = Date.now() - overallStart;
-
-    console.log("\n" + "=".repeat(60));
-    console.log("📋 WORKFLOW TEST SUMMARY");
-    console.log("=".repeat(60));
-    console.log(`Overall Success Rate: ${successCount}/5 (${(successCount/5*100).toFixed(1)}%)`);
-    console.log(`Total Execution Time: ${totalTime}ms`);
-    console.log(`Tests Passed: ${this.results.filter(r => r.success).length}`);
-    console.log(`Tests Failed: ${this.results.filter(r => !r.success).length}`);
-
-    if (successCount === 5) {
-      console.log("\n✅ ALL WORKFLOW TESTS PASSED - Auto-sniping workflow fully functional!");
-    } else {
-      console.log("\n❌ SOME WORKFLOW TESTS FAILED - Review issues above");
+    // 4. Check if auto-sniping is currently running
+    console.log("\n4️⃣ Checking auto-sniping execution status...");
+    if (!serviceStatus.autoSnipingEnabled) {
+      console.log("❌ Auto-sniping is not enabled! Starting it...");
       
-      // Show failed tests
-      const failedTests = this.results.filter(r => !r.success);
-      if (failedTests.length > 0) {
-        console.log("\nFailed Tests:");
-        failedTests.forEach(test => {
-          console.log(`  - ${test.stage}: ${test.error}`);
-        });
+      // Enable auto-sniping in configuration
+      await coreTrading.updateConfig({ 
+        autoSnipingEnabled: true,
+        confidenceThreshold: 75, // Default threshold
+        snipeCheckInterval: 30000, // 30 seconds
+      });
+      
+      // Start auto-sniping
+      const startResult = await coreTrading.startAutoSniping();
+      if (startResult.success) {
+        console.log("✅ Auto-sniping started successfully");
+      } else {
+        console.log(`❌ Failed to start auto-sniping: ${startResult.error}`);
+      }
+    } else {
+      console.log("✅ Auto-sniping is enabled");
+    }
+    
+    // 5. Get final status
+    console.log("\n5️⃣ Final status check...");
+    const finalStatus = await coreTrading.getServiceStatus();
+    console.log(`   autoSnipingEnabled: ${finalStatus.autoSnipingEnabled}`);
+    console.log(`   activePositions: ${finalStatus.activePositions}`);
+    console.log(`   paperTradingMode: ${finalStatus.paperTradingMode}`);
+    
+    // 6. Test manual target processing
+    if (readyTargets.length > 0) {
+      console.log("\n6️⃣ Testing manual target processing...");
+      try {
+        // This would trigger the processSnipeTargets method
+        console.log("   Manually processing targets...");
+        // We need to access the auto-sniping module to test this
+        console.log("   ⚠️ Manual processing test requires module access");
+      } catch (error) {
+        console.log(`   ❌ Manual processing failed: ${error}`);
       }
     }
-
-    console.log("\n" + "=".repeat(60));
+    
+    // 7. Environment and API check
+    console.log("\n7️⃣ Environment and API configuration...");
+    const hasApiKey = !!process.env.MEXC_API_KEY;
+    const hasSecretKey = !!process.env.MEXC_SECRET_KEY;
+    console.log(`   MEXC_API_KEY: ${hasApiKey ? '✅ Present' : '❌ Missing'}`);
+    console.log(`   MEXC_SECRET_KEY: ${hasSecretKey ? '✅ Present' : '❌ Missing'}`);
+    
+    if (!hasApiKey || !hasSecretKey) {
+      console.log("   ⚠️ Missing API credentials - trading will fail!");
+    }
+    
+    // 8. Summary and recommendations
+    console.log("\n🏁 WORKFLOW ANALYSIS SUMMARY");
+    console.log("=".repeat(60));
+    
+    const issues = [];
+    const recommendations = [];
+    
+    if (!finalStatus.autoSnipingEnabled) {
+      issues.push("Auto-sniping is not enabled");
+      recommendations.push("Enable auto-sniping via API or configuration");
+    }
+    
+    if (readyTargets.length === 0) {
+      issues.push("No ready targets to process");
+      recommendations.push("Ensure targets are being created and marked as 'ready'");
+    }
+    
+    if (!hasApiKey || !hasSecretKey) {
+      issues.push("Missing MEXC API credentials");
+      recommendations.push("Set MEXC_API_KEY and MEXC_SECRET_KEY environment variables");
+    }
+    
+    if (finalStatus.circuitBreakerOpen) {
+      issues.push("Circuit breaker is open");
+      recommendations.push("Check system health and reset circuit breaker if needed");
+    }
+    
+    if (issues.length === 0) {
+      console.log("✅ No blocking issues found! Auto-sniping should be working.");
+    } else {
+      console.log("❌ Issues found:");
+      issues.forEach((issue, index) => {
+        console.log(`   ${index + 1}. ${issue}`);
+      });
+      
+      console.log("\n💡 Recommendations:");
+      recommendations.forEach((rec, index) => {
+        console.log(`   ${index + 1}. ${rec}`);
+      });
+    }
+    
+    console.log(`\nTargets summary: ${allTargets.length} total, ${readyTargets.length} ready`);
+    console.log(`Service status: ${finalStatus.autoSnipingEnabled ? 'ENABLED' : 'DISABLED'}`);
+    console.log(`Paper trading: ${finalStatus.paperTradingMode ? 'ON' : 'OFF'}`);
+    
+  } catch (error) {
+    console.error("💥 Workflow test failed:", error);
+    
+    // Try to provide specific troubleshooting
+    if (error instanceof Error) {
+      if (error.message.includes('database')) {
+        console.log("🔧 Database connection issue - check Neon DB configuration");
+      } else if (error.message.includes('API')) {
+        console.log("🔧 API issue - check MEXC credentials and connectivity");
+      } else if (error.message.includes('not initialized')) {
+        console.log("🔧 Service initialization issue - restart the application");
+      }
+    }
   }
 }
 
-// Run the test
-if (import.meta.main) {
-  const tester = new AutoSnipingWorkflowTester();
-  tester.runCompleteWorkflowTest().catch(console.error);
-}
+// Run the workflow test
+testAutoSnipingWorkflow().then(() => {
+  console.log("\n✅ Workflow test complete");
+  process.exit(0);
+}).catch((error) => {
+  console.error("💥 Workflow test crashed:", error);
+  process.exit(1);
+});

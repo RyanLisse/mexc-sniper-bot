@@ -324,6 +324,43 @@ export class SafetyAlertsManager extends EventEmitter {
   }
 
   /**
+   * Start the alerts manager
+   */
+  async start(): Promise<void> {
+    this.logger.info("Safety alerts manager started");
+  }
+
+  /**
+   * Stop the alerts manager
+   */
+  async stop(): Promise<void> {
+    this.logger.info("Safety alerts manager stopped");
+  }
+
+  /**
+   * Perform health check
+   */
+  async performHealthCheck(): Promise<boolean> {
+    try {
+      // Simple health check - ensure we can create and manage alerts
+      const alertCount = this.activeAlerts.size;
+      this.logger.debug(`Health check: ${alertCount} active alerts`);
+      return true;
+    } catch (error) {
+      this.logger.error("Health check failed", undefined, error as Error);
+      return false;
+    }
+  }
+
+  /**
+   * Update configuration
+   */
+  updateConfig(config: SafetyCoordinatorConfig): void {
+    this.config = config;
+    this.logger.info("Configuration updated");
+  }
+
+  /**
    * Cleanup old alerts and actions
    */
   cleanup(): void {

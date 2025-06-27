@@ -86,14 +86,12 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       }
 
       case 'status': {
-        const status = orchestrator.getStatus();
-        const metrics = orchestrator.getMetrics();
+        const status = await coreTrading.getServiceStatus();
         
         return Response.json(createSuccessResponse({
           message: 'Status retrieved successfully',
           data: {
             status,
-            metrics,
             timestamp: new Date().toISOString(),
           },
         }));
@@ -103,13 +101,15 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         const stopReason = reason || 'Manual emergency stop requested';
         console.warn(`[Auto-Sniping Control] Emergency stop requested: ${stopReason}`);
         
-        await orchestrator.emergencyStop(stopReason);
+        const stopResult = await coreTrading.stopAutoSniping();
+        await coreTrading.closeAllPositions(stopReason);
         
         return Response.json(createSuccessResponse({
           message: 'Emergency stop executed successfully',
           data: {
             emergencyStopped: true,
             reason: stopReason,
+            stopResult,
             timestamp: new Date().toISOString(),
           },
         }));
@@ -123,11 +123,11 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           );
         }
 
-        const result = await orchestrator.updateConfiguration(config);
+        const result = await coreTrading.updateConfig(config);
         
         if (result.success) {
           return Response.json(createSuccessResponse({
-            message: result.message,
+            message: 'Configuration updated successfully',
             data: {
               configUpdated: true,
               newConfig: config,
@@ -136,7 +136,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           }));
         } else {
           return Response.json(
-            createErrorResponse(result.message, {
+            createErrorResponse(result.error || 'Configuration update failed', {
               action: 'update_config',
               config,
             }),
@@ -172,14 +172,12 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
   try {
     const coreTrading = getCoreTrading();
-    const status = orchestrator.getStatus();
-    const metrics = orchestrator.getMetrics();
+    const status = await coreTrading.getServiceStatus();
 
     return Response.json(createSuccessResponse({
       message: 'Auto-sniping status retrieved successfully',
       data: {
         status,
-        metrics,
         timestamp: new Date().toISOString(),
         endpoints: {
           start: 'POST /api/auto-sniping/control with action=start',
@@ -210,11 +208,11 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
     const config = await request.json();
     
     const coreTrading = getCoreTrading();
-    const result = await orchestrator.updateConfiguration(config);
+    const result = await coreTrading.updateConfig(config);
     
     if (result.success) {
       return Response.json(createSuccessResponse({
-        message: result.message,
+        message: 'Configuration updated successfully',
         data: {
           configUpdated: true,
           newConfig: config,
@@ -223,7 +221,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       }));
     } else {
       return Response.json(
-        createErrorResponse(result.message, {
+        createErrorResponse(result.error || 'Configuration update failed', {
           config,
         }),
         { status: 400 }
@@ -253,7 +251,8 @@ export const DELETE = apiAuthWrapper(async (request: NextRequest) => {
     console.warn(`[Auto-Sniping Control] Emergency stop via DELETE: ${stopReason}`);
     
     const coreTrading = getCoreTrading();
-    await orchestrator.emergencyStop(stopReason);
+    await coreTrading.stopAutoSniping();
+    await coreTrading.closeAllPositions(stopReason);
     
     return Response.json(createSuccessResponse({
       message: 'Emergency stop executed successfully',
