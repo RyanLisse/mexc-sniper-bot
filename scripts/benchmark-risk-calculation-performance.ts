@@ -6,7 +6,7 @@
  */
 
 import { performance } from 'perf_hooks';
-import { AdvancedRiskEngine } from '../src/services/advanced-risk-engine';
+import { AdvancedRiskEngine } from '../src/services/risk/advanced-risk-engine';
 import {
   RiskCalculationEngine,
   MarketAdjustmentEngine, 

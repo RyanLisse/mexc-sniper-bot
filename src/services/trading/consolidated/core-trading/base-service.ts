@@ -387,6 +387,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       successCount: performanceMetrics.successfulTrades,
       errorCount: performanceMetrics.failedTrades,
       readyTargets: 0, // Would need to get from auto-sniping service
+      activeTargets: baseStatus.activePositions,
       config: {
         maxConcurrentTargets: baseStatus.maxPositions,
         retryAttempts: 3, // From config

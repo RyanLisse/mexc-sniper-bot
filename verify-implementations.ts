@@ -165,95 +165,16 @@ const testStrategy: TradingStrategy = {
 async function verifyMultiPhaseTradingBot(): Promise<VerificationResult> {
   console.log('🤖 Testing MultiPhaseTradingBot implementations...');
   
-  try {
-    // NOTE: MultiPhaseTradingBot has been moved to consolidated CoreTradingService
-    // This verification is disabled until proper integration is complete
-    console.log('⚠️  MultiPhaseTradingBot verification disabled - functionality moved to CoreTradingService');
-    
-    return {
-      passed: true,
-      message: 'MultiPhaseTradingBot verification skipped - moved to consolidated service',
-      warnings: ['Multi-phase trading functionality moved to CoreTradingService.executeMultiPhaseStrategy'],
-      errors: []
-    };
-    
-    // Dynamic import with proper typing (disabled)
-    /* const { MultiPhaseTradingBot } = await import('./src/services/trading/multi-phase-trading-bot') as {
-      MultiPhaseTradingBot: new (strategy: TradingStrategy, initialPrice: number, budget: number) => {
-        calculateOptimalEntry(symbol: string, conditions: MarketConditions): EntryResult;
-        initializePosition(symbol: string, entryPrice: number, budget: number): PositionResult;
-        handlePartialFill(action: string, filledAmount: number, targetAmount: number): FillResult;
-        getPositionInfo(): PositionInfo;
-        getPhaseStatus(): PhaseStatus;
-        performMaintenanceCleanup(): MaintenanceResult;
-        getPendingPersistenceOperations(): PendingOperations;
-      };
-    };
-
-    const bot = new MultiPhaseTradingBot(testStrategy, 1.0, 1000);
-    const testResults: Record<string, unknown> = {};
-    
-    // Test calculateOptimalEntry
-    console.log('   ✓ Testing calculateOptimalEntry...');
-    const entryResult = bot.calculateOptimalEntry('TESTUSDT', {
-      volatility: 0.5,
-      volume: 1.5,
-      momentum: 0.3
-    });
-    console.log(`     Entry: ${entryResult.entryPrice}, Confidence: ${entryResult.confidence}%`);
-    testResults.entryResult = entryResult;
-    
-    // Test initializePosition
-    console.log('   ✓ Testing initializePosition...');
-    const positionResult = bot.initializePosition('TESTUSDT', 1.0, 1000);
-    console.log(`     Position initialized: ${positionResult.success ? 'Success' : 'Failed'}`);
-    testResults.positionResult = positionResult;
-    
-    // Test handlePartialFill
-    console.log('   ✓ Testing handlePartialFill...');
-    const fillResult = bot.handlePartialFill('sell_action', 750, 1000);
-    console.log(`     Fill: ${fillResult.fillPercentage}%, Status: ${fillResult.status}`);
-    testResults.fillResult = fillResult;
-    
-    // Test getPositionInfo
-    console.log('   ✓ Testing getPositionInfo...');
-    const positionInfo = bot.getPositionInfo();
-    console.log(`     Has position: ${positionInfo.hasPosition}, Size: ${positionInfo.currentSize}`);
-    testResults.positionInfo = positionInfo;
-    
-    // Test getPhaseStatus
-    console.log('   ✓ Testing getPhaseStatus...');
-    const phaseStatus = bot.getPhaseStatus();
-    console.log(`     Phases: ${phaseStatus.completedPhases}/${phaseStatus.totalPhases}`);
-    testResults.phaseStatus = phaseStatus;
-    
-    // Test performMaintenanceCleanup
-    console.log('   ✓ Testing performMaintenanceCleanup...');
-    const maintenanceResult = bot.performMaintenanceCleanup();
-    console.log(`     Maintenance: ${maintenanceResult.success ? 'Success' : 'Failed'}`);
-    testResults.maintenanceResult = maintenanceResult;
-    
-    // Test getPendingPersistenceOperations
-    console.log('   ✓ Testing getPendingPersistenceOperations...');
-    const pendingOps = bot.getPendingPersistenceOperations();
-    console.log(`     Pending operations: ${pendingOps.operations.length}`);
-    testResults.pendingOps = pendingOps;
-    
-    console.log('   ✅ MultiPhaseTradingBot verification completed successfully!\n');
-    return {
-      service: 'MultiPhaseTradingBot',
-      success: true,
-      details: testResults
-    };
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('   ❌ MultiPhaseTradingBot verification failed:', errorMessage);
-    return {
-      service: 'MultiPhaseTradingBot',
-      success: false,
-      error: errorMessage
-    };
-  }
+  // NOTE: MultiPhaseTradingBot has been moved to consolidated CoreTradingService
+  // This verification is disabled until proper integration is complete
+  console.log('⚠️  MultiPhaseTradingBot verification disabled - functionality moved to CoreTradingService');
+  
+  return {
+    passed: true,
+    message: 'MultiPhaseTradingBot verification skipped - moved to consolidated service',
+    warnings: ['Multi-phase trading functionality moved to CoreTradingService.executeMultiPhaseStrategy'],
+    errors: []
+  };
 }
 
 async function verifyAdvancedRiskEngine(): Promise<VerificationResult> {

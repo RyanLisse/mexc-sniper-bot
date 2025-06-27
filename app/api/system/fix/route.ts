@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const mexcService = new UnifiedMexcServiceV2();
     const patternEngine = PatternDetectionCore.getInstance();
     const configValidator = MexcConfigValidator.getInstance();
-    const tradingService = multiPhaseTradingService;
+    const tradingService = getCoreTrading();
 
     // 1. Fix MEXC API Configuration
     console.info('[SystemFix] Validating MEXC API credentials...');
@@ -142,9 +142,9 @@ export async function POST(request: NextRequest) {
     } else {
       // Attempt to initialize trading service with defaults
       try {
-        // Test trading service functionality
-        const strategyTemplates = await tradingService.getStrategyTemplates();
-        if (Array.isArray(strategyTemplates)) {
+        // Test trading service functionality via status check
+        const serviceStatus = await tradingService.getServiceStatus();
+        if (serviceStatus.isHealthy && serviceStatus.isConnected) {
           fixesApplied.push('Multi-phase trading strategy system verified');
           tradingStatus = 'fixed';
           recommendations.push('Trading strategies are configured and operational');

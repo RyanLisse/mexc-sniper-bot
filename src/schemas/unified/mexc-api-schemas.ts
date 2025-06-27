@@ -162,7 +162,7 @@ export const ExchangeSymbolSchema = z.object({
 export const TickerSchema = z.object({
   symbol: z.string(),
   lastPrice: z.string().optional(),
-  price: z.string(),
+  price: z.string().optional(), // Make price optional since MEXC uses lastPrice
   c: z.string().optional(), // Alternate close price field
   priceChange: z.string(),
   p: z.string().optional(), // Alternate price change field
@@ -180,6 +180,14 @@ export const TickerSchema = z.object({
   l: z.string().optional(), // Alternate low price field
   count: z.union([z.string(), z.number(), z.null()]).optional(),
   t: z.number().optional(), // Timestamp
+  // Additional MEXC API fields
+  prevClosePrice: z.string().optional(),
+  bidPrice: z.string().optional(),
+  bidQty: z.string().optional(),
+  askPrice: z.string().optional(),
+  askQty: z.string().optional(),
+  openTime: z.number().optional(),
+  closeTime: z.number().optional(),
 });
 
 /**

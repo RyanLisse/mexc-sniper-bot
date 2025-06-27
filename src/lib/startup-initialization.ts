@@ -122,18 +122,25 @@ export class StartupInitializer {
     // Initialize auto-sniping system if enabled
     try {
       console.info("[Startup] Initializing auto-sniping system...");
-      const autoSnipingService = OptimizedAutoSnipingCore.getInstance();
+      const coreTrading = getCoreTrading();
 
-      // Check if auto-sniping should be auto-started
-      const autoSnipingConfig = await autoSnipingService.getConfig();
-      if (autoSnipingConfig.enabled) {
-        console.info("[Startup] Auto-sniping is enabled, preparing for automatic activation...");
-        // Don't start execution immediately - let the UI component handle it after status check
-        initialized.push("auto-sniping-system");
-        console.info("[Startup] ✅ Auto-sniping system ready for activation");
-      } else {
-        initialized.push("auto-sniping-system");
-        console.info("[Startup] ✅ Auto-sniping system initialized (disabled)");
+      // Initialize the core trading service if not already initialized
+      try {
+        const initResult = await coreTrading.initialize();
+        if (initResult.success) {
+          initialized.push("auto-sniping-system");
+          console.info("[Startup] ✅ Auto-sniping system initialized successfully");
+        } else {
+          throw new Error(initResult.error || "Failed to initialize core trading service");
+        }
+      } catch (initError) {
+        // If already initialized, that's okay
+        if (initError instanceof Error && initError.message.includes('already initialized')) {
+          initialized.push("auto-sniping-system");
+          console.info("[Startup] ✅ Auto-sniping system already initialized");
+        } else {
+          throw initError;
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";

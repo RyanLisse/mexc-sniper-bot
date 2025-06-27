@@ -7,6 +7,9 @@ import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { rateLimiter } from "@/src/lib/rate-limiter";
 import { apiResponse } from "@/src/lib/api-response";
 import { ensureStartupInitialization } from "@/src/lib/startup-initialization";
+import { getDb } from "@/src/db/index";
+import { tradingStrategies, strategyTemplates } from "@/src/db/schemas/strategies";
+import { eq, and } from "drizzle-orm";
 
 // ===========================================
 // MULTI-PHASE STRATEGY CREATION TRIGGER
@@ -215,8 +218,14 @@ async function handleStrategyOptimization(data: any, userId: string) {
     throw new Error("Strategy ID is required for optimization");
   }
 
-  // Get existing strategy
-  const strategy = await multiPhaseTradingService.getStrategyById(data.strategyId, userId);
+  // Get existing strategy from database
+  const db = getDb();
+  const [strategy] = await db
+    .select()
+    .from(tradingStrategies)
+    .where(and(eq(tradingStrategies.id, parseInt(data.strategyId)), eq(tradingStrategies.userId, userId)))
+    .limit(1);
+  
   if (!strategy) {
     throw new Error("Strategy not found");
   }
@@ -352,8 +361,17 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's strategies summary
-    const strategies = await multiPhaseTradingService.getUserStrategies(user.id, { limit: 10 });
-    const templates = await multiPhaseTradingService.getStrategyTemplates();
+    const db = getDb();
+    const strategies = await db
+      .select()
+      .from(tradingStrategies)
+      .where(eq(tradingStrategies.userId, user.id))
+      .limit(10);
+    
+    const templates = await db
+      .select()
+      .from(strategyTemplates)
+      .where(eq(strategyTemplates.isActive, true));
 
     return apiResponse.success({
       status: "operational",
@@ -366,10 +384,10 @@ export async function GET(request: NextRequest) {
       },
       userStats: {
         totalStrategies: strategies.length,
-        activeStrategies: strategies.filter(s => s.status === "active").length,
+        activeStrategies: strategies.filter((s: typeof strategies[0]) => s.status === "active").length,
         availableTemplates: templates.length,
       },
-      recentActivity: strategies.slice(0, 5).map(s => ({
+      recentActivity: strategies.slice(0, 5).map((s: typeof strategies[0]) => ({
         id: s.id,
         name: s.name,
         symbol: s.symbol,

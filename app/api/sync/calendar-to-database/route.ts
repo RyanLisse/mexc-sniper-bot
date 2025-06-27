@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       return apiResponse(
         createErrorResponse(
           `Sync failed: ${result.errors.join(', ')}`,
-          result
+          { ...result }
         ),
         HTTP_STATUS.INTERNAL_SERVER_ERROR
       );

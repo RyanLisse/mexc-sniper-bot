@@ -340,6 +340,7 @@ export interface ExtendedServiceStatus extends ServiceStatus {
   successCount?: number;
   errorCount?: number;
   readyTargets?: number;
+  activeTargets?: number;
   config?: {
     maxConcurrentTargets?: number;
     retryAttempts?: number;

@@ -412,6 +412,6 @@ async function main() {
   }
 }
 
-if (import.meta.main) {
+if (require.main === module) {
   main();
 }

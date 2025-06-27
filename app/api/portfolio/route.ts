@@ -237,17 +237,28 @@ export async function GET(request: NextRequest) {
         successRate: calculateSuccessRate(),
         totalCapitalDeployed: Math.round(totalCapitalDeployed * 100) / 100, // Round to 2 decimals
       },
-      recentActivity: recentExecutions.map((exec: any) => ({
-        id: exec?.id || 'unknown',
-        symbol: exec?.symbolName || 'N/A',
-        action: (exec?.action as 'buy' | 'sell') || 'buy',
-        status: (exec?.status as 'success' | 'failed' | 'pending') || 'pending',
-        quantity: safeParseFloat(exec?.executedQuantity) || 0,
-        price: safeParseFloat(exec?.executedPrice) || 0,
-        totalCost: safeParseFloat(exec?.totalCost) || 0,
-        timestamp: exec?.executedAt || new Date().toISOString(),
-        orderId: exec?.exchangeOrderId || 'unknown',
-      })),
+      recentActivity: recentExecutions.map((exec: any) => {
+        const activity = {
+          id: String(exec?.id || 'unknown'),
+          symbol: String(exec?.symbolName || 'N/A'),
+          action: (exec?.action as 'buy' | 'sell') || 'buy',
+          status: (exec?.status as 'success' | 'failed' | 'pending') || 'pending',
+          timestamp: String(exec?.executedAt || new Date().toISOString()),
+        } as any;
+
+        // Only include optional fields if they have valid values
+        const quantity = safeParseFloat(exec?.executedQuantity);
+        const price = safeParseFloat(exec?.executedPrice);
+        const totalCost = safeParseFloat(exec?.totalCost);
+        const orderId = exec?.exchangeOrderId;
+
+        if (quantity > 0) activity.quantity = quantity;
+        if (price > 0) activity.price = price;
+        if (totalCost > 0) activity.totalCost = totalCost;
+        if (orderId) activity.orderId = String(orderId);
+
+        return activity;
+      }),
     };
 
     return NextResponse.json(

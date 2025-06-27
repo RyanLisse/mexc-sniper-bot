@@ -18,7 +18,7 @@ async function makeTargetReady() {
     }
     
     console.log(`📋 Found ${pendingTargets.length} pending targets:`);
-    pendingTargets.forEach((target, index) => {
+    pendingTargets.forEach((target: any, index: number) => {
       console.log(`   ${index + 1}. ${target.symbolName} (ID: ${target.id})`);
     });
     

@@ -62,7 +62,7 @@ export async function GET() {
       symbol: position.symbol,
       entryPrice: position.entryPrice,
       currentPrice: position.currentPrice || position.entryPrice,
-      quantity: position.size,
+      quantity: position.quantity,
       currentPnL: position.unrealizedPnL || 0,
       currentPnLPercentage: calculatePnLPercentage(position.entryPrice, position.currentPrice || position.entryPrice),
       triggeredLevels: calculateTriggeredLevels(position, activeStrategy),
