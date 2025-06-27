@@ -292,7 +292,7 @@ export class WebSocketRateLimiter {
     const previousStats = this.getStats();
     this.connectionLimits.clear();
     this.ipLimits.clear();
-    
+
     this.logger.info("Rate limiter reset", {
       previousActiveConnectionLimits: previousStats.activeConnectionLimits,
       previousActiveIPLimits: previousStats.activeIPLimits,

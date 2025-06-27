@@ -79,11 +79,17 @@ export class CoreSafetyMonitoring {
   // Monitoring lifecycle methods
   public start(): void {
     if (this.isActive) {
-      console.warn("Core monitoring already active", { operation: "start_monitoring", isActive: this.isActive });
+      console.warn("Core monitoring already active", {
+        operation: "start_monitoring",
+        isActive: this.isActive,
+      });
       return;
     }
     this.isActive = true;
-    console.info("Core safety monitoring started", { operation: "start_monitoring", monitoringInterval: this.config.configuration.monitoringIntervalMs });
+    console.info("Core safety monitoring started", {
+      operation: "start_monitoring",
+      monitoringInterval: this.config.configuration.monitoringIntervalMs,
+    });
   }
 
   public stop(): void {
@@ -106,7 +112,10 @@ export class CoreSafetyMonitoring {
     const timer = createTimer("monitoring_cycle", "core-safety-monitoring");
 
     try {
-      this.logger.debug("Starting monitoring cycle", { operation: "monitoring_cycle", currentRiskScore: this.calculateOverallRiskScore() });
+      this.logger.debug("Starting monitoring cycle", {
+        operation: "monitoring_cycle",
+        currentRiskScore: this.calculateOverallRiskScore(),
+      });
 
       // Update risk metrics
       await this.updateRiskMetrics();
@@ -128,14 +137,27 @@ export class CoreSafetyMonitoring {
         overallRiskScore,
       };
 
-      const duration = timer.end({ riskScore: overallRiskScore, violationsCount: thresholdResults.violations.length, status: "success" });
-      console.info("Monitoring cycle completed", { operation: "monitoring_cycle", duration, riskScore: overallRiskScore, violationsCount: thresholdResults.violations.length });
+      const duration = timer.end({
+        riskScore: overallRiskScore,
+        violationsCount: thresholdResults.violations.length,
+        status: "success",
+      });
+      console.info("Monitoring cycle completed", {
+        operation: "monitoring_cycle",
+        duration,
+        riskScore: overallRiskScore,
+        violationsCount: thresholdResults.violations.length,
+      });
 
       return result;
     } catch (error) {
       const duration = timer.end({ status: "failed" });
 
-      console.error("Monitoring cycle failed", { operation: "monitoring_cycle", duration, isActive: this.isActive }, error);
+      console.error(
+        "Monitoring cycle failed",
+        { operation: "monitoring_cycle", duration, isActive: this.isActive },
+        error
+      );
 
       throw error;
     }
@@ -152,7 +174,7 @@ export class CoreSafetyMonitoring {
 
       // Handle potential method availability issues
       try {
-        if (typeof this.config.executionService.getExecutionReport === 'function') {
+        if (typeof this.config.executionService.getExecutionReport === "function") {
           executionReport = await this.config.executionService.getExecutionReport();
         } else {
           // Fallback: construct a basic execution report from available methods
@@ -191,7 +213,7 @@ export class CoreSafetyMonitoring {
       }
 
       try {
-        if (typeof this.config.patternMonitoring.getMonitoringReport === 'function') {
+        if (typeof this.config.patternMonitoring.getMonitoringReport === "function") {
           patternReport = await this.config.patternMonitoring.getMonitoringReport();
         } else {
           // Fallback pattern report
@@ -205,7 +227,9 @@ export class CoreSafetyMonitoring {
           };
         }
       } catch (error) {
-        console.warn("Failed to get pattern monitoring report, using fallback", { error: error.message });
+        console.warn("Failed to get pattern monitoring report, using fallback", {
+          error: error.message,
+        });
         patternReport = {
           status: "healthy",
           stats: {
@@ -220,7 +244,9 @@ export class CoreSafetyMonitoring {
       this.riskMetrics.currentDrawdown = executionReport.stats.currentDrawdown;
       this.riskMetrics.maxDrawdown = executionReport.stats.maxDrawdown;
       this.riskMetrics.portfolioValue = this.calculateRealPortfolioValue(executionReport);
-      this.riskMetrics.totalExposure = this.calculateRealTotalExposure(executionReport.activePositions);
+      this.riskMetrics.totalExposure = this.calculateRealTotalExposure(
+        executionReport.activePositions
+      );
       this.riskMetrics.concentrationRisk = this.calculateConcentrationRisk(
         executionReport.activePositions
       );
@@ -247,7 +273,15 @@ export class CoreSafetyMonitoring {
       this.riskMetrics = validatedMetrics;
       return { ...this.riskMetrics };
     } catch (error) {
-      console.error("Failed to update risk metrics", { operation: "update_risk_metrics", currentDrawdown: this.riskMetrics.currentDrawdown, successRate: this.riskMetrics.successRate }, error);
+      console.error(
+        "Failed to update risk metrics",
+        {
+          operation: "update_risk_metrics",
+          currentDrawdown: this.riskMetrics.currentDrawdown,
+          successRate: this.riskMetrics.successRate,
+        },
+        error
+      );
 
       throw error;
     }
@@ -264,37 +298,57 @@ export class CoreSafetyMonitoring {
 
     // Consolidated threshold checking
     const checks = [
-      { 
+      {
         condition: this.riskMetrics.currentDrawdown > thresholds.maxDrawdownPercentage,
-        type: "max_drawdown_exceeded", severity: "critical", category: "portfolio",
+        type: "max_drawdown_exceeded",
+        severity: "critical",
+        category: "portfolio",
         message: `Current drawdown ${this.riskMetrics.currentDrawdown.toFixed(1)}% exceeds threshold ${thresholds.maxDrawdownPercentage}%`,
-        current: this.riskMetrics.currentDrawdown, threshold: thresholds.maxDrawdownPercentage,
-        alertType: "risk_threshold", title: "Maximum Drawdown Exceeded", riskLevel: 90
+        current: this.riskMetrics.currentDrawdown,
+        threshold: thresholds.maxDrawdownPercentage,
+        alertType: "risk_threshold",
+        title: "Maximum Drawdown Exceeded",
+        riskLevel: 90,
       },
       {
         condition: this.riskMetrics.successRate < thresholds.minSuccessRatePercentage,
-        type: "low_success_rate", severity: "high", category: "performance",
+        type: "low_success_rate",
+        severity: "high",
+        category: "performance",
         message: `Success rate ${this.riskMetrics.successRate.toFixed(1)}% below threshold ${thresholds.minSuccessRatePercentage}%`,
-        current: this.riskMetrics.successRate, threshold: thresholds.minSuccessRatePercentage,
-        alertType: "performance_degradation", title: "Low Success Rate", riskLevel: 70
+        current: this.riskMetrics.successRate,
+        threshold: thresholds.minSuccessRatePercentage,
+        alertType: "performance_degradation",
+        title: "Low Success Rate",
+        riskLevel: 70,
       },
       {
         condition: this.riskMetrics.consecutiveLosses > thresholds.maxConsecutiveLosses,
-        type: "excessive_consecutive_losses", severity: "high", category: "performance",
+        type: "excessive_consecutive_losses",
+        severity: "high",
+        category: "performance",
         message: `${this.riskMetrics.consecutiveLosses} consecutive losses exceeds threshold ${thresholds.maxConsecutiveLosses}`,
-        current: this.riskMetrics.consecutiveLosses, threshold: thresholds.maxConsecutiveLosses,
-        alertType: "risk_threshold", title: "Excessive Consecutive Losses", riskLevel: 75
+        current: this.riskMetrics.consecutiveLosses,
+        threshold: thresholds.maxConsecutiveLosses,
+        alertType: "risk_threshold",
+        title: "Excessive Consecutive Losses",
+        riskLevel: 75,
       },
       {
         condition: this.riskMetrics.apiLatency > thresholds.maxApiLatencyMs,
-        type: "high_api_latency", severity: "medium", category: "api",
+        type: "high_api_latency",
+        severity: "medium",
+        category: "api",
         message: `API latency ${this.riskMetrics.apiLatency}ms exceeds threshold ${thresholds.maxApiLatencyMs}ms`,
-        current: this.riskMetrics.apiLatency, threshold: thresholds.maxApiLatencyMs,
-        alertType: "system_failure", title: "High API Latency", riskLevel: 60
-      }
+        current: this.riskMetrics.apiLatency,
+        threshold: thresholds.maxApiLatencyMs,
+        alertType: "system_failure",
+        title: "High API Latency",
+        riskLevel: 60,
+      },
     ];
 
-    checks.forEach(check => {
+    checks.forEach((check) => {
       if (check.condition) {
         violations.push({
           type: check.type,
@@ -304,7 +358,15 @@ export class CoreSafetyMonitoring {
           thresholdValue: check.threshold,
           category: check.category as any,
         });
-        this.triggerAlert(check.alertType as any, check.severity as any, check.category as any, check.title, check.message, check.riskLevel, { current: check.current, threshold: check.threshold });
+        this.triggerAlert(
+          check.alertType as any,
+          check.severity as any,
+          check.category as any,
+          check.title,
+          check.message,
+          check.riskLevel,
+          { current: check.current, threshold: check.threshold }
+        );
       }
     });
 
@@ -317,8 +379,15 @@ export class CoreSafetyMonitoring {
   /**
    * Helper method to trigger alerts and reduce code duplication
    */
-  private triggerAlert(type: SafetyAlert["type"], severity: SafetyAlert["severity"], 
-    category: SafetyAlert["category"], title: string, message: string, riskLevel: number, metadata: any): void {
+  private triggerAlert(
+    type: SafetyAlert["type"],
+    severity: SafetyAlert["severity"],
+    category: SafetyAlert["category"],
+    title: string,
+    message: string,
+    riskLevel: number,
+    metadata: any
+  ): void {
     if (this.config.onAlert) {
       this.config.onAlert({
         type,
@@ -508,8 +577,10 @@ export class CoreSafetyMonitoring {
       const report = await this.config.executionService.getExecutionReport();
       const executions = report.recentExecutions || [];
       if (executions.length === 0) return 100;
-      
-      const successful = executions.filter(e => e.status === "completed" || e.status === "filled");
+
+      const successful = executions.filter(
+        (e) => e.status === "completed" || e.status === "filled"
+      );
       return (successful.length / executions.length) * 100;
     } catch {
       return 50;
@@ -521,15 +592,21 @@ export class CoreSafetyMonitoring {
       const mem = process.memoryUsage();
       return Math.min((mem.heapUsed / 1024 / 1024 / 1024) * 100, 100);
     }
-    return Math.min(20 + (this.config.executionService?.getActivePositions?.()?.length || 0) * 2, 90);
+    return Math.min(
+      20 + (this.config.executionService?.getActivePositions?.()?.length || 0) * 2,
+      90
+    );
   }
 
   private calculateRealPortfolioValue(report: any): number {
     try {
       const pnl = Number.parseFloat(report.stats.totalPnl) || 0;
       const positions = report.activePositions || [];
-      const posValue = positions.reduce((sum: number, pos: any) => 
-        sum + (Number.parseFloat(pos.quantity) || 0) * (Number.parseFloat(pos.currentPrice) || 0), 0);
+      const posValue = positions.reduce(
+        (sum: number, pos: any) =>
+          sum + (Number.parseFloat(pos.quantity) || 0) * (Number.parseFloat(pos.currentPrice) || 0),
+        0
+      );
       return 10000 + pnl + posValue;
     } catch {
       return 10000;
@@ -542,7 +619,7 @@ export class CoreSafetyMonitoring {
         const qty = Number.parseFloat(pos.quantity) || 0;
         const price = Number.parseFloat(pos.currentPrice) || 0;
         const lev = Number.parseFloat(pos.leverage) || 1;
-        return sum + (qty * price * lev);
+        return sum + qty * price * lev;
       }, 0);
     } catch {
       return positions.length * 100;

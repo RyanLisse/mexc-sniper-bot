@@ -9,10 +9,10 @@ import { toSafeError } from "../../../lib/error-type-utils";
 import type {
   ModuleContext,
   ModuleState,
-  TradeParameters,
-  TradeResult,
   MultiPhaseConfig,
   MultiPhaseResult,
+  TradeParameters,
+  TradeResult,
   TradingStrategy,
 } from "./types";
 import { validateTradeParams } from "./types";
@@ -150,7 +150,8 @@ export class ManualTradingModule {
       }
 
       // Calculate phase allocations
-      const allocations = config.phaseAllocation || this.calculatePhaseAllocations(config.phaseCount);
+      const allocations =
+        config.phaseAllocation || this.calculatePhaseAllocations(config.phaseCount);
 
       const phases: MultiPhaseResult["phases"] = [];
       let totalExecuted = 0;
@@ -490,7 +491,7 @@ export class ManualTradingModule {
       reason,
       resetTime: this.circuitBreakerResetTime,
     });
-    
+
     this.context.eventEmitter.emit("circuit_breaker_triggered", {
       reason,
       timestamp: new Date(),

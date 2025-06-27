@@ -18,9 +18,11 @@ const ResponsiveContainer = lazy(() =>
       // Return fallback component that renders safely
       return {
         default: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
-          <div className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}>
+          <div
+            className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
+          >
             Chart temporarily unavailable
-            {children && <div style={{ display: 'none' }}>{children}</div>}
+            {children && <div style={{ display: "none" }}>{children}</div>}
           </div>
         ),
       };
@@ -36,8 +38,8 @@ export function ChartContainer({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <ErrorBoundary 
-      level="component" 
+    <ErrorBoundary
+      level="component"
       fallback={
         <div className="w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500">
           Chart component temporarily unavailable

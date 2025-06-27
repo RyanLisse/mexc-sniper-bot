@@ -10,12 +10,12 @@ import { db } from "../../../db";
 import { snipeTargets } from "../../../db/schemas/trading";
 import { toSafeError } from "../../../lib/error-type-utils";
 import type {
+  AutoSnipeTarget,
   ModuleContext,
   ModuleState,
-  AutoSnipeTarget,
+  ServiceResponse,
   TradeParameters,
   TradeResult,
-  ServiceResponse,
 } from "./types";
 
 export class AutoSnipingModule {
@@ -162,14 +162,17 @@ export class AutoSnipingModule {
       processedTargets: this.processedTargets,
       successfulSnipes: this.successfulSnipes,
       failedSnipes: this.failedSnipes,
-      successRate: this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+      successRate:
+        this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
     };
   }
 
   /**
    * Manually process snipe targets
    */
-  async processSnipeTargets(): Promise<ServiceResponse<{ processedCount: number; successCount: number }>> {
+  async processSnipeTargets(): Promise<
+    ServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     try {
       this.lastSnipeCheck = new Date();
       this.state.lastActivity = new Date();
@@ -198,7 +201,10 @@ export class AutoSnipingModule {
             this.successfulSnipes++;
           } catch (error) {
             const safeError = toSafeError(error);
-            this.context.logger.error("Failed to execute snipe target", { target, error: safeError });
+            this.context.logger.error("Failed to execute snipe target", {
+              target,
+              error: safeError,
+            });
             await this.updateSnipeTargetStatus(target.id, "failed", safeError.message);
             this.failedSnipes++;
           }
@@ -359,7 +365,7 @@ export class AutoSnipingModule {
     try {
       // Simulate trade execution for now
       // In a real implementation, this would call the manual trading module
-      
+
       if (this.context.config.enablePaperTrading) {
         return await this.executePaperSnipe(params);
       } else {

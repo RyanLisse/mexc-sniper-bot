@@ -12,11 +12,8 @@
  * - Activity monitoring
  */
 
-import { WebSocket } from "ws";
-import type {
-  ConnectionMetrics,
-  WebSocketConnection,
-} from "@/src/lib/websocket-types";
+import type { WebSocket } from "ws";
+import type { ConnectionMetrics, WebSocketConnection } from "@/src/lib/websocket-types";
 
 export interface ConnectionManagerMetrics {
   totalConnections: number;
@@ -298,7 +295,9 @@ export class ServerConnectionManager {
   /**
    * Get connections by client type
    */
-  getConnectionsByType(clientType: WebSocketConnection["clientType"]): (WebSocketConnection & { ws: WebSocket })[] {
+  getConnectionsByType(
+    clientType: WebSocketConnection["clientType"]
+  ): (WebSocketConnection & { ws: WebSocket })[] {
     return Array.from(this.connections.values()).filter((c) => c.clientType === clientType);
   }
 

@@ -1,6 +1,6 @@
 /**
  * Pattern to Database Bridge - User Preferences Integration Tests
- * 
+ *
  * Tests integration with user preferences for position sizing,
  * risk management, and fallback to default values.
  */
@@ -12,11 +12,11 @@ import { db } from "../../../db";
 import { snipeTargets } from "../../../db/schema";
 import { PatternToDatabaseBridge } from "../../data/pattern-detection/pattern-to-database-bridge";
 import {
-  TestContext,
   cleanupAllTestData,
   cleanupTestRecords,
   createTestContext,
   setupTestData,
+  type TestContext,
   verifyDatabaseConnection,
 } from "./test-setup";
 

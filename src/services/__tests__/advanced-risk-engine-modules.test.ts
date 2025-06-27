@@ -431,87 +431,87 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
       // For avgVolume = 300: (200 + x) / 3 = 300 => x = 700
       // maxVolume = max(100, 100, 700) = 700
       // volumeSpike = 700 / 300 = 2.33 (still not enough)
-      
+
       // Let's try avgVolume = 250: (200 + x) / 3 = 250 => x = 550
       // volumeSpike = 550 / 250 = 2.2 (not enough)
-      
-      // Let's try avgVolume = 200: (200 + x) / 3 = 200 => x = 400 
+
+      // Let's try avgVolume = 200: (200 + x) / 3 = 200 => x = 400
       // volumeSpike = 400 / 200 = 2.0 (not enough)
-      
+
       // I need: maxVolume / ((vol1 + vol2 + maxVolume) / 3) > 3
       // maxVolume / ((vol1 + vol2 + maxVolume) / 3) > 3
       // 3 * maxVolume > vol1 + vol2 + maxVolume
       // 2 * maxVolume > vol1 + vol2
       // maxVolume > (vol1 + vol2) / 2
-      
+
       // Let's set vol1=50, vol2=50, then maxVolume > 50, let's try maxVolume = 400
       // avgVolume = (50 + 50 + 400) / 3 = 166.67
       // volumeSpike = 400 / 166.67 = 2.4 (still not enough!)
-      
+
       // Let's try vol1=10, vol2=20, maxVolume = 100
       // avgVolume = (10 + 20 + 100) / 3 = 43.33
       // volumeSpike = 100 / 43.33 = 2.31 (still not enough!)
-      
+
       // Let me try vol1=1, vol2=1, maxVolume = 10
       // avgVolume = (1 + 1 + 10) / 3 = 4
       // volumeSpike = 10 / 4 = 2.5 (still not enough!)
-      
+
       // Let me try vol1=1, vol2=2, maxVolume = 15
       // avgVolume = (1 + 2 + 15) / 3 = 6
       // volumeSpike = 15 / 6 = 2.5 (still not enough!)
-      
-      // Let me try vol1=1, vol2=1, maxVolume = 15  
+
+      // Let me try vol1=1, vol2=1, maxVolume = 15
       // avgVolume = (1 + 1 + 15) / 3 = 5.67
       // volumeSpike = 15 / 5.67 = 2.65 (still not enough!)
-      
+
       // OK let me try vol1=1, vol2=1, maxVolume = 20
       // avgVolume = (1 + 1 + 20) / 3 = 7.33
       // volumeSpike = 20 / 7.33 = 2.73 (still not enough!)
-      
+
       // Let me try vol1=1, vol2=1, maxVolume = 25
       // avgVolume = (1 + 1 + 25) / 3 = 9
       // volumeSpike = 25 / 9 = 2.78 (still not enough!)
-      
+
       // Let me try vol1=1, vol2=1, maxVolume = 30
       // avgVolume = (1 + 1 + 30) / 3 = 10.67
       // volumeSpike = 30 / 10.67 = 2.81 (still not enough!)
-      
+
       // I think I need a HUGE spike! Let me try vol1=1, vol2=1, maxVolume = 40
       // avgVolume = (1 + 1 + 40) / 3 = 14
       // volumeSpike = 40 / 14 = 2.86 (still not enough!)
-      
+
       // OK one more try: vol1=1, vol2=1, maxVolume = 50
       // avgVolume = (1 + 1 + 50) / 3 = 17.33
       // volumeSpike = 50 / 17.33 = 2.88 (still not enough!)
-      
+
       // Final try: vol1=1, vol2=2, maxVolume = 60
       // avgVolume = (1 + 2 + 60) / 3 = 21
       // volumeSpike = 60 / 21 = 2.86 (still not enough!)
-      
+
       // I need to go extreme: vol1=1, vol2=1, maxVolume = 100
       // avgVolume = (1 + 1 + 100) / 3 = 34
       // volumeSpike = 100 / 34 = 2.94 (still not enough!)
-      
+
       // Going more extreme: vol1=1, vol2=1, maxVolume = 200
       // avgVolume = (1 + 1 + 200) / 3 = 67.33
       // volumeSpike = 200 / 67.33 = 2.97 (still not enough!)
-      
+
       // OK super extreme: vol1=1, vol2=1, maxVolume = 1000
       // avgVolume = (1 + 1 + 1000) / 3 = 334
       // volumeSpike = 1000 / 334 = 2.99 (FINALLY close!)
-      
+
       // Let me try: vol1=1, vol2=1, maxVolume = 1500
       // avgVolume = (1 + 1 + 1500) / 3 = 500.67
       // volumeSpike = 1500 / 500.67 = 2.996 (so close!)
-      
+
       // Let me try: vol1=1, vol2=1, maxVolume = 2000
       // avgVolume = (1 + 1 + 2000) / 3 = 667.33
       // volumeSpike = 2000 / 667.33 = 2.998 (SO CLOSE!)
-      
+
       // Let me try: vol1=1, vol2=1, maxVolume = 3000
       // avgVolume = (1 + 1 + 3000) / 3 = 1000.67
       // volumeSpike = 3000 / 1000.67 = 2.998 (ARGH!)
-      
+
       // The formula is converging to 3! I need to be smarter.
       // volumeSpike = maxVolume / ((vol1 + vol2 + maxVolume) / 3)
       // = 3 * maxVolume / (vol1 + vol2 + maxVolume)
@@ -521,7 +521,7 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
       // maxVolume > vol1 + vol2 + maxVolume
       // 0 > vol1 + vol2
       // This is impossible since volumes are positive!
-      
+
       // Create test data that guarantees volumeSpike > 3
       // avgVolume = (1 + 1 + 1) / 3 = 1
       // maxVolume = max(1, 1, 1, 15) = 15

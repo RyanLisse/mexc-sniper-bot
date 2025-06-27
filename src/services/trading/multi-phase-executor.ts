@@ -255,17 +255,17 @@ export class MultiPhaseExecutor {
       if (state.executedPhases && Array.isArray(state.executedPhases)) {
         this.executedPhases = new Set(state.executedPhases);
       }
-      
+
       if (state.phaseHistory && Array.isArray(state.phaseHistory)) {
         this.phaseHistory = state.phaseHistory;
       }
 
       // Synchronize state consistency
       this.synchronizeState();
-      
+
       this.logger.debug("State imported successfully", {
         executedPhases: this.executedPhases.size,
-        historyCount: this.phaseHistory.length
+        historyCount: this.phaseHistory.length,
       });
     } catch (error) {
       this.logger.error("Error importing state", { state }, error as Error);
@@ -280,8 +280,8 @@ export class MultiPhaseExecutor {
   private synchronizeState(): void {
     try {
       // Ensure executed phases match phase history
-      const historyPhases = new Set(this.phaseHistory.map(h => h.phase));
-      
+      const historyPhases = new Set(this.phaseHistory.map((h) => h.phase));
+
       // Remove orphaned executed phases that don't have history
       for (const phase of this.executedPhases) {
         if (!historyPhases.has(phase)) {
@@ -293,14 +293,16 @@ export class MultiPhaseExecutor {
       // Add missing executed phases from history
       for (const historyEntry of this.phaseHistory) {
         if (!this.executedPhases.has(historyEntry.phase)) {
-          this.logger.warn("Adding missing executed phase from history", { phase: historyEntry.phase });
+          this.logger.warn("Adding missing executed phase from history", {
+            phase: historyEntry.phase,
+          });
           this.executedPhases.add(historyEntry.phase);
         }
       }
 
       this.logger.debug("State synchronization completed", {
         executedPhases: Array.from(this.executedPhases),
-        historyCount: this.phaseHistory.length
+        historyCount: this.phaseHistory.length,
       });
     } catch (error) {
       this.logger.error("Error during state synchronization", {}, error as Error);

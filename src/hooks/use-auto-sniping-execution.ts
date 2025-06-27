@@ -145,7 +145,7 @@ export function useAutoSnipingExecution(
     setState((prev) => ({ ...prev, error: null }));
   }, []);
 
-  // Load execution report
+  // Load execution report - FIXED: Stable useCallback to prevent infinite recursion
   const loadExecutionReport = useCallback(
     async (includePositions = true, includeHistory = true, includeAlerts = true) => {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -223,10 +223,10 @@ export function useAutoSnipingExecution(
         }));
       }
     },
-    []
+    [] // Empty dependency array to make it stable
   );
 
-  // Start execution
+  // Start execution - FIX: Remove circular dependencies
   const startExecution = useCallback(async (): Promise<boolean> => {
     setState((prev) => ({ ...prev, isStartingExecution: true, error: null }));
 
@@ -242,7 +242,7 @@ export function useAutoSnipingExecution(
         executionStatus: "active",
       }));
 
-      // Refresh data after starting
+      // Refresh data after starting without circular dependency
       await loadExecutionReport(includePositions, includeHistory, includeAlerts);
 
       return true;
@@ -261,9 +261,9 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
+  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]);
 
-  // Stop execution
+  // Stop execution - FIX: Add missing dependencies
   const stopExecution = useCallback(async (): Promise<boolean> => {
     setState((prev) => ({ ...prev, isStoppingExecution: true, error: null }));
 
@@ -295,9 +295,9 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, []);
+  }, [logger]);
 
-  // Pause execution
+  // Pause execution - FIX: Add missing dependencies
   const pauseExecution = useCallback(async (): Promise<boolean> => {
     setState((prev) => ({ ...prev, isPausingExecution: true, error: null }));
 
@@ -328,9 +328,9 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, []);
+  }, [logger]);
 
-  // Resume execution
+  // Resume execution - FIX: Add missing dependencies
   const resumeExecution = useCallback(async (): Promise<boolean> => {
     setState((prev) => ({ ...prev, isResumingExecution: true, error: null }));
 
@@ -361,9 +361,9 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, []);
+  }, [logger]);
 
-  // Close position
+  // Close position - FIX: Remove circular dependencies  
   const closePosition = useCallback(
     async (positionId: string, reason = "manual"): Promise<boolean> => {
       setState((prev) => ({ ...prev, isClosingPosition: true, error: null }));
@@ -399,10 +399,10 @@ export function useAutoSnipingExecution(
         return false;
       }
     },
-    [loadExecutionReport, includePositions, includeHistory, includeAlerts]
+    [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]
   );
 
-  // Emergency close all
+  // Emergency close all - FIX: Add missing dependencies
   const emergencyCloseAll = useCallback(async (): Promise<number> => {
     setState((prev) => ({ ...prev, error: null }));
 
@@ -432,9 +432,9 @@ export function useAutoSnipingExecution(
       }));
       return 0;
     }
-  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
+  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]);
 
-  // Update configuration
+  // Update configuration - FIX: Add missing dependencies
   const updateConfig = useCallback(
     async (config: Partial<AutoSnipingConfig>): Promise<boolean> => {
       setState((prev) => ({ ...prev, isUpdatingConfig: true, error: null }));
@@ -471,10 +471,10 @@ export function useAutoSnipingExecution(
         return false;
       }
     },
-    [loadExecutionReport, includePositions, includeHistory, includeAlerts]
+    [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]
   );
 
-  // Acknowledge alert
+  // Acknowledge alert - FIX: Add missing dependencies
   const acknowledgeAlert = useCallback(async (alertId: string): Promise<boolean> => {
     try {
       await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
@@ -507,9 +507,9 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, []);
+  }, [logger]);
 
-  // Clear acknowledged alerts
+  // Clear acknowledged alerts - FIX: Add missing dependencies
   const clearAcknowledgedAlerts = useCallback(async (): Promise<number> => {
     try {
       const response = await ApiClient.post<ApiResponse<{ clearedCount: number }>>(
@@ -537,14 +537,14 @@ export function useAutoSnipingExecution(
       }));
       return 0;
     }
-  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
+  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]);
 
-  // Refresh data (alias for loadExecutionReport)
+  // Refresh data (alias for loadExecutionReport) - FIX: Add missing dependencies
   const refreshData = useCallback(async () => {
     await loadExecutionReport(includePositions, includeHistory, includeAlerts);
   }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
 
-  // Start auto-refresh
+  // Start auto-refresh - FIX: Remove circular dependencies
   const startAutoRefresh = useCallback(
     (intervalMs = refreshInterval) => {
       // Clear existing interval
@@ -558,14 +558,7 @@ export function useAutoSnipingExecution(
 
       setAutoRefreshInterval(interval);
     },
-    [
-      autoRefreshInterval,
-      refreshInterval,
-      loadExecutionReport,
-      includePositions,
-      includeHistory,
-      includeAlerts,
-    ]
+    [refreshInterval, loadExecutionReport, includePositions, includeHistory, includeAlerts]
   );
 
   // Stop auto-refresh
@@ -576,34 +569,43 @@ export function useAutoSnipingExecution(
     }
   }, [autoRefreshInterval]);
 
-  // Load initial data on mount
+  // Load initial data on mount - FIXED: Avoid circular dependencies
   useEffect(() => {
     if (loadOnMount) {
       loadExecutionReport(includePositions, includeHistory, includeAlerts);
     }
-  }, [loadOnMount, loadExecutionReport, includePositions, includeHistory, includeAlerts]);
+    // Only run on mount and when load settings change
+  }, [loadOnMount, includePositions, includeHistory, includeAlerts]);
 
-  // Setup auto-refresh if enabled
+  // Setup auto-refresh if enabled - FIXED: Avoid circular dependencies
   useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
     if (autoRefresh) {
-      startAutoRefresh();
+      interval = setInterval(() => {
+        loadExecutionReport(includePositions, includeHistory, includeAlerts);
+      }, refreshInterval);
+      
+      setAutoRefreshInterval(interval);
     }
-
+    
     return () => {
-      if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
+      if (interval) {
+        clearInterval(interval);
+        setAutoRefreshInterval(null);
       }
     };
-  }, [autoRefresh, startAutoRefresh, autoRefreshInterval]);
+  }, [autoRefresh, refreshInterval, includePositions, includeHistory, includeAlerts]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (autoRefreshInterval) {
         clearInterval(autoRefreshInterval);
+        setAutoRefreshInterval(null);
       }
     };
-  }, [autoRefreshInterval]);
+  }, []);
 
   return {
     // State

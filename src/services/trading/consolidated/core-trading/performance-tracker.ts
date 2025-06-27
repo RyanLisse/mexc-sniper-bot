@@ -9,8 +9,8 @@ import type {
   ModuleContext,
   ModuleState,
   PerformanceMetrics,
-  TradeResult,
   Position,
+  TradeResult,
 } from "./types";
 
 export class PerformanceTracker {
@@ -32,12 +32,15 @@ export class PerformanceTracker {
   private totalConfidenceScore = 0;
 
   // Strategy performance tracking
-  private strategyPerformance: Record<string, {
-    trades: number;
-    successRate: number;
-    totalPnL: number;
-    maxDrawdown: number;
-  }> = {};
+  private strategyPerformance: Record<
+    string,
+    {
+      trades: number;
+      successRate: number;
+      totalPnL: number;
+      maxDrawdown: number;
+    }
+  > = {};
 
   // Risk metrics
   private maxDrawdown = 0;
@@ -138,8 +141,10 @@ export class PerformanceTracker {
 
       // Auto-Sniping Metrics
       autoSnipeCount: this.autoSnipeCount,
-      autoSnipeSuccessRate: this.autoSnipeCount > 0 ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100 : 0,
-      averageConfidenceScore: this.autoSnipeCount > 0 ? this.totalConfidenceScore / this.autoSnipeCount : 0,
+      autoSnipeSuccessRate:
+        this.autoSnipeCount > 0 ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100 : 0,
+      averageConfidenceScore:
+        this.autoSnipeCount > 0 ? this.totalConfidenceScore / this.autoSnipeCount : 0,
 
       // Time-based Metrics
       timeframe,
@@ -179,13 +184,13 @@ export class PerformanceTracker {
     this.totalVolume = 0;
     this.totalPnL = 0;
     this.totalExecutionTime = 0;
-    
+
     this.autoSnipeCount = 0;
     this.autoSnipeSuccessful = 0;
     this.totalConfidenceScore = 0;
-    
+
     this.strategyPerformance = {};
-    
+
     this.maxDrawdown = 0;
     this.currentDrawdown = 0;
     this.peakValue = 0;
@@ -217,8 +222,10 @@ export class PerformanceTracker {
       maxDrawdown: this.maxDrawdown,
       autoSnipeStats: {
         count: this.autoSnipeCount,
-        successRate: this.autoSnipeCount > 0 ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100 : 0,
-        averageConfidence: this.autoSnipeCount > 0 ? this.totalConfidenceScore / this.autoSnipeCount : 0,
+        successRate:
+          this.autoSnipeCount > 0 ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100 : 0,
+        averageConfidence:
+          this.autoSnipeCount > 0 ? this.totalConfidenceScore / this.autoSnipeCount : 0,
       },
       uptime: Date.now() - this.startTime.getTime(),
     };
@@ -236,7 +243,7 @@ export class PerformanceTracker {
 
     if (result.success) {
       this.successfulTrades++;
-      
+
       // Track execution time
       if (result.executionTime) {
         this.totalExecutionTime += result.executionTime;
@@ -277,13 +284,17 @@ export class PerformanceTracker {
   private handlePositionClosed(position: Position): void {
     if (position.realizedPnL !== undefined) {
       this.totalPnL += position.realizedPnL;
-      
+
       // Update drawdown calculations
       this.updateDrawdown();
 
       // Track strategy performance
       if (position.strategy) {
-        this.updateStrategyPerformance(position.strategy, position.realizedPnL > 0, position.realizedPnL);
+        this.updateStrategyPerformance(
+          position.strategy,
+          position.realizedPnL > 0,
+          position.realizedPnL
+        );
       }
     }
 
@@ -295,7 +306,7 @@ export class PerformanceTracker {
    */
   private handleAutoSnipeExecuted(data: { target: any; result: TradeResult }): void {
     this.autoSnipeCount++;
-    
+
     if (data.result.success) {
       this.autoSnipeSuccessful++;
     }
@@ -326,9 +337,9 @@ export class PerformanceTracker {
 
     const strategy = this.strategyPerformance[strategyName];
     strategy.trades++;
-    
+
     if (success) {
-      strategy.successRate = ((strategy.successRate * (strategy.trades - 1)) + 100) / strategy.trades;
+      strategy.successRate = (strategy.successRate * (strategy.trades - 1) + 100) / strategy.trades;
     } else {
       strategy.successRate = (strategy.successRate * (strategy.trades - 1)) / strategy.trades;
     }
@@ -356,14 +367,14 @@ export class PerformanceTracker {
    */
   private calculateSharpeRatio(): number | undefined {
     if (this.totalTrades < 10) return undefined; // Need more data
-    
+
     // Simplified calculation - would need returns series for accurate calculation
     const averageReturn = this.totalPnL / this.totalTrades;
     const riskFreeRate = 0; // Assume 0 for simplicity
-    
+
     // Would need standard deviation of returns for accurate calculation
     const estimatedStdDev = Math.abs(this.totalPnL) * 0.1; // Rough estimation
-    
+
     if (estimatedStdDev === 0) return undefined;
     return (averageReturn - riskFreeRate) / estimatedStdDev;
   }
@@ -373,12 +384,12 @@ export class PerformanceTracker {
    */
   private calculateSortinoRatio(): number | undefined {
     if (this.totalTrades < 10) return undefined;
-    
+
     // Simplified calculation
     const averageReturn = this.totalPnL / this.totalTrades;
     // Would need downside deviation for accurate calculation
     const estimatedDownsideDeviation = Math.abs(this.totalPnL) * 0.05;
-    
+
     if (estimatedDownsideDeviation === 0) return undefined;
     return averageReturn / estimatedDownsideDeviation;
   }
@@ -388,7 +399,7 @@ export class PerformanceTracker {
    */
   private calculateCalmarRatio(): number | undefined {
     if (this.maxDrawdown === 0) return undefined;
-    
+
     const annualizedReturn = this.totalPnL; // Would annualize based on time period
     return annualizedReturn / this.maxDrawdown;
   }

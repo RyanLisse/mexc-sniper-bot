@@ -101,7 +101,8 @@ export class MexcConfigValidator {
           message: "MEXC API connectivity failed",
           details: {
             error: connectivityTest.error,
-            responseTime: (connectivityTest as any).responseTime || (connectivityTest as any).latency,
+            responseTime:
+              (connectivityTest as any).responseTime || (connectivityTest as any).latency,
             credentialDetails,
           },
           timestamp,
@@ -133,7 +134,10 @@ export class MexcConfigValidator {
         };
       }
 
-      const serverTime = typeof serverTimeResponse.data === 'number' ? serverTimeResponse.data : serverTimeResponse.data?.serverTime;
+      const serverTime =
+        typeof serverTimeResponse.data === "number"
+          ? serverTimeResponse.data
+          : serverTimeResponse.data?.serverTime;
       const localTime = Date.now();
       const timeDiff = Math.abs(localTime - (serverTime || 0));
 
@@ -435,8 +439,8 @@ export class MexcConfigValidator {
     }
 
     // Check both system readiness and environment variable setting
-    const autoSnipingEnabled = overallStatus === "ready" && 
-      (process.env.AUTO_SNIPING_ENABLED?.toLowerCase() !== "false");
+    const autoSnipingEnabled =
+      overallStatus === "ready" && process.env.AUTO_SNIPING_ENABLED?.toLowerCase() !== "false";
 
     return {
       overallStatus,

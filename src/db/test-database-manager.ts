@@ -9,9 +9,9 @@
  */
 
 import { sql } from "drizzle-orm";
-import { db, closeDatabase } from "./index";
-import { emergencyTransactionCleanup, testTransaction } from "./transaction-helpers";
 import { getLogger } from "../lib/error-type-utils";
+import { closeDatabase, db } from "./index";
+import { emergencyTransactionCleanup, testTransaction } from "./transaction-helpers";
 
 export interface TestDatabaseManager {
   setup(): Promise<void>;
@@ -26,7 +26,7 @@ export interface DatabaseConnectionInfo {
   activeConnections: number;
   totalConnections: number;
   maxConnections: number;
-  connectionHealth: 'healthy' | 'degraded' | 'critical';
+  connectionHealth: "healthy" | "degraded" | "critical";
 }
 
 /**
@@ -43,7 +43,7 @@ export function createTestDatabaseManager(): TestDatabaseManager {
       }
 
       try {
-        logger.info('[TestDB] Setting up test database environment...');
+        logger.info("[TestDB] Setting up test database environment...");
 
         // Test basic connectivity
         await db.execute(sql`SELECT 1 as health_check`);
@@ -54,17 +54,16 @@ export function createTestDatabaseManager(): TestDatabaseManager {
         await db.execute(sql`SET idle_in_transaction_session_timeout = '5s'`);
 
         setupComplete = true;
-        logger.info('[TestDB] Test database setup completed');
-
+        logger.info("[TestDB] Test database setup completed");
       } catch (error) {
-        logger.error('[TestDB] Database setup failed:', error);
+        logger.error("[TestDB] Database setup failed:", error);
         throw error;
       }
     },
 
     async cleanup(): Promise<void> {
       try {
-        logger.info('[TestDB] Starting database cleanup...');
+        logger.info("[TestDB] Starting database cleanup...");
 
         // Emergency transaction cleanup
         await emergencyTransactionCleanup();
@@ -73,10 +72,9 @@ export function createTestDatabaseManager(): TestDatabaseManager {
         await closeDatabase();
 
         setupComplete = false;
-        logger.info('[TestDB] Database cleanup completed');
-
+        logger.info("[TestDB] Database cleanup completed");
       } catch (error) {
-        logger.warn('[TestDB] Cleanup error (non-fatal):', error);
+        logger.warn("[TestDB] Cleanup error (non-fatal):", error);
       }
     },
 
@@ -94,13 +92,12 @@ export function createTestDatabaseManager(): TestDatabaseManager {
           await tx.execute(sql`ROLLBACK TO SAVEPOINT test_isolation`);
 
           return result;
-
         } catch (error) {
           // Rollback to savepoint on error too
           try {
             await tx.execute(sql`ROLLBACK TO SAVEPOINT test_isolation`);
           } catch (rollbackError) {
-            logger.warn('[TestDB] Savepoint rollback failed:', rollbackError);
+            logger.warn("[TestDB] Savepoint rollback failed:", rollbackError);
           }
           throw error;
         }
@@ -112,12 +109,11 @@ export function createTestDatabaseManager(): TestDatabaseManager {
         // Create user if not exists
         await db.execute(sql`
           INSERT INTO users (id, email, name, avatar_url, created_at, updated_at)
-          VALUES (${userId}, ${userId + '@test.com'}, ${'Test User'}, '', NOW(), NOW())
+          VALUES (${userId}, ${userId + "@test.com"}, ${"Test User"}, '', NOW(), NOW())
           ON CONFLICT (id) DO NOTHING
         `);
 
         logger.debug(`[TestDB] Test user created: ${userId}`);
-
       } catch (error) {
         logger.warn(`[TestDB] Failed to create test user ${userId}:`, error);
         // Don't throw - user might already exist or table might not exist
@@ -148,7 +144,6 @@ export function createTestDatabaseManager(): TestDatabaseManager {
         }
 
         logger.debug(`[TestDB] Test data cleaned for user: ${userId}`);
-
       } catch (error) {
         logger.warn(`[TestDB] Cleanup failed for user ${userId}:`, error);
       }
@@ -165,36 +160,35 @@ export function createTestDatabaseManager(): TestDatabaseManager {
         `);
 
         const row = (result as any)[0];
-        const activeConnections = parseInt(row.active_connections || '0');
-        const maxConnections = parseInt(row.max_connections || '100');
+        const activeConnections = parseInt(row.active_connections || "0");
+        const maxConnections = parseInt(row.max_connections || "100");
         const totalConnections = activeConnections; // Simplified for now
 
-        let connectionHealth: 'healthy' | 'degraded' | 'critical' = 'healthy';
+        let connectionHealth: "healthy" | "degraded" | "critical" = "healthy";
         const utilization = activeConnections / maxConnections;
 
         if (utilization > 0.8) {
-          connectionHealth = 'critical';
+          connectionHealth = "critical";
         } else if (utilization > 0.6) {
-          connectionHealth = 'degraded';
+          connectionHealth = "degraded";
         }
 
         return {
           activeConnections,
           totalConnections,
           maxConnections,
-          connectionHealth
+          connectionHealth,
         };
-
       } catch (error) {
-        logger.warn('[TestDB] Failed to get connection info:', error);
+        logger.warn("[TestDB] Failed to get connection info:", error);
         return {
           activeConnections: 0,
           totalConnections: 0,
           maxConnections: 100,
-          connectionHealth: 'critical'
+          connectionHealth: "critical",
         };
       }
-    }
+    },
   };
 }
 
@@ -221,7 +215,7 @@ export async function withDatabaseIsolation<T>(
   userId?: string
 ): Promise<T> {
   const manager = getTestDatabaseManager();
-  
+
   // Setup if needed
   await manager.setup();
 
@@ -246,43 +240,42 @@ export async function withDatabaseIsolation<T>(
  */
 export async function ensureCleanDatabaseState(): Promise<void> {
   const manager = getTestDatabaseManager();
-  
+
   try {
     // Check connection health
     const connectionInfo = await manager.getConnectionInfo();
-    
-    if (connectionInfo.connectionHealth === 'critical') {
-      getLogger().warn('[TestDB] Critical connection state detected, performing cleanup...');
+
+    if (connectionInfo.connectionHealth === "critical") {
+      getLogger().warn("[TestDB] Critical connection state detected, performing cleanup...");
       await manager.cleanup();
       await manager.setup();
     }
 
     // Emergency cleanup
     await emergencyTransactionCleanup();
-
   } catch (error) {
-    getLogger().warn('[TestDB] Failed to ensure clean state:', error);
+    getLogger().warn("[TestDB] Failed to ensure clean state:", error);
   }
 }
 
 /**
  * Register cleanup hooks for test environment
  */
-if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-  process.on('exit', async () => {
+if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
+  process.on("exit", async () => {
     if (globalTestDbManager) {
       await globalTestDbManager.cleanup();
     }
   });
 
-  process.on('SIGINT', async () => {
+  process.on("SIGINT", async () => {
     if (globalTestDbManager) {
       await globalTestDbManager.cleanup();
     }
     process.exit(0);
   });
 
-  process.on('SIGTERM', async () => {
+  process.on("SIGTERM", async () => {
     if (globalTestDbManager) {
       await globalTestDbManager.cleanup();
     }

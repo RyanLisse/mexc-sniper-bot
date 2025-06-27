@@ -33,15 +33,15 @@ import { PatternDetectionError } from "./interfaces";
 import { PatternAnalyzer } from "./pattern-analyzer";
 import { PatternStorage } from "./pattern-storage";
 import { PatternValidator } from "./pattern-validator";
-// OPTIMIZATION: Shared utilities to reduce code duplication and improve performance
-import { createPatternLogger, createErrorContext } from "./shared/logger-utils";
-import { 
-  calculateOptimizedConfidenceDistribution,
-  categorizeOptimizedRecommendations,
+import {
   calculateOptimizedAverageAdvanceHours,
   calculateOptimizedAverageTimeToReady,
-  filterByConfidenceThreshold
+  calculateOptimizedConfidenceDistribution,
+  categorizeOptimizedRecommendations,
+  filterByConfidenceThreshold,
 } from "./shared/algorithm-utils";
+// OPTIMIZATION: Shared utilities to reduce code duplication and improve performance
+import { createErrorContext, createPatternLogger } from "./shared/logger-utils";
 
 /**
  * Pattern Detection Core Implementation

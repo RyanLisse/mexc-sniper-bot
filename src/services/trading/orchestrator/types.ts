@@ -85,12 +85,14 @@ export const AutoSnipingStatusSchema = z.object({
     safetyCoordinator: z.enum(["operational", "degraded", "offline"]),
     mexcConnection: z.enum(["connected", "disconnected", "error"]),
   }),
-  lastOperation: z.object({
-    timestamp: z.string(),
-    action: z.string(),
-    symbol: z.string().optional(),
-    result: z.enum(["success", "failed", "partial"]),
-  }).nullable(),
+  lastOperation: z
+    .object({
+      timestamp: z.string(),
+      action: z.string(),
+      symbol: z.string().optional(),
+      result: z.enum(["success", "failed", "partial"]),
+    })
+    .nullable(),
   runningTime: z.number().nonnegative(),
   detectedOpportunities: z.number().nonnegative(),
   executedTrades: z.number().nonnegative(),
@@ -371,9 +373,9 @@ export function isTradeExecutionResult(obj: any): obj is TradeExecutionResult {
 // Utility Types
 // ============================================================================
 
-export type EventType = 
+export type EventType =
   | "auto_sniping_started"
-  | "auto_sniping_stopped" 
+  | "auto_sniping_stopped"
   | "target_processed"
   | "trade_executed"
   | "position_opened"
@@ -384,7 +386,7 @@ export type EventType =
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
-export type SystemComponent = 
+export type SystemComponent =
   | "pattern_detection"
   | "trade_execution"
   | "position_monitoring"

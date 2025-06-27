@@ -7,29 +7,28 @@
 
 import { EventEmitter } from "events";
 import { toSafeError } from "../../../lib/error-type-utils";
-import { UnifiedMexcServiceV2 } from "../../api/unified-mexc-service-v2";
 import { ComprehensiveSafetyCoordinator } from "../../../risk/comprehensive-safety-coordinator";
-
+import { UnifiedMexcServiceV2 } from "../../api/unified-mexc-service-v2";
+import { AutoSnipingModule } from "./auto-sniping";
 // Import modules
 import { ManualTradingModule } from "./manual-trading";
-import { AutoSnipingModule } from "./auto-sniping";
-import { PositionManager } from "./position-manager";
 import { PerformanceTracker } from "./performance-tracker";
+import { PositionManager } from "./position-manager";
 import { StrategyManager } from "./strategy-manager";
 
 // Import types
 import type {
   CoreTradingConfig,
   CoreTradingEvents,
-  TradeParameters,
-  TradeResult,
+  ModuleContext,
+  MultiPhaseConfig,
+  MultiPhaseResult,
+  PerformanceMetrics,
   Position,
   ServiceResponse,
   ServiceStatus,
-  PerformanceMetrics,
-  MultiPhaseConfig,
-  MultiPhaseResult,
-  ModuleContext,
+  TradeParameters,
+  TradeResult,
 } from "./types";
 import { validateConfig } from "./types";
 
@@ -302,7 +301,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async getServiceStatus(): Promise<ServiceStatus> {
     this.ensureInitialized();
-    
+
     const positionStats = await this.positionManager.getPositionStats();
     const performanceMetrics = await this.performanceTracker.getPerformanceMetrics();
     const manualTradingStatus = this.manualTrading.getStatus();
@@ -322,7 +321,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       // Position Status
       activePositions: positionStats.activeCount,
       maxPositions: this.config.maxConcurrentPositions,
-      availableCapacity: (this.config.maxConcurrentPositions - positionStats.activeCount) / this.config.maxConcurrentPositions,
+      availableCapacity:
+        (this.config.maxConcurrentPositions - positionStats.activeCount) /
+        this.config.maxConcurrentPositions,
 
       // Circuit Breaker Status
       circuitBreakerOpen: manualTradingStatus.circuitBreakerOpen,

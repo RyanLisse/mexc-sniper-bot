@@ -16,6 +16,7 @@ export const PatternTypeSchema = z.enum([
   "pre_ready",
   "launch_sequence",
   "risk_warning",
+  "database_target",
 ]);
 
 export const AlertSeveritySchema = z.enum(["info", "warning", "error", "critical"]);
@@ -159,6 +160,14 @@ export interface TradingOpportunity {
   confidence: number;
   vcoinId: string;
   projectName: string;
+  // Database snipe target specific fields (optional)
+  databaseTargetId?: number;
+  entryStrategy?: string;
+  entryPrice?: number;
+  positionSizeUSDT?: number;
+  stopLossPercent?: number;
+  takeProfitLevel?: number;
+  takeProfitCustom?: number;
 }
 
 export interface ExecutionResult {
@@ -176,7 +185,7 @@ export interface ExecutionResult {
 
 /**
  * Validate Execution Position
- * 
+ *
  * Validates an ExecutionPosition object against the schema
  */
 export function validateExecutionPosition(position: unknown): ExecutionPosition {
@@ -185,7 +194,7 @@ export function validateExecutionPosition(position: unknown): ExecutionPosition 
 
 /**
  * Validate Auto-Sniping Configuration
- * 
+ *
  * Validates an AutoSnipingConfig object against the schema
  */
 export function validateAutoSnipingConfig(config: unknown): AutoSnipingConfig {
@@ -194,7 +203,7 @@ export function validateAutoSnipingConfig(config: unknown): AutoSnipingConfig {
 
 /**
  * Validate Execution Stats
- * 
+ *
  * Validates an ExecutionStats object against the schema
  */
 export function validateExecutionStats(stats: unknown): ExecutionStats {
@@ -203,7 +212,7 @@ export function validateExecutionStats(stats: unknown): ExecutionStats {
 
 /**
  * Validate Execution Alert
- * 
+ *
  * Validates an ExecutionAlert object against the schema
  */
 export function validateExecutionAlert(alert: unknown): ExecutionAlert {

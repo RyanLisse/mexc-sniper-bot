@@ -6,21 +6,16 @@
  */
 
 import { toSafeError } from "../../../lib/error-type-utils";
-import type {
-  ModuleContext,
-  ModuleState,
-  TradingPosition,
-  ServiceResponse,
-} from "./types";
+import type { ModuleContext, ModuleState, ServiceResponse, TradingPosition } from "./types";
 
 export class PositionMonitor {
   private context: ModuleContext;
   private state: ModuleState;
-  
+
   // Position tracking
   private openPositions = new Map<string, TradingPosition>();
   private closedPositions: TradingPosition[] = [];
-  
+
   // Performance tracking
   private totalRealizedPnL = 0;
   private totalUnrealizedPnL = 0;
@@ -28,7 +23,7 @@ export class PositionMonitor {
   private maxDrawdown = 0;
   private successfulTrades = 0;
   private totalTradesExecuted = 0;
-  
+
   // Monitoring interval
   private monitoringInterval: NodeJS.Timeout | null = null;
   private readonly MONITORING_INTERVAL = 5000; // 5 seconds
@@ -55,10 +50,10 @@ export class PositionMonitor {
    */
   async initialize(): Promise<void> {
     this.context.logger.info("Initializing Position Monitor Module");
-    
+
     // Start position monitoring
     this.startMonitoring();
-    
+
     this.state.isInitialized = true;
     this.state.lastActivity = new Date();
     this.context.logger.info("Position Monitor Module initialized successfully");
@@ -69,7 +64,7 @@ export class PositionMonitor {
    */
   async shutdown(): Promise<void> {
     this.context.logger.info("Shutting down Position Monitor Module");
-    
+
     this.stopMonitoring();
     this.openPositions.clear();
     this.closedPositions = [];
@@ -90,10 +85,10 @@ export class PositionMonitor {
   async getHealthStatus(): Promise<"operational" | "degraded" | "offline"> {
     if (!this.state.isInitialized) return "offline";
     if (!this.state.isHealthy) return "degraded";
-    
+
     // Check if monitoring is active
     if (!this.monitoringInterval) return "degraded";
-    
+
     return "operational";
   }
 
@@ -103,7 +98,7 @@ export class PositionMonitor {
   async addPosition(position: TradingPosition): Promise<ServiceResponse<void>> {
     try {
       this.context.logger.info("Adding position to monitor", { position });
-      
+
       // Validate position
       if (!position.id || !position.symbol) {
         throw new Error("Position must have ID and symbol");
@@ -116,7 +111,9 @@ export class PositionMonitor {
 
       // Check position limit
       if (this.openPositions.size >= this.context.config.maxConcurrentPositions) {
-        throw new Error(`Maximum concurrent positions (${this.context.config.maxConcurrentPositions}) reached`);
+        throw new Error(
+          `Maximum concurrent positions (${this.context.config.maxConcurrentPositions}) reached`
+        );
       }
 
       // Add position
@@ -131,7 +128,7 @@ export class PositionMonitor {
       this.state.lastActivity = new Date();
 
       this.context.eventEmitter.emit("position_opened", position);
-      
+
       this.context.logger.info("Position added successfully", {
         positionId: position.id,
         symbol: position.symbol,
@@ -145,7 +142,7 @@ export class PositionMonitor {
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error(`Failed to add position ${position.symbol}: ${safeError.message}`);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -157,10 +154,13 @@ export class PositionMonitor {
   /**
    * Close a position
    */
-  async closePosition(positionId: string, reason: string = "manual"): Promise<ServiceResponse<TradingPosition>> {
+  async closePosition(
+    positionId: string,
+    reason: string = "manual"
+  ): Promise<ServiceResponse<TradingPosition>> {
     try {
       this.context.logger.info("Closing position", { positionId, reason });
-      
+
       const position = this.openPositions.get(positionId);
       if (!position) {
         throw new Error(`Position ${positionId} not found`);
@@ -169,7 +169,7 @@ export class PositionMonitor {
       // Calculate final PnL
       const currentPrice = await this.getCurrentPrice(position.symbol);
       const realizedPnL = this.calculateRealizedPnL(position, currentPrice);
-      
+
       // Update position
       const closedPosition: TradingPosition = {
         ...position,
@@ -194,7 +194,7 @@ export class PositionMonitor {
       this.state.lastActivity = new Date();
 
       this.context.eventEmitter.emit("position_closed", closedPosition);
-      
+
       this.context.logger.info("Position closed successfully", {
         positionId,
         realizedPnL,
@@ -210,7 +210,7 @@ export class PositionMonitor {
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error(`Failed to close position ${positionId}: ${safeError.message}`);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -230,7 +230,7 @@ export class PositionMonitor {
 
       const positionIds = Array.from(this.openPositions.keys());
       let closedCount = 0;
-      
+
       for (const positionId of positionIds) {
         const result = await this.closePosition(positionId, "close_all");
         if (result.success) {
@@ -251,7 +251,7 @@ export class PositionMonitor {
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error(`Failed to close all positions: ${safeError.message}`);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -279,14 +279,15 @@ export class PositionMonitor {
    */
   async getProfitLoss() {
     await this.updateUnrealizedPnL();
-    
+
     return {
       realized: this.totalRealizedPnL,
       unrealized: this.totalUnrealizedPnL,
       total: this.totalRealizedPnL + this.totalUnrealizedPnL,
-      percentage: this.peakValue > 0 
-        ? ((this.totalRealizedPnL + this.totalUnrealizedPnL) / this.peakValue) * 100 
-        : 0,
+      percentage:
+        this.peakValue > 0
+          ? ((this.totalRealizedPnL + this.totalUnrealizedPnL) / this.peakValue) * 100
+          : 0,
     };
   }
 
@@ -294,9 +295,7 @@ export class PositionMonitor {
    * Get profitability metric
    */
   async getProfitability(): Promise<number> {
-    return this.totalTradesExecuted > 0 
-      ? (this.totalRealizedPnL / this.totalTradesExecuted) 
-      : 0;
+    return this.totalTradesExecuted > 0 ? this.totalRealizedPnL / this.totalTradesExecuted : 0;
   }
 
   /**
@@ -311,11 +310,11 @@ export class PositionMonitor {
    */
   async getSharpeRatio(): Promise<number> {
     if (this.totalTradesExecuted < 10) return 0;
-    
+
     const avgReturn = this.totalRealizedPnL / this.totalTradesExecuted;
     const riskFreeRate = 0; // Simplified
     const stdDev = Math.abs(this.totalRealizedPnL) * 0.1; // Rough estimation
-    
+
     return stdDev > 0 ? (avgReturn - riskFreeRate) / stdDev : 0;
   }
 
@@ -334,9 +333,8 @@ export class PositionMonitor {
       ...this.state.metrics,
       totalClosedPositions: this.closedPositions.length,
       averageHoldTime: this.calculateAverageHoldTime(),
-      winRate: this.totalTradesExecuted > 0 
-        ? (this.successfulTrades / this.totalTradesExecuted) * 100 
-        : 0,
+      winRate:
+        this.totalTradesExecuted > 0 ? (this.successfulTrades / this.totalTradesExecuted) * 100 : 0,
     };
   }
 
@@ -391,7 +389,9 @@ export class PositionMonitor {
       try {
         await this.monitorSinglePosition(positionId, position);
       } catch (error) {
-        this.context.logger.error(`Failed to monitor position ${positionId}: ${toSafeError(error).message}`);
+        this.context.logger.error(
+          `Failed to monitor position ${positionId}: ${toSafeError(error).message}`
+        );
       }
     }
 
@@ -402,10 +402,13 @@ export class PositionMonitor {
   /**
    * Monitor a single position
    */
-  private async monitorSinglePosition(positionId: string, position: TradingPosition): Promise<void> {
+  private async monitorSinglePosition(
+    positionId: string,
+    position: TradingPosition
+  ): Promise<void> {
     const currentPrice = await this.getCurrentPrice(position.symbol);
     const unrealizedPnL = this.calculateUnrealizedPnL(position, currentPrice);
-    
+
     // Update position with current data
     const updatedPosition = {
       ...position,
@@ -413,7 +416,7 @@ export class PositionMonitor {
       unrealizedPnL,
       lastUpdated: new Date().toISOString(),
     };
-    
+
     this.openPositions.set(positionId, updatedPosition);
 
     // Check stop loss
@@ -424,7 +427,7 @@ export class PositionMonitor {
         currentPrice,
         stopLoss: position.stopLoss,
       });
-      
+
       await this.closePosition(positionId, "stop_loss");
       return;
     }
@@ -437,15 +440,16 @@ export class PositionMonitor {
         currentPrice,
         takeProfit: position.takeProfit,
       });
-      
+
       await this.closePosition(positionId, "take_profit");
       return;
     }
 
     // Check for significant price moves
     const pnlPercentage = (unrealizedPnL / (position.entryPrice * position.amount)) * 100;
-    
-    if (Math.abs(pnlPercentage) > 10) { // 10% move
+
+    if (Math.abs(pnlPercentage) > 10) {
+      // 10% move
       this.context.logger.info("Significant price movement detected", {
         positionId,
         symbol: position.symbol,
@@ -463,7 +467,7 @@ export class PositionMonitor {
     const basePrice = 100 + Math.random() * 1000;
     const volatility = 0.02; // 2% volatility
     const change = (Math.random() - 0.5) * 2 * volatility;
-    
+
     return basePrice * (1 + change);
   }
 
@@ -473,7 +477,7 @@ export class PositionMonitor {
   private calculateRealizedPnL(position: TradingPosition, exitPrice: number): number {
     const entryValue = position.entryPrice * position.amount;
     const exitValue = exitPrice * position.amount;
-    
+
     return exitValue - entryValue;
   }
 
@@ -483,7 +487,7 @@ export class PositionMonitor {
   private calculateUnrealizedPnL(position: TradingPosition, currentPrice: number): number {
     const entryValue = position.entryPrice * position.amount;
     const currentValue = currentPrice * position.amount;
-    
+
     return currentValue - entryValue;
   }
 
@@ -492,14 +496,14 @@ export class PositionMonitor {
    */
   private async updateUnrealizedPnL(): Promise<void> {
     let totalUnrealized = 0;
-    
+
     for (const position of Array.from(this.openPositions.values())) {
       if (position.currentPrice) {
         const unrealizedPnL = this.calculateUnrealizedPnL(position, position.currentPrice);
         totalUnrealized += unrealizedPnL;
       }
     }
-    
+
     this.totalUnrealizedPnL = totalUnrealized;
   }
 
@@ -508,7 +512,7 @@ export class PositionMonitor {
    */
   private updateDrawdown(): void {
     const totalValue = this.totalRealizedPnL + this.totalUnrealizedPnL;
-    
+
     if (totalValue > this.peakValue) {
       this.peakValue = totalValue;
     } else {
@@ -522,13 +526,13 @@ export class PositionMonitor {
    */
   private calculateAverageHoldTime(): number {
     if (this.closedPositions.length === 0) return 0;
-    
-    const holdTimes = this.closedPositions.map(position => {
+
+    const holdTimes = this.closedPositions.map((position) => {
       const opened = new Date(position.timestamp);
       const closed = new Date(position.lastUpdated || position.timestamp);
       return closed.getTime() - opened.getTime();
     });
-    
+
     const averageMs = holdTimes.reduce((sum, time) => sum + time, 0) / holdTimes.length;
     return averageMs / (1000 * 60); // Convert to minutes
   }

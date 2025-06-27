@@ -12,10 +12,7 @@
  * - Handler registration and management
  */
 
-import type {
-  MessageHandler,
-  WebSocketMessage,
-} from "@/src/lib/websocket-types";
+import type { MessageHandler, WebSocketMessage } from "@/src/lib/websocket-types";
 
 export interface MessageRoutingStats {
   totalHandlers: number;
@@ -146,17 +143,20 @@ export class WebSocketMessageRouter {
         globalHandlers: this.globalHandlers.length,
         channelHandlers: channelHandlers.length,
       });
-
     } catch (error) {
       this.routingStats.routingErrors++;
       const routingTime = Date.now() - routingStart;
 
-      this.logger.error(`Error routing message from connection: ${connectionId}`, {
-        channel: message.channel,
-        type: message.type,
-        messageId: message.id,
-        routingTimeMs: routingTime,
-      }, error as Error);
+      this.logger.error(
+        `Error routing message from connection: ${connectionId}`,
+        {
+          channel: message.channel,
+          type: message.type,
+          messageId: message.id,
+          routingTimeMs: routingTime,
+        },
+        error as Error
+      );
 
       throw error;
     }
@@ -180,24 +180,27 @@ export class WebSocketMessageRouter {
       try {
         await handler(message);
         const handlerTime = Date.now() - handlerStart;
-        
+
         this.logger.debug(`Handler executed successfully`, {
           handlerType,
           handlerIndex: index,
           executionTimeMs: handlerTime,
           messageChannel: message.channel,
         });
-
       } catch (error) {
         const handlerTime = Date.now() - handlerStart;
-        
-        this.logger.error(`Handler execution failed`, {
-          handlerType,
-          handlerIndex: index,
-          executionTimeMs: handlerTime,
-          messageChannel: message.channel,
-          connectionId,
-        }, error as Error);
+
+        this.logger.error(
+          `Handler execution failed`,
+          {
+            handlerType,
+            handlerIndex: index,
+            executionTimeMs: handlerTime,
+            messageChannel: message.channel,
+            connectionId,
+          },
+          error as Error
+        );
 
         // Don't rethrow to prevent one failing handler from stopping others
       }

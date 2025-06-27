@@ -24,30 +24,29 @@
 // ============================================================================
 
 export {
-  // Zod Schemas
-  PatternTypeSchema,
+  type AlertSeverity,
   AlertSeveritySchema,
+  type AlertType,
   AlertTypeSchema,
-  PositionStatusSchema,
-  ExecutionStatusSchema,
+  type AutoSnipingConfig,
   AutoSnipingConfigSchema,
-  ExecutionPositionSchema,
-  ExecutionStatsSchema,
+  type ExecutionAlert,
   ExecutionAlertSchema,
-  
+  type ExecutionPosition,
+  ExecutionPositionSchema,
+  type ExecutionResult,
+  type ExecutionStats,
+  ExecutionStatsSchema,
+  type ExecutionStatus,
+  ExecutionStatusSchema,
   // Types
   type PatternType,
-  type AutoSnipingConfig,
-  type ExecutionPosition,
-  type ExecutionStats,
-  type ExecutionAlert,
-  type ExecutionStatus,
-  type AlertSeverity,
-  type AlertType,
+  // Zod Schemas
+  PatternTypeSchema,
   type PositionStatus,
+  PositionStatusSchema,
   type SystemHealth,
   type TradingOpportunity,
-  type ExecutionResult,
 } from "./auto-sniping/schemas";
 
 // ============================================================================
@@ -60,9 +59,9 @@ export { OptimizedAutoSnipingCore } from "./auto-sniping/core-orchestrator";
 // Re-export Individual Modules for Advanced Usage
 // ============================================================================
 
+export { AutoSnipingAlertManager } from "./auto-sniping/alert-manager";
 export { AutoSnipingConfigManager } from "./auto-sniping/config-manager";
 export { AutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
-export { AutoSnipingAlertManager } from "./auto-sniping/alert-manager";
 
 // ============================================================================
 // Factory Functions for Easy Initialization
@@ -93,9 +92,9 @@ export function getOptimizedAutoSnipingCore(): OptimizedAutoSnipingCore {
 
 export {
   validateAutoSnipingConfig,
+  validateExecutionAlert,
   validateExecutionPosition,
   validateExecutionStats,
-  validateExecutionAlert,
 } from "./auto-sniping/schemas";
 
 // ============================================================================
@@ -111,7 +110,7 @@ export {
  * ```typescript
  * // This code continues to work exactly as before
  * import { OptimizedAutoSnipingCore, createOptimizedAutoSnipingCore } from './optimized-auto-sniping-core';
- * 
+ *
  * const core = createOptimizedAutoSnipingCore(config);
  * const stats = await core.getExecutionStats();
  * ```

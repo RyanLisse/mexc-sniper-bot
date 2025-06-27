@@ -5,10 +5,10 @@
  * Extracted from the original monolithic implementation for better maintainability.
  */
 
-import { z } from "zod";
 import type { EventEmitter } from "events";
-import type { UnifiedMexcServiceV2 } from "../../api/unified-mexc-service-v2";
+import { z } from "zod";
 import type { ComprehensiveSafetyCoordinator } from "../../../risk/comprehensive-safety-coordinator";
+import type { UnifiedMexcServiceV2 } from "../../api/unified-mexc-service-v2";
 
 // ============================================================================
 // Core Configuration Types
@@ -21,7 +21,7 @@ export interface CoreTradingConfig {
   baseUrl?: string;
   timeout?: number;
   maxRetries?: number;
-  
+
   // Trading Configuration
   enablePaperTrading: boolean;
   defaultStrategy: string;
@@ -29,12 +29,12 @@ export interface CoreTradingConfig {
   enableCircuitBreaker: boolean;
   circuitBreakerThreshold: number;
   circuitBreakerResetTime: number;
-  
+
   // Auto-Sniping Configuration
   autoSnipingEnabled: boolean;
   snipeCheckInterval: number;
   confidenceThreshold: number;
-  
+
   // Cache Configuration
   enableCaching: boolean;
   cacheTTL: number;
@@ -73,7 +73,7 @@ export interface TradeParameters {
   stopPrice?: number;
   timeInForce?: "GTC" | "IOC" | "FOK";
   newClientOrderId?: string;
-  
+
   // Enhanced parameters
   strategy?: string;
   isAutoSnipe?: boolean;
@@ -227,14 +227,14 @@ export interface PerformanceMetrics {
   successfulTrades: number;
   failedTrades: number;
   successRate: number;
-  
+
   // Financial Performance
   totalPnL: number;
   realizedPnL: number;
   unrealizedPnL: number;
   totalVolume: number;
   averageTradeSize: number;
-  
+
   // Risk Metrics
   maxDrawdown: number;
   sharpeRatio?: number;
@@ -242,30 +242,33 @@ export interface PerformanceMetrics {
   calmarRatio?: number;
   maxConsecutiveLosses: number;
   maxConsecutiveWins: number;
-  
+
   // Execution Metrics
   averageExecutionTime: number;
   slippageAverage: number;
   fillRate: number;
-  
+
   // Auto-Sniping Metrics
   autoSnipeCount: number;
   autoSnipeSuccessRate: number;
   averageConfidenceScore: number;
-  
+
   // Time-based Metrics
   timeframe: string;
   startDate: Date;
   endDate: Date;
   tradingDays: number;
-  
+
   // Strategy Performance
-  strategyPerformance: Record<string, {
-    trades: number;
-    successRate: number;
-    averagePnL: number;
-    maxDrawdown: number;
-  }>;
+  strategyPerformance: Record<
+    string,
+    {
+      trades: number;
+      successRate: number;
+      averagePnL: number;
+      maxDrawdown: number;
+    }
+  >;
 }
 
 // ============================================================================
@@ -277,32 +280,32 @@ export interface ServiceStatus {
   isHealthy: boolean;
   isConnected: boolean;
   isAuthenticated: boolean;
-  
+
   // Trading Status
   tradingEnabled: boolean;
   autoSnipingEnabled: boolean;
   paperTradingMode: boolean;
-  
+
   // Position Status
   activePositions: number;
   maxPositions: number;
   availableCapacity: number;
-  
+
   // Circuit Breaker Status
   circuitBreakerOpen: boolean;
   circuitBreakerFailures: number;
   circuitBreakerResetTime?: Date | null;
-  
+
   // Performance Status
   lastTradeTime?: Date;
   averageResponseTime: number;
   cacheHitRate: number;
-  
+
   // Risk Status
   currentRiskLevel: "low" | "medium" | "high" | "critical";
   dailyPnL: number;
   dailyVolume: number;
-  
+
   // System Status
   uptime: number;
   lastHealthCheck: Date;

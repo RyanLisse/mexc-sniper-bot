@@ -70,7 +70,7 @@ export class MultiPhasePerformanceAnalytics {
     // Safely get analytics if available, fallback to defaults
     let analytics = null;
     try {
-      if (this.executor && typeof this.executor.getExecutionAnalytics === 'function') {
+      if (this.executor && typeof this.executor.getExecutionAnalytics === "function") {
         analytics = this.executor.getExecutionAnalytics();
       }
     } catch (error) {
@@ -80,7 +80,7 @@ export class MultiPhasePerformanceAnalytics {
     // Safely get summary if available, fallback to defaults
     let summary = null;
     try {
-      if (this.executor && typeof this.executor.calculateSummary === 'function') {
+      if (this.executor && typeof this.executor.calculateSummary === "function") {
         summary = this.executor.calculateSummary(currentPrice);
       }
     } catch (error) {
@@ -89,8 +89,9 @@ export class MultiPhasePerformanceAnalytics {
 
     // Use fallback values if summary is not available
     const realizedProfit = summary?.realizedProfit || 0;
-    const unrealizedProfit = summary?.unrealizedProfit || (currentPrice - this.entryPrice) * this.position;
-    
+    const unrealizedProfit =
+      summary?.unrealizedProfit || (currentPrice - this.entryPrice) * this.position;
+
     const totalPnL = realizedProfit + unrealizedProfit;
     const totalPnLPercent = (totalPnL / (this.entryPrice * this.position)) * 100;
 
@@ -127,10 +128,13 @@ export class MultiPhasePerformanceAnalytics {
     // Calculate max potential reward vs risk with safe method checking
     let maxReward = 15; // Default 15% reward
     try {
-      if (this.executor && typeof this.executor.getPhaseStatus === 'function') {
+      if (this.executor && typeof this.executor.getPhaseStatus === "function") {
         const phaseStatus = this.executor.getPhaseStatus();
         if (phaseStatus && phaseStatus.phaseDetails && Array.isArray(phaseStatus.phaseDetails)) {
-          maxReward = phaseStatus.phaseDetails.reduce((max, phase) => Math.max(max, phase.percentage || 0), 0);
+          maxReward = phaseStatus.phaseDetails.reduce(
+            (max, phase) => Math.max(max, phase.percentage || 0),
+            0
+          );
         }
       }
     } catch (error) {
@@ -329,11 +333,14 @@ export class MultiPhasePerformanceAnalytics {
     // Safely get analytics if available, fallback to defaults
     let analytics = null;
     try {
-      if (this.executor && typeof this.executor.getExecutionAnalytics === 'function') {
+      if (this.executor && typeof this.executor.getExecutionAnalytics === "function") {
         analytics = this.executor.getExecutionAnalytics();
       }
     } catch (error) {
-      this.logger.warn("Failed to get execution analytics for efficiency metrics, using defaults", error);
+      this.logger.warn(
+        "Failed to get execution analytics for efficiency metrics, using defaults",
+        error
+      );
     }
 
     // Use fallback values if analytics is not available

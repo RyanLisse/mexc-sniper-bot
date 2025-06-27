@@ -208,10 +208,11 @@ export function SimpleAutoSnipingControl({
     }
   }, [config?.enabled]);
 
-  // Auto-start execution when component mounts if auto-sniping is enabled
+  // Auto-start execution when component mounts if auto-sniping is enabled - FIXED: Proper dependencies
   useEffect(() => {
-    const autoStartExecution = async () => {
-      if (autoSnipingEnabled && !isExecutionActive && !isLoading && overallStatus === "healthy") {
+    // Only run once on mount and when core dependencies change
+    if (autoSnipingEnabled && !isExecutionActive && !isLoading && overallStatus === "healthy") {
+      const autoStartExecution = async () => {
         try {
           await startExecution();
         } catch (error) {
@@ -219,13 +220,13 @@ export function SimpleAutoSnipingControl({
             error: error instanceof Error ? error.message : String(error),
           });
         }
-      }
-    };
+      };
 
-    // Delay auto-start to allow status to stabilize
-    const timer = setTimeout(autoStartExecution, 2000);
-    return () => clearTimeout(timer);
-  }, [autoSnipingEnabled, isExecutionActive, isLoading, overallStatus, startExecution]);
+      // Delay auto-start to allow status to stabilize
+      const timer = setTimeout(autoStartExecution, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoSnipingEnabled, overallStatus, isExecutionActive, isLoading, startExecution]);
 
   const handleToggleAutoSniping = useCallback(
     async (enabled: boolean) => {

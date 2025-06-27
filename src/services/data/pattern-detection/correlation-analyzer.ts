@@ -392,7 +392,7 @@ function groupSymbolsByStatus(symbols: SymbolEntry[]): Record<string, SymbolEntr
   const groups: Record<string, SymbolEntry[]> = {
     ready_state: [],
     pre_ready_stage_1: [], // sts:1, st:1
-    pre_ready_stage_2: [], // sts:2, st:1  
+    pre_ready_stage_2: [], // sts:2, st:1
     pre_ready_stage_3: [], // sts:2, st:2, tt:!4
     inactive: [],
     unknown: [],
@@ -407,11 +407,9 @@ function groupSymbolsByStatus(symbols: SymbolEntry[]): Record<string, SymbolEntr
       // Pre-ready stages
       else if (symbol.sts === 1 && symbol.st === 1) {
         groups.pre_ready_stage_1.push(symbol);
-      }
-      else if (symbol.sts === 2 && symbol.st === 1) {
+      } else if (symbol.sts === 2 && symbol.st === 1) {
         groups.pre_ready_stage_2.push(symbol);
-      }
-      else if (symbol.sts === 2 && symbol.st === 2 && symbol.tt !== 4) {
+      } else if (symbol.sts === 2 && symbol.st === 2 && symbol.tt !== 4) {
         groups.pre_ready_stage_3.push(symbol);
       }
       // Inactive symbols
@@ -439,31 +437,41 @@ async function analyzeLaunchTimingCorrelations(
   try {
     const insights: string[] = [];
     const recommendations: string[] = [];
-    
+
     // Group symbols by status patterns
     const statusGroups = groupSymbolsByStatus(symbols);
-    
+
     // Calculate correlation strength based on status distribution
     const totalSymbols = symbols.length;
     const readyStateCount = statusGroups.ready_state.length;
-    const preReadyCount = statusGroups.pre_ready_stage_1.length + 
-                         statusGroups.pre_ready_stage_2.length + 
-                         statusGroups.pre_ready_stage_3.length;
+    const preReadyCount =
+      statusGroups.pre_ready_stage_1.length +
+      statusGroups.pre_ready_stage_2.length +
+      statusGroups.pre_ready_stage_3.length;
 
     // Strong correlation if many symbols are in similar stages
     let correlationStrength = 0;
-    
+
     if (readyStateCount / totalSymbols > 0.6) {
       correlationStrength = 0.8;
-      insights.push(`High concentration: ${readyStateCount}/${totalSymbols} symbols in ready state`);
+      insights.push(
+        `High concentration: ${readyStateCount}/${totalSymbols} symbols in ready state`
+      );
       recommendations.push("Strong batch trading opportunity - consider coordinated entries");
     } else if (preReadyCount / totalSymbols > 0.5) {
       correlationStrength = 0.6;
-      insights.push(`Pre-ready cluster: ${preReadyCount}/${totalSymbols} symbols approaching ready state`);
+      insights.push(
+        `Pre-ready cluster: ${preReadyCount}/${totalSymbols} symbols approaching ready state`
+      );
       recommendations.push("Monitor cluster for synchronized ready state transitions");
-    } else if (statusGroups.pre_ready_stage_2.length > 2 && statusGroups.pre_ready_stage_2.length / totalSymbols > 0.3) {
+    } else if (
+      statusGroups.pre_ready_stage_2.length > 2 &&
+      statusGroups.pre_ready_stage_2.length / totalSymbols > 0.3
+    ) {
       correlationStrength = 0.5;
-      insights.push(`Stage 2 cluster: ${statusGroups.pre_ready_stage_2.length} symbols in advanced pre-ready`);
+      insights.push(
+        `Stage 2 cluster: ${statusGroups.pre_ready_stage_2.length} symbols in advanced pre-ready`
+      );
       recommendations.push("Set up monitoring for imminent ready state transitions");
     } else {
       correlationStrength = 0.2;
@@ -472,12 +480,14 @@ async function analyzeLaunchTimingCorrelations(
     }
 
     // Time-based analysis for symbols with known launch times
-    const symbolsWithTiming = symbols.filter(s => (s as any).estimatedReadyTime);
+    const symbolsWithTiming = symbols.filter((s) => (s as any).estimatedReadyTime);
     if (symbolsWithTiming.length > 1) {
       const timeDifferences = calculateTimingClusters(symbolsWithTiming);
       if (timeDifferences.hasCluster) {
         correlationStrength = Math.max(correlationStrength, 0.6);
-        insights.push(`Timing cluster detected: ${timeDifferences.clusterSize} symbols expected within ${timeDifferences.timeWindow} hours`);
+        insights.push(
+          `Timing cluster detected: ${timeDifferences.clusterSize} symbols expected within ${timeDifferences.timeWindow} hours`
+        );
         recommendations.push("Prepare for coordinated market activity during cluster window");
       }
     }
@@ -515,10 +525,10 @@ async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<Correl
   try {
     const insights: string[] = [];
     const recommendations: string[] = [];
-    
+
     // Classify symbols by project type (extracted from symbol names/patterns)
     const sectorGroups = classifySymbolsBySector(symbols);
-    const sectorCounts = Object.values(sectorGroups).map(group => group.length);
+    const sectorCounts = Object.values(sectorGroups).map((group) => group.length);
     const maxSectorSize = Math.max(...sectorCounts);
     const totalSymbols = symbols.length;
 
@@ -528,13 +538,19 @@ async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<Correl
     if (maxSectorSize / totalSymbols > 0.6) {
       correlationStrength = 0.7;
       const dominantSector = Object.keys(sectorGroups).find(
-        sector => sectorGroups[sector].length === maxSectorSize
+        (sector) => sectorGroups[sector].length === maxSectorSize
       );
-      insights.push(`Dominant sector: ${dominantSector} (${maxSectorSize}/${totalSymbols} symbols)`);
-      recommendations.push(`Sector-wide ${dominantSector} movement likely - use sector trading strategy`);
+      insights.push(
+        `Dominant sector: ${dominantSector} (${maxSectorSize}/${totalSymbols} symbols)`
+      );
+      recommendations.push(
+        `Sector-wide ${dominantSector} movement likely - use sector trading strategy`
+      );
     }
     // Moderate correlation with multiple sectors
-    else if (Object.keys(sectorGroups).filter(sector => sectorGroups[sector].length > 1).length > 2) {
+    else if (
+      Object.keys(sectorGroups).filter((sector) => sectorGroups[sector].length > 1).length > 2
+    ) {
       correlationStrength = 0.4;
       insights.push("Multi-sector distribution with moderate clustering");
       recommendations.push("Monitor sector-specific trends for differentiated strategies");
@@ -555,7 +571,7 @@ async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<Correl
     }
 
     // Quality score correlation analysis
-    const qualityScores = symbols.filter(s => s.qs !== undefined).map(s => s.qs!);
+    const qualityScores = symbols.filter((s) => s.qs !== undefined).map((s) => s.qs!);
     if (qualityScores.length > 1) {
       const qualityCorrelation = calculateQualityScoreCorrelation(qualityScores);
       if (qualityCorrelation > 0.5) {
@@ -598,8 +614,8 @@ function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
 } {
   try {
     const times = symbolsWithTiming
-      .map(s => (s as any).estimatedReadyTime)
-      .filter(t => t && typeof t === "number")
+      .map((s) => (s as any).estimatedReadyTime)
+      .filter((t) => t && typeof t === "number")
       .sort((a, b) => a - b);
 
     if (times.length < 2) {
@@ -614,7 +630,7 @@ function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
     for (let i = 0; i < times.length - 1; i++) {
       let clusterSize = 1;
       const startTime = times[i];
-      
+
       for (let j = i + 1; j < times.length; j++) {
         if (times[j] - startTime <= CLUSTER_WINDOW) {
           clusterSize++;
@@ -625,7 +641,8 @@ function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
 
       if (clusterSize > maxClusterSize) {
         maxClusterSize = clusterSize;
-        bestTimeWindow = Math.min(times[i + clusterSize - 1] - startTime, CLUSTER_WINDOW) / (60 * 60 * 1000);
+        bestTimeWindow =
+          Math.min(times[i + clusterSize - 1] - startTime, CLUSTER_WINDOW) / (60 * 60 * 1000);
       }
     }
 
@@ -644,7 +661,7 @@ function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
  */
 function getCurrentMarketSession(): string {
   const hour = new Date().getUTCHours();
-  
+
   if (hour >= 8 && hour < 16) return "peak";
   if (hour >= 0 && hour < 8) return "asia";
   if (hour >= 16 && hour < 24) return "america";
@@ -673,15 +690,40 @@ function classifySymbolsBySector(symbols: SymbolEntry[]): Record<string, SymbolE
 
       if (combined.includes("ai") || combined.includes("gpt") || combined.includes("artificial")) {
         sectors.AI.push(symbol);
-      } else if (combined.includes("defi") || combined.includes("swap") || combined.includes("dex") || combined.includes("yield")) {
+      } else if (
+        combined.includes("defi") ||
+        combined.includes("swap") ||
+        combined.includes("dex") ||
+        combined.includes("yield")
+      ) {
         sectors.DeFi.push(symbol);
-      } else if (combined.includes("game") || combined.includes("metaverse") || combined.includes("nft") || combined.includes("play")) {
+      } else if (
+        combined.includes("game") ||
+        combined.includes("metaverse") ||
+        combined.includes("nft") ||
+        combined.includes("play")
+      ) {
         sectors.GameFi.push(symbol);
-      } else if (combined.includes("meme") || combined.includes("doge") || combined.includes("shib") || combined.includes("pepe")) {
+      } else if (
+        combined.includes("meme") ||
+        combined.includes("doge") ||
+        combined.includes("shib") ||
+        combined.includes("pepe")
+      ) {
         sectors.Meme.push(symbol);
-      } else if (combined.includes("chain") || combined.includes("layer") || combined.includes("protocol") || combined.includes("network")) {
+      } else if (
+        combined.includes("chain") ||
+        combined.includes("layer") ||
+        combined.includes("protocol") ||
+        combined.includes("network")
+      ) {
         sectors.Infrastructure.push(symbol);
-      } else if (combined.includes("oracle") || combined.includes("data") || combined.includes("api") || combined.includes("bridge")) {
+      } else if (
+        combined.includes("oracle") ||
+        combined.includes("data") ||
+        combined.includes("api") ||
+        combined.includes("bridge")
+      ) {
         sectors.Utility.push(symbol);
       } else {
         sectors.Other.push(symbol);
@@ -703,8 +745,8 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
   recommendations: string[];
 } {
   try {
-    const priceScores = symbols.filter(s => s.ps !== undefined).map(s => s.ps!);
-    const qualityScores = symbols.filter(s => s.qs !== undefined).map(s => s.qs!);
+    const priceScores = symbols.filter((s) => s.ps !== undefined).map((s) => s.ps!);
+    const qualityScores = symbols.filter((s) => s.qs !== undefined).map((s) => s.qs!);
 
     let strength = 0;
     const insights: string[] = [];
@@ -714,8 +756,9 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
     if (priceScores.length > 1) {
       const priceVariance = calculateVariance(priceScores);
       const priceAvg = priceScores.reduce((sum, score) => sum + score, 0) / priceScores.length;
-      
-      if (priceVariance < 100 && priceAvg > 70) { // Low variance, high average
+
+      if (priceVariance < 100 && priceAvg > 70) {
+        // Low variance, high average
         strength = 0.7;
         insights.push(`High price score correlation: avg ${priceAvg.toFixed(1)}, low variance`);
         recommendations.push("Strong technical setup - consider coordinated entries");
@@ -728,11 +771,14 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
     // Quality score correlation
     if (qualityScores.length > 1) {
       const qualityVariance = calculateVariance(qualityScores);
-      const qualityAvg = qualityScores.reduce((sum, score) => sum + score, 0) / qualityScores.length;
-      
+      const qualityAvg =
+        qualityScores.reduce((sum, score) => sum + score, 0) / qualityScores.length;
+
       if (qualityVariance < 50 && qualityAvg > 60) {
         strength = Math.max(strength, 0.6);
-        insights.push(`Quality score correlation: avg ${qualityAvg.toFixed(1)}, consistent quality`);
+        insights.push(
+          `Quality score correlation: avg ${qualityAvg.toFixed(1)}, consistent quality`
+        );
         recommendations.push("High-quality symbol cluster - prioritize for trading");
       }
     }
@@ -749,16 +795,16 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
 function calculateQualityScoreCorrelation(scores: number[]): number {
   try {
     if (scores.length < 2) return 0;
-    
+
     const mean = scores.reduce((sum, score) => sum + score, 0) / scores.length;
     const variance = calculateVariance(scores);
     const standardDeviation = Math.sqrt(variance);
-    
+
     // High correlation when low standard deviation relative to mean
     if (standardDeviation / mean < 0.2) return 0.8;
     if (standardDeviation / mean < 0.3) return 0.6;
     if (standardDeviation / mean < 0.4) return 0.4;
-    
+
     return 0.2;
   } catch (error) {
     return 0;
@@ -770,8 +816,8 @@ function calculateQualityScoreCorrelation(scores: number[]): number {
  */
 function calculateVariance(values: number[]): number {
   if (values.length === 0) return 0;
-  
+
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
-  const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+  const squaredDiffs = values.map((val) => (val - mean) ** 2);
   return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / values.length;
 }

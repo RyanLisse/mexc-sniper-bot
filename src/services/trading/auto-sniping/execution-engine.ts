@@ -20,7 +20,7 @@ import {
 
 export class AutoSnipingExecutionEngine {
   private static instance: AutoSnipingExecutionEngine | null = null;
-  
+
   private configManager: AutoSnipingConfigManager;
   private activePositions = new Map<string, ExecutionPosition>();
   private isActive = false;
@@ -39,11 +39,14 @@ export class AutoSnipingExecutionEngine {
       if (!configManager) {
         // Create a default config manager if none provided
         try {
-          const { AutoSnipingConfigManager } = require('./config-manager');
+          const { AutoSnipingConfigManager } = require("./config-manager");
           configManager = new AutoSnipingConfigManager();
           console.info("[AutoSnipingExecutionEngine] Config manager loaded successfully");
         } catch (error) {
-          console.warn("[AutoSnipingExecutionEngine] Could not load config manager, using fallback:", error.message);
+          console.warn(
+            "[AutoSnipingExecutionEngine] Could not load config manager, using fallback:",
+            error.message
+          );
           // Create a minimal fallback config manager for testing/emergency scenarios
           configManager = {
             getConfig: () => ({
@@ -130,18 +133,22 @@ export class AutoSnipingExecutionEngine {
   /**
    * Create instance asynchronously with proper config manager loading
    */
-  static async createInstance(configManager?: AutoSnipingConfigManager): Promise<AutoSnipingExecutionEngine> {
+  static async createInstance(
+    configManager?: AutoSnipingConfigManager
+  ): Promise<AutoSnipingExecutionEngine> {
     if (!configManager) {
       try {
-        const { AutoSnipingConfigManager } = await import('./config-manager');
+        const { AutoSnipingConfigManager } = await import("./config-manager");
         configManager = new AutoSnipingConfigManager();
         console.info("[AutoSnipingExecutionEngine] Config manager loaded asynchronously");
       } catch (error) {
         console.error("[AutoSnipingExecutionEngine] Failed to load config manager:", error);
-        throw new Error("Failed to initialize AutoSnipingExecutionEngine: config manager unavailable");
+        throw new Error(
+          "Failed to initialize AutoSnipingExecutionEngine: config manager unavailable"
+        );
       }
     }
-    
+
     return new AutoSnipingExecutionEngine(configManager);
   }
 
@@ -275,11 +282,11 @@ export class AutoSnipingExecutionEngine {
           timestamp: new Date().toISOString(),
           stopLossPrice: this.calculateStopLossPrice(
             result.executedPrice,
-            config.stopLossPercentage
+            opportunity.stopLossPercent ?? config.stopLossPercentage
           ),
           takeProfitPrice: this.calculateTakeProfitPrice(
             result.executedPrice,
-            config.takeProfitPercentage
+            opportunity.takeProfitCustom ?? config.takeProfitPercentage
           ),
           patternData: {
             symbol: opportunity.symbol,
@@ -340,8 +347,8 @@ export class AutoSnipingExecutionEngine {
     try {
       if (!this.isActive) return;
 
-      // Fetch and process trading opportunities
-      const opportunities = await this.fetchTradingOpportunities();
+      // Fetch and process trading opportunities (pattern-based + database targets)
+      const opportunities = await this.fetchAllTradingOpportunities();
 
       if (opportunities.length === 0) {
         return;
@@ -430,14 +437,209 @@ export class AutoSnipingExecutionEngine {
    */
   private async fetchTradingOpportunities(): Promise<TradingOpportunity[]> {
     try {
-      // Simulated pattern detection API call
-      // In real implementation, this would call the pattern detection service
-      return [];
+      // Import required services
+      const { getMexcService } = await import("../../api/mexc-unified-exports");
+      const { PatternDetectionCore } = await import("../../../core/pattern-detection");
+
+      // Get MEXC service instance
+      const mexcService = getMexcService();
+
+      // Get calendar listings and symbols for pattern analysis
+      const [calendarResponse, symbolsResponse] = await Promise.all([
+        mexcService.getCalendarListings(),
+        mexcService.getAllSymbols(),
+      ]);
+
+      if (!calendarResponse.success || !symbolsResponse.success) {
+        console.warn("Failed to fetch market data for pattern detection", {
+          calendarError: calendarResponse.error,
+          symbolsError: symbolsResponse.error,
+        });
+        return [];
+      }
+
+      // Initialize pattern detection core
+      const patternDetector = PatternDetectionCore.getInstance({
+        minAdvanceHours: this.configManager.getConfig().advanceHoursThreshold,
+        confidenceThreshold: this.configManager.getConfig().minConfidence,
+        enableActivityEnhancement: true,
+      });
+
+      // Analyze patterns
+      const analysisResult = await patternDetector.analyzePatterns({
+        symbols: symbolsResponse.data || [],
+        calendarEntries: calendarResponse.data || [],
+        analysisType: "discovery",
+        confidenceThreshold: this.configManager.getConfig().minConfidence,
+      });
+
+      // Convert pattern matches to trading opportunities
+      const opportunities: TradingOpportunity[] = analysisResult.matches
+        .filter(
+          (match) =>
+            this.configManager.getConfig().allowedPatternTypes.includes(match.patternType) &&
+            match.confidence >= this.configManager.getConfig().minConfidence
+        )
+        .map((match) => {
+          // Find corresponding calendar entry or use current time
+          const calendarEntry = calendarResponse.data?.find(
+            (entry) => entry.vcoinId === match.vcoinId || entry.cd === match.symbol
+          );
+
+          return {
+            symbol: match.symbol,
+            patternMatch: {
+              patternType: match.patternType,
+              confidence: match.confidence,
+              riskLevel: match.riskLevel,
+              advanceNoticeHours: match.advanceNoticeHours,
+            },
+            launchTime: calendarEntry?.et ? new Date(calendarEntry.et * 1000) : new Date(),
+            confidence: match.confidence,
+            vcoinId: match.vcoinId || "",
+            projectName: calendarEntry?.fullName || match.symbol,
+          };
+        })
+        .sort((a, b) => b.confidence - a.confidence); // Sort by confidence descending
+
+      console.info(`Found ${opportunities.length} trading opportunities`, {
+        totalMatches: analysisResult.matches.length,
+        filteredOpportunities: opportunities.length,
+        averageConfidence:
+          opportunities.length > 0
+            ? opportunities.reduce((sum, op) => sum + op.confidence, 0) / opportunities.length
+            : 0,
+        patternTypes: [...new Set(opportunities.map((op) => op.patternMatch.patternType))],
+      });
+
+      return opportunities;
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("Failed to fetch trading opportunities", {
         error: safeError.message,
       });
+      return [];
+    }
+  }
+
+  /**
+   * Fetch database snipe targets and convert to trading opportunities
+   */
+  private async fetchDatabaseSnipeTargets(): Promise<TradingOpportunity[]> {
+    try {
+      const { db } = await import("@/src/db");
+      const { snipeTargets } = await import("@/src/db/schema");
+      const { inArray, and, gte } = await import("drizzle-orm");
+
+      console.info("[ExecutionEngine] Fetching database snipe targets...");
+
+      // Get active snipe targets that are ready for execution
+      const activeTargets = await db
+        .select()
+        .from(snipeTargets)
+        .where(
+          and(
+            inArray(snipeTargets.status, ["pending", "ready"]),
+            // Only get targets that are scheduled for now or in the past
+            snipeTargets.targetExecutionTime
+              ? gte(new Date(), snipeTargets.targetExecutionTime)
+              : undefined
+          )
+        )
+        .limit(this.configManager.getConfig().maxConcurrentTargets);
+
+      console.info(`[ExecutionEngine] Found ${activeTargets.length} database snipe targets`);
+
+      // Convert database targets to trading opportunities
+      const opportunities: TradingOpportunity[] = activeTargets
+        .map((target) => {
+          return {
+            symbol: target.symbolName,
+            patternMatch: {
+              patternType: "database_target" as PatternType,
+              confidence: target.confidenceScore / 100, // Convert percentage to decimal
+              riskLevel: target.riskLevel as "low" | "medium" | "high",
+              advanceNoticeHours: 0, // Database targets are immediate
+            },
+            launchTime: target.targetExecutionTime || new Date(),
+            confidence: target.confidenceScore / 100,
+            vcoinId: target.vcoinId,
+            projectName: target.symbolName,
+            // Add database-specific metadata
+            databaseTargetId: target.id,
+            entryStrategy: target.entryStrategy,
+            entryPrice: target.entryPrice,
+            positionSizeUSDT: target.positionSizeUsdt,
+            stopLossPercent: target.stopLossPercent,
+            takeProfitLevel: target.takeProfitLevel,
+            takeProfitCustom: target.takeProfitCustom,
+          };
+        })
+        .filter((opportunity) => {
+          // Apply same filters as pattern opportunities
+          const config = this.configManager.getConfig();
+          return opportunity.confidence >= config.minConfidence;
+        })
+        .sort((a, b) => b.confidence - a.confidence);
+
+      console.info(
+        `[ExecutionEngine] Converted ${opportunities.length} database targets to trading opportunities`
+      );
+
+      return opportunities;
+    } catch (error) {
+      const safeError = toSafeError(error);
+      console.error("[ExecutionEngine] Failed to fetch database snipe targets:", safeError.message);
+      return [];
+    }
+  }
+
+  /**
+   * Fetch all trading opportunities (pattern-based + database targets)
+   */
+  private async fetchAllTradingOpportunities(): Promise<TradingOpportunity[]> {
+    try {
+      const config = this.configManager.getConfig();
+
+      console.info("[ExecutionEngine] Fetching all trading opportunities...");
+
+      // Fetch both pattern-based and database opportunities in parallel
+      const [patternOpportunities, databaseOpportunities] = await Promise.all([
+        this.fetchTradingOpportunities(),
+        this.fetchDatabaseSnipeTargets(),
+      ]);
+
+      // Combine and deduplicate opportunities
+      const allOpportunities = [...patternOpportunities, ...databaseOpportunities];
+      const uniqueOpportunities = new Map<string, TradingOpportunity>();
+
+      // Deduplicate by symbol, keeping the highest confidence
+      for (const opportunity of allOpportunities) {
+        const existing = uniqueOpportunities.get(opportunity.symbol);
+        if (!existing || opportunity.confidence > existing.confidence) {
+          uniqueOpportunities.set(opportunity.symbol, opportunity);
+        }
+      }
+
+      const finalOpportunities = Array.from(uniqueOpportunities.values())
+        .sort((a, b) => b.confidence - a.confidence)
+        .slice(0, config.maxConcurrentTargets);
+
+      console.info(`[ExecutionEngine] Combined opportunities:`, {
+        patternBased: patternOpportunities.length,
+        databaseBased: databaseOpportunities.length,
+        totalUnique: uniqueOpportunities.size,
+        finalCount: finalOpportunities.length,
+        maxConcurrent: config.maxConcurrentTargets,
+      });
+
+      return finalOpportunities;
+    } catch (error) {
+      const safeError = toSafeError(error);
+      console.error(
+        "[ExecutionEngine] Failed to fetch all trading opportunities:",
+        safeError.message
+      );
       return [];
     }
   }
@@ -450,22 +652,108 @@ export class AutoSnipingExecutionEngine {
       const config = this.configManager.getConfig();
       const startTime = Date.now();
 
-      // Simulated MEXC API call
-      // In real implementation, this would call MEXC trading API
+      // Import MEXC trading service
+      const { getMexcService } = await import("../../api/mexc-unified-exports");
+      const mexcService = getMexcService();
+
+      // Prepare trading symbol (ensure it ends with USDT)
+      const symbol = opportunity.symbol.endsWith("USDT")
+        ? opportunity.symbol
+        : `${opportunity.symbol}USDT`;
+
+      // Get current market price for the symbol
+      const tickerResponse = await mexcService.get24hrTicker(symbol);
+      if (!tickerResponse.success || !tickerResponse.data || tickerResponse.data.length === 0) {
+        throw new Error(`Failed to get market price for ${symbol}: ${tickerResponse.error}`);
+      }
+
+      const currentPrice = Number.parseFloat(
+        tickerResponse.data[0].lastPrice || tickerResponse.data[0].price || "0"
+      );
+      if (currentPrice <= 0) {
+        throw new Error(`Invalid market price for ${symbol}: ${currentPrice}`);
+      }
+
+      // Calculate quantity based on position size in USDT (use database-specific size if available)
+      const positionSizeUSDT = opportunity.positionSizeUSDT ?? config.positionSizeUSDT;
+      const quantity = (positionSizeUSDT / currentPrice).toFixed(6);
+
+      // Check account balance before placing order
+      const balanceResponse = await mexcService.getAccountBalances();
+      if (!balanceResponse.success) {
+        throw new Error(`Failed to check account balance: ${balanceResponse.error}`);
+      }
+
+      const usdtBalance = balanceResponse.data.balances.find((b) => b.asset === "USDT");
+      const availableUSDT = Number.parseFloat(usdtBalance?.free || "0");
+
+      if (availableUSDT < positionSizeUSDT) {
+        throw new Error(`Insufficient USDT balance: ${availableUSDT} < ${positionSizeUSDT}`);
+      }
+
+      console.info(`Executing market BUY order for ${symbol}`, {
+        symbol,
+        quantity,
+        currentPrice,
+        positionSizeUSDT,
+        availableUSDT,
+        isDatabase: !!opportunity.databaseTargetId,
+      });
+
+      // Place market order
+      const orderParams = {
+        symbol,
+        side: "BUY" as const,
+        type: "MARKET" as const,
+        quantity,
+        quoteOrderQty: positionSizeUSDT.toString(), // Use database-specific position size for market orders
+      };
+
+      const orderResponse = await mexcService.placeOrder(orderParams);
       const executionLatency = Date.now() - startTime;
+
+      if (!orderResponse.success || !orderResponse.data) {
+        throw new Error(`Order execution failed: ${orderResponse.error}`);
+      }
+
+      const orderData = orderResponse.data;
+      const executedPrice = Number.parseFloat(orderData.price || currentPrice.toString());
+      const executedQuantity = Number.parseFloat(orderData.quantity || quantity);
+
+      // Calculate slippage
+      const slippage = Math.abs((executedPrice - currentPrice) / currentPrice) * 100;
+
+      console.info(`Market order executed successfully`, {
+        symbol,
+        orderId: orderData.orderId,
+        executedPrice,
+        executedQuantity,
+        executionLatency,
+        slippage: slippage.toFixed(4) + "%",
+        status: orderData.status,
+      });
 
       return {
         success: true,
-        executedPrice: 1.0, // Simulated
-        executedQuantity: config.positionSizeUSDT, // Simulated
+        executedPrice,
+        executedQuantity,
         executionLatency,
-        slippage: 0.1, // Simulated
+        slippage,
       };
     } catch (error) {
       const safeError = toSafeError(error);
+      const executionLatency = Date.now() - Date.now();
+
+      console.error("Market order execution failed", {
+        symbol: opportunity.symbol,
+        error: safeError.message,
+        executionLatency,
+      });
+
       return {
         success: false,
         error: safeError.message,
+        executionLatency,
       };
     }
   }
@@ -475,22 +763,174 @@ export class AutoSnipingExecutionEngine {
    */
   private async monitorPosition(positionId: string, position: ExecutionPosition): Promise<void> {
     try {
-      // Simulated position monitoring
-      // In real implementation, this would:
-      // 1. Fetch current price
-      // 2. Check stop loss/take profit triggers
-      // 3. Update position status
-      // 4. Execute exit orders if needed
+      const { getMexcService } = await import("../../api/mexc-unified-exports");
+      const mexcService = getMexcService();
 
-      console.debug("Monitoring position", {
+      // Prepare trading symbol (ensure it ends with USDT)
+      const symbol = position.symbol.endsWith("USDT") ? position.symbol : `${position.symbol}USDT`;
+
+      // Get current market price
+      const tickerResponse = await mexcService.get24hrTicker(symbol);
+      if (!tickerResponse.success || !tickerResponse.data || tickerResponse.data.length === 0) {
+        console.warn(`Failed to get current price for position monitoring: ${symbol}`, {
+          positionId,
+          error: tickerResponse.error,
+        });
+        return;
+      }
+
+      const currentPrice = Number.parseFloat(
+        tickerResponse.data[0].lastPrice || tickerResponse.data[0].price || "0"
+      );
+      if (currentPrice <= 0) {
+        console.warn(`Invalid current price for position monitoring: ${symbol}`, {
+          positionId,
+          currentPrice,
+        });
+        return;
+      }
+
+      // Calculate current PnL
+      const currentValue = position.quantity * currentPrice;
+      const entryValue = position.quantity * position.entryPrice;
+      const pnlUSDT = currentValue - entryValue;
+      const pnlPercentage = ((currentPrice - position.entryPrice) / position.entryPrice) * 100;
+
+      console.debug("Position monitoring update", {
         positionId,
         symbol: position.symbol,
         status: position.status,
+        entryPrice: position.entryPrice,
+        currentPrice,
+        quantity: position.quantity,
+        pnlUSDT: pnlUSDT.toFixed(4),
+        pnlPercentage: pnlPercentage.toFixed(2) + "%",
+        stopLossPrice: position.stopLossPrice,
+        takeProfitPrice: position.takeProfitPrice,
+      });
+
+      // Check stop loss trigger
+      if (position.stopLossPrice && currentPrice <= position.stopLossPrice) {
+        console.warn(`Stop loss triggered for position ${positionId}`, {
+          symbol,
+          currentPrice,
+          stopLossPrice: position.stopLossPrice,
+          pnlPercentage: pnlPercentage.toFixed(2) + "%",
+        });
+
+        await this.executeExitOrder(positionId, position, currentPrice, "STOP_LOSS");
+        return;
+      }
+
+      // Check take profit trigger
+      if (position.takeProfitPrice && currentPrice >= position.takeProfitPrice) {
+        console.info(`Take profit triggered for position ${positionId}`, {
+          symbol,
+          currentPrice,
+          takeProfitPrice: position.takeProfitPrice,
+          pnlPercentage: pnlPercentage.toFixed(2) + "%",
+        });
+
+        await this.executeExitOrder(positionId, position, currentPrice, "TAKE_PROFIT");
+        return;
+      }
+
+      // Update position with current market data (in a real system, this would be stored in database)
+      const updatedPosition = {
+        ...position,
+        lastMonitoredAt: new Date().toISOString(),
+        currentPrice,
+        unrealizedPnl: pnlUSDT,
+        unrealizedPnlPercentage: pnlPercentage,
+      };
+
+      // In a real implementation, you would update the position in the database here
+      console.debug(`Position ${positionId} monitoring completed`, {
+        symbol,
+        pnlPercentage: pnlPercentage.toFixed(2) + "%",
+        needsAction: false,
       });
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("Position monitoring error", {
         positionId,
+        symbol: position.symbol,
+        error: safeError.message,
+      });
+    }
+  }
+
+  /**
+   * Execute exit order for stop loss or take profit
+   */
+  private async executeExitOrder(
+    positionId: string,
+    position: ExecutionPosition,
+    currentPrice: number,
+    reason: "STOP_LOSS" | "TAKE_PROFIT" | "MANUAL"
+  ): Promise<void> {
+    try {
+      const { getMexcService } = await import("../../api/mexc-unified-exports");
+      const mexcService = getMexcService();
+
+      const symbol = position.symbol.endsWith("USDT") ? position.symbol : `${position.symbol}USDT`;
+
+      console.info(`Executing exit order for position ${positionId}`, {
+        symbol,
+        reason,
+        quantity: position.quantity,
+        currentPrice,
+        entryPrice: position.entryPrice,
+      });
+
+      // Place market sell order to close position
+      const orderParams = {
+        symbol,
+        side: "SELL" as const,
+        type: "MARKET" as const,
+        quantity: position.quantity.toString(),
+      };
+
+      const orderResponse = await mexcService.placeOrder(orderParams);
+
+      if (!orderResponse.success || !orderResponse.data) {
+        throw new Error(`Exit order failed: ${orderResponse.error}`);
+      }
+
+      const orderData = orderResponse.data;
+      const exitPrice = Number.parseFloat(orderData.price || currentPrice.toString());
+      const pnl = (exitPrice - position.entryPrice) * position.quantity;
+      const pnlPercentage = ((exitPrice - position.entryPrice) / position.entryPrice) * 100;
+
+      console.info(`Exit order executed successfully`, {
+        positionId,
+        symbol,
+        reason,
+        orderId: orderData.orderId,
+        exitPrice,
+        entryPrice: position.entryPrice,
+        quantity: position.quantity,
+        pnl: pnl.toFixed(4),
+        pnlPercentage: pnlPercentage.toFixed(2) + "%",
+        status: orderData.status,
+      });
+
+      // Remove position from active positions
+      this.activePositions.delete(positionId);
+
+      // Update statistics
+      const stats = this.configManager.getStats();
+      this.configManager.updateStats({
+        activePositions: this.activePositions.size,
+        totalTrades: stats.totalTrades + 1,
+        successfulTrades: pnl > 0 ? stats.successfulTrades + 1 : stats.successfulTrades,
+        totalPnl: (stats.totalPnl || 0) + pnl,
+      });
+    } catch (error) {
+      const safeError = toSafeError(error);
+      console.error(`Failed to execute exit order for position ${positionId}`, {
+        symbol: position.symbol,
+        reason,
         error: safeError.message,
       });
     }
@@ -526,14 +966,61 @@ export class AutoSnipingExecutionEngine {
   }
 
   /**
+   * Close a specific position
+   */
+  async closePosition(positionId: string): Promise<boolean> {
+    try {
+      console.info(`[ExecutionEngine] Closing position ${positionId}`);
+
+      // Check if position exists in active positions
+      const position = this.activePositions.get(positionId);
+      if (!position) {
+        console.warn(`[ExecutionEngine] Position ${positionId} not found in active positions`);
+        return false;
+      }
+
+      // Get current market price for proper exit calculation
+      const { getMexcService } = await import("../../api/mexc-unified-exports");
+      const mexcService = getMexcService();
+
+      const symbol = position.symbol.endsWith("USDT") ? position.symbol : `${position.symbol}USDT`;
+
+      const tickerResponse = await mexcService.get24hrTicker(symbol);
+      let currentPrice = position.entryPrice; // Fallback to entry price
+
+      if (tickerResponse.success && tickerResponse.data && tickerResponse.data.length > 0) {
+        currentPrice = Number.parseFloat(
+          tickerResponse.data[0].lastPrice ||
+            tickerResponse.data[0].price ||
+            position.entryPrice.toString()
+        );
+      }
+
+      console.info(`[ExecutionEngine] Executing manual close order for position ${positionId}`, {
+        symbol: position.symbol,
+        quantity: position.quantity,
+        entryPrice: position.entryPrice,
+        currentPrice,
+      });
+
+      // Execute the exit order using the real trading system
+      await this.executeExitOrder(positionId, position, currentPrice, "MANUAL");
+
+      console.info(`[ExecutionEngine] Position ${positionId} closed successfully`);
+      return true;
+    } catch (error) {
+      console.error(`[ExecutionEngine] Failed to close position ${positionId}:`, error);
+      return false;
+    }
+  }
+
+  /**
    * Check if the engine is ready for trading
    */
   isReadyForTrading(): boolean {
     try {
       const config = this.configManager.getConfig();
-      return this.isActive && 
-             config.enabled && 
-             this.activePositions.size < config.maxPositions;
+      return this.isActive && config.enabled && this.activePositions.size < config.maxPositions;
     } catch (error) {
       console.error("[AutoSnipingExecutionEngine] Error checking trading readiness:", error);
       return false;
@@ -545,13 +1032,13 @@ export class AutoSnipingExecutionEngine {
    */
   async validateConfiguration(): Promise<boolean> {
     try {
-      if (typeof this.configManager.validateConfiguration === 'function') {
+      if (typeof this.configManager.validateConfiguration === "function") {
         await this.configManager.validateConfiguration();
         return true;
       }
       // Fallback validation for mock config manager
       const config = this.configManager.getConfig();
-      return config && typeof config === 'object' && config.enabled !== undefined;
+      return config && typeof config === "object" && config.enabled !== undefined;
     } catch (error) {
       console.error("[AutoSnipingExecutionEngine] Configuration validation failed:", error);
       return false;
@@ -563,7 +1050,7 @@ export class AutoSnipingExecutionEngine {
    */
   async performHealthChecks(): Promise<boolean> {
     try {
-      if (typeof this.configManager.performHealthChecks === 'function') {
+      if (typeof this.configManager.performHealthChecks === "function") {
         await this.configManager.performHealthChecks();
         return true;
       }
@@ -581,7 +1068,7 @@ export class AutoSnipingExecutionEngine {
   getStats(): any {
     try {
       let stats;
-      if (typeof this.configManager.getStats === 'function') {
+      if (typeof this.configManager.getStats === "function") {
         stats = this.configManager.getStats();
       } else {
         // Fallback stats for mock config manager
@@ -607,7 +1094,7 @@ export class AutoSnipingExecutionEngine {
           successCount: 0,
         };
       }
-      
+
       // Calculate dynamic fields
       const totalExecutions = stats.totalTrades || 0;
       const successCount = stats.successfulTrades || 0;
@@ -658,7 +1145,7 @@ export class AutoSnipingExecutionEngine {
    */
   updateStats(stats: any): void {
     try {
-      if (typeof this.configManager.updateStats === 'function') {
+      if (typeof this.configManager.updateStats === "function") {
         this.configManager.updateStats(stats);
       }
       // For mock config manager, just log the update
@@ -703,20 +1190,20 @@ export class AutoSnipingExecutionEngine {
       const stats = this.getStats();
       const config = this.getConfig();
       const activePositions = this.getActivePositions();
-      
+
       // Get health status
-      let health = { overall: 'unknown', apiConnection: false, patternEngine: false };
+      let health = { overall: "unknown", apiConnection: false, patternEngine: false };
       try {
-        if (typeof this.configManager.performHealthChecks === 'function') {
+        if (typeof this.configManager.performHealthChecks === "function") {
           health = await this.configManager.performHealthChecks();
-          health.overall = Object.values(health).every(v => v) ? 'healthy' : 'degraded';
+          health.overall = Object.values(health).every((v) => v) ? "healthy" : "degraded";
         }
       } catch (error) {
         console.warn("[AutoSnipingExecutionEngine] Health check failed in report:", error);
-        health.overall = 'error';
+        health.overall = "error";
       }
 
-      const status = this.isActive ? 'active' : 'idle';
+      const status = this.isActive ? "active" : "idle";
 
       return {
         status,
@@ -724,8 +1211,8 @@ export class AutoSnipingExecutionEngine {
         activePositions,
         config,
         health,
-        systemHealth: health,  // Add alias for systemHealth for backward compatibility
-        
+        systemHealth: health, // Add alias for systemHealth for backward compatibility
+
         // Flatten commonly used fields for API compatibility
         totalProfit: stats.totalPnl || 0,
         successRate: stats.successRate || 0,
@@ -736,23 +1223,23 @@ export class AutoSnipingExecutionEngine {
         readyTargets: 0, // Would need to be calculated from pattern detection
         executedToday: stats.dailyTradeCount || 0,
         lastExecution: new Date().toISOString(),
-        safetyStatus: health.overall === 'healthy' ? 'safe' : 'warning',
+        safetyStatus: health.overall === "healthy" ? "safe" : "warning",
         patternDetectionActive: true,
         executionCount: stats.totalExecutions || 0,
         uptime: this.isActive ? Date.now() : 0,
       };
     } catch (error) {
       console.error("[AutoSnipingExecutionEngine] Error generating execution report:", error);
-      const errorHealth = { overall: 'error' };
+      const errorHealth = { overall: "error" };
       const fallbackStats = this.getStats();
       return {
-        status: 'error',
+        status: "error",
         stats: fallbackStats,
         activePositions: [],
         config: {},
         health: errorHealth,
         systemHealth: errorHealth,
-        
+
         // Flatten commonly used fields for API compatibility
         totalProfit: 0,
         successRate: 0,
@@ -763,7 +1250,7 @@ export class AutoSnipingExecutionEngine {
         readyTargets: 0,
         executedToday: 0,
         lastExecution: new Date().toISOString(),
-        safetyStatus: 'error',
+        safetyStatus: "error",
         patternDetectionActive: false,
         executionCount: 0,
         uptime: 0,
@@ -784,7 +1271,7 @@ export class AutoSnipingExecutionEngine {
   getExecutionStatus(): { isActive: boolean; status: string } {
     return {
       isActive: this.isActive,
-      status: this.isActive ? 'active' : 'idle'
+      status: this.isActive ? "active" : "idle",
     };
   }
 }

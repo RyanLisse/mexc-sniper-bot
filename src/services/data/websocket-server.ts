@@ -706,7 +706,7 @@ export class WebSocketServerService extends EventEmitter {
 
         const authResult = await Promise.race([authPromise, authTimeout]);
         if (!authResult.valid) {
-          const errorMsg = 'error' in authResult ? authResult.error : "Authentication failed";
+          const errorMsg = "error" in authResult ? authResult.error : "Authentication failed";
           console.warn(`[WebSocket] Authentication failed for ${connectionId}: ${errorMsg}`);
           ws.close(1008, errorMsg);
           return;
@@ -766,18 +766,25 @@ export class WebSocketServerService extends EventEmitter {
 
       if (!welcomeSuccess) {
         console.warn(`[WebSocket] Failed to send welcome message to ${connectionId}`);
-        this.handleDisconnection(connectionId, clientIP, 1011, Buffer.from("Welcome message failed"));
+        this.handleDisconnection(
+          connectionId,
+          clientIP,
+          1011,
+          Buffer.from("Welcome message failed")
+        );
         return;
       }
 
-      console.info(`[WebSocket] New connection established: ${connectionId} (user: ${userId || "anonymous"})`);
+      console.info(
+        `[WebSocket] New connection established: ${connectionId} (user: ${userId || "anonymous"})`
+      );
       this.emit("connection:open", { connectionId, userId });
     } catch (error) {
       console.error(`[WebSocket] Failed to handle connection ${connectionId}:`, error);
-      
+
       // Clear timeout on error
       clearTimeout(connectionTimeout);
-      
+
       // Clean up connection if it was added
       if (connectionAdded) {
         this.connectionManager.removeConnection(connectionId);

@@ -102,8 +102,8 @@ export const ExecutionTab = memo(function ExecutionTab({
             <CardDescription>Order fill success rates</CardDescription>
           </CardHeader>
           <CardContent>
-            <ErrorBoundary 
-              level="component" 
+            <ErrorBoundary
+              level="component"
               fallback={
                 <div className="w-full h-[200px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
                   Fill rates chart temporarily unavailable

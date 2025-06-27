@@ -6,7 +6,7 @@
  *
  * MODULES:
  * - core-trading/base-service.ts: Main orchestrator class (<500 lines)
- * - core-trading/manual-trading.ts: Manual trading operations (<500 lines) 
+ * - core-trading/manual-trading.ts: Manual trading operations (<500 lines)
  * - core-trading/auto-sniping.ts: Auto-sniping execution (<500 lines)
  * - core-trading/position-manager.ts: Position management (<500 lines)
  * - core-trading/performance-tracker.ts: Performance analytics (<500 lines)
@@ -31,10 +31,10 @@ export { CoreTradingService } from "./core-trading/base-service";
 // Re-export Supporting Modules
 // ============================================================================
 
-export { ManualTradingModule } from "./core-trading/manual-trading";
 export { AutoSnipingModule } from "./core-trading/auto-sniping";
-export { PositionManager } from "./core-trading/position-manager";
+export { ManualTradingModule } from "./core-trading/manual-trading";
 export { PerformanceTracker } from "./core-trading/performance-tracker";
+export { PositionManager } from "./core-trading/position-manager";
 export { StrategyManager } from "./core-trading/strategy-manager";
 
 // ============================================================================
@@ -42,23 +42,22 @@ export { StrategyManager } from "./core-trading/strategy-manager";
 // ============================================================================
 
 export {
+  type AutoSnipeTarget,
   type CoreTradingConfig,
+  // Validation schemas
+  CoreTradingConfigSchema,
   type CoreTradingEvents,
-  type TradeParameters,
-  type TradeResult,
+  type MultiPhaseConfig,
+  type MultiPhaseResult,
+  type PerformanceMetrics,
   type Position,
   type ServiceResponse,
   type ServiceStatus,
-  type PerformanceMetrics,
-  type TradingStrategy,
-  type MultiPhaseConfig,
-  type MultiPhaseResult,
-  type AutoSnipeTarget,
-  
-  // Validation schemas
-  CoreTradingConfigSchema,
-  TradeParametersSchema,
   ServiceStatusSchema,
+  type TradeParameters,
+  TradeParametersSchema,
+  type TradeResult,
+  type TradingStrategy,
 } from "./core-trading/types";
 
 // ============================================================================
@@ -107,12 +106,12 @@ export function createCoreTrading(config: Partial<CoreTradingConfig>): CoreTradi
  *
  * NEW USAGE (recommended for advanced users):
  * ```typescript
- * import { 
- *   CoreTradingService, 
+ * import {
+ *   CoreTradingService,
  *   ManualTradingModule,
- *   PositionManager 
+ *   PositionManager
  * } from './consolidated/core-trading.service';
- * 
+ *
  * const trading = new CoreTradingService(config);
  * await trading.initialize();
  * ```

@@ -1,21 +1,24 @@
 /**
  * Pattern to Database Bridge - Pattern Filtering Tests
- * 
+ *
  * Tests pattern filtering functionality including confidence thresholds,
  * supported pattern types, and risk-based filtering.
  */
 
 import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { PatternDetectionEventData, PatternMatch } from "../../../core/pattern-detection/interfaces";
+import type {
+  PatternDetectionEventData,
+  PatternMatch,
+} from "../../../core/pattern-detection/interfaces";
 import { db } from "../../../db";
 import { snipeTargets } from "../../../db/schema";
 import {
-  TestContext,
   cleanupAllTestData,
   cleanupTestRecords,
   createTestContext,
   setupTestData,
+  type TestContext,
   verifyDatabaseConnection,
 } from "./test-setup";
 

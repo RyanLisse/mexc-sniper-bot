@@ -61,7 +61,7 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
   const queryClient = useQueryClient();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Fetch sniping status
+  // Fetch sniping status - FIXED: Remove conflicting refetchInterval
   const {
     data: status,
     isLoading: statusLoading,
@@ -78,7 +78,7 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
 
       return SnipingStatusSchema.parse(result.data);
     },
-    refetchInterval: 5000, // Update every 5 seconds for active monitoring
+    staleTime: 10000, // 10 seconds
     retry: 2,
   });
 

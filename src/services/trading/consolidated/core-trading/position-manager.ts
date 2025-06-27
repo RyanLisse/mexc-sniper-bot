@@ -10,9 +10,9 @@ import type {
   ModuleContext,
   ModuleState,
   Position,
-  TradeResult,
-  TradeParameters,
   ServiceResponse,
+  TradeParameters,
+  TradeResult,
 } from "./types";
 
 export class PositionManager {
@@ -202,10 +202,10 @@ export class PositionManager {
         const ticker = await this.context.mexcService.getTickerPrice(position.symbol);
         if (ticker.success && ticker.data?.price) {
           const currentPrice = parseFloat(ticker.data.price);
-          
+
           // Update position
           position.currentPrice = currentPrice;
-          
+
           // Calculate unrealized P&L
           const priceDiff = currentPrice - position.entryPrice;
           const positionPnL = priceDiff * position.quantity;
@@ -224,9 +224,11 @@ export class PositionManager {
     }
 
     // Update unrealized P&L total
-    this.unrealizedPnL = Array.from(this.activePositions.values())
-      .reduce((total, pos) => total + (pos.unrealizedPnL || 0), 0);
-    
+    this.unrealizedPnL = Array.from(this.activePositions.values()).reduce(
+      (total, pos) => total + (pos.unrealizedPnL || 0),
+      0
+    );
+
     this.updateMetrics();
   }
 
@@ -331,7 +333,8 @@ export class PositionManager {
     if (!position) return;
 
     // Simulate P&L
-    const currentPrice = position.currentPrice || position.entryPrice * (1 + (Math.random() - 0.5) * 0.1);
+    const currentPrice =
+      position.currentPrice || position.entryPrice * (1 + (Math.random() - 0.5) * 0.1);
     const pnl = (currentPrice - position.entryPrice) * position.quantity;
 
     position.status = "closed";
@@ -374,9 +377,10 @@ export class PositionManager {
 
       if (mexcResult.success && mexcResult.data) {
         const exitPrice = parseFloat(mexcResult.data.price);
-        const pnl = position.side === "BUY"
-          ? (exitPrice - position.entryPrice) * position.quantity
-          : (position.entryPrice - exitPrice) * position.quantity;
+        const pnl =
+          position.side === "BUY"
+            ? (exitPrice - position.entryPrice) * position.quantity
+            : (position.entryPrice - exitPrice) * position.quantity;
 
         position.status = "closed";
         position.closeTime = new Date();
@@ -416,7 +420,7 @@ export class PositionManager {
    * Calculate average hold time for closed positions
    */
   private calculateAverageHoldTime(): number {
-    const closedPositions = this.positionHistory.filter(p => p.closeTime);
+    const closedPositions = this.positionHistory.filter((p) => p.closeTime);
     if (closedPositions.length === 0) return 0;
 
     const totalHoldTime = closedPositions.reduce((total, position) => {
@@ -433,10 +437,10 @@ export class PositionManager {
    * Calculate win rate for closed positions
    */
   private calculateWinRate(): number {
-    const closedPositions = this.positionHistory.filter(p => p.realizedPnL !== undefined);
+    const closedPositions = this.positionHistory.filter((p) => p.realizedPnL !== undefined);
     if (closedPositions.length === 0) return 0;
 
-    const winningPositions = closedPositions.filter(p => (p.realizedPnL || 0) > 0);
+    const winningPositions = closedPositions.filter((p) => (p.realizedPnL || 0) > 0);
     return (winningPositions.length / closedPositions.length) * 100;
   }
 

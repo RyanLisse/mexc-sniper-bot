@@ -6,18 +6,18 @@
  */
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  setupServiceMocks,
+  setupStandardizedTests,
+  standardMockData,
+  standardTestCleanup,
+} from "../../../tests/setup/standardized-mocks";
 import { AutoSnipingExecutionEngine } from "../trading/auto-sniping/execution-engine";
 import {
   type AutoSnipingConfig,
-  validateExecutionPosition,
   validateAutoSnipingConfig,
+  validateExecutionPosition,
 } from "../trading/auto-sniping/schemas";
-import {
-  setupStandardizedTests,
-  setupServiceMocks,
-  standardTestCleanup,
-  standardMockData,
-} from "../../../tests/setup/standardized-mocks";
 
 // Use standardized test setup
 beforeAll(() => {
@@ -65,7 +65,7 @@ describe("Optimized Backend Services", () => {
         maxPositions: 3,
         minConfidence: 90,
       });
-      
+
       expect(updatedConfig).toBeDefined();
       expect(typeof updatedConfig).toBe("object");
     });
@@ -211,12 +211,12 @@ describe("Optimized Backend Services", () => {
 
     it("should handle configuration updates", () => {
       const originalConfig = executionEngine.getConfig();
-      
+
       const updatedConfig = executionEngine.updateConfig({
         maxPositions: 3,
         minConfidence: 90,
       });
-      
+
       expect(updatedConfig).toBeDefined();
       expect(typeof updatedConfig).toBe("object");
     });

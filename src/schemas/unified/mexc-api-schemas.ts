@@ -399,7 +399,7 @@ export function isValidForSnipe(entry: CalendarEntry): boolean;
 export function isValidForSnipe(symbol: SymbolV2Entry): boolean;
 export function isValidForSnipe(item: CalendarEntry | SymbolV2Entry): boolean {
   // Check if it's a CalendarEntry (has firstOpenTime property)
-  if ('firstOpenTime' in item) {
+  if ("firstOpenTime" in item) {
     const entry = item as CalendarEntry;
     // Check if the calendar entry is valid for sniping
     if (!entry.symbol || !entry.vcoinId || !entry.firstOpenTime) {
@@ -417,7 +417,7 @@ export function isValidForSnipe(item: CalendarEntry | SymbolV2Entry): boolean {
     const symbol = item as SymbolV2Entry;
     return matchesReadyPattern(symbol) && hasCompleteData(symbol);
   }
-};
+}
 
 // ============================================================================
 // Additional Legacy Schemas
@@ -581,8 +581,8 @@ export function validateServiceResponse<T>(
  */
 export const ReadyStatePatternSchema = z.object({
   sts: z.literal(2), // Symbol Trading Status = 2 (ready)
-  st: z.literal(2),  // Symbol State = 2 (active)
-  tt: z.literal(4),  // Trading Time = 4 (ready for trading)
+  st: z.literal(2), // Symbol State = 2 (active)
+  tt: z.literal(4), // Trading Time = 4 (ready for trading)
 });
 
 /**
@@ -601,7 +601,12 @@ export const matchesReadyPattern = (symbol: SymbolV2Entry): boolean => {
  * Check if a symbol has complete data for sniping
  */
 export const hasCompleteData = (symbol: SymbolV2Entry): boolean => {
-  return !!(symbol.ca && symbol.ps !== undefined && symbol.qs !== undefined && symbol.ot !== undefined);
+  return !!(
+    symbol.ca &&
+    symbol.ps !== undefined &&
+    symbol.qs !== undefined &&
+    symbol.ot !== undefined
+  );
 };
 
 export type ReadyStatePattern = z.infer<typeof ReadyStatePatternSchema>;

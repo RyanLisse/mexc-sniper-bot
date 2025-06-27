@@ -9,10 +9,11 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import type {
-  PatternMatch,
-} from "../../../core/pattern-detection/interfaces";
-import { EnhancedPatternDetectionCore, type PatternDetectionEventData } from "../../../core/pattern-detection/pattern-detection-core-enhanced";
+import type { PatternMatch } from "../../../core/pattern-detection/interfaces";
+import {
+  EnhancedPatternDetectionCore,
+  type PatternDetectionEventData,
+} from "../../../core/pattern-detection/pattern-detection-core-enhanced";
 import { db } from "../../../db";
 import { snipeTargets, userPreferences } from "../../../db/schema";
 import { toSafeError } from "../../../lib/error-type-utils";

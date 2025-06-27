@@ -14,11 +14,11 @@ interface HydrationBoundaryProps {
  * Prevents hydration mismatches by only rendering children after hydration
  * Enhanced with error boundaries and SSR preservation options
  */
-export function HydrationBoundary({ 
-  children, 
-  fallback, 
+export function HydrationBoundary({
+  children,
+  fallback,
   preserveSSR = false,
-  errorFallback 
+  errorFallback,
 }: HydrationBoundaryProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
@@ -37,22 +37,16 @@ export function HydrationBoundary({
   if (preserveSSR && !hasMounted) {
     return (
       <SSRSafeErrorBoundary fallback={errorFallback}>
-        <Suspense fallback={fallback || <div>Loading...</div>}>
-          {children}
-        </Suspense>
+        <Suspense fallback={fallback || <div>Loading...</div>}>{children}</Suspense>
       </SSRSafeErrorBoundary>
     );
   }
 
   if (!isHydrated) {
-    return <>{fallback || <div style={{ visibility: 'hidden' }}>{children}</div>}</>;
+    return <>{fallback || <div style={{ visibility: "hidden" }}>{children}</div>}</>;
   }
 
-  return (
-    <SSRSafeErrorBoundary fallback={errorFallback}>
-      {children}
-    </SSRSafeErrorBoundary>
-  );
+  return <SSRSafeErrorBoundary fallback={errorFallback}>{children}</SSRSafeErrorBoundary>;
 }
 
 /**
@@ -74,12 +68,12 @@ export function useHydration() {
 /**
  * Component that only renders on client-side
  */
-export function ClientOnly({ 
-  children, 
-  fallback 
-}: { 
-  children: React.ReactNode; 
-  fallback?: React.ReactNode; 
+export function ClientOnly({
+  children,
+  fallback,
+}: {
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }) {
   const { hasMounted } = useHydration();
 
@@ -129,6 +123,6 @@ export function useSafeLocalStorage(key: string, defaultValue: string = "") {
  */
 export function useSafeWindow() {
   const { hasMounted } = useHydration();
-  
+
   return hasMounted && typeof window !== "undefined" ? window : null;
 }

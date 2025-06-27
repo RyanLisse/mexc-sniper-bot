@@ -101,48 +101,48 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
     // Initialize service modules
     this.alertsManager = new SafetyAlertsManager(this.config);
-    
+
     // Create a mock emergency system for the emergency manager
     const mockEmergencySystem = {
       forceEmergencyHalt: async (reason: string) => {
         console.info(`Emergency halt triggered: ${reason}`);
-      }
+      },
     };
-    
+
     // Create a mock safety monitor agent
     const mockSafetyMonitor = {
       requestAgentConsensus: async (request: any) => {
         return {
           consensus: { achieved: true, approvalRate: 1.0 },
-          processingTime: 100
+          processingTime: 100,
         };
-      }
+      },
     };
-    
+
     // Create safety metrics
     const safetyMetrics: SafetyMetrics = {
       systemMetrics: {
         availability: 1.0,
         responseTime: 100,
-        errorRate: 0
+        errorRate: 0,
       },
       riskMetrics: {
         averageRiskScore: 50,
         maxRiskScore: 100,
-        riskDistribution: {}
+        riskDistribution: {},
       },
       agentMetrics: {
         anomalyRate: 0,
         averageResponseTime: 100,
-        totalAgents: 1
+        totalAgents: 1,
       },
       consensusMetrics: {
         averageProcessingTime: 100,
         approvalRate: 1.0,
-        consensusSuccessRate: 1.0
-      }
+        consensusSuccessRate: 1.0,
+      },
     };
-    
+
     // Initialize emergency manager with required dependencies
     try {
       this.emergencyManager = new EmergencyManager(
@@ -161,7 +161,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
         stop: async () => {},
         updateConfig: () => {},
         on: () => {},
-        emit: () => {}
+        emit: () => {},
       } as any;
     }
 
@@ -293,9 +293,9 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     try {
       const alertsHealthy = await this.alertsManager.performHealthCheck();
       // Check if performHealthCheck exists on emergencyManager
-      const emergencyHealthy = 
-        typeof this.emergencyManager.performHealthCheck === 'function' 
-          ? await this.emergencyManager.performHealthCheck() 
+      const emergencyHealthy =
+        typeof this.emergencyManager.performHealthCheck === "function"
+          ? await this.emergencyManager.performHealthCheck()
           : true;
 
       const isHealthy = alertsHealthy && emergencyHealthy;

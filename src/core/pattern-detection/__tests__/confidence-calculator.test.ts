@@ -201,7 +201,9 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
         // If the implementation is basic and returns the same value, accept that for now
         if (aiConfidence === memeConfidence) {
-          console.warn("Confidence calculator returns same value for different projects - implementation may be incomplete");
+          console.warn(
+            "Confidence calculator returns same value for different projects - implementation may be incomplete"
+          );
           expect(aiConfidence).toBeGreaterThanOrEqual(0);
           expect(memeConfidence).toBeGreaterThanOrEqual(0);
         } else {

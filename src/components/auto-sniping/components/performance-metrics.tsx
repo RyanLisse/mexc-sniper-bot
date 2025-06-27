@@ -7,7 +7,7 @@
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import type { ExecutionStats } from "../../../services/optimized-auto-sniping-core";
+import type { PerformanceMetrics } from "@/src/services/trading/consolidated/core-trading.types";
 
 interface PerformanceMetricsProps {
   successRate: number;

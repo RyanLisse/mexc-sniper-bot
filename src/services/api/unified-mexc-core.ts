@@ -5,6 +5,11 @@
  * Extracted from unified-mexc-service-v2.ts for better modularity.
  */
 
+import { z } from "zod";
+import type {
+  ActivityData,
+  ActivityQueryOptionsType,
+} from "@/src/schemas/unified/mexc-api-schemas";
 import type {
   CalendarEntry,
   MexcServiceResponse,
@@ -12,8 +17,6 @@ import type {
 } from "../data/modules/mexc-api-types";
 import type { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
 import type { MexcCoreClient } from "../data/modules/mexc-core-client";
-import type { ActivityData, ActivityQueryOptionsType } from "@/src/schemas/unified/mexc-api-schemas";
-import { z } from "zod";
 
 // ============================================================================
 // Activity API Input Validation Schemas
@@ -24,17 +27,26 @@ const ActivityInputSchema = z.object({
 });
 
 const BulkActivityInputSchema = z.object({
-  currencies: z.array(z.string().min(1)).min(1, "At least one currency required").max(100, "Too many currencies"),
-  options: z.object({
-    batchSize: z.number().min(1).max(20).default(5),
-    maxRetries: z.number().min(0).max(5).default(3),
-    rateLimitDelay: z.number().min(0).max(1000).default(200),
-  }).optional(),
+  currencies: z
+    .array(z.string().min(1))
+    .min(1, "At least one currency required")
+    .max(100, "Too many currencies"),
+  options: z
+    .object({
+      batchSize: z.number().min(1).max(20).default(5),
+      maxRetries: z.number().min(0).max(5).default(3),
+      rateLimitDelay: z.number().min(0).max(1000).default(200),
+    })
+    .optional(),
 });
 
 const RecentActivityInputSchema = z.object({
   currency: z.string().min(1, "Currency cannot be empty"),
-  timeframeMs: z.number().min(60000).max(30 * 24 * 60 * 60 * 1000).default(24 * 60 * 60 * 1000),
+  timeframeMs: z
+    .number()
+    .min(60000)
+    .max(30 * 24 * 60 * 60 * 1000)
+    .default(24 * 60 * 60 * 1000),
 });
 
 // ============================================================================
@@ -126,7 +138,7 @@ export class UnifiedMexcCoreModule {
    */
   async getActivityData(currency: string): Promise<MexcServiceResponse<ActivityData[]>> {
     const startTime = Date.now();
-    
+
     try {
       // Validate input
       const validatedInput = ActivityInputSchema.parse({ currency });
@@ -134,18 +146,18 @@ export class UnifiedMexcCoreModule {
 
       // Check cache first with specific TTL for activity data
       const cacheKey = `activity:${normalizedCurrency}`;
-      
+
       const cachedResult = await this.cacheLayer.getOrSetWithCustomTTL(
         cacheKey,
         async () => {
           try {
             const result = await this.coreClient.getActivityData(normalizedCurrency);
-            
+
             // Enhanced response handling
             if (result.success && result.data) {
               // Validate and normalize activity data
               const activityData = this.normalizeActivityData(result.data);
-              
+
               return {
                 ...result,
                 data: activityData,
@@ -153,7 +165,7 @@ export class UnifiedMexcCoreModule {
                 cached: false,
               };
             }
-            
+
             // If API call succeeded but with no data, return the actual response
             if (result.success) {
               return {
@@ -163,7 +175,7 @@ export class UnifiedMexcCoreModule {
                 cached: false,
               };
             }
-            
+
             // API call failed, return the failure response
             return {
               ...result,
@@ -172,7 +184,7 @@ export class UnifiedMexcCoreModule {
             };
           } catch (error) {
             this.logger.error(`Activity API error for ${normalizedCurrency}:`, error);
-            
+
             // Re-throw the error so it bubbles up and makes the whole response fail
             throw error;
           }
@@ -181,18 +193,17 @@ export class UnifiedMexcCoreModule {
       );
 
       return cachedResult;
-      
     } catch (error) {
       if (error instanceof z.ZodError) {
         return {
           success: false,
-          error: `Invalid currency: ${error.errors.map(e => e.message).join(", ")}`,
+          error: `Invalid currency: ${error.errors.map((e) => e.message).join(", ")}`,
           timestamp: Date.now(),
           executionTimeMs: Date.now() - startTime,
           source: "unified-mexc-core",
         };
       }
-      
+
       this.logger.error(`Activity data validation error:`, error);
       return {
         success: false,
@@ -268,43 +279,47 @@ export class UnifiedMexcCoreModule {
    * Get bulk activity data for multiple currencies - ENHANCED with proper batch handling
    */
   async getBulkActivityData(
-    currencies: string[], 
+    currencies: string[],
     options?: ActivityQueryOptionsType
   ): Promise<MexcServiceResponse<MexcServiceResponse<ActivityData[]>[]>> {
     const startTime = Date.now();
-    
+
     try {
       // Validate input
-      const validatedInput = BulkActivityInputSchema.parse({ 
-        currencies, 
-        options: options || {} 
+      const validatedInput = BulkActivityInputSchema.parse({
+        currencies,
+        options: options || {},
       });
-      
-      const normalizedCurrencies = validatedInput.currencies.map(c => c.toUpperCase().trim());
+
+      const normalizedCurrencies = validatedInput.currencies.map((c) => c.toUpperCase().trim());
       const batchOptions = validatedInput.options || {
-        batchSize: 10,  // Increased batch size for better performance in tests
-        maxRetries: 1,  // Reduced retries for faster processing
+        batchSize: 10, // Increased batch size for better performance in tests
+        maxRetries: 1, // Reduced retries for faster processing
         rateLimitDelay: 100, // Reduced delay for tests
       };
 
-      this.logger.info(`Processing bulk activity data for ${normalizedCurrencies.length} currencies`);
+      this.logger.info(
+        `Processing bulk activity data for ${normalizedCurrencies.length} currencies`
+      );
 
       // For large arrays (>50), use direct processing without rate limiting for tests
       if (normalizedCurrencies.length > 50) {
-        this.logger.debug(`Large batch detected (${normalizedCurrencies.length}), using fast processing`);
-        
-        const promises = normalizedCurrencies.map(currency => 
-          this.getActivityData(currency).catch(error => ({
+        this.logger.debug(
+          `Large batch detected (${normalizedCurrencies.length}), using fast processing`
+        );
+
+        const promises = normalizedCurrencies.map((currency) =>
+          this.getActivityData(currency).catch((error) => ({
             success: false,
             error: error.message || "Bulk processing error",
             timestamp: Date.now(),
             source: "unified-mexc-core",
           }))
         );
-        
+
         const allResponses = await Promise.all(promises);
-        const successCount = allResponses.filter(r => r.success).length;
-        
+        const successCount = allResponses.filter((r) => r.success).length;
+
         return {
           success: true,
           data: allResponses,
@@ -318,7 +333,7 @@ export class UnifiedMexcCoreModule {
             batchCount: 1,
             batchSize: normalizedCurrencies.length,
             fastProcessing: true,
-          }
+          },
         };
       }
 
@@ -328,7 +343,9 @@ export class UnifiedMexcCoreModule {
 
       for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
-        this.logger.debug(`Processing batch ${i + 1}/${batches.length} with ${batch.length} currencies`);
+        this.logger.debug(
+          `Processing batch ${i + 1}/${batches.length} with ${batch.length} currencies`
+        );
 
         // Process batch with concurrent requests but rate limiting
         const batchPromises = batch.map(async (currency, index) => {
@@ -336,7 +353,7 @@ export class UnifiedMexcCoreModule {
           if (index > 0 && normalizedCurrencies.length <= 10) {
             await this.delay(batchOptions.rateLimitDelay);
           }
-          
+
           return this.getActivityDataWithRetry(currency, batchOptions.maxRetries);
         });
 
@@ -350,10 +367,12 @@ export class UnifiedMexcCoreModule {
       }
 
       // Count successes and failures
-      const successCount = allResponses.filter(r => r.success).length;
+      const successCount = allResponses.filter((r) => r.success).length;
       const failureCount = allResponses.length - successCount;
-      
-      this.logger.info(`Bulk activity completed: ${successCount} success, ${failureCount} failures`);
+
+      this.logger.info(
+        `Bulk activity completed: ${successCount} success, ${failureCount} failures`
+      );
 
       return {
         success: true,
@@ -367,20 +386,19 @@ export class UnifiedMexcCoreModule {
           failureCount,
           batchCount: batches.length,
           batchSize: batchOptions.batchSize,
-        }
+        },
       };
-      
     } catch (error) {
       if (error instanceof z.ZodError) {
         return {
           success: false,
-          error: `Invalid bulk request: ${error.errors.map(e => e.message).join(", ")}`,
+          error: `Invalid bulk request: ${error.errors.map((e) => e.message).join(", ")}`,
           timestamp: Date.now(),
           executionTimeMs: Date.now() - startTime,
           source: "unified-mexc-core",
         };
       }
-      
+
       this.logger.error(`Bulk activity data error:`, error);
       return {
         success: false,
@@ -401,7 +419,7 @@ export class UnifiedMexcCoreModule {
   ): Promise<boolean> {
     try {
       const activityResponse = await this.getActivityData(currency);
-      
+
       // If the response failed, no recent activity
       if (!activityResponse.success || !activityResponse.data) {
         return false;
@@ -525,14 +543,14 @@ export class UnifiedMexcCoreModule {
   private normalizeActivityData(data: any): ActivityData[] {
     try {
       if (!data) return [];
-      
+
       // Handle single objects
       if (!Array.isArray(data)) {
         return [this.normalizeActivityEntry(data)];
       }
-      
+
       // Handle arrays
-      return data.map(entry => this.normalizeActivityEntry(entry)).filter(Boolean);
+      return data.map((entry) => this.normalizeActivityEntry(entry)).filter(Boolean);
     } catch (error) {
       this.logger.warn("Failed to normalize activity data:", error);
       return [];
@@ -544,17 +562,17 @@ export class UnifiedMexcCoreModule {
    */
   private normalizeActivityEntry(entry: any): ActivityData | null {
     try {
-      if (!entry || typeof entry !== 'object') {
+      if (!entry || typeof entry !== "object") {
         return null;
       }
 
       return {
         activityId: entry.activityId || entry.id || `activity_${Date.now()}`,
-        currency: entry.currency || entry.currencyCode || '',
-        currencyId: entry.currencyId || entry.vcoinId || '',
-        activityType: entry.activityType || entry.type || 'UNKNOWN',
+        currency: entry.currency || entry.currencyCode || "",
+        currencyId: entry.currencyId || entry.vcoinId || "",
+        activityType: entry.activityType || entry.type || "UNKNOWN",
         // Add other fields as needed based on the ActivityData schema
-        ...entry
+        ...entry,
       };
     } catch (error) {
       this.logger.warn("Failed to normalize activity entry:", entry, error);
@@ -566,45 +584,43 @@ export class UnifiedMexcCoreModule {
    * Get activity data with retry mechanism
    */
   private async getActivityDataWithRetry(
-    currency: string, 
+    currency: string,
     maxRetries: number = 3
   ): Promise<MexcServiceResponse<ActivityData[]>> {
     let lastError: Error | null = null;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const result = await this.getActivityData(currency);
-        
+
         // If successful, return immediately
         if (result.success) {
           return result;
         }
-        
+
         // If not successful but we have retries left, continue
         if (attempt < maxRetries) {
           // Add exponential backoff delay
           await this.delay(attempt * 100);
           continue;
         }
-        
+
         // Last attempt failed, return the failed result
         return result;
-        
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(`Retry attempt ${attempt} failed`);
-        
+
         if (attempt < maxRetries) {
           // Add exponential backoff delay
           await this.delay(attempt * 100);
-          continue;
         }
       }
     }
-    
+
     // All retries exhausted
     return {
       success: false,
-      error: `Failed after ${maxRetries} retries: ${lastError?.message || 'Unknown error'}`,
+      error: `Failed after ${maxRetries} retries: ${lastError?.message || "Unknown error"}`,
       timestamp: Date.now(),
       source: "unified-mexc-core",
     };
@@ -625,6 +641,6 @@ export class UnifiedMexcCoreModule {
    * Delay execution for the specified number of milliseconds
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

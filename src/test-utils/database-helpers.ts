@@ -41,7 +41,7 @@ export async function createTestUser(userId: string): Promise<void> {
       const verifyUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
       if (verifyUser.length === 0) {
         // In test mode, mock the user verification
-        if (process.env.NODE_ENV === 'test' || globalThis.__TEST_ENV__) {
+        if (process.env.NODE_ENV === "test" || globalThis.__TEST_ENV__) {
           console.log(`🧪 Mock user verification for test: ${userId}`);
           return;
         }
@@ -49,7 +49,7 @@ export async function createTestUser(userId: string): Promise<void> {
       }
     } catch (dbError) {
       // If database verification fails in test mode, skip it
-      if (process.env.NODE_ENV === 'test' || globalThis.__TEST_ENV__) {
+      if (process.env.NODE_ENV === "test" || globalThis.__TEST_ENV__) {
         console.log(`🧪 Skipping user verification in test mode for: ${userId}`);
         return;
       }

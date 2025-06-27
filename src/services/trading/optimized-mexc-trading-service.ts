@@ -8,21 +8,21 @@
 
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { getCachedCredentials } from "@/src/lib/credential-cache";
-import { getErrorMessage, toSafeError } from "@/src/lib/error-type-utils";
 import { db } from "@/src/db";
 import type { NewExecutionHistory } from "@/src/db/schema";
 import { apiCredentials, executionHistory } from "@/src/db/schema";
-import type { OrderParameters } from "./api/mexc-client-types";
-import { enhancedRiskManagementService } from "../risk/enhanced-risk-management-service";
+import { getCachedCredentials } from "@/src/lib/credential-cache";
+import { getErrorMessage, toSafeError } from "@/src/lib/error-type-utils";
 import { getRecommendedMexcService } from "../api/mexc-unified-exports";
+import { transactionLockService } from "../data/transaction-lock-service";
+import { enhancedRiskManagementService } from "../risk/enhanced-risk-management-service";
+import type { OrderParameters } from "./api/mexc-client-types";
 import {
   type TradingOrderRequest,
   type TradingOrderResponse,
   validateTradingOrderRequest,
   validateTradingOrderResponse,
 } from "./optimized-auto-sniping-schemas";
-import { transactionLockService } from "../data/transaction-lock-service";
 
 // ============================================================================
 // Schemas and Types

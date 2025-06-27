@@ -122,12 +122,12 @@ describe("PatternStorage - TDD Implementation", () => {
 
       // Insert test patterns with known success rates directly into database
       const now = new Date();
-      
+
       // Pattern 1: 8 truePositives, 2 falsePositives (80% success)
       await db.insert(patternEmbeddings).values({
         patternId: `test-calc-1-${Date.now()}`,
         patternType: "test_calculation",
-        symbolName: "CALC1USDT", 
+        symbolName: "CALC1USDT",
         patternData: JSON.stringify({ test: "data1" }),
         embedding: JSON.stringify(new Array(1536).fill(0.1)),
         embeddingDimension: 1536,
@@ -143,7 +143,7 @@ describe("PatternStorage - TDD Implementation", () => {
         createdAt: now,
       });
 
-      // Pattern 2: 7 truePositives, 3 falsePositives (70% success) 
+      // Pattern 2: 7 truePositives, 3 falsePositives (70% success)
       await db.insert(patternEmbeddings).values({
         patternId: `test-calc-2-${Date.now()}`,
         patternType: "test_calculation",
@@ -365,7 +365,7 @@ describe("PatternStorage - TDD Implementation", () => {
       const results = await Promise.all(storePromises);
       expect(results).toHaveLength(10);
       // All should be undefined (successful void returns)
-      results.forEach(result => expect(result).toBeUndefined());
+      results.forEach((result) => expect(result).toBeUndefined());
     });
 
     it("should handle concurrent retrieval operations", async () => {

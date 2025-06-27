@@ -17,6 +17,7 @@ import type {
   SystemHealth,
   TradingOpportunity,
 } from "./schemas";
+import { autoSnipingStateSynchronizer } from "./state-synchronizer";
 
 export class OptimizedAutoSnipingCore {
   private static instance: OptimizedAutoSnipingCore | null = null;
@@ -294,13 +295,152 @@ export class OptimizedAutoSnipingCore {
   }
 
   /**
-   * Get execution report
+   * Get database target count
    */
-  getExecutionReport() {
+  async getDatabaseTargetCount(userId?: string): Promise<number> {
+    try {
+      return await autoSnipingStateSynchronizer.getDatabaseTargetCount(userId);
+    } catch (error) {
+      console.error("Failed to get database target count:", error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get unified target count that checks both database and memory
+   */
+  async getUnifiedTargetCount(userId?: string): Promise<{
+    memoryCount: number;
+    databaseCount: number;
+    unifiedCount: number;
+    isConsistent: boolean;
+    source: "memory" | "database" | "consistent";
+    warning?: string;
+  }> {
+    try {
+      const activePositions = this.getActivePositions();
+      const result = await autoSnipingStateSynchronizer.getUnifiedTargetCount(
+        activePositions,
+        userId
+      );
+
+      let warning: string | undefined;
+      if (!result.isConsistent) {
+        warning = `State inconsistency detected: Memory=${result.memoryCount}, Database=${result.databaseCount}. Using ${result.source} count.`;
+
+        this.alertManager.addAlert({
+          type: "execution_error",
+          severity: "warning",
+          message: "Target count inconsistency detected",
+          details: {
+            memoryCount: result.memoryCount,
+            databaseCount: result.databaseCount,
+            source: result.source,
+            recommendation: "Consider running state synchronization",
+          },
+        });
+      }
+
+      return { ...result, warning };
+    } catch (error) {
+      console.error("Failed to get unified target count:", error);
+      const activePositions = this.getActivePositions();
+      return {
+        memoryCount: activePositions.length,
+        databaseCount: 0,
+        unifiedCount: activePositions.length,
+        isConsistent: false,
+        source: "memory",
+        warning: "Failed to check database, using memory count only",
+      };
+    }
+  }
+
+  /**
+   * Check state consistency between memory and database
+   */
+  async checkStateConsistency(userId?: string) {
+    try {
+      const activePositions = this.getActivePositions();
+      return await autoSnipingStateSynchronizer.checkStateConsistency(activePositions, userId);
+    } catch (error) {
+      console.error("Failed to check state consistency:", error);
+      return {
+        databaseTargetCount: 0,
+        memoryTargetCount: this.getActivePositions().length,
+        isConsistent: false,
+        inconsistencies: ["Failed to check database state"],
+        recommendedActions: ["Check database connectivity"],
+        lastSyncTime: "Never",
+      };
+    }
+  }
+
+  /**
+   * Synchronize state between memory and database
+   */
+  async synchronizeState(
+    options?: {
+      syncDirection?: "memory-to-db" | "db-to-memory" | "bidirectional";
+      dryRun?: boolean;
+      forceSync?: boolean;
+    },
+    userId?: string
+  ) {
+    try {
+      const activePositions = this.getActivePositions();
+      const result = await autoSnipingStateSynchronizer.synchronizeState(
+        activePositions,
+        options,
+        userId
+      );
+
+      if (result.success) {
+        this.alertManager.addAlert({
+          type: "position_opened",
+          severity: "info",
+          message: `State synchronization completed: ${result.syncedTargets} targets synced`,
+          details: {
+            syncedTargets: result.syncedTargets,
+            consistencyReport: result.consistencyReport,
+          },
+        });
+      } else {
+        this.alertManager.addAlert({
+          type: "execution_error",
+          severity: "error",
+          message: "State synchronization failed",
+          details: {
+            errors: result.errors,
+            consistencyReport: result.consistencyReport,
+          },
+        });
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Failed to synchronize state:", error);
+      return {
+        success: false,
+        syncedTargets: 0,
+        errors: [error instanceof Error ? error.message : "Unknown error"],
+        consistencyReport: await this.checkStateConsistency(userId),
+      };
+    }
+  }
+
+  /**
+   * Get execution report with unified target counts
+   */
+  async getExecutionReport() {
     const stats = this.getStats();
     const config = this.getConfig();
     const activePositions = this.getActivePositions();
     const alerts = this.getAlertStats();
+
+    // Get unified target count for consistent reporting
+    const unifiedTargetData = await this.getUnifiedTargetCount();
+    const consistencyReport = await this.checkStateConsistency();
 
     return {
       status: this.getExecutionStatus(),
@@ -310,7 +450,25 @@ export class OptimizedAutoSnipingCore {
       successfulTrades: stats.successfulTrades || 0,
       totalPnl: stats.totalPnl || 0,
       successRate: stats.totalTrades > 0 ? (stats.successfulTrades / stats.totalTrades) * 100 : 0,
-      
+
+      // Enhanced target count information
+      targetCounts: {
+        memory: unifiedTargetData.memoryCount,
+        database: unifiedTargetData.databaseCount,
+        unified: unifiedTargetData.unifiedCount,
+        isConsistent: unifiedTargetData.isConsistent,
+        source: unifiedTargetData.source,
+        warning: unifiedTargetData.warning,
+      },
+
+      // State consistency information
+      stateConsistency: {
+        isConsistent: consistencyReport.isConsistent,
+        inconsistencies: consistencyReport.inconsistencies,
+        recommendedActions: consistencyReport.recommendedActions,
+        lastSyncTime: consistencyReport.lastSyncTime,
+      },
+
       // Additional properties expected by API routes
       recentExecutions: [],
       activeAlerts: alerts.unacknowledged || 0,
@@ -322,22 +480,22 @@ export class OptimizedAutoSnipingCore {
         dailyTradeCount: stats.dailyTrades || 0,
       },
       systemHealth: "healthy", // Will be updated to dynamic health check in future enhancement
-      
-      // Status report properties
-      activeTargets: activePositions.length,
-      readyTargets: this.getActivePositions().filter(p => p.status === "ready").length,
+
+      // Status report properties - use unified count for consistency
+      activeTargets: unifiedTargetData.unifiedCount,
+      readyTargets: this.getActivePositions().filter((p) => p.status === "ready").length,
       executedToday: stats.dailyTrades || 0,
       lastExecution: this.getLastExecutionTime(),
       safetyStatus: this.alertManager.hasCriticalIssues() ? "warning" : "safe",
       patternDetectionActive: this.getExecutionStatus() === "active",
       executionCount: stats.totalTrades || 0,
       uptime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
-      
+
       // Additional API compatibility fields
       totalProfit: stats.totalPnl || 0,
       successCount: stats.successfulTrades || 0,
       errorCount: (stats.totalTrades || 0) - (stats.successfulTrades || 0),
-      
+
       config: {
         enabled: config.enabled,
         maxPositions: config.maxPositions,
@@ -361,11 +519,11 @@ export class OptimizedAutoSnipingCore {
   private getLastExecutionTime(): string | null {
     const positions = this.getActivePositions();
     if (positions.length === 0) return null;
-    
-    const lastPosition = positions.sort((a, b) => 
-      new Date(b.entryTime || 0).getTime() - new Date(a.entryTime || 0).getTime()
+
+    const lastPosition = positions.sort(
+      (a, b) => new Date(b.entryTime || 0).getTime() - new Date(a.entryTime || 0).getTime()
     )[0];
-    
+
     return lastPosition?.entryTime || null;
   }
 
@@ -375,7 +533,7 @@ export class OptimizedAutoSnipingCore {
   isReadyForTrading(): boolean {
     const config = this.getConfig();
     const activePositions = this.getActivePositions();
-    
+
     return (
       config.enabled &&
       activePositions.length < config.maxPositions &&
@@ -389,9 +547,9 @@ export class OptimizedAutoSnipingCore {
    */
   async pauseExecution(): Promise<void> {
     console.info("Pausing auto-sniping execution");
-    
+
     await this.executionEngine.stop();
-    
+
     this.alertManager.addAlert({
       type: "execution_error",
       severity: "warning",
@@ -407,9 +565,9 @@ export class OptimizedAutoSnipingCore {
    */
   async resumeExecution(): Promise<void> {
     console.info("Resuming auto-sniping execution");
-    
+
     await this.executionEngine.start();
-    
+
     this.alertManager.addAlert({
       type: "position_opened",
       severity: "info",
@@ -425,19 +583,19 @@ export class OptimizedAutoSnipingCore {
    */
   async closePosition(positionId: string): Promise<boolean> {
     console.info("Closing position", { positionId });
-    
+
     try {
       // Find the position in our active positions
       const activePositions = this.getActivePositions();
-      const position = activePositions.find(p => p.id === positionId);
-      
+      const position = activePositions.find((p) => p.id === positionId);
+
       if (!position) {
         throw new Error(`Position ${positionId} not found in active positions`);
       }
 
       // Request closure through the execution engine
       const closureResult = await this.executionEngine.closePosition(positionId);
-      
+
       if (closureResult) {
         this.alertManager.addAlert({
           type: "position_closed",
@@ -451,21 +609,21 @@ export class OptimizedAutoSnipingCore {
             pnl: position.unrealizedPnl || 0,
           },
         });
-        
+
         return true;
       } else {
         throw new Error("Position closure failed - execution engine returned false");
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      
+
       this.alertManager.addAlert({
         type: "execution_error",
         severity: "error",
         message: `Failed to close position ${positionId}: ${errorMessage}`,
         details: { positionId, error: errorMessage },
       });
-      
+
       return false;
     }
   }
@@ -475,10 +633,10 @@ export class OptimizedAutoSnipingCore {
    */
   async emergencyCloseAll(): Promise<{ success: number; failed: number; errors: string[] }> {
     console.info("Emergency closing all positions");
-    
+
     const activePositions = this.getActivePositions();
     const results = { success: 0, failed: 0, errors: [] as string[] };
-    
+
     for (const position of activePositions) {
       try {
         const success = await this.closePosition(position.id);
@@ -494,7 +652,7 @@ export class OptimizedAutoSnipingCore {
         results.errors.push(`Error closing position ${position.id}: ${errorMessage}`);
       }
     }
-    
+
     this.alertManager.addAlert({
       type: "execution_error",
       severity: "critical",
@@ -504,7 +662,7 @@ export class OptimizedAutoSnipingCore {
         emergencyTime: new Date().toISOString(),
       },
     });
-    
+
     return results;
   }
 

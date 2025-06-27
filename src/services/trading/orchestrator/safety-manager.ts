@@ -9,22 +9,22 @@ import { toSafeError } from "../../../lib/error-type-utils";
 import type {
   ModuleContext,
   ModuleState,
-  SnipeTarget,
-  SafetyCheck,
   RiskAssessment,
+  SafetyCheck,
   ServiceResponse,
+  SnipeTarget,
 } from "./types";
 
 export class SafetyManager {
   private context: ModuleContext;
   private state: ModuleState;
-  
+
   // Safety tracking
   private safetyViolations = 0;
   private emergencyStops = 0;
   private lastSafetyCheck: Date | null = null;
   private currentRiskScore = 0;
-  
+
   // Risk thresholds
   private readonly RISK_THRESHOLDS = {
     low: 30,
@@ -32,7 +32,7 @@ export class SafetyManager {
     high: 85,
     critical: 95,
   };
-  
+
   // Safety limits
   private readonly SAFETY_LIMITS = {
     maxDailyLoss: 1000, // $1000
@@ -63,10 +63,10 @@ export class SafetyManager {
    */
   async initialize(): Promise<void> {
     this.context.logger.info("Initializing Safety Manager Module");
-    
+
     // Perform initial safety check
     await this.performSafetyCheck();
-    
+
     this.state.isInitialized = true;
     this.state.lastActivity = new Date();
     this.context.logger.info("Safety Manager Module initialized successfully", {
@@ -95,7 +95,8 @@ export class SafetyManager {
    */
   async getHealthStatus(): Promise<"operational" | "degraded" | "offline"> {
     if (!this.state.isInitialized) return "offline";
-    if (!this.state.isHealthy || this.currentRiskScore > this.RISK_THRESHOLDS.high) return "degraded";
+    if (!this.state.isHealthy || this.currentRiskScore > this.RISK_THRESHOLDS.high)
+      return "degraded";
     return "operational";
   }
 
@@ -105,52 +106,55 @@ export class SafetyManager {
   async performSafetyCheck(): Promise<ServiceResponse<SafetyCheck[]>> {
     try {
       this.context.logger.debug("Performing safety check");
-      
+
       const checks: SafetyCheck[] = [];
       let overallSafe = true;
-      
+
       // Check 1: Account balance
       const balanceCheck = await this.checkAccountBalance();
       checks.push(balanceCheck);
       if (!balanceCheck.passed) overallSafe = false;
-      
+
       // Check 2: Position limits
       const positionCheck = await this.checkPositionLimits();
       checks.push(positionCheck);
       if (!positionCheck.passed) overallSafe = false;
-      
+
       // Check 3: Risk exposure
       const riskCheck = await this.checkRiskExposure();
       checks.push(riskCheck);
       if (!riskCheck.passed) overallSafe = false;
-      
+
       // Check 4: Drawdown limits
       const drawdownCheck = await this.checkDrawdownLimits();
       checks.push(drawdownCheck);
       if (!drawdownCheck.passed) overallSafe = false;
-      
+
       // Check 5: Market conditions
       const marketCheck = await this.checkMarketConditions();
       checks.push(marketCheck);
       if (!marketCheck.passed) overallSafe = false;
-      
+
       // Update risk score
       this.currentRiskScore = this.calculateRiskScore(checks);
       this.lastSafetyCheck = new Date();
-      
+
       // Update metrics
-      this.state.metrics.safetyChecksPerformed = (this.state.metrics.safetyChecksPerformed || 0) + 1;
+      this.state.metrics.safetyChecksPerformed =
+        (this.state.metrics.safetyChecksPerformed || 0) + 1;
       this.state.metrics.lastSafetyCheck = this.lastSafetyCheck.toISOString();
       this.state.metrics.currentRiskScore = this.currentRiskScore;
-      
+
       // Handle critical issues
-      const criticalChecks = checks.filter(check => !check.passed && check.severity === "critical");
+      const criticalChecks = checks.filter(
+        (check) => !check.passed && check.severity === "critical"
+      );
       if (criticalChecks.length > 0) {
         this.handleCriticalSafetyViolation(criticalChecks);
       }
-      
+
       this.state.lastActivity = new Date();
-      
+
       this.context.logger.info("Safety check completed", {
         overallSafe,
         riskScore: this.currentRiskScore,
@@ -166,7 +170,7 @@ export class SafetyManager {
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error(`Safety check failed: ${safeError.message}`);
-      
+
       return {
         success: false,
         error: safeError.message,
@@ -181,50 +185,58 @@ export class SafetyManager {
   async validateTarget(target: SnipeTarget): Promise<ServiceResponse<void>> {
     try {
       this.context.logger.debug("Validating target safety", { target });
-      
+
       const issues: string[] = [];
-      
+
       // Check position size
-      if (target.positionSizeUsdt > this.SAFETY_LIMITS.maxPositionSize * 10000) { // Assuming $10k portfolio
-        issues.push(`Position size too large: ${target.positionSizeUsdt} > ${this.SAFETY_LIMITS.maxPositionSize * 10000}`);
+      if (target.positionSizeUsdt > this.SAFETY_LIMITS.maxPositionSize * 10000) {
+        // Assuming $10k portfolio
+        issues.push(
+          `Position size too large: ${target.positionSizeUsdt} > ${this.SAFETY_LIMITS.maxPositionSize * 10000}`
+        );
       }
-      
+
       // Check confidence score
       if (target.confidenceScore < this.context.config.confidenceThreshold) {
-        issues.push(`Confidence score too low: ${target.confidenceScore} < ${this.context.config.confidenceThreshold}`);
+        issues.push(
+          `Confidence score too low: ${target.confidenceScore} < ${this.context.config.confidenceThreshold}`
+        );
       }
-      
+
       // Check if symbol is blacklisted (simulated)
       const blacklistedSymbols = ["SCAMCOIN", "RUGPULL", "HONEYPOT"];
-      if (blacklistedSymbols.some(symbol => target.symbolName.includes(symbol))) {
+      if (blacklistedSymbols.some((symbol) => target.symbolName.includes(symbol))) {
         issues.push(`Symbol is blacklisted: ${target.symbolName}`);
       }
-      
+
       // Check market volatility
       const volatility = await this.getSymbolVolatility(target.symbolName);
-      if (volatility > 0.5) { // 50% volatility
+      if (volatility > 0.5) {
+        // 50% volatility
         issues.push(`Symbol too volatile: ${(volatility * 100).toFixed(1)}%`);
       }
-      
+
       // Check if we're already at position limits
       const currentPositions = await this.getCurrentPositionCount();
       if (currentPositions >= this.context.config.maxConcurrentPositions) {
-        issues.push(`Maximum concurrent positions reached: ${currentPositions}/${this.context.config.maxConcurrentPositions}`);
+        issues.push(
+          `Maximum concurrent positions reached: ${currentPositions}/${this.context.config.maxConcurrentPositions}`
+        );
       }
-      
+
       const isValid = issues.length === 0;
-      
+
       if (!isValid) {
         this.safetyViolations++;
         this.state.metrics.safetyViolations = this.safetyViolations;
-        
+
         this.context.eventEmitter.emit("safety_violation", {
           target,
           issues,
           severity: "warning",
         });
       }
-      
+
       this.context.logger.debug("Target validation completed", {
         targetSymbol: target.symbolName,
         isValid,
@@ -238,8 +250,10 @@ export class SafetyManager {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error(`Target validation failed for ${target.symbolName}: ${safeError.message}`);
-      
+      this.context.logger.error(
+        `Target validation failed for ${target.symbolName}: ${safeError.message}`
+      );
+
       return {
         success: false,
         error: safeError.message,
@@ -255,16 +269,17 @@ export class SafetyManager {
     if (!this.state.isInitialized) return false;
     if (!this.state.isHealthy) return false;
     if (this.currentRiskScore > this.RISK_THRESHOLDS.critical) return false;
-    
+
     // Check if recent safety check passed
     if (this.lastSafetyCheck) {
       const timeSinceCheck = Date.now() - this.lastSafetyCheck.getTime();
-      if (timeSinceCheck > 300000) { // 5 minutes
+      if (timeSinceCheck > 300000) {
+        // 5 minutes
         const safetyResult = await this.performSafetyCheck();
         return safetyResult.success;
       }
     }
-    
+
     return this.currentRiskScore <= this.RISK_THRESHOLDS.high;
   }
 
@@ -278,7 +293,7 @@ export class SafetyManager {
       volatility: await this.getMarketVolatility(),
       marketConditions: await this.getMarketConditionsString(),
     };
-    
+
     let overallRisk: "low" | "medium" | "high" | "critical" = "low";
     if (this.currentRiskScore > this.RISK_THRESHOLDS.critical) {
       overallRisk = "critical";
@@ -287,7 +302,7 @@ export class SafetyManager {
     } else if (this.currentRiskScore > this.RISK_THRESHOLDS.medium) {
       overallRisk = "medium";
     }
-    
+
     const recommendations: string[] = [];
     if (overallRisk === "critical") {
       recommendations.push("STOP ALL TRADING IMMEDIATELY");
@@ -302,7 +317,7 @@ export class SafetyManager {
     } else {
       recommendations.push("Continue normal operations");
     }
-    
+
     return {
       overallRisk,
       factors,
@@ -348,14 +363,14 @@ export class SafetyManager {
     try {
       // Simulate account balance check
       const balance = 5000 + Math.random() * 10000; // $5k-$15k
-      
+
       const passed = balance >= this.SAFETY_LIMITS.minAccountBalance;
-      
+
       return {
         checkType: "account_balance",
         passed,
-        message: passed 
-          ? `Account balance sufficient: $${balance.toFixed(2)}` 
+        message: passed
+          ? `Account balance sufficient: $${balance.toFixed(2)}`
           : `Account balance too low: $${balance.toFixed(2)} < $${this.SAFETY_LIMITS.minAccountBalance}`,
         severity: passed ? "info" : "critical",
         timestamp: new Date().toISOString(),
@@ -378,14 +393,14 @@ export class SafetyManager {
     try {
       const currentPositions = await this.getCurrentPositionCount();
       const maxPositions = this.context.config.maxConcurrentPositions;
-      
+
       const passed = currentPositions < maxPositions;
-      
+
       return {
         checkType: "position_limits",
         passed,
-        message: passed 
-          ? `Position count within limits: ${currentPositions}/${maxPositions}` 
+        message: passed
+          ? `Position count within limits: ${currentPositions}/${maxPositions}`
           : `Too many positions: ${currentPositions}/${maxPositions}`,
         severity: passed ? "info" : "warning",
         timestamp: new Date().toISOString(),
@@ -408,14 +423,14 @@ export class SafetyManager {
     try {
       const exposure = await this.getPortfolioExposure();
       const maxExposure = this.SAFETY_LIMITS.maxPositionSize;
-      
+
       const passed = exposure <= maxExposure;
-      
+
       return {
         checkType: "risk_exposure",
         passed,
-        message: passed 
-          ? `Risk exposure acceptable: ${(exposure * 100).toFixed(1)}%` 
+        message: passed
+          ? `Risk exposure acceptable: ${(exposure * 100).toFixed(1)}%`
           : `Risk exposure too high: ${(exposure * 100).toFixed(1)}% > ${(maxExposure * 100).toFixed(1)}%`,
         severity: passed ? "info" : "critical",
         timestamp: new Date().toISOString(),
@@ -439,14 +454,14 @@ export class SafetyManager {
       // Simulate drawdown calculation
       const currentDrawdown = Math.random() * 30; // 0-30%
       const maxDrawdown = this.SAFETY_LIMITS.maxDrawdownPercent;
-      
+
       const passed = currentDrawdown <= maxDrawdown;
-      
+
       return {
         checkType: "drawdown_limits",
         passed,
-        message: passed 
-          ? `Drawdown within limits: ${currentDrawdown.toFixed(1)}%` 
+        message: passed
+          ? `Drawdown within limits: ${currentDrawdown.toFixed(1)}%`
           : `Drawdown exceeded: ${currentDrawdown.toFixed(1)}% > ${maxDrawdown}%`,
         severity: passed ? "info" : "critical",
         timestamp: new Date().toISOString(),
@@ -470,12 +485,12 @@ export class SafetyManager {
       // Simulate market conditions check
       const volatility = Math.random(); // 0-100%
       const liquidityScore = 50 + Math.random() * 50; // 50-100
-      
+
       const highVolatility = volatility > 0.5;
       const lowLiquidity = liquidityScore < 60;
-      
+
       const passed = !highVolatility && !lowLiquidity;
-      
+
       let message = "Market conditions favorable";
       if (highVolatility && lowLiquidity) {
         message = "High volatility and low liquidity detected";
@@ -484,7 +499,7 @@ export class SafetyManager {
       } else if (lowLiquidity) {
         message = "Low market liquidity detected";
       }
-      
+
       return {
         checkType: "market_conditions",
         passed,
@@ -509,11 +524,11 @@ export class SafetyManager {
   private calculateRiskScore(checks: SafetyCheck[]): number {
     let score = 0;
     let weight = 0;
-    
-    checks.forEach(check => {
+
+    checks.forEach((check) => {
       let checkWeight = 1;
       let checkScore = check.passed ? 0 : 100;
-      
+
       // Adjust weight and score based on severity
       switch (check.severity) {
         case "critical":
@@ -533,11 +548,11 @@ export class SafetyManager {
           checkScore = check.passed ? 0 : 20;
           break;
       }
-      
+
       score += checkScore * checkWeight;
       weight += checkWeight;
     });
-    
+
     return weight > 0 ? Math.min(100, score / weight) : 0;
   }
 
@@ -547,14 +562,14 @@ export class SafetyManager {
   private handleCriticalSafetyViolation(criticalChecks: SafetyCheck[]): void {
     this.emergencyStops++;
     this.state.metrics.emergencyStops = this.emergencyStops;
-    
-    const reason = criticalChecks.map(check => check.message).join("; ");
-    
+
+    const reason = criticalChecks.map((check) => check.message).join("; ");
+
     this.context.logger.error("Critical safety violation - triggering emergency stop", {
       criticalChecks: criticalChecks.length,
       reason,
     });
-    
+
     this.context.eventEmitter.emit("emergency_stop", reason);
   }
 

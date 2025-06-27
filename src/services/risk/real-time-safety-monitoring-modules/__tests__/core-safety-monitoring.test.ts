@@ -551,8 +551,8 @@ describe("CoreSafetyMonitoring", () => {
       // Should handle invalid data gracefully and return sanitized metrics
       const result = await coreMonitoring.updateRiskMetrics();
       expect(result).toBeDefined();
-      expect(typeof result).toBe('object');
-      
+      expect(typeof result).toBe("object");
+
       // Invalid data should be sanitized to safe defaults
       expect(isNaN(result.currentDrawdown)).toBe(false);
       expect(result.successRate).toBeLessThanOrEqual(100);

@@ -42,8 +42,8 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): MobileDetection {
     try {
       isTouch = Boolean(
         "ontouchstart" in window ||
-        (navigator?.maxTouchPoints && navigator.maxTouchPoints > 0) ||
-        (navigator as any)?.msMaxTouchPoints > 0
+          (navigator?.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+          (navigator as any)?.msMaxTouchPoints > 0
       );
     } catch {
       // Fallback if navigator is not available
@@ -114,7 +114,7 @@ export function useBreakpoints(): Breakpoints {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     const updateBreakpoints = () => {
       if (typeof window === "undefined") return;
 
@@ -129,7 +129,7 @@ export function useBreakpoints(): Breakpoints {
     };
 
     updateBreakpoints();
-    
+
     if (typeof window !== "undefined") {
       window.addEventListener("resize", updateBreakpoints, { passive: true });
       return () => window.removeEventListener("resize", updateBreakpoints);
@@ -160,14 +160,14 @@ export function useOrientation(): Orientation {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     const updateOrientation = () => {
       if (typeof window === "undefined") return;
       setOrientation(window.innerHeight > window.innerWidth ? "portrait" : "landscape");
     };
 
     updateOrientation();
-    
+
     if (typeof window !== "undefined") {
       window.addEventListener("resize", updateOrientation, { passive: true });
       window.addEventListener("orientationchange", updateOrientation, { passive: true });
@@ -206,7 +206,7 @@ export function useTouchGestures(): TouchGesture {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     if (typeof document === "undefined") return;
 
     let startTime: number;
@@ -216,7 +216,7 @@ export function useTouchGestures(): TouchGesture {
 
     const handleTouchStart = (e: TouchEvent) => {
       if (!e.touches?.[0]) return;
-      
+
       const touch = e.touches[0];
       startTime = Date.now();
       startX = touch.clientX;
@@ -296,7 +296,7 @@ export function useViewportHeight(): number {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     const updateViewportHeight = () => {
       if (typeof window === "undefined") return;
 
@@ -318,9 +318,13 @@ export function useViewportHeight(): number {
         window.addEventListener("resize", updateViewportHeight, { passive: true });
       }
 
-      window.addEventListener("orientationchange", () => {
-        setTimeout(updateViewportHeight, 100);
-      }, { passive: true });
+      window.addEventListener(
+        "orientationchange",
+        () => {
+          setTimeout(updateViewportHeight, 100);
+        },
+        { passive: true }
+      );
 
       return () => {
         if (window.visualViewport) {
@@ -349,7 +353,7 @@ export function useWindowSize() {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     const updateSize = () => {
       if (typeof window === "undefined") return;
 
@@ -360,7 +364,7 @@ export function useWindowSize() {
     };
 
     updateSize();
-    
+
     if (typeof window !== "undefined") {
       window.addEventListener("resize", updateSize, { passive: true });
       return () => window.removeEventListener("resize", updateSize);
@@ -381,14 +385,14 @@ export function useIsTouchDevice(): boolean {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     if (typeof window === "undefined") return;
 
     try {
       const hasTouch = Boolean(
         "ontouchstart" in window ||
-        (navigator?.maxTouchPoints && navigator.maxTouchPoints > 0) ||
-        (navigator as any)?.msMaxTouchPoints > 0
+          (navigator?.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+          (navigator as any)?.msMaxTouchPoints > 0
       );
 
       setIsTouch(hasTouch);

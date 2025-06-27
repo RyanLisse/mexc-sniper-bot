@@ -30,7 +30,10 @@ import type {
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
-import { EmergencyStopCoordinator, type EmergencyStopEvent } from "@/src/services/risk/emergency-stop-coordinator";
+import {
+  EmergencyStopCoordinator,
+  type EmergencyStopEvent,
+} from "@/src/services/risk/emergency-stop-coordinator";
 import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
 import {
   type AlertGenerationData,
@@ -173,7 +176,7 @@ export class RealTimeSafetyMonitoringService {
     this.mexcService = new UnifiedMexcServiceV2();
 
     // Register this service with the emergency stop coordinator
-    this.emergencyStopCoordinator.registerService('safety-monitoring', this);
+    this.emergencyStopCoordinator.registerService("safety-monitoring", this);
 
     // Initialize modules
     this.initializeModules();
@@ -452,7 +455,7 @@ export class RealTimeSafetyMonitoringService {
       reason,
       activePositions: this.executionService.getActivePositions().length,
       currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
-      coordinator: "EmergencyStopCoordinator"
+      coordinator: "EmergencyStopCoordinator",
     });
 
     const actions: SafetyAction[] = [];
@@ -462,19 +465,20 @@ export class RealTimeSafetyMonitoringService {
       const emergencyEvent: EmergencyStopEvent = {
         id: `emergency_${Date.now()}`,
         type: this.determineEmergencyType(reason),
-        triggeredBy: 'safety-monitoring-service',
+        triggeredBy: "safety-monitoring-service",
         severity: this.determineEmergencySeverity(reason),
         timestamp: Date.now(),
         context: {
           activePositions: this.executionService.getActivePositions().length,
           currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
-          monitoringActive: this.isMonitoringActive
+          monitoringActive: this.isMonitoringActive,
         },
-        reason
+        reason,
       };
 
       // FIXED: Use EmergencyStopCoordinator for coordinated emergency stop
-      const coordinatedResult = await this.emergencyStopCoordinator.triggerEmergencyStop(emergencyEvent);
+      const coordinatedResult =
+        await this.emergencyStopCoordinator.triggerEmergencyStop(emergencyEvent);
 
       // Convert coordinated result to SafetyAction format for backward compatibility
       actions.push({
@@ -484,18 +488,18 @@ export class RealTimeSafetyMonitoringService {
         executed: true,
         executedAt: new Date().toISOString(),
         result: coordinatedResult.success ? "success" : "partial",
-        details: `Coordinated emergency stop: ${coordinatedResult.actionsExecuted.join(', ')}. Services: ${coordinatedResult.coordinatedServices.join(', ')}. Duration: ${coordinatedResult.duration}ms.`,
+        details: `Coordinated emergency stop: ${coordinatedResult.actionsExecuted.join(", ")}. Services: ${coordinatedResult.coordinatedServices.join(", ")}. Duration: ${coordinatedResult.duration}ms.`,
         metadata: {
           coordinatedServices: coordinatedResult.coordinatedServices,
           actionsExecuted: coordinatedResult.actionsExecuted,
           errors: coordinatedResult.errors,
-          duration: coordinatedResult.duration
-        }
+          duration: coordinatedResult.duration,
+        },
       });
 
       // Additional safety monitoring specific actions
       const positions = this.executionService.getActivePositions();
-      
+
       // Local emergency halt (fallback if coordination didn't handle it)
       const haltAction: SafetyAction = {
         id: `local_halt_${Date.now()}`,
@@ -514,7 +518,7 @@ export class RealTimeSafetyMonitoringService {
         haltAction.executed = true;
         haltAction.executedAt = new Date().toISOString();
         haltAction.result = "failed";
-        haltAction.details = `Local halt failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        haltAction.details = `Local halt failed: ${error instanceof Error ? error.message : "Unknown error"}`;
       }
 
       actions.push(haltAction);
@@ -523,9 +527,10 @@ export class RealTimeSafetyMonitoringService {
       const closeAction: SafetyAction = {
         id: `local_close_${Date.now()}`,
         type: "emergency_close",
-        description: positions.length > 0
-          ? `Local emergency close ${positions.length} positions (fallback)`
-          : "Local emergency close preventive (fallback)",
+        description:
+          positions.length > 0
+            ? `Local emergency close ${positions.length} positions (fallback)`
+            : "Local emergency close preventive (fallback)",
         executed: false,
       };
 
@@ -533,15 +538,17 @@ export class RealTimeSafetyMonitoringService {
         const closedCount = await this.executionService.emergencyCloseAll();
         closeAction.executed = true;
         closeAction.executedAt = new Date().toISOString();
-        closeAction.result = positions.length === 0 || closedCount === positions.length ? "success" : "partial";
-        closeAction.details = positions.length > 0
-          ? `Local close: ${closedCount}/${positions.length} positions`
-          : "No positions to close locally";
+        closeAction.result =
+          positions.length === 0 || closedCount === positions.length ? "success" : "partial";
+        closeAction.details =
+          positions.length > 0
+            ? `Local close: ${closedCount}/${positions.length} positions`
+            : "No positions to close locally";
       } catch (error) {
         closeAction.executed = true;
         closeAction.executedAt = new Date().toISOString();
         closeAction.result = "failed";
-        closeAction.details = `Local close failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        closeAction.details = `Local close failed: ${error instanceof Error ? error.message : "Unknown error"}`;
       }
 
       actions.push(closeAction);
@@ -552,27 +559,28 @@ export class RealTimeSafetyMonitoringService {
         severity: "critical",
         category: "system",
         title: "Coordinated Emergency Response Triggered",
-        message: `Coordinated emergency safety response activated: ${reason}. ${coordinatedResult.success ? 'Coordination successful' : 'Coordination partial/failed'}.`,
+        message: `Coordinated emergency safety response activated: ${reason}. ${coordinatedResult.success ? "Coordination successful" : "Coordination partial/failed"}.`,
         riskLevel: 95,
         source: "coordinated_emergency_response",
         autoActions: actions,
-        metadata: { 
-          reason, 
+        metadata: {
+          reason,
           actionsExecuted: actions.length,
           coordinationResult: coordinatedResult,
-          emergencyEvent
+          emergencyEvent,
         },
       });
 
-      console.log(`✅ Coordinated emergency response completed: ${coordinatedResult.success ? 'SUCCESS' : 'PARTIAL'} (${coordinatedResult.duration}ms)`);
+      console.log(
+        `✅ Coordinated emergency response completed: ${coordinatedResult.success ? "SUCCESS" : "PARTIAL"} (${coordinatedResult.duration}ms)`
+      );
       return actions;
-
     } catch (error) {
       console.error("🚨 Coordinated emergency response failed", {
         operation: "emergency_response",
         reason,
         actionsAttempted: actions.length,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
 
       const failedAction: SafetyAction = {
@@ -582,8 +590,8 @@ export class RealTimeSafetyMonitoringService {
         executed: true,
         executedAt: new Date().toISOString(),
         result: "failed",
-        details: `Coordinated emergency response failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        metadata: { originalReason: reason }
+        details: `Coordinated emergency response failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        metadata: { originalReason: reason },
       };
 
       actions.push(failedAction);
@@ -594,38 +602,50 @@ export class RealTimeSafetyMonitoringService {
   /**
    * FIXED: Determine emergency type based on reason for proper coordination
    */
-  private determineEmergencyType(reason: string): EmergencyStopEvent['type'] {
+  private determineEmergencyType(reason: string): EmergencyStopEvent["type"] {
     const lowerReason = reason.toLowerCase();
-    
-    if (lowerReason.includes('circuit') || lowerReason.includes('breaker')) {
-      return 'circuit_breaker_failure';
+
+    if (lowerReason.includes("circuit") || lowerReason.includes("breaker")) {
+      return "circuit_breaker_failure";
     }
-    if (lowerReason.includes('portfolio') || lowerReason.includes('drawdown') || lowerReason.includes('loss')) {
-      return 'portfolio_decline';
+    if (
+      lowerReason.includes("portfolio") ||
+      lowerReason.includes("drawdown") ||
+      lowerReason.includes("loss")
+    ) {
+      return "portfolio_decline";
     }
-    if (lowerReason.includes('manual') || lowerReason.includes('user')) {
-      return 'manual_trigger';
+    if (lowerReason.includes("manual") || lowerReason.includes("user")) {
+      return "manual_trigger";
     }
-    return 'system_failure';
+    return "system_failure";
   }
 
   /**
    * FIXED: Determine emergency severity for proper coordination
    */
-  private determineEmergencySeverity(reason: string): EmergencyStopEvent['severity'] {
+  private determineEmergencySeverity(reason: string): EmergencyStopEvent["severity"] {
     const lowerReason = reason.toLowerCase();
     const currentRiskScore = this.coreSafetyMonitoring.calculateOverallRiskScore();
-    
-    if (currentRiskScore > 90 || lowerReason.includes('critical') || lowerReason.includes('severe')) {
-      return 'CRITICAL';
+
+    if (
+      currentRiskScore > 90 ||
+      lowerReason.includes("critical") ||
+      lowerReason.includes("severe")
+    ) {
+      return "CRITICAL";
     }
-    if (currentRiskScore > 70 || lowerReason.includes('high') || lowerReason.includes('major')) {
-      return 'HIGH';
+    if (currentRiskScore > 70 || lowerReason.includes("high") || lowerReason.includes("major")) {
+      return "HIGH";
     }
-    if (currentRiskScore > 40 || lowerReason.includes('medium') || lowerReason.includes('moderate')) {
-      return 'MEDIUM';
+    if (
+      currentRiskScore > 40 ||
+      lowerReason.includes("medium") ||
+      lowerReason.includes("moderate")
+    ) {
+      return "MEDIUM";
     }
-    return 'LOW';
+    return "LOW";
   }
 
   /**
@@ -634,12 +654,12 @@ export class RealTimeSafetyMonitoringService {
    */
   public async emergencyStop(event: EmergencyStopEvent): Promise<void> {
     console.log(`🚨 Safety monitoring emergency stop triggered by coordinator: ${event.reason}`);
-    
+
     try {
       // Stop monitoring to prevent conflicts during emergency
       if (this.isMonitoringActive) {
         this.stopMonitoring();
-        console.log('⏹️ Safety monitoring stopped during emergency');
+        console.log("⏹️ Safety monitoring stopped during emergency");
       }
 
       // Force immediate risk assessment update
@@ -654,16 +674,16 @@ export class RealTimeSafetyMonitoringService {
         message: `Emergency stop executed by coordinator: ${event.reason}`,
         riskLevel: 95,
         source: "emergency_stop_coordinator",
-        metadata: { 
+        metadata: {
           emergencyEvent: event,
           triggeredBy: event.triggeredBy,
-          severity: event.severity
+          severity: event.severity,
         },
       });
 
-      console.log('✅ Safety monitoring emergency stop completed');
+      console.log("✅ Safety monitoring emergency stop completed");
     } catch (error) {
-      console.error('❌ Safety monitoring emergency stop failed:', error);
+      console.error("❌ Safety monitoring emergency stop failed:", error);
       throw error;
     }
   }

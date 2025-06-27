@@ -1,10 +1,10 @@
 /**
  * Pattern to Database Bridge Integration Tests - Main Entry Point
- * 
+ *
  * This file imports all the split test suites for the Pattern to Database Bridge.
  * The original large test file (1527 lines) has been refactored into smaller,
  * focused test files for better maintainability.
- * 
+ *
  * Test suites included:
  * - Event Integration: Basic event handling and database integration
  * - Pattern Filtering: Confidence thresholds, pattern types, risk filtering

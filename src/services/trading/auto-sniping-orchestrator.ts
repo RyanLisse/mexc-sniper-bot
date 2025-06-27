@@ -31,9 +31,9 @@ export { AutoSnipingOrchestrator } from "./orchestrator/core-orchestrator";
 // ============================================================================
 
 export { PatternProcessor } from "./orchestrator/pattern-processor";
-export { TradeExecutor } from "./orchestrator/trade-executor";
 export { PositionMonitor } from "./orchestrator/position-monitor";
 export { SafetyManager } from "./orchestrator/safety-manager";
+export { TradeExecutor } from "./orchestrator/trade-executor";
 
 // ============================================================================
 // Re-export Types and Schemas
@@ -41,11 +41,10 @@ export { SafetyManager } from "./orchestrator/safety-manager";
 
 export {
   type AutoSnipingConfig,
-  type AutoSnipingStatus,
-  type AutoSnipingMetrics,
-  
   // Validation schemas
   AutoSnipingConfigSchema,
+  type AutoSnipingMetrics,
+  type AutoSnipingStatus,
   AutoSnipingStatusSchema,
 } from "./orchestrator/types";
 
@@ -59,14 +58,18 @@ import type { AutoSnipingConfig } from "./orchestrator/types";
 /**
  * Get the singleton instance of the auto-sniping orchestrator
  */
-export function getAutoSnipingOrchestrator(config?: Partial<AutoSnipingConfig>): AutoSnipingOrchestrator {
+export function getAutoSnipingOrchestrator(
+  config?: Partial<AutoSnipingConfig>
+): AutoSnipingOrchestrator {
   return AutoSnipingOrchestrator.getInstance(config);
 }
 
 /**
  * Create a new auto-sniping orchestrator instance (not singleton)
  */
-export function createAutoSnipingOrchestrator(config?: Partial<AutoSnipingConfig>): AutoSnipingOrchestrator {
+export function createAutoSnipingOrchestrator(
+  config?: Partial<AutoSnipingConfig>
+): AutoSnipingOrchestrator {
   return new AutoSnipingOrchestrator(config);
 }
 
@@ -88,12 +91,12 @@ export function createAutoSnipingOrchestrator(config?: Partial<AutoSnipingConfig
  *
  * NEW USAGE (recommended for advanced users):
  * ```typescript
- * import { 
+ * import {
  *   AutoSnipingOrchestrator,
  *   PatternProcessor,
- *   TradeExecutor 
+ *   TradeExecutor
  * } from './auto-sniping-orchestrator';
- * 
+ *
  * const orchestrator = new AutoSnipingOrchestrator(config);
  * await orchestrator.startAutoSniping();
  * ```

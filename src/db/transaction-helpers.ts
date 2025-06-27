@@ -6,12 +6,12 @@
  */
 
 import { sql } from "drizzle-orm";
-import { db } from "./index";
 import { getLogger } from "../lib/error-type-utils";
+import { db } from "./index";
 
 export interface TransactionOptions {
   timeout?: number; // Timeout in milliseconds
-  isolationLevel?: 'READ_COMMITTED' | 'REPEATABLE_READ' | 'SERIALIZABLE';
+  isolationLevel?: "READ_COMMITTED" | "REPEATABLE_READ" | "SERIALIZABLE";
   retryCount?: number;
   onRollback?: (error: unknown) => void;
   onCommit?: () => void;
@@ -32,16 +32,16 @@ export async function withTransaction<T>(
 ): Promise<T> {
   const {
     timeout = 10000,
-    isolationLevel = 'READ_COMMITTED',
+    isolationLevel = "READ_COMMITTED",
     retryCount = 3,
     onRollback,
-    onCommit
+    onCommit,
   } = options;
 
   const context: TransactionContext = {
     isActive: false,
     startTime: Date.now(),
-    operations: []
+    operations: [],
   };
 
   let attempt = 0;
@@ -51,9 +51,9 @@ export async function withTransaction<T>(
     try {
       const result = await db.transaction(async (tx) => {
         context.isActive = true;
-        
+
         // Set isolation level if specified
-        if (isolationLevel !== 'READ_COMMITTED') {
+        if (isolationLevel !== "READ_COMMITTED") {
           await tx.execute(sql`SET TRANSACTION ISOLATION LEVEL ${sql.raw(isolationLevel)}`);
           context.operations.push(`SET_ISOLATION_${isolationLevel}`);
         }
@@ -64,9 +64,9 @@ export async function withTransaction<T>(
 
         // Execute the operation
         const operationResult = await operation(tx);
-        
-        context.operations.push('OPERATION_COMPLETED');
-        
+
+        context.operations.push("OPERATION_COMPLETED");
+
         // Call commit callback if provided
         if (onCommit) {
           onCommit();
@@ -77,7 +77,6 @@ export async function withTransaction<T>(
 
       context.isActive = false;
       return result;
-
     } catch (error) {
       context.isActive = false;
       lastError = error;
@@ -93,30 +92,27 @@ export async function withTransaction<T>(
 
       // If this is a serialization failure or deadlock, retry
       const errorMessage = error instanceof Error ? error.message : String(error);
-      const shouldRetry = 
-        errorMessage.includes('serialization failure') ||
-        errorMessage.includes('deadlock') ||
-        errorMessage.includes('could not serialize');
+      const shouldRetry =
+        errorMessage.includes("serialization failure") ||
+        errorMessage.includes("deadlock") ||
+        errorMessage.includes("could not serialize");
 
       if (!shouldRetry || attempt >= retryCount) {
         break;
       }
 
       // Wait before retry (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, attempt - 1)));
+      await new Promise((resolve) => setTimeout(resolve, 100 * 2 ** (attempt - 1)));
     }
   }
 
   // If we get here, all attempts failed
   const duration = Date.now() - context.startTime;
-  getLogger().error(
-    `[Transaction] Failed after ${attempt} attempts (${duration}ms)`,
-    {
-      error: lastError,
-      operations: context.operations,
-      duration
-    }
-  );
+  getLogger().error(`[Transaction] Failed after ${attempt} attempts (${duration}ms)`, {
+    error: lastError,
+    operations: context.operations,
+    duration,
+  });
 
   throw lastError;
 }
@@ -130,12 +126,12 @@ export async function withBatchTransaction<T>(
 ): Promise<T[]> {
   return withTransaction(async (tx) => {
     const results: T[] = [];
-    
+
     for (const operation of operations) {
       const result = await operation(tx);
       results.push(result);
     }
-    
+
     return results;
   }, options);
 }
@@ -152,15 +148,15 @@ export async function safeTransaction<T>(
       timeout: 5000, // Shorter timeout for safety
       retryCount: 1, // No retries for safety
       onRollback: (error) => {
-        getLogger().warn('[SafeTransaction] Rollback triggered:', error);
-      }
+        getLogger().warn("[SafeTransaction] Rollback triggered:", error);
+      },
     });
   } finally {
     if (cleanup) {
       try {
         await cleanup();
       } catch (cleanupError) {
-        getLogger().warn('[SafeTransaction] Cleanup failed:', cleanupError);
+        getLogger().warn("[SafeTransaction] Cleanup failed:", cleanupError);
       }
     }
   }
@@ -169,16 +165,14 @@ export async function safeTransaction<T>(
 /**
  * Test transaction wrapper for unit tests
  */
-export async function testTransaction<T>(
-  operation: (tx: any) => Promise<T>
-): Promise<T> {
+export async function testTransaction<T>(operation: (tx: any) => Promise<T>): Promise<T> {
   return withTransaction(operation, {
     timeout: 2000, // Short timeout for tests
-    isolationLevel: 'READ_COMMITTED', // Consistent for tests
+    isolationLevel: "READ_COMMITTED", // Consistent for tests
     retryCount: 1, // No retries in tests
     onRollback: (error) => {
-      console.warn('[TestTransaction] Test transaction rolled back:', error);
-    }
+      console.warn("[TestTransaction] Test transaction rolled back:", error);
+    },
   });
 }
 
@@ -206,7 +200,7 @@ export async function getTransactionInfo(): Promise<{
   try {
     const [txInfo, isoInfo] = await Promise.all([
       db.execute(sql`SELECT txid_current_if_assigned() AS txid`),
-      db.execute(sql`SHOW transaction_isolation`)
+      db.execute(sql`SHOW transaction_isolation`),
     ]);
 
     const txid = (txInfo as any)[0]?.txid;
@@ -216,12 +210,12 @@ export async function getTransactionInfo(): Promise<{
       inTransaction: txid != null,
       transactionId: txid ? String(txid) : undefined,
       isolationLevel,
-      readOnly: false // Would need additional query to determine
+      readOnly: false, // Would need additional query to determine
     };
   } catch (error) {
-    getLogger().warn('[TransactionInfo] Failed to get transaction info:', error);
+    getLogger().warn("[TransactionInfo] Failed to get transaction info:", error);
     return {
-      inTransaction: false
+      inTransaction: false,
     };
   }
 }
@@ -241,8 +235,8 @@ export async function emergencyTransactionCleanup(): Promise<void> {
         AND pid != pg_backend_pid()
     `);
 
-    getLogger().info('[TransactionCleanup] Emergency transaction cleanup completed');
+    getLogger().info("[TransactionCleanup] Emergency transaction cleanup completed");
   } catch (error) {
-    getLogger().warn('[TransactionCleanup] Emergency cleanup failed:', error);
+    getLogger().warn("[TransactionCleanup] Emergency cleanup failed:", error);
   }
 }

@@ -22,16 +22,18 @@
 // Re-export Main Execution Engine for Backward Compatibility
 // ============================================================================
 
-export { AutoSnipingExecutionEngine as OptimizedAutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
-export { AutoSnipingExecutionEngine as AutoSnipingExecutionService } from "./auto-sniping/execution-engine";
-export { AutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
+export {
+  AutoSnipingExecutionEngine as OptimizedAutoSnipingExecutionEngine,
+  AutoSnipingExecutionEngine as AutoSnipingExecutionService,
+  AutoSnipingExecutionEngine,
+} from "./auto-sniping/execution-engine";
 
 // ============================================================================
 // Re-export Supporting Modules
 // ============================================================================
 
-export { AutoSnipingConfigManager } from "./auto-sniping/config-manager";
 export { AutoSnipingAlertManager } from "./auto-sniping/alert-manager";
+export { AutoSnipingConfigManager } from "./auto-sniping/config-manager";
 
 // ============================================================================
 // Re-export Types and Schemas
@@ -39,27 +41,26 @@ export { AutoSnipingAlertManager } from "./auto-sniping/alert-manager";
 
 export {
   type AutoSnipingConfig,
-  type ExecutionPosition,
-  type ExecutionStats,
   type ExecutionAlert,
+  type ExecutionPosition,
   type ExecutionResult,
+  type ExecutionStats,
   type PatternType,
-  type TradingOpportunity,
   type SystemHealth,
-  
+  type TradingOpportunity,
   // Validation functions
   validateAutoSnipingConfig,
+  validateExecutionAlert,
   validateExecutionPosition,
   validateExecutionStats,
-  validateExecutionAlert,
 } from "./auto-sniping/schemas";
 
 // ============================================================================
 // Factory Functions
 // ============================================================================
 
-import { AutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
 import { AutoSnipingConfigManager } from "./auto-sniping/config-manager";
+import { AutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
 import type { AutoSnipingConfig } from "./auto-sniping/schemas";
 
 /**

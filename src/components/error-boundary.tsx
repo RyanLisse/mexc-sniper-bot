@@ -391,12 +391,12 @@ export function AsyncErrorBoundary({ children, fallback, ...props }: ErrorBounda
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => {
                     if (typeof window !== "undefined") {
                       window.location.reload();
                     }
-                  }} 
+                  }}
                   size="sm"
                 >
                   Refresh Page
@@ -421,14 +421,18 @@ export function SSRSafeErrorBoundary({ children, fallback, ...props }: ErrorBoun
       {...props}
       onError={(error, errorInfo) => {
         // Enhanced logging for hydration errors
-        if (error.message.includes("hydration") || error.message.includes("client") || error.message.includes("server")) {
+        if (
+          error.message.includes("hydration") ||
+          error.message.includes("client") ||
+          error.message.includes("server")
+        ) {
           console.warn("[SSR-Safe Error Boundary] Potential hydration mismatch:", {
             error: error.message,
             stack: error.stack,
             componentStack: errorInfo.componentStack,
           });
         }
-        
+
         // Call parent error handler if provided
         props.onError?.(error, errorInfo);
       }}
@@ -446,12 +450,12 @@ export function SSRSafeErrorBoundary({ children, fallback, ...props }: ErrorBoun
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button 
+                <Button
                   onClick={() => {
                     if (typeof window !== "undefined") {
                       window.location.reload();
                     }
-                  }} 
+                  }}
                   size="sm"
                 >
                   Reload Page

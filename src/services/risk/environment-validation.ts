@@ -381,24 +381,24 @@ export class EnvironmentValidation {
 
     categories.forEach((category) => {
       template += `# ${category.toUpperCase()} SETTINGS\n`;
-      
+
       const vars = ENVIRONMENT_VARIABLES.filter((v) => v.category === category);
       vars.forEach((envVar) => {
         template += `# ${envVar.description}\n`;
-        
+
         if (envVar.required) {
           template += `# REQUIRED\n`;
         }
-        
+
         if (envVar.example) {
           template += `# Example: ${envVar.example}\n`;
         }
-        
+
         if (envVar.warningIfMissing) {
           template += `# Note: ${envVar.warningIfMissing}\n`;
         }
-        
-        const value = envVar.defaultValue || (envVar.example || "");
+
+        const value = envVar.defaultValue || envVar.example || "";
         template += `${envVar.key}=${value}\n\n`;
       });
     });

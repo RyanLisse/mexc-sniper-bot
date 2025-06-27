@@ -1,6 +1,6 @@
 /**
  * Pattern to Database Bridge - Deduplication Tests
- * 
+ *
  * Tests deduplication functionality to prevent duplicate patterns
  * and database-level duplicate entries.
  */
@@ -11,11 +11,11 @@ import type { PatternMatch } from "../../../core/pattern-detection/interfaces";
 import { db } from "../../../db";
 import { snipeTargets } from "../../../db/schema";
 import {
-  TestContext,
   cleanupAllTestData,
   cleanupTestRecords,
   createTestContext,
   setupTestData,
+  type TestContext,
   verifyDatabaseConnection,
 } from "./test-setup";
 

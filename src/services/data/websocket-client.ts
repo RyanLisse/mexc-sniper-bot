@@ -360,7 +360,7 @@ export class WebSocketClientService extends EventEmitter {
 
     if (this.ws) {
       // Remove event listeners safely (removeAllListeners may not exist in all WebSocket implementations)
-      if (typeof (this.ws as any).removeAllListeners === 'function') {
+      if (typeof (this.ws as any).removeAllListeners === "function") {
         (this.ws as any).removeAllListeners();
       } else {
         // Manual cleanup for standard WebSocket API
@@ -369,7 +369,7 @@ export class WebSocketClientService extends EventEmitter {
         this.ws.onclose = null;
         this.ws.onerror = null;
       }
-      
+
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
         this.ws.close(1000, "Client disconnect");
       }
@@ -581,11 +581,11 @@ export class WebSocketClientService extends EventEmitter {
     this.stopHeartbeat();
     this.setState("disconnected");
     this.metrics.disconnectedAt = Date.now();
-    
+
     // Clean up WebSocket reference
     if (this.ws) {
       // Remove event listeners safely (removeAllListeners may not exist in all WebSocket implementations)
-      if (typeof (this.ws as any).removeAllListeners === 'function') {
+      if (typeof (this.ws as any).removeAllListeners === "function") {
         (this.ws as any).removeAllListeners();
       } else {
         // Manual cleanup for standard WebSocket API

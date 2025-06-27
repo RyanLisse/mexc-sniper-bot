@@ -9,27 +9,27 @@ import { toSafeError } from "../../../lib/error-type-utils";
 import type {
   ModuleContext,
   ModuleState,
-  PatternMatch,
   OpportunityAssessment,
+  PatternMatch,
   ServiceResponse,
 } from "./types";
 
 export class PatternProcessor {
   private context: ModuleContext;
   private state: ModuleState;
-  
+
   // Pattern detection state
   private lastDetectionTime: Date | null = null;
   private detectedPatterns: PatternMatch[] = [];
   private processedSymbols = new Set<string>();
-  
+
   // Pattern scoring weights
   private readonly SCORING_WEIGHTS = {
     volumeIncrease: 0.25,
-    priceMovement: 0.30,
-    liquidityDepth: 0.20,
+    priceMovement: 0.3,
+    liquidityDepth: 0.2,
     timeBasedFactors: 0.15,
-    technicalIndicators: 0.10,
+    technicalIndicators: 0.1,
   };
 
   constructor(context: ModuleContext) {
@@ -81,13 +81,13 @@ export class PatternProcessor {
   async getHealthStatus(): Promise<"operational" | "degraded" | "offline"> {
     if (!this.state.isInitialized) return "offline";
     if (!this.state.isHealthy) return "degraded";
-    
+
     // Check if we've detected patterns recently
-    if (this.lastDetectionTime && 
-        Date.now() - this.lastDetectionTime.getTime() > 300000) { // 5 minutes
+    if (this.lastDetectionTime && Date.now() - this.lastDetectionTime.getTime() > 300000) {
+      // 5 minutes
       return "degraded";
     }
-    
+
     return "operational";
   }
 
@@ -96,10 +96,10 @@ export class PatternProcessor {
    */
   async detectPatterns(): Promise<PatternMatch[]> {
     const startTime = Date.now();
-    
+
     try {
       this.context.logger.debug("Starting pattern detection cycle");
-      
+
       if (!this.state.isInitialized) {
         throw new Error("Pattern processor not initialized");
       }
@@ -107,29 +107,32 @@ export class PatternProcessor {
       // Get available trading symbols (simulated for now)
       const symbols = await this.getAvailableSymbols();
       const patterns: PatternMatch[] = [];
-      
+
       for (const symbol of symbols) {
         try {
           const marketData = await this.getMarketData(symbol);
           const pattern = await this.analyzePattern(symbol, marketData);
-          
-          if (pattern && pattern.confidence >= 50) { // Minimum confidence threshold
+
+          if (pattern && pattern.confidence >= 50) {
+            // Minimum confidence threshold
             patterns.push(pattern);
             this.context.eventEmitter.emit("pattern_detected", pattern);
           }
         } catch (error) {
-          this.context.logger.debug(`Pattern analysis failed for ${symbol}: ${toSafeError(error).message}`);
+          this.context.logger.debug(
+            `Pattern analysis failed for ${symbol}: ${toSafeError(error).message}`
+          );
         }
       }
 
       this.detectedPatterns = patterns;
       this.lastDetectionTime = new Date();
       this.state.lastActivity = new Date();
-      
+
       // Update metrics
       this.state.metrics.totalPatternsDetected += patterns.length;
       this.state.metrics.processingTime = Date.now() - startTime;
-      
+
       if (patterns.length > 0) {
         const avgConfidence = patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length;
         this.state.metrics.averageConfidence = avgConfidence;
@@ -162,7 +165,7 @@ export class PatternProcessor {
 
       const marketData = await this.getMarketData(symbol);
       const pattern = await this.analyzePattern(symbol, marketData);
-      
+
       if (pattern) {
         this.processedSymbols.add(symbol);
         // Remove from processed set after some time
@@ -171,7 +174,9 @@ export class PatternProcessor {
 
       return pattern;
     } catch (error) {
-      this.context.logger.error(`Failed to analyze symbol ${symbol}: ${toSafeError(error).message}`);
+      this.context.logger.error(
+        `Failed to analyze symbol ${symbol}: ${toSafeError(error).message}`
+      );
       return null;
     }
   }
@@ -182,7 +187,7 @@ export class PatternProcessor {
   async assessOpportunity(pattern: PatternMatch): Promise<OpportunityAssessment> {
     try {
       this.context.logger.debug("Assessing trading opportunity", { pattern });
-      
+
       const reasons: string[] = [];
       let confidence = pattern.confidence;
       let recommendedAction: "execute" | "skip" | "wait" = "skip";
@@ -249,8 +254,10 @@ export class PatternProcessor {
         reasons,
       };
     } catch (error) {
-      this.context.logger.error(`Failed to assess opportunity for ${pattern.symbol}: ${toSafeError(error).message}`);
-      
+      this.context.logger.error(
+        `Failed to assess opportunity for ${pattern.symbol}: ${toSafeError(error).message}`
+      );
+
       return {
         isValid: false,
         confidence: 0,
@@ -290,10 +297,18 @@ export class PatternProcessor {
   private async getAvailableSymbols(): Promise<string[]> {
     // In a real implementation, this would fetch from MEXC API
     const symbols = [
-      "BTCUSDT", "ETHUSDT", "BNBUSDT", "ADAUSDT", "XRPUSDT",
-      "SOLUSDT", "DOTUSDT", "LINKUSDT", "LTCUSDT", "BCHUSDT",
+      "BTCUSDT",
+      "ETHUSDT",
+      "BNBUSDT",
+      "ADAUSDT",
+      "XRPUSDT",
+      "SOLUSDT",
+      "DOTUSDT",
+      "LINKUSDT",
+      "LTCUSDT",
+      "BCHUSDT",
     ];
-    
+
     // Shuffle to vary analysis order
     return symbols.sort(() => Math.random() - 0.5);
   }
@@ -305,7 +320,7 @@ export class PatternProcessor {
     // Simulated market data - in real implementation would call MEXC API
     const basePrice = 100 + Math.random() * 1000;
     const volumeMultiplier = 0.5 + Math.random() * 2; // 0.5x to 2.5x normal volume
-    
+
     return {
       symbol,
       price: basePrice,
@@ -336,17 +351,17 @@ export class PatternProcessor {
 
       // Volume analysis
       if (marketData.volumeChange24h > 50) {
-        confidence += 15 * this.SCORING_WEIGHTS.volumeIncrease / 0.25;
+        confidence += (15 * this.SCORING_WEIGHTS.volumeIncrease) / 0.25;
         factors.push("High volume increase");
       } else if (marketData.volumeChange24h > 20) {
-        confidence += 8 * this.SCORING_WEIGHTS.volumeIncrease / 0.25;
+        confidence += (8 * this.SCORING_WEIGHTS.volumeIncrease) / 0.25;
         factors.push("Moderate volume increase");
       }
 
       // Price movement analysis
       const priceChange = Math.abs(marketData.priceChange24h);
       if (priceChange > 5 && priceChange < 15) {
-        confidence += 12 * this.SCORING_WEIGHTS.priceMovement / 0.30;
+        confidence += (12 * this.SCORING_WEIGHTS.priceMovement) / 0.3;
         factors.push("Optimal price movement range");
       } else if (priceChange > 15) {
         confidence -= 5; // Too volatile
@@ -356,7 +371,7 @@ export class PatternProcessor {
       // Liquidity depth analysis
       const totalDepth = marketData.orderBookDepth.bids + marketData.orderBookDepth.asks;
       if (totalDepth > 150000) {
-        confidence += 10 * this.SCORING_WEIGHTS.liquidityDepth / 0.20;
+        confidence += (10 * this.SCORING_WEIGHTS.liquidityDepth) / 0.2;
         factors.push("Good liquidity depth");
       } else if (totalDepth < 50000) {
         confidence -= 8;
@@ -365,12 +380,12 @@ export class PatternProcessor {
 
       // Technical indicators
       if (marketData.technicalIndicators.rsi > 40 && marketData.technicalIndicators.rsi < 60) {
-        confidence += 8 * this.SCORING_WEIGHTS.technicalIndicators / 0.10;
+        confidence += (8 * this.SCORING_WEIGHTS.technicalIndicators) / 0.1;
         factors.push("Balanced RSI");
       }
 
       if (marketData.technicalIndicators.macdSignal === "bullish") {
-        confidence += 5 * this.SCORING_WEIGHTS.technicalIndicators / 0.10;
+        confidence += (5 * this.SCORING_WEIGHTS.technicalIndicators) / 0.1;
         factors.push("Bullish MACD signal");
       }
 
@@ -383,7 +398,7 @@ export class PatternProcessor {
       // Time-based factors
       const hour = new Date().getHours();
       if (hour >= 9 && hour <= 16) {
-        confidence += 5 * this.SCORING_WEIGHTS.timeBasedFactors / 0.15;
+        confidence += (5 * this.SCORING_WEIGHTS.timeBasedFactors) / 0.15;
         factors.push("Active trading hours");
       }
 
@@ -435,7 +450,9 @@ export class PatternProcessor {
 
       return pattern;
     } catch (error) {
-      this.context.logger.error(`Pattern analysis failed for ${symbol}: ${toSafeError(error).message}`);
+      this.context.logger.error(
+        `Pattern analysis failed for ${symbol}: ${toSafeError(error).message}`
+      );
       return null;
     }
   }

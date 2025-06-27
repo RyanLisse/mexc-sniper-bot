@@ -135,11 +135,20 @@ export class RiskAssessment {
         timestamp: new Date().toISOString(),
       };
 
-      console.info("Comprehensive risk assessment completed", { operation: "comprehensive_assessment", overallRiskScore, riskStatus, recommendationsCount: priorityRecommendations.length });
+      console.info("Comprehensive risk assessment completed", {
+        operation: "comprehensive_assessment",
+        overallRiskScore,
+        riskStatus,
+        recommendationsCount: priorityRecommendations.length,
+      });
 
       return assessment;
     } catch (error) {
-      console.error("Comprehensive risk assessment failed", { operation: "comprehensive_assessment" }, error);
+      console.error(
+        "Comprehensive risk assessment failed",
+        { operation: "comprehensive_assessment" },
+        error
+      );
 
       throw error;
     }
@@ -193,7 +202,11 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      console.error("Portfolio risk assessment failed", { operation: "assess_portfolio_risk" }, error);
+      console.error(
+        "Portfolio risk assessment failed",
+        { operation: "assess_portfolio_risk" },
+        error
+      );
       throw error;
     }
   }
@@ -205,13 +218,13 @@ export class RiskAssessment {
     try {
       const positions = this.config.executionService.getActivePositions();
       const config = this.config.executionService.getConfig();
-      
+
       // Mock execution stats since getExecutionReport doesn't exist
       const mockStats = {
         successRate: 0.85,
         currentDrawdown: 5.2,
         averageSlippage: 0.1,
-        consecutiveLosses: 1
+        consecutiveLosses: 1,
       };
 
       const successRate = mockStats.successRate;
@@ -242,7 +255,11 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      console.error("Performance risk assessment failed", { operation: "assess_performance_risk" }, error);
+      console.error(
+        "Performance risk assessment failed",
+        { operation: "assess_performance_risk" },
+        error
+      );
       throw error;
     }
   }
@@ -314,9 +331,17 @@ export class RiskAssessment {
           },
         };
       } catch (error) {
-        console.warn("Failed to get execution report for system risk assessment", { error: error.message });
+        console.warn("Failed to get execution report for system risk assessment", {
+          error: error.message,
+        });
         executionReport = {
-          stats: { currentDrawdown: 0, maxDrawdown: 0, successRate: 75, averageSlippage: 0.1, totalPnl: "0" },
+          stats: {
+            currentDrawdown: 0,
+            maxDrawdown: 0,
+            successRate: 75,
+            averageSlippage: 0.1,
+            totalPnl: "0",
+          },
           activePositions: [],
           recentExecutions: [],
           systemHealth: { apiConnection: true },
@@ -325,7 +350,7 @@ export class RiskAssessment {
 
       // Handle pattern monitoring with fallback
       try {
-        if (typeof this.config.patternMonitoring.getMonitoringReport === 'function') {
+        if (typeof this.config.patternMonitoring.getMonitoringReport === "function") {
           patternReport = await this.config.patternMonitoring.getMonitoringReport();
         } else {
           patternReport = {
@@ -334,7 +359,9 @@ export class RiskAssessment {
           };
         }
       } catch (error) {
-        console.warn("Failed to get pattern monitoring report for system risk assessment", { error: error.message });
+        console.warn("Failed to get pattern monitoring report for system risk assessment", {
+          error: error.message,
+        });
         patternReport = {
           status: "healthy",
           stats: { averageConfidence: 80, consecutiveErrors: 0, totalPatternsDetected: 100 },
@@ -343,7 +370,7 @@ export class RiskAssessment {
 
       // Handle emergency system with fallback
       try {
-        if (typeof this.config.emergencySystem.performSystemHealthCheck === 'function') {
+        if (typeof this.config.emergencySystem.performSystemHealthCheck === "function") {
           emergencyHealth = await this.config.emergencySystem.performSystemHealthCheck();
         } else {
           emergencyHealth = {
@@ -441,11 +468,16 @@ export class RiskAssessment {
     return maxConcentration;
   }
 
-  private calculateDiversificationMetrics(positions: ExecutionPosition[]): { largestPositionRatio: number; diversificationScore: number } {
+  private calculateDiversificationMetrics(positions: ExecutionPosition[]): {
+    largestPositionRatio: number;
+    diversificationScore: number;
+  } {
     if (positions.length === 0) return { largestPositionRatio: 0, diversificationScore: 100 };
 
     const totalValue = this.calculatePortfolioValue(positions);
-    const positionValues = positions.map(pos => Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice));
+    const positionValues = positions.map(
+      (pos) => Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice)
+    );
     const largestPosition = Math.max(...positionValues);
     const largestPositionRatio = (largestPosition / totalValue) * 100;
 
@@ -481,77 +513,161 @@ export class RiskAssessment {
   }
 
   // Consolidated rating calculations
-  private calculatePerformanceRating(successRate: number, consecutiveLosses: number, averageSlippage: number, drawdownRisk: number): "excellent" | "good" | "concerning" | "poor" {
+  private calculatePerformanceRating(
+    successRate: number,
+    consecutiveLosses: number,
+    averageSlippage: number,
+    drawdownRisk: number
+  ): "excellent" | "good" | "concerning" | "poor" {
     const t = this.config.configuration.thresholds;
-    if (successRate >= t.minSuccessRatePercentage * 1.2 && consecutiveLosses <= t.maxConsecutiveLosses * 0.5 && 
-        averageSlippage <= t.maxSlippagePercentage * 0.5 && drawdownRisk <= t.maxDrawdownPercentage * 0.3) return "excellent";
-    if (successRate >= t.minSuccessRatePercentage && consecutiveLosses <= t.maxConsecutiveLosses && 
-        averageSlippage <= t.maxSlippagePercentage && drawdownRisk <= t.maxDrawdownPercentage * 0.7) return "good";
-    if (successRate >= t.minSuccessRatePercentage * 0.8 && consecutiveLosses <= t.maxConsecutiveLosses * 1.5 && 
-        drawdownRisk <= t.maxDrawdownPercentage) return "concerning";
+    if (
+      successRate >= t.minSuccessRatePercentage * 1.2 &&
+      consecutiveLosses <= t.maxConsecutiveLosses * 0.5 &&
+      averageSlippage <= t.maxSlippagePercentage * 0.5 &&
+      drawdownRisk <= t.maxDrawdownPercentage * 0.3
+    )
+      return "excellent";
+    if (
+      successRate >= t.minSuccessRatePercentage &&
+      consecutiveLosses <= t.maxConsecutiveLosses &&
+      averageSlippage <= t.maxSlippagePercentage &&
+      drawdownRisk <= t.maxDrawdownPercentage * 0.7
+    )
+      return "good";
+    if (
+      successRate >= t.minSuccessRatePercentage * 0.8 &&
+      consecutiveLosses <= t.maxConsecutiveLosses * 1.5 &&
+      drawdownRisk <= t.maxDrawdownPercentage
+    )
+      return "concerning";
     return "poor";
   }
 
-  private calculatePatternReliability(patternAccuracy: number, detectionFailures: number, falsePositiveRate: number): "high" | "medium" | "low" | "unreliable" {
+  private calculatePatternReliability(
+    patternAccuracy: number,
+    detectionFailures: number,
+    falsePositiveRate: number
+  ): "high" | "medium" | "low" | "unreliable" {
     const t = this.config.configuration.thresholds;
-    if (patternAccuracy >= t.minPatternConfidence * 1.2 && detectionFailures <= t.maxPatternDetectionFailures * 0.5 && falsePositiveRate <= 5) return "high";
-    if (patternAccuracy >= t.minPatternConfidence && detectionFailures <= t.maxPatternDetectionFailures && falsePositiveRate <= 15) return "medium";
-    if (patternAccuracy >= t.minPatternConfidence * 0.8 && detectionFailures <= t.maxPatternDetectionFailures * 2 && falsePositiveRate <= 30) return "low";
+    if (
+      patternAccuracy >= t.minPatternConfidence * 1.2 &&
+      detectionFailures <= t.maxPatternDetectionFailures * 0.5 &&
+      falsePositiveRate <= 5
+    )
+      return "high";
+    if (
+      patternAccuracy >= t.minPatternConfidence &&
+      detectionFailures <= t.maxPatternDetectionFailures &&
+      falsePositiveRate <= 15
+    )
+      return "medium";
+    if (
+      patternAccuracy >= t.minPatternConfidence * 0.8 &&
+      detectionFailures <= t.maxPatternDetectionFailures * 2 &&
+      falsePositiveRate <= 30
+    )
+      return "low";
     return "unreliable";
   }
 
-  private calculateOverallSystemHealth(executionService: boolean, patternMonitoring: boolean, emergencySystem: boolean, mexcConnectivity: boolean): number {
+  private calculateOverallSystemHealth(
+    executionService: boolean,
+    patternMonitoring: boolean,
+    emergencySystem: boolean,
+    mexcConnectivity: boolean
+  ): number {
     const components = [executionService, patternMonitoring, emergencySystem, mexcConnectivity];
     return (components.filter(Boolean).length / components.length) * 100;
   }
 
-  private calculateConnectivityStatus(overallHealth: number, apiLatency: number, apiSuccessRate: number): "excellent" | "good" | "degraded" | "poor" {
+  private calculateConnectivityStatus(
+    overallHealth: number,
+    apiLatency: number,
+    apiSuccessRate: number
+  ): "excellent" | "good" | "degraded" | "poor" {
     const t = this.config.configuration.thresholds;
-    if (overallHealth >= 95 && apiLatency <= t.maxApiLatencyMs * 0.5 && apiSuccessRate >= t.minApiSuccessRate) return "excellent";
-    if (overallHealth >= 80 && apiLatency <= t.maxApiLatencyMs && apiSuccessRate >= t.minApiSuccessRate * 0.9) return "good";
+    if (
+      overallHealth >= 95 &&
+      apiLatency <= t.maxApiLatencyMs * 0.5 &&
+      apiSuccessRate >= t.minApiSuccessRate
+    )
+      return "excellent";
+    if (
+      overallHealth >= 80 &&
+      apiLatency <= t.maxApiLatencyMs &&
+      apiSuccessRate >= t.minApiSuccessRate * 0.9
+    )
+      return "good";
     if (overallHealth >= 60 && apiSuccessRate >= t.minApiSuccessRate * 0.8) return "degraded";
     return "poor";
   }
 
   // Consolidated risk score calculations
-  private calculateOverallRiskScore(portfolio: PortfolioRiskAssessment, performance: PerformanceRiskAssessment, pattern: PatternRiskAssessment, system: SystemRiskAssessment): number {
+  private calculateOverallRiskScore(
+    portfolio: PortfolioRiskAssessment,
+    performance: PerformanceRiskAssessment,
+    pattern: PatternRiskAssessment,
+    system: SystemRiskAssessment
+  ): number {
     const weights = { portfolio: 0.3, performance: 0.3, pattern: 0.2, system: 0.2 };
     const performanceScore = this.convertPerformanceToScore(performance.performanceRating);
     const patternScore = this.convertPatternReliabilityToScore(pattern.patternReliability);
     const systemScore = this.convertConnectivityToScore(system.connectivityStatus);
-    
-    const overallScore = portfolio.riskScore * weights.portfolio + performanceScore * weights.performance + patternScore * weights.pattern + systemScore * weights.system;
+
+    const overallScore =
+      portfolio.riskScore * weights.portfolio +
+      performanceScore * weights.performance +
+      patternScore * weights.pattern +
+      systemScore * weights.system;
     return Math.min(100, Math.max(0, overallScore));
   }
 
-  private convertPerformanceToScore(rating: PerformanceRiskAssessment["performanceRating"]): number {
+  private convertPerformanceToScore(
+    rating: PerformanceRiskAssessment["performanceRating"]
+  ): number {
     switch (rating) {
-      case "excellent": return 10;
-      case "good": return 30;
-      case "concerning": return 60;
-      case "poor": return 90;
+      case "excellent":
+        return 10;
+      case "good":
+        return 30;
+      case "concerning":
+        return 60;
+      case "poor":
+        return 90;
     }
   }
 
-  private convertPatternReliabilityToScore(reliability: PatternRiskAssessment["patternReliability"]): number {
+  private convertPatternReliabilityToScore(
+    reliability: PatternRiskAssessment["patternReliability"]
+  ): number {
     switch (reliability) {
-      case "high": return 10;
-      case "medium": return 30;
-      case "low": return 60;
-      case "unreliable": return 90;
+      case "high":
+        return 10;
+      case "medium":
+        return 30;
+      case "low":
+        return 60;
+      case "unreliable":
+        return 90;
     }
   }
 
   private convertConnectivityToScore(status: SystemRiskAssessment["connectivityStatus"]): number {
     switch (status) {
-      case "excellent": return 10;
-      case "good": return 30;
-      case "degraded": return 60;
-      case "poor": return 90;
+      case "excellent":
+        return 10;
+      case "good":
+        return 30;
+      case "degraded":
+        return 60;
+      case "poor":
+        return 90;
     }
   }
 
-  private determineRiskStatus(overallRiskScore: number): "safe" | "warning" | "critical" | "emergency" {
+  private determineRiskStatus(
+    overallRiskScore: number
+  ): "safe" | "warning" | "critical" | "emergency" {
     if (overallRiskScore < 25) return "safe";
     if (overallRiskScore < 50) return "warning";
     if (overallRiskScore < 75) return "critical";
@@ -559,58 +675,106 @@ export class RiskAssessment {
   }
 
   // Consolidated recommendation generation
-  private generatePortfolioRecommendations(concentrationRisk: number, diversificationScore: number, positionCount: number, largestPositionRatio: number): string[] {
+  private generatePortfolioRecommendations(
+    concentrationRisk: number,
+    diversificationScore: number,
+    positionCount: number,
+    largestPositionRatio: number
+  ): string[] {
     const recs: string[] = [];
-    if (concentrationRisk > 50) recs.push("High concentration risk - diversify across more symbols");
-    if (diversificationScore < 60) recs.push("Poor diversification - increase positions or rebalance");
-    if (positionCount < 3) recs.push("Consider increasing position count for better risk distribution");
-    if (largestPositionRatio > 25) recs.push("Largest position too dominant - reduce position size");
+    if (concentrationRisk > 50)
+      recs.push("High concentration risk - diversify across more symbols");
+    if (diversificationScore < 60)
+      recs.push("Poor diversification - increase positions or rebalance");
+    if (positionCount < 3)
+      recs.push("Consider increasing position count for better risk distribution");
+    if (largestPositionRatio > 25)
+      recs.push("Largest position too dominant - reduce position size");
     return recs;
   }
 
-  private generatePerformanceRecommendations(successRate: number, consecutiveLosses: number, averageSlippage: number, drawdownRisk: number): string[] {
+  private generatePerformanceRecommendations(
+    successRate: number,
+    consecutiveLosses: number,
+    averageSlippage: number,
+    drawdownRisk: number
+  ): string[] {
     const recs: string[] = [];
     const t = this.config.configuration.thresholds;
-    if (successRate < t.minSuccessRatePercentage) recs.push("Low success rate - review strategy and entry criteria");
-    if (consecutiveLosses > t.maxConsecutiveLosses * 0.7) recs.push("High consecutive losses - reduce positions or pause trading");
-    if (averageSlippage > t.maxSlippagePercentage * 0.7) recs.push("High slippage - review execution timing and liquidity");
-    if (drawdownRisk > t.maxDrawdownPercentage * 0.5) recs.push("Elevated drawdown risk - implement stricter controls");
+    if (successRate < t.minSuccessRatePercentage)
+      recs.push("Low success rate - review strategy and entry criteria");
+    if (consecutiveLosses > t.maxConsecutiveLosses * 0.7)
+      recs.push("High consecutive losses - reduce positions or pause trading");
+    if (averageSlippage > t.maxSlippagePercentage * 0.7)
+      recs.push("High slippage - review execution timing and liquidity");
+    if (drawdownRisk > t.maxDrawdownPercentage * 0.5)
+      recs.push("Elevated drawdown risk - implement stricter controls");
     return recs;
   }
 
-  private generatePatternRecommendations(patternAccuracy: number, detectionFailures: number, falsePositiveRate: number): string[] {
+  private generatePatternRecommendations(
+    patternAccuracy: number,
+    detectionFailures: number,
+    falsePositiveRate: number
+  ): string[] {
     const recs: string[] = [];
     const t = this.config.configuration.thresholds;
-    if (patternAccuracy < t.minPatternConfidence) recs.push("Low pattern confidence - review detection parameters");
-    if (detectionFailures > t.maxPatternDetectionFailures * 0.7) recs.push("High detection failures - check monitoring system health");
+    if (patternAccuracy < t.minPatternConfidence)
+      recs.push("Low pattern confidence - review detection parameters");
+    if (detectionFailures > t.maxPatternDetectionFailures * 0.7)
+      recs.push("High detection failures - check monitoring system health");
     if (falsePositiveRate > 20) recs.push("High false positive rate - refine recognition criteria");
     return recs;
   }
 
-  private generateSystemRecommendations(systemHealth: SystemHealth, apiLatency: number, apiSuccessRate: number, memoryUsage: number): string[] {
+  private generateSystemRecommendations(
+    systemHealth: SystemHealth,
+    apiLatency: number,
+    apiSuccessRate: number,
+    memoryUsage: number
+  ): string[] {
     const recs: string[] = [];
     const t = this.config.configuration.thresholds;
     if (systemHealth.overallHealth < 80) recs.push("System health degraded - check service status");
-    if (apiLatency > t.maxApiLatencyMs * 0.7) recs.push("High API latency - check connectivity and server load");
-    if (apiSuccessRate < t.minApiSuccessRate * 0.9) recs.push("Low API success rate - investigate connection issues");
-    if (memoryUsage > t.maxMemoryUsagePercentage * 0.7) recs.push("High memory usage - consider optimization");
+    if (apiLatency > t.maxApiLatencyMs * 0.7)
+      recs.push("High API latency - check connectivity and server load");
+    if (apiSuccessRate < t.minApiSuccessRate * 0.9)
+      recs.push("Low API success rate - investigate connection issues");
+    if (memoryUsage > t.maxMemoryUsagePercentage * 0.7)
+      recs.push("High memory usage - consider optimization");
     return recs;
   }
 
-  private generatePriorityRecommendations(portfolio: PortfolioRiskAssessment, performance: PerformanceRiskAssessment, pattern: PatternRiskAssessment, system: SystemRiskAssessment, overallRiskScore: number): string[] {
+  private generatePriorityRecommendations(
+    portfolio: PortfolioRiskAssessment,
+    performance: PerformanceRiskAssessment,
+    pattern: PatternRiskAssessment,
+    system: SystemRiskAssessment,
+    overallRiskScore: number
+  ): string[] {
     const priority: string[] = [];
-    
-    if (overallRiskScore > 75) priority.push("CRITICAL: Overall risk score very high - immediate action required");
-    if (portfolio.concentrationRisk > 80) priority.push("URGENT: Extremely high portfolio concentration - diversify immediately");
-    if (performance.performanceRating === "poor") priority.push("URGENT: Poor performance - halt trading and review strategy");
-    if (pattern.patternReliability === "unreliable") priority.push("URGENT: Pattern detection unreliable - disable automated trading");
-    if (system.connectivityStatus === "poor") priority.push("URGENT: Poor system connectivity - check all connections");
-    
+
+    if (overallRiskScore > 75)
+      priority.push("CRITICAL: Overall risk score very high - immediate action required");
+    if (portfolio.concentrationRisk > 80)
+      priority.push("URGENT: Extremely high portfolio concentration - diversify immediately");
+    if (performance.performanceRating === "poor")
+      priority.push("URGENT: Poor performance - halt trading and review strategy");
+    if (pattern.patternReliability === "unreliable")
+      priority.push("URGENT: Pattern detection unreliable - disable automated trading");
+    if (system.connectivityStatus === "poor")
+      priority.push("URGENT: Poor system connectivity - check all connections");
+
     if (priority.length === 0) {
-      const all = [...portfolio.recommendations, ...performance.recommendations, ...pattern.recommendations, ...system.recommendations];
+      const all = [
+        ...portfolio.recommendations,
+        ...performance.recommendations,
+        ...pattern.recommendations,
+        ...system.recommendations,
+      ];
       priority.push(...all.slice(0, 3));
     }
-    
+
     return priority;
   }
 }

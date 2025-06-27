@@ -135,7 +135,7 @@ export class UnifiedMexcServiceV2 {
   ): Promise<boolean> {
     try {
       const activityResponse = await this.getActivityData(currency);
-      
+
       // If the response failed, no recent activity
       if (!activityResponse.success || !activityResponse.data) {
         return false;

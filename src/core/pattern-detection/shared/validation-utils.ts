@@ -18,7 +18,7 @@ export interface ValidationResult {
 
 /**
  * Fast symbol entry validation
- * 
+ *
  * OPTIMIZATION: Single-pass validation with early exit for invalid data
  */
 export function validateSymbolEntry(symbol: SymbolEntry): ValidationResult {
@@ -61,7 +61,10 @@ export function validateSymbolEntry(symbol: SymbolEntry): ValidationResult {
   }
 
   // Optional field validation - batch check for performance
-  if (symbol.cd && (symbol.cd.length < 3 || symbol.cd.length > 20 || !/^[A-Z0-9]+$/.test(symbol.cd))) {
+  if (
+    symbol.cd &&
+    (symbol.cd.length < 3 || symbol.cd.length > 20 || !/^[A-Z0-9]+$/.test(symbol.cd))
+  ) {
     warnings.push("Symbol code format may be invalid");
   }
 
@@ -70,7 +73,7 @@ export function validateSymbolEntry(symbol: SymbolEntry): ValidationResult {
 
 /**
  * Fast calendar entry validation
- * 
+ *
  * OPTIMIZATION: Streamlined validation with minimal timestamp conversion overhead
  */
 export function validateCalendarEntry(entry: CalendarEntry): ValidationResult {
@@ -97,9 +100,10 @@ export function validateCalendarEntry(entry: CalendarEntry): ValidationResult {
 
   // Timestamp validation - optimized for performance
   if (entry.firstOpenTime) {
-    const timestamp = typeof entry.firstOpenTime === "number" 
-      ? entry.firstOpenTime 
-      : new Date(entry.firstOpenTime).getTime();
+    const timestamp =
+      typeof entry.firstOpenTime === "number"
+        ? entry.firstOpenTime
+        : new Date(entry.firstOpenTime).getTime();
 
     if (isNaN(timestamp)) {
       errors.push("First open time is not a valid timestamp");
@@ -108,7 +112,8 @@ export function validateCalendarEntry(entry: CalendarEntry): ValidationResult {
       if (timestamp < now) {
         warnings.push("First open time is in the past");
       }
-      if (timestamp > now + 31536000000) { // 1 year in ms
+      if (timestamp > now + 31536000000) {
+        // 1 year in ms
         warnings.push("First open time is more than 1 year in the future");
       }
     }
@@ -119,7 +124,7 @@ export function validateCalendarEntry(entry: CalendarEntry): ValidationResult {
 
 /**
  * Fast pattern match validation
- * 
+ *
  * OPTIMIZATION: Essential validation only, performance-focused
  */
 export function validatePatternMatch(match: PatternMatch): ValidationResult {
@@ -136,7 +141,7 @@ export function validatePatternMatch(match: PatternMatch): ValidationResult {
     { field: match.patternType, name: "patternType", type: "string" },
     { field: match.confidence, name: "confidence", type: "number" },
     { field: match.symbol, name: "symbol", type: "string" },
-    { field: match.advanceNoticeHours, name: "advanceNoticeHours", type: "number" }
+    { field: match.advanceNoticeHours, name: "advanceNoticeHours", type: "number" },
   ];
 
   for (const { field, name, type } of requiredFields) {
@@ -168,7 +173,7 @@ export function validatePatternMatch(match: PatternMatch): ValidationResult {
 
 /**
  * Fast analysis request validation
- * 
+ *
  * OPTIMIZATION: Streamlined validation for API requests
  */
 export function validateAnalysisRequest(request: PatternAnalysisRequest): ValidationResult {
@@ -204,10 +209,12 @@ export function validateAnalysisRequest(request: PatternAnalysisRequest): Valida
   }
 
   // Optional field validation
-  if (request.confidenceThreshold !== undefined && 
-      (typeof request.confidenceThreshold !== "number" || 
-       request.confidenceThreshold < 0 || 
-       request.confidenceThreshold > 100)) {
+  if (
+    request.confidenceThreshold !== undefined &&
+    (typeof request.confidenceThreshold !== "number" ||
+      request.confidenceThreshold < 0 ||
+      request.confidenceThreshold > 100)
+  ) {
     errors.push("Confidence threshold must be a number between 0 and 100");
   }
 
@@ -224,13 +231,11 @@ export function validateAnalysisRequest(request: PatternAnalysisRequest): Valida
 
 /**
  * Optimized confidence score validation (shared utility)
- * 
+ *
  * PERFORMANCE: Single validation function used across all modules
  */
 export function validateConfidenceScore(score: number): boolean {
-  return typeof score === "number" && 
-         !isNaN(score) && 
-         isFinite(score) && 
-         score >= 0 && 
-         score <= 100;
+  return (
+    typeof score === "number" && !isNaN(score) && isFinite(score) && score >= 0 && score <= 100
+  );
 }

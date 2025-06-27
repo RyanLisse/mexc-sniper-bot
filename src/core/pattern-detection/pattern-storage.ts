@@ -17,14 +17,14 @@ import { patternEmbeddings } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
 import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IPatternStorage } from "./interfaces";
+import {
+  calculateOptimizedPatternSimilarity,
+  estimateOptimizedMemoryUsage,
+  generateOptimizedEmbedding,
+  optimizedCacheInvalidation,
+} from "./shared/algorithm-utils";
 // OPTIMIZATION: Use shared utilities for better performance and reduced code duplication
 import { createPatternLogger } from "./shared/logger-utils";
-import { 
-  generateOptimizedEmbedding, 
-  calculateOptimizedPatternSimilarity,
-  optimizedCacheInvalidation,
-  estimateOptimizedMemoryUsage
-} from "./shared/algorithm-utils";
 import { validateConfidenceScore } from "./shared/validation-utils";
 
 /**

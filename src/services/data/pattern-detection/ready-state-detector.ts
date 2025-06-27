@@ -455,10 +455,11 @@ export class ReadyStateDetector extends EventEmitter {
     confidence += projectScore * 0.3;
 
     // Market timing assessment
-    const launchTimestamp = typeof entry.firstOpenTime === "number"
-      ? entry.firstOpenTime
-      : new Date(entry.firstOpenTime).getTime();
-    
+    const launchTimestamp =
+      typeof entry.firstOpenTime === "number"
+        ? entry.firstOpenTime
+        : new Date(entry.firstOpenTime).getTime();
+
     const timing = this.assessLaunchTiming(launchTimestamp);
     if (!timing.isWeekend) confidence += 5;
     if (timing.marketSession === "peak") confidence += 5;
@@ -516,7 +517,11 @@ export class ReadyStateDetector extends EventEmitter {
     if (symbol.ca && symbol.ca > 1000) confidence += 2;
 
     const isPreReady = confidence > 0;
-    return { isPreReady, confidence: Math.min(confidence, 100), estimatedTimeToReady: estimatedHours };
+    return {
+      isPreReady,
+      confidence: Math.min(confidence, 100),
+      estimatedTimeToReady: estimatedHours,
+    };
   }
 
   /**
@@ -564,10 +569,11 @@ export class ReadyStateDetector extends EventEmitter {
     if (!entry.symbol || entry.symbol.length < 2) riskScore += 2;
 
     // Market timing risk
-    const launchTimestamp = typeof entry.firstOpenTime === "number"
-      ? entry.firstOpenTime
-      : new Date(entry.firstOpenTime).getTime();
-    
+    const launchTimestamp =
+      typeof entry.firstOpenTime === "number"
+        ? entry.firstOpenTime
+        : new Date(entry.firstOpenTime).getTime();
+
     const timing = this.assessLaunchTiming(launchTimestamp);
     if (timing.isWeekend) riskScore += 1;
     if (timing.marketSession === "off-hours") riskScore += 1;
@@ -615,8 +621,10 @@ export class ReadyStateDetector extends EventEmitter {
 
     if (name.includes("ai") || name.includes("artificial") || name.includes("gpt")) return "AI";
     if (name.includes("defi") || name.includes("swap") || name.includes("dex")) return "DeFi";
-    if (name.includes("game") || name.includes("metaverse") || name.includes("nft")) return "GameFi";
-    if (name.includes("layer") || name.includes("chain") || name.includes("blockchain")) return "Infrastructure";
+    if (name.includes("game") || name.includes("metaverse") || name.includes("nft"))
+      return "GameFi";
+    if (name.includes("layer") || name.includes("chain") || name.includes("blockchain"))
+      return "Infrastructure";
     if (name.includes("meme") || name.includes("doge") || name.includes("shib")) return "Meme";
     if (name.includes("dao") || name.includes("governance")) return "DAO";
     if (name.includes("oracle") || name.includes("data")) return "Oracle";
@@ -659,18 +667,21 @@ export class ReadyStateDetector extends EventEmitter {
   ): Promise<void> {
     try {
       const { patternEmbeddingService } = await import("../pattern-embedding-service");
-      
+
       await patternEmbeddingService.storePattern({
         symbolName: typeof data === "object" ? data.symbol || data.cd : data,
         vcoinId: typeof data === "object" ? data.vcoinId : undefined,
         type: patternType as any,
-        data: typeof data === "object" ? {
-          sts: data.sts,
-          st: data.st,
-          tt: data.tt,
-          confidence,
-          timestamp: Date.now(),
-        } : { confidence, timestamp: Date.now() },
+        data:
+          typeof data === "object"
+            ? {
+                sts: data.sts,
+                st: data.st,
+                tt: data.tt,
+                confidence,
+                timestamp: Date.now(),
+              }
+            : { confidence, timestamp: Date.now() },
         confidence,
       });
 
@@ -698,9 +709,7 @@ export class ReadyStateDetector extends EventEmitter {
           count: sql<number>`COUNT(*)`,
         })
         .from(patternEmbeddings)
-        .where(
-          eq(patternEmbeddings.patternType, patternType as any)
-        )
+        .where(eq(patternEmbeddings.patternType, patternType as any))
         .where(gte(patternEmbeddings.discoveredAt, thirtyDaysAgo));
 
       if (result.length > 0 && result[0].count > 5) {
@@ -762,7 +771,8 @@ export class ReadyStateDetector extends EventEmitter {
 
     // Time-based scoring
     const hour = now.getUTCHours();
-    if (hour >= 8 && hour <= 16) score += 3; // Peak trading hours
+    if (hour >= 8 && hour <= 16)
+      score += 3; // Peak trading hours
     else if (hour >= 0 && hour <= 8) score += 1; // Asia hours
 
     // Weekend penalty

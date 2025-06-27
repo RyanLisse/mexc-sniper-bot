@@ -451,11 +451,12 @@ export async function closeDatabase() {
       try {
         await Promise.race([
           postgresClient.end({ timeout: 2 }), // Reduced timeout for tests
-          new Promise((resolve) =>
-            setTimeout(() => {
-              getLogger().warn("[Database] PostgreSQL close timed out, forcing shutdown");
-              resolve(undefined);
-            }, 2000) // Reduced timeout for tests
+          new Promise(
+            (resolve) =>
+              setTimeout(() => {
+                getLogger().warn("[Database] PostgreSQL close timed out, forcing shutdown");
+                resolve(undefined);
+              }, 2000) // Reduced timeout for tests
           ),
         ]);
         getLogger().info("[Database] NeonDB PostgreSQL connection closed");
@@ -465,7 +466,7 @@ export async function closeDatabase() {
     }
 
     // Emergency cleanup for mock databases
-    if (dbInstance && typeof (dbInstance as any).$emergencyCleanup === 'function') {
+    if (dbInstance && typeof (dbInstance as any).$emergencyCleanup === "function") {
       try {
         await (dbInstance as any).$emergencyCleanup();
       } catch (error) {
@@ -482,6 +483,6 @@ export async function closeDatabase() {
 }
 
 // Register emergency cleanup hook for tests
-if (typeof global !== 'undefined') {
+if (typeof global !== "undefined") {
   (global as any).__emergency_db_cleanup__ = closeDatabase;
 }

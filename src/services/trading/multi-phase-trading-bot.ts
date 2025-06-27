@@ -86,7 +86,11 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
   /**
    * Initialize a new trading position (delegated to position manager)
    */
-  initializePositionFromManager(symbol: string, entryPrice: number, amount: number): PositionInitResult {
+  initializePositionFromManager(
+    symbol: string,
+    entryPrice: number,
+    amount: number
+  ): PositionInitResult {
     const result = this.positionManager.initializePosition(symbol, entryPrice, amount);
 
     if (result.success) {
@@ -257,10 +261,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
     symbol: string;
   };
 
-  calculateOptimalEntry(
-    symbol: string,
-    marketData: any
-  ): any {
+  calculateOptimalEntry(symbol: string, marketData: any): any {
     this.logger.info("Calculating optimal entry", { symbol, marketData });
 
     // Handle flexible marketData structure
@@ -269,7 +270,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
       volume: marketData?.volume ?? 1.0,
       momentum: marketData?.momentum ?? 0.5,
       support: marketData?.support,
-      resistance: marketData?.resistance
+      resistance: marketData?.resistance,
     };
 
     // Base entry price calculation with market conditions consideration
@@ -322,7 +323,7 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
     if (marketConditions.support && marketConditions.resistance) {
       const range = marketConditions.resistance - marketConditions.support;
       const position = (entryPrice - marketConditions.support) / range;
-      
+
       if (position < 0.3) {
         // Near support - good entry point
         confidence += 8;
@@ -344,18 +345,18 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
       symbol,
       entryPrice,
       confidence,
-      adjustments: adjustments.length
+      adjustments: adjustments.length,
     });
 
     const result = {
       entryPrice,
       confidence,
       adjustments,
-      symbol
+      symbol,
     };
 
     // Return Promise if tests expect async behavior
-    if (marketData && typeof marketData === 'object' && marketData.async) {
+    if (marketData && typeof marketData === "object" && marketData.async) {
       return Promise.resolve(result);
     }
 
@@ -387,14 +388,14 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
 
     try {
       // Validate inputs
-      if (!symbol || typeof symbol !== 'string') {
+      if (!symbol || typeof symbol !== "string") {
         throw new Error("Invalid symbol provided");
       }
-      
+
       if (!entryPrice || entryPrice <= 0) {
         throw new Error("Invalid entry price provided");
       }
-      
+
       if (!amount || amount <= 0) {
         throw new Error("Invalid amount provided");
       }
@@ -413,17 +414,13 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
       );
 
       // Update performance analytics
-      this.performanceAnalytics = new MultiPhasePerformanceAnalytics(
-        entryPrice,
-        amount,
-        symbol
-      );
+      this.performanceAnalytics = new MultiPhasePerformanceAnalytics(entryPrice, amount, symbol);
 
       const details = {
         symbol,
         entryPrice,
         amount,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       this.logger.info("Position initialized successfully", details);
@@ -431,21 +428,25 @@ export class MultiPhaseTradingBot extends MultiPhaseTradingBotCore {
       return {
         success: true,
         details,
-        message: `Position initialized for ${symbol} with ${amount} units at ${entryPrice}`
+        message: `Position initialized for ${symbol} with ${amount} units at ${entryPrice}`,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      this.logger.error("Failed to initialize position", { symbol, entryPrice, amount }, error as Error);
-      
+      this.logger.error(
+        "Failed to initialize position",
+        { symbol, entryPrice, amount },
+        error as Error
+      );
+
       return {
         success: false,
         details: {
           symbol: symbol || "unknown",
           entryPrice: entryPrice || 0,
           amount: amount || 0,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        message: `Failed to initialize position: ${errorMessage}`
+        message: `Failed to initialize position: ${errorMessage}`,
       };
     }
   }

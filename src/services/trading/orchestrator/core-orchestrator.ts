@@ -8,50 +8,47 @@
 import { EventEmitter } from "events";
 import { toSafeError } from "../../../lib/error-type-utils";
 import { PatternProcessor } from "./pattern-processor";
-import { TradeExecutor } from "./trade-executor";
 import { PositionMonitor } from "./position-monitor";
 import { SafetyManager } from "./safety-manager";
+import { TradeExecutor } from "./trade-executor";
 import type {
   AutoSnipingConfig,
-  AutoSnipingStatus,
   AutoSnipingMetrics,
+  AutoSnipingStatus,
   ModuleContext,
   OperationResult,
+  PatternMatch,
   SnipeTarget,
   TradingPosition,
-  PatternMatch,
 } from "./types";
-import {
-  DEFAULT_CONFIG,
-  validateConfig,
-} from "./types";
+import { DEFAULT_CONFIG, validateConfig } from "./types";
 
 export class AutoSnipingOrchestrator {
   private static instance: AutoSnipingOrchestrator | null = null;
-  
+
   // Core configuration and state
   private config: AutoSnipingConfig;
   private isRunning = false;
   private isInitialized = false;
   private startTime: Date | null = null;
   private eventEmitter = new EventEmitter();
-  
+
   // Module components
   private patternProcessor: PatternProcessor;
   private tradeExecutor: TradeExecutor;
   private positionMonitor: PositionMonitor;
   private safetyManager: SafetyManager;
-  
+
   // Monitoring intervals
   private patternDetectionInterval: NodeJS.Timeout | null = null;
   private safetyCheckInterval: NodeJS.Timeout | null = null;
-  
+
   // Internal state tracking
   private detectedOpportunities = 0;
   private executedTrades = 0;
   private totalConfidenceScore = 0;
   private lastOperation: AutoSnipingStatus["lastOperation"] = null;
-  
+
   // Logger
   private logger = {
     info: (message: string, context?: any) =>
@@ -67,7 +64,7 @@ export class AutoSnipingOrchestrator {
   constructor(config?: Partial<AutoSnipingConfig>) {
     // Validate and merge configuration
     this.config = validateConfig({ ...DEFAULT_CONFIG, ...config });
-    
+
     // Initialize module context
     const moduleContext: ModuleContext = {
       config: this.config,
@@ -83,10 +80,10 @@ export class AutoSnipingOrchestrator {
 
     // Set up event listeners
     this.setupEventListeners();
-    
-    this.logger.info("Auto-sniping orchestrator created", { 
+
+    this.logger.info("Auto-sniping orchestrator created", {
       config: this.config,
-      paperTradingMode: this.config.paperTradingMode 
+      paperTradingMode: this.config.paperTradingMode,
     });
   }
 
@@ -122,9 +119,9 @@ export class AutoSnipingOrchestrator {
       await this.safetyManager.initialize();
 
       this.isInitialized = true;
-      
+
       this.logger.info("Auto-sniping orchestrator initialized successfully");
-      
+
       return {
         success: true,
         message: "Auto-sniping orchestrator initialized successfully",
@@ -133,7 +130,7 @@ export class AutoSnipingOrchestrator {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(`Failed to initialize auto-sniping orchestrator: ${safeError.message}`);
-      
+
       return {
         success: false,
         message: `Initialization failed: ${safeError.message}`,
@@ -184,10 +181,10 @@ export class AutoSnipingOrchestrator {
 
       // Start monitoring intervals
       this.startMonitoringIntervals();
-      
+
       this.isRunning = true;
       this.startTime = new Date();
-      
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "start_auto_sniping",
@@ -200,7 +197,7 @@ export class AutoSnipingOrchestrator {
       });
 
       this.logger.info("Auto-sniping operations started successfully");
-      
+
       return {
         success: true,
         message: "Auto-sniping operations started successfully",
@@ -209,13 +206,13 @@ export class AutoSnipingOrchestrator {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(`Failed to start auto-sniping operations: ${safeError.message}`);
-      
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "start_auto_sniping",
         result: "failed",
       };
-      
+
       return {
         success: false,
         message: `Failed to start auto-sniping: ${safeError.message}`,
@@ -241,14 +238,14 @@ export class AutoSnipingOrchestrator {
 
       // Stop monitoring intervals
       this.stopMonitoringIntervals();
-      
+
       // Close all open positions if configured to do so
       if (this.config.strategy !== "conservative") {
         await this.positionMonitor.closeAllPositions();
       }
-      
+
       this.isRunning = false;
-      
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "stop_auto_sniping",
@@ -261,7 +258,7 @@ export class AutoSnipingOrchestrator {
       });
 
       this.logger.info("Auto-sniping operations stopped successfully");
-      
+
       return {
         success: true,
         message: "Auto-sniping operations stopped successfully",
@@ -270,13 +267,13 @@ export class AutoSnipingOrchestrator {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(`Failed to stop auto-sniping operations: ${safeError.message}`);
-      
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "stop_auto_sniping",
         result: "failed",
       };
-      
+
       return {
         success: false,
         message: `Failed to stop auto-sniping: ${safeError.message}`,
@@ -292,7 +289,7 @@ export class AutoSnipingOrchestrator {
     const currentPositions = await this.positionMonitor.getOpenPositionsCount();
     const profitLoss = await this.positionMonitor.getProfitLoss();
     const systemHealth = await this.getSystemHealth();
-    
+
     return {
       active: this.isRunning,
       safeToOperate: await this.safetyManager.isSafeToOperate(),
@@ -304,7 +301,8 @@ export class AutoSnipingOrchestrator {
       runningTime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
       detectedOpportunities: this.detectedOpportunities,
       executedTrades: this.executedTrades,
-      avgConfidenceScore: this.detectedOpportunities > 0 ? this.totalConfidenceScore / this.detectedOpportunities : 0,
+      avgConfidenceScore:
+        this.detectedOpportunities > 0 ? this.totalConfidenceScore / this.detectedOpportunities : 0,
     };
   }
 
@@ -315,7 +313,7 @@ export class AutoSnipingOrchestrator {
     const uptime = this.startTime ? Date.now() - this.startTime.getTime() : 0;
     const successfulTrades = await this.positionMonitor.getSuccessfulTradesCount();
     const failedTrades = this.executedTrades - successfulTrades;
-    
+
     return {
       session: {
         startTime: this.startTime?.toISOString() || new Date().toISOString(),
@@ -327,7 +325,10 @@ export class AutoSnipingOrchestrator {
       },
       performance: {
         avgResponseTime: await this.tradeExecutor.getAverageExecutionTime(),
-        avgConfidence: this.detectedOpportunities > 0 ? this.totalConfidenceScore / this.detectedOpportunities : 0,
+        avgConfidence:
+          this.detectedOpportunities > 0
+            ? this.totalConfidenceScore / this.detectedOpportunities
+            : 0,
         profitability: await this.positionMonitor.getProfitability(),
         maxDrawdown: await this.positionMonitor.getMaxDrawdown(),
         sharpeRatio: await this.positionMonitor.getSharpeRatio(),
@@ -348,25 +349,27 @@ export class AutoSnipingOrchestrator {
     try {
       const updatedConfig = validateConfig({ ...this.config, ...newConfig });
       const oldConfig = { ...this.config };
-      
+
       this.config = updatedConfig;
-      
+
       // Update module configurations
       const moduleContext: ModuleContext = {
         config: this.config,
         logger: this.logger,
         eventEmitter: this.eventEmitter,
       };
-      
+
       await this.patternProcessor.updateConfig(moduleContext);
       await this.tradeExecutor.updateConfig(moduleContext);
       await this.positionMonitor.updateConfig(moduleContext);
       await this.safetyManager.updateConfig(moduleContext);
 
       // Restart intervals if running and intervals changed
-      if (this.isRunning && 
-          (oldConfig.patternDetectionInterval !== this.config.patternDetectionInterval ||
-           oldConfig.safetyCheckInterval !== this.config.safetyCheckInterval)) {
+      if (
+        this.isRunning &&
+        (oldConfig.patternDetectionInterval !== this.config.patternDetectionInterval ||
+          oldConfig.safetyCheckInterval !== this.config.safetyCheckInterval)
+      ) {
         this.stopMonitoringIntervals();
         this.startMonitoringIntervals();
       }
@@ -375,7 +378,7 @@ export class AutoSnipingOrchestrator {
         oldConfig,
         newConfig: this.config,
       });
-      
+
       return {
         success: true,
         message: "Configuration updated successfully",
@@ -384,7 +387,7 @@ export class AutoSnipingOrchestrator {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(`Failed to update configuration: ${safeError.message}`);
-      
+
       return {
         success: false,
         message: `Configuration update failed: ${safeError.message}`,
@@ -420,7 +423,7 @@ export class AutoSnipingOrchestrator {
 
       // Execute the trade
       const executionResult = await this.tradeExecutor.executeSnipeTarget(target);
-      
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "process_snipe_target",
@@ -435,22 +438,24 @@ export class AutoSnipingOrchestrator {
 
       return {
         success: executionResult.success,
-        message: executionResult.success 
-          ? "Target processing completed" 
+        message: executionResult.success
+          ? "Target processing completed"
           : executionResult.error || "Target processing failed",
         status: await this.getStatus(),
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(`Failed to process snipe target ${target.symbolName}: ${safeError.message}`);
-      
+      this.logger.error(
+        `Failed to process snipe target ${target.symbolName}: ${safeError.message}`
+      );
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "process_snipe_target",
         symbol: target.symbolName,
         result: "failed",
       };
-      
+
       return {
         success: false,
         message: `Target processing failed: ${safeError.message}`,
@@ -464,27 +469,27 @@ export class AutoSnipingOrchestrator {
    */
   async emergencyStop(reason?: string): Promise<OperationResult> {
     const stopReason = reason || "Emergency stop requested";
-    
+
     try {
       this.logger.error("Emergency stop initiated", { reason: stopReason });
-      
+
       // Immediately stop all intervals
       this.stopMonitoringIntervals();
-      
+
       // Emergency close all positions
       await this.positionMonitor.emergencyCloseAllPositions();
-      
+
       // Cancel all pending orders
       await this.tradeExecutor.cancelAllPendingOrders();
-      
+
       // Stop all modules immediately
       await this.patternProcessor.emergencyStop();
       await this.tradeExecutor.emergencyStop();
       await this.positionMonitor.emergencyStop();
       await this.safetyManager.emergencyStop();
-      
+
       this.isRunning = false;
-      
+
       this.lastOperation = {
         timestamp: new Date().toISOString(),
         action: "emergency_stop",
@@ -495,9 +500,9 @@ export class AutoSnipingOrchestrator {
         reason: stopReason,
         timestamp: new Date().toISOString(),
       });
-      
+
       this.logger.error("Emergency stop completed", { reason: stopReason });
-      
+
       return {
         success: true,
         message: `Emergency stop completed: ${stopReason}`,
@@ -506,7 +511,7 @@ export class AutoSnipingOrchestrator {
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(`Emergency stop failed: ${safeError.message}`, { reason: stopReason });
-      
+
       return {
         success: false,
         message: `Emergency stop failed: ${safeError.message}`,
@@ -520,24 +525,24 @@ export class AutoSnipingOrchestrator {
    */
   async shutdown(): Promise<void> {
     this.logger.info("Shutting down auto-sniping orchestrator");
-    
+
     if (this.isRunning) {
       await this.stopAutoSniping();
     }
-    
+
     this.stopMonitoringIntervals();
-    
+
     // Shutdown all modules
     await this.patternProcessor.shutdown();
     await this.tradeExecutor.shutdown();
     await this.positionMonitor.shutdown();
     await this.safetyManager.shutdown();
-    
+
     this.isInitialized = false;
-    
+
     // Clear singleton instance
     AutoSnipingOrchestrator.instance = null;
-    
+
     this.logger.info("Auto-sniping orchestrator shutdown completed");
   }
 
@@ -627,9 +632,9 @@ export class AutoSnipingOrchestrator {
   private async handlePatternDetected(pattern: PatternMatch): Promise<void> {
     this.detectedOpportunities++;
     this.totalConfidenceScore += pattern.confidence;
-    
+
     this.logger.info("Pattern detected", { pattern });
-    
+
     // Convert pattern to snipe target and process
     const target: SnipeTarget = {
       id: Date.now(),
@@ -681,7 +686,7 @@ export class AutoSnipingOrchestrator {
    */
   private async handleSafetyViolation(violation: any): Promise<void> {
     this.logger.warn("Safety violation detected", { violation });
-    
+
     if (violation.severity === "critical") {
       await this.stopAutoSniping();
       this.logger.error("Auto-sniping stopped due to critical safety violation");

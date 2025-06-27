@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
+import { OptimizedAutoSnipingCore } from "@/src/services/trading/auto-sniping/core-orchestrator";
 import { 
   createSuccessResponse, 
   createErrorResponse, 
@@ -14,7 +14,7 @@ export async function GET() {
   try {
     console.info('[API] Auto-sniping status request received');
     
-    // Get current execution report which includes status
+    // Get current execution report which includes unified status
     const report = await autoSnipingService.getExecutionReport();
     
     // Structure the status response to match frontend expectations
@@ -24,9 +24,26 @@ export async function GET() {
       isActive: report.status === 'active',
       isIdle: report.status === 'idle',
       
-      // Frontend-expected fields
-      activeTargets: report.activeTargets || 0,
+      // Enhanced target count information
+      activeTargets: report.targetCounts?.unified || report.activeTargets || 0,
       readyTargets: report.readyTargets || 0,
+      targetCounts: report.targetCounts || {
+        memory: 0,
+        database: 0,
+        unified: 0,
+        isConsistent: true,
+        source: 'consistent',
+      },
+      
+      // State consistency information  
+      stateConsistency: report.stateConsistency || {
+        isConsistent: true,
+        inconsistencies: [],
+        recommendedActions: [],
+        lastSyncTime: 'Never',
+      },
+      
+      // Frontend-expected fields
       executedToday: report.executedToday || 0,
       successRate: report.successRate || 0,
       totalProfit: report.totalProfit || 0,
@@ -45,15 +62,19 @@ export async function GET() {
         executionDelay: report.config?.executionDelay || 1000,
       },
       health: {
-        isHealthy: true,
+        isHealthy: report.stateConsistency?.isConsistent ?? true,
         lastHealthCheck: new Date().toISOString(),
         memoryUsage: process.memoryUsage().heapUsed,
+        stateConsistency: report.stateConsistency?.isConsistent ?? true,
+        targetCountWarning: report.targetCounts?.warning,
       }
     };
     
     console.info('[API] Auto-sniping status retrieved successfully:', {
       status: statusData.status,
       isActive: statusData.isActive,
+      activeTargets: statusData.activeTargets,
+      targetConsistency: statusData.stateConsistency.isConsistent,
       executionCount: statusData.executionCount
     });
     
@@ -78,6 +99,20 @@ export async function GET() {
         // Frontend-expected fields with fallback values
         activeTargets: 0,
         readyTargets: 0,
+        targetCounts: {
+          memory: 0,
+          database: 0,
+          unified: 0,
+          isConsistent: false,
+          source: 'memory',
+          warning: 'Service unavailable - using fallback values',
+        },
+        stateConsistency: {
+          isConsistent: false,
+          inconsistencies: ['Service error - cannot verify state consistency'],
+          recommendedActions: ['Check service health and restart if necessary'],
+          lastSyncTime: 'Never',
+        },
         executedToday: 0,
         successRate: 0,
         totalProfit: 0,
@@ -98,6 +133,8 @@ export async function GET() {
         health: {
           isHealthy: false,
           lastHealthCheck: new Date().toISOString(),
+          stateConsistency: false,
+          targetCountWarning: 'Service error',
           error: error instanceof Error ? error.message : 'Unknown error',
         }
       }, {

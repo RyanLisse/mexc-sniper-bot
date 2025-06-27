@@ -237,10 +237,13 @@ class QueryPerformanceMonitor {
     const recommendations: string[] = [];
     const failingQueries = this.metrics
       .filter((m) => !m.success)
-      .reduce((acc, m) => {
-        acc[m.queryName] = (acc[m.queryName] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      .reduce(
+        (acc, m) => {
+          acc[m.queryName] = (acc[m.queryName] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
     const frequentlyFailingQueries = Object.entries(failingQueries)
       .filter(([, count]) => count > 2)

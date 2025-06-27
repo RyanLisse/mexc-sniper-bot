@@ -31,7 +31,9 @@ const ComponentSkeleton = ({ className = "" }: { className?: string }) => (
 );
 
 const ChartSkeleton = ({ height = "h-[300px]" }: { height?: string }) => (
-  <div className={`w-full ${height} animate-pulse bg-gray-100 rounded flex items-center justify-center`}>
+  <div
+    className={`w-full ${height} animate-pulse bg-gray-100 rounded flex items-center justify-center`}
+  >
     <div className="text-gray-500">Loading chart...</div>
   </div>
 );
@@ -48,22 +50,21 @@ export function SafeDynamicWrapper({
   componentName = "Component",
 }: SafeDynamicWrapperProps) {
   const defaultErrorFallback = (
-    <div 
+    <div
       className={`w-full ${height || "h-auto"} flex items-center justify-center border border-amber-200 rounded text-amber-600 p-4`}
     >
       {componentName} temporarily unavailable
     </div>
   );
 
-  const defaultFallback = height 
-    ? <ChartSkeleton height={height} />
-    : <ComponentSkeleton className={className} />;
+  const defaultFallback = height ? (
+    <ChartSkeleton height={height} />
+  ) : (
+    <ComponentSkeleton className={className} />
+  );
 
   return (
-    <ErrorBoundary 
-      level="component" 
-      fallback={errorFallback || defaultErrorFallback}
-    >
+    <ErrorBoundary level="component" fallback={errorFallback || defaultErrorFallback}>
       <Suspense fallback={fallback || defaultFallback}>
         <div className={className}>{children}</div>
       </Suspense>
@@ -83,13 +84,17 @@ export function SafeChartWrapper({
   chartName = "Chart",
 }: SafeDynamicWrapperProps & { chartName?: string }) {
   const chartErrorFallback = (
-    <div className={`w-full ${height} flex items-center justify-center border border-blue-200 rounded text-blue-600`}>
+    <div
+      className={`w-full ${height} flex items-center justify-center border border-blue-200 rounded text-blue-600`}
+    >
       {chartName} temporarily unavailable
     </div>
   );
 
   const chartLoadingFallback = (
-    <div className={`w-full ${height} animate-pulse bg-gray-100 rounded flex items-center justify-center`}>
+    <div
+      className={`w-full ${height} animate-pulse bg-gray-100 rounded flex items-center justify-center`}
+    >
       <div className="text-gray-500">Loading {chartName.toLowerCase()}...</div>
     </div>
   );

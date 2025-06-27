@@ -6,15 +6,15 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
+import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
 import type {
   RiskMetrics,
   SafetyAlert,
   SafetyConfiguration,
 } from "../../../schemas/safety-monitoring-schemas";
-import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import type { OptimizedAutoSnipingCore } from "../../../trading/optimized-auto-sniping-core";
-import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
-import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
+import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
 
 describe("RealTimeSafetyMonitoringService - Modular Integration", () => {

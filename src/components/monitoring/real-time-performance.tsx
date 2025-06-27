@@ -441,8 +441,8 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>Real-time system metrics (last 50 data points)</CardDescription>
               </CardHeader>
               <CardContent>
-                <ErrorBoundary 
-                  level="component" 
+                <ErrorBoundary
+                  level="component"
                   fallback={
                     <div className="w-full h-[300px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
                       System performance chart temporarily unavailable
@@ -507,8 +507,8 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>CPU, memory, and network usage</CardDescription>
               </CardHeader>
               <CardContent>
-                <ErrorBoundary 
-                  level="component" 
+                <ErrorBoundary
+                  level="component"
                   fallback={
                     <div className="w-full h-[300px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
                       Resource utilization chart temporarily unavailable
@@ -757,8 +757,8 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>Distribution of detected pattern types</CardDescription>
               </CardHeader>
               <CardContent>
-                <ErrorBoundary 
-                  level="component" 
+                <ErrorBoundary
+                  level="component"
                   fallback={
                     <div className="w-full h-[200px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
                       Pattern types chart temporarily unavailable

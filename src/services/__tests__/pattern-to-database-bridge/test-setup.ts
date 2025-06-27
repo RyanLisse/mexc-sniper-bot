@@ -3,7 +3,10 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import type { PatternDetectionEventData, PatternMatch } from "../../../core/pattern-detection/interfaces";
+import type {
+  PatternDetectionEventData,
+  PatternMatch,
+} from "../../../core/pattern-detection/interfaces";
 import { EnhancedPatternDetectionCore } from "../../../core/pattern-detection/pattern-detection-core-enhanced";
 import { db } from "../../../db";
 import { snipeTargets, userPreferences } from "../../../db/schema";
@@ -88,7 +91,7 @@ export async function setupTestData(testUserId: string): Promise<void> {
 
 export async function cleanupAllTestData(testUserId: string): Promise<void> {
   console.log("🧹 Cleaning up all test data");
-  
+
   // Clean up test users
   await cleanupTestData(testUserId);
   await cleanupTestData("non-existent-user");
@@ -101,7 +104,7 @@ export async function cleanupAllTestData(testUserId: string): Promise<void> {
 
 export async function cleanupTestRecords(testUserId: string): Promise<void> {
   console.log("🧹 Cleaning up test records");
-  
+
   // Delete all records for test users
   await db.delete(snipeTargets).where(eq(snipeTargets.userId, testUserId));
   await db.delete(snipeTargets).where(eq(snipeTargets.userId, "non-existent-user"));
@@ -163,7 +166,9 @@ export async function verifyDatabaseConnection(testUserId: string): Promise<void
   await db.delete(snipeTargets).where(eq(snipeTargets.symbolName, "CONNTEST"));
 }
 
-export function createMockPatternEventData(overrides: Partial<PatternDetectionEventData> = {}): PatternDetectionEventData {
+export function createMockPatternEventData(
+  overrides: Partial<PatternDetectionEventData> = {}
+): PatternDetectionEventData {
   return {
     source: "test_source",
     timestamp: Date.now(),

@@ -94,13 +94,26 @@ export class AlertManagement {
     // Execute auto-actions if enabled
     if (this.config.configuration.autoActionEnabled && validatedAlert.autoActions.length > 0) {
       this.executeAutoActions(validatedAlert.autoActions).catch((error) => {
-        console.error("Auto-action execution failed", { operation: "execute_auto_actions", alertId: validatedAlert.id, alertType: validatedAlert.type, alertSeverity: validatedAlert.severity, actionsCount: validatedAlert.autoActions.length }, error);
+        console.error(
+          "Auto-action execution failed",
+          {
+            operation: "execute_auto_actions",
+            alertId: validatedAlert.id,
+            alertType: validatedAlert.type,
+            alertSeverity: validatedAlert.severity,
+            actionsCount: validatedAlert.autoActions.length,
+          },
+          error
+        );
       });
     }
 
     // Update statistics
     if (this.config.onStatsUpdate) {
-      this.config.onStatsUpdate({ alertsGenerated: this.stats.alertsGenerated, actionsExecuted: this.stats.actionsExecuted });
+      this.config.onStatsUpdate({
+        alertsGenerated: this.stats.alertsGenerated,
+        actionsExecuted: this.stats.actionsExecuted,
+      });
     }
     return validatedAlert;
   }
@@ -112,17 +125,32 @@ export class AlertManagement {
     const alert = this.alerts.find((a) => a.id === alertId);
 
     if (!alert) {
-      console.warn("Alert not found for acknowledgment", { operation: "acknowledge_alert", alertId, totalAlerts: this.alerts.length });
+      console.warn("Alert not found for acknowledgment", {
+        operation: "acknowledge_alert",
+        alertId,
+        totalAlerts: this.alerts.length,
+      });
       return false;
     }
 
     if (alert.acknowledged) {
-      console.warn("Alert already acknowledged", { operation: "acknowledge_alert", alertId, alertType: alert.type, acknowledgedAt: alert.timestamp });
+      console.warn("Alert already acknowledged", {
+        operation: "acknowledge_alert",
+        alertId,
+        alertType: alert.type,
+        acknowledgedAt: alert.timestamp,
+      });
       return true;
     }
 
     alert.acknowledged = true;
-    console.info("Alert acknowledged", { operation: "acknowledge_alert", alertId, alertType: alert.type, alertSeverity: alert.severity, acknowledgedAt: new Date().toISOString() });
+    console.info("Alert acknowledged", {
+      operation: "acknowledge_alert",
+      alertId,
+      alertType: alert.type,
+      alertSeverity: alert.severity,
+      acknowledgedAt: new Date().toISOString(),
+    });
     return true;
   }
 
@@ -133,7 +161,11 @@ export class AlertManagement {
     const countBefore = this.alerts.length;
     this.alerts = this.alerts.filter((alert) => !alert.acknowledged);
     const cleared = countBefore - this.alerts.length;
-    console.info("Acknowledged alerts cleared", { operation: "clear_acknowledged_alerts", clearedCount: cleared, remainingAlerts: this.alerts.length });
+    console.info("Acknowledged alerts cleared", {
+      operation: "clear_acknowledged_alerts",
+      clearedCount: cleared,
+      remainingAlerts: this.alerts.length,
+    });
     return cleared;
   }
 
@@ -298,7 +330,12 @@ export class AlertManagement {
     // Validate action before execution
     validateSafetyAction(action);
 
-    console.info("Executing safety action", { operation: "execute_action", actionId: action.id, actionType: action.type, actionDescription: action.description });
+    console.info("Executing safety action", {
+      operation: "execute_action",
+      actionId: action.id,
+      actionType: action.type,
+      actionDescription: action.description,
+    });
 
     try {
       switch (action.type) {
@@ -327,10 +364,12 @@ export class AlertManagement {
         case "reduce_positions": {
           const positions = this.config.executionService.getActivePositions();
           try {
-            const sorted = [...positions].sort((a, b) => Number.parseFloat(b.quantity) - Number.parseFloat(a.quantity));
+            const sorted = [...positions].sort(
+              (a, b) => Number.parseFloat(b.quantity) - Number.parseFloat(a.quantity)
+            );
             const count = Math.ceil(positions.length * 0.5);
             let reduced = 0;
-            
+
             for (let i = 0; i < count; i++) {
               const pos = sorted[i];
               const newSize = Math.floor(Number.parseFloat(pos.quantity) * 0.5);
@@ -339,7 +378,11 @@ export class AlertManagement {
                 reduced++;
               }
             }
-            this.setActionResult(action, reduced > 0 ? "success" : "partial", `Reduced ${reduced}/${count} positions by 50%`);
+            this.setActionResult(
+              action,
+              reduced > 0 ? "success" : "partial",
+              `Reduced ${reduced}/${count} positions by 50%`
+            );
           } catch (error) {
             this.setActionResult(action, "failed", `Position reduction failed: ${error.message}`);
           }
@@ -348,9 +391,13 @@ export class AlertManagement {
 
         case "limit_exposure": {
           const positions = this.config.executionService.getActivePositions();
-          const exposure = positions.reduce((sum, pos) => sum + (Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice)), 0);
+          const exposure = positions.reduce(
+            (sum, pos) =>
+              sum + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice),
+            0
+          );
           const maxAllowed = this.config.configuration.thresholds.maxPortfolioConcentration * 1000;
-          
+
           try {
             if (exposure > maxAllowed) {
               const ratio = maxAllowed / exposure;
@@ -362,9 +409,17 @@ export class AlertManagement {
                   limited++;
                 }
               }
-              this.setActionResult(action, limited > 0 ? "success" : "partial", `Limited ${limited} positions to ${maxAllowed.toFixed(2)} max`);
+              this.setActionResult(
+                action,
+                limited > 0 ? "success" : "partial",
+                `Limited ${limited} positions to ${maxAllowed.toFixed(2)} max`
+              );
             } else {
-              this.setActionResult(action, "success", `Exposure ${exposure.toFixed(2)} within limits`);
+              this.setActionResult(
+                action,
+                "success",
+                `Exposure ${exposure.toFixed(2)} within limits`
+              );
             }
           } catch (error) {
             this.setActionResult(action, "failed", `Exposure limitation failed: ${error.message}`);
@@ -386,7 +441,11 @@ export class AlertManagement {
             if (global.adminNotificationService) {
               await global.adminNotificationService.sendCriticalAlert(data);
             }
-            this.setActionResult(action, "success", `Admin notification sent with alert ID ${action.id}`);
+            this.setActionResult(
+              action,
+              "success",
+              `Admin notification sent with alert ID ${action.id}`
+            );
           } catch (error) {
             this.setActionResult(action, "failed", `Admin notification failed: ${error.message}`);
           }
@@ -396,14 +455,20 @@ export class AlertManagement {
         case "circuit_breaker": {
           try {
             if (this.config.executionService.setTradingPaused) {
-              await this.config.executionService.setTradingPaused(true, "circuit_breaker_activated");
+              await this.config.executionService.setTradingPaused(
+                true,
+                "circuit_breaker_activated"
+              );
             }
-            
+
             const originalInterval = this.config.configuration.monitoringIntervalMs;
             this.config.configuration.monitoringIntervalMs = 10000;
-            
-            console.warn("[CIRCUIT_BREAKER_ACTIVATED]", { activationTime: new Date().toISOString(), reason: action.description });
-            
+
+            console.warn("[CIRCUIT_BREAKER_ACTIVATED]", {
+              activationTime: new Date().toISOString(),
+              reason: action.description,
+            });
+
             if (global.circuitBreakerState) {
               global.circuitBreakerState = {
                 active: true,
@@ -412,9 +477,17 @@ export class AlertManagement {
                 originalMonitoringInterval: originalInterval,
               };
             }
-            this.setActionResult(action, "success", "Circuit breaker activated: trading paused, monitoring increased to 10s intervals");
+            this.setActionResult(
+              action,
+              "success",
+              "Circuit breaker activated: trading paused, monitoring increased to 10s intervals"
+            );
           } catch (error) {
-            this.setActionResult(action, "failed", `Circuit breaker activation failed: ${error.message}`);
+            this.setActionResult(
+              action,
+              "failed",
+              `Circuit breaker activation failed: ${error.message}`
+            );
           }
           break;
         }

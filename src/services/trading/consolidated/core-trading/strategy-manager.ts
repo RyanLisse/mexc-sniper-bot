@@ -6,12 +6,7 @@
  */
 
 import { toSafeError } from "../../../lib/error-type-utils";
-import type {
-  ModuleContext,
-  ModuleState,
-  TradingStrategy,
-  ServiceResponse,
-} from "./types";
+import type { ModuleContext, ModuleState, ServiceResponse, TradingStrategy } from "./types";
 
 export class StrategyManager {
   private context: ModuleContext;
@@ -65,12 +60,12 @@ export class StrategyManager {
    */
   async updateConfig(config: any): Promise<void> {
     this.context.config = config;
-    
+
     // Update active strategy if it changed
     if (config.defaultStrategy !== this.activeStrategy) {
       this.activeStrategy = config.defaultStrategy;
       this.state.metrics.activeStrategy = this.activeStrategy;
-      
+
       this.context.eventEmitter.emit("strategy_changed", {
         oldStrategy: this.activeStrategy,
         newStrategy: config.defaultStrategy,
@@ -192,7 +187,7 @@ export class StrategyManager {
       }
 
       const updatedStrategy = { ...existingStrategy, ...updates };
-      
+
       // Validate updated strategy
       const validationResult = this.validateStrategy(updatedStrategy);
       if (!validationResult.isValid) {

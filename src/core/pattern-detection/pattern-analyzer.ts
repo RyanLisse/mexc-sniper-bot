@@ -575,12 +575,14 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     // Optimized reduce operation - more functional and efficient
     const boost = activities.reduce((totalBoost, activity) => {
       const activityBoosts = {
-        "SUN_SHINE": 8,    // High priority activity
-        "PROMOTION": 5,    // Medium priority activity  
-        "LAUNCHPAD": 10,   // Highest priority activity
+        SUN_SHINE: 8, // High priority activity
+        PROMOTION: 5, // Medium priority activity
+        LAUNCHPAD: 10, // Highest priority activity
       };
-      
-      return totalBoost + (activityBoosts[activity.activityType as keyof typeof activityBoosts] || 2);
+
+      return (
+        totalBoost + (activityBoosts[activity.activityType as keyof typeof activityBoosts] || 2)
+      );
     }, 0);
 
     // Cap the boost at 15 points
