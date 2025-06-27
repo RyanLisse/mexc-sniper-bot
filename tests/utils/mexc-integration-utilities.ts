@@ -6,7 +6,7 @@
  * synchronization issues between test files.
  */
 
-import { vi } from 'vitest';
+import { vi, type MockedFunction } from 'vitest';
 import type { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
 import type { ActivityData } from '@/src/schemas/unified/mexc-api-schemas';
@@ -25,7 +25,15 @@ export function configureMexcTestEnvironment(): void {
   process.env.MEXC_BASE_URL = 'https://api.mexc.com';
   process.env.MEXC_RATE_LIMIT = '1200'; // requests per minute
   process.env.MEXC_TIMEOUT = '30000'; // 30 seconds
-  process.env.NODE_ENV = 'test';
+  // NODE_ENV is read-only in test environment, skip setting it
+  if (!process.env.NODE_ENV) {
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: 'test',
+      writable: false,
+      enumerable: true,
+      configurable: true
+    });
+  }
 }
 
 /**
@@ -89,10 +97,15 @@ export function createMockActivityData(overrides: Partial<ActivityData> = {}): A
 // MEXC Service Mock Factory
 // ============================================================================
 
+// Type for vitest mocked service
+type MockedMexcService = {
+  [K in keyof UnifiedMexcServiceV2]: MockedFunction<UnifiedMexcServiceV2[K]>;
+};
+
 /**
  * Create a standardized mock MEXC service instance
  */
-export function createMockMexcService(): jest.Mocked<UnifiedMexcServiceV2> {
+export function createMockMexcService(): MockedMexcService {
   return {
     // Market Data Methods
     getSymbolData: vi.fn().mockResolvedValue({
@@ -213,10 +226,10 @@ export async function waitForMexcOperation(timeoutMs: number = 2000): Promise<vo
 /**
  * Ensure all MEXC service mocks are properly reset
  */
-export function resetMexcServiceMocks(mexcService: jest.Mocked<UnifiedMexcServiceV2>): void {
+export function resetMexcServiceMocks(mexcService: MockedMexcService): void {
   Object.values(mexcService).forEach(method => {
     if (typeof method === 'function' && 'mockClear' in method) {
-      method.mockClear();
+      (method as MockedFunction<any>).mockClear();
     }
   });
 }
@@ -229,7 +242,7 @@ export function resetMexcServiceMocks(mexcService: jest.Mocked<UnifiedMexcServic
  * Configure MEXC service to simulate API failures for testing error handling
  */
 export function simulateMexcApiFailures(
-  mexcService: jest.Mocked<UnifiedMexcServiceV2>,
+  mexcService: MockedMexcService,
   failureCount: number = 2
 ): void {
   let callCount = 0;
@@ -265,7 +278,7 @@ export function simulateMexcApiFailures(
  * Configure MEXC service to simulate network timeout
  */
 export function simulateMexcNetworkTimeout(
-  mexcService: jest.Mocked<UnifiedMexcServiceV2>,
+  mexcService: MockedMexcService,
   timeoutMs: number = 5000
 ): void {
   mexcService.testConnectivity.mockImplementation(async () => {
@@ -282,7 +295,7 @@ export function simulateMexcNetworkTimeout(
  * Complete setup for MEXC integration tests
  */
 export function setupMexcIntegrationTest(): {
-  mexcService: jest.Mocked<UnifiedMexcServiceV2>;
+  mexcService: MockedMexcService;
   cleanup: () => void;
 } {
   // Configure environment
@@ -304,7 +317,7 @@ export function setupMexcIntegrationTest(): {
 /**
  * Standardized teardown for MEXC integration tests
  */
-export function teardownMexcIntegrationTest(mexcService?: jest.Mocked<UnifiedMexcServiceV2>): void {
+export function teardownMexcIntegrationTest(mexcService?: MockedMexcService): void {
   if (mexcService) {
     resetMexcServiceMocks(mexcService);
   }

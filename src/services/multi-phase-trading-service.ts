@@ -24,11 +24,15 @@ export interface PhaseResult {
   message?: string;
 }
 
-export interface TradingStrategy extends StrategyPattern {
+export interface TradingStrategy {
+  id: string;
+  name: string;
+  description: string;
+  phases: TradingPhase[];
+  conditions: any[];
   status: 'draft' | 'active' | 'paused' | 'completed' | 'failed';
   createdAt: Date;
   updatedAt: Date;
-  phases: TradingPhase[];
 }
 
 export interface MultiPhaseTradingService {

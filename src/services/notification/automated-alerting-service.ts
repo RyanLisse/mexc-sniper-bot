@@ -677,7 +677,7 @@ export class AutomatedAlertingService {
 
     // Get historical metrics from database for comprehensive analysis
     try {
-      const { db } = await import("../../db");
+      const { db } = await import("@/src/db");
       const { sql } = await import("drizzle-orm");
       
       // Query performance snapshots for historical metrics

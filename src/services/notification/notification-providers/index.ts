@@ -360,7 +360,7 @@ export class NotificationService {
       const categories = JSON.parse(channel.categoryFilter);
       // Get rule to check category by joining with alert rules
       try {
-        const { alertRules } = await import("../../db/schemas/alerts");
+        const { alertRules } = await import("@/src/db/schemas/alerts");
         const alertRule = await this.db
           .select()
           .from(alertRules)

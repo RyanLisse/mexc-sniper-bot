@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { createErrorResponse, HTTP_STATUS } from "./api-response";
 import { shouldBypassRateLimit } from "./bypass-rate-limit";
 import { getSession, requireAuth } from "./kinde-auth";
+import { ApplicationError, AuthorizationError } from "./errors";
 import {
   checkRateLimit,
   createRateLimitResponse,
@@ -276,37 +277,42 @@ export function withAuthOptions<T extends any[]>(
           const ip = getClientIP(request);
           const endpoint = new URL(request.url).pathname;
           
-          // Log unauthorized admin access attempt
+          // Log unauthorized admin access attempt using SUSPICIOUS_ACTIVITY type
           logSecurityEvent({
-            type: "ADMIN_ACCESS_DENIED",
-            userId: user.id,
+            type: "SUSPICIOUS_ACTIVITY",
             ip,
             endpoint,
-            timestamp: new Date().toISOString(),
-            reason: "Insufficient privileges"
+            userAgent: request.headers.get("user-agent") || undefined,
+            userId: user.id,
+            metadata: {
+              reason: "admin_access_denied",
+              severity: "high",
+              action: "attempted_admin_access"
+            }
           });
           
-          throw new ApplicationError("Admin access required", {
-            code: "INSUFFICIENT_PRIVILEGES",
-            statusCode: 403,
-            context: { userId: user.id, endpoint }
+          throw new AuthorizationError("Admin access required", {
+            userId: user.id,
+            endpoint,
+            action: "admin_access_required"
           });
         }
         
-        // Log successful admin access
+        // Log successful admin access using AUTH_ATTEMPT type
         const ip = getClientIP(request);
         const endpoint = new URL(request.url).pathname;
 
         logSecurityEvent({
-          type: "ADMIN_ACCESS_GRANTED",
-          userId: user.id,
+          type: "AUTH_ATTEMPT",
           ip,
           endpoint,
+          userAgent: request.headers.get("user-agent") || undefined,
           userId: user.id,
           metadata: {
             adminAccess: true,
-            granted: true, // Would be false if admin check fails
-          },
+            granted: true,
+            action: "admin_access_granted"
+          }
         });
       }
 

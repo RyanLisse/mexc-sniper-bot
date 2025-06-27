@@ -211,12 +211,6 @@ export const pollMexcCalendar = inngest.createFunction(
       return await orchestrator.executeCalendarDiscoveryWorkflow({
         trigger,
         force,
-        // Pass sync results for orchestrator context
-        syncData: {
-          processed: syncResult.processed,
-          created: syncResult.created,
-          updated: syncResult.updated,
-        },
       });
     });
 

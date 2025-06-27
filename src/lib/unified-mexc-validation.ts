@@ -320,9 +320,9 @@ export class UnifiedMexcValidationService {
       const result = await mexcService.testConnectivity();
 
       return {
-        connected: result as boolean,
+        connected: result.success,
         responseTime: Date.now() - startTime,
-        error: result ? undefined : "Connection test failed",
+        error: result.success ? undefined : "Connection test failed",
       };
     } catch (error) {
       return {
@@ -628,7 +628,11 @@ export async function validateUserCredentials(
   options?: ValidationOptions
 ): Promise<ApiResponse<ComprehensiveValidationResult>> {
   const result = await UnifiedMexcValidationService.validateCredentials(userId, undefined, options);
-  return createCredentialResponse(result, result.accountInfo);
+  const response = createCredentialResponse(result, result.accountInfo);
+  return {
+    ...response,
+    data: result as ComprehensiveValidationResult,
+  } as ApiResponse<ComprehensiveValidationResult>;
 }
 
 /**
@@ -643,7 +647,11 @@ export async function testProvidedCredentials(
     credentials,
     options
   );
-  return createCredentialResponse(result, result.accountInfo);
+  const response = createCredentialResponse(result, result.accountInfo);
+  return {
+    ...response,
+    data: result as ComprehensiveValidationResult,
+  } as ApiResponse<ComprehensiveValidationResult>;
 }
 
 // ============================================================================

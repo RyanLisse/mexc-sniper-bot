@@ -162,9 +162,10 @@ describe('TradingStrategyManager', () => {
     it('should export strategy correctly', () => {
       const exported = manager.exportStrategy('normal');
       
-      expect(exported.id).toBe('normal');
-      expect(exported.name).toBe('Normal Multi-Phase Strategy');
-      expect(exported.levels).toEqual(TRADING_STRATEGIES.normal.levels);
+      expect(exported).not.toBeNull();
+      expect(exported!.id).toBe('normal');
+      expect(exported!.name).toBe('Normal Multi-Phase Strategy');
+      expect(exported!.levels).toEqual(TRADING_STRATEGIES.normal.levels);
     });
 
     it('should import strategy correctly', () => {

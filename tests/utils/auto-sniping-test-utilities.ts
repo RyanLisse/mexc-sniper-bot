@@ -34,7 +34,7 @@ export class MockDataGenerator {
       st: 2,
       tt: 4,
       cd: "MOCKUSDT",
-      ca: 1000,
+      ca: "1000",
       ps: 100,
       qs: 50,
       ...overrides,
@@ -50,7 +50,7 @@ export class MockDataGenerator {
       st: 2,
       tt: 4,
       cd: symbol,
-      ca: Math.floor(Math.random() * 5000) + 1000,
+      ca: (Math.floor(Math.random() * 5000) + 1000).toString(),
       ps: Math.floor(Math.random() * 500) + 100,
       qs: Math.floor(Math.random() * 200) + 50,
     });
@@ -91,7 +91,15 @@ export class MockDataGenerator {
    */
   static generateMarketData(
     scenario: "normal" | "volatile" | "crash" | "pump" | "low_liquidity",
-  ) {
+  ): {
+    price: number;
+    volume24h: number;
+    change24h: number;
+    high24h: number;
+    low24h: number;
+    volatility: number;
+    bidAskSpread?: number;
+  } {
     const basePrice = 1.0;
     const baseVolume = 1000000;
 

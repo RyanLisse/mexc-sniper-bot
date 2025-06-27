@@ -19,11 +19,11 @@ import {
   validateSafetyThresholds,
 } from "@/src/schemas/safety-monitoring-schemas";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
-import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
+import type { CoreTradingService } from "@/src/services/trading/consolidated/core-trading/base-service";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;
-  executionService: OptimizedAutoSnipingExecutionEngine;
+  executionService: CoreTradingService;
   patternMonitoring: PatternMonitoringService;
   onAlert?: (alert: Omit<SafetyAlert, "id" | "timestamp" | "acknowledged">) => void;
 }
@@ -178,14 +178,15 @@ export class CoreSafetyMonitoring {
           executionReport = await this.config.executionService.getExecutionReport();
         } else {
           // Fallback: construct a basic execution report from available methods
-          const activePositions = this.config.executionService.getActivePositions?.() || [];
+          const activePositions = await this.config.executionService.getActivePositions() || [];
+          const performanceMetrics = await this.config.executionService.getPerformanceMetrics();
           executionReport = {
             stats: {
-              currentDrawdown: 0,
-              maxDrawdown: 0,
-              successRate: 75,
+              currentDrawdown: performanceMetrics.maxDrawdown || 0,
+              maxDrawdown: performanceMetrics.maxDrawdown || 0,
+              successRate: performanceMetrics.successRate || 75,
               averageSlippage: 0.1,
-              totalPnl: "0",
+              totalPnl: performanceMetrics.totalPnL?.toString() || "0",
             },
             activePositions,
             recentExecutions: [],
@@ -567,7 +568,12 @@ export class CoreSafetyMonitoring {
   private async measureApiLatency(): Promise<number> {
     const startTime = Date.now();
     try {
-      await this.config.executionService.getExecutionReport();
+      if (typeof this.config.executionService.getExecutionReport === "function") {
+        await this.config.executionService.getExecutionReport();
+      } else {
+        // Use alternative method for latency measurement
+        await this.config.executionService.getServiceStatus();
+      }
       return Date.now() - startTime;
     } catch (error) {
       return 5000; // High latency on failure
@@ -576,28 +582,24 @@ export class CoreSafetyMonitoring {
 
   private async measureApiSuccessRate(): Promise<number> {
     try {
-      const report = await this.config.executionService.getExecutionReport();
-      const executions = report.recentExecutions || [];
-      if (executions.length === 0) return 100;
-
-      const successful = executions.filter(
-        (e) => e.status === "completed" || e.status === "filled"
-      );
-      return (successful.length / executions.length) * 100;
+      const performanceMetrics = await this.config.executionService.getPerformanceMetrics();
+      return performanceMetrics.successRate || 100;
     } catch {
       return 50;
     }
   }
 
-  private measureMemoryUsage(): number {
+  private async measureMemoryUsage(): Promise<number> {
     if (typeof process !== "undefined" && process.memoryUsage) {
       const mem = process.memoryUsage();
       return Math.min((mem.heapUsed / 1024 / 1024 / 1024) * 100, 100);
     }
-    return Math.min(
-      20 + (this.config.executionService?.getActivePositions?.()?.length || 0) * 2,
-      90
-    );
+    try {
+      const activePositions = await this.config.executionService.getActivePositions();
+      return Math.min(20 + (activePositions?.length || 0) * 2, 90);
+    } catch {
+      return 20;
+    }
   }
 
   private calculateRealPortfolioValue(report: any): number {

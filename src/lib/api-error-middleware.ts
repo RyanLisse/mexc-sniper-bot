@@ -174,7 +174,7 @@ export function withApiErrorHandling<T = any>(
           status: result.metadata?.statusCode || (result.success ? 200 : 500),
           headers: {
             "Content-Type": "application/json",
-            "X-Request-ID": requestContext.requestId,
+            ...(requestContext.requestId && { "X-Request-ID": requestContext.requestId }),
           },
         });
       }
@@ -191,7 +191,7 @@ export function withApiErrorHandling<T = any>(
         url: request.url,
         requestId: requestContext.requestId,
         statusCode: response.status,
-        duration: `${duration.toFixed(2)}ms`,
+        duration: Math.round(duration),
       });
 
       return response;
@@ -227,7 +227,7 @@ export function withApiErrorHandling<T = any>(
           url: request.url,
           requestId: requestContext.requestId,
           statusCode: errorResponse.status,
-          duration: `${duration.toFixed(2)}ms`,
+          duration: Math.round(duration),
           error: error instanceof Error ? error.message : String(error),
         },
         error instanceof Error ? error : new Error(String(error))

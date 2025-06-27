@@ -78,7 +78,9 @@ describe("Auto Sniping Core Functionality", () => {
       secretKey: "test-secret-key",
       enableCaching: true,
       enableCircuitBreaker: true,
-      enableMetrics: true,
+      enableRateLimiter: true,
+      maxFailures: 5,
+      resetTimeout: 60000,
     });
 
     // Setup trading bot with conservative strategy for testing
@@ -93,7 +95,7 @@ describe("Auto Sniping Core Functionality", () => {
       ],
     };
 
-    tradingBot = new MultiPhaseTradingBot(testStrategy, 1000, 50000); // $1000 position, $50k portfolio
+    tradingBot = new MultiPhaseTradingBot(testStrategy); // Initialize with strategy
 
     // Initialize safety coordinator
     safetyCoordinator = new ComprehensiveSafetyCoordinator({
@@ -207,7 +209,7 @@ describe("Auto Sniping Core Functionality", () => {
               st: 2,
               tt: 4,
               cd: "AUTOSNIPEUSDT",
-              ca: 5000,
+              ca: "5000",
               ps: 1000,
               qs: 500,
             };

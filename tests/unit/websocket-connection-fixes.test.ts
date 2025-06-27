@@ -125,9 +125,11 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
       expect(client.isConnected()).toBe(false);
       
       const result = client.send({
-        type: 'test:message',
-        channel: 'test',
-        data: { test: 'data' }
+        type: 'system:heartbeat',
+        channel: 'system',
+        data: { test: 'data' },
+        timestamp: Date.now(),
+        messageId: 'test-message-id'
       });
       
       // Should queue message when disconnected
@@ -140,13 +142,13 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
     it('should handle subscription management', () => {
       const mockHandler = vi.fn();
       
-      const unsubscribe = client.subscribe('test:channel', mockHandler);
+      const unsubscribe = client.subscribe('system', mockHandler);
       
-      expect(client.getSubscriptions()).toContain('test:channel');
+      expect(client.getSubscriptions()).toContain('system');
       
       unsubscribe();
       
-      expect(client.getSubscriptions()).not.toContain('test:channel');
+      expect(client.getSubscriptions()).not.toContain('system');
     }, TEST_TIMEOUT);
 
     it('should implement reconnection logic', () => {
@@ -225,8 +227,8 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
     it('should handle market depth updates', async () => {
       const mockDepth = {
         s: 'BTCUSDT',
-        bids: [['45000', '0.5'], ['44999', '1.0']],
-        asks: [['45001', '0.8'], ['45002', '1.2']],
+        bids: [['45000', '0.5'] as [string, string], ['44999', '1.0'] as [string, string]],
+        asks: [['45001', '0.8'] as [string, string], ['45002', '1.2'] as [string, string]],
         ts: Date.now()
       };
 
@@ -419,15 +421,15 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
       
       // Subscribe to same channel multiple times rapidly
       const unsubscribes = handlers.map(handler => 
-        client.subscribe('test:channel', handler)
+        client.subscribe('system', handler)
       );
 
-      expect(client.getSubscriptions()).toContain('test:channel');
+      expect(client.getSubscriptions()).toContain('system');
 
       // Unsubscribe all
       unsubscribes.forEach(unsub => unsub());
       
-      expect(client.getSubscriptions()).not.toContain('test:channel');
+      expect(client.getSubscriptions()).not.toContain('system');
     }, TEST_TIMEOUT);
   });
 

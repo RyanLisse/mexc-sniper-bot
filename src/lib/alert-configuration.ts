@@ -126,6 +126,8 @@ export const BUILT_IN_RULE_TEMPLATES = {
     threshold: 100, // $100 discrepancy
     aggregationWindow: 60,
     evaluationInterval: 30,
+    useAnomalyDetection: false,
+    anomalyThreshold: 2.0,
     maxAlerts: 5,
     tags: ["trading", "balance", "reconciliation"],
   },
@@ -141,6 +143,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     aggregationWindow: 300,
     evaluationInterval: 60,
     useAnomalyDetection: true,
+    anomalyThreshold: 2.0,
     tags: ["api", "performance", "mexc"],
   },
 
@@ -155,6 +158,8 @@ export const BUILT_IN_RULE_TEMPLATES = {
     threshold: 0.1, // 10% of portfolio
     aggregationWindow: 60,
     evaluationInterval: 30,
+    useAnomalyDetection: false,
+    anomalyThreshold: 2.0,
     maxAlerts: 3,
     escalationDelay: 300, // 5 minutes
     tags: ["risk", "safety", "limits"],
@@ -170,6 +175,8 @@ export const BUILT_IN_RULE_TEMPLATES = {
     threshold: 1, // 1 = triggered
     aggregationWindow: 60,
     evaluationInterval: 30,
+    useAnomalyDetection: false,
+    anomalyThreshold: 2.0,
     suppressionDuration: 60, // 1 minute
     tags: ["circuit-breaker", "safety"],
   },
@@ -186,6 +193,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     aggregationWindow: 600,
     evaluationInterval: 120,
     useAnomalyDetection: true,
+    anomalyThreshold: 2.0,
     correlationKey: "agent_health",
     tags: ["agents", "ai", "failures"],
   },
@@ -201,6 +209,7 @@ export const BUILT_IN_RULE_TEMPLATES = {
     aggregationWindow: 300,
     evaluationInterval: 60,
     useAnomalyDetection: true,
+    anomalyThreshold: 2.0,
     tags: ["agents", "performance"],
   },
 
@@ -215,6 +224,8 @@ export const BUILT_IN_RULE_TEMPLATES = {
     threshold: 0.9, // 90% utilization
     aggregationWindow: 300,
     evaluationInterval: 60,
+    useAnomalyDetection: false,
+    anomalyThreshold: 2.0,
     tags: ["database", "connections", "performance"],
   },
 
@@ -243,6 +254,8 @@ export const BUILT_IN_RULE_TEMPLATES = {
     threshold: 10, // 10 slow queries in window
     aggregationWindow: 300,
     evaluationInterval: 60,
+    useAnomalyDetection: false,
+    anomalyThreshold: 2.0,
     tags: ["database", "performance", "queries"],
   },
 
@@ -462,6 +475,7 @@ export class AlertConfigurationService {
 
         if (existing.length === 0) {
           // Ensure template conforms to schema by creating a properly typed object
+          const templateAsAny = template as any;
           const validatedTemplate: z.infer<typeof AlertRuleConfigSchema> = {
             name: template.name,
             description: template.description,
@@ -472,24 +486,28 @@ export class AlertConfigurationService {
             threshold: template.threshold,
             aggregationWindow: template.aggregationWindow,
             evaluationInterval: template.evaluationInterval,
-            useAnomalyDetection: template.useAnomalyDetection ?? false,
-            anomalyThreshold: template.anomalyThreshold ?? 2.0,
-            maxAlerts: (template as any).maxAlerts ?? 10,
-            tags: (template as any).tags ?? [],
-            ...((template as any).learningWindow && {
-              learningWindow: (template as any).learningWindow,
+            useAnomalyDetection: templateAsAny.useAnomalyDetection ?? false,
+            anomalyThreshold: templateAsAny.anomalyThreshold ?? 2.0,
+            maxAlerts: templateAsAny.maxAlerts ?? 10,
+            tags: templateAsAny.tags ?? [],
+            ...(templateAsAny.learningWindow && {
+              learningWindow: templateAsAny.learningWindow,
             }),
-            ...((template as any).suppressionDuration && {
-              suppressionDuration: (template as any).suppressionDuration,
+            ...(templateAsAny.suppressionDuration && {
+              suppressionDuration: templateAsAny.suppressionDuration,
             }),
-            ...((template as any).escalationDelay && {
-              escalationDelay: (template as any).escalationDelay,
+            ...(templateAsAny.escalationDelay && {
+              escalationDelay: templateAsAny.escalationDelay,
             }),
-            ...((template as any).correlationKey && {
-              correlationKey: (template as any).correlationKey,
+            ...(templateAsAny.correlationKey && {
+              correlationKey: templateAsAny.correlationKey,
             }),
-            ...((template as any).parentRuleId && { parentRuleId: (template as any).parentRuleId }),
-            ...((template as any).customFields && { customFields: (template as any).customFields }),
+            ...(templateAsAny.parentRuleId && { 
+              parentRuleId: templateAsAny.parentRuleId 
+            }),
+            ...(templateAsAny.customFields && { 
+              customFields: templateAsAny.customFields 
+            }),
           };
           const ruleId = await this.createAlertRule(validatedTemplate, createdBy);
           deployedRules.push(ruleId);

@@ -34,7 +34,7 @@ import {
   EmergencyStopCoordinator,
   type EmergencyStopEvent,
 } from "@/src/services/risk/emergency-stop-coordinator";
-import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
+import { getCoreTrading, type CoreTradingService } from "@/src/services/trading/consolidated/core-trading/base-service";
 import {
   type AlertGenerationData,
   AlertManagement,
@@ -139,7 +139,7 @@ export class RealTimeSafetyMonitoringService {
   // Service dependencies (for compatibility)
   private emergencySystem: EmergencySafetySystem;
   private emergencyStopCoordinator: EmergencyStopCoordinator;
-  private executionService: OptimizedAutoSnipingCore;
+  private executionService: CoreTradingService;
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
 
@@ -171,7 +171,7 @@ export class RealTimeSafetyMonitoringService {
     // Initialize services
     this.emergencySystem = new EmergencySafetySystem();
     this.emergencyStopCoordinator = EmergencyStopCoordinator.getInstance();
-    this.executionService = OptimizedAutoSnipingCore.getInstance();
+    this.executionService = getCoreTrading();
     this.patternMonitoring = PatternMonitoringService.getInstance();
     this.mexcService = new UnifiedMexcServiceV2();
 
@@ -450,10 +450,11 @@ export class RealTimeSafetyMonitoringService {
    * Addresses Agent 4/15 objectives: Emergency stop system synchronization
    */
   public async triggerEmergencyResponse(reason: string): Promise<SafetyAction[]> {
+    const activePositions = await this.executionService.getActivePositions();
     console.warn("🚨 Triggering coordinated emergency response", {
       operation: "emergency_response",
       reason,
-      activePositions: this.executionService.getActivePositions().length,
+      activePositions: activePositions.length,
       currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
       coordinator: "EmergencyStopCoordinator",
     });
@@ -469,7 +470,7 @@ export class RealTimeSafetyMonitoringService {
         severity: this.determineEmergencySeverity(reason),
         timestamp: Date.now(),
         context: {
-          activePositions: this.executionService.getActivePositions().length,
+          activePositions: activePositions.length,
           currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
           monitoringActive: this.isMonitoringActive,
         },
@@ -498,7 +499,7 @@ export class RealTimeSafetyMonitoringService {
       });
 
       // Additional safety monitoring specific actions
-      const positions = this.executionService.getActivePositions();
+      const positions = activePositions;
 
       // Local emergency halt (fallback if coordination didn't handle it)
       const haltAction: SafetyAction = {
@@ -761,7 +762,7 @@ export class RealTimeSafetyMonitoringService {
    */
   public injectDependencies(dependencies: {
     emergencySystem?: EmergencySafetySystem;
-    executionService?: OptimizedAutoSnipingCore;
+    executionService?: CoreTradingService;
     patternMonitoring?: PatternMonitoringService;
     mexcService?: UnifiedMexcServiceV2;
   }): void {

@@ -68,14 +68,13 @@ export default defineConfig({
     
     // Test execution configuration - removed duplicate, see poolOptions below
     
-    // EMERGENCY timeout configuration to prevent hanging
-    testTimeout: 3000, // 3 seconds default (emergency aggressive timeout)
-    hookTimeout: 5000, // 5 seconds for hooks (emergency reduced)  
-    teardownTimeout: 3000, // 3 seconds for teardown (emergency reduced)
+    // Optimized timeout configuration for balanced performance and reliability
+    testTimeout: 15000, // 15 seconds default (reasonable for unit tests)
+    hookTimeout: 10000, // 10 seconds for hooks (adequate for setup/teardown)  
+    teardownTimeout: 8000, // 8 seconds for teardown (adequate for cleanup)
     
-    // NOTE: Per-file timeout overrides handled via individual test files
-    // Different test types should configure their own timeouts as needed:
-    // - Unit tests: 10s (default)
+    // Balanced timeout strategy:
+    // - Unit tests: 15s (default above)
     // - Integration tests: 45s (use per-test timeout overrides)
     // - Auto-sniping tests: 30s (use per-test timeout overrides)
     // - Performance tests: 60s (use per-test timeout overrides)
@@ -218,9 +217,9 @@ export default defineConfig({
       'test-results/**'
     ],
     
-    // Performance monitoring - optimized
-    logHeapUsage: false, // Disable heap logging for speed unless explicitly enabled
-    isolate: false, // Disable isolation for better performance unless explicitly needed
+    // Performance monitoring - optimized for development efficiency
+    logHeapUsage: process.env.LOG_HEAP_USAGE === 'true', // Enable via env var when needed
+    isolate: process.env.TEST_ISOLATION === 'true', // Enable isolation only when debugging
     
     // Pool management - optimized for performance
     pool: 'threads',
@@ -229,8 +228,8 @@ export default defineConfig({
         isolate: false, // Reduce isolation overhead for better performance
         singleThread: false,
         useAtomics: true,
-        maxThreads: process.env.CI ? 2 : Math.min(8, require('os').cpus().length), // Optimize thread count
-        minThreads: 1,
+        maxThreads: process.env.CI ? 4 : Math.max(2, Math.min(8, require('os').cpus().length - 1)), // Optimize thread count, reserve 1 CPU
+        minThreads: 2, // Ensure minimum parallelism
       }
     },
     

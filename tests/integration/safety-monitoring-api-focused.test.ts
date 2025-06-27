@@ -8,12 +8,10 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-describe("Safety Monitoring API POST Endpoint Configuration", () => {
-  let POST: any;
-
-  beforeAll(async () => {
-    // Setup minimal mocks for testing POST endpoints
-    const mockSafetyService = {
+// Mock modules before imports
+vi.mock("@/src/services/risk/real-time-safety-monitoring-modules/index", () => ({
+  RealTimeSafetyMonitoringService: {
+    getInstance: vi.fn(() => ({
       getMonitoringStatus: vi.fn().mockReturnValue(false),
       startMonitoring: vi.fn().mockResolvedValue(undefined),
       stopMonitoring: vi.fn().mockReturnValue(undefined),
@@ -37,25 +35,23 @@ describe("Safety Monitoring API POST Endpoint Configuration", () => {
           maxDrawdownPercentage: 15,
         },
       }),
+    })),
+  },
+}));
+
+vi.mock("@/src/lib/api-auth", () => ({
+  apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+    return async (request, ...args) => {
+      return await handler(request, ...args);
     };
+  }),
+}));
 
-    // Mock the service module
-    vi.doMock("@/src/services/risk/real-time-safety-monitoring-modules", () => ({
-      RealTimeSafetyMonitoringService: {
-        getInstance: vi.fn(() => mockSafetyService),
-      },
-    }));
+describe("Safety Monitoring API POST Endpoint Configuration", () => {
+  let POST: any;
 
-    // Mock api-auth to bypass authentication
-    vi.doMock("@/src/lib/api-auth", () => ({
-      apiAuthWrapper: vi.fn().mockImplementation((handler) => {
-        return async (request, ...args) => {
-          return await handler(request, ...args);
-        };
-      }),
-    }));
-
-    // Import the POST handler
+  beforeAll(async () => {
+    // Import the POST handler after mocks are set up
     const module = await import("../../app/api/auto-sniping/safety-monitoring/route");
     POST = module.POST;
   });

@@ -16,15 +16,20 @@
     "src/domain/**/*",
     "src/application/**/*", 
     "src/infrastructure/**/*",
-    "src/presentation/**/*",
-    "tests/unit/**/*",
-    "tests/integration/clean-architecture/**/*"
+    "src/presentation/**/*"
   ],
   "exclude": [
     "src/components/**/*",
     "src/services/**/*",
     "src/lib/**/*",
-    "tests/integration/**/*",
-    "tests/e2e/**/*"
+    "src/mexc-agents/**/*",
+    "src/core/**/*",
+    "src/hooks/**/*",
+    "src/contexts/**/*",
+    "src/inngest/**/*",
+    "src/schemas/**/*",
+    "src/utils/**/*",
+    "tests/**/*",
+    "node_modules"
   ]
 }

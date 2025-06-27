@@ -45,26 +45,26 @@ export const SafetyThresholdsSchema = z.object({
 
 export const RiskMetricsSchema = z.object({
   // Portfolio risk
-  currentDrawdown: z.number().min(0),
-  maxDrawdown: z.number().min(0),
-  portfolioValue: z.number().min(0),
-  totalExposure: z.number().min(0),
-  concentrationRisk: z.number().min(0).max(100),
+  currentDrawdown: z.number().finite().min(0).default(0),
+  maxDrawdown: z.number().finite().min(0).default(0),
+  portfolioValue: z.number().finite().min(0).default(10000),
+  totalExposure: z.number().finite().min(0).default(0),
+  concentrationRisk: z.number().finite().min(0).max(100).default(0),
 
   // Performance risk
-  successRate: z.number().min(0).max(100),
-  consecutiveLosses: z.number().int().min(0),
-  averageSlippage: z.number().min(0),
+  successRate: z.number().finite().min(0).max(100).default(0),
+  consecutiveLosses: z.number().int().min(0).default(0),
+  averageSlippage: z.number().finite().min(0).default(0),
 
   // System risk
-  apiLatency: z.number().min(0),
-  apiSuccessRate: z.number().min(0).max(100),
-  memoryUsage: z.number().min(0).max(100),
+  apiLatency: z.number().finite().min(0).default(0),
+  apiSuccessRate: z.number().finite().min(0).max(100).default(100),
+  memoryUsage: z.number().finite().min(0).max(100).default(0),
 
   // Pattern risk
-  patternAccuracy: z.number().min(0).max(100),
-  detectionFailures: z.number().int().min(0),
-  falsePositiveRate: z.number().min(0).max(100),
+  patternAccuracy: z.number().finite().min(0).max(100).default(0),
+  detectionFailures: z.number().int().min(0).default(0),
+  falsePositiveRate: z.number().finite().min(0).max(100).default(0),
 });
 
 // ============================================================================
@@ -77,6 +77,7 @@ export const SafetyActionSchema = z.object({
     "halt_trading",
     "reduce_positions",
     "emergency_close",
+    "emergency_coordination",
     "limit_exposure",
     "notify_admin",
     "circuit_breaker",
@@ -86,6 +87,7 @@ export const SafetyActionSchema = z.object({
   executedAt: z.string().optional(),
   result: z.enum(["success", "failed", "partial"]).optional(),
   details: z.string().optional(),
+  metadata: z.record(z.unknown()).optional(),
 });
 
 // ============================================================================
@@ -204,7 +206,74 @@ export function validateSafetyThresholds(data: unknown): SafetyThresholds {
 }
 
 export function validateRiskMetrics(data: unknown): RiskMetrics {
-  return RiskMetricsSchema.parse(data);
+  // First, sanitize any NaN values before validation
+  const sanitizedData = sanitizeRiskMetricsData(data);
+  return RiskMetricsSchema.parse(sanitizedData);
+}
+
+/**
+ * Sanitize risk metrics data to convert NaN and invalid values to safe defaults
+ */
+function sanitizeRiskMetricsData(data: unknown): any {
+  if (!data || typeof data !== 'object') {
+    return {};
+  }
+
+  const sanitized = { ...data as any };
+  
+  // List of numeric fields that should be sanitized
+  const numericFields = [
+    'currentDrawdown', 'maxDrawdown', 'portfolioValue', 'totalExposure', 
+    'concentrationRisk', 'successRate', 'consecutiveLosses', 'averageSlippage',
+    'apiLatency', 'apiSuccessRate', 'memoryUsage', 'patternAccuracy', 
+    'detectionFailures', 'falsePositiveRate'
+  ];
+
+  // Sanitize each numeric field
+  for (const field of numericFields) {
+    if (field in sanitized) {
+      const value = sanitized[field];
+      
+      // Convert NaN, Infinity, or non-numeric values to appropriate defaults
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        sanitized[field] = getDefaultValueForField(field);
+      }
+      // Ensure values are within reasonable bounds
+      else if (value < 0) {
+        sanitized[field] = 0;
+      }
+      // Special handling for percentage fields
+      else if (['concentrationRisk', 'successRate', 'apiSuccessRate', 'memoryUsage', 'patternAccuracy', 'falsePositiveRate'].includes(field) && value > 100) {
+        sanitized[field] = 100;
+      }
+    }
+  }
+
+  return sanitized;
+}
+
+/**
+ * Get default value for a specific risk metrics field
+ */
+function getDefaultValueForField(field: string): number {
+  const defaults: Record<string, number> = {
+    currentDrawdown: 0,
+    maxDrawdown: 0,
+    portfolioValue: 10000,
+    totalExposure: 0,
+    concentrationRisk: 0,
+    successRate: 0,
+    consecutiveLosses: 0,
+    averageSlippage: 0,
+    apiLatency: 0,
+    apiSuccessRate: 100,
+    memoryUsage: 0,
+    patternAccuracy: 0,
+    detectionFailures: 0,
+    falsePositiveRate: 0,
+  };
+  
+  return defaults[field] ?? 0;
 }
 
 export function validateSafetyAction(data: unknown): SafetyAction {

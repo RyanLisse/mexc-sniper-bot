@@ -613,7 +613,7 @@ export class PerformanceCollector {
   private async persistMetrics(): Promise<void> {
     try {
       // Import database connection and schemas
-      const { db } = await import("../../db");
+      const { db } = await import("@/src/db");
       const { sql } = await import("drizzle-orm");
       
       // Create performance metrics tables if they don't exist

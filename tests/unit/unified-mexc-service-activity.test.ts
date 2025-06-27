@@ -12,9 +12,18 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
     mexcService = new UnifiedMexcServiceV2({
       apiKey: 'test-api-key',
       secretKey: 'test-secret-key',
+      baseUrl: 'https://api.mexc.com',
+      timeout: 10000,
+      maxRetries: 3,
+      retryDelay: 1000,
+      rateLimitDelay: 100,
       enableCaching: false, // Disable caching for tests
+      cacheTTL: 30000,
+      apiResponseTTL: 1500,
       enableCircuitBreaker: false,
-      enableMetrics: false,
+      enableRateLimiter: false,
+      maxFailures: 5,
+      resetTimeout: 60000,
     });
   });
 
@@ -115,7 +124,11 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
           timestamp: new Date().toISOString(),
         });
 
-      const result = await mexcService.getBulkActivityData(currencies, { batchSize: 2 });
+      const result = await mexcService.getBulkActivityData(currencies, { 
+        batchSize: 2,
+        maxRetries: 3,
+        rateLimitDelay: 200
+      });
 
       expect(result.success).toBe(true);
       expect(result.data).toBeInstanceOf(Array);
