@@ -322,7 +322,7 @@ export function useEnhancedConnectivity(options: ConnectivityHookOptions = {}) {
   const isHealthy = connectivity
     ? connectivity.connectionHealth === "excellent" || connectivity.connectionHealth === "good"
     : false;
-  const hasCriticalIssues = connectivity ? analysis?.criticalIssues.length > 0 : true;
+  const hasCriticalIssues = connectivity ? (analysis?.criticalIssues?.length || 0) > 0 : true;
   const needsImmedateAttention = connectivity
     ? connectivity.circuitBreaker.isOpen ||
       connectivity.alerts.severity === "critical" ||

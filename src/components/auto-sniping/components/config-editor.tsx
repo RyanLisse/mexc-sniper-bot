@@ -12,13 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading/types";
+import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
 import { type AutoSnipingConfigForm, configFormSchema } from "../schemas/validation-schemas";
 
 interface ConfigEditorProps {
-  config: CoreTradingConfig | null;
+  config: AutoSnipingConfig | null;
   configEditMode: boolean;
-  tempConfig: Partial<CoreTradingConfig>;
+  tempConfig: Partial<AutoSnipingConfig>;
   isUpdatingConfig: boolean;
   onConfigChange: (field: string, value: string | number | boolean) => void;
   onSaveConfig: () => void;
