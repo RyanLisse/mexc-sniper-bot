@@ -312,6 +312,41 @@ export interface ServiceStatus {
   version: string;
 }
 
+// Extended interface for frontend-specific status data
+export interface ExtendedServiceStatus extends ServiceStatus {
+  // Frontend-specific fields
+  status?: string;
+  targetCounts?: {
+    memory: number;
+    database: number;
+    unified: number;
+    isConsistent: boolean;
+    source: string;
+    warning?: string;
+  };
+  stateConsistency?: {
+    isConsistent: boolean;
+    inconsistencies: string[];
+    recommendedActions: string[];
+    lastSyncTime: string;
+  };
+  executedToday?: number;
+  successRate?: number;
+  totalProfit?: number;
+  lastExecution?: string;
+  safetyStatus?: string;
+  patternDetectionActive?: boolean;
+  executionCount?: number;
+  successCount?: number;
+  errorCount?: number;
+  readyTargets?: number;
+  config?: {
+    maxConcurrentTargets?: number;
+    retryAttempts?: number;
+    executionDelay?: number;
+  };
+}
+
 export const ServiceStatusSchema = z.object({
   isHealthy: z.boolean(),
   isConnected: z.boolean(),
@@ -364,7 +399,11 @@ export interface ServiceResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+  message?: string;
+  status?: string;
+  finalStatus?: string;
   timestamp: string;
+  requestId?: string;
 }
 
 // ============================================================================

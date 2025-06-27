@@ -198,7 +198,7 @@ export default defineConfig({
     globalSetup: './tests/setup/global-setup.js',
     
     // Reporter configuration - optimized for performance
-    reporter: process.env.CI 
+    reporters: process.env.CI 
       ? ['github-actions', 'json']
       : process.env.VERBOSE_TESTS === 'true' ? ['verbose'] : ['basic'], // Minimal reporting for speed
       

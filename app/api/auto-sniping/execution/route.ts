@@ -176,7 +176,7 @@ export const POST = instrumentedTradingRoute(
         }
 
       case 'get_active_positions':
-        const activePositions = getExecutionService().getActivePositions();
+        const activePositions = await getExecutionService().getActivePositions();
         return NextResponse.json(createSuccessResponse(
           { positions: activePositions },
           { message: `Retrieved ${activePositions.length} active positions` }

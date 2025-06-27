@@ -43,16 +43,16 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         if (result.success) {
           return Response.json(createSuccessResponse({
-            message: result.message,
+            message: result.message || 'Auto-sniping started successfully',
             data: {
               started: true,
-              status: result.status,
+              status: await coreTrading.getServiceStatus(),
               timestamp: new Date().toISOString(),
             },
           }));
         } else {
           return Response.json(
-            createErrorResponse(result.message, {
+            createErrorResponse(result.error || 'Failed to start auto-sniping', {
               action: 'start',
               timestamp: new Date().toISOString(),
             }),
@@ -67,16 +67,16 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         if (result.success) {
           return Response.json(createSuccessResponse({
-            message: result.message,
+            message: result.message || 'Auto-sniping stopped successfully',
             data: {
               stopped: true,
-              finalStatus: result.finalStatus,
+              finalStatus: await coreTrading.getServiceStatus(),
               timestamp: new Date().toISOString(),
             },
           }));
         } else {
           return Response.json(
-            createErrorResponse(result.message, {
+            createErrorResponse(result.error || 'Failed to stop auto-sniping', {
               action: 'stop',
               timestamp: new Date().toISOString(),
             }),

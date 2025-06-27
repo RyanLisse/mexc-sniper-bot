@@ -12,20 +12,37 @@ const coreTrading = getCoreTrading();
 
 export async function GET() {
   try {
-    // Initialize core trading service if needed
-    let report;
+    // Ensure core trading service is initialized before making any calls
+    let initResult;
     try {
-      report = await coreTrading.getPerformanceMetrics();
+      // Check if service needs initialization by calling a simple status check
+      const status = await coreTrading.getServiceStatus();
+      console.info('[API] Core trading service already initialized');
     } catch (error) {
-      // If service is not initialized, initialize it first
       if (error instanceof Error && error.message.includes('not initialized')) {
-        console.info('[API] Core trading service not initialized, initializing...');
-        await coreTrading.initialize();
-        report = await coreTrading.getPerformanceMetrics();
+        console.info('[API] Initializing core trading service...');
+        initResult = await coreTrading.initialize();
+        
+        if (!initResult.success) {
+          console.error('[API] Core trading service initialization failed:', initResult.error);
+          return apiResponse(
+            createErrorResponse("Service initialization failed", {
+              error: initResult.error,
+              message: "Core trading service could not be initialized"
+            }),
+            HTTP_STATUS.INTERNAL_SERVER_ERROR
+          );
+        }
+        
+        console.info('[API] Core trading service initialized successfully');
       } else {
+        // Re-throw unexpected errors
         throw error;
       }
     }
+
+    // Now safely get performance metrics
+    const report = await coreTrading.getPerformanceMetrics();
     
     return apiResponse(
       createSuccessResponse(report, {

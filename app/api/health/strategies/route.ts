@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHealthResponse, apiResponse, handleApiError } from "@/src/lib/api-response";
 import { strategyInitializationService } from "@/src/services/trading/strategy-initialization-service";
-import { multiPhaseTradingService } from "@/src/services/trading/multi-phase-trading-service";
 
 export async function GET() {
   try {

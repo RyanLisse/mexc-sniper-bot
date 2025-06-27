@@ -178,7 +178,7 @@ export const TickerSchema = z.object({
   h: z.string().optional(), // Alternate high price field
   lowPrice: z.string().optional(),
   l: z.string().optional(), // Alternate low price field
-  count: z.union([z.string(), z.number()]).optional(),
+  count: z.union([z.string(), z.number(), z.null()]).optional(),
   t: z.number().optional(), // Timestamp
 });
 

@@ -200,7 +200,9 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
     this.isActive = true;
     await this.alertsManager.start();
-    await this.emergencyManager.start();
+    
+    // Emergency manager doesn't have start/stop methods - just initialize state
+    this.logger.info("Emergency manager initialized - no start method required");
 
     console.info("Safety monitoring started");
     this.emit("started");
@@ -216,7 +218,9 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
     this.isActive = false;
     await this.alertsManager.stop();
-    await this.emergencyManager.stop();
+    
+    // Emergency manager doesn't have start/stop methods - just note shutdown
+    this.logger.info("Emergency manager shutdown - no stop method required");
 
     console.info("Safety monitoring stopped");
     this.emit("stopped");

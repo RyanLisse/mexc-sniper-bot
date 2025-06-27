@@ -17,13 +17,13 @@ export async function GET() {
     // Get current execution report which includes unified status
     let report;
     try {
-      report = await coreTrading.getServiceStatus();
+      report = await coreTrading.getExtendedServiceStatus();
     } catch (error) {
       // If service is not initialized, initialize it first
       if (error instanceof Error && error.message.includes('not initialized')) {
         console.info('[API] Core trading service not initialized, initializing...');
         await coreTrading.initialize();
-        report = await coreTrading.getServiceStatus();
+        report = await coreTrading.getExtendedServiceStatus();
       } else {
         throw error;
       }

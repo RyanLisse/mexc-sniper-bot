@@ -152,6 +152,85 @@ export class AutoSnipingModule {
   }
 
   /**
+   * Pause auto-sniping monitoring
+   */
+  async pause(): Promise<ServiceResponse<void>> {
+    if (!this.isActive) {
+      return {
+        success: false,
+        error: "Auto-sniping is not active",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    try {
+      if (this.autoSnipingInterval) {
+        clearInterval(this.autoSnipingInterval);
+        this.autoSnipingInterval = null;
+      }
+
+      this.context.logger.info("Auto-sniping monitoring paused");
+      return {
+        success: true,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      this.context.logger.error("Failed to pause auto-sniping", safeError);
+
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Resume auto-sniping monitoring
+   */
+  async resume(): Promise<ServiceResponse<void>> {
+    if (!this.isActive) {
+      return {
+        success: false,
+        error: "Auto-sniping is not active",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    if (this.autoSnipingInterval) {
+      return {
+        success: false,
+        error: "Auto-sniping is already running",
+        timestamp: new Date().toISOString(),
+      };
+    }
+
+    try {
+      // Resume the interval
+      this.autoSnipingInterval = setInterval(
+        () => this.processSnipeTargets(),
+        this.context.config.snipeCheckInterval
+      );
+
+      this.context.logger.info("Auto-sniping monitoring resumed");
+      return {
+        success: true,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      this.context.logger.error("Failed to resume auto-sniping", safeError);
+
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
    * Get module status
    */
   getStatus() {

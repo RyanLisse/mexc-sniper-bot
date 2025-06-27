@@ -24,24 +24,25 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const coreTrading = getCoreTrading();
     const body = await request.json();
     const { action } = body;
 
     switch (action) {
       case "start":
-        await exitManagerService.start();
+        await coreTrading.startExecution();
         return NextResponse.json({
           success: true,
           message: "Auto exit manager started",
-          data: exitManagerService.getStatus(),
+          data: await coreTrading.getStatus(),
         });
 
       case "stop":
-        exitManagerService.stop();
+        await coreTrading.stopExecution();
         return NextResponse.json({
           success: true,
           message: "Auto exit manager stopped",
-          data: exitManagerService.getStatus(),
+          data: await coreTrading.getStatus(),
         });
 
       default:

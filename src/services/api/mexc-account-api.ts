@@ -189,15 +189,37 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
       for (const symbol of symbolsNeeded) {
         try {
+          console.info(`[MexcAccountApi] Fetching price for ${symbol}...`);
           const tickerResponse = await this.get24hrTicker(symbol);
+          console.info(`[MexcAccountApi] Ticker response for ${symbol}:`, {
+            success: tickerResponse.success,
+            dataLength: tickerResponse.data?.length || 0,
+            hasData: !!tickerResponse.data,
+            error: tickerResponse.error
+          });
+          
           if (tickerResponse.success && tickerResponse.data.length > 0) {
             const ticker = tickerResponse.data[0];
+            console.info(`[MexcAccountApi] Ticker data for ${symbol}:`, {
+              lastPrice: ticker?.lastPrice,
+              price: ticker?.price,
+              symbol: ticker?.symbol
+            });
+            
             // MEXC API uses lastPrice as the primary price field
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
               priceMap.set(symbol, Number.parseFloat(price));
-              this.logger.debug(`[MexcAccountApi] Price found for ${symbol}: ${price}`);
+              console.info(`[MexcAccountApi] ✅ Price found for ${symbol}: ${price}`);
+            } else {
+              console.warn(`[MexcAccountApi] ❌ Invalid price for ${symbol}:`, { price, lastPrice: ticker?.lastPrice, regularPrice: ticker?.price });
             }
+          } else {
+            console.warn(`[MexcAccountApi] ❌ No ticker data for ${symbol}:`, {
+              success: tickerResponse.success,
+              dataLength: tickerResponse.data?.length || 0,
+              error: tickerResponse.error
+            });
           }
         } catch (error) {
           console.error(`[MexcAccountApi] Failed to get price for ${symbol}:`, error);
