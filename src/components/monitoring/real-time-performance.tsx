@@ -13,25 +13,61 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ErrorBoundary } from "../error-boundary";
 
-// Lazy load Recharts components to reduce initial bundle size
+// Safely lazy load Recharts components to reduce initial bundle size with error handling
 const LazyRecharts = lazy(() =>
-  import("recharts").then((module) => ({
-    default: {
-      Area: module.Area,
-      AreaChart: module.AreaChart,
-      CartesianGrid: module.CartesianGrid,
-      Cell: module.Cell,
-      Line: module.Line,
-      LineChart: module.LineChart,
-      Pie: module.Pie,
-      PieChart: module.PieChart,
-      ResponsiveContainer: module.ResponsiveContainer,
-      Tooltip: module.Tooltip,
-      XAxis: module.XAxis,
-      YAxis: module.YAxis,
-    },
-  }))
+  import("recharts")
+    .then((module) => ({
+      default: {
+        Area: module.Area,
+        AreaChart: module.AreaChart,
+        CartesianGrid: module.CartesianGrid,
+        Cell: module.Cell,
+        Line: module.Line,
+        LineChart: module.LineChart,
+        Pie: module.Pie,
+        PieChart: module.PieChart,
+        ResponsiveContainer: module.ResponsiveContainer,
+        Tooltip: module.Tooltip,
+        XAxis: module.XAxis,
+        YAxis: module.YAxis,
+      },
+    }))
+    .catch((error) => {
+      console.warn("Failed to load Recharts components:", error);
+      // Return fallback components that render safely
+      return {
+        default: {
+          Area: () => null,
+          AreaChart: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+              Chart unavailable
+            </div>
+          ),
+          CartesianGrid: () => null,
+          Cell: () => null,
+          Line: () => null,
+          LineChart: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+              Chart unavailable
+            </div>
+          ),
+          Pie: () => null,
+          PieChart: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+              Chart unavailable
+            </div>
+          ),
+          ResponsiveContainer: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full">{children}</div>
+          ),
+          Tooltip: () => null,
+          XAxis: () => null,
+          YAxis: () => null,
+        },
+      };
+    })
 );
 
 import { Badge } from "@/components/ui/badge";
@@ -405,54 +441,63 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>Real-time system metrics (last 50 data points)</CardDescription>
               </CardHeader>
               <CardContent>
-                <Suspense
+                <ErrorBoundary 
+                  level="component" 
                   fallback={
-                    <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
-                      Loading chart...
+                    <div className="w-full h-[300px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
+                      System performance chart temporarily unavailable
                     </div>
                   }
                 >
-                  <LazyRecharts>
-                    {({
-                      ResponsiveContainer,
-                      LineChart,
-                      CartesianGrid,
-                      XAxis,
-                      YAxis,
-                      Tooltip,
-                      Line,
-                    }) => (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={chartMetrics}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis
-                            dataKey="timestamp"
-                            tickFormatter={(time) =>
-                              new Date(time).toLocaleTimeString().slice(0, 5)
-                            }
-                          />
-                          <YAxis />
-                          <Tooltip
-                            labelFormatter={(time) => new Date(time).toLocaleTimeString()}
-                            formatter={durationTooltipFormatter}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="responseTime"
-                            stroke="#8884d8"
-                            name="Response Time (ms)"
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="throughput"
-                            stroke="#82ca9d"
-                            name="Throughput"
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    )}
-                  </LazyRecharts>
-                </Suspense>
+                  <Suspense
+                    fallback={
+                      <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
+                        Loading chart...
+                      </div>
+                    }
+                  >
+                    <LazyRecharts>
+                      {({
+                        ResponsiveContainer,
+                        LineChart,
+                        CartesianGrid,
+                        XAxis,
+                        YAxis,
+                        Tooltip,
+                        Line,
+                      }) => (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={chartMetrics}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="timestamp"
+                              tickFormatter={(time) =>
+                                new Date(time).toLocaleTimeString().slice(0, 5)
+                              }
+                            />
+                            <YAxis />
+                            <Tooltip
+                              labelFormatter={(time) => new Date(time).toLocaleTimeString()}
+                              formatter={durationTooltipFormatter}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="responseTime"
+                              stroke="#8884d8"
+                              name="Response Time (ms)"
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="throughput"
+                              stroke="#82ca9d"
+                              name="Throughput"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+                    </LazyRecharts>
+                  </Suspense>
+                </ErrorBoundary>
               </CardContent>
             </Card>
 
@@ -462,58 +507,67 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>CPU, memory, and network usage</CardDescription>
               </CardHeader>
               <CardContent>
-                <Suspense
+                <ErrorBoundary 
+                  level="component" 
                   fallback={
-                    <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
-                      Loading chart...
+                    <div className="w-full h-[300px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
+                      Resource utilization chart temporarily unavailable
                     </div>
                   }
                 >
-                  <LazyRecharts>
-                    {({
-                      ResponsiveContainer,
-                      AreaChart,
-                      CartesianGrid,
-                      XAxis,
-                      YAxis,
-                      Tooltip,
-                      Area,
-                    }) => (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={chartMetrics}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis
-                            dataKey="timestamp"
-                            tickFormatter={(time) =>
-                              new Date(time).toLocaleTimeString().slice(0, 5)
-                            }
-                          />
-                          <YAxis domain={[0, 100]} />
-                          <Tooltip
-                            labelFormatter={(time) => new Date(time).toLocaleTimeString()}
-                            formatter={percentageTooltipFormatter}
-                          />
-                          <Area
-                            type="monotone"
-                            dataKey="cpuUsage"
-                            stackId="1"
-                            stroke="#8884d8"
-                            fill="#8884d8"
-                            name="CPU Usage"
-                          />
-                          <Area
-                            type="monotone"
-                            dataKey="memoryUsage"
-                            stackId="1"
-                            stroke="#82ca9d"
-                            fill="#82ca9d"
-                            name="Memory Usage"
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    )}
-                  </LazyRecharts>
-                </Suspense>
+                  <Suspense
+                    fallback={
+                      <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
+                        Loading chart...
+                      </div>
+                    }
+                  >
+                    <LazyRecharts>
+                      {({
+                        ResponsiveContainer,
+                        AreaChart,
+                        CartesianGrid,
+                        XAxis,
+                        YAxis,
+                        Tooltip,
+                        Area,
+                      }) => (
+                        <ResponsiveContainer width="100%" height={300}>
+                          <AreaChart data={chartMetrics}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis
+                              dataKey="timestamp"
+                              tickFormatter={(time) =>
+                                new Date(time).toLocaleTimeString().slice(0, 5)
+                              }
+                            />
+                            <YAxis domain={[0, 100]} />
+                            <Tooltip
+                              labelFormatter={(time) => new Date(time).toLocaleTimeString()}
+                              formatter={percentageTooltipFormatter}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="cpuUsage"
+                              stackId="1"
+                              stroke="#8884d8"
+                              fill="#8884d8"
+                              name="CPU Usage"
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="memoryUsage"
+                              stackId="1"
+                              stroke="#82ca9d"
+                              fill="#82ca9d"
+                              name="Memory Usage"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+                    </LazyRecharts>
+                  </Suspense>
+                </ErrorBoundary>
               </CardContent>
             </Card>
           </div>
@@ -703,40 +757,49 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                 <CardDescription>Distribution of detected pattern types</CardDescription>
               </CardHeader>
               <CardContent>
-                <Suspense
+                <ErrorBoundary 
+                  level="component" 
                   fallback={
-                    <div className="w-full h-[200px] animate-pulse bg-gray-100 rounded">
-                      Loading chart...
+                    <div className="w-full h-[200px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
+                      Pattern types chart temporarily unavailable
                     </div>
                   }
                 >
-                  <LazyRecharts>
-                    {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip }) => (
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={data.patternDiscoveryAnalytics.patternTypes}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={40}
-                            outerRadius={80}
-                            paddingAngle={5}
-                            dataKey="count"
-                            nameKey="type"
-                          >
-                            {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
-                              <Cell
-                                key={generateChartCellKey(index, entry.type)}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    )}
-                  </LazyRecharts>
-                </Suspense>
+                  <Suspense
+                    fallback={
+                      <div className="w-full h-[200px] animate-pulse bg-gray-100 rounded">
+                        Loading chart...
+                      </div>
+                    }
+                  >
+                    <LazyRecharts>
+                      {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip }) => (
+                        <ResponsiveContainer width="100%" height={200}>
+                          <PieChart>
+                            <Pie
+                              data={data.patternDiscoveryAnalytics.patternTypes}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={40}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="count"
+                              nameKey="type"
+                            >
+                              {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
+                                <Cell
+                                  key={generateChartCellKey(index, entry.type)}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      )}
+                    </LazyRecharts>
+                  </Suspense>
+                </ErrorBoundary>
                 <div className="mt-2 space-y-1">
                   {data.patternDiscoveryAnalytics.patternTypes.map((type, index) => (
                     <div key={type.type} className="flex items-center gap-2 text-sm">

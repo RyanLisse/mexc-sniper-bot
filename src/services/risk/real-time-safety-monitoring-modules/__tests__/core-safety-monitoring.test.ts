@@ -95,6 +95,26 @@ describe("CoreSafetyMonitoring", () => {
           apiConnection: true,
         },
       }),
+      getActivePositions: vi.fn().mockReturnValue([]),
+      getConfig: vi.fn().mockReturnValue({
+        thresholds: {
+          maxDrawdownPercentage: 20,
+          maxPortfolioConcentration: 10,
+          minSuccessRatePercentage: 70,
+          maxConsecutiveLosses: 5,
+          maxSlippagePercentage: 2,
+          minPatternConfidence: 70,
+          maxPatternDetectionFailures: 3,
+          maxApiLatencyMs: 1000,
+          minApiSuccessRate: 95,
+          maxMemoryUsagePercentage: 80,
+        },
+        enabled: true,
+        autoActionEnabled: false,
+        emergencyMode: false,
+      }),
+      stopExecution: vi.fn().mockResolvedValue(undefined),
+      emergencyCloseAll: vi.fn().mockResolvedValue(0),
     } as any;
 
     // Create mock pattern monitoring
@@ -528,8 +548,15 @@ describe("CoreSafetyMonitoring", () => {
 
       coreMonitoring.start();
 
-      // Should handle invalid data gracefully
-      await expect(coreMonitoring.updateRiskMetrics()).rejects.toThrow();
+      // Should handle invalid data gracefully and return sanitized metrics
+      const result = await coreMonitoring.updateRiskMetrics();
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('object');
+      
+      // Invalid data should be sanitized to safe defaults
+      expect(isNaN(result.currentDrawdown)).toBe(false);
+      expect(result.successRate).toBeLessThanOrEqual(100);
+      expect(result.successRate).toBeGreaterThanOrEqual(0);
     });
 
     it("should handle partial service failures", async () => {

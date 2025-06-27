@@ -6,20 +6,43 @@
  */
 
 import { lazy, memo, Suspense, useMemo } from "react";
+import { ErrorBoundary } from "../error-boundary";
 
-// Lazy load Recharts components to reduce initial bundle size
+// Safely lazy load Recharts components to reduce initial bundle size with error handling
 const LazyRecharts = lazy(() =>
-  import("recharts").then((module) => ({
-    default: {
-      Area: module.Area,
-      AreaChart: module.AreaChart,
-      CartesianGrid: module.CartesianGrid,
-      ResponsiveContainer: module.ResponsiveContainer,
-      Tooltip: module.Tooltip,
-      XAxis: module.XAxis,
-      YAxis: module.YAxis,
-    },
-  }))
+  import("recharts")
+    .then((module) => ({
+      default: {
+        Area: module.Area,
+        AreaChart: module.AreaChart,
+        CartesianGrid: module.CartesianGrid,
+        ResponsiveContainer: module.ResponsiveContainer,
+        Tooltip: module.Tooltip,
+        XAxis: module.XAxis,
+        YAxis: module.YAxis,
+      },
+    }))
+    .catch((error) => {
+      console.warn("Failed to load Recharts components in PerformanceTab:", error);
+      // Return fallback components that render safely
+      return {
+        default: {
+          Area: () => null,
+          AreaChart: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+              Chart unavailable
+            </div>
+          ),
+          CartesianGrid: () => null,
+          ResponsiveContainer: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full">{children}</div>
+          ),
+          Tooltip: () => null,
+          XAxis: () => null,
+          YAxis: () => null,
+        },
+      };
+    })
 );
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -24,6 +24,7 @@
 
 export { AutoSnipingExecutionEngine as OptimizedAutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
 export { AutoSnipingExecutionEngine as AutoSnipingExecutionService } from "./auto-sniping/execution-engine";
+export { AutoSnipingExecutionEngine } from "./auto-sniping/execution-engine";
 
 // ============================================================================
 // Re-export Supporting Modules

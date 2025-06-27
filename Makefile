@@ -115,21 +115,21 @@ pre-commit: lint type-check ## Run all pre-commit checks
 # ==================== Testing Commands ====================
 
 .PHONY: test
-test: kill-ports ## Run all unit tests with isolated database branches
-	@echo -e "${BLUE}Running unit tests with isolated branches...${NC}"
-	@$(NODE) run test
-	@echo -e "${GREEN}✓ Unit tests completed${NC}"
+test: kill-ports ## Run all tests with performance optimizations
+	@echo -e "${BLUE}Running tests with performance optimizations...${NC}"
+	@$(NODE) run test:fast
+	@echo -e "${GREEN}✓ Tests completed${NC}"
 
 .PHONY: test-unit
-test-unit: ## Run unit tests only with branch isolation
-	@echo -e "${BLUE}Running unit tests with branch isolation...${NC}"
-	@bunx vitest run tests/unit/
+test-unit: ## Run unit tests with performance optimizations
+	@echo -e "${BLUE}Running unit tests with performance optimizations...${NC}"
+	@$(NODE) run test:fast:unit
 	@echo -e "${GREEN}✓ Unit tests completed${NC}"
 
 .PHONY: test-integration
-test-integration: ## Run integration tests with isolated database branches
-	@echo -e "${BLUE}Running integration tests with isolated branches...${NC}"
-	@bunx vitest run tests/integration/
+test-integration: ## Run integration tests with performance optimizations
+	@echo -e "${BLUE}Running integration tests with performance optimizations...${NC}"
+	@$(NODE) run test:fast:integration
 	@echo -e "${GREEN}✓ Integration tests completed${NC}"
 
 .PHONY: test-utils
@@ -284,10 +284,16 @@ test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E 
 	@echo -e "${GREEN}✓ All tests completed successfully${NC}"
 
 .PHONY: test-quick
-test-quick: ## Quick test run (unit tests only, no cleanup)
-	@echo -e "${BLUE}Running quick unit tests...${NC}"
-	@bunx vitest run --run
+test-quick: ## Quick test run with maximum performance optimizations
+	@echo -e "${BLUE}Running quick tests with maximum performance optimizations...${NC}"
+	@$(NODE) run test:fast:parallel
 	@echo -e "${GREEN}✓ Quick tests completed${NC}"
+
+.PHONY: test-emergency
+test-emergency: ## Emergency test run with circuit breakers and forced termination
+	@echo -e "${BLUE}Running emergency tests with circuit breakers...${NC}"
+	@$(NODE) run test:emergency
+	@echo -e "${GREEN}✓ Emergency tests completed${NC}"
 
 # ==================== Build Commands ====================
 

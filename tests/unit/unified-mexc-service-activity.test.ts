@@ -296,9 +296,9 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
 
       const result = await mexcService.getActivityData('FCAT');
 
-      // The service may still return success: true with null data
+      // The service may still return success: true with empty data array (normalized from null)
       expect(result.success).toBe(true);
-      expect(result.data).toBe(null);
+      expect(result.data).toEqual([]);
       expect(result.executionTimeMs).toBeDefined();
     });
   });

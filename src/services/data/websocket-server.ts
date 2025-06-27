@@ -670,8 +670,23 @@ export class WebSocketServerService extends EventEmitter {
   private async handleConnection(ws: WebSocket, request: IncomingMessage): Promise<void> {
     const connectionId = crypto.randomUUID();
     const clientIP = this.getClientIP(request);
+    let connectionAdded = false;
+
+    // Connection timeout handler
+    const connectionTimeout = setTimeout(() => {
+      if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+        console.warn(`[WebSocket] Connection timeout for ${connectionId}`);
+        ws.close(1008, "Connection timeout");
+      }
+    }, 10000); // 10 second timeout
 
     try {
+      // Validate WebSocket state
+      if (ws.readyState !== WebSocket.OPEN && ws.readyState !== WebSocket.CONNECTING) {
+        console.warn(`[WebSocket] Invalid WebSocket state: ${ws.readyState} for ${connectionId}`);
+        return;
+      }
+
       // Rate limiting check
       if (
         this.config.rateLimiting.enabled &&
@@ -681,23 +696,45 @@ export class WebSocketServerService extends EventEmitter {
         return;
       }
 
-      // Authentication (if required)
+      // Authentication (if required) with timeout
       let userId: string | undefined;
       if (this.config.authentication.required) {
-        const authResult = await this.authenticateConnection(request);
+        const authPromise = this.authenticateConnection(request);
+        const authTimeout = new Promise<{ valid: false; error: string }>((resolve) =>
+          setTimeout(() => resolve({ valid: false, error: "Authentication timeout" }), 5000)
+        );
+
+        const authResult = await Promise.race([authPromise, authTimeout]);
         if (!authResult.valid) {
-          ws.close(1008, "Authentication failed");
+          const errorMsg = 'error' in authResult ? authResult.error : "Authentication failed";
+          console.warn(`[WebSocket] Authentication failed for ${connectionId}: ${errorMsg}`);
+          ws.close(1008, errorMsg);
           return;
         }
         userId = authResult.userId;
       }
 
-      // Add connection
-      this.connectionManager.addConnection(connectionId, ws, userId);
+      // Validate connection is still open before proceeding
+      if (ws.readyState !== WebSocket.OPEN) {
+        console.warn(`[WebSocket] Connection closed during setup: ${connectionId}`);
+        return;
+      }
 
-      // Setup message handling
+      // Add connection to manager
+      this.connectionManager.addConnection(connectionId, ws, userId);
+      connectionAdded = true;
+
+      // Clear connection timeout since setup is successful
+      clearTimeout(connectionTimeout);
+
+      // Setup message handling with error recovery
       ws.on("message", async (data) => {
-        await this.handleMessage(connectionId, data);
+        try {
+          await this.handleMessage(connectionId, data);
+        } catch (error) {
+          console.error(`[WebSocket] Error in message handler for ${connectionId}:`, error);
+          this.sendError(connectionId, "MESSAGE_ERROR", "Failed to process message");
+        }
       });
 
       ws.on("close", (code, reason) => {
@@ -709,8 +746,13 @@ export class WebSocketServerService extends EventEmitter {
         this.handleDisconnection(connectionId, clientIP, 1006, Buffer.from(error.message));
       });
 
+      // Setup connection health monitoring
+      ws.on("pong", () => {
+        this.connectionManager.updateActivity(connectionId);
+      });
+
       // Send welcome message
-      this.sendMessage(connectionId, {
+      const welcomeSuccess = this.sendMessage(connectionId, {
         type: "system:connect",
         channel: "system",
         data: {
@@ -722,11 +764,33 @@ export class WebSocketServerService extends EventEmitter {
         timestamp: Date.now(),
       });
 
-      console.info(`[WebSocket] New connection: ${connectionId} (user: ${userId || "anonymous"})`);
+      if (!welcomeSuccess) {
+        console.warn(`[WebSocket] Failed to send welcome message to ${connectionId}`);
+        this.handleDisconnection(connectionId, clientIP, 1011, Buffer.from("Welcome message failed"));
+        return;
+      }
+
+      console.info(`[WebSocket] New connection established: ${connectionId} (user: ${userId || "anonymous"})`);
       this.emit("connection:open", { connectionId, userId });
     } catch (error) {
-      console.error(`[WebSocket] Failed to handle connection:`, error);
-      ws.close(1011, "Internal server error");
+      console.error(`[WebSocket] Failed to handle connection ${connectionId}:`, error);
+      
+      // Clear timeout on error
+      clearTimeout(connectionTimeout);
+      
+      // Clean up connection if it was added
+      if (connectionAdded) {
+        this.connectionManager.removeConnection(connectionId);
+        this.rateLimiter.removeConnection(clientIP, connectionId);
+      }
+
+      // Close WebSocket with appropriate error code
+      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+        const errorMsg = error instanceof Error ? error.message : "Internal server error";
+        ws.close(1011, errorMsg);
+      }
+
+      this.emit("connection:error", { connectionId, error });
     }
   }
 

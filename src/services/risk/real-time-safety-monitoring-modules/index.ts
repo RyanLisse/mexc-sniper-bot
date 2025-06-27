@@ -30,6 +30,7 @@ import type {
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
+import { EmergencyStopCoordinator, type EmergencyStopEvent } from "@/src/services/risk/emergency-stop-coordinator";
 import { OptimizedAutoSnipingCore } from "@/src/services/trading/optimized-auto-sniping-core";
 import {
   type AlertGenerationData,
@@ -134,6 +135,7 @@ export class RealTimeSafetyMonitoringService {
 
   // Service dependencies (for compatibility)
   private emergencySystem: EmergencySafetySystem;
+  private emergencyStopCoordinator: EmergencyStopCoordinator;
   private executionService: OptimizedAutoSnipingCore;
   private patternMonitoring: PatternMonitoringService;
   private mexcService: UnifiedMexcServiceV2;
@@ -165,9 +167,13 @@ export class RealTimeSafetyMonitoringService {
   private constructor() {
     // Initialize services
     this.emergencySystem = new EmergencySafetySystem();
+    this.emergencyStopCoordinator = EmergencyStopCoordinator.getInstance();
     this.executionService = OptimizedAutoSnipingCore.getInstance();
     this.patternMonitoring = PatternMonitoringService.getInstance();
     this.mexcService = new UnifiedMexcServiceV2();
+
+    // Register this service with the emergency stop coordinator
+    this.emergencyStopCoordinator.registerService('safety-monitoring', this);
 
     // Initialize modules
     this.initializeModules();
@@ -437,24 +443,64 @@ export class RealTimeSafetyMonitoringService {
   }
 
   /**
-   * Trigger emergency safety response
+   * FIXED: Trigger coordinated emergency safety response using EmergencyStopCoordinator
+   * Addresses Agent 4/15 objectives: Emergency stop system synchronization
    */
   public async triggerEmergencyResponse(reason: string): Promise<SafetyAction[]> {
-    console.warn("Triggering emergency response", {
+    console.warn("🚨 Triggering coordinated emergency response", {
       operation: "emergency_response",
       reason,
       activePositions: this.executionService.getActivePositions().length,
       currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
+      coordinator: "EmergencyStopCoordinator"
     });
 
     const actions: SafetyAction[] = [];
 
     try {
-      // Execute emergency halt
+      // Create emergency stop event for coordination
+      const emergencyEvent: EmergencyStopEvent = {
+        id: `emergency_${Date.now()}`,
+        type: this.determineEmergencyType(reason),
+        triggeredBy: 'safety-monitoring-service',
+        severity: this.determineEmergencySeverity(reason),
+        timestamp: Date.now(),
+        context: {
+          activePositions: this.executionService.getActivePositions().length,
+          currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
+          monitoringActive: this.isMonitoringActive
+        },
+        reason
+      };
+
+      // FIXED: Use EmergencyStopCoordinator for coordinated emergency stop
+      const coordinatedResult = await this.emergencyStopCoordinator.triggerEmergencyStop(emergencyEvent);
+
+      // Convert coordinated result to SafetyAction format for backward compatibility
+      actions.push({
+        id: `coordinated_emergency_${Date.now()}`,
+        type: "emergency_coordination",
+        description: "Coordinated emergency stop executed",
+        executed: true,
+        executedAt: new Date().toISOString(),
+        result: coordinatedResult.success ? "success" : "partial",
+        details: `Coordinated emergency stop: ${coordinatedResult.actionsExecuted.join(', ')}. Services: ${coordinatedResult.coordinatedServices.join(', ')}. Duration: ${coordinatedResult.duration}ms.`,
+        metadata: {
+          coordinatedServices: coordinatedResult.coordinatedServices,
+          actionsExecuted: coordinatedResult.actionsExecuted,
+          errors: coordinatedResult.errors,
+          duration: coordinatedResult.duration
+        }
+      });
+
+      // Additional safety monitoring specific actions
+      const positions = this.executionService.getActivePositions();
+      
+      // Local emergency halt (fallback if coordination didn't handle it)
       const haltAction: SafetyAction = {
-        id: `halt_${Date.now()}`,
+        id: `local_halt_${Date.now()}`,
         type: "halt_trading",
-        description: "Emergency trading halt activated",
+        description: "Local trading halt (fallback safety)",
         executed: false,
       };
 
@@ -463,25 +509,23 @@ export class RealTimeSafetyMonitoringService {
         haltAction.executed = true;
         haltAction.executedAt = new Date().toISOString();
         haltAction.result = "success";
-        haltAction.details = "Trading execution successfully halted";
+        haltAction.details = "Local trading execution halt successful";
       } catch (error) {
         haltAction.executed = true;
         haltAction.executedAt = new Date().toISOString();
         haltAction.result = "failed";
-        haltAction.details = `Failed to halt trading: ${error.message}`;
+        haltAction.details = `Local halt failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       }
 
       actions.push(haltAction);
 
-      // Execute emergency close
-      const positions = this.executionService.getActivePositions();
+      // Local emergency close (fallback if coordination didn't handle it)
       const closeAction: SafetyAction = {
-        id: `close_${Date.now()}`,
+        id: `local_close_${Date.now()}`,
         type: "emergency_close",
-        description:
-          positions.length > 0
-            ? `Emergency close ${positions.length} active positions`
-            : "Emergency close all positions (preventive)",
+        description: positions.length > 0
+          ? `Local emergency close ${positions.length} positions (fallback)`
+          : "Local emergency close preventive (fallback)",
         executed: false,
       };
 
@@ -489,58 +533,138 @@ export class RealTimeSafetyMonitoringService {
         const closedCount = await this.executionService.emergencyCloseAll();
         closeAction.executed = true;
         closeAction.executedAt = new Date().toISOString();
-        closeAction.result =
-          positions.length === 0 || closedCount === positions.length ? "success" : "partial";
-        closeAction.details =
-          positions.length > 0
-            ? `Closed ${closedCount}/${positions.length} positions`
-            : "No positions to close";
+        closeAction.result = positions.length === 0 || closedCount === positions.length ? "success" : "partial";
+        closeAction.details = positions.length > 0
+          ? `Local close: ${closedCount}/${positions.length} positions`
+          : "No positions to close locally";
       } catch (error) {
         closeAction.executed = true;
         closeAction.executedAt = new Date().toISOString();
         closeAction.result = "failed";
-        closeAction.details = `Failed to close positions: ${error.message}`;
+        closeAction.details = `Local close failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
       }
 
       actions.push(closeAction);
 
-      // Generate emergency alert
+      // Generate comprehensive emergency alert with coordination info
       this.alertManagement.addAlert({
         type: "emergency_condition",
         severity: "critical",
         category: "system",
-        title: "Emergency Response Triggered",
-        message: `Emergency safety response activated: ${reason}`,
+        title: "Coordinated Emergency Response Triggered",
+        message: `Coordinated emergency safety response activated: ${reason}. ${coordinatedResult.success ? 'Coordination successful' : 'Coordination partial/failed'}.`,
         riskLevel: 95,
-        source: "emergency_response",
+        source: "coordinated_emergency_response",
         autoActions: actions,
-        metadata: { reason, actionsExecuted: actions.length },
+        metadata: { 
+          reason, 
+          actionsExecuted: actions.length,
+          coordinationResult: coordinatedResult,
+          emergencyEvent
+        },
       });
 
+      console.log(`✅ Coordinated emergency response completed: ${coordinatedResult.success ? 'SUCCESS' : 'PARTIAL'} (${coordinatedResult.duration}ms)`);
       return actions;
+
     } catch (error) {
-      console.error(
-        "Emergency response failed",
-        {
-          operation: "emergency_response",
-          reason,
-          actionsAttempted: actions.length,
-        },
-        error
-      );
+      console.error("🚨 Coordinated emergency response failed", {
+        operation: "emergency_response",
+        reason,
+        actionsAttempted: actions.length,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
 
       const failedAction: SafetyAction = {
-        id: `failed_${Date.now()}`,
+        id: `coordination_failed_${Date.now()}`,
         type: "notify_admin",
-        description: "Emergency response system failure",
+        description: "Coordinated emergency response system failure",
         executed: true,
         executedAt: new Date().toISOString(),
         result: "failed",
-        details: `Emergency response failed: ${error.message}`,
+        details: `Coordinated emergency response failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        metadata: { originalReason: reason }
       };
 
       actions.push(failedAction);
       return actions;
+    }
+  }
+
+  /**
+   * FIXED: Determine emergency type based on reason for proper coordination
+   */
+  private determineEmergencyType(reason: string): EmergencyStopEvent['type'] {
+    const lowerReason = reason.toLowerCase();
+    
+    if (lowerReason.includes('circuit') || lowerReason.includes('breaker')) {
+      return 'circuit_breaker_failure';
+    }
+    if (lowerReason.includes('portfolio') || lowerReason.includes('drawdown') || lowerReason.includes('loss')) {
+      return 'portfolio_decline';
+    }
+    if (lowerReason.includes('manual') || lowerReason.includes('user')) {
+      return 'manual_trigger';
+    }
+    return 'system_failure';
+  }
+
+  /**
+   * FIXED: Determine emergency severity for proper coordination
+   */
+  private determineEmergencySeverity(reason: string): EmergencyStopEvent['severity'] {
+    const lowerReason = reason.toLowerCase();
+    const currentRiskScore = this.coreSafetyMonitoring.calculateOverallRiskScore();
+    
+    if (currentRiskScore > 90 || lowerReason.includes('critical') || lowerReason.includes('severe')) {
+      return 'CRITICAL';
+    }
+    if (currentRiskScore > 70 || lowerReason.includes('high') || lowerReason.includes('major')) {
+      return 'HIGH';
+    }
+    if (currentRiskScore > 40 || lowerReason.includes('medium') || lowerReason.includes('moderate')) {
+      return 'MEDIUM';
+    }
+    return 'LOW';
+  }
+
+  /**
+   * FIXED: Emergency stop method for EmergencyStopCoordinator integration
+   * Called by EmergencyStopCoordinator during coordinated emergency stops
+   */
+  public async emergencyStop(event: EmergencyStopEvent): Promise<void> {
+    console.log(`🚨 Safety monitoring emergency stop triggered by coordinator: ${event.reason}`);
+    
+    try {
+      // Stop monitoring to prevent conflicts during emergency
+      if (this.isMonitoringActive) {
+        this.stopMonitoring();
+        console.log('⏹️ Safety monitoring stopped during emergency');
+      }
+
+      // Force immediate risk assessment update
+      await this.coreSafetyMonitoring.updateRiskMetrics();
+
+      // Generate emergency alert for tracking
+      this.alertManagement.addAlert({
+        type: "emergency_condition",
+        severity: "critical",
+        category: "system",
+        title: "Emergency Stop Executed",
+        message: `Emergency stop executed by coordinator: ${event.reason}`,
+        riskLevel: 95,
+        source: "emergency_stop_coordinator",
+        metadata: { 
+          emergencyEvent: event,
+          triggeredBy: event.triggeredBy,
+          severity: event.severity
+        },
+      });
+
+      console.log('✅ Safety monitoring emergency stop completed');
+    } catch (error) {
+      console.error('❌ Safety monitoring emergency stop failed:', error);
+      throw error;
     }
   }
 

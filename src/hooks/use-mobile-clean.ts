@@ -15,15 +15,20 @@ const TABLET_BREAKPOINT = 1024;
 /**
  * Enhanced Mobile Detection Hook
  * Provides comprehensive device detection with TypeScript safety
+ * SSR-safe with proper hydration handling
  */
 export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): MobileDetection {
+  // Initialize with safe defaults for SSR
   const [state, setState] = useState<MobileDetection>({
     isMobile: false,
     isTouch: false,
-    screenWidth: 0,
+    screenWidth: typeof window !== "undefined" ? window.innerWidth : 1024,
     isTablet: false,
-    isDesktop: false,
+    isDesktop: true, // Default to desktop for SSR
   });
+
+  // Track if we're in client-side environment
+  const [isClient, setIsClient] = useState(false);
 
   const updateState = useCallback(() => {
     if (typeof window === "undefined") return;
@@ -33,11 +38,17 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): MobileDetection {
     const isTablet = width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT;
     const isDesktop = width >= TABLET_BREAKPOINT;
 
-    const isTouch = Boolean(
-      "ontouchstart" in window ||
-        navigator.maxTouchPoints > 0 ||
-        (navigator as any).msMaxTouchPoints > 0
-    );
+    let isTouch = false;
+    try {
+      isTouch = Boolean(
+        "ontouchstart" in window ||
+        (navigator?.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+        (navigator as any)?.msMaxTouchPoints > 0
+      );
+    } catch {
+      // Fallback if navigator is not available
+      isTouch = false;
+    }
 
     setState({
       isMobile,
@@ -49,13 +60,28 @@ export function useIsMobile(breakpoint = MOBILE_BREAKPOINT): MobileDetection {
   }, [breakpoint]);
 
   useEffect(() => {
+    // Set client flag to prevent hydration mismatch
+    setIsClient(true);
     updateState();
 
+    if (typeof window === "undefined") return;
+
     const handleResize = () => updateState();
-    window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
 
     return () => window.removeEventListener("resize", handleResize);
   }, [updateState]);
+
+  // Return SSR-safe state until client-side hydration
+  if (!isClient) {
+    return {
+      isMobile: false,
+      isTouch: false,
+      screenWidth: 1024,
+      isTablet: false,
+      isDesktop: true,
+    };
+  }
 
   return state;
 }
@@ -73,17 +99,22 @@ export function useDeviceType(): DeviceType {
 
 /**
  * Responsive Breakpoints Hook
+ * SSR-safe with proper hydration handling
  */
 export function useBreakpoints(): Breakpoints {
   const [breakpoints, setBreakpoints] = useState<Breakpoints>({
-    sm: false,
-    md: false,
-    lg: false,
-    xl: false,
+    sm: true, // Default to larger breakpoints for SSR
+    md: true,
+    lg: true,
+    xl: true,
     "2xl": false,
   });
 
+  const [isClient, setIsClient] = useState(false);
+
   useEffect(() => {
+    setIsClient(true);
+    
     const updateBreakpoints = () => {
       if (typeof window === "undefined") return;
 
@@ -98,37 +129,58 @@ export function useBreakpoints(): Breakpoints {
     };
 
     updateBreakpoints();
-    window.addEventListener("resize", updateBreakpoints);
-
-    return () => window.removeEventListener("resize", updateBreakpoints);
+    
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", updateBreakpoints, { passive: true });
+      return () => window.removeEventListener("resize", updateBreakpoints);
+    }
   }, []);
+
+  // Return SSR-safe defaults until hydrated
+  if (!isClient) {
+    return {
+      sm: true,
+      md: true,
+      lg: true,
+      xl: true,
+      "2xl": false,
+    };
+  }
 
   return breakpoints;
 }
 
 /**
  * Orientation Detection Hook
+ * SSR-safe with proper hydration handling
  */
 export function useOrientation(): Orientation {
   const [orientation, setOrientation] = useState<Orientation>("portrait");
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
     const updateOrientation = () => {
       if (typeof window === "undefined") return;
       setOrientation(window.innerHeight > window.innerWidth ? "portrait" : "landscape");
     };
 
     updateOrientation();
-    window.addEventListener("resize", updateOrientation);
-    window.addEventListener("orientationchange", updateOrientation);
+    
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", updateOrientation, { passive: true });
+      window.addEventListener("orientationchange", updateOrientation, { passive: true });
 
-    return () => {
-      window.removeEventListener("resize", updateOrientation);
-      window.removeEventListener("orientationchange", updateOrientation);
-    };
+      return () => {
+        window.removeEventListener("resize", updateOrientation);
+        window.removeEventListener("orientationchange", updateOrientation);
+      };
+    }
   }, []);
 
-  return orientation;
+  // Return SSR-safe default until hydrated
+  return isClient ? orientation : "portrait";
 }
 
 /**
@@ -146,17 +198,25 @@ export function useMobileDevice() {
 
 /**
  * Touch Gesture Detection Hook
+ * SSR-safe with proper hydration handling
  */
 export function useTouchGestures(): TouchGesture {
   const [gesture, setGesture] = useState<TouchGesture>({ type: null });
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
+    if (typeof document === "undefined") return;
+
     let startTime: number;
     let startX: number;
     let startY: number;
     let hasSwipe = false;
 
     const handleTouchStart = (e: TouchEvent) => {
+      if (!e.touches?.[0]) return;
+      
       const touch = e.touches[0];
       startTime = Date.now();
       startX = touch.clientX;
@@ -208,72 +268,88 @@ export function useTouchGestures(): TouchGesture {
         document.removeEventListener("touchend", handleTouchEnd);
       };
 
-      document.addEventListener("touchmove", handleTouchMove);
-      document.addEventListener("touchend", handleTouchEnd);
+      document.addEventListener("touchmove", handleTouchMove, { passive: true });
+      document.addEventListener("touchend", handleTouchEnd, { passive: true });
     };
 
-    document.addEventListener("touchstart", handleTouchStart);
+    document.addEventListener("touchstart", handleTouchStart, { passive: true });
 
     return () => {
       document.removeEventListener("touchstart", handleTouchStart);
     };
   }, []);
 
-  return gesture;
+  // Return null gesture state for SSR
+  return isClient ? gesture : { type: null };
 }
 
 /**
  * Viewport Height Hook
  * Handles mobile viewport height changes (keyboard, browser chrome)
+ * SSR-safe with proper hydration handling
  */
 export function useViewportHeight(): number {
-  const [viewportHeight, setViewportHeight] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(
+    typeof window !== "undefined" ? window.innerHeight : 800
+  );
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
     const updateViewportHeight = () => {
       if (typeof window === "undefined") return;
 
       const height = window.visualViewport?.height || window.innerHeight;
       setViewportHeight(height);
 
-      // Set CSS custom property
-      document.documentElement.style.setProperty("--vh", `${height * 0.01}px`);
+      // Set CSS custom property safely
+      if (typeof document !== "undefined") {
+        document.documentElement.style.setProperty("--vh", `${height * 0.01}px`);
+      }
     };
 
     updateViewportHeight();
 
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", updateViewportHeight);
-    } else {
-      window.addEventListener("resize", updateViewportHeight);
-    }
-
-    window.addEventListener("orientationchange", () => {
-      setTimeout(updateViewportHeight, 100);
-    });
-
-    return () => {
+    if (typeof window !== "undefined") {
       if (window.visualViewport) {
-        window.visualViewport.removeEventListener("resize", updateViewportHeight);
+        window.visualViewport.addEventListener("resize", updateViewportHeight, { passive: true });
       } else {
-        window.removeEventListener("resize", updateViewportHeight);
+        window.addEventListener("resize", updateViewportHeight, { passive: true });
       }
-    };
+
+      window.addEventListener("orientationchange", () => {
+        setTimeout(updateViewportHeight, 100);
+      }, { passive: true });
+
+      return () => {
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener("resize", updateViewportHeight);
+        } else {
+          window.removeEventListener("resize", updateViewportHeight);
+        }
+      };
+    }
   }, []);
 
-  return viewportHeight;
+  // Return SSR-safe default until hydrated
+  return isClient ? viewportHeight : 800;
 }
 
 /**
  * Window Size Hook (for general responsive calculations)
+ * SSR-safe with proper hydration handling
  */
 export function useWindowSize() {
   const [windowSize, setWindowSize] = useState({
-    width: 0,
-    height: 0,
+    width: typeof window !== "undefined" ? window.innerWidth : 1024,
+    height: typeof window !== "undefined" ? window.innerHeight : 800,
   });
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
     const updateSize = () => {
       if (typeof window === "undefined") return;
 
@@ -284,31 +360,44 @@ export function useWindowSize() {
     };
 
     updateSize();
-    window.addEventListener("resize", updateSize);
-
-    return () => window.removeEventListener("resize", updateSize);
+    
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", updateSize, { passive: true });
+      return () => window.removeEventListener("resize", updateSize);
+    }
   }, []);
 
-  return windowSize;
+  // Return SSR-safe defaults until hydrated
+  return isClient ? windowSize : { width: 1024, height: 800 };
 }
 
 /**
  * Touch Device Detection Hook
+ * SSR-safe with proper hydration handling
  */
 export function useIsTouchDevice(): boolean {
   const [isTouch, setIsTouch] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
     if (typeof window === "undefined") return;
 
-    const hasTouch = Boolean(
-      "ontouchstart" in window ||
-        navigator.maxTouchPoints > 0 ||
-        (navigator as any).msMaxTouchPoints > 0
-    );
+    try {
+      const hasTouch = Boolean(
+        "ontouchstart" in window ||
+        (navigator?.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+        (navigator as any)?.msMaxTouchPoints > 0
+      );
 
-    setIsTouch(hasTouch);
+      setIsTouch(hasTouch);
+    } catch {
+      // Fallback if navigator is not available
+      setIsTouch(false);
+    }
   }, []);
 
-  return isTouch;
+  // Return SSR-safe default until hydrated
+  return isClient ? isTouch : false;
 }

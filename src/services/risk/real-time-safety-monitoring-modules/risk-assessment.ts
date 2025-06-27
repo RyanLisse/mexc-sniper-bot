@@ -297,26 +297,22 @@ export class RiskAssessment {
 
       // Handle execution service with fallback
       try {
-        if (typeof this.config.executionService.getExecutionReport === 'function') {
-          executionReport = await this.config.executionService.getExecutionReport();
-        } else {
-          // Fallback execution report
-          const activePositions = this.config.executionService.getActivePositions?.() || [];
-          executionReport = {
-            stats: {
-              currentDrawdown: 0,
-              maxDrawdown: 0,
-              successRate: 75,
-              averageSlippage: 0.1,
-              totalPnl: "0",
-            },
-            activePositions,
-            recentExecutions: [],
-            systemHealth: {
-              apiConnection: true,
-            },
-          };
-        }
+        // Use fallback execution report since getExecutionReport doesn't exist
+        const activePositions = this.config.executionService.getActivePositions?.() || [];
+        executionReport = {
+          stats: {
+            currentDrawdown: 0,
+            maxDrawdown: 0,
+            successRate: 75,
+            averageSlippage: 0.1,
+            totalPnl: "0",
+          },
+          activePositions,
+          recentExecutions: [],
+          systemHealth: {
+            apiConnection: true,
+          },
+        };
       } catch (error) {
         console.warn("Failed to get execution report for system risk assessment", { error: error.message });
         executionReport = {

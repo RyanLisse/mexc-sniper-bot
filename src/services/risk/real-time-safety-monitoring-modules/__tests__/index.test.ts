@@ -45,6 +45,23 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
         },
       }),
       getActivePositions: vi.fn().mockReturnValue([]),
+      getConfig: vi.fn().mockReturnValue({
+        thresholds: {
+          maxDrawdownPercentage: 20,
+          maxPortfolioConcentration: 10,
+          minSuccessRatePercentage: 70,
+          maxConsecutiveLosses: 5,
+          maxSlippagePercentage: 2,
+          minPatternConfidence: 70,
+          maxPatternDetectionFailures: 3,
+          maxApiLatencyMs: 1000,
+          minApiSuccessRate: 95,
+          maxMemoryUsagePercentage: 80,
+        },
+        enabled: true,
+        autoActionEnabled: false,
+        emergencyMode: false,
+      }),
       stopExecution: vi.fn().mockResolvedValue(undefined),
       emergencyCloseAll: vi.fn().mockResolvedValue(0),
     };

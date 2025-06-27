@@ -735,6 +735,23 @@ export function initializeMexcApiMocks(): void {
         success: true,
         data: [],
         timestamp: Date.now()
+      }),
+      getAccountBalances: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          balances: [],
+          totalUsdtValue: 1000,
+          totalValue: 1000,
+          totalValueBTC: 0.1,
+          allocation: {},
+          performance24h: { change: 0, changePercent: 0 }
+        },
+        timestamp: Date.now()
+      }),
+      getAccountBalance: vi.fn().mockResolvedValue({
+        success: true,
+        data: [],
+        timestamp: Date.now()
       })
     })),
 
@@ -744,6 +761,121 @@ export function initializeMexcApiMocks(): void {
     CalendarEntry: {},
     SymbolEntry: {},
     BalanceEntry: {}
+  }));
+
+  // Mock the unified MEXC service factory module
+  vi.mock('@/src/services/api/unified-mexc-service-factory', () => ({
+    getUnifiedMexcService: vi.fn().mockResolvedValue({
+      hasCredentials: vi.fn().mockReturnValue(true),
+      getAccountBalances: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          balances: [
+            { asset: 'USDT', free: '10000.00', locked: '0.00', total: 10000.0, usdtValue: 10000.0 },
+            { asset: 'BTC', free: '0.001', locked: '0.000', total: 0.001, usdtValue: 50.0 }
+          ],
+          totalUsdtValue: 10050.0,
+          lastUpdated: new Date().toISOString(),
+          hasUserCredentials: true,
+          credentialsType: "user-specific"
+        },
+        metadata: {
+          requestDuration: "100ms",
+          balanceCount: 2,
+          credentialSource: "user-database"
+        }
+      }),
+      testConnectivity: vi.fn().mockResolvedValue(true),
+      getAccountInfo: vi.fn().mockResolvedValue({
+        success: true,
+        data: { balances: [] }
+      }),
+      getConfig: vi.fn().mockReturnValue({
+        enabled: true,
+        maxPositions: 5,
+        maxDailyTrades: 10,
+        positionSizeUSDT: 100,
+        minConfidence: 80,
+        allowedPatternTypes: ["ready_state"],
+        emergencyStopEnabled: true,
+        riskManagement: {
+          maxDrawdown: 10,
+          maxDailyLoss: 5,
+          positionSizing: "fixed"
+        }
+      }),
+      getExecutionReport: vi.fn().mockResolvedValue({
+        status: 'idle',
+        stats: { 
+          totalTrades: 0, 
+          successfulTrades: 0, 
+          failedTrades: 0,
+          currentDrawdown: 0,
+          maxDrawdown: 0,
+          successRate: 75,
+          averageSlippage: 0.1,
+          totalPnl: "0"
+        },
+        activePositions: [],
+        recentExecutions: [],
+        config: {},
+        systemHealth: { apiConnection: true },
+        health: { overall: 'healthy', apiConnection: true, patternEngine: true }
+      }),
+    })
+  }));
+
+  // Mock the mexc-client-factory module
+  vi.mock('@/src/services/api/mexc-client-factory', () => ({
+    UnifiedMexcClient: vi.fn().mockImplementation(() => ({
+      getAccountBalances: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          balances: [],
+          totalUsdtValue: 1000,
+          totalValue: 1000,
+          totalValueBTC: 0.1,
+          allocation: {},
+          performance24h: { change: 0, changePercent: 0 }
+        },
+        timestamp: Date.now()
+      }),
+      getAccountBalance: vi.fn().mockResolvedValue({
+        success: true,
+        data: [],
+        timestamp: Date.now()
+      }),
+      getCalendarListings: vi.fn().mockResolvedValue({
+        success: true,
+        data: [],
+        timestamp: Date.now()
+      })
+    })),
+    getUnifiedMexcClient: vi.fn().mockImplementation(() => ({
+      getAccountBalances: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          balances: [],
+          totalUsdtValue: 1000,
+          totalValue: 1000,
+          totalValueBTC: 0.1,
+          allocation: {},
+          performance24h: { change: 0, changePercent: 0 }
+        },
+        timestamp: Date.now()
+      }),
+      getAccountBalance: vi.fn().mockResolvedValue({
+        success: true,
+        data: [],
+        timestamp: Date.now()
+      }),
+      getCalendarListings: vi.fn().mockResolvedValue({
+        success: true,
+        data: [],
+        timestamp: Date.now()
+      })
+    })),
+    resetUnifiedMexcClient: vi.fn()
   }));
 }
 

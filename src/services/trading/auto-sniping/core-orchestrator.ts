@@ -333,6 +333,11 @@ export class OptimizedAutoSnipingCore {
       executionCount: stats.totalTrades || 0,
       uptime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
       
+      // Additional API compatibility fields
+      totalProfit: stats.totalPnl || 0,
+      successCount: stats.successfulTrades || 0,
+      errorCount: (stats.totalTrades || 0) - (stats.successfulTrades || 0),
+      
       config: {
         enabled: config.enabled,
         maxPositions: config.maxPositions,

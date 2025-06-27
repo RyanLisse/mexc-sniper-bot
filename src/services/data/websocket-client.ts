@@ -359,12 +359,26 @@ export class WebSocketClientService extends EventEmitter {
     this.stopHeartbeat();
 
     if (this.ws) {
-      this.ws.close(1000, "Client disconnect");
+      // Remove event listeners safely (removeAllListeners may not exist in all WebSocket implementations)
+      if (typeof (this.ws as any).removeAllListeners === 'function') {
+        (this.ws as any).removeAllListeners();
+      } else {
+        // Manual cleanup for standard WebSocket API
+        this.ws.onopen = null;
+        this.ws.onmessage = null;
+        this.ws.onclose = null;
+        this.ws.onerror = null;
+      }
+      
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, "Client disconnect");
+      }
       this.ws = null;
     }
 
     this.setState("disconnected");
     this.metrics.disconnectedAt = Date.now();
+    this.connectionId = undefined;
     this.emit("disconnected");
   }
 
@@ -567,7 +581,21 @@ export class WebSocketClientService extends EventEmitter {
     this.stopHeartbeat();
     this.setState("disconnected");
     this.metrics.disconnectedAt = Date.now();
-    this.ws = null;
+    
+    // Clean up WebSocket reference
+    if (this.ws) {
+      // Remove event listeners safely (removeAllListeners may not exist in all WebSocket implementations)
+      if (typeof (this.ws as any).removeAllListeners === 'function') {
+        (this.ws as any).removeAllListeners();
+      } else {
+        // Manual cleanup for standard WebSocket API
+        this.ws.onopen = null;
+        this.ws.onmessage = null;
+        this.ws.onclose = null;
+        this.ws.onerror = null;
+      }
+      this.ws = null;
+    }
 
     this.emit("disconnected", { code: event.code, reason: event.reason });
 
@@ -579,7 +607,12 @@ export class WebSocketClientService extends EventEmitter {
     ) {
       this.setState("reconnecting");
       this.connectionManager.scheduleReconnect(() => {
-        this.connect();
+        if (this.authToken) {
+          this.connect(this.authToken).catch((error) => {
+            console.error("[WebSocket Client] Reconnection failed:", error);
+            this.setState("error");
+          });
+        }
       });
     }
   }

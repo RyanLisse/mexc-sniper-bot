@@ -169,7 +169,21 @@ function createMockDatabase() {
     }),
     delete: () => createThenable([]),
     transaction: async (cb: any) => {
-      return cb(createMockDatabase());
+      // Ensure transaction callback gets proper mock database
+      try {
+        const result = await cb(createMockDatabase());
+        return result;
+      } catch (error) {
+        throw error;
+      }
+    },
+    // Add connection cleanup for tests
+    end: async () => Promise.resolve(),
+    destroy: async () => Promise.resolve(),
+    // Add emergency cleanup hook
+    $emergencyCleanup: async () => {
+      getLogger().debug("[Database] Mock database emergency cleanup completed");
+      return Promise.resolve();
     },
   };
 }
@@ -419,26 +433,43 @@ export async function closeDatabase() {
     getLogger().info("[Database] Database connection closed");
 
     // Stop performance monitoring
-    queryPerformanceMonitor.stopMonitoring();
+    try {
+      queryPerformanceMonitor.stopMonitoring();
+    } catch (error) {
+      getLogger().warn("[Database] Error stopping performance monitoring:", error);
+    }
 
     // Shutdown connection pool
-    databaseConnectionPool.shutdown();
+    try {
+      await databaseConnectionPool.shutdown();
+    } catch (error) {
+      getLogger().warn("[Database] Error shutting down connection pool:", error);
+    }
 
     // Close PostgreSQL connection if exists
     if (postgresClient) {
       try {
         await Promise.race([
-          postgresClient.end({ timeout: 5 }),
+          postgresClient.end({ timeout: 2 }), // Reduced timeout for tests
           new Promise((resolve) =>
             setTimeout(() => {
               getLogger().warn("[Database] PostgreSQL close timed out, forcing shutdown");
               resolve(undefined);
-            }, 5000)
+            }, 2000) // Reduced timeout for tests
           ),
         ]);
         getLogger().info("[Database] NeonDB PostgreSQL connection closed");
       } catch (error) {
         getLogger().warn("[Database] Error closing PostgreSQL connection:", error);
+      }
+    }
+
+    // Emergency cleanup for mock databases
+    if (dbInstance && typeof (dbInstance as any).$emergencyCleanup === 'function') {
+      try {
+        await (dbInstance as any).$emergencyCleanup();
+      } catch (error) {
+        getLogger().warn("[Database] Error in emergency cleanup:", error);
       }
     }
 
@@ -448,4 +479,9 @@ export async function closeDatabase() {
   } catch (error) {
     getLogger().error("[Database] Error closing database:", error);
   }
+}
+
+// Register emergency cleanup hook for tests
+if (typeof global !== 'undefined') {
+  (global as any).__emergency_db_cleanup__ = closeDatabase;
 }

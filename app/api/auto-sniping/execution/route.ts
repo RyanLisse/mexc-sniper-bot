@@ -50,9 +50,9 @@ export const GET = instrumentedTradingRoute(
         isActive: report.status === 'active',
         status: report.status,
         activePositionsCount: report.activeTargets || 0,
-        totalPnl: report.stats.totalPnl,
-        successRate: report.stats.successRate,
-        dailyTrades: report.stats.dailyTradeCount,
+        totalPnl: report.totalProfit || 0,
+        successRate: report.successRate || 0,
+        dailyTrades: report.executedToday || 0,
       },
     };
 
@@ -237,11 +237,11 @@ export const POST = instrumentedTradingRoute(
           status: report.status,
           isActive: report.status === 'active',
           activePositions: report.activeTargets || 0,
-          totalTrades: report.stats.totalTrades,
-          successRate: report.stats.successRate,
-          totalPnl: report.stats.totalPnl,
+          totalTrades: report.totalTrades,
+          successRate: report.successRate,
+          totalPnl: report.totalProfit,
           systemHealth: report.systemHealth,
-          lastUpdated: report.lastUpdated,
+          lastUpdated: report.lastExecution,
         }, {
           message: 'Execution status retrieved successfully'
         }));

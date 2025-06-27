@@ -324,6 +324,15 @@ export class CacheWarmingService {
     if (toRun.length > 0) {
       await Promise.all(toRun.map(([name]) => this.executeStrategy(name)));
     }
+
+    // Apply adaptive optimizations every 10 warmup cycles
+    if (this.metrics.totalRuns > 0 && this.metrics.totalRuns % 10 === 0) {
+      try {
+        this.applyAdaptiveOptimizations();
+      } catch (error) {
+        console.warn("[CacheWarmingService] Failed to apply adaptive optimizations:", error);
+      }
+    }
   }
 
   private getPriorityWeight(priority: string): number {
@@ -614,6 +623,59 @@ export class CacheWarmingService {
 
   getMetrics(): WarmupMetrics {
     return { ...this.metrics };
+  }
+
+  /**
+   * Get adaptive warmup recommendations based on cache performance
+   */
+  getAdaptiveWarmupRecommendations(): {
+    recommendedStrategies: string[];
+    suggestedFrequencies: Record<string, number>;
+    reasoning: string[];
+  } {
+    const recommendations = {
+      recommendedStrategies: [] as string[],
+      suggestedFrequencies: {} as Record<string, number>,
+      reasoning: [] as string[],
+    };
+
+    // Analyze strategy performance
+    for (const [name, strategy] of this.strategies) {
+      const successRate = strategy.successCount / (strategy.successCount + strategy.errorCount || 1);
+      const avgExecutionTime = strategy.avgExecutionTime;
+
+      // Recommend based on performance
+      if (successRate > 0.9 && avgExecutionTime < 1000) {
+        recommendations.recommendedStrategies.push(name);
+        recommendations.suggestedFrequencies[name] = Math.max(10000, strategy.frequency * 0.8); // Increase frequency by 20%
+        recommendations.reasoning.push(`${strategy.name}: High success rate (${(successRate * 100).toFixed(1)}%) and fast execution (${avgExecutionTime}ms)`);
+      } else if (successRate < 0.7) {
+        recommendations.suggestedFrequencies[name] = Math.min(120000, strategy.frequency * 1.5); // Decrease frequency by 50%
+        recommendations.reasoning.push(`${strategy.name}: Low success rate (${(successRate * 100).toFixed(1)}%) - reducing frequency`);
+      } else if (avgExecutionTime > 5000) {
+        recommendations.suggestedFrequencies[name] = Math.min(60000, strategy.frequency * 1.2); // Slightly decrease frequency
+        recommendations.reasoning.push(`${strategy.name}: Slow execution (${avgExecutionTime}ms) - slightly reducing frequency`);
+      }
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Apply adaptive optimizations based on performance data
+   */
+  applyAdaptiveOptimizations(): void {
+    const recommendations = this.getAdaptiveWarmupRecommendations();
+    
+    for (const [strategyName, newFrequency] of Object.entries(recommendations.suggestedFrequencies)) {
+      const strategy = this.strategies.get(strategyName);
+      if (strategy && strategy.frequency !== newFrequency) {
+        console.info(`[CacheWarmingService] Adapting ${strategy.name} frequency from ${strategy.frequency}ms to ${newFrequency}ms`);
+        strategy.frequency = newFrequency;
+      }
+    }
+
+    console.info(`[CacheWarmingService] Applied ${Object.keys(recommendations.suggestedFrequencies).length} adaptive optimizations`);
   }
 
   getStrategies(): Map<string, WarmupStrategy> {

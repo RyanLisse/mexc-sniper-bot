@@ -122,8 +122,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       stack: error.stack,
       componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
-      url: window.location.href,
-      userAgent: navigator.userAgent,
+      url: typeof window !== "undefined" ? window.location.href : "SSR",
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
     };
 
     // For now, just log to console
@@ -147,7 +147,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleGoHome = () => {
-    window.location.href = "/";
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
   };
 
   toggleDetails = () => {
@@ -389,8 +391,70 @@ export function AsyncErrorBoundary({ children, fallback, ...props }: ErrorBounda
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => window.location.reload()} size="sm">
+                <Button 
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.location.reload();
+                    }
+                  }} 
+                  size="sm"
+                >
                   Refresh Page
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )
+      }
+    >
+      {children}
+    </ErrorBoundary>
+  );
+}
+
+/**
+ * SSR-Safe Error Boundary for handling hydration mismatches
+ */
+export function SSRSafeErrorBoundary({ children, fallback, ...props }: ErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      {...props}
+      onError={(error, errorInfo) => {
+        // Enhanced logging for hydration errors
+        if (error.message.includes("hydration") || error.message.includes("client") || error.message.includes("server")) {
+          console.warn("[SSR-Safe Error Boundary] Potential hydration mismatch:", {
+            error: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+          });
+        }
+        
+        // Call parent error handler if provided
+        props.onError?.(error, errorInfo);
+      }}
+      fallback={
+        fallback || (
+          <div className="flex items-center justify-center p-4">
+            <Card className="border-blue-200 dark:border-blue-800">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-blue-500" />
+                  Hydration Error
+                </CardTitle>
+                <CardDescription>
+                  There was a mismatch between server and client rendering.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      window.location.reload();
+                    }
+                  }} 
+                  size="sm"
+                >
+                  Reload Page
                 </Button>
               </CardContent>
             </Card>

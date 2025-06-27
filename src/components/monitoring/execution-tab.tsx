@@ -6,18 +6,39 @@
  */
 
 import { lazy, memo, Suspense, useMemo } from "react";
+import { ErrorBoundary } from "../error-boundary";
 
-// Lazy load Recharts components to reduce initial bundle size
+// Safely lazy load Recharts components to reduce initial bundle size with error handling
 const LazyRecharts = lazy(() =>
-  import("recharts").then((module) => ({
-    default: {
-      Cell: module.Cell,
-      Pie: module.Pie,
-      PieChart: module.PieChart,
-      ResponsiveContainer: module.ResponsiveContainer,
-      Tooltip: module.Tooltip,
-    },
-  }))
+  import("recharts")
+    .then((module) => ({
+      default: {
+        Cell: module.Cell,
+        Pie: module.Pie,
+        PieChart: module.PieChart,
+        ResponsiveContainer: module.ResponsiveContainer,
+        Tooltip: module.Tooltip,
+      },
+    }))
+    .catch((error) => {
+      console.warn("Failed to load Recharts components in ExecutionTab:", error);
+      // Return fallback components that render safely
+      return {
+        default: {
+          Cell: () => null,
+          Pie: () => null,
+          PieChart: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full flex items-center justify-center text-gray-500">
+              Chart unavailable
+            </div>
+          ),
+          ResponsiveContainer: ({ children }: { children?: React.ReactNode }) => (
+            <div className="w-full h-full">{children}</div>
+          ),
+          Tooltip: () => null,
+        },
+      };
+    })
 );
 
 import { Badge } from "@/components/ui/badge";
@@ -81,36 +102,45 @@ export const ExecutionTab = memo(function ExecutionTab({
             <CardDescription>Order fill success rates</CardDescription>
           </CardHeader>
           <CardContent>
-            <Suspense
+            <ErrorBoundary 
+              level="component" 
               fallback={
-                <div className="w-full h-[200px] animate-pulse bg-gray-100 rounded">
-                  Loading chart...
+                <div className="w-full h-[200px] flex items-center justify-center border border-blue-200 rounded text-blue-600">
+                  Fill rates chart temporarily unavailable
                 </div>
               }
             >
-              <LazyRecharts>
-                {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip }) => (
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={fillRatesData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}%`}
-                      >
-                        {["#8884d8", "#82ca9d", "#ffc658"].map((color, index) => (
-                          <Cell key={generateChartCellKey(index, `fill-${color}`)} fill={color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </LazyRecharts>
-            </Suspense>
+              <Suspense
+                fallback={
+                  <div className="w-full h-[200px] animate-pulse bg-gray-100 rounded">
+                    Loading chart...
+                  </div>
+                }
+              >
+                <LazyRecharts>
+                  {({ ResponsiveContainer, PieChart, Pie, Cell, Tooltip }) => (
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={fillRatesData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}%`}
+                        >
+                          {["#8884d8", "#82ca9d", "#ffc658"].map((color, index) => (
+                            <Cell key={generateChartCellKey(index, `fill-${color}`)} fill={color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </LazyRecharts>
+              </Suspense>
+            </ErrorBoundary>
           </CardContent>
         </Card>
       </div>

@@ -9,6 +9,7 @@
 import type React from "react";
 import { lazy, Suspense } from "react";
 import { Skeleton } from "./ui/optimized-exports";
+import { ErrorBoundary } from "./error-boundary";
 
 // Loading fallback components
 const ComponentSkeleton = ({ className = "" }: { className?: string }) => (
@@ -460,46 +461,77 @@ export const OptimizationControlPanel = safeLazy(
   () => <CardSkeleton />
 );
 
-// Wrapper components with loading states
+// Wrapper components with loading states and error boundaries
 interface LazyComponentWrapperProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
+  errorFallback?: React.ReactNode;
   className?: string;
 }
 
 export function LazyComponentWrapper({
   children,
   fallback = <ComponentSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="p-4 text-center text-amber-600 border border-amber-200 rounded">
+          Component temporarily unavailable
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazyCardWrapper({
   children,
   fallback = <CardSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-amber-200 p-4 text-amber-600">
+          Card component temporarily unavailable
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazyTableWrapper({
   children,
   fallback = <TableSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-gray-200 p-4 text-gray-600">
+          Table data temporarily unavailable
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -507,72 +539,132 @@ export function LazyTableWrapper({
 export function LazyDashboardWrapper({
   children,
   fallback = <DashboardSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-red-200 p-4 text-red-600">
+          Dashboard component failed to load
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazyTradingWrapper({
   children,
   fallback = <TradingSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-red-200 p-4 text-red-600">
+          Trading component failed to load
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazyExecutionWrapper({
   children,
   fallback = <ExecutionSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-red-200 p-4 text-red-600">
+          Execution component failed to load
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazySafetyWrapper({
   children,
   fallback = <SafetySkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-yellow-200 p-4 text-yellow-600">
+          Safety component failed to load
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazyAlertWrapper({
   children,
   fallback = <AlertSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-orange-200 p-4 text-orange-600">
+          Alert component failed to load
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
 export function LazyChartWrapper({
   children,
   fallback = <ChartSkeleton />,
+  errorFallback,
   className = "",
 }: LazyComponentWrapperProps) {
   return (
-    <Suspense fallback={fallback}>
-      <div className={className}>{children}</div>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={errorFallback || (
+        <div className="rounded-lg border border-blue-200 p-4 h-64 flex items-center justify-center text-blue-600">
+          Chart failed to load
+        </div>
+      )}
+    >
+      <Suspense fallback={fallback}>
+        <div className={className}>{children}</div>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

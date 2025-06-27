@@ -32,29 +32,8 @@ describe("Configuration Validation Integration", () => {
   let mexcService: UnifiedMexcServiceV2;
 
   beforeAll(() => {
-    // Setup comprehensive mocking for external dependencies
-    vi.mock("@/src/services/unified-mexc-service");
-    vi.mock("@/src/services/pattern-detection-engine");
-    vi.mock("@/src/services/comprehensive-safety-coordinator");
-    vi.mock("@/src/db", () => ({
-      db: {
-        insert: vi.fn().mockReturnValue({
-          values: vi.fn().mockReturnValue({
-            returning: vi
-              .fn()
-              .mockResolvedValue([{ id: "1", createdAt: new Date() }]),
-          }),
-        }),
-        select: vi.fn().mockReturnValue({
-          from: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
-              orderBy: vi.fn().mockResolvedValue([]),
-            }),
-          }),
-        }),
-      },
-    }));
+    // Note: vi.mock calls have been removed as they were causing test failures
+    // Individual method mocking is done in beforeEach instead
   });
 
   beforeEach(async () => {
@@ -92,14 +71,19 @@ describe("Configuration Validation Integration", () => {
         vi.spyOn(mexcService, "testConnectivityWithResponse").mockResolvedValue(
           {
             success: true,
-            data: { serverTime: Date.now() },
+            data: { 
+              serverTime: Date.now(),
+              latency: 150,
+              connected: true,
+              apiVersion: "1.0",
+              region: "US"
+            },
             timestamp: new Date().toISOString(),
-            responseTime: 150,
           },
         );
         vi.spyOn(mexcService, "getServerTime").mockResolvedValue({
           success: true,
-          data: { serverTime: Date.now() },
+          data: Date.now(),
           timestamp: new Date().toISOString(),
         });
 
@@ -147,7 +131,6 @@ describe("Configuration Validation Integration", () => {
             success: false,
             error: "Connection timeout",
             timestamp: new Date().toISOString(),
-            responseTime: 5000,
           },
         );
 
@@ -173,14 +156,19 @@ describe("Configuration Validation Integration", () => {
         vi.spyOn(mexcService, "testConnectivityWithResponse").mockResolvedValue(
           {
             success: true,
-            data: { serverTime },
+            data: { 
+              serverTime,
+              latency: 150,
+              connected: true,
+              apiVersion: "1.0",
+              region: "US"
+            },
             timestamp: new Date().toISOString(),
-            responseTime: 150,
           },
         );
         vi.spyOn(mexcService, "getServerTime").mockResolvedValue({
           success: true,
-          data: { serverTime },
+          data: serverTime,
           timestamp: new Date().toISOString(),
         });
 
@@ -388,7 +376,11 @@ describe("Configuration Validation Integration", () => {
     it(
       "should perform quick health check successfully",
       async () => {
-        vi.spyOn(mexcService, "testConnectivity").mockResolvedValue(true);
+        vi.spyOn(mexcService, "testConnectivity").mockResolvedValue({
+          success: true,
+          data: { serverTime: Date.now(), latency: 150 },
+          timestamp: new Date().toISOString(),
+        });
         vi.spyOn(mexcService, "hasValidCredentials").mockReturnValue(true);
 
         const healthCheck = await configValidator.quickHealthCheck();
@@ -403,7 +395,11 @@ describe("Configuration Validation Integration", () => {
     it(
       "should detect health issues",
       async () => {
-        vi.spyOn(mexcService, "testConnectivity").mockResolvedValue(false);
+        vi.spyOn(mexcService, "testConnectivity").mockResolvedValue({
+          success: false,
+          error: "Connection failed",
+          timestamp: new Date().toISOString(),
+        });
         vi.spyOn(mexcService, "hasValidCredentials").mockReturnValue(false);
 
         const healthCheck = await configValidator.quickHealthCheck();

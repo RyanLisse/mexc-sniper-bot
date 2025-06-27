@@ -12,29 +12,37 @@
 
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 
-// Mock all database optimization services before importing
+// Mock database optimization manager
+const mockOptimizationManager = {
+  runCompleteOptimization: vi.fn().mockResolvedValue({
+    phases: [
+      { phase: "phase1", success: true, improvements: ["Query indexing"], metrics: { improvement: 25 } },
+      { phase: "phase2", success: true, improvements: ["Index optimization"], metrics: { improvement: 40 } },
+      { phase: "phase3", success: true, improvements: ["Query optimization"], metrics: { improvement: 15 } },
+      { phase: "phase4", success: true, improvements: ["Connection pooling"], metrics: { improvement: 10 } },
+    ],
+    totalImprovement: 90,
+    success: true,
+    startTime: new Date(),
+    endTime: new Date(),
+  }),
+  getOptimizationStatus: vi.fn().mockReturnValue({
+    isOptimizing: false,
+    currentPhase: null,
+    progress: 100,
+    estimatedTimeRemaining: 0,
+  }),
+  optimizeForAgentWorkloads: vi.fn().mockResolvedValue(undefined),
+  exportOptimizationReport: vi.fn().mockResolvedValue({}),
+};
+
 vi.mock("@/src/lib/database-optimization-manager", () => ({
-  databaseOptimizationManager: {
-    runFullOptimization: vi.fn().mockResolvedValue({
-      phase1: { completed: true, improvements: 25 },
-      phase2: { completed: true, improvements: 40 },
-      phase3: { completed: true, improvements: 15 },
-      phase4: { completed: true, improvements: 10 },
-      totalImprovement: 90,
-      status: "completed",
-    }),
-    getOptimizationStatus: vi.fn().mockReturnValue({
-      isOptimizing: false,
-      currentPhase: null,
-      progress: 100,
-      estimatedTimeRemaining: 0,
-    }),
-  },
+  databaseOptimizationManager: mockOptimizationManager,
 }));
 
-vi.mock("@/src/lib/database-performance-analyzer", () => ({
-  databasePerformanceAnalyzer: {
-    runComprehensiveAnalysis: vi.fn().mockResolvedValue({
+// Mock database performance analyzer
+const mockPerformanceAnalyzer = {
+  runComprehensiveAnalysis: vi.fn().mockResolvedValue({
       totalQueries: 150,
       averageExecutionTime: 32.5,
       slowQueries: 8,
@@ -116,11 +124,14 @@ vi.mock("@/src/lib/database-performance-analyzer", () => ({
         },
       ],
     }),
-  },
+};
+
+vi.mock("@/src/lib/database-performance-analyzer", () => ({
+  databasePerformanceAnalyzer: mockPerformanceAnalyzer,
 }));
 
-vi.mock("@/src/lib/database-index-optimizer", () => ({
-  databaseIndexOptimizer: {
+// Mock database index optimizer
+const mockIndexOptimizer = {
     createStrategicIndexes: vi.fn().mockResolvedValue({
       indexesCreated: 8,
       indexesFailed: 0,
@@ -156,11 +167,14 @@ vi.mock("@/src/lib/database-index-optimizer", () => ({
         },
       ],
     }),
-  },
+};
+
+vi.mock("@/src/lib/database-index-optimizer", () => ({
+  databaseIndexOptimizer: mockIndexOptimizer,
 }));
 
-vi.mock("@/src/lib/database-query-optimizer", () => ({
-  databaseQueryOptimizer: {
+// Mock database query optimizer
+const mockQueryOptimizer = {
     optimizeCommonQueries: vi.fn().mockResolvedValue({
       queriesOptimized: 15,
       totalImprovement: 35,
@@ -174,27 +188,33 @@ vi.mock("@/src/lib/database-query-optimizer", () => ({
         },
       ],
     }),
-  },
+};
+
+vi.mock("@/src/lib/database-query-optimizer", () => ({
+  databaseQueryOptimizer: mockQueryOptimizer,
 }));
+
+// Mock database connection pool
+const mockConnectionPool = {
+  optimize: vi.fn().mockResolvedValue({
+    poolSizeOptimized: true,
+    connectionTimeImproved: 25,
+    throughputImproved: 15,
+  }),
+  shutdown: vi.fn().mockResolvedValue(undefined),
+  getMetrics: vi.fn().mockReturnValue({
+    totalConnections: 8,
+    activeConnections: 3,
+    connectionPoolHealth: "healthy",
+  }),
+};
 
 vi.mock("@/src/lib/database-connection-pool", () => ({
-  databaseConnectionPool: {
-    optimize: vi.fn().mockResolvedValue({
-      poolSizeOptimized: true,
-      connectionTimeImproved: 25,
-      throughputImproved: 15,
-    }),
-    shutdown: vi.fn().mockResolvedValue(undefined),
-    getMetrics: vi.fn().mockReturnValue({
-      totalConnections: 8,
-      activeConnections: 3,
-      connectionPoolHealth: "healthy",
-    }),
-  },
+  databaseConnectionPool: mockConnectionPool,
 }));
 
-vi.mock("@/src/services/data/query-performance-monitor", () => ({
-  queryPerformanceMonitor: {
+// Mock query performance monitor
+const mockQueryPerformanceMonitor = {
     startMonitoring: vi.fn(),
     stopMonitoring: vi.fn(),
     getMetrics: vi.fn().mockReturnValue({
@@ -202,7 +222,10 @@ vi.mock("@/src/services/data/query-performance-monitor", () => ({
       totalQueries: 150,
       slowQueries: 8,
     }),
-  },
+};
+
+vi.mock("@/src/services/data/query-performance-monitor", () => ({
+  queryPerformanceMonitor: mockQueryPerformanceMonitor,
 }));
 
 // Import after mocking

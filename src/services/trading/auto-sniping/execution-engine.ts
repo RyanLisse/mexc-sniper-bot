@@ -41,9 +41,10 @@ export class AutoSnipingExecutionEngine {
         try {
           const { AutoSnipingConfigManager } = require('./config-manager');
           configManager = new AutoSnipingConfigManager();
+          console.info("[AutoSnipingExecutionEngine] Config manager loaded successfully");
         } catch (error) {
-          console.warn("[AutoSnipingExecutionEngine] Could not load config manager:", error.message);
-          // Create a basic mock config manager for testing
+          console.warn("[AutoSnipingExecutionEngine] Could not load config manager, using fallback:", error.message);
+          // Create a minimal fallback config manager for testing/emergency scenarios
           configManager = {
             getConfig: () => ({
               enabled: true,
@@ -124,6 +125,24 @@ export class AutoSnipingExecutionEngine {
       AutoSnipingExecutionEngine.instance = new AutoSnipingExecutionEngine(configManager);
     }
     return AutoSnipingExecutionEngine.instance;
+  }
+
+  /**
+   * Create instance asynchronously with proper config manager loading
+   */
+  static async createInstance(configManager?: AutoSnipingConfigManager): Promise<AutoSnipingExecutionEngine> {
+    if (!configManager) {
+      try {
+        const { AutoSnipingConfigManager } = await import('./config-manager');
+        configManager = new AutoSnipingConfigManager();
+        console.info("[AutoSnipingExecutionEngine] Config manager loaded asynchronously");
+      } catch (error) {
+        console.error("[AutoSnipingExecutionEngine] Failed to load config manager:", error);
+        throw new Error("Failed to initialize AutoSnipingExecutionEngine: config manager unavailable");
+      }
+    }
+    
+    return new AutoSnipingExecutionEngine(configManager);
   }
 
   /**
@@ -582,15 +601,29 @@ export class AutoSnipingExecutionEngine {
           patternSuccessRates: {},
           averagePatternConfidence: 0,
           mostSuccessfulPattern: null,
+          successRate: 0,
+          errorCount: 0,
+          totalExecutions: 0,
+          successCount: 0,
         };
       }
       
+      // Calculate dynamic fields
+      const totalExecutions = stats.totalTrades || 0;
+      const successCount = stats.successfulTrades || 0;
+      const errorCount = totalExecutions - successCount;
+      const successRate = totalExecutions > 0 ? (successCount / totalExecutions) * 100 : 0;
+
       // Add engine state information to stats
       return {
         ...stats,
         isActive: this.isActive,
         activePositions: this.activePositions.size, // Override with current value
         uptime: this.isActive ? Date.now() : 0,
+        totalExecutions,
+        successCount,
+        errorCount,
+        successRate,
       };
     } catch (error) {
       console.error("[AutoSnipingExecutionEngine] Error getting stats:", error);
@@ -612,6 +645,10 @@ export class AutoSnipingExecutionEngine {
         patternSuccessRates: {},
         averagePatternConfidence: 0,
         mostSuccessfulPattern: null,
+        successRate: 0,
+        errorCount: 0,
+        totalExecutions: 0,
+        successCount: 0,
       };
     }
   }
@@ -629,5 +666,125 @@ export class AutoSnipingExecutionEngine {
     } catch (error) {
       console.error("[AutoSnipingExecutionEngine] Error updating stats:", error);
     }
+  }
+
+  /**
+   * Stop execution - alias for stop() method for backward compatibility
+   */
+  stopExecution(): Promise<void> {
+    return this.stop();
+  }
+
+  /**
+   * Get execution report for monitoring and debugging
+   */
+  async getExecutionReport(): Promise<{
+    status: string;
+    stats: any;
+    activePositions: any[];
+    config: any;
+    health: any;
+    systemHealth: any;
+    totalProfit: number;
+    successRate: number;
+    successCount: number;
+    errorCount: number;
+    totalTrades: number;
+    activeTargets: number;
+    readyTargets: number;
+    executedToday: number;
+    lastExecution: string;
+    safetyStatus: string;
+    patternDetectionActive: boolean;
+    executionCount: number;
+    uptime: number;
+  }> {
+    try {
+      const stats = this.getStats();
+      const config = this.getConfig();
+      const activePositions = this.getActivePositions();
+      
+      // Get health status
+      let health = { overall: 'unknown', apiConnection: false, patternEngine: false };
+      try {
+        if (typeof this.configManager.performHealthChecks === 'function') {
+          health = await this.configManager.performHealthChecks();
+          health.overall = Object.values(health).every(v => v) ? 'healthy' : 'degraded';
+        }
+      } catch (error) {
+        console.warn("[AutoSnipingExecutionEngine] Health check failed in report:", error);
+        health.overall = 'error';
+      }
+
+      const status = this.isActive ? 'active' : 'idle';
+
+      return {
+        status,
+        stats,
+        activePositions,
+        config,
+        health,
+        systemHealth: health,  // Add alias for systemHealth for backward compatibility
+        
+        // Flatten commonly used fields for API compatibility
+        totalProfit: stats.totalPnl || 0,
+        successRate: stats.successRate || 0,
+        successCount: stats.successCount || 0,
+        errorCount: stats.errorCount || 0,
+        totalTrades: stats.totalTrades || 0,
+        activeTargets: this.activePositions.size,
+        readyTargets: 0, // Would need to be calculated from pattern detection
+        executedToday: stats.dailyTradeCount || 0,
+        lastExecution: new Date().toISOString(),
+        safetyStatus: health.overall === 'healthy' ? 'safe' : 'warning',
+        patternDetectionActive: true,
+        executionCount: stats.totalExecutions || 0,
+        uptime: this.isActive ? Date.now() : 0,
+      };
+    } catch (error) {
+      console.error("[AutoSnipingExecutionEngine] Error generating execution report:", error);
+      const errorHealth = { overall: 'error' };
+      const fallbackStats = this.getStats();
+      return {
+        status: 'error',
+        stats: fallbackStats,
+        activePositions: [],
+        config: {},
+        health: errorHealth,
+        systemHealth: errorHealth,
+        
+        // Flatten commonly used fields for API compatibility
+        totalProfit: 0,
+        successRate: 0,
+        successCount: 0,
+        errorCount: 0,
+        totalTrades: 0,
+        activeTargets: 0,
+        readyTargets: 0,
+        executedToday: 0,
+        lastExecution: new Date().toISOString(),
+        safetyStatus: 'error',
+        patternDetectionActive: false,
+        executionCount: 0,
+        uptime: 0,
+      };
+    }
+  }
+
+  /**
+   * Start execution - alias for start() method for backward compatibility
+   */
+  startExecution(): Promise<void> {
+    return this.start();
+  }
+
+  /**
+   * Check if execution is currently active
+   */
+  getExecutionStatus(): { isActive: boolean; status: string } {
+    return {
+      isActive: this.isActive,
+      status: this.isActive ? 'active' : 'idle'
+    };
   }
 }

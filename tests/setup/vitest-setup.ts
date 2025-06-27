@@ -13,6 +13,13 @@ import { db } from '../../src/db';
 import '@testing-library/jest-dom';
 import { globalTimeoutMonitor } from '../utils/timeout-utilities';
 import React from 'react';
+import { 
+  initializeEmergencyPerformanceMonitoring,
+  withEmergencyTimeout,
+  emergencyCleanupAll,
+  forceTerminateHangingProcesses,
+  getPerformanceMetrics 
+} from './emergency-test-optimizations';
 
 // Make React globally available for JSX
 global.React = React;
@@ -75,29 +82,41 @@ if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
 // Test Setup and Teardown
 // ============================================================================
 
-// Global setup before all tests
+// Global setup before all tests - emergency performance optimized
 beforeAll(async () => {
-  console.log('🧪 Setting up Vitest global environment...');
+  // Initialize emergency performance monitoring FIRST
+  initializeEmergencyPerformanceMonitoring();
   
-  // Detect test environment and configure
-  const { isIntegrationTest, testInfo } = detectTestEnvironment();
+  if (process.env.VERBOSE_TESTS === 'true') {
+    console.log('🧪 Setting up Vitest global environment with emergency optimizations...');
+  }
   
-  console.log('🔍 Test detection:', {
-    ...testInfo,
-    isIntegrationTest
-  });
-  
-  // Configure environment variables
-  configureEnvironmentVariables(isIntegrationTest);
+  // Wrap entire setup in emergency timeout
+  await withEmergencyTimeout(async () => {
+    // Detect test environment and configure
+    const { isIntegrationTest, testInfo } = detectTestEnvironment();
+    
+    if (process.env.VERBOSE_TESTS === 'true') {
+      console.log('🔍 Test detection:', {
+        ...testInfo,
+        isIntegrationTest
+      });
+    }
+    
+    // Configure environment variables
+    configureEnvironmentVariables(isIntegrationTest);
 
-  // Initialize test utilities and mocks
-  await initializeTestMocks();
-  await initializeDatabaseMocks(isIntegrationTest);
+    // Initialize test utilities and mocks in parallel for speed
+    await Promise.all([
+      initializeTestMocks(),
+      initializeDatabaseMocks(isIntegrationTest),
+      Promise.resolve(initializeTestUtilities())
+    ]);
 
-  // Initialize test utilities
-  initializeTestUtilities();
-
-  console.log('✅ Global mocks configured');
+    if (process.env.VERBOSE_TESTS === 'true') {
+      console.log('✅ Global mocks configured');
+    }
+  }, 30000, 'global test setup');
 });
 
 // Database setup for each test
@@ -107,61 +126,57 @@ beforeEach(async () => {
   }
 });
 
-// Cleanup after each test
+// Cleanup after each test - optimized for performance
 afterEach(async () => {
+  // Fast cleanup - only essential operations
   vi.clearAllMocks();
 
   if (global.mockDataStore && global.mockDataStore.reset) {
     global.mockDataStore.reset();
   }
 
-  globalTimeoutMonitor.cleanup();
-  
+  // Only run timeout monitoring cleanup if enabled and verbose
   if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
-    const activeCount = globalTimeoutMonitor.getActiveCount();
-    if (activeCount.timeouts > 0 || activeCount.intervals > 0) {
-      console.warn(`⚠️ Cleaned up ${activeCount.timeouts} timeouts and ${activeCount.intervals} intervals after test`);
+    globalTimeoutMonitor.cleanup();
+    if (process.env.VERBOSE_TESTS === 'true') {
+      const activeCount = globalTimeoutMonitor.getActiveCount();
+      if (activeCount.timeouts > 0 || activeCount.intervals > 0) {
+        console.warn(`⚠️ Cleaned up ${activeCount.timeouts} timeouts and ${activeCount.intervals} intervals after test`);
+      }
     }
   }
 
-  if (global.testCleanupFunctions) {
-    for (const cleanup of global.testCleanupFunctions) {
-      await cleanup();
-    }
+  // Run cleanup functions in parallel for speed
+  if (global.testCleanupFunctions && global.testCleanupFunctions.length > 0) {
+    await Promise.allSettled(global.testCleanupFunctions.map(cleanup => cleanup()));
     global.testCleanupFunctions = [];
   }
 });
 
-// Global cleanup after all tests
+// Global cleanup after all tests - emergency performance optimized
 afterAll(async () => {
-  console.log('🧹 Cleaning up Vitest environment...');
-
-  // Clean up timeout monitoring
-  globalTimeoutMonitor.cleanup();
-  const finalActiveCount = globalTimeoutMonitor.getActiveCount();
-  if (finalActiveCount.timeouts > 0 || finalActiveCount.intervals > 0) {
-    console.warn(`⚠️ Final cleanup: ${finalActiveCount.timeouts} timeouts and ${finalActiveCount.intervals} intervals`);
+  if (process.env.VERBOSE_TESTS === 'true') {
+    console.log('🧹 Running emergency cleanup...');
+    const metrics = getPerformanceMetrics();
+    console.log('📊 Performance metrics:', metrics);
   }
 
-  // Enhanced database cleanup with forced closure
+  // Use emergency cleanup instead of manual cleanup
   try {
-    if (db && typeof (db as any).closeDatabase === 'function') {
-      await Promise.race([
-        (db as any).closeDatabase(),
-        new Promise((resolve) => setTimeout(() => {
-          console.warn('⚠️ Database cleanup timed out');
-          resolve(undefined);
-        }, 3000))
-      ]);
-      console.log('📦 Database connections closed');
-    }
-
-    // Force close any remaining database connections
-    if (typeof (global as any).__db_close_all__ === 'function') {
-      await (global as any).__db_close_all__();
-    }
+    await emergencyCleanupAll();
   } catch (error) {
-    console.warn('⚠️ Database cleanup warning:', (error as Error).message);
+    console.error('🚨 Emergency cleanup failed:', (error as Error).message);
+  }
+
+  // Clean up timeout monitoring
+  if (process.env.ENABLE_TIMEOUT_MONITORING === 'true') {
+    globalTimeoutMonitor.cleanup();
+    if (process.env.VERBOSE_TESTS === 'true') {
+      const finalActiveCount = globalTimeoutMonitor.getActiveCount();
+      if (finalActiveCount.timeouts > 0 || finalActiveCount.intervals > 0) {
+        console.warn(`⚠️ Final cleanup: ${finalActiveCount.timeouts} timeouts and ${finalActiveCount.intervals} intervals`);
+      }
+    }
   }
 
   try {
@@ -197,13 +212,12 @@ afterAll(async () => {
   vi.restoreAllMocks();
 
   const testDuration = Date.now() - globalThis.__TEST_START_TIME__;
-  console.log(`✅ Vitest environment cleaned up (${testDuration}ms)`);
+  if (process.env.VERBOSE_TESTS === 'true') {
+    console.log(`✅ Emergency cleanup completed (${testDuration}ms)`);
+  }
 
-  // Force exit after cleanup to prevent hanging
-  setTimeout(() => {
-    console.log('🔄 Forcing process cleanup to prevent hanging...');
-    process.exitCode = 0;
-  }, 100);
+  // Force terminate hanging processes immediately
+  forceTerminateHangingProcesses();
 });
 
 // ============================================================================
@@ -213,5 +227,7 @@ afterAll(async () => {
 // Set up error handling for uncaught exceptions in tests
 setupErrorHandling();
 
-console.log('🚀 Vitest setup completed successfully');
+if (process.env.VERBOSE_TESTS === 'true') {
+  console.log('🚀 Vitest setup completed successfully');
+}
 

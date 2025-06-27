@@ -71,7 +71,7 @@ export class MexcConfigValidator {
           isValid: false,
           component,
           status: "invalid",
-          message: "MEXC API credentials validation failed",
+          message: "MEXC API credentials not configured",
           details: credentialDetails,
           timestamp,
         };
@@ -101,7 +101,7 @@ export class MexcConfigValidator {
           message: "MEXC API connectivity failed",
           details: {
             error: connectivityTest.error,
-            responseTime: connectivityTest.responseTime,
+            responseTime: (connectivityTest as any).responseTime || (connectivityTest as any).latency,
             credentialDetails,
           },
           timestamp,
@@ -133,7 +133,7 @@ export class MexcConfigValidator {
         };
       }
 
-      const serverTime = serverTimeResponse.data?.serverTime;
+      const serverTime = typeof serverTimeResponse.data === 'number' ? serverTimeResponse.data : serverTimeResponse.data?.serverTime;
       const localTime = Date.now();
       const timeDiff = Math.abs(localTime - (serverTime || 0));
 
@@ -160,7 +160,7 @@ export class MexcConfigValidator {
         status: "valid",
         message: "MEXC API credentials validated successfully",
         details: {
-          responseTime: connectivityTest.responseTime,
+          responseTime: connectivityTest.data?.latency || (connectivityTest as any).responseTime,
           timeDifference: timeDiff,
           serverTime,
         },
@@ -434,8 +434,9 @@ export class MexcConfigValidator {
       }
     }
 
-    // FIXED: Auto-sniping is ALWAYS enabled when system is ready
-    const autoSnipingEnabled = overallStatus === "ready";
+    // Check both system readiness and environment variable setting
+    const autoSnipingEnabled = overallStatus === "ready" && 
+      (process.env.AUTO_SNIPING_ENABLED?.toLowerCase() !== "false");
 
     return {
       overallStatus,
@@ -456,7 +457,7 @@ export class MexcConfigValidator {
     try {
       // Quick connectivity test
       const connectivity = await this.mexcService.testConnectivity();
-      if (!connectivity) {
+      if (!connectivity.success) {
         issues.push("MEXC API connectivity failed");
       }
 

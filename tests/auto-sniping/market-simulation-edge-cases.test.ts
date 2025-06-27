@@ -19,6 +19,7 @@ import {
   vi,
   beforeAll,
 } from "vitest";
+
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
@@ -99,47 +100,42 @@ describe("Market Simulation Edge Cases", () => {
     }
   }
 
-  beforeAll(() => {
-    // Mock external dependencies
-    vi.mock("@/src/db", () => ({
-      db: {
-        insert: vi.fn().mockReturnValue({
-          values: vi.fn().mockReturnValue({
-            returning: vi.fn().mockResolvedValue([{ id: "1" }]),
-          }),
-        }),
-        select: vi.fn().mockReturnValue({
-          from: vi.fn().mockReturnValue({
-            where: vi.fn().mockReturnValue({
-              limit: vi.fn().mockResolvedValue([]),
-            }),
-          }),
-        }),
-      },
-    }));
-  });
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Initialize services with aggressive test configuration
     patternEngine = PatternDetectionCore.getInstance();
 
-    riskEngine = new AdvancedRiskEngine({
-      maxPortfolioValue: 50000,
-      maxSinglePositionSize: 5000,
-      maxConcurrentPositions: 10,
-      maxDailyLoss: 1000,
-      maxDrawdown: 15, // Higher for stress testing
-      confidenceLevel: 0.95,
-      lookbackPeriod: 30,
-      correlationThreshold: 0.8,
-      volatilityMultiplier: 1.2,
-      adaptiveRiskScaling: true,
-      marketRegimeDetection: true,
-      stressTestingEnabled: true,
-      emergencyVolatilityThreshold: 0.8,
-      emergencyLiquidityThreshold: 0.2,
-      emergencyCorrelationThreshold: 0.9,
-    });
+    // Create risk engine and ensure all methods are available
+    try {
+      riskEngine = new AdvancedRiskEngine({
+        maxPortfolioValue: 50000,
+        maxSinglePositionSize: 5000,
+        maxConcurrentPositions: 10,
+        maxDailyLoss: 1000,
+        maxDrawdown: 15, // Higher for stress testing
+        confidenceLevel: 0.95,
+        lookbackPeriod: 30,
+        correlationThreshold: 0.8,
+        volatilityMultiplier: 1.2,
+        adaptiveRiskScaling: true,
+        marketRegimeDetection: true,
+        stressTestingEnabled: true,
+        emergencyVolatilityThreshold: 0.8,
+        emergencyLiquidityThreshold: 0.2,
+        emergencyCorrelationThreshold: 0.9,
+      });
+
+      // Verify required methods exist
+      if (!riskEngine.updateMarketConditions) {
+        throw new Error("riskEngine.updateMarketConditions method not available");
+      }
+      if (!riskEngine.detectManipulation) {
+        throw new Error("riskEngine.detectManipulation method not available");
+      }
+    } catch (error) {
+      console.error("Failed to initialize risk engine:", error);
+      throw error;
+    }
 
     mexcService = new UnifiedMexcServiceV2({
       apiKey: "test-api-key",

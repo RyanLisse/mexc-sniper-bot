@@ -173,7 +173,7 @@ export class CircuitBreakerCoordinator {
    */
   cleanupExpiredLocks(): void {
     const now = Date.now();
-    for (const [key, lock] of this.locks.entries()) {
+    for (const [key, lock] of Array.from(this.locks.entries())) {
       if (lock.expiresAt <= now) {
         this.locks.delete(key);
       }
@@ -539,7 +539,7 @@ export class CoordinatedCircuitBreakerRegistry {
   getHealthStatus(): { [name: string]: any } {
     const status: { [name: string]: any } = {};
 
-    for (const [name, breaker] of this.breakers) {
+    for (const [name, breaker] of Array.from(this.breakers)) {
       status[name] = breaker.getStats();
     }
 

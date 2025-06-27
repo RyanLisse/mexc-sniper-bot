@@ -26,13 +26,13 @@ export interface TimeoutResult<T> {
  */
 export function getTestTimeout(testType: TimeoutConfig['testType']): number {
   const defaults = {
-    unit: 10000,
-    integration: 45000,
-    'auto-sniping': 30000,
-    performance: 60000,
-    safety: 45000,
-    agents: 30000,
-    e2e: 120000
+    unit: 5000,      // Reduced from 10s to 5s for faster unit tests
+    integration: 20000,  // Reduced from 45s to 20s for faster integration tests
+    'auto-sniping': 15000, // Reduced from 30s to 15s
+    performance: 30000,    // Reduced from 60s to 30s
+    safety: 20000,     // Reduced from 45s to 20s
+    agents: 15000,     // Reduced from 30s to 15s
+    e2e: 60000         // Reduced from 120s to 60s
   };
 
   const envVariables = {

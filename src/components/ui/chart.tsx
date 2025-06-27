@@ -1,16 +1,30 @@
 "use client";
 import type * as React from "react";
 import { lazy, Suspense } from "react";
+import { ErrorBoundary } from "../error-boundary";
 
 export interface ChartConfig {
   [key: string]: { label?: string; color?: string };
 }
 
-// Lazy load Recharts ResponsiveContainer to reduce initial bundle size
+// Safely lazy load Recharts ResponsiveContainer to reduce initial bundle size with error handling
 const ResponsiveContainer = lazy(() =>
-  import("recharts").then((module) => ({
-    default: module.ResponsiveContainer,
-  }))
+  import("recharts")
+    .then((module) => ({
+      default: module.ResponsiveContainer,
+    }))
+    .catch((error) => {
+      console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
+      // Return fallback component that renders safely
+      return {
+        default: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
+          <div className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}>
+            Chart temporarily unavailable
+            {children && <div style={{ display: 'none' }}>{children}</div>}
+          </div>
+        ),
+      };
+    })
 );
 
 export function ChartContainer({
@@ -22,11 +36,20 @@ export function ChartContainer({
   children: React.ReactNode;
 }): React.ReactElement {
   return (
-    <Suspense fallback={<div className="w-full h-96 animate-pulse bg-gray-100 rounded" />}>
-      <ResponsiveContainer className={className}>
-        {children as React.ReactElement}
-      </ResponsiveContainer>
-    </Suspense>
+    <ErrorBoundary 
+      level="component" 
+      fallback={
+        <div className="w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500">
+          Chart component temporarily unavailable
+        </div>
+      }
+    >
+      <Suspense fallback={<div className="w-full h-96 animate-pulse bg-gray-100 rounded" />}>
+        <ResponsiveContainer className={className}>
+          {children as React.ReactElement}
+        </ResponsiveContainer>
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

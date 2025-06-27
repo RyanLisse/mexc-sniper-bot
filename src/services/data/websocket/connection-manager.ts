@@ -82,30 +82,58 @@ export class MexcConnectionManager {
       this.ws.on("close", (code, reason) => this.handleClose(code, reason));
       this.ws.on("error", (error) => this.handleError(error));
 
-      // Wait for connection to be established
+      // Wait for connection to be established with proper error handling
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
+          this.cleanup();
           reject(new Error("WebSocket connection timeout"));
         }, 10000);
 
-        this.ws!.once("open", () => {
+        const cleanup = () => {
           clearTimeout(timeout);
+        };
+
+        this.ws!.once("open", () => {
+          cleanup();
           resolve();
         });
 
         this.ws!.once("error", (error) => {
-          clearTimeout(timeout);
+          cleanup();
+          this.cleanup();
           reject(error);
+        });
+
+        this.ws!.once("close", (code, reason) => {
+          cleanup();
+          this.cleanup();
+          reject(new Error(`Connection closed during establishment: ${code} - ${reason}`));
         });
       });
     } catch (error) {
       this.isConnecting = false;
+      this.cleanup();
       this.logger.error("Failed to establish WebSocket connection", {
         error: error instanceof Error ? error.message : String(error),
         connectionId: this.connectionId,
       });
       throw error;
     }
+  }
+
+  /**
+   * Clean up connection resources
+   */
+  private cleanup(): void {
+    if (this.ws) {
+      this.ws.removeAllListeners();
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close();
+      }
+      this.ws = null;
+    }
+    this.isConnected = false;
+    this.isConnecting = false;
   }
 
   /**
@@ -123,7 +151,9 @@ export class MexcConnectionManager {
 
     if (this.ws) {
       this.ws.removeAllListeners();
-      this.ws.close(1000, "Normal closure");
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, "Normal closure");
+      }
       this.ws = null;
     }
 
@@ -208,11 +238,24 @@ export class MexcConnectionManager {
       code,
       reason: reason.toString(),
       connectionId: this.connectionId,
+      reconnectAttempts: this.reconnectAttempts,
     });
+
+    // Clean up WebSocket reference
+    if (this.ws) {
+      this.ws.removeAllListeners();
+      this.ws = null;
+    }
 
     // Attempt reconnection unless it was a normal closure
     if (code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
       this.scheduleReconnect();
+    } else if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      this.logger.error("Max reconnection attempts reached", {
+        maxAttempts: this.maxReconnectAttempts,
+        connectionId: this.connectionId,
+      });
+      this.onError(new Error("Max reconnection attempts reached"));
     }
   }
 
