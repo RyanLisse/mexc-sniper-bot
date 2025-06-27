@@ -42,7 +42,7 @@ export interface AlertingConfig {
 }
 
 export class AutomatedAlertingService {
-  private _; /**
+  /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
   private get logger(): {

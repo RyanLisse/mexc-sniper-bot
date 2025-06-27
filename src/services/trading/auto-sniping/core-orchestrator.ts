@@ -304,39 +304,33 @@ export class OptimizedAutoSnipingCore {
 
     return {
       status: this.getExecutionStatus(),
-      activePositions: activePositions.length,
+      activePositions: activePositions,
+      activePositionsCount: activePositions.length,
       totalTrades: stats.totalTrades || 0,
       successfulTrades: stats.successfulTrades || 0,
-      totalProfit: stats.totalProfit || 0,
+      totalPnl: stats.totalPnl || 0,
       successRate: stats.totalTrades > 0 ? (stats.successfulTrades / stats.totalTrades) * 100 : 0,
       
       // Additional properties expected by API routes
-      activePositions: activePositions,
       recentExecutions: [],
       activeAlerts: alerts.unacknowledged || 0,
       stats: {
         totalExecutions: stats.totalTrades || 0,
         successCount: stats.successfulTrades || 0,
         errorCount: (stats.totalTrades || 0) - (stats.successfulTrades || 0),
-        totalPnl: stats.totalProfit || 0,
-        successRate: stats.totalTrades > 0 ? (stats.successfulTrades / stats.totalTrades) * 100 : 0,
+        totalPnl: stats.totalPnl || 0,
         dailyTradeCount: stats.dailyTrades || 0,
-        totalTrades: stats.totalTrades || 0,
-        length: 1, // For array-like access
       },
-      systemHealth: "healthy",
-      lastUpdated: new Date().toISOString(),
+      systemHealth: "healthy", // Will be updated to dynamic health check in future enhancement
       
       // Status report properties
       activeTargets: activePositions.length,
-      readyTargets: 0,
+      readyTargets: this.getActivePositions().filter(p => p.status === "ready").length,
       executedToday: stats.dailyTrades || 0,
-      lastExecution: null,
-      safetyStatus: "safe",
+      lastExecution: this.getLastExecutionTime(),
+      safetyStatus: this.alertManager.hasCriticalIssues() ? "warning" : "safe",
       patternDetectionActive: this.getExecutionStatus() === "active",
       executionCount: stats.totalTrades || 0,
-      successCount: stats.successfulTrades || 0,
-      errorCount: (stats.totalTrades || 0) - (stats.successfulTrades || 0),
       uptime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
       
       config: {
@@ -352,8 +346,22 @@ export class OptimizedAutoSnipingCore {
         unacknowledged: alerts.unacknowledged,
         critical: alerts.critical,
       },
-      lastUpdate: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Get last execution time
+   */
+  private getLastExecutionTime(): string | null {
+    const positions = this.getActivePositions();
+    if (positions.length === 0) return null;
+    
+    const lastPosition = positions.sort((a, b) => 
+      new Date(b.entryTime || 0).getTime() - new Date(a.entryTime || 0).getTime()
+    )[0];
+    
+    return lastPosition?.entryTime || null;
   }
 
   /**
@@ -414,20 +422,35 @@ export class OptimizedAutoSnipingCore {
     console.info("Closing position", { positionId });
     
     try {
-      // This would normally interact with the exchange API
-      // For now, we'll simulate the closure
+      // Find the position in our active positions
+      const activePositions = this.getActivePositions();
+      const position = activePositions.find(p => p.id === positionId);
       
-      this.alertManager.addAlert({
-        type: "position_closed",
-        severity: "info",
-        message: `Position ${positionId} closed manually`,
-        details: {
-          positionId,
-          closeTime: new Date().toISOString(),
-        },
-      });
+      if (!position) {
+        throw new Error(`Position ${positionId} not found in active positions`);
+      }
+
+      // Request closure through the execution engine
+      const closureResult = await this.executionEngine.closePosition(positionId);
       
-      return true;
+      if (closureResult) {
+        this.alertManager.addAlert({
+          type: "position_closed",
+          severity: "info",
+          message: `Position ${positionId} closed manually`,
+          details: {
+            positionId,
+            symbol: position.symbol,
+            closeTime: new Date().toISOString(),
+            closePrice: position.currentPrice,
+            pnl: position.unrealizedPnl || 0,
+          },
+        });
+        
+        return true;
+      } else {
+        throw new Error("Position closure failed - execution engine returned false");
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       

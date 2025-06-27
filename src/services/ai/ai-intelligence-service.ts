@@ -7,7 +7,7 @@
 
 import { embeddingsService } from "./embeddings-service";
 import { type EnhancedPatternData, intelligenceOrchestrator } from "./intelligence-orchestrator";
-import type { PatternData } from "./pattern-embedding-service";
+import type { PatternData } from "../data/pattern-embedding-service";
 import { type PerplexityResearchResult, researchService } from "./research-service";
 
 // Re-export types for backward compatibility
