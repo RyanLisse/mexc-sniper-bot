@@ -60,7 +60,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
     // Handle null/undefined input gracefully
     if (!symbolData) {
-      console.warn("Null/undefined symbol data provided to detectReadyStatePattern");
+      this.logger.warn("Null/undefined symbol data provided to detectReadyStatePattern");
       return [];
     }
 
@@ -76,7 +76,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       try {
         // Validate symbol data
         if (!this.validateSymbolData(symbol)) {
-          console.warn("Invalid symbol data", { symbol: symbol?.cd || "unknown" });
+          this.logger.warn("Invalid symbol data", { symbol: symbol?.cd || "unknown" });
           continue;
         }
 
@@ -106,9 +106,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 activities: activityData,
                 activityBoost,
                 hasHighPriorityActivity: this.hasHighPriorityActivity(activityData),
-                activityTypes: activityData
-                  .map((a) => a.activityType)
-                  .filter((v, i, a) => a.indexOf(v) === i),
+                activityTypes: [...new Set(activityData.map((a) => a.activityType))], // More efficient unique operation
               };
             }
 
@@ -135,7 +133,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        console.error(
+        this.logger.error(
           "Error processing symbol",
           {
             symbol: symbol?.cd || "unknown",
@@ -148,7 +146,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     const duration = Date.now() - startTime;
-    console.info("Ready state detection completed", {
+    this.logger.info("Ready state detection completed", {
       symbolsAnalyzed: symbols.length,
       patternsFound: matches.length,
       duration,
@@ -217,9 +215,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 activities: activityData,
                 activityBoost,
                 hasHighPriorityActivity: this.hasHighPriorityActivity(activityData),
-                activityTypes: activityData
-                  .map((a) => a.activityType)
-                  .filter((v, i, a) => a.indexOf(v) === i),
+                activityTypes: [...new Set(activityData.map((a) => a.activityType))], // More efficient unique operation
               };
             }
 
@@ -251,7 +247,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        console.error(
+        this.logger.error(
           "Error processing calendar entry",
           {
             symbol: entry?.symbol || "unknown",
@@ -264,7 +260,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     const duration = Date.now() - startTime;
-    console.info("Advance opportunity detection completed", {
+    this.logger.info("Advance opportunity detection completed", {
       calendarEntriesAnalyzed: calendarEntries.length,
       opportunitiesFound: matches.length,
       duration,
@@ -321,7 +317,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        console.error(
+        this.logger.error(
           "Error processing pre-ready symbol",
           {
             symbol: symbol?.cd || "unknown",
@@ -362,7 +358,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error(
+      this.logger.error(
         "Error analyzing correlations",
         {
           symbolsAnalyzed: symbolData.length,
@@ -576,23 +572,16 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   private calculateActivityBoost(activities: any[]): number {
     if (!activities || activities.length === 0) return 0;
 
-    let boost = 0;
-
-    activities.forEach((activity) => {
-      switch (activity.activityType) {
-        case "SUN_SHINE":
-          boost += 8; // High priority activity
-          break;
-        case "PROMOTION":
-          boost += 5; // Medium priority activity
-          break;
-        case "LAUNCHPAD":
-          boost += 10; // Highest priority activity
-          break;
-        default:
-          boost += 2; // Default activity boost
-      }
-    });
+    // Optimized reduce operation - more functional and efficient
+    const boost = activities.reduce((totalBoost, activity) => {
+      const activityBoosts = {
+        "SUN_SHINE": 8,    // High priority activity
+        "PROMOTION": 5,    // Medium priority activity  
+        "LAUNCHPAD": 10,   // Highest priority activity
+      };
+      
+      return totalBoost + (activityBoosts[activity.activityType as keyof typeof activityBoosts] || 2);
+    }, 0);
 
     // Cap the boost at 15 points
     return Math.min(boost, 15);

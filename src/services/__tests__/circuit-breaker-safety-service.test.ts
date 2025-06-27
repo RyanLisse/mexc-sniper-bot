@@ -82,9 +82,9 @@ describe("Circuit Breaker Safety Service", () => {
       const result = await safetyService.executeCircuitBreakerRecovery(mockReliabilityManager);
 
       expect(result.success).toBe(true);
-      expect(result.steps).toContain("Validated safety conditions");
-      expect(result.steps).toContain("Reset circuit breaker");
-      expect(result.steps).toContain("Verified system connectivity");
+      expect(result.steps).toContain("Validated safety conditions under coordination lock");
+      expect(result.steps).toContain("Reset circuit breaker with coordination");
+      expect(result.steps).toContain("Verified system connectivity after coordinated reset");
     });
 
     it("should prevent unsafe recovery when conditions are not met", async () => {

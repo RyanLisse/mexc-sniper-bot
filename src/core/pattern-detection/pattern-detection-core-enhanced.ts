@@ -320,15 +320,19 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
         },
       };
 
-      // Emit the event
+      // Emit the general patterns_detected event
       this.emit("patterns_detected", eventData);
+
+      // Also emit specific pattern type events for bridge listeners
+      this.emit(patternType, eventData);
 
       console.info("Pattern detection event emitted", {
         patternType,
         matchesCount: matches.length,
         averageConfidence: eventData.metadata.averageConfidence,
         source: metadata.source,
-        listeners: this.listenerCount("patterns_detected"),
+        generalListeners: this.listenerCount("patterns_detected"),
+        specificListeners: this.listenerCount(patternType),
       });
     } catch (error) {
       console.error(

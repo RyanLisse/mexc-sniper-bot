@@ -35,6 +35,25 @@ vi.mock("@/src/services/api/unified-mexc-service-v2", () => ({
         success: true,
         data: { currency: "BTC", activities: [] },
       }),
+    // Add the missing getCalendarListings method to fix calendar agent errors
+    getCalendarListings: vi
+      .fn()
+      .mockResolvedValue({
+        success: true,
+        data: [
+          {
+            vcoinId: 'test-coin-id',
+            symbol: 'TESTCOIN',
+            projectName: 'Test Coin Project',
+            firstOpenTime: Date.now() + 3600000, // 1 hour from now
+            vcoinName: 'TestCoin',
+            vcoinNameFull: 'Test Coin Full Name',
+            zone: 'innovation'
+          }
+        ],
+        timestamp: Date.now(),
+        source: 'mock-calendar-service'
+      }),
   })),
 }));
 

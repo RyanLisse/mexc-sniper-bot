@@ -6,64 +6,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import React from "react";
-import { db, apiCredentials } from "../../src/db";
-import { eq, and } from "drizzle-orm";
-import { getEncryptionService } from "../../src/services/api/secure-encryption-service";
-import { GET as accountBalanceEndpoint } from "../../app/api/account/balance/route";
-import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
-import type { BalanceEntry } from "../../src/services/api/mexc-unified-exports";
 
-// Ensure React is available globally for JSX
-globalThis.React = React;
-
-// Mock fetch to avoid AbortSignal issues in tests
-const originalFetch = globalThis.fetch;
-globalThis.fetch = vi
-  .fn()
-  .mockImplementation(async (url: RequestInfo, init?: RequestInit) => {
-    // Remove signal from init to avoid AbortSignal issues
-    const { signal, ...safeInit } = init || {};
-
-    // Return proper AccountBalanceResponseSchema structure
-    const mockResponse = {
-      success: true,
-      data: {
-        balances: [
-          {
-            asset: "USDT",
-            free: "100.00",
-            locked: "0.00",
-            total: 100.0,
-            usdtValue: 100.0,
-          },
-          {
-            asset: "BTC",
-            free: "0.001",
-            locked: "0.000",
-            total: 0.001,
-            usdtValue: 50.0,
-          },
-        ],
-        totalUsdtValue: 150.0,
-        lastUpdated: new Date().toISOString(),
-        hasUserCredentials: true,
-        credentialsType: "user-specific" as const,
-      },
-      metadata: {
-        requestDuration: "100ms",
-        balanceCount: 2,
-        credentialSource: "user-database",
-      },
-    };
-
-    return new Response(JSON.stringify(mockResponse), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    });
-  });
+// Mock the unified MEXC service factory
+vi.mock("../../src/services/api/unified-mexc-service-factory", () => ({
+  getUnifiedMexcService: vi.fn(),
+}));
 
 // Mock auth
 vi.mock("../../src/lib/kinde-auth-client", () => ({
@@ -83,23 +30,34 @@ vi.mock("../../src/hooks/use-currency-formatting", () => ({
   }),
 }));
 
-// Mock the unified MEXC service factory at module level
-const mockMexcService = vi.hoisted(() => ({
-  hasCredentials: vi.fn().mockReturnValue(true),
-  getAccountBalances: vi.fn(),
-  testConnectivity: vi.fn().mockResolvedValue(true),
-  getAccountInfo: vi.fn(),
-}));
+import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
+import { db, apiCredentials } from "../../src/db";
+import { eq, and } from "drizzle-orm";
+import { getEncryptionService } from "../../src/services/api/secure-encryption-service";
+import { GET as accountBalanceEndpoint } from "../../app/api/account/balance/route";
+import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
+import type { BalanceEntry } from "../../src/services/api/mexc-unified-exports";
+import { getUnifiedMexcService } from "../../src/services/api/unified-mexc-service-factory";
 
-vi.mock("../../src/services/api/unified-mexc-service-factory", () => ({
-  getUnifiedMexcService: vi.fn().mockResolvedValue(mockMexcService),
-}));
+// Ensure React is available globally for JSX
+globalThis.React = React;
 
 describe("Account Balance Flow Integration Tests", () => {
   const testUserId = "test-user-balance";
   const testApiKey = "mx0x_test_balance_key_1234567890abcdef";
   const testSecretKey = "abcd_test_balance_secret_1234567890_9876";
   let queryClient: QueryClient;
+  let originalFetch: typeof fetch;
+
+  // Mock service object
+  const mockMexcService = {
+    hasCredentials: vi.fn().mockReturnValue(true),
+    getAccountBalances: vi.fn(),
+    testConnectivity: vi.fn().mockResolvedValue(true),
+    getAccountInfo: vi.fn(),
+  };
 
   beforeEach(async () => {
     queryClient = new QueryClient({
@@ -109,14 +67,64 @@ describe("Account Balance Flow Integration Tests", () => {
       },
     });
 
+    // Store original fetch before mocking
+    originalFetch = globalThis.fetch;
+
+    // Mock fetch for API tests
+    globalThis.fetch = vi
+      .fn()
+      .mockImplementation(async (url: RequestInfo, init?: RequestInit) => {
+        // Remove signal from init to avoid AbortSignal issues
+        const { signal, ...safeInit } = init || {};
+
+        // Return proper AccountBalanceResponseSchema structure
+        const mockResponse = {
+          success: true,
+          data: {
+            balances: [
+              {
+                asset: "USDT",
+                free: "100.00",
+                locked: "0.00",
+                total: 100.0,
+                usdtValue: 100.0,
+              },
+              {
+                asset: "BTC",
+                free: "0.001",
+                locked: "0.000",
+                total: 0.001,
+                usdtValue: 50.0,
+              },
+            ],
+            totalUsdtValue: 150.0,
+            lastUpdated: new Date().toISOString(),
+            hasUserCredentials: true,
+            credentialsType: "user-specific" as const,
+          },
+          metadata: {
+            requestDuration: "100ms",
+            balanceCount: 2,
+            credentialSource: "user-database",
+          },
+        };
+
+        return new Response(JSON.stringify(mockResponse), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      });
+
     vi.clearAllMocks();
 
+    // Configure the mock service factory
+    vi.mocked(getUnifiedMexcService).mockResolvedValue(mockMexcService);
+
     // Reset all mock functions to their default implementation
-    const service = mockMexcService;
-    service.hasCredentials.mockReturnValue(true);
-    service.getAccountBalances.mockReset();
-    service.testConnectivity.mockResolvedValue(true);
-    service.getAccountInfo.mockReset();
+    mockMexcService.hasCredentials.mockReturnValue(true);
+    mockMexcService.getAccountBalances.mockReset();
+    mockMexcService.testConnectivity.mockResolvedValue(true);
+    mockMexcService.getAccountInfo.mockReset();
 
     // Clean up any existing test credentials
     await db
@@ -196,8 +204,7 @@ describe("Account Balance Flow Integration Tests", () => {
       };
 
       // Configure the mock for this test
-      const service = mockMexcService;
-      service.getAccountBalances.mockResolvedValue(mockBalanceResponse);
+      mockMexcService.getAccountBalances.mockResolvedValue(mockBalanceResponse);
 
       // Act: Call balance endpoint
       const request = new Request(
@@ -215,7 +222,7 @@ describe("Account Balance Flow Integration Tests", () => {
       expect(data.data.credentialsType).toBe("user-specific");
 
       // Verify service was called correctly
-      expect(service.getAccountBalances).toHaveBeenCalled();
+      expect(mockMexcService.getAccountBalances).toHaveBeenCalled();
     });
 
     it("should fall back to environment credentials when user credentials not found", async () => {
@@ -241,8 +248,7 @@ describe("Account Balance Flow Integration Tests", () => {
       };
 
       // Configure the mock for this test
-      const service = mockMexcService;
-      service.getAccountBalances.mockResolvedValue(mockBalanceResponse);
+      mockMexcService.getAccountBalances.mockResolvedValue(mockBalanceResponse);
 
       // Act: Call balance endpoint without userId to trigger environment fallback
       const request = new Request(`http://localhost/api/account/balance`);
@@ -280,8 +286,7 @@ describe("Account Balance Flow Integration Tests", () => {
       };
 
       // Configure the mock for this test
-      const service = mockMexcService;
-      service.getAccountBalances.mockResolvedValue(mockBalanceResponse);
+      mockMexcService.getAccountBalances.mockResolvedValue(mockBalanceResponse);
 
       // Act
       const request = new Request(
@@ -596,8 +601,7 @@ describe("Account Balance Flow Integration Tests", () => {
       };
 
       // Configure the mock for this test
-      const service = mockMexcService;
-      service.getAccountBalances.mockResolvedValue(mockBalanceResponse);
+      mockMexcService.getAccountBalances.mockResolvedValue(mockBalanceResponse);
 
       // Test balance endpoint
       const balanceRequest = new Request(
@@ -611,7 +615,7 @@ describe("Account Balance Flow Integration Tests", () => {
       expect(balanceData.data.totalUsdtValue).toBe(46000);
 
       // Verify service was called correctly
-      expect(service.getAccountBalances).toHaveBeenCalled();
+      expect(mockMexcService.getAccountBalances).toHaveBeenCalled();
 
       // The key insight: When both endpoints use the same service initialization approach,
       // status synchronization issues should be minimized

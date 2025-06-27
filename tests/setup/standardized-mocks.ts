@@ -464,7 +464,7 @@ export function setupGlobalAIMocks() {
 export function resetSingletons() {
   // Reset PatternDetectionCore singleton
   try {
-    const { PatternDetectionCore } = require("@/src/core/pattern-detection");
+    const { PatternDetectionCore } = require("../../src/core/pattern-detection");
     if (PatternDetectionCore && PatternDetectionCore.getInstance) {
       (PatternDetectionCore as any).instance = undefined;
     }
@@ -474,7 +474,7 @@ export function resetSingletons() {
 
   // Reset other singletons if they exist
   try {
-    const { clearSingletonInstances } = require("@/src/lib/singleton-manager");
+    const { clearSingletonInstances } = require("../../src/lib/singleton-manager");
     if (typeof clearSingletonInstances === 'function') {
       clearSingletonInstances();
     }

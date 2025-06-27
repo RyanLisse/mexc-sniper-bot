@@ -8,6 +8,11 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { setTestTimeout } from "../../utils/timeout-utilities";
+import { 
+  setupMexcIntegrationTest,
+  teardownMexcIntegrationTest,
+  waitForMexcOperation
+} from "../../utils/mexc-integration-utilities";
 
 // Set up mocks at the top level to avoid hoisting issues
 vi.mock("@/src/lib/kinde-auth", () => ({
@@ -70,6 +75,23 @@ vi.mock("@/src/services/risk/emergency-safety-system", () => ({
 vi.mock("@/src/services/api/unified-mexc-service-v2", () => ({
   UnifiedMexcServiceV2: vi.fn().mockImplementation(() => ({
     getAccountBalance: vi.fn().mockResolvedValue({ success: true, data: {} }),
+    // Add the missing getCalendarListings method to fix calendar agent errors
+    getCalendarListings: vi.fn().mockResolvedValue({
+      success: true,
+      data: [
+        {
+          vcoinId: 'test-coin-id',
+          symbol: 'TESTCOIN',
+          projectName: 'Test Coin Project',
+          firstOpenTime: Date.now() + 3600000, // 1 hour from now
+          vcoinName: 'TestCoin',
+          vcoinNameFull: 'Test Coin Full Name',
+          zone: 'innovation'
+        }
+      ],
+      timestamp: Date.now(),
+      source: 'mock-calendar-service'
+    }),
   })),
 }));
 
@@ -77,13 +99,16 @@ describe("Safety Monitoring API Integration Tests", () => {
   const TEST_TIMEOUT = setTestTimeout("integration");
 
   beforeEach(() => {
+    // Setup MEXC integration test environment
+    setupMexcIntegrationTest();
+    
     // Clear all mocks before each test
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    // Clean up after each test
-    vi.clearAllMocks();
+    // Use standardized teardown
+    teardownMexcIntegrationTest();
   });
 
   describe("Core API Integration", () => {
@@ -106,6 +131,9 @@ describe("Safety Monitoring API Integration Tests", () => {
       const {
         GET,
       } = await import("../../../app/api/auto-sniping/safety-monitoring/route");
+
+      // Ensure services are ready
+      await waitForMexcOperation(100);
 
       // Test invalid request structure
       const invalidRequest = new NextRequest(

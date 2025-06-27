@@ -311,6 +311,7 @@ export class OptimizedAutoSnipingCore {
       successRate: stats.totalTrades > 0 ? (stats.successfulTrades / stats.totalTrades) * 100 : 0,
       
       // Additional properties expected by API routes
+      activePositions: activePositions,
       recentExecutions: [],
       activeAlerts: alerts.unacknowledged || 0,
       stats: {
@@ -327,7 +328,7 @@ export class OptimizedAutoSnipingCore {
       lastUpdated: new Date().toISOString(),
       
       // Status report properties
-      activeTargets: 0,
+      activeTargets: activePositions.length,
       readyTargets: 0,
       executedToday: stats.dailyTrades || 0,
       lastExecution: null,

@@ -24,7 +24,7 @@ import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
-import type { SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 
 describe("Market Simulation Edge Cases", () => {
   let patternEngine: PatternDetectionCore;

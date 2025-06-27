@@ -10,15 +10,14 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import type {
-  PatternDetectionEventData,
   PatternMatch,
-} from "@/src/core/pattern-detection/interfaces";
-import { EnhancedPatternDetectionCore } from "@/src/core/pattern-detection/pattern-detection-core-enhanced";
-import { db } from "@/src/db";
-import { snipeTargets, userPreferences } from "@/src/db/schema";
-import { toSafeError } from "@/src/lib/error-type-utils";
+} from "../../../core/pattern-detection/interfaces";
+import { EnhancedPatternDetectionCore, type PatternDetectionEventData } from "../../../core/pattern-detection/pattern-detection-core-enhanced";
+import { db } from "../../../db";
+import { snipeTargets, userPreferences } from "../../../db/schema";
+import { toSafeError } from "../../../lib/error-type-utils";
 
-import { createLogger, type LogContext } from "@/src/lib/unified-logger";
+import { createLogger, type LogContext } from "../../../lib/unified-logger";
 
 // ============================================================================
 // Configuration Schema

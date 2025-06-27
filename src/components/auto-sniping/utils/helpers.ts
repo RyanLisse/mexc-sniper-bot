@@ -117,7 +117,7 @@ export const validateNumberRange = (
 /**
  * Debounce function for input validation
  */
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: readonly unknown[]) => unknown>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {

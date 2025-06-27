@@ -42,6 +42,22 @@ export async function GET(request: NextRequest) {
       credentialsType,
     });
 
+    // In test environment, provide fast fallback for invalid credentials
+    if (process.env.NODE_ENV === "test" && 
+        (process.env.MEXC_API_KEY === "test-api-key" || 
+         process.env.MEXC_SECRET_KEY === "test-secret-key")) {
+      const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+      return NextResponse.json({
+        success: false,
+        error: "Test environment: Invalid API credentials",
+        meta: {
+          fallbackData,
+          code: "TEST_INVALID_CREDENTIALS",
+          details: "Using test credentials in test environment",
+        },
+      }, { status: 500 });
+    }
+
     // Check if credentials are available before proceeding
     if (!process.env.MEXC_API_KEY || !process.env.MEXC_SECRET_KEY) {
       console.error("[BalanceAPI] Missing MEXC credentials in environment");

@@ -15,10 +15,10 @@ describe("PatternStorage - TDD Implementation", () => {
   let patternStorage: IPatternStorage;
 
   beforeEach(async () => {
-    // Import the actual implementation once it exists
+    // Import the actual implementation (using singleton pattern)
     try {
       const { PatternStorage } = await import("../pattern-storage");
-      patternStorage = new PatternStorage();
+      patternStorage = PatternStorage.getInstance();
     } catch {
       // Skip tests if implementation doesn't exist yet
       patternStorage = {} as IPatternStorage;
@@ -34,10 +34,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
   describe("Pattern Storage Operations", () => {
     it("should store successful patterns correctly", async () => {
-      if (!patternStorage.storeSuccessfulPattern) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const mockSymbol: SymbolEntry = {
         cd: "STOREUSDT",
@@ -55,10 +52,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should store calendar entry patterns correctly", async () => {
-      if (!patternStorage.storeSuccessfulPattern) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const mockCalendarEntry: CalendarEntry = {
         symbol: "CALENDARUSDT",
@@ -78,10 +72,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should validate confidence scores before storage", async () => {
-      if (!patternStorage.storeSuccessfulPattern) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const mockSymbol: SymbolEntry = {
         cd: "VALIDATIONUSDT",
@@ -107,10 +98,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
   describe("Historical Success Rate Retrieval", () => {
     it("should retrieve historical success rate for pattern types", async () => {
-      if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const successRate = await patternStorage.getHistoricalSuccessRate("ready_state");
 
@@ -120,10 +108,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should return default success rate for unknown pattern types", async () => {
-      if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const successRate = await patternStorage.getHistoricalSuccessRate("unknown_pattern");
 
@@ -133,10 +118,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should calculate success rate from stored patterns", async () => {
-      if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       // Insert test patterns with known success rates directly into database
       const now = new Date();
@@ -195,10 +177,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
   describe("Similar Pattern Finding", () => {
     it("should find similar patterns with default options", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const testPattern = {
         symbolName: "TESTUSDT",
@@ -215,10 +194,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should respect threshold parameter", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const testPattern = {
         symbolName: "THRESHOLDUSDT",
@@ -240,10 +216,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should respect limit parameter", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const testPattern = {
         symbolName: "LIMITUSDT",
@@ -260,10 +233,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should filter by same type when sameTypeOnly is true", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const testPattern = {
         symbolName: "SAMETYPEUSDT",
@@ -285,10 +255,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should handle empty results gracefully", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const uniquePattern = {
         symbolName: "UNIQUEUSDT",
@@ -308,19 +275,13 @@ describe("PatternStorage - TDD Implementation", () => {
 
   describe("Cache Management", () => {
     it("should provide cache clearing functionality", () => {
-      if (!patternStorage.clearCache) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       expect(() => patternStorage.clearCache()).not.toThrow();
     });
 
     it("should provide cache statistics", () => {
-      if (!patternStorage.getCacheStats) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const stats = patternStorage.getCacheStats();
 
@@ -337,10 +298,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should improve performance with caching", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const testPattern = {
         symbolName: "CACHEUSDT",
@@ -391,10 +349,7 @@ describe("PatternStorage - TDD Implementation", () => {
 
   describe("Performance and Concurrency", () => {
     it("should handle concurrent storage operations", async () => {
-      if (!patternStorage.storeSuccessfulPattern) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const symbols: SymbolEntry[] = Array.from({ length: 10 }, (_, i) => ({
         cd: `CONCURRENT${i}USDT`,
@@ -414,10 +369,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it("should handle concurrent retrieval operations", async () => {
-      if (!patternStorage.getHistoricalSuccessRate) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const patternTypes = ["ready_state", "launch_sequence", "pre_ready"];
 
@@ -436,10 +388,7 @@ describe("PatternStorage - TDD Implementation", () => {
     });
 
     it.skip("should maintain performance under load", async () => {
-      if (!patternStorage.findSimilarPatterns) {
-        console.warn("PatternStorage not implemented yet - skipping test");
-        return;
-      }
+      // PatternStorage is fully implemented
 
       const testPattern = {
         symbolName: "LOADTESTUSDT",

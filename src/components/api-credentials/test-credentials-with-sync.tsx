@@ -10,7 +10,7 @@
 import { useKindeAuth } from "@kinde-oss/kinde-auth-nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Loader2, RefreshCw, XCircle } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,8 +53,8 @@ interface TestCredentialsResponse {
 
 export function TestCredentialsWithSync() {
   const { user } = useKindeAuth();
-  const queryClient = useQueryClient();
-  const { handleStatusSync, invalidateStatusQueries, getCacheStatus } = useStatusSync();
+  const _queryClient = useQueryClient();
+  const { handleStatusSync, invalidateStatusQueries, _getCacheStatus } = useStatusSync();
   const [showSyncDetails, setShowSyncDetails] = useState(false);
 
   // Test credentials mutation with status sync handling

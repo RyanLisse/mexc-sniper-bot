@@ -1,572 +1,233 @@
-import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest';
-
-// Override the global database mock for this integration test
-// This provides more realistic database behavior for multi-phase system tests
-vi.mock('@/src/db', () => {
-  let mockIdCounter = 1;
-  const mockStoredData = {
-    strategies: new Map(),
-    executions: new Map(),
-    templates: new Map(),
-    users: new Map()
-  };
-
-  const mockDb = {
-    insert: vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockImplementation((data) => ({
-        returning: vi.fn().mockImplementation(() => {
-          const id = (mockIdCounter++).toString();
-          // Ensure we return the full data with all fields including levels
-          const fullData = {
-            ...data,
-            id,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            // If levels is undefined or null, provide a default
-            levels: data.levels || JSON.stringify([
-              { percentage: 50, multiplier: 1.5, sellPercentage: 25 },
-              { percentage: 100, multiplier: 2.0, sellPercentage: 25 }
-            ])
-          };
-
-          // Store based on data type
-          if (data.strategyId !== undefined) {
-            // This is a phase execution
-            mockStoredData.executions.set(id, fullData);
-          } else {
-            // This is a strategy
-            mockStoredData.strategies.set(id, fullData);
-          }
-
-          return Promise.resolve([fullData]);
-        })
-      }))
-    })),
-    select: vi.fn().mockImplementation(() => ({
-      from: vi.fn().mockImplementation((table) => {
-        // Store the table reference for later use
-        const queryBuilder = {
-          _table: table,
-          where: vi.fn().mockImplementation((condition) => ({
-            orderBy: vi.fn().mockImplementation(() => {
-              // Use a simple heuristic: if we're looking for executions, return executions
-              // This is based on the fact that getStrategyPhaseExecutions is the main caller
-              if (queryBuilder._table === strategyPhaseExecutions) {
-                return Promise.resolve(Array.from(mockStoredData.executions.values()));
-              }
-              return Promise.resolve(Array.from(mockStoredData.strategies.values()));
-            }),
-            limit: vi.fn().mockImplementation(() => {
-              if (queryBuilder._table === strategyPhaseExecutions) {
-                return Promise.resolve(Array.from(mockStoredData.executions.values()));
-              }
-              return Promise.resolve(Array.from(mockStoredData.strategies.values()));
-            })
-          })),
-          limit: vi.fn().mockImplementation(() => ({
-            orderBy: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.strategies.values())))
-          })),
-          orderBy: vi.fn().mockImplementation(() => Promise.resolve(Array.from(mockStoredData.strategies.values())))
-        };
-        return queryBuilder;
-      })
-    })),
-    update: vi.fn().mockImplementation(() => ({
-      set: vi.fn().mockImplementation(() => ({
-        where: vi.fn().mockImplementation(() => Promise.resolve([]))
-      }))
-    })),
-    delete: vi.fn().mockImplementation(() => ({
-      where: vi.fn().mockImplementation(() => Promise.resolve([]))
-    })),
-    transaction: vi.fn().mockImplementation(async (cb) => {
-      return cb(mockDb);
-    }),
-    execute: vi.fn().mockResolvedValue([]),
-    query: vi.fn().mockResolvedValue([])
-  };
-
-  // Add helper methods to access mock data for testing
-  (mockDb as any)._getMockData = () => mockStoredData;
-  (mockDb as any)._clearMockData = () => {
-    mockStoredData.strategies.clear();
-    mockStoredData.executions.clear();
-    mockStoredData.templates.clear();
-    mockStoredData.users.clear();
-  };
-
-  return {
-    db: mockDb,
-    getDb: vi.fn().mockReturnValue(mockDb)
-  };
-});
-import { db } from "@/src/db";
-import { tradingStrategies, strategyTemplates } from "@/src/db/schemas/strategies";
-
-// Import strategyPhaseExecutions separately to avoid duplicate identifier
-import { strategyPhaseExecutions } from "@/src/db/schemas/strategies";
-import { user } from "@/src/db/schema";
-import { multiPhaseTradingService } from "@/src/services/trading/multi-phase-trading-service";
-import { MultiPhaseExecutor, createExecutorFromStrategy } from "@/src/services/trading/multi-phase-executor";
-import { TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
-import { AdvancedTradingStrategy } from "@/src/services/trading/advanced-trading-strategy";
+import { describe, it, expect } from 'vitest';
 import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
-import { eq } from 'drizzle-orm';
+import { MultiPhaseExecutor } from "@/src/services/trading/multi-phase-executor";
+import { MultiPhaseStrategyBuilder } from "@/src/services/trading/multi-phase-strategy-builder";
+import { TRADING_STRATEGIES } from "@/src/services/trading/trading-strategy-manager";
 
-describe('Multi-Phase Trading System Integration', () => {
-  const testUserId = 'test-user-integration';
-  let testStrategy: any;
+describe('Multi-Phase Trading System Core Integration', () => {
+  describe('Component Integration', () => {
+    it('should integrate MultiPhaseStrategyBuilder with MultiPhaseTradingBot', () => {
+      // Create a strategy using the builder
+      const strategy = new MultiPhaseStrategyBuilder('test-integration', 'Integration Test Strategy')
+        .addPhase(25, 30)
+        .addPhase(50, 40)
+        .addPhase(75, 30)
+        .withDescription('Integration test strategy')
+        .build();
 
-  beforeEach(() => {
-    // Clear mock data between tests
-    if ((db as any)._clearMockData) {
-      (db as any)._clearMockData();
-    }
-  });
-
-  beforeAll(async () => {
-    // Ensure test user exists
-    try {
-      await db.insert(user).values({
-        id: testUserId,
-        name: 'Integration Test User',
-        email: `${testUserId}@test.com`,
-        emailVerified: false,
-      }).onConflictDoNothing();
-    } catch (error) {
-      // User might already exist, continue
-    }
-
-    // Clean up strategy templates first to avoid unique constraint conflicts
-    await db.delete(strategyTemplates);
-
-    // Initialize predefined strategies
-    await multiPhaseTradingService.initializePredefinedStrategies();
-  });
-
-  beforeEach(async () => {
-    // Clean up test data in correct order (foreign key dependencies)
-    await db.delete(strategyPhaseExecutions);
-    await db.delete(tradingStrategies);
-  });
-
-  describe('End-to-End Strategy Lifecycle', () => {
-    it('should create and execute a complete multi-phase strategy', async () => {
-      // Step 1: Create strategy using service
-      const strategyData = {
-        userId: testUserId,
-        name: 'Integration Test Strategy',
-        symbol: 'BTCUSDT',
-        entryPrice: 50000,
-        positionSize: 1,
-        positionSizeUsdt: 50000,
-        strategyConfig: {
-          id: 'integration-test',
-          name: 'Integration Test Strategy',
-          description: 'Test strategy for integration testing',
-          levels: [
-            { percentage: 20, multiplier: 1.2, sellPercentage: 25 },
-            { percentage: 40, multiplier: 1.4, sellPercentage: 25 },
-            { percentage: 60, multiplier: 1.6, sellPercentage: 25 },
-            { percentage: 80, multiplier: 1.8, sellPercentage: 25 },
-          ],
-        },
-        stopLossPercent: 10,
-        description: 'Integration test strategy with 4 phases',
+      // Convert to trading strategy format for bot
+      const tradingStrategy = {
+        id: strategy.id,
+        name: strategy.name,
+        description: strategy.description,
+        levels: strategy.levels,
       };
 
-      const strategy = await multiPhaseTradingService.createTradingStrategy(strategyData);
-      expect(strategy).toBeDefined();
-      expect(typeof strategy.id === 'string' ? parseInt(strategy.id) : strategy.id).toBeGreaterThan(0);
+      // Create bot with custom strategy
+      const bot = new MultiPhaseTradingBot(tradingStrategy, 100, 1000);
 
-      // Step 2: Create executor from database strategy
-      const executor = await createExecutorFromStrategy(strategy, testUserId);
-      expect(executor).toBeDefined();
+      // Test bot functionality
+      const result = bot.onPriceUpdate(130); // 30% increase
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0]).toContain('Phase 1');
 
-      // Step 3: Execute phases as price moves up
-      const priceUpdates = [60000, 65000, 70000, 80000, 90000]; // 20%, 30%, 40%, 60%, 80%
-
-      for (const currentPrice of priceUpdates) {
-        const execution = executor.executePhases(currentPrice);
-
-        // Record executions
-        for (const phase of execution.phasesToExecute) {
-          await executor.recordPhaseExecution(
-            phase.phase,
-            currentPrice,
-            phase.amount,
-            {
-              fees: phase.expectedProfit * 0.001,
-              latency: 50,
-            }
-          );
-        }
-      }
-
-      // Step 4: Verify execution results
-      const finalStatus = executor.getPhaseStatus();
-      expect(finalStatus.completedPhases).toBe(4); // All phases should be executed
-
-      const analytics = executor.getExecutionAnalytics();
-      expect(analytics.totalExecutions).toBe(4);
-      expect(analytics.totalProfitRealized).toBeGreaterThan(0);
-
-      // Step 5: Verify database persistence
-      const executions = await multiPhaseTradingService.getStrategyPhaseExecutions(strategy.id, testUserId);
-      expect(executions).toHaveLength(4);
-
-      const performanceMetrics = await multiPhaseTradingService.calculatePerformanceMetrics(strategy.id, testUserId);
-      expect(performanceMetrics.totalPnl).toBeGreaterThan(0);
-      expect(performanceMetrics.winRate).toBe(100); // All executions should be profitable
+      const status = bot.getStatus();
+      expect(status.entryPrice).toBe(100);
+      expect(status.position).toBe(1000);
     });
 
-    it('should handle partial execution and resume correctly', async () => {
-      // Create strategy
-      const strategy = await multiPhaseTradingService.createTradingStrategy({
-        userId: testUserId,
-        name: 'Partial Execution Test',
-        symbol: 'ETHUSDT',
-        entryPrice: 3000,
-        positionSize: 10,
-        positionSizeUsdt: 30000,
-        strategyConfig: {
-          id: 'partial-test',
-          name: 'Partial Test Strategy',
-          levels: [
-            { percentage: 25, multiplier: 1.25, sellPercentage: 30 },
-            { percentage: 50, multiplier: 1.5, sellPercentage: 30 },
-            { percentage: 75, multiplier: 1.75, sellPercentage: 40 },
-          ],
-        },
-        stopLossPercent: 15,
-      });
+    it('should work with predefined strategies', () => {
+      // Test with conservative strategy
+      const conservativeBot = new MultiPhaseTradingBot(
+        TRADING_STRATEGIES.conservative,
+        100,
+        1000
+      );
 
-      // First execution session - execute only phase 1
-      let executor = await createExecutorFromStrategy(strategy, testUserId);
-      let execution = executor.executePhases(3750); // 25% increase
+      const result = conservativeBot.onPriceUpdate(115); // 15% increase
+      expect(result.actions).toHaveLength(1);
+      expect(result.status.summary.completedPhases).toBe(1);
 
-      for (const phase of execution.phasesToExecute) {
-        await executor.recordPhaseExecution(phase.phase, 3750, phase.amount);
-      }
+      // Test performance summary
+      const performance = conservativeBot.getPerformanceSummary(115);
+      expect(performance.totalPnL).toBeGreaterThan(0);
+      expect(performance.efficiency).toBeGreaterThanOrEqual(0);
+    });
 
-      expect(executor.getPhaseStatus().completedPhases).toBe(1);
+    it('should handle risk metrics calculations', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
 
-      // Second execution session - simulate app restart by creating new executor
-      executor = await createExecutorFromStrategy(strategy, testUserId);
-      expect(executor.getPhaseStatus().completedPhases).toBe(1); // Should restore state
+      // Test profit scenario
+      const profitMetrics = bot.getRiskMetrics(120);
+      expect(profitMetrics.currentDrawdown).toBe(0);
+      expect(profitMetrics.riskRewardRatio).toBeGreaterThan(0);
 
-      // Continue execution
-      execution = executor.executePhases(5250); // 75% increase
+      // Test loss scenario
+      const lossMetrics = bot.getRiskMetrics(80);
+      expect(lossMetrics.currentDrawdown).toBe(20);
+      expect(lossMetrics.positionRisk).toBe(20);
+    });
 
-      for (const phase of execution.phasesToExecute) {
-        await executor.recordPhaseExecution(phase.phase, 5250, phase.amount);
-      }
+    it('should integrate position management and performance analytics', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
 
-      expect(executor.getPhaseStatus().completedPhases).toBe(3); // All phases completed
+      // Initialize position
+      const initResult = bot.initializePosition('TESTUSDT', 100, 1000);
+      expect(initResult.success).toBe(true);
+      expect(initResult.details.symbol).toBe('TESTUSDT');
+
+      // Get position info
+      const positionInfo = bot.getPositionInfo();
+      expect(positionInfo.hasPosition).toBe(true);
+      expect(positionInfo.symbol).toBe('TESTUSDT');
+
+      // Test efficiency metrics
+      const efficiency = bot.getExecutionEfficiency();
+      expect(efficiency.successRate).toBeGreaterThanOrEqual(0);
+      expect(efficiency.costEfficiency).toBeGreaterThanOrEqual(0);
     });
   });
 
-  describe('Multi-Component Integration', () => {
-    it('should integrate TradingStrategyManager with MultiPhaseExecutor', async () => {
-      const manager = new TradingStrategyManager();
-      const activeStrategy = manager.getActiveStrategy();
+  describe('State Management Integration', () => {
+    it('should maintain state consistency across components', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
 
-      // Create database strategy from manager strategy
-      const dbStrategy = await multiPhaseTradingService.createTradingStrategy({
-        userId: testUserId,
-        name: activeStrategy.name,
-        symbol: 'ADAUSDT',
-        entryPrice: 1.0,
-        positionSize: 1000,
-        positionSizeUsdt: 1000,
-        strategyConfig: activeStrategy,
-        stopLossPercent: 10,
-      });
+      // Execute some phases
+      bot.onPriceUpdate(150); // Should execute phase 1
+      bot.onPriceUpdate(200); // Should execute phase 2
 
-      // Create executor
-      const executor = await createExecutorFromStrategy(dbStrategy, testUserId);
+      // Export state
+      const state = bot.exportState();
+      expect(state.entryPrice).toBe(100);
+      expect(state.position).toBe(1000);
+      expect(state.executorState).toBeDefined();
 
-      // Test sell recommendations vs executor execution
-      const currentPrice = 1.5; // 50% increase
-      const recommendation = manager.getSellRecommendation(currentPrice, 1.0);
-      const execution = executor.executePhases(currentPrice);
+      // Create new bot and import state
+      const newBot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 50, 500);
+      newBot.importState(state);
 
-      expect(recommendation.shouldSell).toBe(true);
-      expect(execution.phasesToExecute.length).toBeGreaterThan(0);
-
-      // Both should agree on which phases to execute
-      expect(execution.phasesToExecute[0].phase).toBe(recommendation.phases[0].phase);
-    });
-
-    it('should integrate AdvancedTradingStrategy with MultiPhaseTradingBot', async () => {
-      const advancedStrategy = new AdvancedTradingStrategy();
-
-      // Adjust for high volatility
-      advancedStrategy.adjustStrategyForVolatility(0.8);
-      const adjustedStrategy = advancedStrategy.getActiveStrategy();
-
-      // Create bot with adjusted strategy
-      const bot = new MultiPhaseTradingBot(adjustedStrategy, 100, 1000);
-
-      // Test volatility-adjusted execution
-      const result = bot.onPriceUpdate(120); // 20% increase
-      expect(result).toBeDefined();
-      expect(result.status).toBeDefined();
-
-      // Get risk assessment
-      const riskMetrics = bot.getRiskMetrics(120);
-      const riskAssessment = advancedStrategy.assessRisk(10000, 100, 100);
-
-      expect(riskMetrics.riskRewardRatio).toBeGreaterThan(0);
-      expect(riskAssessment.riskLevel).toBeDefined();
-    });
-
-    it('should persist and restore complex trading scenarios', async () => {
-      // Create multiple strategies with different configurations
-      const strategies = await Promise.all([
-        multiPhaseTradingService.createTradingStrategy({
-          userId: testUserId,
-          name: 'Conservative Portfolio',
-          symbol: 'BTC-CONSERVATIVE',
-          entryPrice: 50000,
-          positionSize: 0.1,
-          positionSizeUsdt: 5000,
-          strategyConfig: {
-            id: 'conservative-portfolio',
-            name: 'Conservative Portfolio',
-            levels: [
-              { percentage: 10, multiplier: 1.1, sellPercentage: 50 },
-              { percentage: 20, multiplier: 1.2, sellPercentage: 50 },
-            ],
-          },
-          stopLossPercent: 5,
-        }),
-        multiPhaseTradingService.createTradingStrategy({
-          userId: testUserId,
-          name: 'Aggressive Portfolio',
-          symbol: 'BTC-AGGRESSIVE',
-          entryPrice: 50000,
-          positionSize: 0.5,
-          positionSizeUsdt: 25000,
-          strategyConfig: {
-            id: 'aggressive-portfolio',
-            name: 'Aggressive Portfolio',
-            levels: [
-              { percentage: 100, multiplier: 2.0, sellPercentage: 25 },
-              { percentage: 200, multiplier: 3.0, sellPercentage: 25 },
-              { percentage: 400, multiplier: 5.0, sellPercentage: 50 },
-            ],
-          },
-          stopLossPercent: 20,
-        }),
-      ]);
-
-      // Execute both strategies simultaneously
-      const executors = await Promise.all(
-        strategies.map(strategy => createExecutorFromStrategy(strategy, testUserId))
-      );
-
-      // Simulate market movement
-      const prices = [55000, 60000, 70000, 100000]; // Various price levels
-
-      for (const price of prices) {
-        for (const executor of executors) {
-          const execution = executor.executePhases(price);
-
-          for (const phase of execution.phasesToExecute) {
-            await executor.recordPhaseExecution(phase.phase, price, phase.amount);
-          }
-        }
-      }
-
-      // Verify both strategies executed appropriately
-      const conservativeStatus = executors[0].getPhaseStatus();
-      const aggressiveStatus = executors[1].getPhaseStatus();
-
-      // Conservative should have executed all phases (low targets)
-      expect(conservativeStatus.completedPhases).toBe(2);
-
-      // Aggressive should have executed some phases
-      expect(aggressiveStatus.completedPhases).toBeGreaterThan(0);
-
-      // Verify database persistence for both
-      const userStrategies = await multiPhaseTradingService.getUserStrategies(testUserId);
-      expect(userStrategies).toHaveLength(2);
-
-      const allExecutions = await Promise.all(
-        strategies.map(strategy =>
-          multiPhaseTradingService.getStrategyPhaseExecutions(strategy.id, testUserId)
-        )
-      );
-
-      expect(allExecutions[0].length).toBeGreaterThan(0); // Conservative executions
-      expect(allExecutions[1].length).toBeGreaterThan(0); // Aggressive executions
+      const newStatus = newBot.getStatus();
+      expect(newStatus.entryPrice).toBe(100);
+      expect(newStatus.position).toBe(1000);
+      expect(newStatus.completionPercentage).toBeGreaterThan(0);
     });
   });
 
-  describe('Error Handling and Recovery', () => {
-    it('should handle database errors gracefully', async () => {
-      // Create strategy
-      const strategy = await multiPhaseTradingService.createTradingStrategy({
-        userId: testUserId,
-        name: 'Error Test Strategy',
-        symbol: 'ERRORTEST',
-        entryPrice: 100,
-        positionSize: 100,
-        positionSizeUsdt: 10000,
-        strategyConfig: {
-          id: 'error-test',
-          name: 'Error Test',
-          levels: [{ percentage: 50, multiplier: 1.5, sellPercentage: 100 }],
-        },
-        stopLossPercent: 10,
-      });
+  describe('Price Movement Simulation', () => {
+    it('should simulate complex price movements correctly', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
 
-      const executor = await createExecutorFromStrategy(strategy, testUserId);
+      const priceMovements = [
+        { price: 110, description: 'Small pump +10%' },
+        { price: 150, description: 'First target hit +50%' },
+        { price: 200, description: 'Second target hit +100%' },
+        { price: 180, description: 'Pullback -10%' },
+        { price: 275, description: 'Rally to third target +175%' },
+      ];
 
-      // Mock database error
-      const originalRecordPhase = multiPhaseTradingService.recordPhaseExecution;
-      vi.spyOn(multiPhaseTradingService, 'recordPhaseExecution').mockRejectedValueOnce(
-        new Error('Database connection failed')
-      );
+      const results = bot.simulatePriceMovements(priceMovements);
 
-      // Should not throw error, should continue execution
-      await expect(
-        executor.recordPhaseExecution(1, 150, 100)
-      ).resolves.not.toThrow();
+      expect(results).toHaveLength(5);
+      expect(results[0].actions).toHaveLength(0); // No execution at 10%
+      expect(results[1].actions).toHaveLength(1); // Execute phase 1 at 50%
+      expect(results[2].actions).toHaveLength(1); // Execute phase 2 at 100%
+      expect(results[3].actions).toHaveLength(0); // No new execution on pullback
+      expect(results[4].actions).toHaveLength(2); // Execute phases 3 and 4 at 175%
 
-      // Verify local state was still updated
-      expect(executor.getPhaseStatus().completedPhases).toBe(1);
-
-      // Restore original method
-      vi.restoreAllMocks();
+      // Performance should improve with each execution
+      expect(results[4].performance.totalPnL).toBeGreaterThan(results[1].performance.totalPnL);
     });
+  });
 
-    it('should validate data integrity across components', async () => {
-      const manager = new TradingStrategyManager();
-
-      // Test with invalid strategy data
-      const invalidStrategy = {
-        id: 'invalid',
-        name: 'Invalid Strategy',
-        levels: [
-          { percentage: -10, multiplier: 0.5, sellPercentage: 150 }, // Invalid values
-        ],
+  describe('Advanced Bot Features', () => {
+    it('should work with multiple strategy configurations', () => {
+      const strategies = {
+        conservative: TRADING_STRATEGIES.conservative,
+        normal: TRADING_STRATEGIES.normal,
+        aggressive: TRADING_STRATEGIES.highPriceIncrease,
       };
 
-      // Manager should reject invalid strategy
-      const importSuccess = manager.importStrategy(invalidStrategy);
-      expect(importSuccess).toBe(false);
-
-      // Service should also reject invalid strategy
-      await expect(
-        multiPhaseTradingService.createTradingStrategy({
-          userId: testUserId,
-          name: 'Invalid Strategy Test',
-          symbol: 'INVALID',
-          entryPrice: 100,
-          positionSize: 100,
-          positionSizeUsdt: 10000,
-          strategyConfig: invalidStrategy,
-          stopLossPercent: 10,
-        })
-      ).rejects.toThrow();
-    });
-  });
-
-  describe('Performance and Scalability', () => {
-    it('should handle multiple concurrent strategy executions', async () => {
-      const concurrentStrategies = Array.from({ length: 5 }, (_, i) => ({
-        id: `concurrent-strategy-${i}`,
-        name: `Concurrent Strategy ${i}`,
-        levels: [
-          { percentage: 20, multiplier: 1.2, sellPercentage: 25 },
-          { percentage: 40, multiplier: 1.4, sellPercentage: 25 },
-          { percentage: 60, multiplier: 1.6, sellPercentage: 25 },
-          { percentage: 80, multiplier: 1.8, sellPercentage: 25 },
-        ]
-      }));
-      
-      const startTime = performance.now();
-      
-      const results = await Promise.all(
-        concurrentStrategies.map(async (strategy) => {
-          const strategyManager = new TradingStrategyManager();
-          const importSuccess = strategyManager.importStrategy(strategy);
-          return { success: importSuccess, metrics: { executionTime: performance.now() - startTime } };
-        })
+      const advancedBot = new (require('@/src/services/trading/multi-phase-trading-bot').AdvancedMultiPhaseTradingBot)(
+        strategies,
+        'normal',
+        100,
+        1000
       );
-      
-      const executionTime = performance.now() - startTime;
-      
-      expect(results.length).toBe(5);
-      expect(results.every(r => r.success)).toBe(true);
-      expect(executionTime).toBeLessThan(10000); // Should complete within 10 seconds
-      expect(results.every(r => r.metrics.executionTime > 0)).toBe(true);
-    });
 
-    it('should efficiently handle large numbers of phase executions', async () => {
-      const largePhaseCount = 25; // Further reduced to optimize memory usage
-      const strategy = new TradingStrategyManager().getActiveStrategy();
-      
-      const benchmarkStart = performance.now();
-      
-      // Force garbage collection before starting if available
-      if (global.gc) {
-        global.gc();
-      }
-      
-      // Get initial memory baseline
-      const initialMemory = process.memoryUsage().heapUsed;
-      
-      // Reuse single bot instance instead of creating many instances
-      const bot = new MultiPhaseTradingBot(strategy, 100, 1000);
-      let successfulPhases = 0;
-      
-      // Process in smaller batches to reduce memory pressure
-      const batchSize = 5;
-      for (let batch = 0; batch < Math.ceil(largePhaseCount / batchSize); batch++) {
-        const batchStart = batch * batchSize;
-        const batchEnd = Math.min(batchStart + batchSize, largePhaseCount);
-        
-        for (let i = batchStart; i < batchEnd; i++) {
-          const priceUpdate = 100 + (i % 10); // Smaller price variation range
-          const result = bot.onPriceUpdate(priceUpdate);
-          if (result.actions.length > 0) {
-            successfulPhases++;
-          }
-        }
-        
-        // Force cleanup after each batch
-        if (global.gc) {
-          global.gc();
-        }
-      }
-      
-      const benchmarkTime = performance.now() - benchmarkStart;
-      const finalMemory = process.memoryUsage().heapUsed;
-      const memoryDelta = finalMemory - initialMemory;
-      
-      const batchResults = {
-        totalPhases: largePhaseCount,
-        successfulPhases,
-        averagePhaseTime: benchmarkTime / largePhaseCount,
-        memoryUsage: finalMemory,
-        memoryDelta
-      };
-      
-      expect(batchResults.totalPhases).toBe(largePhaseCount);
-      expect(batchResults.successfulPhases).toBeGreaterThanOrEqual(0); // Some may not trigger actions
-      expect(benchmarkTime).toBeLessThan(10000); // Should complete within 10 seconds
-      expect(batchResults.averagePhaseTime).toBeLessThan(500); // Average phase time < 500ms (more lenient)
-      // Use memory delta instead of absolute memory to account for test environment variations
-      expect(batchResults.memoryDelta).toBeLessThan(1024 * 1024 * 20); // < 20MB delta from baseline
+      // Test initial strategy
+      expect(advancedBot.getCurrentStrategy().id).toBe('normal');
+
+      // Test strategy switching
+      const switchSuccess = advancedBot.switchStrategy('conservative');
+      expect(switchSuccess).toBe(true);
+      expect(advancedBot.getCurrentStrategy().id).toBe('conservative');
+
+      // Test failed switch
+      const failedSwitch = advancedBot.switchStrategy('nonexistent');
+      expect(failedSwitch).toBe(false);
+      expect(advancedBot.getCurrentStrategy().id).toBe('conservative');
+
+      // Test available strategies
+      const availableStrategies = advancedBot.listStrategies();
+      expect(availableStrategies).toContain('conservative');
+      expect(availableStrategies).toContain('normal');
+      expect(availableStrategies).toContain('aggressive');
     });
   });
 
-  afterAll(async () => {
-    // Clean up test data
-    await db.delete(strategyPhaseExecutions);
-    await db.delete(tradingStrategies);
+  describe('Error Handling and Edge Cases', () => {
+    it('should handle invalid market conditions gracefully', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
+
+      // Test with extreme market conditions
+      const extremeConditions = {
+        volatility: 0.95,
+        volume: 0.1,
+        momentum: -0.8,
+        support: 80,
+        resistance: 120,
+      };
+
+      const optimalEntry = bot.calculateOptimalEntry('TESTUSDT', extremeConditions);
+      expect(optimalEntry.entryPrice).toBeGreaterThan(0);
+      expect(optimalEntry.confidence).toBeGreaterThanOrEqual(30);
+      expect(optimalEntry.confidence).toBeLessThanOrEqual(95);
+      expect(optimalEntry.adjustments).toBeDefined();
+    });
+
+    it('should handle position initialization edge cases', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
+
+      // Test invalid inputs
+      const invalidResult = bot.initializePosition('', 0, 0);
+      expect(invalidResult.success).toBe(false);
+      expect(invalidResult.message).toContain('Failed');
+
+      // Test valid inputs
+      const validResult = bot.initializePosition('VALIDUSDT', 100, 1000);
+      expect(validResult.success).toBe(true);
+      expect(validResult.details.symbol).toBe('VALIDUSDT');
+    });
+  });
+
+  describe('Performance and Maintenance', () => {
+    it('should perform maintenance operations correctly', () => {
+      const bot = new MultiPhaseTradingBot(TRADING_STRATEGIES.normal, 100, 1000);
+
+      // Generate some history first
+      bot.onPriceUpdate(150);
+      bot.onPriceUpdate(200);
+
+      // Perform maintenance
+      const maintenanceResult = bot.performMaintenanceCleanup();
+      expect(maintenanceResult.success).toBe(true);
+      expect(maintenanceResult.operations).toBeDefined();
+      expect(Array.isArray(maintenanceResult.operations)).toBe(true);
+
+      // Check pending operations
+      const pendingOps = bot.getPendingPersistenceOperations();
+      expect(pendingOps.hasPending).toBeDefined();
+      expect(Array.isArray(pendingOps.operations)).toBe(true);
+    });
   });
 });

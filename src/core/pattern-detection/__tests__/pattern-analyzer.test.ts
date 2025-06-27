@@ -13,10 +13,10 @@ describe("PatternAnalyzer - TDD Implementation", () => {
   let patternAnalyzer: IPatternAnalyzer;
 
   beforeEach(async () => {
-    // Import the actual implementation
+    // Import the actual implementation (using singleton pattern)
     try {
       const { PatternAnalyzer } = await import("../pattern-analyzer");
-      patternAnalyzer = new PatternAnalyzer();
+      patternAnalyzer = PatternAnalyzer.getInstance();
     } catch (error) {
       console.error("Failed to import PatternAnalyzer:", error);
       // Skip tests if implementation doesn't exist yet
@@ -30,10 +30,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
   describe("Ready State Pattern Detection", () => {
     it("should detect exact ready state pattern (sts:2, st:2, tt:4)", async () => {
-      if (!patternAnalyzer.detectReadyStatePattern) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const mockSymbol: SymbolEntry = {
         cd: "TESTUSDT",
@@ -57,10 +54,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should not detect patterns with incorrect states", async () => {
-      if (!patternAnalyzer.detectReadyStatePattern) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const mockSymbol: SymbolEntry = {
         cd: "NOREADYUSDT",
@@ -75,10 +69,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should handle array of symbols efficiently", async () => {
-      if (!patternAnalyzer.detectReadyStatePattern) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const mockSymbols: SymbolEntry[] = [
         { cd: "SYMBOL1USDT", sts: 2, st: 2, tt: 4 },
@@ -101,10 +92,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should validate exact ready state correctly", async () => {
-      if (!patternAnalyzer.validateExactReadyState) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const readySymbol: SymbolEntry = {
         cd: "READYUSDT",
@@ -127,10 +115,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
   describe("Advance Opportunity Detection", () => {
     it("should detect opportunities with 3.5+ hour advance notice", async () => {
-      if (!patternAnalyzer.detectAdvanceOpportunities) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const futureTime = Date.now() + 4 * 60 * 60 * 1000; // 4 hours from now
 
@@ -150,10 +135,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should filter out opportunities with insufficient advance notice", async () => {
-      if (!patternAnalyzer.detectAdvanceOpportunities) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const nearFutureTime = Date.now() + 2 * 60 * 60 * 1000; // 2 hours (below threshold)
 
@@ -170,10 +152,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should handle multiple calendar entries efficiently", async () => {
-      if (!patternAnalyzer.detectAdvanceOpportunities) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const entries: CalendarEntry[] = [
         {
@@ -208,10 +187,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
   describe("Pre-Ready Pattern Detection", () => {
     it("should detect pre-ready patterns approaching ready state", async () => {
-      if (!patternAnalyzer.detectPreReadyPatterns) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const mockSymbols: SymbolEntry[] = [
         { cd: "PREREADY1USDT", sts: 1, st: 1, tt: 1 }, // Early stage
@@ -232,10 +208,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should estimate time to ready state", async () => {
-      if (!patternAnalyzer.detectPreReadyPatterns) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const mockSymbol: SymbolEntry = {
         cd: "ALMOSTREADYUSDT",
@@ -254,10 +227,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
   describe("Symbol Correlation Analysis", () => {
     it("should analyze correlations between symbols", async () => {
-      if (!patternAnalyzer.analyzeSymbolCorrelations) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const mockSymbols: SymbolEntry[] = [
         { cd: "CORR1USDT", sts: 2, st: 2, tt: 4 },
@@ -283,10 +253,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should handle insufficient symbols for correlation", async () => {
-      if (!patternAnalyzer.analyzeSymbolCorrelations) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const singleSymbol: SymbolEntry[] = [{ cd: "SINGLEUSDT", sts: 2, st: 2, tt: 4 }];
 
@@ -297,10 +264,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should perform correlation analysis efficiently", async () => {
-      if (!patternAnalyzer.analyzeSymbolCorrelations) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       // Test with larger dataset
       const manySymbols: SymbolEntry[] = Array.from({ length: 20 }, (_, i) => ({
@@ -321,10 +285,7 @@ describe("PatternAnalyzer - TDD Implementation", () => {
 
   describe("Error Handling and Edge Cases", () => {
     it("should handle malformed symbol data gracefully", async () => {
-      if (!patternAnalyzer.detectReadyStatePattern) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const malformedSymbol = {
         // Missing required fields
@@ -337,20 +298,14 @@ describe("PatternAnalyzer - TDD Implementation", () => {
     });
 
     it("should handle empty arrays", async () => {
-      if (!patternAnalyzer.detectReadyStatePattern) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       const emptyResult = await patternAnalyzer.detectReadyStatePattern([]);
       expect(emptyResult).toHaveLength(0);
     });
 
     it("should handle null/undefined inputs", async () => {
-      if (!patternAnalyzer.detectReadyStatePattern) {
-        console.warn("PatternAnalyzer not implemented yet - skipping test");
-        return;
-      }
+      // PatternAnalyzer is fully implemented
 
       await expect(async () => {
         await patternAnalyzer.detectReadyStatePattern(null as any);

@@ -86,7 +86,7 @@ export function ConfigEditor({
       try {
         configFormSchema.parse(formData);
         setValidationErrors({});
-      } catch (error) {
+      } catch (_error) {
         // Set validation errors for invalid fields
       }
     }

@@ -11,45 +11,24 @@ import type {
   SafetyAlert,
   SafetyConfiguration,
 } from "../../../schemas/safety-monitoring-schemas";
-import { OptimizedAutoSnipingExecutionEngine } from "../../../trading/optimized-auto-sniping-execution-engine";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
-import { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
-import type { UnifiedMexcServiceV2 } from "../../unified-mexc-service-v2";
+import type { OptimizedAutoSnipingCore } from "../../../trading/optimized-auto-sniping-core";
+import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
+import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
-
-// Mock all dependencies with proper getInstance methods
-vi.mock("../../../trading/optimized-auto-sniping-execution-engine", () => ({
-  OptimizedAutoSnipingExecutionEngine: {
-    getInstance: vi.fn(),
-  },
-}));
-
-vi.mock("../../../notification/pattern-monitoring-service", () => ({
-  PatternMonitoringService: {
-    getInstance: vi.fn(),
-  },
-}));
-
-vi.mock("../../emergency-safety-system", () => ({
-  EmergencySafetySystem: vi.fn(),
-}));
-
-vi.mock("../../unified-mexc-service-v2", () => ({
-  UnifiedMexcServiceV2: vi.fn(),
-}));
 
 describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   let safetyService: RealTimeSafetyMonitoringService;
-  let mockExecutionService: vi.Mocked<OptimizedAutoSnipingExecutionEngine>;
-  let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
-  let mockEmergencySystem: vi.Mocked<EmergencySafetySystem>;
-  let mockMexcService: vi.Mocked<UnifiedMexcServiceV2>;
+  let mockExecutionService: Partial<OptimizedAutoSnipingCore>;
+  let mockPatternMonitoring: Partial<PatternMonitoringService>;
+  let mockEmergencySystem: Partial<EmergencySafetySystem>;
+  let mockMexcService: Partial<UnifiedMexcServiceV2>;
 
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
 
-    // Create mock instances
+    // Create mock instances using partial objects
     mockExecutionService = {
       getExecutionReport: vi.fn().mockResolvedValue({
         stats: {
@@ -68,7 +47,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
       getActivePositions: vi.fn().mockReturnValue([]),
       stopExecution: vi.fn().mockResolvedValue(undefined),
       emergencyCloseAll: vi.fn().mockResolvedValue(0),
-    } as any;
+    };
 
     mockPatternMonitoring = {
       getMonitoringReport: vi.fn().mockResolvedValue({
@@ -79,33 +58,27 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
           totalPatternsDetected: 100,
         },
       }),
-    } as any;
+    };
 
     mockEmergencySystem = {
       performSystemHealthCheck: vi.fn().mockResolvedValue({
         overall: "healthy",
       }),
-    } as any;
+    };
 
     mockMexcService = {
       // Add any needed mock methods
-    } as any;
-
-    // Mock the getInstance methods
-    vi.mocked(OptimizedAutoSnipingExecutionEngine.getInstance).mockReturnValue(
-      mockExecutionService
-    );
-    vi.mocked(PatternMonitoringService.getInstance).mockReturnValue(mockPatternMonitoring);
+    };
 
     // Create service instance
     safetyService = createRealTimeSafetyMonitoringService();
 
     // Inject mocked dependencies
     safetyService.injectDependencies({
-      executionService: mockExecutionService,
-      patternMonitoring: mockPatternMonitoring,
-      emergencySystem: mockEmergencySystem,
-      mexcService: mockMexcService,
+      executionService: mockExecutionService as OptimizedAutoSnipingCore,
+      patternMonitoring: mockPatternMonitoring as PatternMonitoringService,
+      emergencySystem: mockEmergencySystem as EmergencySafetySystem,
+      mexcService: mockMexcService as UnifiedMexcServiceV2,
     });
 
     // Reset to clean state for each test
@@ -123,7 +96,6 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
     }
     // Reset all mocks after each test
     vi.clearAllMocks();
-    vi.resetAllMocks();
   });
 
   describe("Initialization and Configuration", () => {

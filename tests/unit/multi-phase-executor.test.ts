@@ -378,7 +378,7 @@ describe('MultiPhaseExecutor', () => {
 
     it('should handle missing optional parameters', async () => {
       // Should not throw when called with minimal parameters
-      await expect(executor.recordPhaseExecution(1, 150, 250)).resolves.not.toThrow();
+      await expect(executor.recordPhaseExecution(1, 150, 250)).resolves.toBeUndefined();
     });
   });
 

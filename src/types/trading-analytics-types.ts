@@ -239,20 +239,20 @@ export interface MetricCardProps {
   title: string;
   value: string | number;
   change?: number;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   className?: string;
 }
 
 export interface ChartDataItem {
   name: string;
   value: number;
-  [key: string]: any;
+  [key: string]: string | number;
 }
 
 export interface TooltipFormatterProps {
-  value: any;
+  value: string | number;
   name: string;
-  payload: any;
+  payload: Record<string, unknown>;
 }
 
 // ============================================================================

@@ -193,7 +193,7 @@ vi.mock("@/src/lib/database-connection-pool", () => ({
   },
 }));
 
-vi.mock("@/src/services/query-performance-monitor", () => ({
+vi.mock("@/src/services/data/query-performance-monitor", () => ({
   queryPerformanceMonitor: {
     startMonitoring: vi.fn(),
     stopMonitoring: vi.fn(),
@@ -211,11 +211,14 @@ import { databasePerformanceAnalyzer } from "@/src/lib/database-performance-anal
 import { databaseIndexOptimizer } from "@/src/lib/database-index-optimizer";
 import { databaseQueryOptimizer } from "@/src/lib/database-query-optimizer";
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
-import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
+import { queryPerformanceMonitor } from "@/src/services/data/query-performance-monitor";
+import { sql } from "drizzle-orm";
+import { db, snipeTargets, executionHistory, patternEmbeddings, executeOptimizedWrite, monitoredQuery } from "@/src/db";
 
 describe("Database Optimization", () => {
   let baselineMetrics: any;
   let optimizationResults: any;
+  const testUserId = "test-user-123";
 
   beforeAll(async () => {
     // Start performance monitoring (mocked)

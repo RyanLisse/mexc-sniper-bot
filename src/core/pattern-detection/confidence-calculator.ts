@@ -54,7 +54,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
    */
   async calculateReadyStateConfidence(symbol: SymbolEntry): Promise<number> {
     if (!symbol) {
-      console.warn("Null symbol provided to calculateReadyStateConfidence");
+      this.logger.warn("Null symbol provided to calculateReadyStateConfidence");
       return 0;
     }
 
@@ -77,7 +77,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        console.warn(
+        this.logger.warn(
           "Activity enhancement failed",
           {
             symbol: symbol.cd || "unknown",
@@ -106,7 +106,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       return Math.min(Math.max(confidence, 0), 100);
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error(
+      this.logger.error(
         "Error calculating ready state confidence",
         {
           symbol: symbol.cd || "unknown",
@@ -176,7 +176,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       return Math.min(Math.max(confidence, 0), 100);
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error(
+      this.logger.error(
         "Error calculating advance opportunity confidence",
         {
           symbol: entry.symbol || "unknown",
@@ -225,7 +225,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       return { isPreReady, confidence, estimatedTimeToReady: estimatedHours };
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error(
+      this.logger.error(
         "Error calculating pre-ready score",
         {
           symbol: symbol.cd || "unknown",
@@ -279,7 +279,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       return Math.min(enhancedConfidence, 100);
     } catch (error) {
       const safeError = toSafeError(error);
-      console.warn(
+      this.logger.warn(
         "Activity enhancement calculation failed",
         {
           baseConfidence,
@@ -393,7 +393,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
 
       return activities || [];
     } catch (error) {
-      console.warn("Failed to fetch activity data", {
+      this.logger.warn("Failed to fetch activity data", {
         symbol:
           typeof symbolOrEntry === "string"
             ? symbolOrEntry
@@ -421,7 +421,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       // Cap enhancement between -10 and +15 points
       return Math.max(-10, Math.min(15, enhancement.confidenceAdjustment || 0));
     } catch (error) {
-      console.warn("AI enhancement failed, using fallback", {
+      this.logger.warn("AI enhancement failed, using fallback", {
         symbol: symbol.symbol || symbol.cd,
         error: toSafeError(error).message,
       });
@@ -453,7 +453,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       // Fallback for insufficient data
       return 75;
     } catch (error) {
-      console.warn("Failed to fetch historical success data", {
+      this.logger.warn("Failed to fetch historical success data", {
         error: toSafeError(error).message,
       });
 

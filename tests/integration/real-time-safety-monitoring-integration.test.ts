@@ -77,47 +77,60 @@ describe('Real-time Safety Monitoring Integration', () => {
     });
 
     // Mock execution service methods
-    vi.spyOn(executionService, 'getExecutionReport').mockResolvedValue({
+    vi.spyOn(executionService, 'getActivePositions').mockReturnValue([]);
+    vi.spyOn(executionService, 'isExecutionActive').mockReturnValue(false);
+    vi.spyOn(executionService, 'getConfig').mockReturnValue({
+      enabled: false,
+      maxPositions: 5,
+      maxDailyTrades: 10,
+      positionSizeUSDT: 100,
+      minConfidence: 80,
+      allowedPatternTypes: ['ready_state'],
+      requireCalendarConfirmation: true,
+      stopLossPercentage: 5,
+      takeProfitPercentage: 10,
+      maxDrawdownPercentage: 20,
+      enableAdvanceDetection: true,
+      advanceHoursThreshold: 3.5,
+      enableMultiPhaseStrategy: false,
+      slippageTolerancePercentage: 1,
+      throttleInterval: 5000,
+    });
+
+    // Mock execution service stats (simulated since getExecutionReport doesn't exist)
+    const mockExecutionStats = {
+      totalTrades: 0,
+      successfulTrades: 0,
+      failedTrades: 0,
+      successRate: 0,
+      totalPnl: '0',
+      totalPnlPercentage: 0,
+      averageTradeReturn: 0,
+      maxDrawdown: 0,
+      currentDrawdown: 0,
+      averageExecutionTime: 0,
+      averageSlippage: 0,
+      activePositions: 0,
+      dailyTradeCount: 0,
+      patternSuccessRates: {
+        ready_state: 0,
+        pre_ready: 0,
+        launch_sequence: 0,
+        risk_warning: 0,
+      },
+      averagePatternConfidence: 0,
+      mostSuccessfulPattern: null,
+    };
+
+    // Mock additional execution service methods
+    vi.spyOn(executionService, 'start').mockResolvedValue();
+    vi.spyOn(executionService, 'stop').mockResolvedValue();
+    vi.spyOn(executionService, 'executeTradingOpportunity').mockResolvedValue(true);
+
+    const mockExecutionReport = {
       status: 'idle',
-      config: {
-        enabled: false,
-        maxPositions: 5,
-        maxDailyTrades: 10,
-        positionSizeUSDT: 100,
-        minConfidence: 80,
-        allowedPatternTypes: ['ready_state'],
-        requireCalendarConfirmation: true,
-        stopLossPercentage: 5,
-        takeProfitPercentage: 10,
-        maxDrawdownPercentage: 20,
-        enableAdvanceDetection: true,
-        advanceHoursThreshold: 3.5,
-        enableMultiPhaseStrategy: false,
-        slippageTolerancePercentage: 1,
-      },
-      stats: {
-        totalTrades: 0,
-        successfulTrades: 0,
-        failedTrades: 0,
-        successRate: 0,
-        totalPnl: '0',
-        totalPnlPercentage: 0,
-        averageTradeReturn: 0,
-        maxDrawdown: 0,
-        currentDrawdown: 0,
-        averageExecutionTime: 0,
-        averageSlippage: 0,
-        activePositions: 0,
-        dailyTradeCount: 0,
-        patternSuccessRates: {
-          ready_state: 0,
-          pre_ready: 0,
-          launch_sequence: 0,
-          risk_warning: 0,
-        },
-        averagePatternConfidence: 0,
-        mostSuccessfulPattern: null,
-      },
+      config: executionService.getConfig(),
+      stats: mockExecutionStats,
       activePositions: [],
       recentExecutions: [],
       activeAlerts: [],
@@ -129,11 +142,7 @@ describe('Real-time Safety Monitoring Integration', () => {
       },
       recommendations: [],
       lastUpdated: new Date().toISOString(),
-    });
-
-    vi.spyOn(executionService, 'getActivePositions').mockReturnValue([]);
-    vi.spyOn(executionService, 'stopExecution').mockImplementation(() => {});
-    vi.spyOn(executionService, 'emergencyCloseAll').mockResolvedValue(0);
+    };
 
     // Mock pattern monitoring
     vi.spyOn(patternMonitoring, 'getMonitoringReport').mockResolvedValue({

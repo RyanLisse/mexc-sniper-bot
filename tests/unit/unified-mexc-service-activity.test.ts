@@ -8,7 +8,6 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
   beforeEach(() => {
     // Clear any previous mocks
     vi.clearAllMocks();
-    vi.resetAllMocks();
     
     mexcService = new UnifiedMexcServiceV2({
       apiKey: 'test-api-key',
@@ -21,7 +20,6 @@ describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.resetAllMocks();
   });
 
   describe('getActivityData', () => {

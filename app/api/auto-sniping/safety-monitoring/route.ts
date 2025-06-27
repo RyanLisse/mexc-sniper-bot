@@ -34,26 +34,20 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       case 'status':
         const timerOperations = service.getTimerStatus();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            isActive: service.getMonitoringStatus(),
-            timerOperations,
-            lastChecked: new Date().toISOString()
-          }
+          isActive: service.getMonitoringStatus(),
+          timerOperations,
+          lastChecked: new Date().toISOString()
         }));
 
       case 'report':
         const report = await service.getSafetyReport();
-        return NextResponse.json(createSuccessResponse({
-          data: report
-        }));
+        return NextResponse.json(createSuccessResponse(report));
 
       case 'risk-metrics':
         const riskMetrics = service.getRiskMetrics();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            riskMetrics,
-            timestamp: new Date().toISOString()
-          }
+          riskMetrics,
+          timestamp: new Date().toISOString()
         }));
 
       case 'alerts':
@@ -69,32 +63,26 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
         const limitedAlerts = filteredAlerts.slice(0, limit);
         
         return NextResponse.json(createSuccessResponse({
-          data: {
-            alerts: limitedAlerts,
-            totalCount: safetyReport.activeAlerts?.length || 0,
-            filteredCount: filteredAlerts.length
-          }
+          alerts: limitedAlerts,
+          totalCount: safetyReport.activeAlerts?.length || 0,
+          filteredCount: filteredAlerts.length
         }));
 
       case 'system-health':
         const healthReport = await service.getSafetyReport();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            systemHealth: healthReport.systemHealth,
-            overallRiskScore: healthReport.overallRiskScore,
-            status: healthReport.status,
-            recommendations: healthReport.recommendations,
-            lastUpdated: healthReport.lastUpdated
-          }
+          systemHealth: healthReport.systemHealth,
+          overallRiskScore: healthReport.overallRiskScore,
+          status: healthReport.status,
+          recommendations: healthReport.recommendations,
+          lastUpdated: healthReport.lastUpdated
         }));
 
       case 'configuration':
         const config = service.getConfiguration();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            configuration: config,
-            isActive: service.getMonitoringStatus()
-          }
+          configuration: config,
+          isActive: service.getMonitoringStatus()
         }));
 
       case 'check-safety':
@@ -103,13 +91,11 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
         const overallRiskScore = service.calculateOverallRiskScore();
         
         return NextResponse.json(createSuccessResponse({
-          data: {
-            isSafe,
-            overallRiskScore,
-            currentDrawdown: currentRiskMetrics.currentDrawdown,
-            successRate: currentRiskMetrics.successRate,
-            consecutiveLosses: currentRiskMetrics.consecutiveLosses
-          }
+          isSafe,
+          overallRiskScore,
+          currentDrawdown: currentRiskMetrics.currentDrawdown,
+          successRate: currentRiskMetrics.successRate,
+          consecutiveLosses: currentRiskMetrics.consecutiveLosses
         }));
 
       default:
@@ -172,11 +158,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         await service.startMonitoring();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Real-time safety monitoring started successfully',
-            isActive: true,
-            timestamp: new Date().toISOString()
-          }
+          message: 'Real-time safety monitoring started successfully',
+          isActive: true,
+          timestamp: new Date().toISOString()
         }));
 
       case 'stop_monitoring':
@@ -190,11 +174,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         service.stopMonitoring();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Real-time safety monitoring stopped successfully',
-            isActive: false,
-            timestamp: new Date().toISOString()
-          }
+          message: 'Real-time safety monitoring stopped successfully',
+          isActive: false,
+          timestamp: new Date().toISOString()
         }));
 
       case 'update_configuration':
@@ -207,11 +189,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         service.updateConfiguration(configuration as Partial<SafetyConfiguration>);
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Safety monitoring configuration updated successfully',
-            updatedFields: Object.keys(configuration),
-            timestamp: new Date().toISOString()
-          }
+          message: 'Safety monitoring configuration updated successfully',
+          updatedFields: Object.keys(configuration),
+          timestamp: new Date().toISOString()
         }));
 
       case 'update_thresholds':
@@ -249,11 +229,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         service.updateConfiguration(updatedConfig);
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Safety monitoring thresholds updated successfully',
-            updatedThresholds: Object.keys(filteredThresholds),
-            timestamp: new Date().toISOString()
-          }
+          message: 'Safety monitoring thresholds updated successfully',
+          updatedThresholds: Object.keys(filteredThresholds),
+          timestamp: new Date().toISOString()
         }));
 
       case 'emergency_response':
@@ -266,12 +244,10 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         
         const emergencyActions = await service.triggerEmergencyResponse(reason);
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Emergency safety response triggered successfully',
-            actionsExecuted: emergencyActions,
-            reason,
-            timestamp: new Date().toISOString()
-          }
+          message: 'Emergency safety response triggered successfully',
+          actionsExecuted: emergencyActions,
+          reason,
+          timestamp: new Date().toISOString()
         }));
 
       case 'acknowledge_alert':
@@ -291,21 +267,17 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         }
         
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Alert acknowledged successfully',
-            alertId,
-            timestamp: new Date().toISOString()
-          }
+          message: 'Alert acknowledged successfully',
+          alertId,
+          timestamp: new Date().toISOString()
         }));
 
       case 'clear_acknowledged_alerts':
         const clearedCount = service.clearAcknowledgedAlerts();
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: `${clearedCount} acknowledged alerts cleared successfully`,
-            clearedCount,
-            timestamp: new Date().toISOString()
-          }
+          message: `${clearedCount} acknowledged alerts cleared successfully`,
+          clearedCount,
+          timestamp: new Date().toISOString()
         }));
 
       case 'force_risk_assessment':
@@ -314,12 +286,10 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         const overallRiskScore = service.calculateOverallRiskScore();
         
         return NextResponse.json(createSuccessResponse({
-          data: {
-            message: 'Forced risk assessment completed successfully',
-            riskMetrics: currentRiskMetrics,
-            overallRiskScore,
-            timestamp: new Date().toISOString()
-          }
+          message: 'Forced risk assessment completed successfully',
+          riskMetrics: currentRiskMetrics,
+          overallRiskScore,
+          timestamp: new Date().toISOString()
         }));
 
       default:

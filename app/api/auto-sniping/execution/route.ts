@@ -49,7 +49,7 @@ export const GET = instrumentedTradingRoute(
       execution: {
         isActive: report.status === 'active',
         status: report.status,
-        activePositionsCount: typeof report.activePositions === 'number' ? report.activePositions : (report.activePositions && Array.isArray(report.activePositions) ? report.activePositions.length : 0),
+        activePositionsCount: report.activeTargets || 0,
         totalPnl: report.stats.totalPnl,
         successRate: report.stats.successRate,
         dailyTrades: report.stats.dailyTradeCount,
@@ -236,7 +236,7 @@ export const POST = instrumentedTradingRoute(
         return NextResponse.json(createSuccessResponse({
           status: report.status,
           isActive: report.status === 'active',
-          activePositions: typeof report.activePositions === 'number' ? report.activePositions : (report.activePositions && Array.isArray(report.activePositions) ? report.activePositions.length : 0),
+          activePositions: report.activeTargets || 0,
           totalTrades: report.stats.totalTrades,
           successRate: report.stats.successRate,
           totalPnl: report.stats.totalPnl,

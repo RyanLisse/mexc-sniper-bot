@@ -12,6 +12,30 @@ import type {
 } from "../data/modules/mexc-api-types";
 import type { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
 import type { MexcCoreClient } from "../data/modules/mexc-core-client";
+import type { ActivityData, ActivityQueryOptionsType } from "@/src/schemas/unified/mexc-api-schemas";
+import { z } from "zod";
+
+// ============================================================================
+// Activity API Input Validation Schemas
+// ============================================================================
+
+const ActivityInputSchema = z.object({
+  currency: z.string().min(1, "Currency cannot be empty").max(20, "Currency too long"),
+});
+
+const BulkActivityInputSchema = z.object({
+  currencies: z.array(z.string().min(1)).min(1, "At least one currency required").max(100, "Too many currencies"),
+  options: z.object({
+    batchSize: z.number().min(1).max(20).default(5),
+    maxRetries: z.number().min(0).max(5).default(3),
+    rateLimitDelay: z.number().min(0).max(1000).default(200),
+  }).optional(),
+});
+
+const RecentActivityInputSchema = z.object({
+  currency: z.string().min(1, "Currency cannot be empty"),
+  timeframeMs: z.number().min(60000).max(30 * 24 * 60 * 60 * 1000).default(24 * 60 * 60 * 1000),
+});
 
 // ============================================================================
 // Core Service Module

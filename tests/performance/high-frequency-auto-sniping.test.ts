@@ -29,7 +29,7 @@ import {
   ApiMockingUtils,
   TestFixtures 
 } from '../utils/auto-sniping-test-utilities';
-import type { SymbolEntry } from '@/src/services/mexc-unified-exports';
+import type { SymbolEntry } from '@/src/services/api/mexc-unified-exports';
 
 describe('High-Frequency Auto Sniping Performance', () => {
   // Set extended timeout for performance tests (60 seconds)

@@ -109,7 +109,7 @@ export class PatternDetectionCore extends EventEmitter {
     this.patternStorage = PatternStorage.getInstance();
     this.patternValidator = PatternValidator.getInstance();
 
-    console.info("Pattern Detection Core initialized", {
+    this.logger.info("Pattern Detection Core initialized", {
       config: this.config,
     });
   }

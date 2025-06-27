@@ -14,12 +14,12 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
   let confidenceCalculator: IConfidenceCalculator;
 
   beforeEach(async () => {
-    // Import the actual implementation once it exists
+    // Import the actual implementation (using singleton pattern)
     try {
       const { ConfidenceCalculator } = await import("../confidence-calculator");
-
-      confidenceCalculator = new ConfidenceCalculator();
-    } catch {
+      confidenceCalculator = ConfidenceCalculator.getInstance();
+    } catch (error) {
+      console.warn("Failed to import ConfidenceCalculator:", error);
       // Skip tests if implementation doesn't exist yet
       confidenceCalculator = {} as IConfidenceCalculator;
     }
@@ -31,10 +31,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
   describe("Ready State Confidence Calculation", () => {
     it("should calculate high confidence for perfect ready state symbols", async () => {
-      if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const perfectSymbol: SymbolEntry = {
         cd: "PERFECTUSDT",
@@ -53,10 +50,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should calculate lower confidence for incomplete symbols", async () => {
-      if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const incompleteSymbol: SymbolEntry = {
         cd: "INCOMPLETEUSDT",
@@ -74,10 +68,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should calculate very low confidence for incorrect states", async () => {
-      if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const incorrectSymbol: SymbolEntry = {
         cd: "INCORRECTUSDT",
@@ -92,10 +83,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should enhance confidence with activity data", async () => {
-      if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const baseConfidence = 70;
       const activities: ActivityData[] = [
@@ -123,10 +111,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should cap confidence at maximum 100", async () => {
-      if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const highBaseConfidence = 95;
       const manyActivities: ActivityData[] = Array.from({ length: 10 }, (_, i) => ({
@@ -148,10 +133,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
   describe("Advance Opportunity Confidence Calculation", () => {
     it("should calculate high confidence for optimal advance timing", async () => {
-      if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const futureTime = Date.now() + 6 * 60 * 60 * 1000; // 6 hours
       const optimalEntry: CalendarEntry = {
@@ -171,10 +153,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should calculate lower confidence for very early opportunities", async () => {
-      if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const veryFutureTime = Date.now() + 72 * 60 * 60 * 1000; // 72 hours (very early)
       const veryEarlyEntry: CalendarEntry = {
@@ -193,10 +172,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should calculate confidence based on project quality", async () => {
-      if (!confidenceCalculator.calculateAdvanceOpportunityConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const aiProjectEntry: CalendarEntry = {
         symbol: "AIPROJECTUSDT",
@@ -240,10 +216,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
   describe("Pre-Ready Score Calculation", () => {
     it("should calculate pre-ready score for symbols approaching ready state", async () => {
-      if (!confidenceCalculator.calculatePreReadyScore) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const approachingSymbol: SymbolEntry = {
         cd: "APPROACHINGUSDT",
@@ -260,10 +233,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should not identify ready symbols as pre-ready", async () => {
-      if (!confidenceCalculator.calculatePreReadyScore) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const readySymbol: SymbolEntry = {
         cd: "ALREADYREADYUSDT",
@@ -278,10 +248,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should estimate shorter time for closer-to-ready symbols", async () => {
-      if (!confidenceCalculator.calculatePreReadyScore) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const veryCloseSymbol: SymbolEntry = {
         cd: "VERYCLOSEUSDT",
@@ -311,10 +278,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
   describe("Confidence Score Validation", () => {
     it("should validate confidence scores within valid range", async () => {
-      if (!confidenceCalculator.validateConfidenceScore) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       // Valid scores
       expect(confidenceCalculator.validateConfidenceScore(0)).toBe(true);
@@ -329,10 +293,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should validate decimal confidence scores", async () => {
-      if (!confidenceCalculator.validateConfidenceScore) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       expect(confidenceCalculator.validateConfidenceScore(85.5)).toBe(true);
       expect(confidenceCalculator.validateConfidenceScore(0.1)).toBe(true);
@@ -342,10 +303,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
 
   describe("Performance and Edge Cases", () => {
     it("should handle batch confidence calculations efficiently", async () => {
-      if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const symbols: SymbolEntry[] = Array.from({ length: 100 }, (_, i) => ({
         cd: `BATCH${i}USDT`,
@@ -375,10 +333,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should handle missing or null symbol data gracefully", async () => {
-      if (!confidenceCalculator.calculateReadyStateConfidence) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const incompleteSymbol = {
         cd: "INCOMPLETE",
@@ -395,10 +350,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should handle empty activity arrays", async () => {
-      if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const baseConfidence = 70;
       const emptyActivities: ActivityData[] = [];
@@ -412,10 +364,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
     });
 
     it("should handle extreme confidence values properly", async () => {
-      if (!confidenceCalculator.enhanceConfidenceWithActivity) {
-        console.warn("ConfidenceCalculator not implemented yet - skipping test");
-        return;
-      }
+      // ConfidenceCalculator is fully implemented
 
       const activities: ActivityData[] = [
         {

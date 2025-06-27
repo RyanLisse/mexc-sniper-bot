@@ -16,7 +16,7 @@ import { eq } from "drizzle-orm";
 import type {
   SymbolEntry,
   CalendarEntry,
-} from "@/src/services/mexc-unified-exports";
+} from "@/src/services/api/mexc-unified-exports";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 import * as activityIntegration from "@/src/services/data/pattern-detection/activity-integration";
 import {
@@ -24,6 +24,14 @@ import {
   standardTestCleanup,
   standardMockData,
 } from "../setup/standardized-mocks";
+import {
+  setupMexcIntegrationTest,
+  teardownMexcIntegrationTest,
+  createMockSymbolEntry,
+  createMockCalendarEntry,
+  createMockActivityData,
+  waitForMexcOperation
+} from "../utils/mexc-integration-utilities";
 
 // Note: Using real activity integration without mocking to avoid mocking issues
 
@@ -32,15 +40,12 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
   let mexcService: UnifiedMexcServiceV2;
 
   beforeAll(() => {
-    // Initialize services with test configuration
+    // Initialize pattern engine
     patternEngine = PatternDetectionCore.getInstance();
-    mexcService = new UnifiedMexcServiceV2({
-      apiKey: 'test-api-key',
-      secretKey: 'test-secret-key',
-      enableCaching: false, // Disable caching for tests
-      enableCircuitBreaker: false,
-      enableMetrics: false,
-    });
+    
+    // Setup MEXC integration test environment 
+    const { mexcService: mockMexcService } = setupMexcIntegrationTest();
+    mexcService = mockMexcService as UnifiedMexcServiceV2;
 
     // Setup standardized service mocks (excluding pattern engine to test real implementation)
     setupServiceMocks({
@@ -60,6 +65,7 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
   });
 
   afterEach(() => {
+    teardownMexcIntegrationTest();
     standardTestCleanup();
   });
 
@@ -114,18 +120,16 @@ describe("Pattern Detection Engine - Integration Tests (Phase 1 Week 2)", () => 
         },
       ]);
 
-      // Test symbol with ready state pattern
-      const testSymbol: SymbolEntry = {
-        sts: 2,
-        st: 2,
-        tt: 4,
+      // Test symbol with ready state pattern using standardized utilities
+      const testSymbol = createMockSymbolEntry({
         cd: "FCATUSDT",
         ca: "0x1000",
         ps: 100,
         qs: 50,
-      };
+      });
 
-      // Detect patterns
+      // Detect patterns with timing synchronization
+      await waitForMexcOperation(50); // Ensure service is ready
       const matches = await patternEngine.detectReadyStatePattern(testSymbol);
 
       // Validate results
