@@ -1,5 +1,6 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
+import { calendarSyncService } from "@/src/services/calendar-to-database-sync";
 import { inngest } from "./client";
 // Import safety functions
 import { safetyFunctions } from "./safety-functions";
@@ -164,12 +165,31 @@ export const pollMexcCalendar = inngest.createFunction(
       },
     });
 
-    // Step 1: Execute Multi-Agent Calendar Discovery
+    // Step 1: Sync Calendar to Database (single source of truth)
+    const syncResult = await step.run("calendar-to-database-sync", async () => {
+      return await calendarSyncService.syncCalendarToDatabase("system", {
+        timeWindowHours: 24,
+        forceSync: force,
+        dryRun: false
+      });
+    });
+
+    // Step 2: Execute Multi-Agent Calendar Discovery (optional enhancement)
     const discoveryResult = await step.run("calendar-discovery-workflow", async () => {
+      if (!syncResult.success) {
+        throw new Error(`Calendar sync failed: ${syncResult.errors.join(', ')}`);
+      }
+      
       const orchestrator = new MexcOrchestrator();
       return await orchestrator.executeCalendarDiscoveryWorkflow({
         trigger,
         force,
+        // Pass sync results for orchestrator context
+        syncData: {
+          processed: syncResult.processed,
+          created: syncResult.created,
+          updated: syncResult.updated
+        }
       });
     });
 
@@ -193,10 +213,15 @@ export const pollMexcCalendar = inngest.createFunction(
       ? discoveryResult.data
       : null;
 
-    // Update metrics
+    // Update metrics with sync and discovery results
     await updateWorkflowStatus("updateMetrics", {
       metrics: {
         readyTokens: discoveryData?.readyTargets?.length || 0,
+        synced: {
+          processed: syncResult.processed,
+          created: syncResult.created,
+          updated: syncResult.updated,
+        }
       },
     });
 
@@ -248,13 +273,24 @@ export const pollMexcCalendar = inngest.createFunction(
     return {
       status: "success",
       trigger,
-      newListingsFound: discoveryData?.newListings?.length || 0,
-      readyTargetsFound: discoveryData?.readyTargets?.length || 0,
-      followUpEventsSent: followUpEvents,
+      // Sync results (database as single source of truth)
+      sync: {
+        processed: syncResult.processed,
+        created: syncResult.created,
+        updated: syncResult.updated,
+        errors: syncResult.errors,
+      },
+      // Discovery results (additional intelligence)
+      discovery: {
+        newListingsFound: discoveryData?.newListings?.length || 0,
+        readyTargetsFound: discoveryData?.readyTargets?.length || 0,
+        followUpEventsSent: followUpEvents,
+      },
       timestamp: new Date().toISOString(),
       metadata: {
-        agentsUsed: ["calendar", "pattern-discovery", "api"],
+        agentsUsed: ["calendar-sync", "calendar", "pattern-discovery", "api"],
         analysisComplete: true,
+        databaseSynced: syncResult.success,
       },
     };
   }

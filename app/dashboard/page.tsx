@@ -26,7 +26,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Plus } from "lucide-react";
 import { ManualTradingPanel } from "@/src/components/manual-trading-panel";
-import { useMexcCalendar, useReadyTargets } from "@/src/hooks/use-mexc-data";
+import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
 import { usePortfolio } from "@/src/hooks/use-portfolio";
 import { useAccountBalance } from "@/src/hooks/use-account-balance";
 import { useAuth } from "@/src/lib/kinde-auth-client";
@@ -97,7 +97,7 @@ export default function DashboardPage() {
   );
   const { data: portfolio } = usePortfolio(userId || "");
   const { data: calendarData } = useMexcCalendar();
-  const { data: readyTargets } = useReadyTargets();
+  const { data: readyLaunches } = useReadyLaunches();
   const { data: enhancedPatterns, isLoading: patternsLoading } =
     useEnhancedPatterns({
       enableAI: true,
@@ -120,7 +120,7 @@ export default function DashboardPage() {
   const totalBalance = accountBalance?.totalUsdtValue || 0;
   const balanceChange = 0; // TODO: Calculate balance change from historical data
   const newListings = Array.isArray(calendarData) ? calendarData.length : 0;
-  const activeTargets = Array.isArray(readyTargets) ? readyTargets.length : 0;
+  const activeTargets = Array.isArray(readyLaunches) ? readyLaunches.length : 0;
   const winRate = 0; // TODO: Calculate win rate from portfolio data
 
   // Debug logging
@@ -196,7 +196,7 @@ export default function DashboardPage() {
               >
                 Pattern Detection
                 <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium">
-                  {readyTargets ? readyTargets.length : 0}
+                  {readyLaunches ? readyLaunches.length : 0}
                 </span>
               </TabsTrigger>
               <TabsTrigger

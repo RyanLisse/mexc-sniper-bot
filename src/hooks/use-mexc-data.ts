@@ -307,11 +307,11 @@ export function useUpcomingLaunches() {
   };
 }
 
-// Hook for ready targets (launching within 4 hours)
-export function useReadyTargets() {
+// Hook for ready launches (upcoming coin launches within 4 hours)
+export function useReadyLaunches() {
   const { data: calendar, ...rest } = useMexcCalendar();
 
-  const readyTargets = Array.isArray(calendar)
+  const readyLaunches = Array.isArray(calendar)
     ? calendar.filter((entry: CalendarEntry) => {
         try {
           const launchTime = new Date(entry.firstOpenTime);
@@ -329,10 +329,51 @@ export function useReadyTargets() {
     : [];
 
   return {
-    data: readyTargets,
-    count: readyTargets.length,
+    data: readyLaunches,
+    count: readyLaunches.length,
     ...rest,
   };
+}
+
+// Legacy hook for backward compatibility - DEPRECATED: Use useReadyLaunches instead
+export function useReadyTargets() {
+  console.warn("useReadyTargets is deprecated. Use useReadyLaunches instead for calendar launches or useSnipeTargets for actual trading targets.");
+  return useReadyLaunches();
+}
+
+// Hook for actual snipe targets (trading targets from database)
+export function useSnipeTargets(userId?: string) {
+  const { user, isAuthenticated } = useAuth();
+
+  return useQuery({
+    queryKey: ["snipe-targets", userId || "anonymous"],
+    queryFn: async () => {
+      if (!userId) {
+        throw new Error("User ID is required for snipe targets");
+      }
+
+      const response = await fetch(`/api/snipe-targets?userId=${userId}`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+          return [];
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      return result.success ? result.data : [];
+    },
+    staleTime: 30 * 1000, // 30 seconds - snipe targets cache
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    refetchInterval: false, // Don't auto-refetch to prevent storms
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    placeholderData: [], // Prevent loading flicker
+    retry: false, // No retries to prevent storms
+    enabled: !!userId && isAuthenticated && user?.id === userId,
+  });
 }
 
 // Hook for MEXC account balance
