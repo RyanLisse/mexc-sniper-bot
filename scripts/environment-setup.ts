@@ -14,7 +14,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { environmentValidation } from '../src/services/enhanced-environment-validation';
+import { environmentValidation } from '../src/services/risk/enhanced-environment-validation';
 
 interface SetupOptions {
   check?: boolean;
@@ -101,16 +101,16 @@ class EnvironmentSetup {
     
     this.displayStatus(healthSummary);
     
-    if (healthSummary.issues.length > 0) {
-      console.log('\n🚨 Issues Found:');
-      healthSummary.issues.forEach(issue => {
+    if (healthSummary.criticalMissing.length > 0) {
+      console.log('\n🚨 Critical Issues Found:');
+      healthSummary.criticalMissing.forEach((issue: string) => {
         console.log(`   ❌ ${issue}`);
       });
     }
     
-    if (healthSummary.recommendedActions.length > 0) {
+    if (healthSummary.recommendations.length > 0) {
       console.log('\n💡 Recommended Actions:');
-      healthSummary.recommendedActions.forEach(action => {
+      healthSummary.recommendations.forEach((action: string) => {
         console.log(`   🔧 ${action}`);
       });
     }
@@ -155,7 +155,7 @@ class EnvironmentSetup {
     console.log(`🔍 Validating specific variables: ${variables.join(', ')}\n`);
     
     const validation = environmentValidation.validateEnvironment();
-    const specificResults = validation.results.filter(r => 
+    const specificResults = validation.results.filter((r: any) => 
       variables.includes(r.key)
     );
 
@@ -164,7 +164,7 @@ class EnvironmentSetup {
       return;
     }
 
-    specificResults.forEach(result => {
+    specificResults.forEach((result: any) => {
       const status = this.getStatusEmoji(result.status);
       console.log(`${status} ${result.key}`);
       console.log(`   Category: ${result.category}`);
@@ -180,7 +180,7 @@ class EnvironmentSetup {
       console.log('');
     });
 
-    const configured = specificResults.filter(r => r.status === 'configured').length;
+    const configured = specificResults.filter((r: any) => r.status === 'configured').length;
     console.log(`📊 Summary: ${configured}/${specificResults.length} variables configured`);
   }
 
