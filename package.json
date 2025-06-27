@@ -15,6 +15,7 @@
     "lint:all": "./scripts/lint-and-format.sh",
     "type-check": "tsc --noEmit",
     "test:mexc-credentials": "tsx scripts/test-mexc-credentials.ts",
+    "validate:mexc-credentials": "tsx scripts/validate-mexc-credentials.ts",
     "// ===== UNIFIED TESTING FRAMEWORK =====": "",
     "test": "vitest run --config=vitest.config.unified.ts",
     "test:unit": "vitest run tests/unit/ --config=vitest.config.unified.ts",
