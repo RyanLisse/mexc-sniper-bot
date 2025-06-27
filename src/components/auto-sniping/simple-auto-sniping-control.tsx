@@ -226,6 +226,7 @@ export function SimpleAutoSnipingControl({
       const timer = setTimeout(autoStartExecution, 2000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [autoSnipingEnabled, overallStatus, isExecutionActive, isLoading, startExecution]);
 
   const handleToggleAutoSniping = useCallback(
@@ -257,7 +258,11 @@ export function SimpleAutoSnipingControl({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="flex items-center justify-between">
-            <span>{error instanceof Error ? error.message : String(error)}</span>
+            <span>
+              {error && typeof error === "object" && "message" in error
+                ? (error as Error).message
+                : String(error)}
+            </span>
             <Button variant="outline" size="sm" onClick={clearError}>
               Dismiss
             </Button>

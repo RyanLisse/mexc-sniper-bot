@@ -40,7 +40,7 @@ const TableSkeleton = () => (
 function safeLazy<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
   fallbackComponent?: ComponentType<any>
-): LazyExoticComponent<T> {
+): LazyExoticComponent<ComponentType<any>> {
   return lazy(() =>
     factory().catch((error) => {
       console.warn("Failed to load component:", error);
@@ -50,7 +50,7 @@ function safeLazy<T extends ComponentType<any>>(
           fallbackComponent ||
           ((() => (
             <div className="p-4 text-center text-gray-500">Component failed to load</div>
-          )) as T),
+          )) as ComponentType<any>),
       };
     })
   );
@@ -73,107 +73,83 @@ export function SafeLazyWrapper({
   );
 }
 
-// Safely loaded dashboard components with comprehensive error handling
-export const MetricCard = safeLazy(() =>
-  import("./dashboard/metric-card").catch(() =>
-    Promise.resolve({
-      default: ({ title, value }: { title: string; value: string }) => (
-        <div className="rounded-lg border p-4">
-          <div className="font-medium">{title}</div>
-          <div className="text-2xl font-bold">{value}</div>
-        </div>
-      ),
-    })
+// Performance-optimized dashboard components with efficient loading patterns
+export const MetricCard = safeLazy(
+  () => import("./dashboard/metric-card").then(module => ({ default: module.MetricCard })),
+  ({ title, value }: { title: string; value: string }) => (
+    <div className="rounded-lg border p-4">
+      <div className="font-medium">{title}</div>
+      <div className="text-2xl font-bold">{value}</div>
+    </div>
   )
 );
 
-export const TradingChart = safeLazy(() =>
-  import("./dashboard/trading-chart").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4 h-64 flex items-center justify-center">
-          <div className="text-gray-500">Trading Chart</div>
-        </div>
-      ),
-    })
+export const TradingChart = safeLazy(
+  () => import("./dashboard/trading-chart"),
+  () => (
+    <div className="rounded-lg border p-4 h-64 flex items-center justify-center">
+      <div className="text-gray-500">Trading Chart</div>
+    </div>
   )
 );
 
-export const CoinListingsBoard = safeLazy(() =>
-  import("./dashboard/coin-listings-board").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4">
-          <h3 className="font-medium mb-2">Coin Listings</h3>
-          <div className="text-gray-500">Loading coin listings...</div>
-        </div>
-      ),
-    })
+export const CoinListingsBoard = safeLazy(
+  () => import("./dashboard/coin-listings-board").then(module => ({ default: module.CoinListingsBoard })),
+  () => (
+    <div className="rounded-lg border p-4">
+      <h3 className="font-medium mb-2">Coin Listings</h3>
+      <div className="text-gray-500">Loading coin listings...</div>
+    </div>
   )
 );
 
-export const OptimizedActivityFeed = safeLazy(() =>
-  import("./dashboard/optimized-activity-feed").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4">
-          <h3 className="font-medium mb-2">Activity Feed</h3>
-          <div className="text-gray-500">No recent activity</div>
-        </div>
-      ),
-    })
+export const OptimizedActivityFeed = safeLazy(
+  () => import("./dashboard/optimized-activity-feed").then(module => ({ default: module.OptimizedActivityFeed })),
+  () => (
+    <div className="rounded-lg border p-4">
+      <h3 className="font-medium mb-2">Activity Feed</h3>
+      <div className="text-gray-500">No recent activity</div>
+    </div>
   )
 );
 
-export const OptimizedTradingTargets = safeLazy(() =>
-  import("./dashboard/optimized-trading-targets").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4">
-          <h3 className="font-medium mb-2">Trading Targets</h3>
-          <div className="text-gray-500">No active targets</div>
-        </div>
-      ),
-    })
+export const OptimizedTradingTargets = safeLazy(
+  () => import("./dashboard/optimized-trading-targets").then(module => ({ default: module.OptimizedTradingTargets })),
+  () => (
+    <div className="rounded-lg border p-4">
+      <h3 className="font-medium mb-2">Trading Targets</h3>
+      <div className="text-gray-500">No active targets</div>
+    </div>
   )
 );
 
-export const RecentTradesTable = safeLazy(() =>
-  import("./dashboard/recent-trades-table").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4">
-          <h3 className="font-medium mb-2">Recent Trades</h3>
-          <TableSkeleton />
-        </div>
-      ),
-    })
+export const RecentTradesTable = safeLazy(
+  () => import("./dashboard/recent-trades-table").then(module => ({ default: module.RecentTradesTable })),
+  () => (
+    <div className="rounded-lg border p-4">
+      <h3 className="font-medium mb-2">Recent Trades</h3>
+      <TableSkeleton />
+    </div>
   )
 );
 
-export const UpcomingCoinsSection = safeLazy(() =>
-  import("./dashboard/upcoming-coins-section").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4">
-          <h3 className="font-medium mb-2">Upcoming Coins</h3>
-          <div className="text-gray-500">No upcoming listings</div>
-        </div>
-      ),
-    })
+export const UpcomingCoinsSection = safeLazy(
+  () => import("./dashboard/upcoming-coins-section").then(module => ({ default: module.UpcomingCoinsSection })),
+  () => (
+    <div className="rounded-lg border p-4">
+      <h3 className="font-medium mb-2">Upcoming Coins</h3>
+      <div className="text-gray-500">No upcoming listings</div>
+    </div>
   )
 );
 
-export const OptimizedAccountBalance = safeLazy(() =>
-  import("./optimized-account-balance").catch(() =>
-    Promise.resolve({
-      default: () => (
-        <div className="rounded-lg border p-4">
-          <h3 className="font-medium mb-2">Account Balance</h3>
-          <div className="text-2xl font-bold">$0.00</div>
-        </div>
-      ),
-    })
+export const OptimizedAccountBalance = safeLazy(
+  () => import("./optimized-account-balance").then(module => ({ default: module.OptimizedAccountBalance })),
+  () => (
+    <div className="rounded-lg border p-4">
+      <h3 className="font-medium mb-2">Account Balance</h3>
+      <div className="text-2xl font-bold">$0.00</div>
+    </div>
   )
 );
 
@@ -242,7 +218,7 @@ export function LazyTableWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Safe preloading function with error handling
+// Safe preloading function with error handling and bundle optimization
 export async function preloadDashboardComponents() {
   const componentsToPreload = [
     () => import("./dashboard/metric-card"),
@@ -255,7 +231,19 @@ export async function preloadDashboardComponents() {
     () => import("./optimized-account-balance"),
   ];
 
-  const results = await Promise.allSettled(componentsToPreload.map((loader) => loader()));
+  // Preload critical components first (priority loading)
+  const criticalComponents = componentsToPreload.slice(0, 3);
+  const nonCriticalComponents = componentsToPreload.slice(3);
+
+  // Load critical components first, then non-critical
+  const criticalResults = await Promise.allSettled(criticalComponents.map((loader) => loader()));
+  
+  // Small delay to avoid blocking critical rendering
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const nonCriticalResults = await Promise.allSettled(nonCriticalComponents.map((loader) => loader()));
+  
+  const results = [...criticalResults, ...nonCriticalResults];
 
   // Log any failed preloads for debugging
   results.forEach((result, index) => {
@@ -268,11 +256,12 @@ export async function preloadDashboardComponents() {
   const successful = results.filter((r) => r.status === "fulfilled").length;
   const failed = results.filter((r) => r.status === "rejected").length;
 
-  console.info(`Preloaded ${successful}/${successful + failed} dashboard components`);
+  console.info(`Preloaded ${successful}/${successful + failed} dashboard components (${criticalResults.filter(r => r.status === "fulfilled").length} critical)`);
 
   return {
     successful,
     failed,
     total: successful + failed,
+    criticalLoaded: criticalResults.filter(r => r.status === "fulfilled").length,
   };
 }

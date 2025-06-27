@@ -10,7 +10,7 @@ import { ApiClient } from "@/src/lib/api-client";
 import type {
   ConfigValidationResult,
   SystemReadinessReport,
-} from "../services/mexc-config-validator";
+} from "../services/api/mexc-config-validator";
 
 interface ConfigValidationState {
   // System readiness

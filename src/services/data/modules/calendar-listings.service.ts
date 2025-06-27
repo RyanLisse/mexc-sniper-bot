@@ -91,7 +91,11 @@ export class CalendarListingsService {
   /**
    * Get calendar listings with optional filtering
    */
-  @instrumentServiceMethod("calendar-listings", "getListings")
+  @instrumentServiceMethod({
+    serviceName: "calendar-listings",
+    methodName: "getListings",
+    operationType: "api_call",
+  })
   async getListings(filter?: CalendarFilter): Promise<CalendarListingsResponse> {
     const startTime = Date.now();
 
@@ -140,7 +144,11 @@ export class CalendarListingsService {
   /**
    * Get active trading pairs from calendar
    */
-  @instrumentServiceMethod("calendar-listings", "getActivePairs")
+  @instrumentServiceMethod({
+    serviceName: "calendar-listings",
+    methodName: "getActivePairs",
+    operationType: "api_call",
+  })
   async getActivePairs(): Promise<CalendarListingsResponse> {
     return this.getListings({ status: "TRADING" });
   }
@@ -148,7 +156,11 @@ export class CalendarListingsService {
   /**
    * Get upcoming listings
    */
-  @instrumentServiceMethod("calendar-listings", "getUpcomingListings")
+  @instrumentServiceMethod({
+    serviceName: "calendar-listings",
+    methodName: "getUpcomingListings",
+    operationType: "api_call",
+  })
   async getUpcomingListings(): Promise<CalendarListingsResponse> {
     const filter: CalendarFilter = {
       status: "PENDING",
@@ -162,7 +174,11 @@ export class CalendarListingsService {
   /**
    * Get calendar entry by symbol
    */
-  @instrumentServiceMethod("calendar-listings", "getBySymbol")
+  @instrumentServiceMethod({
+    serviceName: "calendar-listings",
+    methodName: "getBySymbol",
+    operationType: "api_call",
+  })
   async getBySymbol(symbol: string): Promise<CalendarListingsResponse> {
     if (!symbol || typeof symbol !== "string") {
       return {
@@ -316,5 +332,3 @@ export function createCalendarListingsService(
 // ============================================================================
 // Exports
 // ============================================================================
-
-export type { CalendarListingsConfig };

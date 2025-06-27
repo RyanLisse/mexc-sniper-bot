@@ -170,10 +170,13 @@ async function verifyMultiPhaseTradingBot(): Promise<VerificationResult> {
   console.log('⚠️  MultiPhaseTradingBot verification disabled - functionality moved to CoreTradingService');
   
   return {
-    passed: true,
-    message: 'MultiPhaseTradingBot verification skipped - moved to consolidated service',
-    warnings: ['Multi-phase trading functionality moved to CoreTradingService.executeMultiPhaseStrategy'],
-    errors: []
+    service: 'MultiPhaseTradingBot',
+    success: true,
+    details: {
+      message: 'MultiPhaseTradingBot verification skipped - moved to consolidated service',
+      warnings: ['Multi-phase trading functionality moved to CoreTradingService.executeMultiPhaseStrategy'],
+      errors: []
+    }
   };
 }
 

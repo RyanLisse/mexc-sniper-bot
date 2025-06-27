@@ -297,7 +297,9 @@ export function UnifiedStatusCard({
                 className="p-2"
               >
                 <AlertDescription className="text-xs">
-                  {error instanceof Error ? error.message : String(error)}
+                  {error && typeof error === "object" && "message" in error
+                    ? (error as Error).message
+                    : String(error)}
                 </AlertDescription>
               </Alert>
             ))}

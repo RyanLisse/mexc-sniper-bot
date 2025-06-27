@@ -443,7 +443,7 @@ const SystemControlBar = ({
   );
 };
 
-export const CoinListingsBoard = memo(function CoinListingsBoard() {
+const CoinListingsBoard = memo(function CoinListingsBoard() {
   const {
     isMonitoring,
     isLoading,
@@ -655,3 +655,9 @@ export const CoinListingsBoard = memo(function CoinListingsBoard() {
     </div>
   );
 });
+
+// Named export for normal imports
+export { CoinListingsBoard };
+
+// Default export for dynamic imports
+export default CoinListingsBoard;

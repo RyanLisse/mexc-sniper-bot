@@ -34,6 +34,7 @@ export class CircuitBreaker {
   private lastFailureTime?: Date;
   private lastSuccessTime?: Date;
   private nextRetryTime?: Date;
+  private _logger: any;
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
@@ -285,6 +286,7 @@ export class CircuitBreakerError extends Error {
 export class CircuitBreakerRegistry {
   private static instance: CircuitBreakerRegistry;
   private breakers = new Map<string, CircuitBreaker>();
+  private _logger: any;
   private constructor() {}
 
   /**

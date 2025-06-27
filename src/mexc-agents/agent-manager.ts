@@ -124,12 +124,12 @@ export class AgentManager {
     const startTime = Date.now();
 
     // Check cache first for performance optimization
-    if (this.healthCache && (Date.now() - this.healthCache.timestamp) < this.HEALTH_CACHE_TTL) {
+    if (this.healthCache && Date.now() - this.healthCache.timestamp < this.HEALTH_CACHE_TTL) {
       this.logger.debug("[AgentManager] Returning cached health status");
       return {
         ...this.healthCache.data,
         cached: true,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
     }
 
@@ -141,24 +141,28 @@ export class AgentManager {
       ]);
 
       // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Health check timeout")), 3000)
       );
 
-      const [coreSystemsResult, safetyAgentsResult] = await Promise.race([
+      const [coreSystemsResult, safetyAgentsResult] = (await Promise.race([
         healthCheckPromises,
-        timeoutPromise
-      ]) as PromiseSettledResult<any>[];
+        timeoutPromise,
+      ])) as PromiseSettledResult<any>[];
 
-      const coreSystemsHealth = coreSystemsResult.status === "fulfilled" ? coreSystemsResult.value : null;
-      const safetyAgentsHealth = safetyAgentsResult.status === "fulfilled" ? safetyAgentsResult.value : null;
+      const coreSystemsHealth =
+        coreSystemsResult.status === "fulfilled" ? coreSystemsResult.value : null;
+      const safetyAgentsHealth =
+        safetyAgentsResult.status === "fulfilled" ? safetyAgentsResult.value : null;
 
       const result = {
         // Core trading agents (based on system dependencies)
         mexcApi: coreSystemsHealth?.mexcApiStatus !== "unhealthy",
         patternDiscovery: coreSystemsHealth?.openAiStatus !== "unhealthy",
         calendar: coreSystemsHealth?.mexcApiStatus !== "unhealthy",
-        symbolAnalysis: coreSystemsHealth?.mexcApiStatus !== "unhealthy" && coreSystemsHealth?.openAiStatus !== "unhealthy",
+        symbolAnalysis:
+          coreSystemsHealth?.mexcApiStatus !== "unhealthy" &&
+          coreSystemsHealth?.openAiStatus !== "unhealthy",
         strategy: coreSystemsHealth?.openAiStatus !== "unhealthy",
         // Safety agents
         simulation: safetyAgentsHealth?.simulation || false,
@@ -171,18 +175,17 @@ export class AgentManager {
           databaseStatus: coreSystemsHealth?.databaseStatus || "error",
         },
         cached: false,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
 
       // Cache the result for future requests
       this.healthCache = {
         timestamp: Date.now(),
-        data: result
+        data: result,
       };
 
       this.logger.debug(`[AgentManager] Health check completed in ${result.responseTime}ms`);
       return result;
-
     } catch (error) {
       this.logger.error("[AgentManager] Health check failed:", error);
       const errorResult = {
@@ -203,13 +206,13 @@ export class AgentManager {
           databaseStatus: "error",
         },
         cached: false,
-        responseTime: Date.now() - startTime
+        responseTime: Date.now() - startTime,
       };
 
       // Cache error result for a shorter time (5 seconds)
       this.healthCache = {
         timestamp: Date.now() - (this.HEALTH_CACHE_TTL - 5000),
-        data: errorResult
+        data: errorResult,
       };
 
       return errorResult;
@@ -250,27 +253,31 @@ export class AgentManager {
     const agentHealthChecks = await Promise.allSettled([
       Promise.race([
         this.simulationAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
       ]),
       Promise.race([
         this.riskManagerAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
       ]),
       Promise.race([
         this.reconciliationAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
       ]),
       Promise.race([
         this.errorRecoveryAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000))
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
       ]),
     ]);
 
     return {
-      simulation: agentHealthChecks[0].status === "fulfilled" && agentHealthChecks[0].value === true,
-      riskManager: agentHealthChecks[1].status === "fulfilled" && agentHealthChecks[1].value === true,
-      reconciliation: agentHealthChecks[2].status === "fulfilled" && agentHealthChecks[2].value === true,
-      errorRecovery: agentHealthChecks[3].status === "fulfilled" && agentHealthChecks[3].value === true,
+      simulation:
+        agentHealthChecks[0].status === "fulfilled" && agentHealthChecks[0].value === true,
+      riskManager:
+        agentHealthChecks[1].status === "fulfilled" && agentHealthChecks[1].value === true,
+      reconciliation:
+        agentHealthChecks[2].status === "fulfilled" && agentHealthChecks[2].value === true,
+      errorRecovery:
+        agentHealthChecks[3].status === "fulfilled" && agentHealthChecks[3].value === true,
     };
   }
 
@@ -401,7 +408,7 @@ export class AgentManager {
     return {
       isCached: true,
       cacheAge,
-      cacheValid
+      cacheValid,
     };
   }
 

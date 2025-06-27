@@ -99,6 +99,7 @@ export function OptimizedAgentsDashboard({
               },
               currentTask: "Monitoring MEXC calendar for new listings",
               capabilities: ["Calendar monitoring", "Listing detection", "Scheduling"],
+              errors: [],
             },
             {
               id: "pattern-discovery-agent",
@@ -115,6 +116,7 @@ export function OptimizedAgentsDashboard({
               },
               currentTask: "Analyzing ready-state patterns (sts:2, st:2, tt:4)",
               capabilities: ["Pattern detection", "ML analysis", "Advance warning"],
+              errors: [],
             },
             {
               id: "symbol-analysis-agent",
@@ -131,6 +133,7 @@ export function OptimizedAgentsDashboard({
               },
               currentTask: "Real-time symbol readiness assessment",
               capabilities: ["Market analysis", "Risk evaluation", "Confidence scoring"],
+              errors: [],
             },
             {
               id: "mexc-api-agent",
@@ -147,6 +150,7 @@ export function OptimizedAgentsDashboard({
               },
               currentTask: "Handling API interactions and trade execution",
               capabilities: ["API communication", "Trade execution", "Data extraction"],
+              errors: [],
             },
             {
               id: "orchestrator-agent",
@@ -163,6 +167,7 @@ export function OptimizedAgentsDashboard({
               },
               currentTask: "Coordinating multi-agent workflows",
               capabilities: ["Workflow coordination", "Error recovery", "Result synthesis"],
+              errors: [],
             },
           ],
           systemStatus: "healthy",

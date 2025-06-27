@@ -24,7 +24,7 @@ export interface SafeError {
 // Lazy logger initialization to prevent build-time errors
 let _logger: any = null;
 
-function getLogger() {
+export function getLogger() {
   if (!_logger) {
     _logger = {
       info: (message: string, context?: any) =>
@@ -269,3 +269,46 @@ export function normalizeErrorLike(errorLike: unknown): SafeError {
 
   return toSafeError(errorLike);
 }
+
+/**
+ * Additional type guards for error classification
+ */
+export function isNetworkError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("network") ||
+      message.includes("connection") ||
+      message.includes("timeout") ||
+      message.includes("fetch") ||
+      error.name === "NetworkError"
+    );
+  }
+  return false;
+}
+
+export function isTimeoutError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("timeout") || message.includes("timed out") || error.name === "TimeoutError"
+    );
+  }
+  return false;
+}
+
+export function isServerError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes("server error") ||
+      message.includes("internal server") ||
+      message.includes("500") ||
+      error.name === "ServerError"
+    );
+  }
+  return false;
+}
+
+// Legacy alias for SafeError
+export type SafeErrorResult = SafeError;

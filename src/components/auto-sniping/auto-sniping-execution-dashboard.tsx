@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAutoSnipingExecution } from "@/src/hooks/use-auto-sniping-execution";
-import type { AutoSnipingConfig } from "@/src/services/optimized-auto-sniping-core";
+import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
 import { AlertsList } from "./components/alerts-list";
 import { ConfigEditor } from "./components/config-editor";
 import { ExecutionControls } from "./components/execution-controls";
@@ -133,7 +133,7 @@ export function AutoSnipingExecutionDashboard(props: AutoSnipingExecutionDashboa
   }, [clearAcknowledgedAlerts]);
 
   const handleConfigChange = useCallback((field: string, value: string | number | boolean) => {
-    setTempConfig((prev) => ({ ...prev, [field]: value }));
+    setTempConfig((prev: Partial<CoreTradingConfig>) => ({ ...prev, [field]: value }));
   }, []);
 
   const handleSaveConfig = useCallback(async () => {
@@ -241,7 +241,7 @@ export function AutoSnipingExecutionDashboard(props: AutoSnipingExecutionDashboa
           <PerformanceMetrics
             successRate={successRate}
             dailyTradeCount={dailyTradeCount}
-            maxDailyTrades={config?.maxDailyTrades}
+            maxDailyTrades={config?.maxConcurrentTrades}
             stats={stats}
           />
 

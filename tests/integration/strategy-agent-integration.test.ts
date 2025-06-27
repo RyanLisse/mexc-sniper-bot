@@ -135,8 +135,8 @@ describe('Strategy-Agent Integration (TDD)', () => {
         symbol: 'TESTCOIN'
       });
 
-      expect(conservativeWorkflow.steps).toInclude('enhanced-risk-assessment');
-      expect(conservativeWorkflow.agentParticipants).toInclude('safety-monitor-agent');
+      expect(conservativeWorkflow.steps).include('enhanced-risk-assessment');
+      expect(conservativeWorkflow.agentParticipants).include('safety-monitor-agent');
       expect(conservativeWorkflow.confidenceThreshold).toBeGreaterThan(85);
 
       // Aggressive strategy should use different approach
@@ -146,7 +146,7 @@ describe('Strategy-Agent Integration (TDD)', () => {
         symbol: 'TESTCOIN'
       });
 
-      expect(aggressiveWorkflow.steps).toInclude('rapid-execution');
+      expect(aggressiveWorkflow.steps).include('rapid-execution');
       expect(aggressiveWorkflow.parallelExecution).toBe(true);
       expect(aggressiveWorkflow.confidenceThreshold).toBeLessThan(70);
     });

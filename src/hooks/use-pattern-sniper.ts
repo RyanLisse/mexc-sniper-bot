@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
+import type { SniperStats } from "@/src/schemas/mexc-schemas";
 import {
   type CalendarEntry,
   isValidForSnipe,
   type OrderParameters as SchemaOrderParameters,
-  type SniperStats,
   type SnipeTarget,
   type SymbolV2Entry,
 } from "@/src/schemas/unified/mexc-api-schemas";
@@ -170,7 +170,7 @@ export const usePatternSniper = () => {
 
     let newReadyCount = 0;
 
-    for (const vcoinId of pendingDetection) {
+    for (const vcoinId of Array.from(pendingDetection)) {
       const symbol = symbols.find((s: SymbolV2Entry) => s.cd === vcoinId);
 
       if (symbol && isValidForSnipe(symbol)) {
@@ -243,7 +243,7 @@ export const usePatternSniper = () => {
       const now = new Date();
       const newExecuted = new Set(executedTargets);
 
-      for (const [symbol, target] of readyTargets) {
+      for (const [symbol, target] of Array.from(readyTargets)) {
         if (executedTargets.has(symbol)) continue;
 
         const timeUntil = target.launchTime.getTime() - now.getTime();

@@ -227,7 +227,7 @@ class ErrorHandlingMigrator {
   }
 
   private addImports(content: string, imports: string[], module?: string): string {
-    const moduleMap = {
+    const moduleMap: Record<string, string> = {
       'apiResponse': '@/src/lib/api-response',
       'handleApiError': '@/src/lib/error-handler',
       'getErrorMessage': '@/src/lib/error-type-utils',
@@ -237,7 +237,7 @@ class ErrorHandlingMigrator {
     // Group imports by module
     const importsByModule: Record<string, string[]> = {};
     
-    imports.forEach(imp => {
+    imports.forEach((imp: string) => {
       const mod = module || moduleMap[imp] || '@/src/lib/error-type-utils';
       if (!importsByModule[mod]) {
         importsByModule[mod] = [];

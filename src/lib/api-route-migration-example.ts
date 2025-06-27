@@ -11,7 +11,7 @@ import {
   ConnectivityTestRequestSchema,
   ConnectivityTestResponseSchema,
 } from "../schemas/mexc-api-validation-schemas";
-import { mexcConnectivityService } from "../services/mexc-connectivity-service";
+import { mexcConnectivityService } from "../services/api/mexc-connectivity-service";
 import { createPublicApiRoute } from "./api-route-handler";
 
 // ============================================================================

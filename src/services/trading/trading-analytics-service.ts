@@ -129,6 +129,7 @@ const ANALYTICS_CONFIG = {
 // ============================================================================
 
 export class TradingAnalyticsService {
+  private _logger: any;
   private get logger(): {
     info: (message: string, context?: any) => void;
     warn: (message: string, context?: any) => void;

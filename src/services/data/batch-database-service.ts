@@ -334,7 +334,14 @@ export class BatchDatabaseService {
               "batch_pattern_metrics_update",
               async () => {
                 return await executeWithRetry(async () => {
-                  return await db.execute(sql.raw(updateQuery, [patternIds]));
+                  return await db.execute(
+                    sql.raw(
+                      updateQuery.replace(
+                        "$1",
+                        `ARRAY[${patternIds.map((id) => `'${id}'`).join(",")}]`
+                      )
+                    )
+                  );
                 });
               },
               {
@@ -412,7 +419,7 @@ export class BatchDatabaseService {
 
       // Create lookup set for O(1) duplicate checking
       const existingCombinations = new Set(
-        existingTargets.map((target) => `${target.userId}:${target.symbolName}`)
+        existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
       );
 
       // Filter out duplicates
@@ -475,7 +482,14 @@ export class BatchDatabaseService {
         "aggregate_pattern_performance_metrics",
         async () => {
           return await executeWithRetry(async () => {
-            return await db.execute(sql.raw(baseQuery.query, baseQuery.parameters));
+            // Replace PostgreSQL-style placeholders with actual values
+            let queryWithParams = baseQuery.query;
+            baseQuery.parameters.forEach((param, index) => {
+              const placeholder = `$${index + 1}`;
+              const value = param instanceof Date ? `'${param.toISOString()}'` : `'${param}'`;
+              queryWithParams = queryWithParams.replace(placeholder, value);
+            });
+            return await db.execute(sql.raw(queryWithParams));
           });
         },
         {
@@ -562,7 +576,7 @@ export class BatchDatabaseService {
         .where(inArray(patternEmbeddings.patternId, patternIds));
     });
 
-    const existingIds = new Set(existingPatterns.map((p) => p.patternId));
+    const existingIds = new Set(existingPatterns.map((p: any) => p.patternId));
     return embeddings.filter((e) => !existingIds.has(e.patternId));
   }
 

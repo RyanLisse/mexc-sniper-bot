@@ -118,8 +118,6 @@ export class CacheWarmingManager {
               metadata: {
                 type: "agent_response",
                 source: pattern.agentId,
-                warmup: true,
-                timestamp: Date.now(),
               },
             });
 

@@ -20,6 +20,19 @@ describe("Safety Monitoring API Integration Tests", () => {
 
   beforeAll(async () => {
     // Setup mocks at test suite level to prevent hoisting issues
+    vi.mock("@/src/lib/api-auth", () => ({
+      apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+        return async (request, ...args) => {
+          return await handler(request, ...args);
+        };
+      }),
+      requireApiAuth: vi.fn().mockResolvedValue({
+        id: "test-user-123",
+        email: "test@example.com",
+        name: "Test User",
+      }),
+    }));
+
     vi.mock("@/src/lib/kinde-auth", () => ({
       requireAuth: vi.fn().mockResolvedValue({
         id: "test-user-123",

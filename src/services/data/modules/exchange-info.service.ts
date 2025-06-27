@@ -135,7 +135,11 @@ export class ExchangeInfoService {
   /**
    * Get complete exchange information
    */
-  @instrumentServiceMethod("exchange-info", "getExchangeInfo")
+  @instrumentServiceMethod({
+    serviceName: "exchange-info",
+    methodName: "getExchangeInfo",
+    operationType: "api_call",
+  })
   async getExchangeInfo(): Promise<ExchangeInfoResponse> {
     const startTime = Date.now();
 
@@ -180,7 +184,11 @@ export class ExchangeInfoService {
   /**
    * Get trading rules for a specific symbol
    */
-  @instrumentServiceMethod("exchange-info", "getSymbolTradingRules")
+  @instrumentServiceMethod({
+    serviceName: "exchange-info",
+    methodName: "getSymbolTradingRules",
+    operationType: "api_call",
+  })
   async getSymbolTradingRules(symbol: string): Promise<ExchangeInfoResponse> {
     if (!symbol || typeof symbol !== "string") {
       return {
@@ -211,7 +219,11 @@ export class ExchangeInfoService {
   /**
    * Get symbols filtered by criteria
    */
-  @instrumentServiceMethod("exchange-info", "getFilteredSymbols")
+  @instrumentServiceMethod({
+    serviceName: "exchange-info",
+    methodName: "getFilteredSymbols",
+    operationType: "api_call",
+  })
   async getFilteredSymbols(filter: SymbolFilter): Promise<ExchangeInfoResponse> {
     try {
       // Validate filter input
@@ -278,7 +290,11 @@ export class ExchangeInfoService {
   /**
    * Get all trading symbols (status = TRADING)
    */
-  @instrumentServiceMethod("exchange-info", "getTradingSymbols")
+  @instrumentServiceMethod({
+    serviceName: "exchange-info",
+    methodName: "getTradingSymbols",
+    operationType: "api_call",
+  })
   async getTradingSymbols(): Promise<ExchangeInfoResponse> {
     return this.getFilteredSymbols({ status: "TRADING" });
   }
@@ -286,7 +302,11 @@ export class ExchangeInfoService {
   /**
    * Get symbols by base asset
    */
-  @instrumentServiceMethod("exchange-info", "getSymbolsByBaseAsset")
+  @instrumentServiceMethod({
+    serviceName: "exchange-info",
+    methodName: "getSymbolsByBaseAsset",
+    operationType: "api_call",
+  })
   async getSymbolsByBaseAsset(baseAsset: string): Promise<ExchangeInfoResponse> {
     if (!baseAsset || typeof baseAsset !== "string") {
       return {
@@ -303,7 +323,11 @@ export class ExchangeInfoService {
   /**
    * Get symbols by quote asset (e.g., all USDT pairs)
    */
-  @instrumentServiceMethod("exchange-info", "getSymbolsByQuoteAsset")
+  @instrumentServiceMethod({
+    operationType: "api_call",
+    serviceName: "exchange-info",
+    methodName: "getSymbolsByQuoteAsset",
+  })
   async getSymbolsByQuoteAsset(quoteAsset: string): Promise<ExchangeInfoResponse> {
     if (!quoteAsset || typeof quoteAsset !== "string") {
       return {
@@ -401,5 +425,3 @@ export function createExchangeInfoService(config: ExchangeInfoConfig): ExchangeI
 // ============================================================================
 // Exports
 // ============================================================================
-
-export type { ExchangeInfoConfig };

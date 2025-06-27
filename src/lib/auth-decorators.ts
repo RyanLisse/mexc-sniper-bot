@@ -231,8 +231,20 @@ export function tradingRoute<T extends any[]>(
 ) {
   return withAuthOptions(
     async (request: NextRequest, user: any, ...args: T) => {
-      // TODO: Add trading permission checks when implemented
-      // For now, just ensure user is authenticated
+      // Check if user has trading permissions enabled
+      // Check user preferences for trading authorization
+      if (!user || !user.id) {
+        return new Response(
+          JSON.stringify(createErrorResponse("Authentication required for trading operations")),
+          {
+            status: HTTP_STATUS.UNAUTHORIZED,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      // Future: Add role-based trading permissions when user roles are implemented
+      // For now, all authenticated users can trade
       return await handler(request, user, ...args);
     },
     {

@@ -138,15 +138,16 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       // Handle nested MEXC API response structure: response.data.data.balances
       // MEXC API returns data.data = null when account has no balances (valid case)
       const actualBalances =
-        accountResponse.data?.data?.balances || accountResponse.data?.balances || [];
+        (accountResponse.data && 'balances' in accountResponse.data 
+          ? (accountResponse.data as { balances: any[] }).balances 
+          : []) || [];
       const hasValidData = accountResponse.success && accountResponse.data;
 
       if (!hasValidData) {
         console.error("[MexcAccountApi] Account response validation failed:", {
           success: accountResponse.success,
           hasData: !!accountResponse.data,
-          hasNestedBalances: !!accountResponse.data?.data?.balances,
-          hasDirectBalances: !!accountResponse.data?.balances,
+          hasDirectBalances: !!(accountResponse.data && 'balances' in accountResponse.data),
           hasActualBalances: !!actualBalances,
           error: accountResponse.error,
           data: accountResponse.data,
@@ -171,16 +172,16 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       );
 
       // Filter non-zero balances first
-      const nonZeroBalances = actualBalances.filter((balance) => {
+      const nonZeroBalances = actualBalances.filter((balance: any) => {
         const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
         return total > 0;
       });
 
       // Get symbols we need prices for (excluding USDT)
       const symbolsNeeded = nonZeroBalances
-        .filter((balance) => balance.asset !== "USDT")
-        .map((balance) => `${balance.asset}USDT`)
-        .filter((symbol) => validTradingPairs.has(symbol));
+        .filter((balance: any) => balance.asset !== "USDT")
+        .map((balance: any) => `${balance.asset}USDT`)
+        .filter((symbol: any) => validTradingPairs.has(symbol));
 
       console.info(`[MexcAccountApi] Need prices for ${symbolsNeeded.length} symbols`);
 
@@ -195,30 +196,34 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             success: tickerResponse.success,
             dataLength: tickerResponse.data?.length || 0,
             hasData: !!tickerResponse.data,
-            error: tickerResponse.error
+            error: tickerResponse.error,
           });
-          
+
           if (tickerResponse.success && tickerResponse.data.length > 0) {
             const ticker = tickerResponse.data[0];
             console.info(`[MexcAccountApi] Ticker data for ${symbol}:`, {
               lastPrice: ticker?.lastPrice,
               price: ticker?.price,
-              symbol: ticker?.symbol
+              symbol: ticker?.symbol,
             });
-            
+
             // MEXC API uses lastPrice as the primary price field
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
               priceMap.set(symbol, Number.parseFloat(price));
               console.info(`[MexcAccountApi] ✅ Price found for ${symbol}: ${price}`);
             } else {
-              console.warn(`[MexcAccountApi] ❌ Invalid price for ${symbol}:`, { price, lastPrice: ticker?.lastPrice, regularPrice: ticker?.price });
+              console.warn(`[MexcAccountApi] ❌ Invalid price for ${symbol}:`, {
+                price,
+                lastPrice: ticker?.lastPrice,
+                regularPrice: ticker?.price,
+              });
             }
           } else {
             console.warn(`[MexcAccountApi] ❌ No ticker data for ${symbol}:`, {
               success: tickerResponse.success,
               dataLength: tickerResponse.data?.length || 0,
-              error: tickerResponse.error
+              error: tickerResponse.error,
             });
           }
         } catch (error) {
@@ -228,7 +233,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
       // Process balances with fetched prices
       const balances: BalanceEntry[] = nonZeroBalances
-        .map((balance): BalanceEntry | null => {
+        .map((balance: any): BalanceEntry | null => {
           const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
           let usdtValue = 0;
 
@@ -259,8 +264,8 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             return null;
           }
         })
-        .filter((balance): balance is BalanceEntry => balance !== null)
-        .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0)); // Sort by USDT value desc
+        .filter((balance: BalanceEntry | null): balance is BalanceEntry => balance !== null)
+        .sort((a: BalanceEntry, b: BalanceEntry) => (b.usdtValue || 0) - (a.usdtValue || 0)); // Sort by USDT value desc
 
       const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
       const balancesWithValue = balances.filter((b) => (b.usdtValue || 0) > 0);

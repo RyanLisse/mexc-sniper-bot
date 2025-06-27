@@ -324,3 +324,6 @@ export function UpcomingCoinsSection() {
     </div>
   );
 }
+
+// Add default export for dynamic imports
+export default UpcomingCoinsSection;

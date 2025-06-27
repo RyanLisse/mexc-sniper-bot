@@ -174,7 +174,7 @@ export class ManualTradingModule {
 
         const phase = {
           phaseId: i + 1,
-          status: "executing" as const,
+          status: "executing" as "executing" | "completed" | "failed",
           allocation: allocations[i],
           executionTime: new Date(),
         };

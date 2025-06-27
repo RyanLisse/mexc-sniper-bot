@@ -478,4 +478,4 @@ export function createMarketConditionsManager(
 }
 
 // Export types for external use
-export type { MarketConditionsManagerConfig, PortfolioUpdate };
+// (Types already exported above via interface declarations)

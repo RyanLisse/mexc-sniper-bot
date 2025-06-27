@@ -6,13 +6,13 @@
 
 import { and, desc, eq, gte } from "drizzle-orm";
 import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
+import { db } from "@/src/db";
 import { monitoredListings } from "@/src/db/schemas/patterns";
 import { createConsoleLogger } from "@/src/lib/shared/console-logger";
 import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
-import { db } from "../db";
 import type { SymbolEntry } from "./mexc-unified-exports";
 import { MonitoringPlanCreator } from "./pattern-orchestrator/monitoring-plan-creator";
 import { StrategicRecommendationGenerator } from "./pattern-orchestrator/recommendation-generator";
@@ -260,7 +260,7 @@ export class StreamlinedPatternOrchestrator {
       for (const pattern of readyPatterns) {
         const validationResponse = await this.patternAgent.validateReadyState({
           vcoinId: pattern.vcoinId || pattern.symbol,
-          symbolData: request.input.symbolData?.filter((s) => s.cd === pattern.symbol),
+          symbolData: request.input.symbolData?.filter((s: any) => s.cd === pattern.symbol),
           count: 1,
         });
         results.agentResponses![`validation-${pattern.symbol}`] = validationResponse;
@@ -305,11 +305,16 @@ export class StreamlinedPatternOrchestrator {
       );
 
       if (readyPatterns.length > 0) {
-        const strategyResponse = await this.strategyAgent.createTradingStrategy(
-          `Strategy for ${request.input.vcoinId}: Ready state pattern detected with ${readyPatterns.length} matches`,
-          "medium",
-          "short"
-        );
+        const strategyResponse = await this.strategyAgent.createStrategy({
+          action: "create",
+          symbols: [request.input.vcoinId],
+          timeframe: "short",
+          riskLevel: "medium",
+          parameters: {
+            description: `Strategy for ${request.input.vcoinId}: Ready state pattern detected with ${readyPatterns.length} matches`,
+            patternMatches: readyPatterns.length
+          }
+        });
         results.agentResponses!["strategy-creation"] = strategyResponse;
       }
 
@@ -459,7 +464,7 @@ export class StreamlinedPatternOrchestrator {
         .orderBy(desc(monitoredListings.confidence))
         .limit(50);
 
-      return monitoredSymbols.map((symbol) => ({
+      return monitoredSymbols.map((symbol: any) => ({
         cd: symbol.symbolName,
         symbol: symbol.symbolName,
         sts: symbol.patternSts || 0,

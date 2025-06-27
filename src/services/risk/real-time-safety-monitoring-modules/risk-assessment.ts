@@ -332,7 +332,7 @@ export class RiskAssessment {
         };
       } catch (error) {
         console.warn("Failed to get execution report for system risk assessment", {
-          error: error.message,
+          error: (error as Error)?.message,
         });
         executionReport = {
           stats: {
@@ -360,7 +360,7 @@ export class RiskAssessment {
         }
       } catch (error) {
         console.warn("Failed to get pattern monitoring report for system risk assessment", {
-          error: error.message,
+          error: (error as Error)?.message,
         });
         patternReport = {
           status: "healthy",
@@ -382,7 +382,9 @@ export class RiskAssessment {
           };
         }
       } catch (error) {
-        console.warn("Failed to get emergency system health check", { error: error.message });
+        console.warn("Failed to get emergency system health check", {
+          error: (error as Error)?.message,
+        });
         emergencyHealth = {
           overall: "healthy",
           alerts: [],

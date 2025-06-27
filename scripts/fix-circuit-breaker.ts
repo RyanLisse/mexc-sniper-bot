@@ -19,9 +19,9 @@
  *   --verbose   - Show detailed output
  */
 
-import { CircuitBreakerSafetyService } from '../src/services/circuit-breaker-safety-service'
-import { UnifiedMexcServiceV2 } from '../src/services/unified-mexc-service-v2'
-import { getGlobalReliabilityManager, resetGlobalReliabilityManager } from '../src/services/mexc-circuit-breaker'
+import { CircuitBreakerSafetyService } from '../src/services/risk/circuit-breaker-safety-service'
+import { UnifiedMexcServiceV2 } from '../src/services/api/unified-mexc-service-v2'
+import { circuitBreakerRegistry } from '../src/services/risk/circuit-breaker'
 import { config } from 'dotenv'
 import chalk from 'chalk'
 
@@ -60,7 +60,7 @@ async function main() {
     // Initialize services
     const mexcService = new UnifiedMexcServiceV2()
     const safetyService = new CircuitBreakerSafetyService(mexcService)
-    const reliabilityManager = getGlobalReliabilityManager()
+    // Use circuit breaker registry instead of global reliability manager
 
     // Execute the requested action
     switch (options.action) {
@@ -68,7 +68,7 @@ async function main() {
         await executeDiagnose(safetyService, options)
         break
       case 'fix':
-        await executeFix(safetyService, reliabilityManager, options)
+        await executeFix(safetyService, circuitBreakerRegistry, options)
         break
       case 'validate':
         await executeValidate(safetyService, options)
@@ -168,13 +168,13 @@ async function executeFix(
   if (fixResult.success) {
     console.log(`New State: ${chalk.green(fixResult.newState || 'CLOSED')}`)
     console.log('\n' + chalk.bold('Steps Executed:'))
-    fixResult.steps.forEach((step, index) => {
+    fixResult.steps.forEach((step: string, index: number) => {
       console.log(`${index + 1}. ${chalk.green('✓')} ${step}`)
     })
   } else {
     console.log(`Reason: ${chalk.red(fixResult.reason || 'Unknown error')}`)
     console.log('\n' + chalk.bold('Steps Attempted:'))
-    fixResult.steps.forEach((step, index) => {
+    fixResult.steps.forEach((step: string, index: number) => {
       console.log(`${index + 1}. ${chalk.yellow('•')} ${step}`)
     })
   }
@@ -221,27 +221,27 @@ async function executeValidate(safetyService: CircuitBreakerSafetyService, optio
   
   if (readiness.blockers.length > 0) {
     console.log('\n' + chalk.bold('Blockers:'))
-    readiness.blockers.forEach(blocker => {
+    readiness.blockers.forEach((blocker: string) => {
       console.log(`• ${chalk.red(blocker)}`)
     })
   }
 
   if (readiness.warnings.length > 0) {
     console.log('\n' + chalk.bold('Warnings:'))
-    readiness.warnings.forEach(warning => {
+    readiness.warnings.forEach((warning: string) => {
       console.log(`• ${chalk.yellow(warning)}`)
     })
   }
 
   if (autoSnipingSafety.blockers.length > 0) {
     console.log('\n' + chalk.bold('Auto-Sniping Blockers:'))
-    autoSnipingSafety.blockers.forEach(blocker => {
+    autoSnipingSafety.blockers.forEach((blocker: string) => {
       console.log(`• ${chalk.red(blocker)}`)
     })
   }
 
   console.log('\n' + chalk.bold('Recommendations:'))
-  readiness.recommendations.forEach(rec => {
+  readiness.recommendations.forEach((rec: string) => {
     console.log(`• ${chalk.blue(rec)}`)
   })
 
@@ -262,7 +262,7 @@ async function executeComprehensiveCheck(safetyService: CircuitBreakerSafetyServ
   console.log(`Overall Status: ${getOverallStatusColor(safetyCheck.overall)(safetyCheck.overall)}`)
   
   console.log('\n' + chalk.bold('Component Checks:'))
-  Object.entries(safetyCheck.checks).forEach(([component, result]) => {
+  Object.entries(safetyCheck.checks).forEach(([component, result]: [string, any]) => {
     const statusColor = result.status === 'PASS' ? chalk.green : result.status === 'WARN' ? chalk.yellow : chalk.red
     const statusIcon = result.status === 'PASS' ? '✅' : result.status === 'WARN' ? '⚠️' : '❌'
     console.log(`${statusIcon} ${component}: ${statusColor(result.status)} - ${result.message}`)
@@ -270,7 +270,7 @@ async function executeComprehensiveCheck(safetyService: CircuitBreakerSafetyServ
 
   if (safetyCheck.recommendations.length > 0) {
     console.log('\n' + chalk.bold('Recommendations:'))
-    safetyCheck.recommendations.forEach(rec => {
+    safetyCheck.recommendations.forEach((rec: string) => {
       console.log(`• ${chalk.blue(rec)}`)
     })
   }

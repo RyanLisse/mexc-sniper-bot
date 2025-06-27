@@ -70,10 +70,14 @@ export class MexcOrchestrator {
 
     // Optionally enable enhanced coordination with improved error handling
     if (options.useEnhancedCoordination) {
-      this.coordinationInitializationPromise = this.initializeEnhancedCoordination(options.coordinationConfig)
+      this.coordinationInitializationPromise = this.initializeEnhancedCoordination(
+        options.coordinationConfig
+      )
         .then(() => {
           this.enhancedCoordinationEnabled = true;
-          this.logger.info("[MexcOrchestrator] Enhanced coordination system successfully activated");
+          this.logger.info(
+            "[MexcOrchestrator] Enhanced coordination system successfully activated"
+          );
         })
         .catch((error) => {
           this.enhancedCoordinationEnabled = false;

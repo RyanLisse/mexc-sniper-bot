@@ -222,10 +222,9 @@ export class StreamlinedCacheMonitoringSystem {
         improvements.memoryReduction = cleanupResults.total * 1024;
 
         const optimizationResults = globalCacheManager.optimize();
-        actions.push(
-          `Evicted ${optimizationResults.evicted} entries, promoted ${optimizationResults.promoted}`
-        );
-        improvements.performanceImprovement = optimizationResults.promoted * 10;
+        actions.push(...optimizationResults.actions);
+        // Merge optimization improvements
+        Object.assign(improvements, optimizationResults.improvements);
       }
 
       if (current.global.hitRate < 60) {

@@ -11,35 +11,9 @@
  * This ensures the safety monitoring API works end-to-end with proper error handling.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from "vitest";
 import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
 import { NextRequest } from "next/server";
-
-// Mock the entire api-auth module to bypass authentication and rate limiting
-vi.mock("@/src/lib/api-auth", () => ({
-  apiAuthWrapper: vi.fn().mockImplementation((handler) => {
-    // Return a wrapper that directly calls the handler without auth checks
-    return async (request, ...args) => {
-      return await handler(request, ...args);
-    };
-  }),
-  requireApiAuth: vi.fn().mockResolvedValue({
-    id: "test-user-123",
-    email: "test@example.com",
-    name: "Test User",
-  }),
-}));
-
-// Mock logger to avoid logging noise during tests
-vi.mock("@/src/lib/structured-logger", () => ({
-  createSafeLogger: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-    trading: vi.fn(),
-  }),
-}));
 
 // Mock the safety service at module level first
 let mockSafetyService: any;
@@ -177,22 +151,53 @@ const createMockSafetyService = () => ({
   clearAcknowledgedAlerts: vi.fn().mockReturnValue(5),
 });
 
-// Mock the real-time safety monitoring modules to use our mock service
-vi.mock("@/src/services/risk/real-time-safety-monitoring-modules", () => ({
-  RealTimeSafetyMonitoringService: {
-    getInstance: vi.fn(() => mockSafetyService),
-  },
-}));
-
-// Import after mocking
-const { GET, POST } = await import(
-  "../../app/api/auto-sniping/safety-monitoring/route"
-);
-
 describe("Safety Monitoring API Integration", () => {
   const TEST_TIMEOUT = setTestTimeout("integration");
 
-  // Authentication is handled by mocked Kinde auth
+  let GET: any;
+  let POST: any;
+
+  beforeAll(async () => {
+    // Use doMock which works in beforeAll hooks
+    vi.doMock("@/src/lib/api-auth", () => ({
+      apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+        // Return a wrapper that directly calls the handler without auth checks
+        return async (request, ...args) => {
+          return await handler(request, ...args);
+        };
+      }),
+      requireApiAuth: vi.fn().mockResolvedValue({
+        id: "test-user-123",
+        email: "test@example.com",
+        name: "Test User",
+      }),
+    }));
+
+    // Mock logger to avoid logging noise during tests
+    vi.doMock("@/src/lib/structured-logger", () => ({
+      createSafeLogger: () => ({
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        trading: vi.fn(),
+      }),
+    }));
+
+    // Mock the real-time safety monitoring modules to use our mock service
+    vi.doMock("@/src/services/risk/real-time-safety-monitoring-modules", () => ({
+      RealTimeSafetyMonitoringService: {
+        getInstance: vi.fn(() => mockSafetyService),
+      },
+    }));
+
+    // Import after mocking
+    const { GET: getHandler, POST: postHandler } = await import(
+      "../../app/api/auto-sniping/safety-monitoring/route"
+    );
+    GET = getHandler;
+    POST = postHandler;
+  });
 
   beforeEach(() => {
     // Clear all mocks
@@ -217,8 +222,7 @@ describe("Safety Monitoring API Integration", () => {
 
         const response = await withApiTimeout(
           () => GET(request),
-          5000,
-          "GET /status request",
+          5000
         );
 
         expect(response.status).toBe(200);
@@ -241,8 +245,7 @@ describe("Safety Monitoring API Integration", () => {
 
         const response = await withApiTimeout(
           () => GET(request),
-          5000,
-          "GET /report request",
+          5000
         );
 
         expect(response.status).toBe(200);
@@ -268,8 +271,7 @@ describe("Safety Monitoring API Integration", () => {
 
         const response = await withApiTimeout(
           () => GET(request),
-          5000,
-          "GET /risk-metrics request",
+          5000
         );
 
         expect(response.status).toBe(200);

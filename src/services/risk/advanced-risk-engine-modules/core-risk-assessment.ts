@@ -13,7 +13,7 @@ import type {
   MarketConditions,
   PositionRiskProfile,
   RiskEngineConfig,
-} from "../../schemas/risk-engine-schemas-extracted";
+} from "@/src/schemas/risk-engine-schemas-extracted";
 
 export interface CoreRiskAssessmentConfig {
   riskConfig: RiskEngineConfig;
@@ -349,4 +349,4 @@ export function createCoreRiskAssessment(config: CoreRiskAssessmentConfig): Core
 }
 
 // Export types for external use
-export type { CoreRiskAssessmentConfig, AdvancedRiskMetrics, TradeRiskResult };
+// (Types already exported above via interface declarations)

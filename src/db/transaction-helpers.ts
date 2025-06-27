@@ -6,6 +6,7 @@
  */
 
 import { sql } from "drizzle-orm";
+import type { PostgresJsTransaction } from "drizzle-orm/postgres-js";
 import { getLogger } from "../lib/error-type-utils";
 import { db } from "./index";
 
@@ -49,7 +50,7 @@ export async function withTransaction<T>(
 
   while (attempt < retryCount) {
     try {
-      const result = await db.transaction(async (tx) => {
+      const result = await db.transaction(async (tx: PostgresJsTransaction<any, any>) => {
         context.isActive = true;
 
         // Set isolation level if specified

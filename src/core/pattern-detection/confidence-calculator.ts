@@ -11,13 +11,13 @@
  * - Comprehensive validation framework
  */
 
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
 import {
   calculateActivityBoost,
   hasHighPriorityActivity,
 } from "../../schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IConfidenceCalculator } from "./interfaces";
 
 /**
@@ -77,14 +77,11 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        this.logger.warn(
-          "Activity enhancement failed",
-          {
-            symbol: symbol.cd || "unknown",
-            error: safeError.message,
-          },
-          safeError
-        );
+        this.logger.warn("Activity enhancement failed", {
+          symbol: symbol.cd || "unknown",
+          error: safeError.message,
+          errorStack: safeError.stack,
+        });
         // Continue without activity enhancement
       }
 
@@ -279,15 +276,12 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       return Math.min(enhancedConfidence, 100);
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn(
-        "Activity enhancement calculation failed",
-        {
-          baseConfidence,
-          activitiesCount: activities.length,
-          error: safeError.message,
-        },
-        safeError
-      );
+      this.logger.warn("Activity enhancement calculation failed", {
+        baseConfidence,
+        activitiesCount: activities.length,
+        error: safeError.message,
+        errorStack: safeError.stack,
+      });
 
       return baseConfidence;
     }
@@ -389,9 +383,18 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       // Import activity service dynamically to avoid circular dependencies
       const { unifiedMexcService } = await import("../../services/api/unified-mexc-service-v2");
       const activityResponse = await unifiedMexcService.getRecentActivity(symbol);
-      const activities = activityResponse.success ? activityResponse.data?.activities || [] : [];
+      const recentActivities = activityResponse.success ? activityResponse.data?.activities || [] : [];
 
-      return activities || [];
+      // Transform RecentActivityData structure to ActivityData structure
+      const activities: ActivityData[] = recentActivities.map((activity, index) => ({
+        currency: symbol.replace('USDT', ''),
+        activityId: `activity-${activity.timestamp}-${index}`,
+        currencyId: `${symbol.replace('USDT', '')}-id`,
+        activityType: activity.activityType.toUpperCase(),
+        symbol: symbol
+      }));
+
+      return activities;
     } catch (error) {
       this.logger.warn("Failed to fetch activity data", {
         symbol:

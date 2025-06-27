@@ -447,11 +447,14 @@ export function ManualTradingPanel({ userId, className }: ManualTradingPanelProp
         throw new Error(error.message || "Trade failed");
       }
 
-      return response.json();
+      const result = await response.json();
+      // Include original order info in the response for the callback
+      return { ...result, originalOrder: order };
     },
     onSuccess: (data) => {
       const orderData = data.data;
-      const orderInfo = `${orderData?.side || side} ${orderData?.symbol || "asset"}`;
+      const originalOrder = data.originalOrder;
+      const orderInfo = `${orderData?.side || originalOrder?.side || "Unknown"} ${orderData?.symbol || originalOrder?.symbol || "Unknown"}`;
       const orderId = orderData?.orderId || orderData?.data?.orderId || "N/A";
 
       toast.success("Trade Executed Successfully", {
@@ -462,8 +465,7 @@ export function ManualTradingPanel({ userId, className }: ManualTradingPanelProp
       refetchBalance();
       queryClient.invalidateQueries({ queryKey: ["execution-history", userId] });
 
-      // Reset form on successful trade
-      resetForm();
+      // Form reset handled by component state management
     },
     onError: (error: Error) => {
       toast.error("Trade Failed", {

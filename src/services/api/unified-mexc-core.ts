@@ -575,7 +575,11 @@ export class UnifiedMexcCoreModule {
         ...entry,
       };
     } catch (error) {
-      this.logger.warn("Failed to normalize activity entry:", entry, error);
+      this.logger.warn("Failed to normalize activity entry:", {
+        entry,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
       return null;
     }
   }

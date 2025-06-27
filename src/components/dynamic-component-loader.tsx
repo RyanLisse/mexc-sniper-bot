@@ -158,7 +158,7 @@ function safeLazy<T extends React.ComponentType<any>>(
             <div className="p-4 text-center text-muted-foreground">
               Component "{fallbackName}" failed to load
             </div>
-          )) as T),
+          )) as unknown as T),
       };
     })
   );
@@ -167,7 +167,7 @@ function safeLazy<T extends React.ComponentType<any>>(
 // Lazy loaded dashboard components with safe error handling
 export const OptimizedCoinCalendar = safeLazy(
   () =>
-    import("./optimized-coin-calendar").then((module) => ({
+    import("./optimized-coin-calendar").then((module: any) => ({
       default: module.OptimizedCoinCalendar || module.default,
     })),
   "OptimizedCoinCalendar",
@@ -176,7 +176,7 @@ export const OptimizedCoinCalendar = safeLazy(
 
 export const OptimizedAccountBalance = safeLazy(
   () =>
-    import("./optimized-account-balance").then((module) => ({
+    import("./optimized-account-balance").then((module: any) => ({
       default: module.OptimizedAccountBalance || module.default,
     })),
   "OptimizedAccountBalance",
@@ -185,7 +185,7 @@ export const OptimizedAccountBalance = safeLazy(
 
 export const OptimizedWebSocketMonitor = safeLazy(
   () =>
-    import("./optimized-websocket-monitor").then((module) => ({
+    import("./optimized-websocket-monitor").then((module: any) => ({
       default: module.OptimizedWebSocketMonitor || module.default,
     })),
   "OptimizedWebSocketMonitor",
@@ -194,7 +194,7 @@ export const OptimizedWebSocketMonitor = safeLazy(
 
 export const SafetyMonitoringDashboard = safeLazy(
   () =>
-    import("./safety-monitoring-dashboard").then((module) => ({
+    import("./safety-monitoring-dashboard").then((module: any) => ({
       default: module.SafetyMonitoringDashboard || module.default,
     })),
   "SafetyMonitoringDashboard",
@@ -203,7 +203,7 @@ export const SafetyMonitoringDashboard = safeLazy(
 
 export const PatternSniper = safeLazy(
   () =>
-    import("./pattern-sniper").then((module) => ({
+    import("./pattern-sniper").then((module: any) => ({
       default: module.default || module.PatternSniper || module.PatternSniperComponent,
     })),
   "PatternSniper",
@@ -212,7 +212,7 @@ export const PatternSniper = safeLazy(
 
 export const AgentDashboard = safeLazy(
   () =>
-    import("./agent-dashboard").then((module) => ({
+    import("./agent-dashboard").then((module: any) => ({
       default: module.AgentDashboard || module.default,
     })),
   "AgentDashboard",
@@ -221,7 +221,7 @@ export const AgentDashboard = safeLazy(
 
 export const StrategyManager = safeLazy(
   () =>
-    import("./strategy-manager").then((module) => ({
+    import("./strategy-manager").then((module: any) => ({
       default: module.StrategyManager || module.default,
     })),
   "StrategyManager",
@@ -230,7 +230,7 @@ export const StrategyManager = safeLazy(
 
 export const WorkflowManager = safeLazy(
   () =>
-    import("./workflow-manager").then((module) => ({
+    import("./workflow-manager").then((module: any) => ({
       default: module.WorkflowManager || module.default,
     })),
   "WorkflowManager",
@@ -239,7 +239,7 @@ export const WorkflowManager = safeLazy(
 
 export const TradingConfiguration = safeLazy(
   () =>
-    import("./trading-configuration").then((module) => ({
+    import("./trading-configuration").then((module: any) => ({
       default: module.TradingConfiguration || module.default,
     })),
   "TradingConfiguration",
@@ -248,7 +248,7 @@ export const TradingConfiguration = safeLazy(
 
 export const UserPreferences = safeLazy(
   () =>
-    import("./user-preferences").then((module) => ({
+    import("./user-preferences").then((module: any) => ({
       default: module.UserPreferences || module.default,
     })),
   "UserPreferences",
@@ -258,7 +258,7 @@ export const UserPreferences = safeLazy(
 // Dashboard section components with safe loading
 export const CoinListingsBoard = safeLazy(
   () =>
-    import("./dashboard/coin-listings-board").then((module) => ({
+    import("./dashboard/coin-listings-board").then((module: any) => ({
       default: module.CoinListingsBoard || module.default,
     })),
   "CoinListingsBoard",
@@ -267,7 +267,7 @@ export const CoinListingsBoard = safeLazy(
 
 export const MetricCard = safeLazy(
   () =>
-    import("./dashboard/metric-card").then((module) => ({
+    import("./dashboard/metric-card").then((module: any) => ({
       default: module.MetricCard || module.default,
     })),
   "MetricCard",
@@ -281,7 +281,7 @@ export const MetricCard = safeLazy(
 
 export const OptimizedActivityFeed = safeLazy(
   () =>
-    import("./dashboard/optimized-activity-feed").then((module) => ({
+    import("./dashboard/optimized-activity-feed").then((module: any) => ({
       default: module.OptimizedActivityFeed || module.default,
     })),
   "OptimizedActivityFeed",
@@ -290,7 +290,7 @@ export const OptimizedActivityFeed = safeLazy(
 
 export const OptimizedMetricsGrid = safeLazy(
   () =>
-    import("./dashboard/optimized-metrics-grid").then((module) => ({
+    import("./dashboard/optimized-metrics-grid").then((module: any) => ({
       default: module.OptimizedMetricsGrid || module.default,
     })),
   "OptimizedMetricsGrid",
@@ -299,7 +299,7 @@ export const OptimizedMetricsGrid = safeLazy(
 
 export const OptimizedTradingTargets = safeLazy(
   () =>
-    import("./dashboard/optimized-trading-targets").then((module) => ({
+    import("./dashboard/optimized-trading-targets").then((module: any) => ({
       default: module.OptimizedTradingTargets || module.default,
     })),
   "OptimizedTradingTargets",
@@ -308,7 +308,7 @@ export const OptimizedTradingTargets = safeLazy(
 
 export const RecentTradesTable = safeLazy(
   () =>
-    import("./dashboard/recent-trades-table").then((module) => ({
+    import("./dashboard/recent-trades-table").then((module: any) => ({
       default: module.RecentTradesTable || module.default,
     })),
   "RecentTradesTable",
@@ -317,7 +317,7 @@ export const RecentTradesTable = safeLazy(
 
 export const TradingChart = safeLazy(
   () =>
-    import("./dashboard/trading-chart").then((module) => ({
+    import("./dashboard/trading-chart").then((module: any) => ({
       default: module.TradingChart || module.default,
     })),
   "TradingChart",
@@ -326,7 +326,7 @@ export const TradingChart = safeLazy(
 
 export const UpcomingCoinsSection = safeLazy(
   () =>
-    import("./dashboard/upcoming-coins-section").then((module) => ({
+    import("./dashboard/upcoming-coins-section").then((module: any) => ({
       default: module.UpcomingCoinsSection || module.default,
     })),
   "UpcomingCoinsSection",
@@ -335,7 +335,7 @@ export const UpcomingCoinsSection = safeLazy(
 
 export const WorkflowStatusCard = safeLazy(
   () =>
-    import("./dashboard/workflow-status-card").then((module) => ({
+    import("./dashboard/workflow-status-card").then((module: any) => ({
       default: module.WorkflowStatusCard || module.default,
     })),
   "WorkflowStatusCard",
@@ -345,7 +345,7 @@ export const WorkflowStatusCard = safeLazy(
 // TIER 1 HEAVY COMPONENTS: Critical for 70% faster load performance with safe loading
 export const TradingAnalyticsDashboard = safeLazy(
   () =>
-    import("./monitoring/trading-analytics-dashboard").then((module) => ({
+    import("./monitoring/trading-analytics-dashboard").then((module: any) => ({
       default: module.TradingAnalyticsDashboard || module.default,
     })),
   "TradingAnalyticsDashboard",
@@ -354,7 +354,7 @@ export const TradingAnalyticsDashboard = safeLazy(
 
 export const AutoSnipingExecutionDashboard = safeLazy(
   () =>
-    import("./auto-sniping/auto-sniping-execution-dashboard").then((module) => ({
+    import("./auto-sniping/auto-sniping-execution-dashboard").then((module: any) => ({
       default: module.AutoSnipingExecutionDashboard || module.default,
     })),
   "AutoSnipingExecutionDashboard",
@@ -363,7 +363,7 @@ export const AutoSnipingExecutionDashboard = safeLazy(
 
 export const AlertCenter = safeLazy(
   () =>
-    import("./monitoring/alert-center").then((module) => ({
+    import("./monitoring/alert-center").then((module: any) => ({
       default: module.AlertCenter || module.default,
     })),
   "AlertCenter",
@@ -372,7 +372,7 @@ export const AlertCenter = safeLazy(
 
 export const RealTimeSafetyDashboard = safeLazy(
   () =>
-    import("./auto-sniping/real-time-safety-dashboard").then((module) => ({
+    import("./auto-sniping/real-time-safety-dashboard").then((module: any) => ({
       default: module.RealTimeSafetyDashboard || module.default,
     })),
   "RealTimeSafetyDashboard",
@@ -381,7 +381,7 @@ export const RealTimeSafetyDashboard = safeLazy(
 
 export const ComprehensiveSafetyDashboard = safeLazy(
   () =>
-    import("./safety/comprehensive-safety-dashboard").then((module) => ({
+    import("./safety/comprehensive-safety-dashboard").then((module: any) => ({
       default: module.ComprehensiveSafetyDashboard || module.default,
     })),
   "ComprehensiveSafetyDashboard",
@@ -390,7 +390,7 @@ export const ComprehensiveSafetyDashboard = safeLazy(
 
 export const RealTimePerformance = safeLazy(
   () =>
-    import("./monitoring/real-time-performance").then((module) => ({
+    import("./monitoring/real-time-performance").then((module: any) => ({
       default: module.RealTimePerformance || module.default,
     })),
   "RealTimePerformance",
@@ -400,7 +400,7 @@ export const RealTimePerformance = safeLazy(
 // TIER 2 HEAVY COMPONENTS: Quick wins for performance with safe loading
 export const RealTimeDashboard = safeLazy(
   () =>
-    import("./dashboard/real-time-dashboard").then((module) => ({
+    import("./dashboard/real-time-dashboard").then((module: any) => ({
       default: module.default || module.RealTimeDashboard,
     })),
   "RealTimeDashboard",
@@ -409,7 +409,7 @@ export const RealTimeDashboard = safeLazy(
 
 export const AlertsDashboard = safeLazy(
   () =>
-    import("./alerts/alerts-dashboard").then((module) => ({
+    import("./alerts/alerts-dashboard").then((module: any) => ({
       default: module.AlertsDashboard || module.default,
     })),
   "AlertsDashboard",
@@ -418,7 +418,7 @@ export const AlertsDashboard = safeLazy(
 
 export const UnifiedTakeProfitSettings = safeLazy(
   () =>
-    import("./unified-take-profit-settings").then((module) => ({
+    import("./unified-take-profit-settings").then((module: any) => ({
       default: module.UnifiedTakeProfitSettings || module.default,
     })),
   "UnifiedTakeProfitSettings",
@@ -427,7 +427,7 @@ export const UnifiedTakeProfitSettings = safeLazy(
 
 export const SystemArchitectureOverview = safeLazy(
   () =>
-    import("./monitoring/system-architecture-overview").then((module) => ({
+    import("./monitoring/system-architecture-overview").then((module: any) => ({
       default: module.SystemArchitectureOverview || module.default,
     })),
   "SystemArchitectureOverview",
@@ -436,7 +436,7 @@ export const SystemArchitectureOverview = safeLazy(
 
 export const EditableTakeProfitTable = safeLazy(
   () =>
-    import("./editable-take-profit-table").then((module) => ({
+    import("./editable-take-profit-table").then((module: any) => ({
       default: module.EditableTakeProfitTable || module.default,
     })),
   "EditableTakeProfitTable",
@@ -445,7 +445,7 @@ export const EditableTakeProfitTable = safeLazy(
 
 export const ParameterMonitor = safeLazy(
   () =>
-    import("./tuning/parameter-monitor").then((module) => ({
+    import("./tuning/parameter-monitor").then((module: any) => ({
       default: module.ParameterMonitor || module.default,
     })),
   "ParameterMonitor",
@@ -454,7 +454,7 @@ export const ParameterMonitor = safeLazy(
 
 export const OptimizationControlPanel = safeLazy(
   () =>
-    import("./tuning/optimization-control-panel").then((module) => ({
+    import("./tuning/optimization-control-panel").then((module: any) => ({
       default: module.OptimizationControlPanel || module.default,
     })),
   "OptimizationControlPanel",

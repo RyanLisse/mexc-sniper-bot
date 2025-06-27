@@ -281,17 +281,17 @@ describe("Pattern to Database Bridge - Event Integration", () => {
     expect(targets).toHaveLength(3);
 
     // Verify ready_state pattern
-    const readyTarget = targets.find((t) => t.symbolName === "READY1USDT");
+    const readyTarget = targets.find((t: any) => t.symbolName === "READY1USDT");
     expect(readyTarget?.status).toBe("ready");
     expect(readyTarget?.priority).toBe(1); // High confidence, ready state should get highest priority
 
     // Verify pre_ready pattern
-    const preReadyTarget = targets.find((t) => t.symbolName === "PRE1USDT");
+    const preReadyTarget = targets.find((t: any) => t.symbolName === "PRE1USDT");
     expect(preReadyTarget?.status).toBe("pending");
     expect(preReadyTarget?.targetExecutionTime).toBeDefined();
 
     // Verify launch_sequence pattern
-    const launchTarget = targets.find((t) => t.symbolName === "LAUNCH1USDT");
+    const launchTarget = targets.find((t: any) => t.symbolName === "LAUNCH1USDT");
     expect(launchTarget?.status).toBe("pending");
     expect(launchTarget?.targetExecutionTime).toBeDefined();
   });

@@ -51,6 +51,8 @@ export const allTables = {
   transactions: tradingTables.transactions,
   transactionLocks: tradingTables.transactionLocks,
   transactionQueue: tradingTables.transactionQueue,
+  balanceSnapshots: tradingTables.balanceSnapshots,
+  portfolioSummary: tradingTables.portfolioSummary,
 
   // Safety tables
   simulationSessions: safetyTables.simulationSessions,
@@ -59,9 +61,11 @@ export const allTables = {
   positionSnapshots: safetyTables.positionSnapshots,
   reconciliationReports: safetyTables.reconciliationReports,
   errorIncidents: safetyTables.errorIncidents,
+  errorLogs: safetyTables.errorLogs,
   systemHealthMetrics: safetyTables.systemHealthMetrics,
 
   // Pattern tables
+  coinActivities: patternTables.coinActivities,
   monitoredListings: patternTables.monitoredListings,
   patternEmbeddings: patternTables.patternEmbeddings,
   patternSimilarityCache: patternTables.patternSimilarityCache,
@@ -101,7 +105,9 @@ export type {
 } from "./auth";
 export type {
   // Pattern types
+  CoinActivity,
   MonitoredListing,
+  NewCoinActivity,
   NewMonitoredListing,
   NewPatternEmbedding,
   NewPatternSimilarityCache,
@@ -123,7 +129,9 @@ export type {
 } from "./performance";
 export type {
   ErrorIncident,
+  ErrorLog,
   NewErrorIncident,
+  NewErrorLog,
   NewPositionSnapshot,
   NewReconciliationReport,
   NewRiskEvent,
@@ -154,13 +162,17 @@ export type {
 export type {
   // Trading types
   ApiCredentials,
+  BalanceSnapshot,
   ExecutionHistory,
   NewApiCredentials,
+  NewBalanceSnapshot,
   NewExecutionHistory,
+  NewPortfolioSummary,
   NewSnipeTarget,
   NewTransaction,
   NewTransactionLock,
   NewTransactionQueue,
+  PortfolioSummary,
   SnipeTarget,
   Transaction,
   TransactionLock,

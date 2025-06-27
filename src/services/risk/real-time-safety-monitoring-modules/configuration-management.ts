@@ -185,9 +185,9 @@ export class ConfigurationManagement {
         console.error("Threshold update validation failed", {
           operation: "update_thresholds",
           updateFields: Object.keys(thresholdUpdates),
-          error: error.message,
+          error: (error as Error)?.message,
         });
-        throw new Error(`Invalid threshold update: ${error.message}`);
+        throw new Error(`Invalid threshold update: ${(error as Error)?.message}`);
       }
     }
 
@@ -213,7 +213,7 @@ export class ConfigurationManagement {
     try {
       validateSafetyConfiguration(config);
     } catch (error) {
-      errors.push(error.message);
+      errors.push((error as Error)?.message || "Unknown error");
     }
 
     // Additional business logic validation

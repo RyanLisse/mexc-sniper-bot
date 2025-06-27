@@ -1,6 +1,6 @@
 /**
  * Performance Monitor
- * 
+ *
  * Tracks optimization impact across all Phase 1 improvements:
  * - Logger fixes (undefined reference elimination)
  * - Agent health check optimization (70% cache hit rate)
@@ -10,29 +10,29 @@
 
 interface PerformanceMetrics {
   timestamp: Date;
-  
+
   // System-wide metrics
   systemResponseTime: number;
   systemThroughput: number;
   systemLoadAverage: number;
-  
+
   // Agent health optimization metrics
   agentHealthCacheHitRate: number;
   agentHealthAverageResponseTime: number;
   agentHealthChecksPerMinute: number;
-  
+
   // Coordination system metrics
   coordinationSystemActive: boolean;
   coordinationInitializationTime: number;
   workflowValidationWarnings: number;
-  
+
   // Logger optimization metrics
   loggerErrors: number;
   loggerUndefinedReferences: number;
-  
+
   // Overall optimization impact
   overallPerformanceScore: number;
-  optimizationEffectiveness: 'excellent' | 'good' | 'moderate' | 'poor';
+  optimizationEffectiveness: "excellent" | "good" | "moderate" | "poor";
 }
 
 interface PerformanceReport {
@@ -41,22 +41,22 @@ interface PerformanceReport {
     end: Date;
     durationMs: number;
   };
-  
+
   // Optimization impact summary
   optimizations: {
     loggerFixes: {
-      status: 'completed' | 'in-progress' | 'pending';
-      impact: 'high' | 'medium' | 'low';
+      status: "completed" | "in-progress" | "pending";
+      impact: "high" | "medium" | "low";
       metrics: {
         errorsEliminated: number;
         undefinedReferencesFixed: number;
         stabilityImprovement: number; // percentage
       };
     };
-    
+
     agentHealthOptimization: {
-      status: 'completed' | 'in-progress' | 'pending';
-      impact: 'high' | 'medium' | 'low';
+      status: "completed" | "in-progress" | "pending";
+      impact: "high" | "medium" | "low";
       metrics: {
         cacheHitRate: number; // percentage
         responseTimeReduction: number; // percentage
@@ -64,20 +64,20 @@ interface PerformanceReport {
         checksUnder500ms: number; // percentage
       };
     };
-    
+
     enhancedCoordination: {
-      status: 'completed' | 'in-progress' | 'pending';
-      impact: 'high' | 'medium' | 'low';
+      status: "completed" | "in-progress" | "pending";
+      impact: "high" | "medium" | "low";
       metrics: {
         initializationSuccess: boolean;
         systemStability: number; // percentage
         coordinationEfficiency: number; // percentage
       };
     };
-    
+
     agentRegistryTiming: {
-      status: 'completed' | 'in-progress' | 'pending';
-      impact: 'high' | 'medium' | 'low';
+      status: "completed" | "in-progress" | "pending";
+      impact: "high" | "medium" | "low";
       metrics: {
         warningsEliminated: number;
         registrationTimingOptimal: boolean;
@@ -85,7 +85,7 @@ interface PerformanceReport {
       };
     };
   };
-  
+
   // Overall performance analysis
   overall: {
     performanceScore: number; // 0-100
@@ -93,14 +93,14 @@ interface PerformanceReport {
     systemStability: number; // percentage
     recommendedNextSteps: string[];
   };
-  
+
   // Detailed metrics
   metrics: PerformanceMetrics[];
   averageMetrics: PerformanceMetrics;
   trends: {
-    responseTime: 'improving' | 'stable' | 'degrading';
-    cachePerformance: 'improving' | 'stable' | 'degrading';
-    systemStability: 'improving' | 'stable' | 'degrading';
+    responseTime: "improving" | "stable" | "degrading";
+    cachePerformance: "improving" | "stable" | "degrading";
+    systemStability: "improving" | "stable" | "degrading";
   };
 }
 
@@ -142,7 +142,9 @@ export class PerformanceMonitor {
     }
 
     this.isMonitoring = true;
-    this.logger.info(`[PerformanceMonitor] Starting performance monitoring (interval: ${intervalMs}ms)`);
+    this.logger.info(
+      `[PerformanceMonitor] Starting performance monitoring (interval: ${intervalMs}ms)`
+    );
 
     // Initial metrics collection
     this.collectMetrics();
@@ -178,34 +180,36 @@ export class PerformanceMonitor {
     try {
       const metrics: PerformanceMetrics = {
         timestamp: new Date(),
-        
+
         // System metrics (simulated for demo - would integrate with real monitoring)
         systemResponseTime: this.measureSystemResponseTime(),
         systemThroughput: this.measureSystemThroughput(),
         systemLoadAverage: this.measureSystemLoad(),
-        
+
         // Agent health metrics (would integrate with actual agent manager)
         agentHealthCacheHitRate: this.measureAgentHealthCacheHitRate(),
         agentHealthAverageResponseTime: this.measureAgentHealthResponseTime(),
         agentHealthChecksPerMinute: this.measureAgentHealthFrequency(),
-        
+
         // Coordination metrics
         coordinationSystemActive: this.measureCoordinationSystemStatus(),
         coordinationInitializationTime: this.measureCoordinationInitTime(),
         workflowValidationWarnings: this.measureWorkflowWarnings(),
-        
+
         // Logger metrics
         loggerErrors: this.measureLoggerErrors(),
         loggerUndefinedReferences: this.measureLoggerUndefinedReferences(),
-        
+
         // Overall score
         overallPerformanceScore: 0, // calculated below
-        optimizationEffectiveness: 'good',
+        optimizationEffectiveness: "good",
       };
 
       // Calculate overall performance score
       metrics.overallPerformanceScore = this.calculatePerformanceScore(metrics);
-      metrics.optimizationEffectiveness = this.determineOptimizationEffectiveness(metrics.overallPerformanceScore);
+      metrics.optimizationEffectiveness = this.determineOptimizationEffectiveness(
+        metrics.overallPerformanceScore
+      );
 
       this.metrics.push(metrics);
 
@@ -214,8 +218,9 @@ export class PerformanceMonitor {
         this.metrics = this.metrics.slice(-this.maxMetricsHistory);
       }
 
-      this.logger.debug(`[PerformanceMonitor] Collected metrics - Score: ${metrics.overallPerformanceScore.toFixed(1)}`);
-
+      this.logger.debug(
+        `[PerformanceMonitor] Collected metrics - Score: ${metrics.overallPerformanceScore.toFixed(1)}`
+      );
     } catch (error) {
       this.logger.error("[PerformanceMonitor] Failed to collect metrics:", error);
     }
@@ -226,10 +231,10 @@ export class PerformanceMonitor {
    */
   generateReport(periodHours: number = 1): PerformanceReport {
     const now = new Date();
-    const periodStart = new Date(now.getTime() - (periodHours * 60 * 60 * 1000));
-    
-    const periodMetrics = this.metrics.filter(m => m.timestamp >= periodStart);
-    
+    const periodStart = new Date(now.getTime() - periodHours * 60 * 60 * 1000);
+
+    const periodMetrics = this.metrics.filter((m) => m.timestamp >= periodStart);
+
     if (periodMetrics.length === 0) {
       throw new Error("No metrics available for the specified period");
     }
@@ -243,63 +248,73 @@ export class PerformanceMonitor {
         end: now,
         durationMs: now.getTime() - periodStart.getTime(),
       },
-      
+
       optimizations: {
         loggerFixes: {
-          status: 'completed',
-          impact: 'high',
+          status: "completed",
+          impact: "high",
           metrics: {
             errorsEliminated: Math.max(0, this.baseline.loggerErrors - averageMetrics.loggerErrors),
-            undefinedReferencesFixed: Math.max(0, this.baseline.loggerErrors - averageMetrics.loggerUndefinedReferences),
+            undefinedReferencesFixed: Math.max(
+              0,
+              this.baseline.loggerErrors - averageMetrics.loggerUndefinedReferences
+            ),
             stabilityImprovement: this.calculateLoggerStabilityImprovement(averageMetrics),
           },
         },
-        
+
         agentHealthOptimization: {
-          status: 'completed',
-          impact: 'high',
+          status: "completed",
+          impact: "high",
           metrics: {
             cacheHitRate: averageMetrics.agentHealthCacheHitRate,
-            responseTimeReduction: this.calculateResponseTimeReduction(averageMetrics.agentHealthAverageResponseTime),
+            responseTimeReduction: this.calculateResponseTimeReduction(
+              averageMetrics.agentHealthAverageResponseTime
+            ),
             averageResponseTime: averageMetrics.agentHealthAverageResponseTime,
             checksUnder500ms: this.calculateChecksUnder500ms(periodMetrics),
           },
         },
-        
+
         enhancedCoordination: {
-          status: 'completed',
-          impact: 'high',
+          status: "completed",
+          impact: "high",
           metrics: {
             initializationSuccess: averageMetrics.coordinationSystemActive,
             systemStability: this.calculateSystemStability(averageMetrics),
             coordinationEfficiency: this.calculateCoordinationEfficiency(averageMetrics),
           },
         },
-        
+
         agentRegistryTiming: {
-          status: 'completed',
-          impact: 'high',
+          status: "completed",
+          impact: "high",
           metrics: {
-            warningsEliminated: Math.max(0, this.baseline.workflowWarnings - averageMetrics.workflowValidationWarnings),
+            warningsEliminated: Math.max(
+              0,
+              this.baseline.workflowWarnings - averageMetrics.workflowValidationWarnings
+            ),
             registrationTimingOptimal: averageMetrics.workflowValidationWarnings === 0,
             validationSuccess: averageMetrics.workflowValidationWarnings === 0,
           },
         },
       },
-      
+
       overall: {
         performanceScore: averageMetrics.overallPerformanceScore,
         improvementPercentage: this.calculateOverallImprovement(averageMetrics),
         systemStability: this.calculateSystemStability(averageMetrics),
         recommendedNextSteps: this.generateRecommendations(averageMetrics, trends),
       },
-      
+
       metrics: periodMetrics,
       averageMetrics,
       trends,
     };
 
-    this.logger.info(`[PerformanceMonitor] Generated report for ${periodHours}h period - Score: ${report.overall.performanceScore.toFixed(1)}`);
+    this.logger.info(
+      `[PerformanceMonitor] Generated report for ${periodHours}h period - Score: ${report.overall.performanceScore.toFixed(1)}`
+    );
 
     return report;
   }
@@ -314,12 +329,12 @@ export class PerformanceMonitor {
     optimizationStatus: string;
   } {
     const latestMetrics = this.metrics[this.metrics.length - 1];
-    
+
     return {
       isMonitoring: this.isMonitoring,
       metricsCollected: this.metrics.length,
       latestScore: latestMetrics?.overallPerformanceScore || 0,
-      optimizationStatus: latestMetrics?.optimizationEffectiveness || 'unknown',
+      optimizationStatus: latestMetrics?.optimizationEffectiveness || "unknown",
     };
   }
 
@@ -379,42 +394,61 @@ export class PerformanceMonitor {
   // Calculation methods
   private calculatePerformanceScore(metrics: PerformanceMetrics): number {
     // Weighted score based on optimization targets
-    const responseTimeScore = Math.max(0, 100 - (metrics.systemResponseTime / 20));
+    const responseTimeScore = Math.max(0, 100 - metrics.systemResponseTime / 20);
     const cacheScore = metrics.agentHealthCacheHitRate;
     const coordinationScore = metrics.coordinationSystemActive ? 100 : 0;
     const warningScore = metrics.workflowValidationWarnings === 0 ? 100 : 50;
-    const loggerScore = Math.max(0, 100 - (metrics.loggerErrors * 2));
+    const loggerScore = Math.max(0, 100 - metrics.loggerErrors * 2);
 
-    return (responseTimeScore * 0.2 + cacheScore * 0.3 + coordinationScore * 0.2 + 
-            warningScore * 0.2 + loggerScore * 0.1);
+    return (
+      responseTimeScore * 0.2 +
+      cacheScore * 0.3 +
+      coordinationScore * 0.2 +
+      warningScore * 0.2 +
+      loggerScore * 0.1
+    );
   }
 
-  private determineOptimizationEffectiveness(score: number): 'excellent' | 'good' | 'moderate' | 'poor' {
-    if (score >= 85) return 'excellent';
-    if (score >= 70) return 'good';
-    if (score >= 55) return 'moderate';
-    return 'poor';
+  private determineOptimizationEffectiveness(
+    score: number
+  ): "excellent" | "good" | "moderate" | "poor" {
+    if (score >= 85) return "excellent";
+    if (score >= 70) return "good";
+    if (score >= 55) return "moderate";
+    return "poor";
   }
 
   private calculateAverageMetrics(metrics: PerformanceMetrics[]): PerformanceMetrics {
-    const sum = metrics.reduce((acc, m) => ({
-      systemResponseTime: acc.systemResponseTime + m.systemResponseTime,
-      systemThroughput: acc.systemThroughput + m.systemThroughput,
-      systemLoadAverage: acc.systemLoadAverage + m.systemLoadAverage,
-      agentHealthCacheHitRate: acc.agentHealthCacheHitRate + m.agentHealthCacheHitRate,
-      agentHealthAverageResponseTime: acc.agentHealthAverageResponseTime + m.agentHealthAverageResponseTime,
-      agentHealthChecksPerMinute: acc.agentHealthChecksPerMinute + m.agentHealthChecksPerMinute,
-      coordinationInitializationTime: acc.coordinationInitializationTime + m.coordinationInitializationTime,
-      workflowValidationWarnings: acc.workflowValidationWarnings + m.workflowValidationWarnings,
-      loggerErrors: acc.loggerErrors + m.loggerErrors,
-      loggerUndefinedReferences: acc.loggerUndefinedReferences + m.loggerUndefinedReferences,
-      overallPerformanceScore: acc.overallPerformanceScore + m.overallPerformanceScore,
-    }), {
-      systemResponseTime: 0, systemThroughput: 0, systemLoadAverage: 0,
-      agentHealthCacheHitRate: 0, agentHealthAverageResponseTime: 0, agentHealthChecksPerMinute: 0,
-      coordinationInitializationTime: 0, workflowValidationWarnings: 0,
-      loggerErrors: 0, loggerUndefinedReferences: 0, overallPerformanceScore: 0,
-    });
+    const sum = metrics.reduce(
+      (acc, m) => ({
+        systemResponseTime: acc.systemResponseTime + m.systemResponseTime,
+        systemThroughput: acc.systemThroughput + m.systemThroughput,
+        systemLoadAverage: acc.systemLoadAverage + m.systemLoadAverage,
+        agentHealthCacheHitRate: acc.agentHealthCacheHitRate + m.agentHealthCacheHitRate,
+        agentHealthAverageResponseTime:
+          acc.agentHealthAverageResponseTime + m.agentHealthAverageResponseTime,
+        agentHealthChecksPerMinute: acc.agentHealthChecksPerMinute + m.agentHealthChecksPerMinute,
+        coordinationInitializationTime:
+          acc.coordinationInitializationTime + m.coordinationInitializationTime,
+        workflowValidationWarnings: acc.workflowValidationWarnings + m.workflowValidationWarnings,
+        loggerErrors: acc.loggerErrors + m.loggerErrors,
+        loggerUndefinedReferences: acc.loggerUndefinedReferences + m.loggerUndefinedReferences,
+        overallPerformanceScore: acc.overallPerformanceScore + m.overallPerformanceScore,
+      }),
+      {
+        systemResponseTime: 0,
+        systemThroughput: 0,
+        systemLoadAverage: 0,
+        agentHealthCacheHitRate: 0,
+        agentHealthAverageResponseTime: 0,
+        agentHealthChecksPerMinute: 0,
+        coordinationInitializationTime: 0,
+        workflowValidationWarnings: 0,
+        loggerErrors: 0,
+        loggerUndefinedReferences: 0,
+        overallPerformanceScore: 0,
+      }
+    );
 
     const count = metrics.length;
     return {
@@ -425,23 +459,26 @@ export class PerformanceMonitor {
       agentHealthCacheHitRate: sum.agentHealthCacheHitRate / count,
       agentHealthAverageResponseTime: sum.agentHealthAverageResponseTime / count,
       agentHealthChecksPerMinute: sum.agentHealthChecksPerMinute / count,
-      coordinationSystemActive: metrics.filter(m => m.coordinationSystemActive).length / count > 0.8,
+      coordinationSystemActive:
+        metrics.filter((m) => m.coordinationSystemActive).length / count > 0.8,
       coordinationInitializationTime: sum.coordinationInitializationTime / count,
       workflowValidationWarnings: sum.workflowValidationWarnings / count,
       loggerErrors: sum.loggerErrors / count,
       loggerUndefinedReferences: sum.loggerUndefinedReferences / count,
       overallPerformanceScore: sum.overallPerformanceScore / count,
-      optimizationEffectiveness: this.determineOptimizationEffectiveness(sum.overallPerformanceScore / count),
+      optimizationEffectiveness: this.determineOptimizationEffectiveness(
+        sum.overallPerformanceScore / count
+      ),
     };
   }
 
   private analyzeTrends(metrics: PerformanceMetrics[]): {
-    responseTime: 'improving' | 'stable' | 'degrading';
-    cachePerformance: 'improving' | 'stable' | 'degrading';
-    systemStability: 'improving' | 'stable' | 'degrading';
+    responseTime: "improving" | "stable" | "degrading";
+    cachePerformance: "improving" | "stable" | "degrading";
+    systemStability: "improving" | "stable" | "degrading";
   } {
     if (metrics.length < 2) {
-      return { responseTime: 'stable', cachePerformance: 'stable', systemStability: 'stable' };
+      return { responseTime: "stable", cachePerformance: "stable", systemStability: "stable" };
     }
 
     const midpoint = Math.floor(metrics.length / 2);
@@ -452,12 +489,24 @@ export class PerformanceMonitor {
     const secondHalfAvg = this.calculateAverageMetrics(secondHalf);
 
     return {
-      responseTime: secondHalfAvg.systemResponseTime < firstHalfAvg.systemResponseTime ? 'improving' :
-                   secondHalfAvg.systemResponseTime > firstHalfAvg.systemResponseTime ? 'degrading' : 'stable',
-      cachePerformance: secondHalfAvg.agentHealthCacheHitRate > firstHalfAvg.agentHealthCacheHitRate ? 'improving' :
-                       secondHalfAvg.agentHealthCacheHitRate < firstHalfAvg.agentHealthCacheHitRate ? 'degrading' : 'stable',
-      systemStability: secondHalfAvg.overallPerformanceScore > firstHalfAvg.overallPerformanceScore ? 'improving' :
-                      secondHalfAvg.overallPerformanceScore < firstHalfAvg.overallPerformanceScore ? 'degrading' : 'stable',
+      responseTime:
+        secondHalfAvg.systemResponseTime < firstHalfAvg.systemResponseTime
+          ? "improving"
+          : secondHalfAvg.systemResponseTime > firstHalfAvg.systemResponseTime
+            ? "degrading"
+            : "stable",
+      cachePerformance:
+        secondHalfAvg.agentHealthCacheHitRate > firstHalfAvg.agentHealthCacheHitRate
+          ? "improving"
+          : secondHalfAvg.agentHealthCacheHitRate < firstHalfAvg.agentHealthCacheHitRate
+            ? "degrading"
+            : "stable",
+      systemStability:
+        secondHalfAvg.overallPerformanceScore > firstHalfAvg.overallPerformanceScore
+          ? "improving"
+          : secondHalfAvg.overallPerformanceScore < firstHalfAvg.overallPerformanceScore
+            ? "degrading"
+            : "stable",
     };
   }
 
@@ -472,20 +521,20 @@ export class PerformanceMonitor {
   }
 
   private calculateChecksUnder500ms(metrics: PerformanceMetrics[]): number {
-    const under500ms = metrics.filter(m => m.agentHealthAverageResponseTime < 500).length;
+    const under500ms = metrics.filter((m) => m.agentHealthAverageResponseTime < 500).length;
     return (under500ms / metrics.length) * 100;
   }
 
   private calculateSystemStability(metrics: PerformanceMetrics): number {
     // Based on coordination system uptime and low error rates
     const coordinationUptime = metrics.coordinationSystemActive ? 95 : 60;
-    const errorStability = Math.max(0, 100 - (metrics.loggerErrors * 5));
+    const errorStability = Math.max(0, 100 - metrics.loggerErrors * 5);
     return (coordinationUptime + errorStability) / 2;
   }
 
   private calculateCoordinationEfficiency(metrics: PerformanceMetrics): number {
     // Based on initialization time and warning elimination
-    const initEfficiency = Math.max(0, 100 - (metrics.coordinationInitializationTime / 50));
+    const initEfficiency = Math.max(0, 100 - metrics.coordinationInitializationTime / 50);
     const validationEfficiency = metrics.workflowValidationWarnings === 0 ? 100 : 70;
     return (initEfficiency + validationEfficiency) / 2;
   }
@@ -498,19 +547,29 @@ export class PerformanceMonitor {
     const validationImprovement = metrics.workflowValidationWarnings === 0 ? 100 : 50;
     const loggerImprovement = this.calculateLoggerStabilityImprovement(metrics);
 
-    return (responseTimeImprovement + cacheImprovement + coordinationImprovement + 
-            validationImprovement + loggerImprovement) / 5;
+    return (
+      (responseTimeImprovement +
+        cacheImprovement +
+        coordinationImprovement +
+        validationImprovement +
+        loggerImprovement) /
+      5
+    );
   }
 
   private generateRecommendations(metrics: PerformanceMetrics, trends: any): string[] {
     const recommendations: string[] = [];
 
     if (metrics.overallPerformanceScore < 70) {
-      recommendations.push("Overall performance score is below target - review system optimization");
+      recommendations.push(
+        "Overall performance score is below target - review system optimization"
+      );
     }
 
     if (metrics.agentHealthCacheHitRate < 70) {
-      recommendations.push("Agent health cache hit rate below 70% target - investigate cache configuration");
+      recommendations.push(
+        "Agent health cache hit rate below 70% target - investigate cache configuration"
+      );
     }
 
     if (metrics.systemResponseTime > 1000) {
@@ -518,10 +577,12 @@ export class PerformanceMonitor {
     }
 
     if (metrics.workflowValidationWarnings > 0) {
-      recommendations.push("Workflow validation warnings detected - check agent registration timing");
+      recommendations.push(
+        "Workflow validation warnings detected - check agent registration timing"
+      );
     }
 
-    if (trends.systemStability === 'degrading') {
+    if (trends.systemStability === "degrading") {
       recommendations.push("System stability trend is degrading - investigate recent changes");
     }
 

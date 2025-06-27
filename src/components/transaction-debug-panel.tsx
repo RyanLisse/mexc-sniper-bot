@@ -427,13 +427,13 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold">
-                {executions.filter((e) => e.status === "success").length}
+                {executions.filter((e: ExecutionRecord) => e.status === "success").length}
               </p>
               <p className="text-xs text-muted-foreground">Successful Executions</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold">
-                {transactions.filter((t) => t.status === "completed").length}
+                {transactions.filter((t: TransactionRecord) => t.status === "completed").length}
               </p>
               <p className="text-xs text-muted-foreground">Completed Transactions</p>
             </div>

@@ -195,7 +195,9 @@ export class CoreSafetyMonitoring {
           };
         }
       } catch (error) {
-        console.warn("Failed to get execution report, using fallback", { error: error.message });
+        console.warn("Failed to get execution report, using fallback", {
+          error: (error as Error)?.message,
+        });
         executionReport = {
           stats: {
             currentDrawdown: 0,
@@ -228,7 +230,7 @@ export class CoreSafetyMonitoring {
         }
       } catch (error) {
         console.warn("Failed to get pattern monitoring report, using fallback", {
-          error: error.message,
+          error: (error as Error)?.message,
         });
         patternReport = {
           status: "healthy",

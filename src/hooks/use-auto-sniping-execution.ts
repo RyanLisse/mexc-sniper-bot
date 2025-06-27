@@ -6,16 +6,79 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
 import { ApiClient } from "@/src/lib/api-client";
 import { createLogger, type LogContext } from "@/src/lib/unified-logger";
 import type { ApiErrorResponse, ApiResponse } from "@/src/types/common-interfaces";
-import type {
-  AutoSnipingConfig,
-  AutoSnipingExecutionReport,
-  ExecutionAlert,
-  ExecutionPosition,
-  ExecutionStats,
-} from "../services/optimized-auto-sniping-core";
+
+// Define missing types for auto-sniping execution
+export interface AutoSnipingExecutionReport {
+  totalExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  totalPnl: number;
+  successRate: number;
+
+  // Additional properties used in the code
+  config?: AutoSnipingConfig;
+  stats?: ExecutionStats;
+  activePositions?: ExecutionPosition[];
+  recentExecutions?: ExecutionPosition[];
+  activeAlerts?: ExecutionAlert[];
+}
+
+export interface ExecutionStats {
+  activePositions: number;
+  totalVolume: number;
+  averageExecutionTime: number;
+  successRate: number;
+
+  // Additional properties used in the dashboard
+  totalTrades: number;
+  successfulTrades: number;
+  failedTrades: number;
+  totalPnl: string;
+  dailyTradeCount: number;
+
+  // Additional properties for PerformanceMetrics component compatibility
+  slippageAverage: number;
+  maxDrawdown: number;
+  totalPnL: number; // Numeric version for PerformanceMetrics
+}
+
+export interface ExecutionPosition {
+  id: string;
+  symbol: string;
+  side: "BUY" | "SELL";
+  quantity: string | number;
+  price: number;
+  status: string;
+  timestamp: string;
+
+  // Additional properties used in the dashboard components
+  entryPrice: string | number;
+  currentPrice: string | number;
+  entryTime: string | Date;
+  patternMatch: {
+    confidence: number;
+    patternType: string;
+  };
+  stopLossPrice?: string | number;
+  takeProfitPrice?: string | number;
+  pnl?: number;
+}
+
+export interface ExecutionAlert {
+  id: string;
+  type: "info" | "warning" | "error";
+  message: string;
+  timestamp: string;
+
+  // Additional properties used in the code
+  severity: "error" | "info" | "critical" | "warning";
+  acknowledged: boolean;
+  symbol?: string;
+}
 
 // Create logger instance for hook
 const logger = createLogger("use-auto-sniping-execution", {
@@ -187,9 +250,17 @@ export function useAutoSnipingExecution(
           config: report.config || {},
           stats: report.stats || {
             totalTrades: 0,
+            successfulTrades: 0,
+            failedTrades: 0,
             successRate: 0,
             totalPnl: "0",
+            totalPnL: 0,
             dailyTradeCount: 0,
+            activePositions: 0,
+            totalVolume: 0,
+            averageExecutionTime: 0,
+            slippageAverage: 0,
+            maxDrawdown: 0,
           },
           activePositions: report.activePositions || [],
           recentExecutions: report.recentExecutions || [],
@@ -363,7 +434,7 @@ export function useAutoSnipingExecution(
     }
   }, [logger]);
 
-  // Close position - FIX: Remove circular dependencies  
+  // Close position - FIX: Remove circular dependencies
   const closePosition = useCallback(
     async (positionId: string, reason = "manual"): Promise<boolean> => {
       setState((prev) => ({ ...prev, isClosingPosition: true, error: null }));
@@ -475,39 +546,42 @@ export function useAutoSnipingExecution(
   );
 
   // Acknowledge alert - FIX: Add missing dependencies
-  const acknowledgeAlert = useCallback(async (alertId: string): Promise<boolean> => {
-    try {
-      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
-        action: "acknowledge_alert",
-        alertId,
-      });
-
-      // Update local state
-      setState((prev) => ({
-        ...prev,
-        activeAlerts: prev.activeAlerts.map((alert) =>
-          alert.id === alertId ? { ...alert, acknowledged: true } : alert
-        ),
-        unacknowledgedAlertsCount: Math.max(0, prev.unacknowledgedAlertsCount - 1),
-      }));
-
-      return true;
-    } catch (error) {
-      logger.error(
-        "Failed to acknowledge alert",
-        {
-          operation: "acknowledge_alert",
+  const acknowledgeAlert = useCallback(
+    async (alertId: string): Promise<boolean> => {
+      try {
+        await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
+          action: "acknowledge_alert",
           alertId,
-        },
-        error instanceof Error ? error : new Error(String(error))
-      );
-      setState((prev) => ({
-        ...prev,
-        error: error instanceof Error ? error.message : "Failed to acknowledge alert",
-      }));
-      return false;
-    }
-  }, [logger]);
+        });
+
+        // Update local state
+        setState((prev) => ({
+          ...prev,
+          activeAlerts: prev.activeAlerts.map((alert) =>
+            alert.id === alertId ? { ...alert, acknowledged: true } : alert
+          ),
+          unacknowledgedAlertsCount: Math.max(0, prev.unacknowledgedAlertsCount - 1),
+        }));
+
+        return true;
+      } catch (error) {
+        logger.error(
+          "Failed to acknowledge alert",
+          {
+            operation: "acknowledge_alert",
+            alertId,
+          },
+          error instanceof Error ? error : new Error(String(error))
+        );
+        setState((prev) => ({
+          ...prev,
+          error: error instanceof Error ? error.message : "Failed to acknowledge alert",
+        }));
+        return false;
+      }
+    },
+    [logger]
+  );
 
   // Clear acknowledged alerts - FIX: Add missing dependencies
   const clearAcknowledgedAlerts = useCallback(async (): Promise<number> => {
@@ -558,7 +632,7 @@ export function useAutoSnipingExecution(
 
       setAutoRefreshInterval(interval);
     },
-    [refreshInterval, loadExecutionReport, includePositions, includeHistory, includeAlerts]
+    [refreshInterval, loadExecutionReport, includePositions, includeHistory, includeAlerts, autoRefreshInterval]
   );
 
   // Stop auto-refresh
@@ -575,27 +649,27 @@ export function useAutoSnipingExecution(
       loadExecutionReport(includePositions, includeHistory, includeAlerts);
     }
     // Only run on mount and when load settings change
-  }, [loadOnMount, includePositions, includeHistory, includeAlerts]);
+  }, [loadOnMount, includePositions, includeHistory, includeAlerts, loadExecutionReport]);
 
   // Setup auto-refresh if enabled - FIXED: Avoid circular dependencies
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    
+
     if (autoRefresh) {
       interval = setInterval(() => {
         loadExecutionReport(includePositions, includeHistory, includeAlerts);
       }, refreshInterval);
-      
+
       setAutoRefreshInterval(interval);
     }
-    
+
     return () => {
       if (interval) {
         clearInterval(interval);
         setAutoRefreshInterval(null);
       }
     };
-  }, [autoRefresh, refreshInterval, includePositions, includeHistory, includeAlerts]);
+  }, [autoRefresh, refreshInterval, includePositions, includeHistory, includeAlerts, loadExecutionReport]);
 
   // Cleanup on unmount
   useEffect(() => {

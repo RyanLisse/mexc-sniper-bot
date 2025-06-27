@@ -16,6 +16,35 @@ import {
 } from "../services/multi-phase-trading-service";
 import { inngest } from "./client";
 
+// Type definitions
+interface StrategyAnalysisResult {
+  strategy: any;
+  analytics: {
+    executionTrend?: string;
+    [key: string]: unknown;
+  };
+  performanceMetrics: {
+    [key: string]: unknown;
+  };
+  currentPhases: number;
+  totalPhases: number;
+  efficiency: string;
+}
+
+// Type guard functions
+function isStrategyAnalysisResult(value: unknown): value is StrategyAnalysisResult {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as any).strategy === "object" &&
+    typeof (value as any).analytics === "object" &&
+    typeof (value as any).performanceMetrics === "object" &&
+    typeof (value as any).currentPhases === "number" &&
+    typeof (value as any).totalPhases === "number" &&
+    typeof (value as any).efficiency === "string"
+  );
+}
+
 // ===========================================
 // MULTI-PHASE STRATEGY INNGEST WORKFLOWS
 // ===========================================
@@ -93,12 +122,18 @@ export const createMultiPhaseStrategy = inngest.createFunction(
         const volatilityStrategy = StrategyPatterns.momentum("high");
         const preview = volatilityStrategy.preview();
         builder.addPhases(
-          preview.levels.map((l) => [l.percentage, l.sellPercentage] as [number, number])
+          preview.levels.map(
+            (l: { percentage: number; sellPercentage: number }) =>
+              [l.percentage, l.sellPercentage] as [number, number]
+          )
         );
       } else {
         // Use base strategy levels
         builder.addPhases(
-          baseStrategy.levels.map((l) => [l.percentage, l.sellPercentage] as [number, number])
+          baseStrategy.levels.map(
+            (l: { percentage: number; sellPercentage: number }) =>
+              [l.percentage, l.sellPercentage] as [number, number]
+          )
         );
       }
 
@@ -303,7 +338,7 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
       }
 
       const performanceMetrics = await Promise.all(
-        strategies.map(async (strategy) => {
+        strategies.map(async (strategy: any) => {
           try {
             const metrics = await multiPhaseTradingService.calculatePerformanceMetrics(
               strategy.id,
@@ -334,7 +369,7 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
         hasStrategies: true,
         count: strategies.length,
         performanceMetrics,
-        topPerformer: performanceMetrics.reduce((best, current) =>
+        topPerformer: performanceMetrics.reduce((best: any, current: any) =>
           (current.metrics?.totalPnlPercent || 0) > (best.metrics?.totalPnlPercent || 0)
             ? current
             : best
@@ -384,7 +419,7 @@ Current Market Data: ${marketData}
       summary: {
         strategiesAnalyzed: strategies.length,
         marketConfidence: marketAnalysis.marketConfidence,
-        hasActiveStrategies: strategies.some((s) => s.status === "active"),
+        hasActiveStrategies: strategies.some((s: any) => s.status === "active"),
         overallHealth: performanceAnalysis.hasStrategies ? "good" : "no_data",
       },
       timestamp: new Date().toISOString(),
@@ -421,6 +456,11 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
         efficiency: analytics.executionTrend,
       };
     });
+
+    // Type guard for strategy analysis result
+    if (!isStrategyAnalysisResult(strategyAnalysis)) {
+      throw new Error("Invalid strategy analysis result format");
+    }
 
     // Step 2: AI-powered optimization analysis
     const optimizationAnalysis = await step.run("ai-optimization-analysis", async () => {

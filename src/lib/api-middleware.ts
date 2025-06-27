@@ -462,7 +462,18 @@ async function applyAuthMiddleware(
           rateLimitType: "authStrict",
           skipRateLimit: true,
         });
-        // TODO: Add admin role check when role system is implemented
+        // Basic admin check - for now, any authenticated user with valid credentials
+        // Future: Implement proper role-based access control with admin role in database
+        if (!context.user || !context.user.id) {
+          throw new Error("Admin authentication failed - no valid user context");
+        }
+        
+        // Additional admin validation could be added here
+        // For example: checking specific admin email domains or user flags
+        const isValidAdmin = context.user.email && context.user.emailVerified;
+        if (!isValidAdmin) {
+          throw new Error("Admin access denied - insufficient privileges");
+        }
         logSecurityEvent({
           type: "AUTH_ATTEMPT",
           ip: context.clientIP!,

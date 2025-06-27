@@ -48,7 +48,7 @@ async function validateMexcCredentials() {
 
     // Test market data retrieval (public endpoint)
     console.log("\n📊 Market Data Test:");
-    const symbolsResponse = await mexcService.getAllSymbols();
+    const symbolsResponse = await mexcService.getSymbolsV2();
     
     if (!symbolsResponse.success) {
       console.log(`❌ Symbols API failed: ${symbolsResponse.error}`);

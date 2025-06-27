@@ -135,7 +135,7 @@ export class StartupInitializer {
         }
       } catch (initError) {
         // If already initialized, that's okay
-        if (initError instanceof Error && initError.message.includes('already initialized')) {
+        if (initError instanceof Error && initError.message.includes("already initialized")) {
           initialized.push("auto-sniping-system");
           console.info("[Startup] ✅ Auto-sniping system already initialized");
         } else {

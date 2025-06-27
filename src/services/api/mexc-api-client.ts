@@ -22,10 +22,14 @@ import type { EnhancedUnifiedCacheSystem } from "@/src/lib/enhanced-unified-cach
 import type { PerformanceMonitoringService } from "@/src/lib/performance-monitoring-service";
 import type { UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 import type { CircuitBreaker } from "../risk/circuit-breaker";
-import type { MexcResponseCache } from "./mexc-cache-manager";
+import { MexcRequestCache } from "./mexc-request-cache";
+import { MexcAuthService } from "./mexc-auth-service";
+import { MexcRetryService } from "./mexc-retry-service";
+import { MexcRequestService } from "./mexc-request-service";
+import { MexcTradingService } from "./mexc-trading-service";
 
-// Export all types for backward compatibility
-export type {
+// Import and export all types for backward compatibility
+import type {
   ApiClientStats,
   ApiParams,
   ApiParamValue,
@@ -41,6 +45,23 @@ export type {
   RetryConfig,
   TimeoutConfig,
 } from "./mexc-api-types";
+
+export type {
+  ApiClientStats,
+  ApiParams,
+  ApiParamValue,
+  ApiRequestConfig,
+  AuthenticationContext,
+  CacheEntry,
+  ErrorClassification,
+  HttpResponse,
+  PerformanceMetrics,
+  RateLimitInfo,
+  RequestContext,
+  RequestOptions,
+  RetryConfig,
+  TimeoutConfig,
+};
 
 // Export individual services for advanced usage
 export { MexcAuthService } from "./mexc-auth-service";
@@ -68,13 +89,13 @@ export class MexcApiClient {
   private retryService: MexcRetryService;
   private requestService: MexcRequestService;
   private tradingService: MexcTradingService;
-  private cache: MexcResponseCache;
+  private cache: MexcRequestCache;
   private reliabilityManager: CircuitBreaker;
   private stats: ApiClientStats;
 
   constructor(
     config: Required<UnifiedMexcConfig>,
-    cache: MexcResponseCache,
+    cache: MexcRequestCache,
     reliabilityManager: CircuitBreaker,
     enhancedCache?: EnhancedUnifiedCacheSystem,
     performanceMonitoring?: PerformanceMonitoringService

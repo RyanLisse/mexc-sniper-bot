@@ -329,13 +329,11 @@ export async function initializeEnhancedTelemetry(): Promise<{
             await result.sdk.shutdown();
             logger.info("OpenTelemetry SDK shutdown completed");
           } catch (error) {
-            logger.error(
-              "Error shutting down OpenTelemetry SDK",
-              {
-                operation: "telemetry_shutdown",
-              },
-              error instanceof Error ? error : new Error(String(error))
-            );
+            logger.error("Error shutting down OpenTelemetry SDK", {
+              operation: "telemetry_shutdown",
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined,
+            });
           }
         }
         process.exit(0);
@@ -344,14 +342,11 @@ export async function initializeEnhancedTelemetry(): Promise<{
 
     return result;
   } catch (error) {
-    logger.error(
-      "Failed to initialize enhanced OpenTelemetry",
-      {
-        operation: "telemetry_initialization",
-        error: error instanceof Error ? error.message : "Unknown error",
-      },
-      error instanceof Error ? error : new Error(String(error))
-    );
+    logger.error("Failed to initialize enhanced OpenTelemetry", {
+      operation: "telemetry_initialization",
+      error: error instanceof Error ? error.message : "Unknown error",
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
 
     return {
       success: false,

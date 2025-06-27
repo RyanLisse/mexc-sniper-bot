@@ -532,9 +532,11 @@ export class CacheWarmingService {
         .limit(10);
 
       // Warm up activity data for each currency
-      const currencies = [...new Set(recentActivities.map((a) => a.currency))];
+      const currencies = [...new Set(recentActivities.map((a: any) => a.currency))];
 
       for (const currency of currencies) {
+        if (typeof currency !== "string") continue;
+
         const cacheKey = `mexc:activity:${currency}`;
 
         // Check if already cached

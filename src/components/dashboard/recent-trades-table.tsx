@@ -242,3 +242,6 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
     </Card>
   );
 }
+
+// Add default export for dynamic imports
+export default RecentTradesTable;

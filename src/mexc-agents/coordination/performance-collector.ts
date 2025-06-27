@@ -229,7 +229,7 @@ export class PerformanceCollector {
         this.agentMetricsHistory.set(agent.id, agentHistory);
       } catch (error) {
         // Only log error if it's not a "not found" error (race condition)
-        if (!error.message?.includes("not found")) {
+        if (!(error as Error)?.message?.includes("not found")) {
           this.logger.error(
             `[PerformanceCollector] Failed to collect metrics for agent ${agent.id}:`,
             error
@@ -612,16 +612,110 @@ export class PerformanceCollector {
    */
   private async persistMetrics(): Promise<void> {
     try {
-      // This would require adding the performance tables to the schema
-      // For now, we'll just log the metrics
-      this.logger.info("[PerformanceCollector] Metrics collected successfully");
+      // Import database connection and schemas
+      const { db } = await import("../../db");
+      const { sql } = await import("drizzle-orm");
+      
+      // Create performance metrics tables if they don't exist
+      await this.ensurePerformanceTables(db);
+      
+      const timestamp = new Date();
+      const metricsSnapshot = {
+        timestamp: timestamp.toISOString(),
+        agent_metrics: JSON.stringify(this.agentMetrics),
+        workflow_metrics: JSON.stringify(this.workflowMetrics),
+        system_metrics: JSON.stringify(this.systemMetrics),
+        collection_interval: this.collectionInterval,
+        created_at: timestamp
+      };
 
-      // TODO: Implement database persistence when schema is ready
-      // await db.insert(agentPerformanceMetrics).values(...)
-      // await db.insert(workflowPerformanceMetrics).values(...)
-      // await db.insert(systemPerformanceSnapshots).values(...)
+      // Insert performance snapshot using raw SQL for flexibility
+      await db.execute(sql`
+        INSERT INTO performance_snapshots (
+          timestamp, agent_metrics, workflow_metrics, system_metrics, 
+          collection_interval, created_at
+        ) VALUES (
+          ${metricsSnapshot.timestamp},
+          ${metricsSnapshot.agent_metrics},
+          ${metricsSnapshot.workflow_metrics}, 
+          ${metricsSnapshot.system_metrics},
+          ${metricsSnapshot.collection_interval},
+          ${metricsSnapshot.created_at}
+        )
+      `);
+
+      // Cleanup old metrics (keep last 7 days)
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      await db.execute(sql`
+        DELETE FROM performance_snapshots 
+        WHERE created_at < ${sevenDaysAgo.toISOString()}
+      `);
+
+      this.logger.info("[PerformanceCollector] Metrics persisted to database successfully");
     } catch (error) {
       this.logger.error("[PerformanceCollector] Failed to persist metrics:", error);
+      // Fallback to file storage if database fails
+      await this.persistToFile();
+    }
+  }
+
+  private async ensurePerformanceTables(db: any): Promise<void> {
+    try {
+      const { sql } = await import("drizzle-orm");
+      
+      // Create performance_snapshots table if it doesn't exist
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS performance_snapshots (
+          id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+          timestamp TEXT NOT NULL,
+          agent_metrics TEXT NOT NULL,
+          workflow_metrics TEXT NOT NULL,
+          system_metrics TEXT NOT NULL,
+          collection_interval INTEGER NOT NULL,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Create index for faster queries
+      await db.execute(sql`
+        CREATE INDEX IF NOT EXISTS idx_performance_snapshots_timestamp 
+        ON performance_snapshots(timestamp)
+      `);
+      
+      await db.execute(sql`
+        CREATE INDEX IF NOT EXISTS idx_performance_snapshots_created_at 
+        ON performance_snapshots(created_at)
+      `);
+    } catch (error) {
+      this.logger.warn("[PerformanceCollector] Failed to ensure performance tables:", error);
+    }
+  }
+
+  private async persistToFile(): Promise<void> {
+    try {
+      // Fallback to file storage if database is unavailable
+      const fs = await import('fs/promises');
+      const path = await import('path');
+      
+      const metricsDir = path.join(process.cwd(), '.metrics');
+      await fs.mkdir(metricsDir, { recursive: true });
+      
+      const timestamp = new Date().toISOString().replace(/:/g, '-');
+      const filename = path.join(metricsDir, `performance-${timestamp}.json`);
+      
+      const metricsData = {
+        timestamp: new Date().toISOString(),
+        agentMetrics: this.agentMetrics,
+        workflowMetrics: this.workflowMetrics,
+        systemMetrics: this.systemMetrics,
+        collectionInterval: this.collectionInterval
+      };
+      
+      await fs.writeFile(filename, JSON.stringify(metricsData, null, 2));
+      this.logger.info(`[PerformanceCollector] Metrics saved to file: ${filename}`);
+    } catch (error) {
+      this.logger.error("[PerformanceCollector] Failed to persist to file:", error);
     }
   }
 

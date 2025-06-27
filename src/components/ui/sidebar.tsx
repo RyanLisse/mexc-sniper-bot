@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-// import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/src/hooks/use-mobile-clean";
 import { cn } from "../../lib/utils";
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
@@ -61,7 +61,7 @@ function SidebarProvider({
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }) {
-  const isMobile = false; // TODO: Implement proper mobile detection
+  const { isMobile } = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
 
   // This is the internal state of the sidebar.

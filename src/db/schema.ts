@@ -25,6 +25,9 @@ import {
 } from "./schemas/patterns";
 import {
   agentPerformanceMetrics,
+  insertAgentPerformanceMetricsSchema,
+  insertWorkflowPerformanceMetricsSchema,
+  insertSystemPerformanceSnapshotSchema,
   performanceAlerts,
   performanceBaselines,
   systemPerformanceSnapshots,
@@ -32,6 +35,7 @@ import {
 } from "./schemas/performance";
 import {
   errorIncidents,
+  errorLogs,
   positionSnapshots,
   reconciliationReports,
   riskEvents,
@@ -82,6 +86,7 @@ export {
   positionSnapshots,
   reconciliationReports,
   errorIncidents,
+  errorLogs,
   systemHealthMetrics,
   // Pattern tables
   coinActivities,
@@ -115,6 +120,13 @@ export {
   strategyConfigBackups,
 };
 
+// Export validation schemas
+export { 
+  insertAgentPerformanceMetricsSchema, 
+  insertWorkflowPerformanceMetricsSchema,
+  insertSystemPerformanceSnapshotSchema 
+};
+
 export type * from "./schemas/alerts";
 // Export all types
 export type * from "./schemas/auth";
@@ -141,6 +153,8 @@ const allTables = {
   transactions,
   transactionLocks,
   transactionQueue,
+  balanceSnapshots,
+  portfolioSummary,
 
   // Safety tables
   simulationSessions,
@@ -149,6 +163,7 @@ const allTables = {
   positionSnapshots,
   reconciliationReports,
   errorIncidents,
+  errorLogs,
   systemHealthMetrics,
 
   // Pattern tables

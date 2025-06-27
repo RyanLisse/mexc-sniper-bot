@@ -37,6 +37,7 @@ interface SlackBlock {
 }
 
 export class SlackProvider implements NotificationProvider {
+  private _logger: any;
   private get logger(): {
     info: (message: string, context?: any) => void;
     warn: (message: string, context?: any) => void;

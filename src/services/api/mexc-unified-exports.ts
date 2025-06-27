@@ -23,17 +23,12 @@ import type {
   CalendarEntry,
   ExchangeSymbol,
   Kline,
-  MarketStats,
   OrderBook,
   OrderParameters,
   OrderResult,
   OrderStatus,
-  PatternAnalysis,
-  Portfolio,
-  RiskAssessment,
   SymbolEntry,
   Ticker,
-  TradingOpportunity,
 } from "@/src/schemas/unified/mexc-api-schemas";
 // Import logger
 // Import the production-ready unified client (modular)
@@ -45,11 +40,12 @@ import {
 // Import the new unified V2 service
 import {
   getUnifiedMexcServiceV2,
-  type MexcServiceResponse,
   resetUnifiedMexcServiceV2,
-  type UnifiedMexcConfig,
+  type UnifiedMexcConfigV2,
   UnifiedMexcServiceV2,
 } from "./unified-mexc-service-v2";
+// Import MexcServiceResponse from schemas
+import type { MexcServiceResponse } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Primary Exports - Use These (Updated to use UnifiedMexcServiceV2)
@@ -60,7 +56,7 @@ export {
   UnifiedMexcServiceV2 as MexcServiceLayer,
   getUnifiedMexcServiceV2 as getRecommendedMexcService,
   resetUnifiedMexcServiceV2 as resetMexcService,
-  type UnifiedMexcConfig as MexcServiceConfig,
+  type UnifiedMexcConfigV2 as MexcServiceConfig,
   type MexcServiceResponse as ServiceResponse,
 };
 
@@ -78,8 +74,8 @@ export type {
   Kline,
 };
 
-// Advanced analytics and trading types
-export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskAssessment };
+// Advanced analytics and trading types (removed non-existent types)
+// export type { MarketStats, PatternAnalysis, TradingOpportunity, Portfolio, RiskAssessment };
 
 // ============================================================================
 // Convenience Functions and Aliases
@@ -149,7 +145,7 @@ export function getUnifiedMexcClient(config?: {
 // Legacy Type Aliases for Backward Compatibility
 // ============================================================================
 
-/** @deprecated Use UnifiedMexcConfig instead */
+/** @deprecated Use UnifiedMexcConfigV2 instead */
 export type UnifiedMexcResponse<T> = MexcServiceResponse<T>;
 
 /** @deprecated Use OrderParameters instead */

@@ -529,12 +529,4 @@ export function createStressTestingValidation(
 }
 
 // Export types for external use
-export type {
-  StressTestingConfig,
-  StressTestResult,
-  FlashCrashDetection,
-  ManipulationDetection,
-  LiquidityAssessment,
-  StressTestScenarioResult,
-  PortfolioRiskCalculation,
-};
+// (Types already exported above via interface declarations)

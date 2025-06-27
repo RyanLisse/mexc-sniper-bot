@@ -163,7 +163,7 @@ export function usePhase3FeatureStatus() {
         aiConfidenceThreshold: data.configuration.aiIntelligence.confidenceThreshold,
         patternConfidenceThreshold: data.configuration.patternDetection.confidenceThreshold,
       }
-    : null;
+    : undefined;
 
   return {
     data: featureStatus,

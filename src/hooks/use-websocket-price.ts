@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { webSocketPriceService } from "../services/websocket-price-service";
+import { webSocketPriceService } from "../services/data/websocket-price-service";
 
 interface PriceUpdate {
   symbol: string;
@@ -92,7 +92,7 @@ export function useWebSocketPrice(
       }
 
       // Subscribe to price updates
-      const unsubscribe = webSocketPriceService.subscribe(symbol, (priceUpdate) => {
+      const unsubscribe = webSocketPriceService.subscribe(symbol, (priceUpdate: PriceUpdate) => {
         if (isMountedRef.current) {
           setPrice(priceUpdate);
           setError(null);
@@ -242,7 +242,7 @@ export function useWebSocketPrices(
         }
 
         // Subscribe to price updates
-        const unsubscribe = webSocketPriceService.subscribe(symbol, (priceUpdate) => {
+        const unsubscribe = webSocketPriceService.subscribe(symbol, (priceUpdate: PriceUpdate) => {
           if (isMountedRef.current) {
             setPrices((prev) => {
               const newPrices = new Map(prev);

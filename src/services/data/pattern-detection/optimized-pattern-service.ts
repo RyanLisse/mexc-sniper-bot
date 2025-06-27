@@ -245,7 +245,7 @@ export class OptimizedPatternService {
 
     // Create lookup set for O(1) duplicate checking
     const existingCombinations = new Set(
-      existingTargets.map((target) => `${target.userId}:${target.symbolName}`)
+      existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
     );
 
     // Filter out duplicates in O(n) time

@@ -192,8 +192,8 @@ afterAll(async () => {
   // Clean up file handles and network connections
   try {
     // Close any open WebSocket connections
-    if (global.WebSocket && typeof global.WebSocket.close === 'function') {
-      global.WebSocket.close();
+    if (global.WebSocket && global.WebSocket.CLOSED !== undefined) {
+      // WebSocket constants are available
     }
 
     // Clean up fetch mock

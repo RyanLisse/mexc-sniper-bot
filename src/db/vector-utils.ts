@@ -112,7 +112,7 @@ export class VectorUtils {
 
       // Calculate similarities client-side
       const results = candidates
-        .map((candidate) => {
+        .map((candidate: any) => {
           const candidateEmbedding = JSON.parse(candidate.embedding) as number[];
           const similarity = VectorUtils.calculateCosineSimilarity(embedding, candidateEmbedding);
           const distance = VectorUtils.calculateEuclideanDistance(embedding, candidateEmbedding);
@@ -123,8 +123,8 @@ export class VectorUtils {
             distance,
           };
         })
-        .filter((result) => result.similarity >= threshold)
-        .sort((a, b) => b.similarity - a.similarity)
+        .filter((result: any) => result.similarity >= threshold)
+        .sort((a: any, b: any) => b.similarity - a.similarity)
         .slice(0, limit);
 
       return results;

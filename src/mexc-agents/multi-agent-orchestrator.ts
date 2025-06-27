@@ -458,7 +458,7 @@ export class MultiAgentOrchestrator {
 
   private log(message: string, ...args: any[]): void {
     if (this.config.enableLogging) {
-      logger.info(`[MultiAgentOrchestrator] ${message}`, ...args);
+      this.logger.info(`[MultiAgentOrchestrator] ${message}`, ...args);
     }
   }
 }

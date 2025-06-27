@@ -242,7 +242,7 @@ export function cacheable(ttl: number = 60000) {
 
     descriptor.value = async function (...args: unknown[]) {
       const cache = getGlobalCache();
-      const cacheKey = `${target.constructor.name}:${propertyKey}:${JSON.stringify(args)}`;
+      const cacheKey = `${(target as any).constructor.name}:${propertyKey}:${JSON.stringify(args)}`;
 
       // Try to get from cache first
       const cached = cache.get(cacheKey);

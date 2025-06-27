@@ -14,8 +14,8 @@
 
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import OpenAI from "openai";
-import { getRecommendedMexcService } from "../services/mexc-unified-exports";
-import { getUserCredentials } from "../services/user-credentials-service";
+import { getRecommendedMexcService } from "../services/api/mexc-unified-exports";
+import { getUserCredentials } from "../services/api/user-credentials-service";
 import type {
   ConfigValidationResult,
   CredentialValidationResult,

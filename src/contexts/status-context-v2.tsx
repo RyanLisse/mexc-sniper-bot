@@ -344,7 +344,7 @@ export function StatusProvider({
 
   // Refresh Functions using React Query invalidation
   const refreshAll = useCallback(async () => {
-    await refreshMutation.mutateAsync();
+    await refreshMutation.mutateAsync({});
   }, [refreshMutation]);
 
   const refreshNetwork = useCallback(async () => {

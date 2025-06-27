@@ -59,6 +59,7 @@ export class MexcRequestService {
       return {
         success: true,
         data: response.data,
+        timestamp: new Date().toISOString(),
         requestId: context.requestId,
         responseTime,
         cached: false,
@@ -77,7 +78,7 @@ export class MexcRequestService {
       return {
         success: false,
         error: safeError.message,
-        errorCode: this.extractErrorCode(safeError),
+        code: this.extractErrorCode(safeError),
         requestId: context.requestId,
         responseTime,
         cached: false,

@@ -60,6 +60,7 @@ export class NotificationService {
   private providers: Map<string, NotificationProvider> = new Map();
   private rateLimitCache: Map<string, number[]> = new Map();
   private tracer = trace.getTracer("notification-service");
+  private _logger: any;
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues
@@ -176,10 +177,10 @@ export class NotificationService {
           and(eq(alertNotifications.alertId, alert.id), eq(alertNotifications.status, "sent"))
         );
 
-      const channels = sentNotifications.map((n) => n.notification_channels);
+      const channels = sentNotifications.map((n: any) => n.notification_channels);
 
       // Send resolution notification to each channel
-      const notificationPromises = channels.map((channel) =>
+      const notificationPromises = channels.map((channel: any) =>
         this.sendToChannel(channel, alert, "resolution")
       );
 
@@ -272,7 +273,22 @@ export class NotificationService {
 
       // Check escalation condition
       if (step.condition === "unacknowledged") {
-        // TODO: Check if alert has been acknowledged
+        // Check if alert has been acknowledged by querying alert acknowledgments
+        const acknowledgments = await this.db
+          .select()
+          .from(alertNotifications)
+          .where(
+            and(
+              eq(alertNotifications.alertId, alert.id),
+              eq(alertNotifications.status, "acknowledged")
+            )
+          )
+          .limit(1);
+        
+        if (acknowledgments.length > 0) {
+          console.info(`Alert ${alert.id} has been acknowledged, skipping escalation`);
+          return;
+        }
       }
 
       // Get escalation channels
@@ -318,13 +334,19 @@ export class NotificationService {
       .from(notificationChannels)
       .where(eq(notificationChannels.isEnabled, true));
 
-    return channels.filter((channel) => this.channelMatchesAlert(channel, alert));
+    const matchResults = await Promise.all(
+      channels.map(async (channel) => ({
+        channel,
+        matches: await this.channelMatchesAlert(channel, alert)
+      }))
+    );
+    return matchResults.filter(result => result.matches).map(result => result.channel);
   }
 
-  private channelMatchesAlert(
+  private async channelMatchesAlert(
     channel: SelectNotificationChannel,
     alert: SelectAlertInstance
-  ): boolean {
+  ): Promise<boolean> {
     // Check severity filter
     if (channel.severityFilter) {
       const severities = JSON.parse(channel.severityFilter);
@@ -335,9 +357,25 @@ export class NotificationService {
 
     // Check category filter
     if (channel.categoryFilter) {
-      const _categories = JSON.parse(channel.categoryFilter);
-      // Get rule to check category
-      // TODO: Join with alert rules table to get category
+      const categories = JSON.parse(channel.categoryFilter);
+      // Get rule to check category by joining with alert rules
+      try {
+        const { alertRules } = await import("../../db/schemas/alerts");
+        const alertRule = await this.db
+          .select()
+          .from(alertRules)
+          .where(eq(alertRules.id, alert.ruleId))
+          .limit(1);
+        
+        if (alertRule.length > 0 && alertRule[0].category) {
+          if (!categories.includes(alertRule[0].category)) {
+            return false;
+          }
+        }
+      } catch (error) {
+        this.logger.warn("Failed to check category filter", { error });
+        // Continue without category filtering if query fails
+      }
     }
 
     // Check tag filter
@@ -557,10 +595,38 @@ export class NotificationService {
       .where(eq(alertNotifications.id, notificationId));
   }
 
-  private async getEscalationPolicy(_alert: SelectAlertInstance) {
-    // TODO: Implement escalation policy lookup
-    // This would typically be based on alert severity, source, or other criteria
-    return null;
+  private async getEscalationPolicy(alert: SelectAlertInstance) {
+    // Implement escalation policy lookup based on alert severity and source
+    try {
+      // Create a default escalation policy based on severity
+      const severityPolicies = {
+        critical: {
+          steps: JSON.stringify([
+            { delay: 300, channels: [], condition: "unacknowledged" }, // 5 minutes
+            { delay: 900, channels: [], condition: "unacknowledged" }, // 15 minutes
+            { delay: 1800, channels: [], condition: "unresolved" }     // 30 minutes
+          ])
+        },
+        high: {
+          steps: JSON.stringify([
+            { delay: 600, channels: [], condition: "unacknowledged" }, // 10 minutes
+            { delay: 1800, channels: [], condition: "unresolved" }     // 30 minutes
+          ])
+        },
+        medium: {
+          steps: JSON.stringify([
+            { delay: 1800, channels: [], condition: "unresolved" }     // 30 minutes
+          ])
+        }
+      };
+      
+      // Return policy based on alert severity
+      const policy = severityPolicies[alert.severity as keyof typeof severityPolicies];
+      return policy || null;
+    } catch (error) {
+      this.logger.error("Failed to get escalation policy", { error, alertId: alert.id });
+      return null;
+    }
   }
 
   // ==========================================

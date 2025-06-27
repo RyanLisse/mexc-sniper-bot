@@ -157,3 +157,6 @@ export const OptimizedActivityFeed = React.memo(
 );
 
 OptimizedActivityFeed.displayName = "OptimizedActivityFeed";
+
+// Add default export for dynamic imports
+export default OptimizedActivityFeed;

@@ -127,9 +127,9 @@ export abstract class SafetyBaseAgent extends BaseAgent {
 
     // Log critical events
     if (severity === "critical") {
-      logger.error(`[${this.config.name}] CRITICAL SAFETY EVENT:`, message, data);
+      logger.error(`[${this.config.name}] CRITICAL SAFETY EVENT: ${message}`, data);
     } else if (severity === "high") {
-      logger.warn(`[${this.config.name}] HIGH SEVERITY EVENT:`, message, data);
+      logger.warn(`[${this.config.name}] HIGH SEVERITY EVENT: ${message}`, data);
     } else {
       logger.info(`[${this.config.name}] Safety event:`, message);
     }

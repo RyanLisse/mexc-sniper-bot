@@ -29,13 +29,16 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
       port: 8081, // Use different port to avoid conflicts
       host: 'localhost',
       path: '/test-ws',
-      authentication: { required: false }
+      authentication: { 
+        required: false,
+        tokenValidation: async (token: string) => ({ valid: true, userId: 'test' })
+      }
     });
     
     client = new WebSocketClientService({
       url: 'ws://localhost:8081/test-ws',
-      authentication: { token: 'test-token' },
-      reconnection: { enabled: true, maxAttempts: 3 }
+      authentication: { token: 'test-token', autoRefresh: false },
+      reconnection: { enabled: true, maxAttempts: 3, delay: 1000, maxDelay: 5000 }
     });
     
     streamService = MexcWebSocketStreamService.getInstance();
@@ -390,7 +393,10 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
     it('should handle async connection operations properly', async () => {
       const server = new WebSocketServerService({
         port: 8082,
-        authentication: { required: false }
+        authentication: { 
+          required: false,
+          tokenValidation: async (token: string) => ({ valid: true, userId: 'test' })
+        }
       });
 
       await server.start();
@@ -428,7 +434,7 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
   describe('Error Handling and Recovery', () => {
     it('should handle connection errors gracefully', () => {
       const client = new WebSocketClientService({
-        reconnection: { enabled: true, maxAttempts: 2 }
+        reconnection: { enabled: true, maxAttempts: 2, delay: 1000, maxDelay: 5000 }
       });
 
       let errorReceived = false;

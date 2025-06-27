@@ -92,7 +92,7 @@ export function StreamlinedWorkflowStatus({
         }
       );
     },
-    staleTime: 30000, // Increased to 30 seconds to reduce conflicts  
+    staleTime: 30000, // Increased to 30 seconds to reduce conflicts
     refetchInterval: autoRefresh ? 45000 : false, // Reduced frequency to 45 seconds
     retry: 2,
   });

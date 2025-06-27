@@ -481,12 +481,4 @@ export function createDynamicCalculations(config: DynamicCalculationsConfig): Dy
 }
 
 // Export types for external use
-export type {
-  DynamicCalculationsConfig,
-  StopLossRecommendation,
-  TakeProfitRecommendation,
-  PositionSizeValidation,
-  VolatilityAdjustment,
-  StopLossValidation,
-  DiversificationAssessment,
-};
+// (Types already exported above via interface declarations)

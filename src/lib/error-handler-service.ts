@@ -1,4 +1,4 @@
-import { ErrorLoggingService } from "../services/error-logging-service";
+import { ErrorLoggingService } from "../services/notification/error-logging-service";
 import { AppError, ErrorCode, ErrorSeverity, isAppError, toAppError } from "./error-types";
 export interface ErrorHandlerConfig {
   enableLogging?: boolean;
@@ -126,7 +126,7 @@ export class ErrorHandlerService {
           await this.delay(currentDelay);
           currentDelay = Math.min(
             currentDelay * retryOptions.backoffMultiplier!,
-            retryOptions.maxDelayMs
+            retryOptions.maxDelayMs ?? 5000
           );
         }
       }

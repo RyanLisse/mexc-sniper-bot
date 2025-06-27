@@ -475,11 +475,16 @@ export class PatternStrategyOrchestrator {
       );
 
       if (readyPatterns.length > 0) {
-        const strategyResponse = await this.strategyAgent.createTradingStrategy(
-          `Strategy for ${request.input.vcoinId}: Ready state pattern detected with ${readyPatterns.length} matches`,
-          "medium",
-          "short"
-        );
+        const strategyResponse = await this.strategyAgent.createStrategy({
+          action: "create",
+          symbols: [request.input.vcoinId],
+          timeframe: "short",
+          riskLevel: "medium",
+          parameters: {
+            description: `Strategy for ${request.input.vcoinId}: Ready state pattern detected with ${readyPatterns.length} matches`,
+            patternMatches: readyPatterns.length
+          }
+        });
 
         results.agentResponses!["strategy-creation"] = strategyResponse;
       }
@@ -880,7 +885,7 @@ export class PatternStrategyOrchestrator {
         .limit(50); // Limit to prevent excessive API calls
 
       // Transform database records to SymbolEntry format for pattern analysis
-      const symbolEntries: SymbolEntry[] = monitoredSymbols.map((symbol) => ({
+      const symbolEntries: SymbolEntry[] = monitoredSymbols.map((symbol: any) => ({
         cd: symbol.symbolName,
         symbol: symbol.symbolName,
         sts: symbol.patternSts || 0,

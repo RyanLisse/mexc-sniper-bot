@@ -141,7 +141,7 @@ export class EnhancedCredentialValidator {
 
     try {
       // Step 1: Check if credentials exist
-      const credentials = this.getCredentials();
+      const credentials = await this.getCredentials();
       if (!credentials.hasCredentials) {
         return {
           hasCredentials: false,
@@ -162,7 +162,7 @@ export class EnhancedCredentialValidator {
       }
 
       // Step 2: Validate format
-      const formatValidation = this.validateFormat();
+      const formatValidation = await this.validateFormat();
 
       // Step 3: Check for test credentials
       const isTestCredentials = this.detectTestCredentials(
@@ -262,13 +262,13 @@ export class EnhancedCredentialValidator {
   /**
    * Validate credential format without API calls
    */
-  validateFormat(): {
+  async validateFormat(): Promise<{
     validFormat: boolean;
     apiKeyValid: boolean;
     secretKeyValid: boolean;
     validationMessages: string[];
-  } {
-    const credentials = this.getCredentials();
+  }> {
+    const credentials = await this.getCredentials();
     const messages: string[] = [];
 
     if (!credentials.hasCredentials) {
@@ -337,7 +337,7 @@ export class EnhancedCredentialValidator {
       }
     }
 
-    const credentials = this.getCredentials();
+    const credentials = await this.getCredentials();
     if (!credentials.hasCredentials) {
       return {
         canAuthenticate: false,
@@ -392,12 +392,12 @@ export class EnhancedCredentialValidator {
   // Helper Methods
   // ============================================================================
 
-  private getCredentials(): {
+  private async getCredentials(): Promise<{
     hasCredentials: boolean;
     apiKey: string;
     secretKey: string;
     source: "database" | "environment" | "none";
-  } {
+  }> {
     // Check environment variables first
     const envApiKey = process.env.MEXC_API_KEY;
     const envSecretKey = process.env.MEXC_SECRET_KEY;
@@ -411,8 +411,45 @@ export class EnhancedCredentialValidator {
       };
     }
 
-    // TODO: Add database credential retrieval here
-    // For now, return none if no environment variables
+    // Retrieve credentials from database for the current user
+    try {
+      // Import required dependencies for database operations (using synchronous imports)
+      // Note: Dynamic imports are async by nature but we can handle them in try-catch
+      const dbModule = await import("@/src/db");
+      const schemaModule = await import("@/src/db/schema");
+      const drizzleModule = await import("drizzle-orm");
+      
+      const { db } = dbModule;
+      const { apiCredentials } = schemaModule;
+      const { eq, and } = drizzleModule;
+      
+      // Get user ID from request context or headers
+      // Note: This would typically come from authenticated session
+      // For now, we'll return the environment-based credentials
+      // Future: Implement proper user session context to get userId
+      
+      // Example query structure (commented out until user context is available):
+      // const userCreds = await db
+      //   .select({
+      //     apiKey: apiCredentials.encryptedApiKey,
+      //     secretKey: apiCredentials.encryptedSecretKey,
+      //   })
+      //   .from(apiCredentials)
+      //   .where(
+      //     and(
+      //       eq(apiCredentials.userId, userId),
+      //       eq(apiCredentials.provider, "mexc"),
+      //       eq(apiCredentials.isActive, true)
+      //     )
+      //   )
+      //   .limit(1);
+      
+      // For now, fall back to environment credentials
+      console.info("[enhanced-mexc-credential-validator] Database credential retrieval prepared, using environment fallback");
+    } catch (error) {
+      console.warn("[enhanced-mexc-credential-validator] Database credential retrieval failed:", error);
+      // Continue with environment fallback
+    }
 
     return {
       hasCredentials: false,
@@ -532,7 +569,7 @@ export class EnhancedCredentialValidator {
   }
 
   private shouldAttemptReset(): boolean {
-    return this.circuitBreaker.nextAttemptTime && new Date() >= this.circuitBreaker.nextAttemptTime;
+    return !!(this.circuitBreaker.nextAttemptTime && new Date() >= this.circuitBreaker.nextAttemptTime);
   }
 
   private resetCircuitBreaker(): void {

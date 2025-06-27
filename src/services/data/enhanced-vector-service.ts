@@ -214,7 +214,17 @@ export class EnhancedVectorService {
         "native_vector_similarity_search",
         async () => {
           return await executeWithRetry(async () => {
-            return await db.execute(sql.raw(query, parameters));
+            // Replace PostgreSQL-style placeholders with actual values
+            let queryWithParams = query;
+            parameters.forEach((param, index) => {
+              const placeholder = `$${index + 1}`;
+              const value = typeof param === "string" ? `'${param.replace(/'/g, "''")}'` : param;
+              queryWithParams = queryWithParams.replace(
+                new RegExp(`\\$${index + 1}`, "g"),
+                String(value)
+              );
+            });
+            return await db.execute(sql.raw(queryWithParams));
           });
         },
         {
@@ -396,6 +406,7 @@ export class EnhancedVectorService {
             threshold,
             limit,
             useNativeOps: true,
+            maxResults: limit,
           });
           return { index, results: searchResults };
         });
@@ -411,6 +422,7 @@ export class EnhancedVectorService {
             threshold,
             limit,
             useNativeOps: true,
+            maxResults: limit,
           });
           results[i] = searchResults;
         }

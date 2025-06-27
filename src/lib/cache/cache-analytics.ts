@@ -100,6 +100,7 @@ export class CacheAnalyticsManager {
           degradedAgents: healthStats.degradedAgents,
           unhealthyAgents: healthStats.unhealthyAgents,
           averageResponseTime: healthStats.averageResponseTime,
+          systemLoad: healthStats.systemLoad || 0,
         },
         recommendations: recommendations,
       };
@@ -119,6 +120,7 @@ export class CacheAnalyticsManager {
           degradedAgents: 0,
           unhealthyAgents: 0,
           averageResponseTime: 0,
+          systemLoad: 0,
         },
         recommendations: ["Error retrieving analytics - please check system health"],
       };
@@ -217,8 +219,8 @@ export class CacheAnalyticsManager {
         : 0;
 
     // Determine system health
-    const unhealthyAgents = analytics.agentHealthStats.unhealthyAgents;
-    const degradedAgents = analytics.agentHealthStats.degradedAgents;
+    const unhealthyAgents = analytics.healthMonitoring.unhealthyAgents;
+    const degradedAgents = analytics.healthMonitoring.degradedAgents;
     let systemHealth: "healthy" | "degraded" | "critical" = "healthy";
 
     if (unhealthyAgents > 0 || overallHitRate < 30) {

@@ -70,7 +70,9 @@ export class OptimizedLRUCache<K, V> {
     } else if (this.cache.size >= this.capacity) {
       // Remove least recently used (first item) - O(1) operation
       const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
+      }
     }
 
     this.cache.set(key, { value, timestamp: now, expiresAt });

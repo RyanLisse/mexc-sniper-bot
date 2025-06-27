@@ -200,7 +200,7 @@ export default defineConfig({
     // Reporter configuration - optimized for performance
     reporters: process.env.CI 
       ? ['github-actions', 'json']
-      : process.env.VERBOSE_TESTS === 'true' ? ['verbose'] : ['basic'], // Minimal reporting for speed
+      : process.env.VERBOSE_TESTS === 'true' ? ['verbose'] : [['default', { summary: false }]], // Minimal reporting for speed
       
     // Output configuration
     outputFile: {

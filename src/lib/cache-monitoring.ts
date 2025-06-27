@@ -483,10 +483,9 @@ export class CacheMonitoringSystem {
 
         // Optimize cache sizes
         const optimizationResults = globalCacheManager.optimize();
-        actions.push(
-          `Evicted ${optimizationResults.evicted} entries, promoted ${optimizationResults.promoted}`
-        );
-        improvements.performanceImprovement = optimizationResults.promoted * 10; // Estimate ms saved
+        actions.push(...optimizationResults.actions);
+        // Merge optimization improvements
+        Object.assign(improvements, optimizationResults.improvements);
       }
 
       // Optimize based on hit rate

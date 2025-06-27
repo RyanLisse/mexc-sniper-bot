@@ -8,42 +8,8 @@
 import { lazy, memo, Suspense, useMemo } from "react";
 import { ErrorBoundary } from "../error-boundary";
 
-// Safely lazy load Recharts components to reduce initial bundle size with error handling
-const LazyRecharts = lazy(() =>
-  import("recharts")
-    .then((module) => ({
-      default: {
-        Area: module.Area,
-        AreaChart: module.AreaChart,
-        CartesianGrid: module.CartesianGrid,
-        ResponsiveContainer: module.ResponsiveContainer,
-        Tooltip: module.Tooltip,
-        XAxis: module.XAxis,
-        YAxis: module.YAxis,
-      },
-    }))
-    .catch((error) => {
-      console.warn("Failed to load Recharts components in PerformanceTab:", error);
-      // Return fallback components that render safely
-      return {
-        default: {
-          Area: () => null,
-          AreaChart: ({ children }: { children?: React.ReactNode }) => (
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
-              Chart unavailable
-            </div>
-          ),
-          CartesianGrid: () => null,
-          ResponsiveContainer: ({ children }: { children?: React.ReactNode }) => (
-            <div className="w-full h-full">{children}</div>
-          ),
-          Tooltip: () => null,
-          XAxis: () => null,
-          YAxis: () => null,
-        },
-      };
-    })
-);
+// Import Recharts components directly to avoid complex dynamic import typing issues
+import { AreaChart, Area, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -78,24 +44,32 @@ export const PerformanceTab = memo(function PerformanceTab({
             <CardDescription>Daily profit and loss over the last 30 days</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis tickFormatter={formatCurrency} />
-                <Tooltip
-                  formatter={currencyTooltipFormatter}
-                  labelFormatter={(date) => `Date: ${date}`}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="pnl"
-                  stroke="#8884d8"
-                  fill="#8884d8"
-                  fillOpacity={0.6}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Suspense
+              fallback={
+                <div className="w-full h-[300px] animate-pulse bg-gray-100 rounded">
+                  Loading chart...
+                </div>
+              }
+            >
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis tickFormatter={formatCurrency} />
+                  <Tooltip
+                    formatter={currencyTooltipFormatter}
+                    labelFormatter={(date: string | number) => `Date: ${date}`}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="pnl"
+                    stroke="#8884d8"
+                    fill="#8884d8"
+                    fillOpacity={0.6}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Suspense>
           </CardContent>
         </Card>
 

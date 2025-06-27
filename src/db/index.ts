@@ -29,8 +29,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // Lazy logger initialization to prevent build-time errors and race conditions
 function getLogger() {
   // Use a local static variable to ensure thread-safety
-  if (!getLogger._logger) {
-    getLogger._logger = {
+  if (!(getLogger as any)._logger) {
+    (getLogger as any)._logger = {
       info: (message: string, context?: any) => console.info("[db-index]", message, context || ""),
       warn: (message: string, context?: any) => console.warn("[db-index]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
@@ -39,7 +39,7 @@ function getLogger() {
         console.debug("[db-index]", message, context || ""),
     };
   }
-  return getLogger._logger;
+  return (getLogger as any)._logger;
 }
 
 async function withRetry<T>(
@@ -135,7 +135,7 @@ function createPostgresClient() {
 // Create mock database for testing
 function createMockDatabase() {
   // Create a thenable mock that resolves to empty array
-  const createThenable = (result = []) => {
+  const createThenable = (result: any[] = []) => {
     const thenable = {
       then: (resolve: any) => resolve(result),
       catch: (reject: any) => reject,
@@ -293,14 +293,13 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
 // Export schema for use in other files
 export * from "./schema";
 
-// Import necessary schema elements for user preferences
-import { userPreferences } from "./schemas/auth";
 import { eq } from "drizzle-orm";
-
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
+// Import necessary schema elements for user preferences
+import { userPreferences } from "./schemas/auth";
 
 // Database utilities with retry logic
 export async function initializeDatabase() {
@@ -391,7 +390,7 @@ export async function executeOptimizedSelect<T>(
   cacheKey?: string,
   cacheTTL?: number
 ): Promise<T> {
-  return databaseConnectionPool.executeSelect(queryFn, cacheKey, cacheTTL);
+  return databaseConnectionPool.executeSelect(queryFn, cacheKey || "default", cacheTTL);
 }
 
 export async function executeOptimizedWrite<T>(
@@ -435,46 +434,43 @@ export async function monitoredQuery<T>(
 // User Preferences Database Operations
 export async function getUserPreferences(userId: string): Promise<any | null> {
   try {
-    const result = await executeWithRetry(
-      async () => db
-        .select()
-        .from(userPreferences)
-        .where(eq(userPreferences.userId, userId))
-        .limit(1),
-      'getUserPreferences'
-    ) as any[];
+    const result = (await executeWithRetry(
+      async () =>
+        db.select().from(userPreferences).where(eq(userPreferences.userId, userId)).limit(1),
+      "getUserPreferences"
+    )) as any[];
 
     if (result.length === 0) {
       return null;
     }
 
     const prefs = result[0];
-    
+
     // Safe pattern parsing with fallbacks
     let patternParts: number[] = [2, 2, 4]; // Default fallback
     try {
-      if (prefs.readyStatePattern && typeof prefs.readyStatePattern === 'string') {
+      if (prefs.readyStatePattern && typeof prefs.readyStatePattern === "string") {
         const parts = prefs.readyStatePattern.split(",").map(Number);
         if (parts.length >= 3 && parts.every((p: number) => !isNaN(p) && p > 0)) {
           patternParts = parts;
         }
       }
     } catch (error) {
-      getLogger().warn('Failed to parse readyStatePattern, using defaults:', { 
-        pattern: prefs.readyStatePattern, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      getLogger().warn("Failed to parse readyStatePattern, using defaults:", {
+        pattern: prefs.readyStatePattern,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
 
     // Safe JSON parsing helper
     const safeJsonParse = (jsonString: string | null | undefined, fallback: any = undefined) => {
-      if (!jsonString || typeof jsonString !== 'string') return fallback;
+      if (!jsonString || typeof jsonString !== "string") return fallback;
       try {
         return JSON.parse(jsonString);
       } catch (error) {
-        getLogger().warn('Failed to parse JSON field:', { 
-          jsonString: jsonString.substring(0, 100), 
-          error: error instanceof Error ? error.message : 'Unknown error' 
+        getLogger().warn("Failed to parse JSON field:", {
+          jsonString: jsonString.substring(0, 100),
+          error: error instanceof Error ? error.message : "Unknown error",
         });
         return fallback;
       }
@@ -489,7 +485,7 @@ export async function getUserPreferences(userId: string): Promise<any | null> {
       readyStatePatternParts: patternParts,
     };
   } catch (error) {
-    getLogger().error('Failed to get user preferences:', { userId, error });
+    getLogger().error("Failed to get user preferences:", { userId, error });
     throw error;
   }
 }

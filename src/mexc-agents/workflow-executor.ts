@@ -288,7 +288,7 @@ export class WorkflowExecutor {
       context.currentStep = "strategy-analysis";
       const strategyAnalysis = await this.agentManager.getStrategyAgent().createStrategy({
         action: "create",
-        symbols: [request.symbolData.cd],
+        symbols: [(request.symbolData as any)?.cd],
         riskLevel: request.riskLevel || "medium",
         timeframe: "medium",
       });

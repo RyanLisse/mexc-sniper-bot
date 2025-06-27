@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
           tt: 4,
           price: "1.0000",
           volume: "1000",
-          ca: Date.now(),
+          ca: Date.now().toString(),
           ps: 1000000,
           qs: 1000000
         };

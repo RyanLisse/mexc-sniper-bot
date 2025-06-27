@@ -406,11 +406,12 @@ export class PatternTargetIntegrationService {
 
     return {
       totalTargetsCreated: allTargets.length,
-      activeTargets: allTargets.filter((t) => ["pending", "ready", "executing"].includes(t.status))
-        .length,
-      readyTargets: allTargets.filter((t) => t.status === "ready").length,
-      pendingTargets: allTargets.filter((t) => t.status === "pending").length,
-      executingTargets: allTargets.filter((t) => t.status === "executing").length,
+      activeTargets: allTargets.filter((t: any) =>
+        ["pending", "ready", "executing"].includes(t.status)
+      ).length,
+      readyTargets: allTargets.filter((t: any) => t.status === "ready").length,
+      pendingTargets: allTargets.filter((t: any) => t.status === "pending").length,
+      executingTargets: allTargets.filter((t: any) => t.status === "executing").length,
     };
   }
 }

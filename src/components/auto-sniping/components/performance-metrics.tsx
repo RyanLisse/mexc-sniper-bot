@@ -7,7 +7,7 @@
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import type { PerformanceMetrics } from "@/src/services/trading/consolidated/core-trading.types";
+import type { ExecutionStats } from "@/src/hooks/use-auto-sniping-execution";
 
 interface PerformanceMetricsProps {
   successRate: number;
@@ -61,7 +61,7 @@ export function PerformanceMetrics({
               <p className="text-xs text-gray-600">Avg Execution</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-lg font-semibold">{stats.averageSlippage.toFixed(2)}%</div>
+              <div className="text-lg font-semibold">{stats.slippageAverage.toFixed(2)}%</div>
               <p className="text-xs text-gray-600">Avg Slippage</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded">
@@ -69,8 +69,8 @@ export function PerformanceMetrics({
               <p className="text-xs text-gray-600">Max Drawdown</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-lg font-semibold">{stats.averageTradeReturn.toFixed(1)}%</div>
-              <p className="text-xs text-gray-600">Avg Return</p>
+              <div className="text-lg font-semibold">{stats.totalPnL.toFixed(1)}</div>
+              <p className="text-xs text-gray-600">Total P&L</p>
             </div>
           </div>
         )}

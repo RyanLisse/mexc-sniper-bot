@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "@/src/lib/api-response";
 import { useAuth } from "@/src/lib/kinde-auth-client";
 import { queryKeys } from "@/src/lib/query-client";
-import type { CalendarEntry, SymbolEntry } from "../services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 
 // MEXC Calendar Data Hook
 export function useMexcCalendar() {
@@ -337,7 +337,9 @@ export function useReadyLaunches() {
 
 // Legacy hook for backward compatibility - DEPRECATED: Use useReadyLaunches instead
 export function useReadyTargets() {
-  console.warn("useReadyTargets is deprecated. Use useReadyLaunches instead for calendar launches or useSnipeTargets for actual trading targets.");
+  console.warn(
+    "useReadyTargets is deprecated. Use useReadyLaunches instead for calendar launches or useSnipeTargets for actual trading targets."
+  );
   return useReadyLaunches();
 }
 
@@ -355,14 +357,14 @@ export function useSnipeTargets(userId?: string) {
       const response = await fetch(`/api/snipe-targets?userId=${userId}`, {
         credentials: "include",
       });
-      
+
       if (!response.ok) {
         if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
           return [];
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const result = await response.json();
       return result.success ? result.data : [];
     },

@@ -61,6 +61,7 @@ export interface PatternMonitoringReport {
 }
 
 export class PatternMonitoringService {
+  private _logger: any;
   private get logger() {
     if (!this._logger) {
       this._logger = {

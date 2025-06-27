@@ -461,7 +461,37 @@ export class AlertConfigurationService {
           .limit(1);
 
         if (existing.length === 0) {
-          const ruleId = await this.createAlertRule(template, createdBy);
+          // Ensure template conforms to schema by creating a properly typed object
+          const validatedTemplate: z.infer<typeof AlertRuleConfigSchema> = {
+            name: template.name,
+            description: template.description,
+            category: template.category,
+            severity: template.severity,
+            metricName: template.metricName,
+            operator: template.operator,
+            threshold: template.threshold,
+            aggregationWindow: template.aggregationWindow,
+            evaluationInterval: template.evaluationInterval,
+            useAnomalyDetection: template.useAnomalyDetection ?? false,
+            anomalyThreshold: template.anomalyThreshold ?? 2.0,
+            maxAlerts: (template as any).maxAlerts ?? 10,
+            tags: (template as any).tags ?? [],
+            ...((template as any).learningWindow && {
+              learningWindow: (template as any).learningWindow,
+            }),
+            ...((template as any).suppressionDuration && {
+              suppressionDuration: (template as any).suppressionDuration,
+            }),
+            ...((template as any).escalationDelay && {
+              escalationDelay: (template as any).escalationDelay,
+            }),
+            ...((template as any).correlationKey && {
+              correlationKey: (template as any).correlationKey,
+            }),
+            ...((template as any).parentRuleId && { parentRuleId: (template as any).parentRuleId }),
+            ...((template as any).customFields && { customFields: (template as any).customFields }),
+          };
+          const ruleId = await this.createAlertRule(validatedTemplate, createdBy);
           deployedRules.push(ruleId);
           console.info(`Deployed built-in rule: ${template.name}`);
         } else {
@@ -505,7 +535,11 @@ export class AlertConfigurationService {
     skipped: number;
     errors: string[];
   }> {
-    const result = { imported: 0, skipped: 0, errors: [] };
+    const result: { imported: number; skipped: number; errors: string[] } = {
+      imported: 0,
+      skipped: 0,
+      errors: [],
+    };
 
     // Import rules
     if (config.rules && Array.isArray(config.rules)) {
@@ -614,7 +648,11 @@ export class AlertConfigurationService {
     errors: string[];
     warnings: string[];
   }> {
-    const result = { isValid: true, errors: [], warnings: [] };
+    const result: { isValid: boolean; errors: string[]; warnings: string[] } = {
+      isValid: true,
+      errors: [],
+      warnings: [],
+    };
 
     try {
       AlertRuleConfigSchema.parse(config);
@@ -677,7 +715,7 @@ export class AlertConfigurationService {
 
   private async getRulesStatistics() {
     const allRules = await this.db.select().from(alertRules);
-    const enabledRules = allRules.filter((r) => r.isEnabled);
+    const enabledRules = allRules.filter((r: any) => r.isEnabled);
 
     const byCategory: Record<string, number> = {};
     const bySeverity: Record<string, number> = {};
@@ -697,7 +735,7 @@ export class AlertConfigurationService {
 
   private async getChannelsStatistics() {
     const allChannels = await this.db.select().from(notificationChannels);
-    const enabledChannels = allChannels.filter((c) => c.isEnabled);
+    const enabledChannels = allChannels.filter((c: any) => c.isEnabled);
 
     const byType: Record<string, number> = {};
 
@@ -714,7 +752,7 @@ export class AlertConfigurationService {
 
   private async getPoliciesStatistics() {
     const allPolicies = await this.db.select().from(escalationPolicies);
-    const enabledPolicies = allPolicies.filter((p) => p.isEnabled);
+    const enabledPolicies = allPolicies.filter((p: any) => p.isEnabled);
 
     return {
       total: allPolicies.length,

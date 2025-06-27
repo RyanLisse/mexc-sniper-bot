@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../../db";
 import { patternEmbeddings } from "../../../db/schemas/patterns";
-import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "../../../services/api/mexc-unified-exports";
 import type { IPatternStorage } from "../interfaces";
 
 describe("PatternStorage - TDD Implementation", () => {
@@ -41,7 +41,7 @@ describe("PatternStorage - TDD Implementation", () => {
         sts: 2,
         st: 2,
         tt: 4,
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };

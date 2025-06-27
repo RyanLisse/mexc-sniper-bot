@@ -116,7 +116,7 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
     try {
       // Log request start with type-safe context
-      logger.api(request.method, new URL(request.url).pathname, undefined, {
+      logger.api(new URL(request.url).pathname, request.method, 0, {
         requestId,
         operation: "request_start",
         userAgent: request.headers.get("user-agent"),
@@ -125,13 +125,12 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
       // Validate HTTP method
       if (options.method && request.method !== options.method) {
-        return createErrorResponse(
-          `Method ${request.method} not allowed. Expected ${options.method}`,
-          {
+        return apiResponse(
+          createErrorResponse(`Method ${request.method} not allowed. Expected ${options.method}`, {
             code: "METHOD_NOT_ALLOWED",
             requestId,
             requestDuration: `${Date.now() - startTime}ms`,
-          },
+          }),
           HTTP_STATUS.METHOD_NOT_ALLOWED
         );
       }
@@ -378,9 +377,9 @@ export function createCorsHeaders(origin?: string) {
  * Handle CORS preflight OPTIONS requests
  */
 export function handleOptionsRequest(origin?: string) {
-  return apiResponse(
-    createSuccessResponse(null, { message: "CORS preflight request" }),
-    HTTP_STATUS.OK,
-    createCorsHeaders(origin)
-  );
+  const { NextResponse } = require("next/server");
+  return NextResponse.json(createSuccessResponse(null, { message: "CORS preflight request" }), {
+    status: HTTP_STATUS.OK,
+    headers: createCorsHeaders(origin),
+  });
 }

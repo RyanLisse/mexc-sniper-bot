@@ -5,7 +5,7 @@
  */
 
 import { DollarSign, Hash, Percent } from "lucide-react";
-import type { ExecutionStats as ExecutionStatsType } from "../schemas/validation-schemas";
+import type { ExecutionStats as ExecutionStatsType } from "@/src/hooks/use-auto-sniping-execution";
 import { StatusIndicator } from "./status-indicator";
 
 interface ExecutionStatsProps {

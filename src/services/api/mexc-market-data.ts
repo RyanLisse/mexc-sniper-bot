@@ -91,7 +91,7 @@ export class MexcMarketDataClient extends MexcClientCore {
               "firstOpenTime" in entry &&
               Boolean(entry.firstOpenTime)
           )
-          .map((entry): CalendarEntry | undefined => {
+          .map((entry: any): CalendarEntry | undefined => {
             try {
               return CalendarEntrySchema.parse({
                 vcoinId: String(entry.vcoinId),
@@ -104,7 +104,9 @@ export class MexcMarketDataClient extends MexcClientCore {
               return undefined;
             }
           })
-          .filter((entry): entry is CalendarEntry => entry !== undefined);
+          .filter(
+            (entry: CalendarEntry | undefined): entry is CalendarEntry => entry !== undefined
+          );
       }
       // Fallback: check if data is directly an array (for backward compatibility)
       else if (response.data?.data && Array.isArray(response.data.data)) {
@@ -120,7 +122,7 @@ export class MexcMarketDataClient extends MexcClientCore {
               "firstOpenTime" in entry &&
               Boolean(entry.firstOpenTime)
           )
-          .map((entry): CalendarEntry | undefined => {
+          .map((entry: any): CalendarEntry | undefined => {
             try {
               return CalendarEntrySchema.parse({
                 vcoinId: String(entry.vcoinId),
@@ -133,7 +135,9 @@ export class MexcMarketDataClient extends MexcClientCore {
               return undefined;
             }
           })
-          .filter((entry): entry is CalendarEntry => entry !== undefined);
+          .filter(
+            (entry: CalendarEntry | undefined): entry is CalendarEntry => entry !== undefined
+          );
       }
 
       console.info(`[MexcMarketData] Retrieved ${calendarData.length} calendar entries`);
@@ -445,7 +449,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         "Connectivity Test"
       );
 
-      const success = result.success && result.data?.success;
+      const success = Boolean(result.success && result.data?.success);
       console.info("[MexcMarketData] Connectivity test result:", success);
       return success;
     } catch (error) {

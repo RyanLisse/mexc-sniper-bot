@@ -7,7 +7,7 @@
  * OPTIMIZATION: Replaces duplicate validation logic across multiple modules
  */
 
-import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import type { PatternAnalysisRequest, PatternMatch } from "../interfaces";
 
 export interface ValidationResult {
@@ -219,10 +219,10 @@ export function validateAnalysisRequest(request: PatternAnalysisRequest): Valida
   }
 
   // Performance warnings
-  if (request.symbols?.length > 1000) {
+  if ((request.symbols?.length || 0) > 1000) {
     warnings.push("Large number of symbols may impact performance");
   }
-  if (request.calendarEntries?.length > 500) {
+  if ((request.calendarEntries?.length || 0) > 500) {
     warnings.push("Large number of calendar entries may impact performance");
   }
 

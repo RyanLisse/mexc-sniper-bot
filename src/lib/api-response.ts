@@ -29,6 +29,23 @@ export interface ApiResponse<T = unknown> {
     version?: string;
     environment?: string;
     requestId?: string;
+    statusCode?: number;
+    errorCode?: string;
+    [key: string]: unknown;
+  };
+  /** Compatibility alias for metadata */
+  metadata?: {
+    timestamp?: string;
+    count?: number;
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+    version?: string;
+    environment?: string;
+    requestId?: string;
+    statusCode?: number;
+    errorCode?: string;
     [key: string]: unknown;
   };
 }
@@ -177,6 +194,7 @@ export const HTTP_STATUS = {
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,
+  METHOD_NOT_ALLOWED: 405,
   CONFLICT: 409,
   UNPROCESSABLE_ENTITY: 422,
   TOO_MANY_REQUESTS: 429,

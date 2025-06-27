@@ -416,7 +416,7 @@ export class EventHandling {
         status: "failed",
       });
 
-      operation.lastError = error.message;
+      operation.lastError = (error as Error)?.message;
       this.stats.totalErrors++;
 
       console.error(

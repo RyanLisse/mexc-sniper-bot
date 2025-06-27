@@ -12,7 +12,7 @@ import type { PatternAnalysisRequest } from "@/src/core/pattern-detection";
 import { EnhancedPatternDetectionCore } from "@/src/core/pattern-detection/pattern-detection-core-enhanced";
 import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { CalendarWorkflow } from "@/src/mexc-agents/calendar-workflow";
-import type { CalendarEntry } from "@/src/services/mexc-unified-exports";
+import type { CalendarEntry } from "@/src/services/api/mexc-unified-exports";
 
 export interface CalendarEventData {
   eventType: "new_listings" | "upcoming_launches" | "ready_candidates" | "schedule_changes";

@@ -7,8 +7,8 @@
 
 import { EventEmitter } from "events";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 import { AutoSnipingModule } from "./auto-sniping";
 // Import modules
 import { ManualTradingModule } from "./manual-trading";
@@ -361,15 +361,15 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     // Map base status to extended status with frontend-expected fields
     const extendedStatus: ExtendedServiceStatus = {
       ...baseStatus,
-      
+
       // Frontend-specific fields with appropriate defaults/mappings
-      status: baseStatus.isHealthy ? 'active' : 'idle',
+      status: baseStatus.isHealthy ? "active" : "idle",
       targetCounts: {
         memory: 0, // Would need to get from auto-sniping service
         database: 0, // Would need to get from database
         unified: baseStatus.activePositions,
         isConsistent: true,
-        source: 'unified',
+        source: "unified",
       },
       stateConsistency: {
         isConsistent: baseStatus.isHealthy,
@@ -381,7 +381,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       successRate: performanceMetrics.successRate,
       totalProfit: performanceMetrics.totalPnL,
       lastExecution: baseStatus.lastTradeTime?.toISOString() || new Date().toISOString(),
-      safetyStatus: baseStatus.currentRiskLevel === 'critical' ? 'unsafe' : 'safe',
+      safetyStatus: baseStatus.currentRiskLevel === "critical" ? "unsafe" : "safe",
       patternDetectionActive: autoSnipingStatus.isActive,
       executionCount: performanceMetrics.totalTrades,
       successCount: performanceMetrics.successfulTrades,
@@ -495,7 +495,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     const metrics = await this.getPerformanceMetrics();
     const positions = await this.getActivePositions();
     const status = await this.getServiceStatus();
-    
+
     return {
       status,
       metrics,

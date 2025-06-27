@@ -108,3 +108,6 @@ export function TradingChart({ className }: TradingChartProps) {
     </Card>
   );
 }
+
+// Optimized default export for dynamic loading
+export { TradingChart as default };

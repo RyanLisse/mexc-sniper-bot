@@ -5,8 +5,8 @@
  * These interfaces ensure clean architecture and testability.
  */
 
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 
 // ============================================================================
 // Core Pattern Types (Preserved from original engine)
@@ -212,6 +212,22 @@ export interface PatternDetectionMetrics {
   cacheHitRatio: number;
   errorCount: number;
   warningCount: number;
+}
+
+// ============================================================================
+// Event Data Interface for Enhanced Pattern Detection
+// ============================================================================
+
+export interface PatternDetectionEventData {
+  patternType: string;
+  matches: PatternMatch[];
+  metadata: {
+    source: string;
+    timestamp: Date;
+    averageConfidence: number;
+    algorithmVersion: string;
+    processingTime: number;
+  };
 }
 
 // ============================================================================

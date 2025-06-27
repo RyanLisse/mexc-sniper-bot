@@ -157,7 +157,7 @@ Provide specific pattern matches with confidence levels and clear action items.
 
   async discoverNewListings(calendarEntries: CalendarEntry[]): Promise<AgentResponse> {
     try {
-      logger.info(
+      this.logger.info(
         `[PatternDiscoveryAgent] Starting discovery analysis on ${calendarEntries.length} calendar entries`
       );
 
@@ -243,7 +243,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
       const patternSummary = this.generatePatternSummary(processedData);
       const enhancedContent = `${aiResponse.content}\n\n**Pattern Analysis Summary:**\n${JSON.stringify(patternSummary, null, 2)}`;
 
-      logger.info(
+      this.logger.info(
         `[PatternDiscoveryAgent] Successfully analyzed ${calendarEntries.length} entries, found ${patternSummary.totalOpportunities} opportunities`
       );
 
@@ -254,7 +254,7 @@ Provide specific pattern matches with confidence scores and actionable recommend
         },
       };
     } catch (error) {
-      logger.error(`[PatternDiscoveryAgent] Discovery analysis failed:`, error);
+      this.logger.error(`[PatternDiscoveryAgent] Discovery analysis failed:`, error);
       return {
         content: `Pattern discovery analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -694,7 +694,7 @@ Provide a detailed reliability assessment with specific confidence percentages a
     analysisType: "discovery" | "monitoring" | "execution";
   }): Promise<AgentResponse> {
     try {
-      logger.info(
+      this.logger.info(
         `[PatternDiscoveryAgent] Analyzing patterns for ${params.vcoinId} - type: ${params.analysisType}`
       );
 
@@ -748,10 +748,13 @@ Provide specific pattern matches with confidence levels, timing recommendations,
         },
       ]);
 
-      logger.info(`[PatternDiscoveryAgent] Pattern analysis completed for ${params.vcoinId}`);
+      this.logger.info(`[PatternDiscoveryAgent] Pattern analysis completed for ${params.vcoinId}`);
       return response;
     } catch (error) {
-      logger.error(`[PatternDiscoveryAgent] Pattern analysis failed for ${params.vcoinId}:`, error);
+      this.logger.error(
+        `[PatternDiscoveryAgent] Pattern analysis failed for ${params.vcoinId}:`,
+        error
+      );
       return {
         content: `Pattern analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {

@@ -463,6 +463,7 @@ export function useRealTimeSafetyMonitoring(
         }
       };
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, loadSafetyReport]);
 
   // Initial load

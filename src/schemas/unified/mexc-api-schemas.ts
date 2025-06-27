@@ -47,6 +47,47 @@ export type MexcCacheConfig = z.infer<typeof MexcCacheConfigSchema>;
 export type MexcReliabilityConfig = z.infer<typeof MexcReliabilityConfigSchema>;
 
 // ============================================================================
+// Unified MEXC Configuration Schema
+// ============================================================================
+
+export const UnifiedMexcConfigSchema = z.object({
+  // API Configuration
+  apiKey: z.string().min(1, "API key is required"),
+  secretKey: z.string().min(1, "Secret key is required"),
+  passphrase: z.string().optional(),
+  baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
+  timeout: z.number().positive("Timeout must be positive").default(10000),
+  
+  // Cache Configuration
+  enableCaching: z.boolean().default(true),
+  cacheTTL: z.number().positive("Cache TTL must be positive").default(30000),
+  apiResponseTTL: z.number().positive("API response TTL must be positive").default(1500),
+  
+  // Reliability Configuration
+  enableCircuitBreaker: z.boolean().default(true),
+  enableRateLimiter: z.boolean().default(true),
+  maxFailures: z.number().positive("Max failures must be positive").default(5),
+  resetTimeout: z.number().positive("Reset timeout must be positive").default(60000),
+  maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
+  retryDelay: z.number().nonnegative("Retry delay cannot be negative").default(1000),
+  rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
+  
+  // Trading Configuration
+  enablePaperTrading: z.boolean().default(true),
+  circuitBreakerThreshold: z.number().positive("Circuit breaker threshold must be positive").default(5),
+  circuitBreakerResetTime: z.number().positive("Circuit breaker reset time must be positive").default(30000),
+  
+  // Optional test configurations
+  enableTestMode: z.boolean().optional(),
+  enableMetrics: z.boolean().optional(),
+});
+
+export type UnifiedMexcConfig = z.infer<typeof UnifiedMexcConfigSchema>;
+
+// Legacy config type alias for backward compatibility
+export type UnifiedMexcConfigV2 = UnifiedMexcConfig;
+
+// ============================================================================
 // Response Wrapper
 // ============================================================================
 
@@ -325,6 +366,7 @@ export const ActivityDataSchema = z.object({
   currency: z.string(),
   currencyId: z.string(),
   activityType: z.string(),
+  symbol: z.string().optional(), // Add optional symbol field for test compatibility
 });
 
 /**

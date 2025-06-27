@@ -340,3 +340,6 @@ export const OptimizedTradingTargets = React.memo(
 );
 
 OptimizedTradingTargets.displayName = "OptimizedTradingTargets";
+
+// Add default export for dynamic imports
+export default OptimizedTradingTargets;

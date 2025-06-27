@@ -8,8 +8,8 @@
  */
 
 import { EventEmitter } from "events";
+import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
-import type { SymbolEntry } from "../../services/mexc-unified-exports";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
   CorrelationAnalysis,

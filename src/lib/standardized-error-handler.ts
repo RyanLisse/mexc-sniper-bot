@@ -5,17 +5,24 @@
  * Integrates with existing error utilities and logging systems.
  */
 
-import type { CommonInterfaces } from "../types/common-interfaces";
 import { type ApiResponse, createApiResponse } from "./api-response";
 import {
-  isApiError,
   isNetworkError,
   isServerError,
   isTimeoutError,
-  isValidationError,
-  type SafeErrorResult,
+  type SafeError,
+  toSafeError,
 } from "./error-type-utils";
-import { APIError, NetworkError, ServerError, TimeoutError, ValidationError } from "./errors";
+import {
+  type ApiError,
+  type ApplicationError,
+  isApiError,
+  isNetworkError,
+  isValidationError,
+  NetworkError,
+  TimeoutError,
+  ValidationError,
+} from "./errors";
 import { createLogger, type LogContext } from "./unified-logger";
 
 const logger = createLogger("error-handler", {
@@ -179,10 +186,10 @@ export class StandardizedErrorHandler {
     // Determine HTTP status code
     const statusCode = this.getHttpStatusCode(processedError, metadata);
 
-    return createApiResponse<T>({
+    return {
       success: false,
       error: metadata.userMessage,
-      data: null,
+      data: null as T,
       metadata: {
         errorCode: metadata.errorCode,
         category: metadata.category,
@@ -191,9 +198,9 @@ export class StandardizedErrorHandler {
         retryable: metadata.retryable,
         requestId: metadata.context.requestId,
         timestamp: metadata.context.timestamp,
+        statusCode,
       },
-      statusCode,
-    });
+    };
   }
 
   /**
@@ -204,7 +211,7 @@ export class StandardizedErrorHandler {
       return true;
     }
 
-    if (isApiError(error) && error.statusCode >= 500) {
+    if (isApiError(error) && (error as any).statusCode >= 500) {
       return true;
     }
 
@@ -374,10 +381,10 @@ export class StandardizedErrorHandler {
     if (isServerError(error)) return ErrorCategory.SYSTEM;
 
     if (isApiError(error)) {
-      if (error.statusCode === 401) return ErrorCategory.AUTHENTICATION;
-      if (error.statusCode === 403) return ErrorCategory.AUTHORIZATION;
-      if (error.statusCode === 429) return ErrorCategory.RATE_LIMIT;
-      if (error.statusCode >= 500) return ErrorCategory.SYSTEM;
+      if ((error as ApiError).statusCode === 401) return ErrorCategory.AUTHENTICATION;
+      if ((error as ApiError).statusCode === 403) return ErrorCategory.AUTHORIZATION;
+      if ((error as ApiError).statusCode === 429) return ErrorCategory.RATE_LIMIT;
+      if ((error as ApiError).statusCode >= 500) return ErrorCategory.SYSTEM;
     }
 
     // Check error message for patterns
@@ -521,7 +528,7 @@ export class StandardizedErrorHandler {
 
   private getHttpStatusCode(error: Error, metadata: ErrorMetadata): number {
     if (isApiError(error)) {
-      return error.statusCode;
+      return (error as ApiError).statusCode;
     }
 
     switch (metadata.category) {

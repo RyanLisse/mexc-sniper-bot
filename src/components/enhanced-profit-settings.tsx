@@ -148,12 +148,7 @@ export function EnhancedProfitSettings({
 
         {/* Advanced Exit Strategies Tab */}
         <TabsContent value="advanced" className="space-y-6">
-          <ExitStrategySelector
-            selectedStrategy={selectedStrategy}
-            customStrategy={customStrategy}
-            onStrategyChange={onStrategyChange}
-            onCustomStrategyChange={onCustomStrategyChange}
-          />
+          <ExitStrategySelector value={customStrategy} onChange={onCustomStrategyChange} />
         </TabsContent>
 
         {/* Help & Guide Tab */}

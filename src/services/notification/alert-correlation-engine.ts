@@ -46,7 +46,7 @@ export interface AlertSignature {
 }
 
 export class AlertCorrelationEngine {
-  private _; /**
+  private _logger: any; /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
   private get logger(): {

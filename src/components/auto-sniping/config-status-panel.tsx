@@ -33,7 +33,7 @@ import {
 import { Progress } from "@/src/components/ui/progress";
 import { Separator } from "@/src/components/ui/separator";
 import { useConfigValidation } from "@/src/hooks/use-config-validation";
-import type { ConfigValidationResult } from "@/src/services/mexc-config-validator";
+import type { ConfigValidationResult } from "@/src/services/api/mexc-config-validator";
 
 interface ConfigStatusPanelProps {
   className?: string;
@@ -393,7 +393,7 @@ export function ConfigStatusPanel({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {readinessReport.recommendations.map((recommendation, index) => (
+              {readinessReport.recommendations.map((recommendation: string, index: number) => (
                 <div
                   key={`recommendation-${index}-${recommendation.slice(0, 20)}`}
                   className="flex items-start gap-2"

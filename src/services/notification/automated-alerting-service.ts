@@ -42,6 +42,7 @@ export interface AlertingConfig {
 }
 
 export class AutomatedAlertingService {
+  private _logger: any;
   /**
    * Lazy logger initialization to prevent webpack bundling issues
    */
@@ -211,7 +212,7 @@ export class AutomatedAlertingService {
       // Process rules in batches
       for (let i = 0; i < rules.length; i += this.config.batchSize) {
         const batch = rules.slice(i, i + this.config.batchSize);
-        await Promise.all(batch.map((rule) => this.evaluateRule(rule)));
+        await Promise.all(batch.map((rule: any) => this.evaluateRule(rule)));
       }
 
       // Run correlation analysis
@@ -635,8 +636,8 @@ export class AutomatedAlertingService {
         )
       );
 
-    const resolved = alerts.filter((a) => a.resolvedAt);
-    const totalResolutionTime = resolved.reduce((sum, alert) => {
+    const resolved = alerts.filter((a: any) => a.resolvedAt);
+    const totalResolutionTime = resolved.reduce((sum: number, alert: any) => {
       const resolvedTime = alert.resolvedAt ? alert.resolvedAt.getTime() : 0;
       const triggeredTime = alert.firstTriggeredAt.getTime();
       return sum + (resolvedTime - triggeredTime);
@@ -644,18 +645,18 @@ export class AutomatedAlertingService {
 
     return {
       totalAlerts: alerts.length,
-      criticalAlerts: alerts.filter((a) => a.severity === "critical").length,
-      highAlerts: alerts.filter((a) => a.severity === "high").length,
-      mediumAlerts: alerts.filter((a) => a.severity === "medium").length,
-      lowAlerts: alerts.filter((a) => a.severity === "low").length,
+      criticalAlerts: alerts.filter((a: any) => a.severity === "critical").length,
+      highAlerts: alerts.filter((a: any) => a.severity === "high").length,
+      mediumAlerts: alerts.filter((a: any) => a.severity === "medium").length,
+      lowAlerts: alerts.filter((a: any) => a.severity === "low").length,
       resolvedAlerts: resolved.length,
       averageResolutionTime: resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
       mttr: resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
-      tradingAlerts: alerts.filter((a) => a.source.includes("trading")).length,
-      safetyAlerts: alerts.filter((a) => a.source.includes("safety")).length,
-      performanceAlerts: alerts.filter((a) => a.source.includes("performance")).length,
-      systemAlerts: alerts.filter((a) => a.source.includes("system")).length,
-      agentAlerts: alerts.filter((a) => a.source.includes("agent")).length,
+      tradingAlerts: alerts.filter((a: any) => a.source.includes("trading")).length,
+      safetyAlerts: alerts.filter((a: any) => a.source.includes("safety")).length,
+      performanceAlerts: alerts.filter((a: any) => a.source.includes("performance")).length,
+      systemAlerts: alerts.filter((a: any) => a.source.includes("system")).length,
+      agentAlerts: alerts.filter((a: any) => a.source.includes("agent")).length,
     };
   }
 
@@ -674,10 +675,54 @@ export class AutomatedAlertingService {
       }
     }
 
-    // TODO: Get from database for historical metrics
-    // This would query agent performance metrics, system health metrics, etc.
+    // Get historical metrics from database for comprehensive analysis
+    try {
+      const { db } = await import("../../db");
+      const { sql } = await import("drizzle-orm");
+      
+      // Query performance snapshots for historical metrics
+      const historicalData = await db.execute(sql`
+        SELECT timestamp, agent_metrics, workflow_metrics, system_metrics
+        FROM performance_snapshots 
+        WHERE timestamp > ${cutoff.toISOString()}
+        ORDER BY timestamp ASC
+      `);
+      
+      // Extract specific metric from historical data
+      for (const row of historicalData.rows) {
+        try {
+          const agentMetrics = JSON.parse(row.agent_metrics as string);
+          const workflowMetrics = JSON.parse(row.workflow_metrics as string);
+          const systemMetrics = JSON.parse(row.system_metrics as string);
+          
+          // Search for the metric in different metric categories
+          const allMetrics = { ...agentMetrics, ...workflowMetrics, ...systemMetrics };
+          
+          if (allMetrics[metricName]) {
+            metrics.push({
+              timestamp: new Date(row.timestamp as string),
+              value: typeof allMetrics[metricName] === 'object' 
+                ? allMetrics[metricName].value || allMetrics[metricName].average || 0
+                : allMetrics[metricName],
+              source: 'database',
+              metadata: {
+                snapshotId: row.id,
+                metricCategory: Object.keys(agentMetrics).includes(metricName) ? 'agent' :
+                              Object.keys(workflowMetrics).includes(metricName) ? 'workflow' : 'system'
+              }
+            });
+          }
+        } catch (parseError) {
+          this.logger.warn(`Failed to parse historical metrics data:`, parseError);
+        }
+      }
+      
+      this.logger.info(`Retrieved ${metrics.length} metrics for ${metricName} (${historicalData.rows.length} from database)`);
+    } catch (error) {
+      this.logger.warn(`Failed to retrieve historical metrics for ${metricName}:`, error);
+    }
 
-    return metrics;
+    return metrics.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 
   private generateAlertMessage(

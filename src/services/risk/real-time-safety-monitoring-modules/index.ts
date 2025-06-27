@@ -354,7 +354,7 @@ export class RealTimeSafetyMonitoringService {
     } catch (error) {
       console.warn("Initial health check failed during monitoring start", {
         operation: "start_monitoring",
-        error: error.message,
+        error: (error as Error)?.message,
       });
     }
 

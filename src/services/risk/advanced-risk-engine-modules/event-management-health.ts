@@ -517,4 +517,4 @@ export function createEventManagementHealth(config: EventManagementConfig): Even
 }
 
 // Export types for external use
-export type { EventManagementConfig, HealthStatus, EmergencyState, RiskThresholdEvent };
+// (Types already exported above via interface declarations)

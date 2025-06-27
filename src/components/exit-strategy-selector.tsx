@@ -72,13 +72,15 @@ export function ExitStrategySelector({
         type: strategy.id,
         description: strategy.description,
         riskLevel: strategy.riskLevel,
+        levels: [], // Empty array for now - strategy-specific levels can be added later
+        isDefault: false,
+        isCustom: true,
         parameters: {
           ...strategy,
           ...customParams,
         },
         enabled: true,
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
       onChange(exitStrategy);
     }
@@ -97,10 +99,12 @@ export function ExitStrategySelector({
           type: strategy.id,
           description: strategy.description,
           riskLevel: strategy.riskLevel,
+          levels: [], // Empty array for now - strategy-specific levels can be added later
+          isDefault: false,
+          isCustom: true,
           parameters: newParams,
           enabled: true,
           createdAt: new Date(),
-          updatedAt: new Date(),
         };
         onChange(exitStrategy);
       }

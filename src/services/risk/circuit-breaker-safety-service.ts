@@ -96,6 +96,7 @@ export class CircuitBreakerSafetyService {
   private coordinator: CircuitBreakerCoordinator;
   private serviceId: string;
   private tracer = trace.getTracer("circuit-breaker-safety-service");
+  private _logger: any;
 
   /**
    * Lazy logger initialization to prevent webpack bundling issues

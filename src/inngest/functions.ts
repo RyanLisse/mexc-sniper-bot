@@ -34,6 +34,15 @@ interface PatternAnalysisData {
   confidenceScore?: number;
 }
 
+interface SyncResult {
+  success: boolean;
+  processed: number;
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: string[];
+}
+
 interface TradingStrategyData {
   entryPrice?: number;
   stopLoss?: number;
@@ -88,6 +97,19 @@ function isPatternAnalysisData(value: unknown): value is PatternAnalysisData {
 
 function isTradingStrategyData(value: unknown): value is TradingStrategyData {
   return typeof value === "object" && value !== null;
+}
+
+function isSyncResult(value: unknown): value is SyncResult {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as any).success === "boolean" &&
+    typeof (value as any).processed === "number" &&
+    typeof (value as any).created === "number" &&
+    typeof (value as any).updated === "number" &&
+    typeof (value as any).skipped === "number" &&
+    Array.isArray((value as any).errors)
+  );
 }
 
 // Helper function to update workflow status
@@ -170,16 +192,21 @@ export const pollMexcCalendar = inngest.createFunction(
       return await calendarSyncService.syncCalendarToDatabase("system", {
         timeWindowHours: 24,
         forceSync: force,
-        dryRun: false
+        dryRun: false,
       });
     });
+
+    // Type guard for sync result
+    if (!isSyncResult(syncResult)) {
+      throw new Error("Invalid sync result format");
+    }
 
     // Step 2: Execute Multi-Agent Calendar Discovery (optional enhancement)
     const discoveryResult = await step.run("calendar-discovery-workflow", async () => {
       if (!syncResult.success) {
-        throw new Error(`Calendar sync failed: ${syncResult.errors.join(', ')}`);
+        throw new Error(`Calendar sync failed: ${syncResult.errors.join(", ")}`);
       }
-      
+
       const orchestrator = new MexcOrchestrator();
       return await orchestrator.executeCalendarDiscoveryWorkflow({
         trigger,
@@ -188,8 +215,8 @@ export const pollMexcCalendar = inngest.createFunction(
         syncData: {
           processed: syncResult.processed,
           created: syncResult.created,
-          updated: syncResult.updated
-        }
+          updated: syncResult.updated,
+        },
       });
     });
 
@@ -221,7 +248,7 @@ export const pollMexcCalendar = inngest.createFunction(
           processed: syncResult.processed,
           created: syncResult.created,
           updated: syncResult.updated,
-        }
+        },
       },
     });
 

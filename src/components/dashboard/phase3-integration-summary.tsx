@@ -66,7 +66,7 @@ const getOverallStatus = (
   const checks = [
     aiServices?.overall?.status === "healthy",
     cacheMetrics?.connection?.redis?.connected || cacheMetrics?.connection?.valkey?.connected,
-    enhancedPatterns?.summary?.totalPatterns > 0,
+    (enhancedPatterns?.summary?.totalPatterns || 0) > 0,
     featureStatus?.aiIntelligenceEnabled,
   ];
 

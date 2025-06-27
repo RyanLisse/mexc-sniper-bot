@@ -540,7 +540,7 @@ export class PatternToDatabaseBridge {
 
         // Create lookup set for O(1) duplicate checking
         const existingCombinations = new Set(
-          existingTargets.map((target) => `${target.userId}:${target.symbolName}`)
+          existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
         );
 
         // Filter out duplicates in O(n) time
@@ -623,7 +623,9 @@ export class PatternToDatabaseBridge {
 
       // Count targets per user in memory (O(n) complexity)
       for (const userId of uniqueUserIds) {
-        const userTargetCount = existingTargets.filter((target) => target.userId === userId).length;
+        const userTargetCount = existingTargets.filter(
+          (target: any) => target.userId === userId
+        ).length;
         userCounts.set(userId, userTargetCount);
       }
     }

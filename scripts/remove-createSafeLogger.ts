@@ -178,6 +178,6 @@ function main() {
   console.log(`   ⏭️  Next steps: Review changes and test build`);
 }
 
-if (import.meta.main) {
+if (require.main === module) {
   main();
 }

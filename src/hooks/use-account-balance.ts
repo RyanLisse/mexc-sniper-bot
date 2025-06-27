@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/src/lib/kinde-auth-client";
-import type { BalanceEntry } from "../services/mexc-unified-exports";
+import type { BalanceEntry } from "@/src/services/api/mexc-unified-exports";
 
 interface UseAccountBalanceOptions {
   userId?: string;
@@ -119,4 +119,4 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
   });
 }
 
-export type { BalanceEntry } from "../services/mexc-unified-exports";
+export type { BalanceEntry } from "@/src/services/api/mexc-unified-exports";

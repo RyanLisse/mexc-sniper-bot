@@ -114,7 +114,7 @@ export class TransactionLockService {
 
     try {
       // Use database transaction for atomicity
-      return await db.transaction(async (tx) => {
+      return await db.transaction(async (tx: any) => {
         // Check for existing lock with same idempotency key
         const existingLocks = await tx
           .select()
@@ -160,7 +160,9 @@ export class TransactionLockService {
 
         if (activeLocks.length > 0) {
           // Check if any of the active locks have the same idempotency key
-          const duplicateLock = activeLocks.find((lock) => lock.idempotencyKey === idempotencyKey);
+          const duplicateLock = activeLocks.find(
+            (lock: any) => lock.idempotencyKey === idempotencyKey
+          );
           if (duplicateLock) {
             return {
               success: false,
@@ -516,7 +518,7 @@ export class TransactionLockService {
       isLocked: activeLocks.length > 0,
       lockCount: activeLocks.length,
       queueLength: queuedItems.length,
-      activeLocks: activeLocks.map((lock) => ({
+      activeLocks: activeLocks.map((lock: any) => ({
         id: lock.lockId,
         ownerId: lock.ownerId,
         resourceId: lock.resourceId,

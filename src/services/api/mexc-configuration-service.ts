@@ -196,8 +196,7 @@ export class MexcConfigurationService {
       cacheTTL: env.MEXC_CACHE_TTL,
       enableCircuitBreaker: env.MEXC_ENABLE_CIRCUIT_BREAKER,
       enableMetrics: env.MEXC_ENABLE_METRICS,
-      enableEnhancedCaching: env.MEXC_ENABLE_ENHANCED_CACHING,
-      enablePerformanceMonitoring: env.MEXC_ENABLE_PERFORMANCE_MONITORING,
+      // Removed enableEnhancedCaching and enablePerformanceMonitoring - not in UnifiedMexcConfigSchema
       apiResponseTTL: env.MEXC_API_RESPONSE_TTL,
     };
   }

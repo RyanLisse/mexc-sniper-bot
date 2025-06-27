@@ -530,7 +530,7 @@ export class DatabasePerformanceAnalyzer {
     const startTime = performance.now();
 
     // Get current monitoring data
-    const monitoringStats = queryPerformanceMonitor.getPerformanceStats(60);
+    const monitoringStats = queryPerformanceMonitor.getPerformanceStats();
     const _queryPatterns = queryPerformanceMonitor.analyzeQueryPatterns(60);
 
     // Run our detailed analysis

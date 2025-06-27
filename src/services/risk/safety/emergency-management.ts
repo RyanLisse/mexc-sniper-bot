@@ -282,7 +282,7 @@ export class EmergencyManager extends EventEmitter {
       if (procedure.requiredApprovals.length > 0) {
         const consensusRequest: AgentConsensusRequest = {
           id: `emergency-${procedureId}-${Date.now()}`,
-          type: "emergency_procedure",
+          type: "emergency_response",
           priority: "critical",
           requester: "emergency_manager",
           data: { procedure, executedBy },

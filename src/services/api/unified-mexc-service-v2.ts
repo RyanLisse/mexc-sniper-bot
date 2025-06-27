@@ -8,6 +8,7 @@
  * - Optimized bundle size through tree-shaking
  */
 
+import type { ActivityQueryOptionsType } from "@/src/schemas/unified/mexc-api-schemas";
 // Build-safe imports - modular architecture
 import type {
   BalanceEntry,
@@ -125,8 +126,11 @@ export class UnifiedMexcServiceV2 {
     return this.coreModule.getSymbolsData();
   }
 
-  async getBulkActivityData(currencies: string[]): Promise<MexcServiceResponse<any[]>> {
-    return this.coreModule.getBulkActivityData(currencies);
+  async getBulkActivityData(
+    currencies: string[],
+    options?: ActivityQueryOptionsType
+  ): Promise<MexcServiceResponse<any[]>> {
+    return this.coreModule.getBulkActivityData(currencies, options);
   }
 
   async hasRecentActivity(

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading.types";
+import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading/types";
 import { type AutoSnipingConfigForm, configFormSchema } from "../schemas/validation-schemas";
 
 interface ConfigEditorProps {
@@ -42,9 +42,33 @@ export function ConfigEditor({
 }: ConfigEditorProps) {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
+  // Mapping between form field names and CoreTradingConfig field names
+  const fieldMapping: Record<string, keyof CoreTradingConfig> = {
+    enabled: "autoSnipingEnabled",
+    maxPositions: "maxConcurrentPositions",
+    maxDailyTrades: "maxConcurrentPositions", // Temp mapping - needs proper field
+    positionSizeUSDT: "maxPositionSize",
+    minConfidence: "confidenceThreshold",
+    enableAdvanceDetection: "autoSnipingEnabled", // Temp mapping - needs proper field
+    stopLossPercentage: "globalStopLossPercent",
+    takeProfitPercentage: "globalTakeProfitPercent",
+    maxDrawdownPercentage: "maxDailyLoss", // Temp mapping - needs conversion
+    slippageTolerancePercentage: "maxDailyLoss", // Temp mapping - needs proper field
+  };
+
   const getConfigValue = useCallback(
-    <K extends keyof CoreTradingConfig>(field: K): CoreTradingConfig[K] | undefined => {
-      return configEditMode ? (tempConfig[field] ?? config?.[field]) : config?.[field];
+    (field: string): any => {
+      const mappedField = fieldMapping[field];
+      if (mappedField) {
+        return configEditMode
+          ? (tempConfig[mappedField] ?? config?.[mappedField])
+          : config?.[mappedField];
+      }
+      // Fallback for direct field access
+      return configEditMode
+        ? (tempConfig[field as keyof CoreTradingConfig] ??
+            config?.[field as keyof CoreTradingConfig])
+        : config?.[field as keyof CoreTradingConfig];
     },
     [configEditMode, tempConfig, config]
   );
@@ -153,12 +177,12 @@ export function ConfigEditor({
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="enabled"
-                    checked={getConfigValue("enabled") as boolean}
-                    onCheckedChange={(checked) => handleConfigChange("enabled", checked)}
+                    checked={getConfigValue("autoSnipingEnabled") as boolean}
+                    onCheckedChange={(checked) => handleConfigChange("autoSnipingEnabled", checked)}
                     disabled={!configEditMode}
                   />
                   <span className="text-sm text-gray-600">
-                    {getConfigValue("enabled") ? "Enabled" : "Disabled"}
+                    {getConfigValue("autoSnipingEnabled") ? "Enabled" : "Disabled"}
                   </span>
                 </div>
               </div>
@@ -170,9 +194,9 @@ export function ConfigEditor({
                   type="number"
                   min="1"
                   max="50"
-                  value={getConfigValue("maxPositions") as number}
+                  value={getConfigValue("maxConcurrentPositions") as number}
                   onChange={(e) =>
-                    handleConfigChange("maxPositions", Number.parseInt(e.target.value))
+                    handleConfigChange("maxConcurrentPositions", Number.parseInt(e.target.value))
                   }
                   disabled={!configEditMode}
                   className={validationErrors.maxPositions ? "border-red-500" : ""}
@@ -235,9 +259,9 @@ export function ConfigEditor({
                   type="number"
                   min="0"
                   max="100"
-                  value={getConfigValue("minConfidence") as number}
+                  value={getConfigValue("confidenceThreshold") as number}
                   onChange={(e) =>
-                    handleConfigChange("minConfidence", Number.parseFloat(e.target.value))
+                    handleConfigChange("confidenceThreshold", Number.parseFloat(e.target.value))
                   }
                   disabled={!configEditMode}
                   className={validationErrors.minConfidence ? "border-red-500" : ""}

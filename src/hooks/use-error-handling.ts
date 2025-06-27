@@ -268,6 +268,7 @@ export function useErrorHandling(options: UseErrorHandlingOptions = {}): UseErro
 
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [config.enableAutoRecovery, errorState, retryOperation]);
 
   return {

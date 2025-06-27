@@ -464,17 +464,17 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       expect(targets).toHaveLength(3);
 
       // Verify ready_state pattern
-      const readyTarget = targets.find((t) => t.symbolName === "READY1USDT");
+      const readyTarget = targets.find((t: any) => t.symbolName === "READY1USDT");
       expect(readyTarget?.status).toBe("ready");
       expect(readyTarget?.priority).toBe(1); // High confidence, ready state should get highest priority
 
       // Verify pre_ready pattern
-      const preReadyTarget = targets.find((t) => t.symbolName === "PRE1USDT");
+      const preReadyTarget = targets.find((t: any) => t.symbolName === "PRE1USDT");
       expect(preReadyTarget?.status).toBe("pending");
       expect(preReadyTarget?.targetExecutionTime).toBeDefined();
 
       // Verify launch_sequence pattern
-      const launchTarget = targets.find((t) => t.symbolName === "LAUNCH1USDT");
+      const launchTarget = targets.find((t: any) => t.symbolName === "LAUNCH1USDT");
       expect(launchTarget?.status).toBe("pending");
       expect(launchTarget?.targetExecutionTime).toBeDefined();
     });
@@ -1134,9 +1134,9 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
       expect(targets).toHaveLength(3);
 
       // Find targets by symbol
-      const highPriTarget = targets.find((t) => t.symbolName === "HIPRI1USDT");
-      const medPriTarget = targets.find((t) => t.symbolName === "MEDPRI1USDT");
-      const lowPriTarget = targets.find((t) => t.symbolName === "LOWPRI1USDT");
+      const highPriTarget = targets.find((t: any) => t.symbolName === "HIPRI1USDT");
+      const medPriTarget = targets.find((t: any) => t.symbolName === "MEDPRI1USDT");
+      const lowPriTarget = targets.find((t: any) => t.symbolName === "LOWPRI1USDT");
 
       // High confidence + ready state + low risk should get highest priority (lowest number)
       expect(highPriTarget?.priority).toBe(1);
@@ -1364,7 +1364,7 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
 
       // Should create 2 targets from valid patterns
       expect(targets).toHaveLength(2);
-      expect(targets.map((t) => t.symbolName).sort()).toEqual(["VALID1USDT", "VALID2USDT"]);
+      expect(targets.map((t: any) => t.symbolName).sort()).toEqual(["VALID1USDT", "VALID2USDT"]);
     });
   });
 

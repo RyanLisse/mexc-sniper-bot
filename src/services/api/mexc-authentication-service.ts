@@ -149,7 +149,6 @@ export class MexcAuthenticationService {
   getStatus(): AuthenticationStatus {
     return {
       ...this.status,
-      uptime: Date.now() - this.startTime.getTime(),
     };
   }
 
@@ -278,13 +277,29 @@ export class MexcAuthenticationService {
     }
 
     try {
-      const cipher = crypto.createCipher("aes256", this.config.encryptionKey);
+      const iv = crypto.randomBytes(16);
+      const cipher = crypto.createCipheriv(
+        "aes-256-cbc",
+        Buffer.from(this.config.encryptionKey, "hex"),
+        iv
+      );
       const encryptedApiKey =
-        cipher.update(this.config.apiKey, "utf8", "hex") + cipher.final("hex");
+        iv.toString("hex") +
+        ":" +
+        cipher.update(this.config.apiKey, "utf8", "hex") +
+        cipher.final("hex");
 
-      const cipher2 = crypto.createCipher("aes256", this.config.encryptionKey);
+      const iv2 = crypto.randomBytes(16);
+      const cipher2 = crypto.createCipheriv(
+        "aes-256-cbc",
+        Buffer.from(this.config.encryptionKey, "hex"),
+        iv2
+      );
       const encryptedSecretKey =
-        cipher2.update(this.config.secretKey, "utf8", "hex") + cipher2.final("hex");
+        iv2.toString("hex") +
+        ":" +
+        cipher2.update(this.config.secretKey, "utf8", "hex") +
+        cipher2.final("hex");
 
       return {
         apiKey: encryptedApiKey,
@@ -309,12 +324,25 @@ export class MexcAuthenticationService {
     }
 
     try {
-      const decipher = crypto.createDecipher("aes256", this.config.encryptionKey);
-      const apiKey = decipher.update(encrypted.apiKey, "hex", "utf8") + decipher.final("utf8");
+      const apiKeyParts = encrypted.apiKey.split(":");
+      const iv = Buffer.from(apiKeyParts[0], "hex");
+      const encryptedText = apiKeyParts[1];
+      const decipher = crypto.createDecipheriv(
+        "aes-256-cbc",
+        Buffer.from(this.config.encryptionKey, "hex"),
+        iv
+      );
+      const apiKey = decipher.update(encryptedText, "hex", "utf8") + decipher.final("utf8");
 
-      const decipher2 = crypto.createDecipher("aes256", this.config.encryptionKey);
-      const secretKey =
-        decipher2.update(encrypted.secretKey, "hex", "utf8") + decipher2.final("utf8");
+      const secretKeyParts = encrypted.secretKey.split(":");
+      const iv2 = Buffer.from(secretKeyParts[0], "hex");
+      const encryptedText2 = secretKeyParts[1];
+      const decipher2 = crypto.createDecipheriv(
+        "aes-256-cbc",
+        Buffer.from(this.config.encryptionKey, "hex"),
+        iv2
+      );
+      const secretKey = decipher2.update(encryptedText2, "hex", "utf8") + decipher2.final("utf8");
 
       await this.updateCredentials({ apiKey, secretKey });
       return true;

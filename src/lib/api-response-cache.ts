@@ -377,7 +377,9 @@ export class APIResponseCache {
 
       // Invalidate by custom pattern
       if (criteria.pattern) {
-        invalidated += await globalCacheManager.invalidatePattern(criteria.pattern);
+        const pattern =
+          typeof criteria.pattern === "string" ? new RegExp(criteria.pattern) : criteria.pattern;
+        invalidated += await globalCacheManager.invalidatePattern(pattern);
       }
 
       // Invalidate by dependencies

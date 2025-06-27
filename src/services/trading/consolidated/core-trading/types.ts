@@ -7,8 +7,8 @@
 
 import type { EventEmitter } from "events";
 import { z } from "zod";
-import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 
 // ============================================================================
 // Core Configuration Types
@@ -35,6 +35,12 @@ export interface CoreTradingConfig {
   snipeCheckInterval: number;
   confidenceThreshold: number;
 
+  // Risk Management Configuration
+  maxPositionSize?: number;
+  globalStopLossPercent?: number;
+  globalTakeProfitPercent?: number;
+  maxDailyLoss?: number;
+
   // Cache Configuration
   enableCaching: boolean;
   cacheTTL: number;
@@ -55,6 +61,10 @@ export const CoreTradingConfigSchema = z.object({
   autoSnipingEnabled: z.boolean().default(false),
   snipeCheckInterval: z.number().positive().default(30000), // 30 seconds
   confidenceThreshold: z.number().min(0).max(100).default(75),
+  maxPositionSize: z.number().positive().optional(),
+  globalStopLossPercent: z.number().positive().optional(),
+  globalTakeProfitPercent: z.number().positive().optional(),
+  maxDailyLoss: z.number().positive().optional(),
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().positive().default(60000), // 1 minute
 });

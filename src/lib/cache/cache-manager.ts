@@ -459,7 +459,7 @@ export class CacheManager {
 
       logger.info("Destroyed cache manager");
     } catch (error) {
-      logger.error("Destroy error:", error instanceof Error ? error : new Error(String(error)));
+      logger.error("Destroy error:", {}, error instanceof Error ? error : new Error(String(error)));
     }
   }
 

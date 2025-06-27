@@ -11,9 +11,9 @@
  * - Comprehensive error handling
  */
 
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
-import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type {
   CorrelationAnalysis,
   IPatternAnalyzer,

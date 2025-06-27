@@ -251,7 +251,7 @@ export function validateData<T>(
     if (error instanceof import("zod").ZodError) {
       return {
         success: false,
-        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+        error: `Validation failed: ${(error as any).errors.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
       };
     }
     return {

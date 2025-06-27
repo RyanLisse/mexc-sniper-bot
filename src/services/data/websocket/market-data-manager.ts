@@ -321,7 +321,7 @@ export class MarketDataManager {
       const priceData = this.priceCache.get(status.symbol);
 
       // Analyze pattern with context
-      const analysisResult = await this.patternDetection.analyzePattern({
+      const analysisResult = await this.patternDetection.analyzePatterns({
         symbol: status.symbol,
         sts: status.sts,
         st: status.st,

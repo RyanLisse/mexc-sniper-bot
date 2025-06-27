@@ -14,6 +14,30 @@ const safetyMonitor = new SafetyMonitorAgent();
 emergencySystem.setRiskEngine(riskEngine);
 safetyMonitor.setIntegrations(riskEngine, emergencySystem);
 
+// Type definitions
+interface RiskAssessmentResult {
+  healthy: boolean;
+  riskScore: number;
+  portfolioValue: number;
+  valueAtRisk: number;
+  activeAlerts: number;
+  criticalAlerts: number;
+}
+
+// Type guard functions
+function isRiskAssessmentResult(value: unknown): value is RiskAssessmentResult {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as any).healthy === "boolean" &&
+    typeof (value as any).riskScore === "number" &&
+    typeof (value as any).portfolioValue === "number" &&
+    typeof (value as any).valueAtRisk === "number" &&
+    typeof (value as any).activeAlerts === "number" &&
+    typeof (value as any).criticalAlerts === "number"
+  );
+}
+
 // Legacy safety monitoring workflow - runs every 5 minutes
 export const legacySafetyMonitor = inngest.createFunction(
   { id: "legacy-safety-monitor", name: "Legacy Comprehensive Safety Monitor" },
@@ -464,6 +488,11 @@ export const advancedSafetyMonitor = inngest.createFunction(
         criticalAlerts: activeAlerts.filter((a) => a.severity === "critical").length,
       };
     });
+
+    // Type guard for risk assessment result
+    if (!isRiskAssessmentResult(riskAssessment)) {
+      throw new Error("Invalid risk assessment result format");
+    }
 
     // Step 3: Agent behavior monitoring
     const agentMonitoring = await step.run("agent-monitoring", async () => {

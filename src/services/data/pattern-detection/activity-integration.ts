@@ -47,7 +47,7 @@ export async function getActivityDataForSymbol(
       .limit(10); // Limit to recent activities
 
     // Transform to ActivityData format
-    return activities.map((activity) => ({
+    return activities.map((activity: any) => ({
       activityId: activity.activityId,
       currency: activity.currency,
       currencyId: activity.currencyId || "",

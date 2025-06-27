@@ -13,7 +13,7 @@
  *   npx tsx scripts/test-mexc-credentials.ts
  */
 
-import { getRecommendedMexcService } from "../src/services/mexc-unified-exports";
+import { getRecommendedMexcService } from "../src/services/api/mexc-unified-exports";
 
 async function testMexcCredentials() {
   console.log("🔐 MEXC Credential Testing Script");

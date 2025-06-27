@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 
 /**
  * Trading Settings Sync Hook
- * 
+ *
  * Manages synchronization between user preferences and the Core Trading Service
  * Provides real-time status monitoring and immediate configuration updates
  */
@@ -66,7 +66,7 @@ export function useTradingSettingsSync(userId?: string) {
     data: settingsStatus,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery<TradingSettingsStatus>({
     queryKey: ["trading-settings", userId],
     queryFn: async () => {
@@ -83,7 +83,9 @@ export function useTradingSettingsSync(userId?: string) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to fetch trading settings: ${response.statusText}`);
+        throw new Error(
+          errorData.message || `Failed to fetch trading settings: ${response.statusText}`
+        );
       }
 
       const result = await response.json();
@@ -108,7 +110,9 @@ export function useTradingSettingsSync(userId?: string) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to update trading settings: ${response.statusText}`);
+        throw new Error(
+          errorData.message || `Failed to update trading settings: ${response.statusText}`
+        );
       }
 
       return response.json();
@@ -132,17 +136,20 @@ export function useTradingSettingsSync(userId?: string) {
   }, [userId, settingsUpdateMutation]);
 
   // Update Core Trading Service configuration directly
-  const updateExecutionSettings = useCallback(async (settings: Record<string, unknown>) => {
-    if (!userId) {
-      throw new Error("User ID is required for update");
-    }
+  const updateExecutionSettings = useCallback(
+    async (settings: Record<string, unknown>) => {
+      if (!userId) {
+        throw new Error("User ID is required for update");
+      }
 
-    return settingsUpdateMutation.mutateAsync({
-      action: "update",
-      userId,
-      settings,
-    });
-  }, [userId, settingsUpdateMutation]);
+      return settingsUpdateMutation.mutateAsync({
+        action: "update",
+        userId,
+        settings,
+      });
+    },
+    [userId, settingsUpdateMutation]
+  );
 
   // Reset to default configuration
   const resetToDefaults = useCallback(async () => {
@@ -187,26 +194,26 @@ export function useTradingSettingsSync(userId?: string) {
     settingsStatus,
     isLoading,
     error,
-    
+
     // Sync operations
     syncToExecutionSystem,
     updateExecutionSettings,
     resetToDefaults,
-    
+
     // Auto-sync control
     autoSyncEnabled,
     enableAutoSync,
     disableAutoSync,
     forceRefresh,
-    
+
     // Status monitoring
     isInSync,
     syncHealth,
-    
+
     // Operation status
     isUpdating: settingsUpdateMutation.isPending,
     updateError: settingsUpdateMutation.error,
-    
+
     // Computed values for easy access
     userSettings: settingsStatus?.userSettings,
     executionSettings: settingsStatus?.executionSettings,
@@ -226,15 +233,19 @@ export function useTradingSettingsSyncMonitor(userId?: string) {
     isInSync: settingsStatus?.syncStatus?.isInSync ?? false,
     lastSyncTime: settingsStatus?.syncStatus?.lastSync,
     pendingCount: settingsStatus?.syncStatus?.pendingUpdates?.length || 0,
-    
+
     // System health
     isExecutionSystemHealthy: syncHealth.isHealthy,
     errorCount: syncHealth.errorMessage ? 1 : 0,
-    
+
     // Performance metrics
-    userSettingsCount: settingsStatus?.userSettings ? Object.keys(settingsStatus.userSettings).length : 0,
-    executionSettingsCount: settingsStatus?.executionSettings ? Object.keys(settingsStatus.executionSettings).length : 0,
-    
+    userSettingsCount: settingsStatus?.userSettings
+      ? Object.keys(settingsStatus.userSettings).length
+      : 0,
+    executionSettingsCount: settingsStatus?.executionSettings
+      ? Object.keys(settingsStatus.executionSettings).length
+      : 0,
+
     // Auto-sync status
     autoSyncEnabled,
     nextSyncEstimate: autoSyncEnabled ? new Date(Date.now() + 10000).toISOString() : null,
@@ -253,67 +264,76 @@ export function useTradingSettingsSyncMonitor(userId?: string) {
 export function useBulkTradingSettings(userId?: string) {
   const { updateExecutionSettings, syncToExecutionSystem } = useTradingSettingsSync(userId);
 
-  const applyTradingProfile = useCallback(async (profileName: "conservative" | "balanced" | "aggressive") => {
-    const profiles = {
-      conservative: {
-        maxConcurrentPositions: 2,
-        stopLossPercent: 3.0,
-        confidenceThreshold: 85,
-        maxPositionSize: 0.05,
-        autoSnipingEnabled: false,
-      },
-      balanced: {
-        maxConcurrentPositions: 3,
-        stopLossPercent: 5.0,
-        confidenceThreshold: 75,
-        maxPositionSize: 0.1,
-        autoSnipingEnabled: true,
-      },
-      aggressive: {
-        maxConcurrentPositions: 5,
-        stopLossPercent: 8.0,
-        confidenceThreshold: 65,
-        maxPositionSize: 0.2,
-        autoSnipingEnabled: true,
-      },
-    };
+  const applyTradingProfile = useCallback(
+    async (profileName: "conservative" | "balanced" | "aggressive") => {
+      const profiles = {
+        conservative: {
+          maxConcurrentPositions: 2,
+          stopLossPercent: 3.0,
+          confidenceThreshold: 85,
+          maxPositionSize: 0.05,
+          autoSnipingEnabled: false,
+        },
+        balanced: {
+          maxConcurrentPositions: 3,
+          stopLossPercent: 5.0,
+          confidenceThreshold: 75,
+          maxPositionSize: 0.1,
+          autoSnipingEnabled: true,
+        },
+        aggressive: {
+          maxConcurrentPositions: 5,
+          stopLossPercent: 8.0,
+          confidenceThreshold: 65,
+          maxPositionSize: 0.2,
+          autoSnipingEnabled: true,
+        },
+      };
 
-    const profile = profiles[profileName];
-    return updateExecutionSettings(profile);
-  }, [updateExecutionSettings]);
+      const profile = profiles[profileName];
+      return updateExecutionSettings(profile);
+    },
+    [updateExecutionSettings]
+  );
 
-  const applyRiskLevel = useCallback(async (riskLevel: "low" | "medium" | "high") => {
-    const riskSettings = {
-      low: {
-        maxConcurrentPositions: 2,
-        stopLossPercent: 3.0,
-        confidenceThreshold: 85,
-        maxPositionSize: 0.05,
-      },
-      medium: {
-        maxConcurrentPositions: 3,
-        stopLossPercent: 5.0,
-        confidenceThreshold: 75,
-        maxPositionSize: 0.1,
-      },
-      high: {
-        maxConcurrentPositions: 5,
-        stopLossPercent: 8.0,
-        confidenceThreshold: 65,
-        maxPositionSize: 0.2,
-      },
-    };
+  const applyRiskLevel = useCallback(
+    async (riskLevel: "low" | "medium" | "high") => {
+      const riskSettings = {
+        low: {
+          maxConcurrentPositions: 2,
+          stopLossPercent: 3.0,
+          confidenceThreshold: 85,
+          maxPositionSize: 0.05,
+        },
+        medium: {
+          maxConcurrentPositions: 3,
+          stopLossPercent: 5.0,
+          confidenceThreshold: 75,
+          maxPositionSize: 0.1,
+        },
+        high: {
+          maxConcurrentPositions: 5,
+          stopLossPercent: 8.0,
+          confidenceThreshold: 65,
+          maxPositionSize: 0.2,
+        },
+      };
 
-    const settings = riskSettings[riskLevel];
-    return updateExecutionSettings(settings);
-  }, [updateExecutionSettings]);
+      const settings = riskSettings[riskLevel];
+      return updateExecutionSettings(settings);
+    },
+    [updateExecutionSettings]
+  );
 
-  const enableTradingMode = useCallback(async (paperTrading: boolean) => {
-    return updateExecutionSettings({
-      enablePaperTrading: paperTrading,
-      tradingEnabled: true,
-    });
-  }, [updateExecutionSettings]);
+  const enableTradingMode = useCallback(
+    async (paperTrading: boolean) => {
+      return updateExecutionSettings({
+        enablePaperTrading: paperTrading,
+        tradingEnabled: true,
+      });
+    },
+    [updateExecutionSettings]
+  );
 
   const emergencyStop = useCallback(async () => {
     return updateExecutionSettings({
@@ -341,15 +361,15 @@ export function useBulkTradingSettings(userId?: string) {
  */
 export function formatSyncStatus(syncStatus: any): string {
   if (!syncStatus) return "Unknown";
-  
+
   if (syncStatus.isInSync) {
     return "In Sync";
   }
-  
+
   if (syncStatus.pendingUpdates?.length > 0) {
     return `${syncStatus.pendingUpdates.length} Pending Updates`;
   }
-  
+
   return "Out of Sync";
 }
 
@@ -358,25 +378,26 @@ export function formatSyncStatus(syncStatus: any): string {
  */
 export function calculateSyncHealthScore(syncHealth: any): number {
   if (!syncHealth) return 0;
-  
+
   let score = 100;
-  
+
   // Deduct for errors
   if (syncHealth.errorMessage) score -= 50;
-  
+
   // Deduct for pending updates
   if (syncHealth.pendingUpdates?.length > 0) {
     score -= Math.min(syncHealth.pendingUpdates.length * 10, 30);
   }
-  
+
   // Deduct for old sync time
   if (syncHealth.lastSync) {
     const syncAge = Date.now() - new Date(syncHealth.lastSync).getTime();
     const minutesOld = syncAge / (1000 * 60);
-    
-    if (minutesOld > 60) score -= 20; // Very old sync
+
+    if (minutesOld > 60)
+      score -= 20; // Very old sync
     else if (minutesOld > 10) score -= 10; // Somewhat old sync
   }
-  
+
   return Math.max(score, 0);
 }

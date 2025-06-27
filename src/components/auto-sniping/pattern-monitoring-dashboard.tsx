@@ -34,7 +34,7 @@ import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { PatternMatch } from "@/src/core/pattern-detection";
 import { usePatternMonitoring } from "@/src/hooks/use-pattern-monitoring";
-import type { PatternAlert } from "@/src/services/pattern-monitoring-service";
+import type { PatternAlert } from "@/src/services/notification/pattern-monitoring-service";
 
 interface PatternMonitoringDashboardProps {
   className?: string;
@@ -338,7 +338,7 @@ export function PatternMonitoringDashboard({
               </CardTitle>
               <CardDescription>Pattern detection alerts and notifications</CardDescription>
             </div>
-            {report.activeAlerts.some((alert) => alert.acknowledged) && (
+            {report.activeAlerts.some((alert: PatternAlert) => alert.acknowledged) && (
               <Button variant="outline" size="sm" onClick={handleClearAlerts}>
                 Clear Acknowledged
               </Button>
@@ -389,7 +389,7 @@ export function PatternMonitoringDashboard({
                     <p className="text-sm text-gray-700 mt-2">{alert.message}</p>
                     {alert.patterns.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {alert.patterns.slice(0, 3).map((pattern, idx) => (
+                        {alert.patterns.slice(0, 3).map((pattern: PatternMatch, idx: number) => (
                           <Badge
                             key={`alert-pattern-${pattern.symbol}-${idx}`}
                             variant="outline"
@@ -482,7 +482,7 @@ export function PatternMonitoringDashboard({
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {report.recommendations.map((recommendation, index) => (
+              {report.recommendations.map((recommendation: string, index: number) => (
                 <div
                   key={`recommendation-${index}-${recommendation.slice(0, 20)}`}
                   className="flex items-start gap-2"

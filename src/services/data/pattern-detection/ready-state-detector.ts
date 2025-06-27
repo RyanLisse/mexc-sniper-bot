@@ -10,8 +10,8 @@ import {
   calculateActivityBoost,
   getUniqueActivityTypes,
   hasHighPriorityActivity,
-} from "../../schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../mexc-unified-exports";
+} from "@/src/schemas/unified/mexc-api-schemas";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { getActivityDataForSymbol } from "./activity-integration";
 import type { PatternMatch } from "./pattern-types";
 import { PATTERN_CONSTANTS } from "./pattern-types";
@@ -696,8 +696,8 @@ export class ReadyStateDetector extends EventEmitter {
    */
   private async getHistoricalSuccessRate(patternType: string): Promise<number> {
     try {
-      const { db } = await import("../../db");
-      const { patternEmbeddings } = await import("../../db/schemas/patterns");
+      const { db } = await import("@/src/db");
+      const { patternEmbeddings } = await import("@/src/db/schemas/patterns");
       const { eq, gte, sql } = await import("drizzle-orm");
 
       // Get patterns from last 30 days

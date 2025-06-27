@@ -36,7 +36,7 @@ const AutoSnipingConfigSchema = z.object({
   enablePatternDetection: z.boolean(),
 });
 
-type AutoSnipingConfig = z.infer<typeof AutoSnipingConfigSchema>;
+export type AutoSnipingConfig = z.infer<typeof AutoSnipingConfigSchema>;
 
 // Zod schema for sniping status
 const SnipingStatusSchema = z.object({

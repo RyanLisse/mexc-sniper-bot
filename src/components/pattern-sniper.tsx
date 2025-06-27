@@ -16,11 +16,31 @@ import {
   Zap,
 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { usePatternSniper } from "../hooks/use-pattern-sniper";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+
+// Utility functions
+const formatUptime = (uptimeMs: number): string => {
+  const hours = Math.floor(uptimeMs / (1000 * 60 * 60));
+  const minutes = Math.floor((uptimeMs % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+};
+
+const formatTimeRemaining = (targetTime: Date): string => {
+  const now = new Date();
+  const diff = targetTime.getTime() - now.getTime();
+
+  if (diff <= 0) return "Now";
+
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Component handles complex pattern detection UI with multiple conditional rendering paths
 export const PatternSniperComponent: React.FC = memo(function PatternSniperComponent() {
@@ -440,4 +460,6 @@ export const PatternSniperComponent: React.FC = memo(function PatternSniperCompo
   );
 });
 
+// Export aliases for dynamic loader compatibility
+export const PatternSniper = PatternSniperComponent;
 export default PatternSniperComponent;

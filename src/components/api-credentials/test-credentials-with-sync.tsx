@@ -54,7 +54,7 @@ interface TestCredentialsResponse {
 export function TestCredentialsWithSync() {
   const { user } = useKindeAuth();
   const _queryClient = useQueryClient();
-  const { handleStatusSync, invalidateStatusQueries, _getCacheStatus } = useStatusSync();
+  const { handleStatusSync, invalidateStatusQueries, getCacheStatus } = useStatusSync();
   const [showSyncDetails, setShowSyncDetails] = useState(false);
 
   // Test credentials mutation with status sync handling

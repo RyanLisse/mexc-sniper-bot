@@ -461,40 +461,6 @@ export type MultiPhaseResult = z.infer<typeof MultiPhaseResultSchema>;
 // ============================================================================
 // Export All Types
 // ============================================================================
+// (Types already exported above via individual export statements)
 
-export type {
-  // Configuration
-  CoreTradingConfig,
-  // Trading
-  TradeParameters,
-  TradeResult,
-  // Auto-Sniping
-  AutoSnipeTarget,
-  // Strategy
-  TradingStrategy,
-  // Position Management
-  Position,
-  // Analytics
-  PerformanceMetrics,
-  // Service Status
-  ServiceStatus,
-  // Multi-Phase
-  MultiPhaseConfig,
-  MultiPhaseResult,
-  // API
-  ServiceResponse,
-};
-
-// Export Schemas for validation
-export {
-  CoreTradingConfigSchema,
-  TradeParametersSchema,
-  TradeResultSchema,
-  AutoSnipeTargetSchema,
-  TradingStrategySchema,
-  PositionSchema,
-  PerformanceMetricsSchema,
-  ServiceStatusSchema,
-  MultiPhaseConfigSchema,
-  MultiPhaseResultSchema,
-};
+// Schemas are already exported individually above

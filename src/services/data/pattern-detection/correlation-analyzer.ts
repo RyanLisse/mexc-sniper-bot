@@ -68,15 +68,12 @@ export async function analyzeSymbolCorrelations(
     correlations.push(...mlCorrelations);
   } catch (error) {
     const safeError = toSafeError(error);
-    getLogger().warn(
-      "ML correlation analysis failed",
-      {
-        operation: "ml_correlation_analysis",
-        symbolsAnalyzed: symbolData.length,
-        error: safeError.message,
-      },
-      safeError
-    );
+    getLogger().warn("ML correlation analysis failed", {
+      operation: "ml_correlation_analysis",
+      symbolsAnalyzed: symbolData.length,
+      error: safeError.message,
+      errorStack: safeError.stack,
+    });
   }
 
   return correlations;
@@ -141,15 +138,13 @@ export async function analyzeMLPatternCorrelations(
           try {
             return await calculatePatternSimilarityOptimized(pattern1, pattern2, cache);
           } catch (error) {
-            getLogger().warn(
-              "Pattern similarity calculation failed",
-              {
-                operation: "pattern_similarity_calculation",
-                pattern1Symbol: pattern1.symbolName,
-                pattern2Symbol: pattern2.symbolName,
-              },
-              error
-            );
+            getLogger().warn("Pattern similarity calculation failed", {
+              operation: "pattern_similarity_calculation",
+              pattern1Symbol: pattern1.symbolName,
+              pattern2Symbol: pattern2.symbolName,
+              error: error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined,
+            });
             return null;
           }
         })

@@ -298,19 +298,31 @@ export class MexcWebSocketStreamService extends EventEmitter {
     // Handle price updates
     this.on("price_update", (price: TradingPriceMessage) => {
       // Broadcast to WebSocket server
-      webSocketServer.broadcast("price_update", price);
+      webSocketServer.broadcast({
+        type: "trading:price",
+        channel: "trading:prices",
+        data: price
+      });
     });
 
     // Handle trading signals
     this.on("trading_signal", (signal: TradingSignalMessage) => {
       // Broadcast to WebSocket server
-      webSocketServer.broadcast("trading_signal", signal);
+      webSocketServer.broadcast({
+        type: "trading:signal",
+        channel: "trading:signals",
+        data: signal
+      });
     });
 
     // Handle notifications
     this.on("notification", (notification: NotificationMessage) => {
       // Broadcast to WebSocket server
-      webSocketServer.broadcast("notification", notification);
+      webSocketServer.broadcast({
+        type: "notification:info",
+        channel: "notifications:global",
+        data: notification
+      });
     });
   }
 

@@ -269,13 +269,37 @@ export function withAuthOptions<T extends any[]>(
 
       // Check admin access if required
       if (options?.adminOnly) {
-        // TODO: Implement admin role check when role system is available
-        // For now, log admin access attempts
+        // Implement comprehensive admin role check
+        const isAdmin = await checkAdminRole(user);
+        
+        if (!isAdmin) {
+          const ip = getClientIP(request);
+          const endpoint = new URL(request.url).pathname;
+          
+          // Log unauthorized admin access attempt
+          logSecurityEvent({
+            type: "ADMIN_ACCESS_DENIED",
+            userId: user.id,
+            ip,
+            endpoint,
+            timestamp: new Date().toISOString(),
+            reason: "Insufficient privileges"
+          });
+          
+          throw new ApplicationError("Admin access required", {
+            code: "INSUFFICIENT_PRIVILEGES",
+            statusCode: 403,
+            context: { userId: user.id, endpoint }
+          });
+        }
+        
+        // Log successful admin access
         const ip = getClientIP(request);
         const endpoint = new URL(request.url).pathname;
 
         logSecurityEvent({
-          type: "AUTH_ATTEMPT",
+          type: "ADMIN_ACCESS_GRANTED",
+          userId: user.id,
           ip,
           endpoint,
           userId: user.id,
@@ -411,6 +435,71 @@ export async function getUserIdFromBody(request: NextRequest): Promise<string> {
         headers: { "Content-Type": "application/json" },
       }
     );
+  }
+}
+
+/**
+ * Check if user has admin role
+ */
+export async function checkAdminRole(user: any): Promise<boolean> {
+  try {
+    // Multi-level admin role check for comprehensive security
+    
+    // 1. Check environment-based admin list
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(email => email.trim()) || [];
+    if (adminEmails.includes(user.email)) {
+      return true;
+    }
+    
+    // 2. Check admin user IDs from environment
+    const adminUserIds = process.env.ADMIN_USER_IDS?.split(',').map(id => id.trim()) || [];
+    if (adminUserIds.includes(user.id)) {
+      return true;
+    }
+    
+    // 3. Check database for user roles when available
+    try {
+      const { db } = await import("../db");
+      const { sql } = await import("drizzle-orm");
+      
+      // Check if user_roles table exists and query it
+      const roleResult = await db.execute(sql`
+        SELECT role FROM user_roles 
+        WHERE user_id = ${user.id} AND is_active = true
+        LIMIT 1
+      `);
+      
+      if (roleResult.rows.length > 0) {
+        const userRole = roleResult.rows[0].role;
+        return userRole === 'admin' || userRole === 'super_admin';
+      }
+    } catch (dbError) {
+      // Database role check failed, continue with other checks
+      getLogger().warn('Database role check failed:', dbError);
+    }
+    
+    // 4. Check for admin claim in user object (from JWT/session)
+    if (user.role === 'admin' || user.isAdmin === true || user.admin === true) {
+      return true;
+    }
+    
+    // 5. Check for specific admin permissions
+    if (user.permissions && Array.isArray(user.permissions)) {
+      return user.permissions.includes('admin') || user.permissions.includes('super_admin');
+    }
+    
+    // 6. Default to false if no admin role found
+    getLogger().info(`Admin role check failed for user ${user.id}`, {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      hasPermissions: !!user.permissions
+    });
+    
+    return false;
+  } catch (error) {
+    getLogger().error('Error checking admin role:', error);
+    return false; // Fail secure - deny access on error
   }
 }
 

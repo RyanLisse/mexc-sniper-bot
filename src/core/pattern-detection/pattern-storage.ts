@@ -12,10 +12,10 @@
  */
 
 import { and, eq } from "drizzle-orm";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { db } from "../../db";
 import { patternEmbeddings } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
-import type { CalendarEntry, SymbolEntry } from "../../services/mexc-unified-exports";
 import type { IPatternStorage } from "./interfaces";
 import {
   calculateOptimizedPatternSimilarity,
@@ -180,9 +180,13 @@ export class PatternStorage implements IPatternStorage {
         return defaultRate;
       }
 
-      const totalSuccesses = patterns.reduce((sum, p) => sum + (p.truePositives || 0), 0);
+      const totalSuccesses = patterns.reduce(
+        (sum: number, p: { truePositives?: number }) => sum + (p.truePositives || 0),
+        0
+      );
       const totalAttempts = patterns.reduce(
-        (sum, p) => sum + (p.truePositives || 0) + (p.falsePositives || 0),
+        (sum: number, p: { truePositives?: number; falsePositives?: number }) =>
+          sum + (p.truePositives || 0) + (p.falsePositives || 0),
         0
       );
 
@@ -252,12 +256,12 @@ export class PatternStorage implements IPatternStorage {
 
       // OPTIMIZATION: Use optimized similarity calculation (60% faster)
       const similarPatterns = allPatterns
-        .map((p) => ({
+        .map((p: any) => ({
           ...p,
           similarity: calculateOptimizedPatternSimilarity(pattern, p),
         }))
-        .filter((p) => p.similarity >= threshold)
-        .sort((a, b) => b.similarity - a.similarity)
+        .filter((p: any) => p.similarity >= threshold)
+        .sort((a: any, b: any) => b.similarity - a.similarity)
         .slice(0, limit);
 
       // Cache the result

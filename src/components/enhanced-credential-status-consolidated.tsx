@@ -142,15 +142,17 @@ export function ConsolidatedCredentialStatus({
   if (variant === "compact") {
     return (
       <div className={`flex items-center space-x-2 ${className}`}>
-        <StatusTooltip
-          title="System Status"
-          details={`Network: ${networkStatus.connected ? "Connected" : "Disconnected"}, Credentials: ${credentialStatus.isValid ? "Valid" : "Invalid"}`}
-        >
+        <div className="relative group">
           <UnifiedStatusBadge size="sm" />
-        </StatusTooltip>
-        <NetworkStatusIndicator size="sm" />
-        <CredentialStatusIndicator size="sm" />
-        <TradingStatusIndicator size="sm" />
+          <div className="absolute z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 transform -translate-x-1/2 mb-2">
+            <div className="bg-white border shadow-lg rounded p-2 text-xs whitespace-nowrap">
+              <StatusTooltip />
+            </div>
+          </div>
+        </div>
+        <NetworkStatusIndicator />
+        <CredentialStatusIndicator />
+        <TradingStatusIndicator />
       </div>
     );
   }
@@ -307,7 +309,7 @@ export function ConsolidatedCredentialStatus({
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <UnifiedStatusBadge status={overallStatus} />
+          <UnifiedStatusBadge />
           <span className="text-lg font-semibold text-gray-900 dark:text-white">System Status</span>
         </div>
         <button
@@ -334,9 +336,9 @@ export function ConsolidatedCredentialStatus({
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <NetworkStatusIndicator status={networkStatus} />
-        <CredentialStatusIndicator status={credentialStatus} />
-        <TradingStatusIndicator status={tradingStatus} />
+        <NetworkStatusIndicator />
+        <CredentialStatusIndicator />
+        <TradingStatusIndicator />
       </div>
 
       {showTimestamp && lastUpdated && (

@@ -1,5 +1,5 @@
 "use client";
-import type * as React from "react";
+import * as React from "react";
 import { lazy, Suspense } from "react";
 import { ErrorBoundary } from "../error-boundary";
 
@@ -8,26 +8,25 @@ export interface ChartConfig {
 }
 
 // Safely lazy load Recharts ResponsiveContainer to reduce initial bundle size with error handling
-const ResponsiveContainer = lazy(() =>
-  import("recharts")
-    .then((module) => ({
-      default: module.ResponsiveContainer,
-    }))
-    .catch((error) => {
-      console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
-      // Return fallback component that renders safely
-      return {
-        default: ({ children, className }: { children?: React.ReactNode; className?: string }) => (
-          <div
-            className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
-          >
-            Chart temporarily unavailable
-            {children && <div style={{ display: "none" }}>{children}</div>}
-          </div>
-        ),
-      };
-    })
-);
+const ResponsiveContainer = lazy(async () => {
+  try {
+    const module = await import("recharts");
+    return { default: module.ResponsiveContainer };
+  } catch (error) {
+    console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
+    // Return fallback component that renders safely
+    const FallbackComponent: React.FC<{ children?: React.ReactNode; className?: string }> = ({ children, className }) => (
+      <div
+        className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
+      >
+        Chart temporarily unavailable
+        {children && <div style={{ display: "none" }}>{children}</div>}
+      </div>
+    );
+    FallbackComponent.displayName = "ChartFallback";
+    return { default: FallbackComponent };
+  }
+});
 
 export function ChartContainer({
   className,

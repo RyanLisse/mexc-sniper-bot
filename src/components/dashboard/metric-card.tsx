@@ -58,3 +58,6 @@ export function MetricCard({
     </Card>
   );
 }
+
+// Add default export for dynamic loading
+export default MetricCard;

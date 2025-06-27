@@ -422,7 +422,7 @@ export class DatabaseOptimizationManager {
    * Capture current performance metrics
    */
   private async capturePerformanceMetrics(): Promise<PerformanceBenchmark> {
-    const monitoringStats = queryPerformanceMonitor.getPerformanceStats(30);
+    const monitoringStats = queryPerformanceMonitor.getPerformanceStats();
     const connectionMetrics = databaseConnectionPool.getConnectionMetrics();
     const cacheMetrics = databaseConnectionPool.getCacheMetrics();
 

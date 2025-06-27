@@ -330,7 +330,7 @@ export class PerformanceTracker {
       this.strategyPerformance[strategyName] = {
         trades: 0,
         successRate: 0,
-        totalPnL: 0,
+        averagePnL: 0,
         maxDrawdown: 0,
       };
     }
@@ -345,7 +345,8 @@ export class PerformanceTracker {
     }
 
     if (pnl !== undefined) {
-      strategy.totalPnL += pnl;
+      const currentAverage = strategy.averagePnL * (strategy.trades - 1);
+      strategy.averagePnL = (currentAverage + pnl) / strategy.trades;
     }
   }
 

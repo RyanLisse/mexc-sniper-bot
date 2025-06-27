@@ -5,7 +5,7 @@
  * performance tracking, and cache invalidation strategies.
  */
 
-import type { AgentResponse } from "@/src/mexc-agents/base-agent";
+import type { AgentResponse } from "@/src/types/common-interfaces";
 import { generateCacheKey, globalCacheManager } from "../cache-manager";
 import type {
   AgentCacheConfig,
@@ -164,7 +164,10 @@ export class AgentResponseCache {
 
         // Check pattern-based criteria
         if (criteria.pattern && !shouldDelete) {
-          shouldDelete = key.includes(criteria.pattern);
+          shouldDelete =
+            typeof criteria.pattern === "string"
+              ? key.includes(criteria.pattern)
+              : criteria.pattern.test(key);
         }
 
         // Check tag-based criteria

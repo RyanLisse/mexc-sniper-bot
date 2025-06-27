@@ -134,6 +134,7 @@ export function useBreakpoints(): Breakpoints {
       window.addEventListener("resize", updateBreakpoints, { passive: true });
       return () => window.removeEventListener("resize", updateBreakpoints);
     }
+    return undefined;
   }, []);
 
   // Return SSR-safe defaults until hydrated
@@ -177,6 +178,7 @@ export function useOrientation(): Orientation {
         window.removeEventListener("orientationchange", updateOrientation);
       };
     }
+    return undefined;
   }, []);
 
   // Return SSR-safe default until hydrated
@@ -334,6 +336,7 @@ export function useViewportHeight(): number {
         }
       };
     }
+    return undefined;
   }, []);
 
   // Return SSR-safe default until hydrated
@@ -369,6 +372,7 @@ export function useWindowSize() {
       window.addEventListener("resize", updateSize, { passive: true });
       return () => window.removeEventListener("resize", updateSize);
     }
+    return undefined;
   }, []);
 
   // Return SSR-safe defaults until hydrated

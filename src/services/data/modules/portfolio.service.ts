@@ -110,7 +110,11 @@ export class PortfolioService {
   /**
    * Get complete portfolio with metrics
    */
-  @instrumentServiceMethod("portfolio", "getPortfolio")
+  @instrumentServiceMethod({
+    serviceName: "portfolio",
+    methodName: "getPortfolio",
+    operationType: "api_call",
+  })
   async getPortfolio(filter?: PortfolioFilter): Promise<PortfolioResponse> {
     const startTime = Date.now();
 
@@ -160,7 +164,11 @@ export class PortfolioService {
   /**
    * Get portfolio balances only (no metrics)
    */
-  @instrumentServiceMethod("portfolio", "getBalances")
+  @instrumentServiceMethod({
+    serviceName: "portfolio",
+    methodName: "getBalances",
+    operationType: "api_call",
+  })
   async getBalances(filter?: PortfolioFilter): Promise<PortfolioResponse> {
     const filterWithoutMetrics = { ...filter, includeMetrics: false };
     return this.getPortfolio(filterWithoutMetrics);
@@ -169,7 +177,11 @@ export class PortfolioService {
   /**
    * Get asset allocation breakdown
    */
-  @instrumentServiceMethod("portfolio", "getAssetAllocation")
+  @instrumentServiceMethod({
+    serviceName: "portfolio",
+    methodName: "getAssetAllocation",
+    operationType: "api_call",
+  })
   async getAssetAllocation(): Promise<{
     success: boolean;
     data: Record<string, number>;
@@ -198,7 +210,11 @@ export class PortfolioService {
   /**
    * Get portfolio performance summary
    */
-  @instrumentServiceMethod("portfolio", "getPerformanceSummary")
+  @instrumentServiceMethod({
+    serviceName: "portfolio",
+    methodName: "getPerformanceSummary",
+    operationType: "api_call",
+  })
   async getPerformanceSummary(): Promise<{
     success: boolean;
     data: {
@@ -444,5 +460,3 @@ export function createPortfolioService(config: PortfolioConfig): PortfolioServic
 // ============================================================================
 // Exports
 // ============================================================================
-
-export type { PortfolioConfig };

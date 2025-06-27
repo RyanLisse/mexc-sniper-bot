@@ -557,7 +557,11 @@ export class DatabaseIndexOptimizer {
   async validateIndexes(): Promise<{ valid: number; invalid: number; details: any[] }> {
     console.info("🔍 Validating index integrity...");
 
-    const results = { valid: 0, invalid: 0, details: [] };
+    const results: {
+      valid: number;
+      invalid: number;
+      details: Array<{ index: string; status: string; issues?: any; error?: unknown }>;
+    } = { valid: 0, invalid: 0, details: [] };
     const strategicIndexes = this.getStrategicIndexes();
 
     for (const index of strategicIndexes) {

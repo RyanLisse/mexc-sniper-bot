@@ -8,8 +8,8 @@
 
 import { and, desc, eq, gte } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "../db";
-import { balanceSnapshots, portfolioSummary } from "../db/schema";
+import { db } from "@/src/db";
+import { balanceSnapshots, portfolioSummary } from "@/src/db/schema";
 // Zod schemas for type-safe balance data validation
 export const BalanceItemSchema = z.object({
   asset: z.string().min(1).max(20),

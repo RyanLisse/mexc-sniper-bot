@@ -13,8 +13,8 @@
  * - Comprehensive test results
  */
 
-import { getRecommendedMexcService } from "../services/mexc-unified-exports";
-import { getUserCredentials } from "../services/user-credentials-service";
+import { getRecommendedMexcService } from "../services/api/mexc-unified-exports";
+import { getUserCredentials } from "../services/api/user-credentials-service";
 import {
   type ApiResponse,
   type CredentialValidationResult,

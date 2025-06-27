@@ -203,3 +203,6 @@ export const OptimizedAccountBalance = React.memo(({ userId, className }: Accoun
 ));
 
 OptimizedAccountBalance.displayName = "OptimizedAccountBalance";
+
+// Add default export for dynamic imports
+export default OptimizedAccountBalance;

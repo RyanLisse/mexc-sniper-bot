@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
 
 /**
  * Strategy Management Hook
- * 
+ *
  * Manages strategy selection, performance tracking, and real-time updates
  * Connects UI to Core Trading Service via the /api/strategies endpoint
  */
@@ -83,7 +83,7 @@ export function useStrategyManagement() {
     data: strategyData,
     isLoading,
     error,
-    refetch
+    refetch,
   } = useQuery<StrategyData>({
     queryKey: ["strategies"],
     queryFn: async () => {
@@ -132,43 +132,52 @@ export function useStrategyManagement() {
   });
 
   // Switch strategy function
-  const switchStrategy = useCallback(async (strategyId: string) => {
-    return strategyUpdateMutation.mutateAsync({
-      action: "switch",
-      strategyId,
-    });
-  }, [strategyUpdateMutation]);
+  const switchStrategy = useCallback(
+    async (strategyId: string) => {
+      return strategyUpdateMutation.mutateAsync({
+        action: "switch",
+        strategyId,
+      });
+    },
+    [strategyUpdateMutation]
+  );
 
   // Update configuration function
-  const updateConfiguration = useCallback(async (config: Record<string, unknown>) => {
-    return strategyUpdateMutation.mutateAsync({
-      action: "update",
-      config,
-    });
-  }, [strategyUpdateMutation]);
+  const updateConfiguration = useCallback(
+    async (config: Record<string, unknown>) => {
+      return strategyUpdateMutation.mutateAsync({
+        action: "update",
+        config,
+      });
+    },
+    [strategyUpdateMutation]
+  );
 
   // Toggle trading function
-  const toggleTrading = useCallback(async (enabled: boolean) => {
-    // This would integrate with the auto-sniping control endpoint
-    const response = await fetch("/api/auto-sniping/config", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        action: enabled ? "start" : "stop",
-      }),
-    });
+  const toggleTrading = useCallback(
+    async (enabled: boolean) => {
+      // This would integrate with the auto-sniping control endpoint
+      const response = await fetch("/api/auto-sniping/config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: enabled ? "start" : "stop",
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Failed to ${enabled ? 'start' : 'stop'} trading`);
-    }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to ${enabled ? "start" : "stop"} trading`);
+      }
 
-    // Refetch strategy data to get updated status
-    refetch();
-    return response.json();
-  }, [refetch]);
+      // Refetch strategy data to get updated status
+      refetch();
+      return response.json();
+    },
+    [refetch]
+  );
 
   // Real-time control
   const enableRealTime = useCallback(() => {
@@ -189,22 +198,22 @@ export function useStrategyManagement() {
     strategyData,
     isLoading,
     error,
-    
+
     // Strategy operations
     switchStrategy,
     updateConfiguration,
     toggleTrading,
-    
+
     // Real-time control
     isRealTimeEnabled,
     enableRealTime,
     disableRealTime,
     forceRefresh,
-    
+
     // Status
     isUpdating: strategyUpdateMutation.isPending,
     updateError: strategyUpdateMutation.error,
-    
+
     // Computed values
     activeStrategy: strategyData?.activeStrategy,
     availableStrategies: strategyData?.availableStrategies || [],
@@ -233,9 +242,7 @@ export function useStrategyManagement() {
 export function useStrategyPerformanceMonitor(strategyId?: string) {
   const { strategyData, isRealTimeEnabled } = useStrategyManagement();
 
-  const specificPerformance = strategyId 
-    ? strategyData?.strategyPerformance[strategyId]
-    : null;
+  const specificPerformance = strategyId ? strategyData?.strategyPerformance[strategyId] : null;
 
   return {
     performance: specificPerformance,
@@ -251,14 +258,11 @@ export function useStrategyPerformanceMonitor(strategyId?: string) {
 export function useActivePositionsMonitor() {
   const { strategyData, isRealTimeEnabled } = useStrategyManagement();
 
-  const totalPnL = strategyData?.activePositions.reduce(
-    (sum, pos) => sum + pos.currentPnL, 0
-  ) || 0;
+  const totalPnL = strategyData?.activePositions.reduce((sum, pos) => sum + pos.currentPnL, 0) || 0;
 
-  const totalPnLPercentage = strategyData?.activePositions.length 
-    ? strategyData.activePositions.reduce(
-        (sum, pos) => sum + pos.currentPnLPercentage, 0
-      ) / strategyData.activePositions.length
+  const totalPnLPercentage = strategyData?.activePositions.length
+    ? strategyData.activePositions.reduce((sum, pos) => sum + pos.currentPnLPercentage, 0) /
+      strategyData.activePositions.length
     : 0;
 
   return {
@@ -277,8 +281,9 @@ export function useActivePositionsMonitor() {
 export function useStrategyComparison() {
   const { strategyPerformance, availableStrategies } = useStrategyManagement();
 
-  const comparison = availableStrategies.map(strategy => {
+  const comparison = availableStrategies.map((strategy) => {
     const performance = strategyPerformance[strategy.id] || {
+      strategyId: strategy.id,
       successRate: 0,
       averageProfit: 0,
       totalTrades: 0,

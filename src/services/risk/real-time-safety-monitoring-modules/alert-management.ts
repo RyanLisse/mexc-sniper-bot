@@ -384,7 +384,11 @@ export class AlertManagement {
               `Reduced ${reduced}/${count} positions by 50%`
             );
           } catch (error) {
-            this.setActionResult(action, "failed", `Position reduction failed: ${error.message}`);
+            this.setActionResult(
+              action,
+              "failed",
+              `Position reduction failed: ${(error as Error)?.message}`
+            );
           }
           break;
         }
@@ -422,7 +426,11 @@ export class AlertManagement {
               );
             }
           } catch (error) {
-            this.setActionResult(action, "failed", `Exposure limitation failed: ${error.message}`);
+            this.setActionResult(
+              action,
+              "failed",
+              `Exposure limitation failed: ${(error as Error)?.message}`
+            );
           }
           break;
         }
@@ -447,7 +455,11 @@ export class AlertManagement {
               `Admin notification sent with alert ID ${action.id}`
             );
           } catch (error) {
-            this.setActionResult(action, "failed", `Admin notification failed: ${error.message}`);
+            this.setActionResult(
+              action,
+              "failed",
+              `Admin notification failed: ${(error as Error)?.message}`
+            );
           }
           break;
         }
@@ -486,7 +498,7 @@ export class AlertManagement {
             this.setActionResult(
               action,
               "failed",
-              `Circuit breaker activation failed: ${error.message}`
+              `Circuit breaker activation failed: ${(error as Error)?.message}`
             );
           }
           break;
@@ -510,7 +522,7 @@ export class AlertManagement {
     } catch (error) {
       action.executed = true;
       action.result = "failed";
-      action.details = `Execution failed: ${error.message}`;
+      action.details = `Execution failed: ${(error as Error)?.message}`;
       action.executedAt = new Date().toISOString();
 
       console.error(
@@ -519,7 +531,7 @@ export class AlertManagement {
           operation: "execute_action",
           actionId: action.id,
           actionType: action.type,
-          error: error.message,
+          error: (error as Error)?.message,
         },
         error
       );

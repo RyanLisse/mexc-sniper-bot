@@ -5,9 +5,9 @@
  * Preserves system architecture while providing type safety.
  */
 
-import type { PatternEmbedding } from "../../db/schemas/patterns";
-import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../mexc-unified-exports";
+import type { PatternEmbedding } from "@/src/db/schemas/patterns";
+import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 
 // ============================================================================
 // Core Pattern Types - Preserving System Architecture

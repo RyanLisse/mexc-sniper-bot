@@ -60,7 +60,7 @@ export function instrumentedTradingRoute<T = any>(
           "trading.operation_type": operationType,
         },
       },
-      async (span) => {
+      async (span: any) => {
         const startTime = Date.now();
 
         try {
@@ -158,7 +158,7 @@ export async function instrumentedDatabaseOperation<T>(
         ...attributes,
       },
     },
-    async (span) => {
+    async (span: any) => {
       const startTime = Date.now();
 
       try {
@@ -216,7 +216,7 @@ export async function instrumentedApiCall<T>(
         ...attributes,
       },
     },
-    async (span) => {
+    async (span: any) => {
       const startTime = Date.now();
 
       try {
@@ -288,7 +288,7 @@ export async function instrumentedTradingOperation<T>(
         ...attributes,
       },
     },
-    async (span) => {
+    async (span: any) => {
       const startTime = Date.now();
 
       try {

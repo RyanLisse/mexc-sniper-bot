@@ -115,19 +115,60 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  logErrorToService = (error: Error, errorInfo: ErrorInfo) => {
-    // TODO: Integrate with error monitoring service (e.g., Sentry, LogRocket)
-    const errorData = {
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString(),
-      url: typeof window !== "undefined" ? window.location.href : "SSR",
-      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
-    };
+  logErrorToService = async (error: Error, errorInfo: ErrorInfo) => {
+    try {
+      // Only log to service on server-side to avoid bundling database code for client
+      if (typeof window !== "undefined") {
+        // Client-side: Send error to API endpoint instead
+        fetch("/api/errors", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: error.message,
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            timestamp: new Date().toISOString(),
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+          }),
+        }).catch(console.error);
+        return;
+      }
 
-    // For now, just log to console
-    console.error("Error logged to monitoring service:", errorData);
+      // Send to browser error tracking if available
+      if (typeof window !== "undefined") {
+        // Send to browser monitoring services
+        const monitoringData = {
+          error: error.message,
+          stack: error.stack,
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          component_stack: errorInfo.componentStack
+        };
+
+        // Try multiple monitoring endpoints
+        const endpoints = [
+          (window as any).Sentry?.captureException && (() => (window as any).Sentry.captureException(error, { extra: monitoringData })),
+          (window as any).LogRocket?.captureException && (() => (window as any).LogRocket.captureException(error)),
+          (window as any).gtag && (() => (window as any).gtag('event', 'exception', { description: error.message, fatal: false }))
+        ].filter(Boolean);
+
+        endpoints.forEach(endpoint => {
+          try {
+            endpoint();
+          } catch (e) {
+            console.warn('Failed to send to monitoring endpoint:', e);
+          }
+        });
+      }
+
+      this.logger.info("Error logged to monitoring services", { errorId: error.name });
+    } catch (loggingError) {
+      // Fallback logging if error service fails
+      console.error("Failed to log error to monitoring service:", loggingError);
+      console.error("Original error:", error.message, errorInfo.componentStack);
+    }
   };
 
   handleReset = () => {

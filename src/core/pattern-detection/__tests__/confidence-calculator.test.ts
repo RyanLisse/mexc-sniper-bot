@@ -7,7 +7,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../../../services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import type { IConfidenceCalculator } from "../interfaces";
 
 describe("ConfidenceCalculator - TDD Implementation", () => {
@@ -38,7 +38,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
         sts: 2,
         st: 2,
         tt: 4,
-        ca: 1000,
+        ca: "0x1000",
         ps: 100,
         qs: 50,
       };

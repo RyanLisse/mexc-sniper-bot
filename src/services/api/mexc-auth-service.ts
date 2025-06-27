@@ -22,9 +22,9 @@ export class MexcAuthService {
   hasCredentials(): boolean {
     return Boolean(
       this.config.apiKey &&
-        this.config.apiSecret &&
+        this.config.secretKey &&
         this.config.apiKey.trim().length > 0 &&
-        this.config.apiSecret.trim().length > 0
+        this.config.secretKey.trim().length > 0
     );
   }
 
@@ -36,7 +36,7 @@ export class MexcAuthService {
       throw new Error("API credentials not configured");
     }
 
-    return crypto.createHmac("sha256", this.config.apiSecret).update(queryString).digest("hex");
+    return crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
   }
 
   /**
@@ -53,7 +53,7 @@ export class MexcAuthService {
     const authParams = {
       ...params,
       timestamp,
-      recvWindow: this.config.recvWindow || 5000,
+      recvWindow: 5000, // Fixed value since recvWindow is not in UnifiedMexcConfigV2
     };
 
     // Create query string
@@ -64,7 +64,7 @@ export class MexcAuthService {
 
     return {
       apiKey: this.config.apiKey,
-      apiSecret: this.config.apiSecret,
+      apiSecret: this.config.secretKey,
       timestamp,
       signature,
     };
@@ -91,7 +91,7 @@ export class MexcAuthService {
       ...params,
       timestamp: authContext.timestamp,
       signature: authContext.signature,
-      recvWindow: this.config.recvWindow || 5000,
+      recvWindow: 5000, // Fixed value since recvWindow is not in UnifiedMexcConfigV2
     };
   }
 
@@ -138,7 +138,7 @@ export class MexcAuthService {
       errors.push("Invalid API key format");
     }
 
-    if (!this.validateApiSecret(this.config.apiSecret)) {
+    if (!this.validateApiSecret(this.config.secretKey)) {
       errors.push("Invalid API secret format");
     }
 

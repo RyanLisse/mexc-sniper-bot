@@ -13,6 +13,11 @@ export interface ExitStrategy {
   levels: ExitLevel[];
   isDefault: boolean;
   isCustom: boolean;
+  type?: string;
+  riskLevel?: string;
+  parameters?: Record<string, any>;
+  enabled?: boolean;
+  createdAt?: string | Date;
 }
 
 // Predefined Exit Strategies
