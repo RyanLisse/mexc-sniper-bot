@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 // Direct imports for Recharts - since TradingChart is already lazy-loaded by dynamic-component-loader
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { ChartContainer } from "../ui/chart";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
@@ -37,67 +36,45 @@ type MexcKlineData = [
   string  // buyQuoteAssetVolume
 ];
 
-// Real market data fetcher using MEXC API with actual klines data
+// Real market data fetcher using API route
 const fetchMarketData = async (symbol: string = "BTCUSDT", interval: string = "1d", limit: number = 90): Promise<ChartDataPoint[]> => {
   try {
-    const mexcService = await getUnifiedMexcService();
+    console.log("[TradingChart] Fetching market data from API");
     
-    // First, try to get actual historical klines data
-    console.log("[TradingChart] Fetching real klines data from MEXC API");
+    const params = new URLSearchParams({
+      symbol,
+      interval,
+      limit: limit.toString(),
+    });
     
-    try {
-      // Use the new getKlines method to get actual historical candlestick data
-      const klinesResponse = await (mexcService as any).getKlines?.(symbol, interval, limit);
+    const response = await fetch(`/api/market-data/klines?${params}`);
+    
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+      console.log("[TradingChart] Successfully fetched market data", {
+        dataPoints: result.data.length,
+        isFallback: result.fallback || false,
+        source: result.fallback ? "fallback" : "real"
+      });
       
-      if (klinesResponse && klinesResponse.success && Array.isArray(klinesResponse.data) && klinesResponse.data.length > 0) {
-        console.log("[TradingChart] Using real historical klines data");
-        const chartData = convertKlinesToChartData(klinesResponse.data);
-        (chartData as any)._dataSource = "real";
-        return chartData;
-      }
-    } catch (klinesError) {
-      console.warn("[TradingChart] Klines API call failed, falling back to ticker data:", klinesError);
+      // The API already returns data in the correct ChartDataPoint format
+      const chartData = result.data;
+      (chartData as any)._dataSource = result.fallback ? "fallback" : "real";
+      return chartData;
+    } else {
+      throw new Error("No data received from API");
     }
-    
-    // Fallback to ticker data approach
-    try {
-      const tickerResponse = await mexcService.get24hrTicker(symbol);
-      if (tickerResponse.success && Array.isArray(tickerResponse.data) && tickerResponse.data.length > 0) {
-        console.log("[TradingChart] Using ticker data for historical simulation");
-        const chartData = generateHistoricalDataFromTicker(tickerResponse.data[0], limit);
-        (chartData as any)._dataSource = "ticker";
-        return chartData;
-      }
-    } catch (tickerError) {
-      console.warn("[TradingChart] Ticker API call failed, trying all tickers:", tickerError);
-    }
-    
-    // Try to get all tickers as fallback
-    try {
-      const allTickersResponse = await mexcService.get24hrTicker();
-      if (allTickersResponse.success && Array.isArray(allTickersResponse.data)) {
-        const targetTicker = allTickersResponse.data.find((ticker: any) => ticker.symbol === symbol);
-        if (targetTicker) {
-          console.log("[TradingChart] Found ticker in all tickers response");
-          const chartData = generateHistoricalDataFromTicker(targetTicker, limit);
-          (chartData as any)._dataSource = "ticker";
-          return chartData;
-        }
-      }
-    } catch (allTickersError) {
-      console.warn("[TradingChart] All tickers API call failed:", allTickersError);
-    }
-    
-    // Final fallback to realistic demo data
-    console.warn("[TradingChart] All API calls failed, using demo data");
-    const demoData = generateRealisticDemoData(limit);
-    (demoData as any)._dataSource = "demo";
-    return demoData;
 
   } catch (error) {
     console.error("[TradingChart] Failed to fetch market data:", error);
     
     // Fallback to realistic demo data on error
+    console.warn("[TradingChart] Using demo data as final fallback");
     const demoData = generateRealisticDemoData(limit);
     (demoData as any)._dataSource = "demo";
     return demoData;
