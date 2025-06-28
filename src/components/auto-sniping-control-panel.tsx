@@ -37,7 +37,7 @@ const SnipingStatusSchema = z.object({
   successRate: z.number(),
   totalProfit: z.number(),
   lastExecution: z.string().optional(),
-  safetyStatus: z.enum(["safe", "warning", "critical"]),
+  safetyStatus: z.enum(["safe", "warning", "critical", "emergency"]),
   patternDetectionActive: z.boolean(),
 });
 
