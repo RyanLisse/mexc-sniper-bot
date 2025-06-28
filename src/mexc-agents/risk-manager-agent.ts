@@ -52,7 +52,7 @@ export interface TradeRiskAssessment {
 
 export class RiskManagerAgent extends SafetyBaseAgent {
   // Simple console logger to avoid webpack bundling issues
-  private logger = {
+  protected logger = {
     info: (message: string, context?: any) =>
       console.info("[risk-manager-agent]", message, context || ""),
     warn: (message: string, context?: any) =>
@@ -337,18 +337,18 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     switch (breaker.action) {
       case "warn":
         // Just emit warning - no trading restrictions
-        logger.warn(`[RiskManager] Warning: ${breaker.name} threshold reached`);
+        this.logger.warn(`[RiskManager] Warning: ${breaker.name} threshold reached`);
         break;
 
       case "halt_new":
         // Halt new trades but allow existing ones to continue
-        logger.warn(`[RiskManager] Halting new trades due to: ${breaker.name}`);
+        this.logger.warn(`[RiskManager] Halting new trades due to: ${breaker.name}`);
         // This would integrate with trading system to prevent new trades
         break;
 
       case "halt_all":
         // Halt all trading activity
-        logger.error(`[RiskManager] Halting all trading due to: ${breaker.name}`);
+        this.logger.error(`[RiskManager] Halting all trading due to: ${breaker.name}`);
         // This would integrate with trading system to halt everything
         break;
 
@@ -489,7 +489,7 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     // 1. Cancel all pending orders
     // 2. Close all positions (if configured)
     // 3. Disable all trading functionality
-    logger.error(`[RiskManager] EMERGENCY HALT ACTIVATED: ${reason}`);
+    this.logger.error(`[RiskManager] EMERGENCY HALT ACTIVATED: ${reason}`);
   }
 
   async deactivateEmergencyHalt(): Promise<void> {

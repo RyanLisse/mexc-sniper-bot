@@ -197,7 +197,11 @@ export class PerformanceMonitor {
     thresholds: Partial<ThresholdConfig> = {}
   ) {
     this.config = { ...defaultConfig, ...config };
-    this.thresholds = { ...defaultThresholds, ...thresholds };
+    // Filter out undefined values from thresholds before merging
+    const validThresholds = Object.fromEntries(
+      Object.entries(thresholds).filter(([_, value]) => value !== undefined)
+    ) as ThresholdConfig;
+    this.thresholds = { ...defaultThresholds, ...validThresholds };
 
     // Start cleanup interval
     if (this.config.enableMetrics) {

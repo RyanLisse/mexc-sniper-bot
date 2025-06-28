@@ -81,19 +81,20 @@ export class StartupInitializer {
       const healthSummary = environmentValidation.getHealthSummary();
 
       if (healthSummary.status === "critical") {
-        const errorMessage = `Critical environment issues: ${healthSummary.issues.join(", ")}`;
+        const errorMessage = `Critical environment issues: ${healthSummary.criticalMissing.join(", ")}`;
         failed.push("environment-validation");
         errors["environment-validation"] = errorMessage;
         console.error("[Startup] ❌ Environment validation failed:", errorMessage);
         console.error("[Startup] 💡 Run: bun run scripts/environment-setup.ts --check");
       } else {
         initialized.push("environment-validation");
+        const score = Math.round((healthSummary.configured / healthSummary.total) * 100);
         console.info(
-          `[Startup] ✅ Environment validated (${healthSummary.status}, score: ${healthSummary.score}/100)`
+          `[Startup] ✅ Environment validated (${healthSummary.status}, score: ${score}/100)`
         );
 
         if (healthSummary.status === "warning") {
-          console.warn(`[Startup] ⚠️ Environment warnings: ${healthSummary.issues.join(", ")}`);
+          console.warn(`[Startup] ⚠️ Environment warnings: Missing ${healthSummary.missing}, Invalid ${healthSummary.invalid}`);
           console.warn(
             "[Startup] 💡 Consider running: bun run scripts/environment-setup.ts --template"
           );

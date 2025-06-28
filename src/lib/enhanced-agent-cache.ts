@@ -30,12 +30,11 @@ export type {
   CachedAgentResponse,
   CacheEventData,
   CacheEventHandler,
-  CacheInvalidationRule,
+  CacheInvalidationCriteria,
   CacheMiddleware,
-  CacheOperationResult,
   CachePerformanceMetrics,
   CacheStrategy,
-  CacheWarmupPattern,
+  CacheWarmupConfig,
   WorkflowCacheEntry,
 } from "./cache/agent-cache-types";
 export { AgentHealthCacheManager } from "./cache/agent-health-cache";
@@ -57,6 +56,7 @@ import type {
   WorkflowCacheEntry,
   WorkflowInvalidationCriteria,
 } from "./cache/agent-cache-types";
+import type { AgentResponse } from "@/src/types/common-interfaces";
 import { AgentHealthCacheManager } from "./cache/agent-health-cache";
 import { AgentResponseCache } from "./cache/agent-response-cache";
 import { CacheAnalyticsManager } from "./cache/cache-analytics";
@@ -432,7 +432,15 @@ export function withAgentCache<T extends (...args: any[]) => Promise<AgentRespon
       // Try to get from cache first
       const cached = await globalEnhancedAgentCache.getAgentResponse(agentId, input, context);
       if (cached) {
-        return cached;
+        // Convert CachedAgentResponse to AgentResponse format
+        return {
+          success: true,
+          data: cached.content,
+          timestamp: cached.cacheMetadata.originalTimestamp,
+          processingTime: 1, // Cached responses are fast
+          metadata: cached.metadata,
+          confidence: 1.0,
+        };
       }
 
       // Execute original method

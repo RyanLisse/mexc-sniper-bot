@@ -86,6 +86,7 @@ export const SECURITY_CONFIG = {
       SYMBOL: 20,
       QUANTITY: 20,
       PRICE: 20,
+      PERCENTAGE: 5,
       NOTES: 500,
       CONFIG_VALUE: 1000,
     },

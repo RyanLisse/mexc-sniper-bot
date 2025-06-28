@@ -619,7 +619,14 @@ export function validateServiceResponse<T>(
     metadata: z.unknown().optional(),
   });
 
-  return validateMexcData(baseResponseSchema, data);
+  const validationResult = validateMexcData(baseResponseSchema, data);
+  
+  // Cast the result to match the expected return type
+  return {
+    success: validationResult.success,
+    data: validationResult.data as MexcServiceResponse<T>,
+    error: validationResult.error
+  };
 }
 
 // ============================================================================

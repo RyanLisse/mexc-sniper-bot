@@ -167,7 +167,19 @@ export class BaseAgent {
 
       if (enhancedCached) {
         this.logger.info(`[${this.config.name}] Enhanced cache hit for request`);
-        return enhancedCached;
+        // Convert from common-interfaces AgentResponse to base-agent AgentResponse
+        return {
+          content: enhancedCached.content,
+          data: enhancedCached.data,
+          metadata: {
+            agent: this.config.name,
+            timestamp: new Date(enhancedCached.timestamp).toISOString(),
+            fromCache: true,
+            cached: true,
+            executionTimeMs: enhancedCached.processingTime,
+            ...enhancedCached.metadata,
+          },
+        };
       }
 
       // Track cache miss in enhanced cache when it returns null
@@ -253,10 +265,21 @@ export class BaseAgent {
         const input = JSON.stringify(messages);
         const context = { options, agent: this.config.name };
 
+        // Convert base-agent AgentResponse to common-interfaces AgentResponse
+        const commonAgentResponse: import("@/src/types/common-interfaces").AgentResponse = {
+          success: true,
+          data: agentResponse.content,
+          timestamp: Date.now(),
+          processingTime: agentResponse.metadata.executionTimeMs || executionTime,
+          confidence: 0.9, // Default confidence for AI responses
+          reasoning: `AI response from ${this.config.name}`,
+          metadata: agentResponse.metadata,
+        };
+
         await globalEnhancedAgentCache.setAgentResponse(
           this.config.name,
           input,
-          agentResponse,
+          commonAgentResponse,
           context,
           {
             ttl: this.config.cacheTTL || this.defaultCacheTTL,

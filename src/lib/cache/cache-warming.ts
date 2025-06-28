@@ -14,7 +14,7 @@
  */
 
 import { generateCacheKey, globalCacheManager } from "../cache-manager";
-import type { AgentCacheConfig, CacheWarmupConfig, CacheWarmupPattern } from "./agent-cache-types";
+import type { AgentCacheConfig, CacheWarmupConfig } from "./agent-cache-types";
 
 export class CacheWarmingManager {
   private _logger?: {
@@ -42,7 +42,7 @@ export class CacheWarmingManager {
 
   private config: AgentCacheConfig;
   private warmupPatterns: Set<string> = new Set();
-  private warmupIntervalId?: NodeJS.Timer;
+  private warmupIntervalId?: NodeJS.Timeout;
   private isWarming = false;
   private readonly DEFAULT_WARMUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
   private readonly PLACEHOLDER_TTL = 60 * 1000; // 1 minute for warmup placeholders

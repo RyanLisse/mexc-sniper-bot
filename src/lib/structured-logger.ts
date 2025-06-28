@@ -718,9 +718,9 @@ export function replaceConsoleLog(component: string) {
 export class PerformanceTimer {
   private startTime: number;
   private operation: string;
-  private logger: StructuredLogger;
+  private logger: ILogger;
 
-  constructor(operation: string, logger: StructuredLogger) {
+  constructor(operation: string, logger: ILogger) {
     this.operation = operation;
     this.logger = logger;
     this.startTime = Date.now();

@@ -136,6 +136,59 @@ export class PatternEmbeddingService {
       keys: Array.from(this.embeddingCache.keys()),
     };
   }
+
+  /**
+   * Detect pattern trends (placeholder implementation)
+   */
+  async detectPatternTrends(patternType: string, timeWindows: any[]): Promise<{
+    trends: any[];
+    insights: any[];
+    alerts: any[];
+  }> {
+    // Placeholder implementation - replace with actual trend detection logic
+    return {
+      trends: timeWindows.map((window: any, index: number) => ({
+        window,
+        trend: index % 2 === 0 ? "increasing" : "decreasing",
+        confidence: 0.7,
+        volume: Math.random() * 100
+      })),
+      insights: [`Pattern ${patternType} shows moderate activity`],
+      alerts: []
+    };
+  }
+
+  /**
+   * Analyze historical performance (placeholder implementation)
+   */
+  async analyzeHistoricalPerformance(patternType: string, timeRange: any): Promise<{
+    summary: {
+      totalPatterns: number;
+      successRate: number;
+      avgProfit: number;
+    };
+    breakdown: any[];
+    recommendations: string[];
+  }> {
+    // Placeholder implementation - replace with actual historical analysis logic
+    return {
+      summary: {
+        totalPatterns: 53,
+        successRate: 0.72,
+        avgProfit: 2.5
+      },
+      breakdown: [
+        { patternType: "ready_state", successRate: 0.75, trades: 20 },
+        { patternType: "breakout", successRate: 0.68, trades: 18 },
+        { patternType: "momentum", successRate: 0.70, trades: 15 }
+      ],
+      recommendations: [
+        `Pattern ${patternType} shows consistent performance`,
+        "Consider increasing position size for this pattern type",
+        "Monitor performance during high volatility periods"
+      ]
+    };
+  }
 }
 
 // Export singleton instance

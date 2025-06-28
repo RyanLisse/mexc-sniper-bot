@@ -212,8 +212,8 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
       logger.debug(`[${routeName.toUpperCase()}] Request validation completed`, {
         requestId,
-        hasQuery: Object.keys(queryData).length > 0,
-        hasBody: Object.keys(bodyData).length > 0,
+        hasQuery: Object.keys(queryData as object).length > 0,
+        hasBody: Object.keys(bodyData as object).length > 0,
         validationDuration: `${Date.now() - startTime}ms`,
       });
 

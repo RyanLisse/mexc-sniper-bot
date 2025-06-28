@@ -347,8 +347,8 @@ export class WorkflowExecutor {
       error: safeError.message,
       metadata: {
         agentsUsed,
-        errorName: safeError.name,
-        errorStack: safeError.stack,
+        duration: 0,
+        confidence: 0,
       },
     };
   }

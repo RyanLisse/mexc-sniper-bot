@@ -7,7 +7,6 @@
 
 import { type ApiResponse, createApiResponse } from "./api-response";
 import {
-  isNetworkError,
   isServerError,
   isTimeoutError,
   type SafeError,

@@ -1226,9 +1226,10 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
 
       // Create pattern with missing required fields
       const invalidPattern = {
+        symbol: "TESTUSDT", // Add required symbol property
         patternType: "ready_state",
         confidence: 85,
-        // Missing symbol and vcoinId
+        // Missing vcoinId
         indicators: {},
         activityInfo: {
           activities: [],
@@ -1287,9 +1288,9 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           recommendation: "immediate_action",
         },
         {
+          symbol: "INVALIDUSDT", // Add required symbol property
           patternType: "ready_state",
           confidence: 85,
-          // Missing symbol - invalid pattern
           vcoinId: "invalid-1",
           indicators: {},
           activityInfo: {
@@ -1398,11 +1399,11 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
         activityInfo: {
           activities: [
             {
-              symbol: "FULLTEST1USDT",
+              activityId: "act-1",
+              currency: "FULLTEST1",
+              currencyId: "fulltest1-coin",
               activityType: "listing_announcement",
-              priority: "high",
-              timestamp: new Date().toISOString(),
-              description: "New listing announcement",
+              symbol: "FULLTEST1USDT",
             },
           ],
           activityBoost: 1.5,

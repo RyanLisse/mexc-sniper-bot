@@ -367,6 +367,10 @@ export const isTradingError = (error: unknown): error is TradingError => {
   return error instanceof TradingError;
 };
 
+export const isNetworkError = (error: unknown): error is NetworkError => {
+  return error instanceof NetworkError;
+};
+
 export const isOperationalError = (error: unknown): boolean => {
   if (isApplicationError(error)) {
     return error.isOperational;

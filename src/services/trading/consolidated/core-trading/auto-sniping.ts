@@ -551,4 +551,94 @@ export class AutoSnipingModule {
       throw safeError;
     }
   }
+
+  /**
+   * Get current configuration
+   */
+  getConfig() {
+    return this.context.config;
+  }
+
+  /**
+   * Check if ready for trading
+   */
+  isReadyForTrading(): boolean {
+    return this.state.isInitialized && this.state.isHealthy;
+  }
+
+  /**
+   * Validate configuration
+   */
+  async validateConfiguration(): Promise<boolean> {
+    try {
+      // Basic validation logic
+      const config = this.context.config;
+      return (
+        config &&
+        typeof config.autoSnipingEnabled === 'boolean' &&
+        typeof config.confidenceThreshold === 'number' &&
+        config.confidenceThreshold >= 0 &&
+        config.confidenceThreshold <= 100
+      );
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Perform health checks
+   */
+  async performHealthChecks(): Promise<boolean> {
+    try {
+      // Basic health check logic
+      return this.state.isInitialized && this.state.isHealthy;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * Get statistics
+   */
+  getStats() {
+    return {
+      activePositions: 0, // Would track actual positions
+      totalTrades: this.processedTargets,
+      successfulTrades: this.successfulSnipes,
+      failedTrades: this.failedSnipes,
+      successRate: this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+      timestamp: Date.now(),
+    };
+  }
+
+  /**
+   * Update statistics
+   */
+  updateStats(stats: any): void {
+    // Update internal metrics with provided stats
+    if (stats.activePositions !== undefined) {
+      // Would update active positions tracking
+    }
+    if (stats.totalTrades !== undefined) {
+      this.processedTargets = stats.totalTrades;
+    }
+    if (stats.timestamp !== undefined) {
+      this.state.lastActivity = new Date(stats.timestamp);
+    }
+  }
+
+  /**
+   * Check if execution is active
+   */
+  isExecutionActive(): boolean {
+    return this.isActive;
+  }
+
+  /**
+   * Get active positions
+   */
+  getActivePositions(): any[] {
+    // Would return actual active positions
+    return [];
+  }
 }

@@ -31,7 +31,7 @@ export type {
  */
 export class AgentRegistry extends AgentRegistryCore {
   // Simple console logger to avoid webpack bundling issues
-  private logger = {
+  protected logger = {
     info: (message: string, context?: any) =>
       console.info("[agent-registry]", message, context || ""),
     warn: (message: string, context?: any) =>

@@ -13,6 +13,7 @@ import type {
   MexcServiceResponse,
   UnifiedMexcConfig,
 } from "@/src/schemas/unified/mexc-api-schemas";
+import type { UnifiedMexcConfigV2 } from "../api/unified-mexc-config";
 
 // Test schemas using Zod for type safety
 const TestConfigSchema = z.object({
@@ -40,16 +41,33 @@ const CalendarListingResponseSchema = z.object({
 
 describe("UnifiedMexcService - TDD Refactoring", () => {
   let mexcService: any;
-  let mockConfig: UnifiedMexcConfig;
+  let mockConfig: UnifiedMexcConfigV2;
 
   beforeEach(() => {
     mockConfig = {
+      // API Configuration
       apiKey: "test-api-key",
       secretKey: "test-secret-key",
+      passphrase: "test-passphrase",
       baseUrl: "https://api.mexc.com",
       timeout: 10000,
       maxRetries: 3,
+      retryDelay: 1000,
+      rateLimitDelay: 100,
+      
+      // Cache Configuration
       enableCaching: true,
+      cacheTTL: 30000,
+      apiResponseTTL: 1500,
+      
+      // Reliability Configuration
+      enableCircuitBreaker: true,
+      enableRateLimiter: true,
+      maxFailures: 5,
+      resetTimeout: 60000,
+      
+      // Feature Flags
+      enableEnhancedFeatures: true,
     };
 
     // Reset mocks

@@ -117,7 +117,7 @@ export const GET = createPublicApiRoute(
     enableResponseValidation: true,
   },
   async (context, { query }) => {
-    const { logger } = context;
+    // Note: logger is available from the module scope, not from context
 
     // Set defaults for optional parameters
     const connectivityRequest: ConnectivityTestRequest = {

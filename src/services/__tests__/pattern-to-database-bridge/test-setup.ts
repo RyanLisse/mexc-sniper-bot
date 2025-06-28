@@ -170,21 +170,20 @@ export function createMockPatternEventData(
   overrides: Partial<PatternDetectionEventData> = {}
 ): PatternDetectionEventData {
   return {
-    source: "test_source",
     timestamp: Date.now(),
     patterns: [
       {
         vcoinId: "test-coin-123",
         symbol: "TESTUSDT",
-        patternType: "binance_listing_detected",
+        patternType: "ready_state",
         confidence: 85,
         metadata: {
           exchange: "binance",
-          listingTime: Date.now() + 300000, // 5 minutes from now
+          listingTime: new Date(Date.now() + 300000), // 5 minutes from now
           status: "ready",
           riskLevel: "low",
         },
-        detectedAt: Date.now(),
+        detectedAt: new Date(),
       },
     ],
     detectionReason: "automated_scan",

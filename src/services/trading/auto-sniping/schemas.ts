@@ -54,18 +54,16 @@ export const AutoSnipingMetricsSchema = z.object({
 export type AutoSnipingMetrics = z.infer<typeof AutoSnipingMetricsSchema>;
 
 // Validation functions for test compatibility
-export function validateAutoSnipingConfig(config: unknown): config is AutoSnipingConfig {
-  try {
-    AutoSnipingConfigSchema.parse(config);
-    return true;
-  } catch {
-    return false;
-  }
+export function validateAutoSnipingConfig(config: unknown): AutoSnipingConfig {
+  return AutoSnipingConfigSchema.parse(config);
 }
 
-export function validateExecutionPosition(position: unknown): boolean {
-  // Simple validation for execution position - can be enhanced as needed
-  return typeof position === 'object' && position !== null;
+export function validateExecutionPosition(position: unknown): any {
+  // Simple validation for execution position - return the position if valid
+  if (typeof position === 'object' && position !== null) {
+    return position;
+  }
+  throw new Error('Invalid execution position');
 }
 
 export function validateAutoSnipingMetrics(metrics: unknown): metrics is AutoSnipingMetrics {

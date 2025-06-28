@@ -531,7 +531,8 @@ export class DatabasePerformanceAnalyzer {
 
     // Get current monitoring data
     const monitoringStats = queryPerformanceMonitor.getPerformanceStats();
-    const _queryPatterns = queryPerformanceMonitor.analyzeQueryPatterns(60);
+    // Note: analyzeQueryPatterns method doesn't exist, commenting out for now
+    // const _queryPatterns = queryPerformanceMonitor.analyzeQueryPatterns(60);
 
     // Run our detailed analysis
     const [expensiveQueries, tableStats, indexStats] = await Promise.all([
@@ -547,8 +548,8 @@ export class DatabasePerformanceAnalyzer {
 
     const results: DatabaseStats = {
       totalQueries: monitoringStats.totalQueries,
-      averageExecutionTime: monitoringStats.averageDuration,
-      slowQueries: monitoringStats.slowQueries,
+      averageExecutionTime: monitoringStats.averageExecutionTime,
+      slowQueries: monitoringStats.slowQueriesCount,
       mostExpensiveQueries: expensiveQueries,
       indexUsageStats: indexStats,
       tableScanStats: tableStats,

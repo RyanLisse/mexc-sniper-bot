@@ -180,7 +180,7 @@ describe("PatternToDatabaseBridge Unit Tests", () => {
         createTestPattern({ symbol: "VALID1USDT" }), // Valid
         createTestPattern({ symbol: "", vcoinId: "test" }), // Invalid: empty symbol
         createTestPattern({ symbol: "VALID2USDT", vcoinId: "" }), // Invalid: empty vcoinId
-        { ...createTestPattern(), symbol: undefined } as PatternMatch, // Invalid: undefined symbol
+        { ...createTestPattern(), symbol: undefined } as unknown as PatternMatch, // Invalid: undefined symbol
       ];
 
       const bridgeAny = bridge as any;

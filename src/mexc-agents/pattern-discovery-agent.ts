@@ -34,7 +34,7 @@ export interface PatternMatch {
 
 export class PatternDiscoveryAgent extends BaseAgent {
   // Simple console logger to avoid webpack bundling issues
-  private logger = {
+  protected logger = {
     info: (message: string, context?: any) =>
       console.info("[pattern-discovery-agent]", message, context || ""),
     warn: (message: string, context?: any) =>

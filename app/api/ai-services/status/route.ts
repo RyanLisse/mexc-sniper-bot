@@ -58,11 +58,11 @@ async function checkCohereStatus() {
 
     // Test Cohere API with a simple embedding request
     const testResult = await getAiIntelligenceService().generatePatternEmbedding({
-      symbolName: "TEST",
-      vcoinId: "test",
-      type: "ready_state",
+      id: "test-pattern",
+      type: "technical",
+      timestamp: Date.now(),
       data: { sts: 2, st: 2, tt: 4 },
-      confidence: 85,
+      confidence: 0.85,
     });
 
     return {
@@ -115,7 +115,7 @@ async function checkPerplexityStatus() {
       capabilities: ["market-research", "sentiment-analysis", "news-analysis"],
       lastCheck: new Date().toISOString(),
       metrics: {
-        researchQuality: testResult?.confidenceBoost || 0,
+        researchQuality: testResult ? Math.min(testResult.confidence * 10, 15) : 0,
         responseTime: "< 5s",
       },
     };

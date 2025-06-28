@@ -5,7 +5,7 @@
  * Extracted from enhanced-agent-cache.ts for better modularity.
  */
 
-import type { AgentResponse } from "@/src/mexc-agents/base-agent";
+import type { AgentResponse } from "@/src/types/common-interfaces";
 
 // =======================
 // Agent Cache Types
@@ -34,6 +34,7 @@ export interface AgentCacheMetrics {
 }
 
 export interface CachedAgentResponse extends AgentResponse {
+  content: string; // Add content field for backward compatibility
   cacheMetadata: {
     cacheKey: string;
     cacheLevel: "L1" | "L2" | "L3";

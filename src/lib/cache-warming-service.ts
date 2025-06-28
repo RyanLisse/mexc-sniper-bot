@@ -93,7 +93,7 @@ export class CacheWarmingService {
     } else {
       this.cache = getEnhancedUnifiedCache();
       this.mexcService = new UnifiedMexcServiceV2();
-      this.patternEngine = new PatternDetectionCore();
+      this.patternEngine = PatternDetectionCore.getInstance();
     }
 
     this.config = {

@@ -427,8 +427,8 @@ export class DatabaseOptimizationManager {
     const cacheMetrics = databaseConnectionPool.getCacheMetrics();
 
     return {
-      avgQueryTime: monitoringStats.averageDuration,
-      slowQueries: monitoringStats.slowQueries,
+      avgQueryTime: monitoringStats.averageExecutionTime,
+      slowQueries: monitoringStats.slowQueriesCount,
       totalQueries: monitoringStats.totalQueries,
       cacheHitRate: cacheMetrics.hitRate,
       connectionHealth: connectionMetrics.connectionPoolHealth,

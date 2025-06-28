@@ -52,16 +52,18 @@ export class EmbeddingsService {
 
     this.cache.set(cacheKey, embedding);
     return embedding;
-  }  /**
+  }
+
+  /**
    * Generate pattern embedding
    */
   async generatePatternEmbedding(patternData: any): Promise<PatternEmbedding> {
     const embedding = await this.generateCohereEmbedding(JSON.stringify(patternData));
     
     return {
-      patternId: patternData.id || `pattern_${Date.now()}`,
+      patternId: patternData?.id || `pattern_${Date.now()}`,
       embedding,
-      description: patternData.description || 'Trading pattern',
+      description: patternData?.description || 'Trading pattern',
       confidence: Math.random() * 0.4 + 0.6, // 0.6-1.0
     };
   }

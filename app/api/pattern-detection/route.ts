@@ -340,9 +340,9 @@ async function handlePatternTrends(request: z.infer<typeof PatternDetectionReque
         alerts: trends.alerts,
         summary: {
           totalTrendWindows: trends.trends.length,
-          increasingTrends: trends.trends.filter(t => t.trend === "increasing").length,
-          decreasingTrends: trends.trends.filter(t => t.trend === "decreasing").length,
-          avgSuccessRate: trends.trends.reduce((sum, t) => sum + t.successRate, 0) / trends.trends.length,
+          increasingTrends: trends.trends.filter((t: any) => t.trend === "increasing").length,
+          decreasingTrends: trends.trends.filter((t: any) => t.trend === "decreasing").length,
+          avgSuccessRate: trends.trends.reduce((sum: number, t: any) => sum + (t.successRate || 0), 0) / trends.trends.length,
           alertCount: trends.alerts.length
         }
       }
@@ -377,7 +377,7 @@ async function handlePatternPerformance(request: z.infer<typeof PatternDetection
 
   try {
     const performance = await patternEmbeddingService.analyzeHistoricalPerformance(
-      request.patternType,
+      request.patternType || "unknown",
       timeRange
     );
 
@@ -392,7 +392,7 @@ async function handlePatternPerformance(request: z.infer<typeof PatternDetection
           overallSuccessRate: performance.summary.successRate,
           avgProfit: performance.summary.avgProfit,
           patternTypeCount: performance.breakdown.length,
-          topPerformingType: performance.breakdown.reduce((best, current) => 
+          topPerformingType: performance.breakdown.reduce((best: any, current: any) => 
             current.successRate > best.successRate ? current : best, 
             { patternType: "none", successRate: 0 }
           )

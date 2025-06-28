@@ -61,21 +61,28 @@ export class AgentResponseCache {
 
       // Create enhanced response with cache metadata
       const cachedResponse: CachedAgentResponse = {
-        ...cached,
-        cacheMetadata: {
-          cacheKey,
-          cacheLevel: "L1", // Will be determined by cache manager
-          cacheTimestamp: Date.now(),
-          originalTimestamp: cached.metadata.timestamp
-            ? new Date(cached.metadata.timestamp).getTime()
-            : Date.now(),
-          hitCount,
-          performanceScore: this.calculatePerformanceScore(cached),
-        },
+        // Common interfaces AgentResponse fields
+        success: cached.success || true,
+        data: cached.data,
+        error: cached.error,
+        confidence: cached.confidence || 1.0,
+        reasoning: cached.reasoning,
+        timestamp: cached.timestamp,
+        processingTime: cached.processingTime || 1,
         metadata: {
           ...cached.metadata,
           fromCache: true,
           cached: true,
+        },
+        // Additional fields for backward compatibility
+        content: (cached.data as string) || "",
+        cacheMetadata: {
+          cacheKey,
+          cacheLevel: "L1", // Will be determined by cache manager
+          cacheTimestamp: Date.now(),
+          originalTimestamp: cached.timestamp,
+          hitCount,
+          performanceScore: this.calculatePerformanceScore(cached),
         },
       };
 
@@ -156,7 +163,7 @@ export class AgentResponseCache {
         // Check age-based criteria
         if (criteria.olderThan) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
-          if (cached?.metadata?.timestamp) {
+          if (cached?.metadata?.timestamp && typeof cached.metadata.timestamp === 'string') {
             const age = Date.now() - new Date(cached.metadata.timestamp).getTime();
             shouldDelete = age > criteria.olderThan;
           }
@@ -173,8 +180,8 @@ export class AgentResponseCache {
         // Check tag-based criteria
         if (criteria.tags && criteria.tags.length > 0 && !shouldDelete) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
-          if (cached?.metadata?.tags) {
-            const hasMatchingTag = criteria.tags.some((tag) => cached.metadata.tags?.includes(tag));
+          if (cached?.metadata?.tags && Array.isArray(cached.metadata.tags)) {
+            const hasMatchingTag = criteria.tags.some((tag) => (cached.metadata!.tags as string[]).includes(tag));
             shouldDelete = hasMatchingTag;
           }
         }
@@ -187,9 +194,9 @@ export class AgentResponseCache {
         // Check dependencies criteria
         if (criteria.dependencies && criteria.dependencies.length > 0 && !shouldDelete) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
-          if (cached?.metadata?.dependencies) {
+          if (cached?.metadata?.dependencies && Array.isArray(cached.metadata.dependencies)) {
             const hasMatchingDependency = criteria.dependencies.some((dep) =>
-              cached.metadata.dependencies?.includes(dep)
+              (cached.metadata!.dependencies as string[]).includes(dep)
             );
             shouldDelete = hasMatchingDependency;
           }
@@ -255,7 +262,7 @@ export class AgentResponseCache {
         if (cached) {
           totalSize += JSON.stringify(cached).length;
 
-          const timestamp = cached.metadata?.timestamp
+          const timestamp = cached.metadata?.timestamp && typeof cached.metadata.timestamp === 'string'
             ? new Date(cached.metadata.timestamp).getTime()
             : Date.now();
 
@@ -385,7 +392,7 @@ export class AgentResponseCache {
       const newHits = currentHits + 1;
 
       await globalCacheManager.set(hitCountKey, newHits, {
-        type: "counter",
+        type: "performance_metrics",
         ttl: 86400000, // 24 hours
       });
 

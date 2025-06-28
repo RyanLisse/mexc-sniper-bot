@@ -620,12 +620,17 @@ export class PerformanceCollector {
       await this.ensurePerformanceTables(db);
       
       const timestamp = new Date();
+      // Get current metrics from history arrays
+      const currentAgentMetrics = Array.from(this.agentMetricsHistory.values()).flat();
+      const currentWorkflowMetrics = this.workflowMetricsHistory.slice(-50); // Last 50 workflows
+      const currentSystemMetrics = this.systemSnapshotHistory.slice(-1)[0] || null; // Latest snapshot
+
       const metricsSnapshot = {
         timestamp: timestamp.toISOString(),
-        agent_metrics: JSON.stringify(this.agentMetrics),
-        workflow_metrics: JSON.stringify(this.workflowMetrics),
-        system_metrics: JSON.stringify(this.systemMetrics),
-        collection_interval: this.collectionInterval,
+        agent_metrics: JSON.stringify(currentAgentMetrics),
+        workflow_metrics: JSON.stringify(currentWorkflowMetrics),
+        system_metrics: JSON.stringify(currentSystemMetrics),
+        collection_interval: this.collectionIntervalMs,
         created_at: timestamp
       };
 
@@ -704,12 +709,17 @@ export class PerformanceCollector {
       const timestamp = new Date().toISOString().replace(/:/g, '-');
       const filename = path.join(metricsDir, `performance-${timestamp}.json`);
       
+      // Get current metrics from history arrays
+      const currentAgentMetrics = Array.from(this.agentMetricsHistory.values()).flat();
+      const currentWorkflowMetrics = this.workflowMetricsHistory.slice(-50); // Last 50 workflows
+      const currentSystemMetrics = this.systemSnapshotHistory.slice(-1)[0] || null; // Latest snapshot
+
       const metricsData = {
         timestamp: new Date().toISOString(),
-        agentMetrics: this.agentMetrics,
-        workflowMetrics: this.workflowMetrics,
-        systemMetrics: this.systemMetrics,
-        collectionInterval: this.collectionInterval
+        agentMetrics: currentAgentMetrics,
+        workflowMetrics: currentWorkflowMetrics,
+        systemMetrics: currentSystemMetrics,
+        collectionInterval: this.collectionIntervalMs
       };
       
       await fs.writeFile(filename, JSON.stringify(metricsData, null, 2));

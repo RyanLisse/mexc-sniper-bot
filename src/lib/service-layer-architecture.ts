@@ -30,6 +30,9 @@ export interface ServiceDependencies {
 
   // Configuration
   config?: ServiceConfiguration;
+
+  // Allow dynamic property assignment for dependency injection
+  [key: string]: any;
 }
 
 export interface ServiceConfiguration {

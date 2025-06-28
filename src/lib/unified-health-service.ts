@@ -71,6 +71,15 @@ class HealthCheckCache {
       }
     }
   }
+
+  getStats(): { size: number; keys: string[] } {
+    const keys: string[] = [];
+    this.cache.forEach((_, key) => keys.push(key));
+    return {
+      size: this.cache.size,
+      keys,
+    };
+  }
 }
 
 const healthCache = new HealthCheckCache();
@@ -535,7 +544,7 @@ export class UnifiedHealthService {
           : mexcHealth.hasCredentials
             ? "MEXC credentials invalid"
             : "MEXC credentials not configured",
-        details: mexcHealth,
+        details: mexcHealth as unknown as Record<string, unknown>,
       };
 
       // Convert environment config result to health result
@@ -548,7 +557,7 @@ export class UnifiedHealthService {
         message: environmentHealth.valid
           ? "Environment properly configured"
           : "Environment configuration issues",
-        details: environmentHealth,
+        details: environmentHealth as unknown as Record<string, unknown>,
       };
 
       const components = {
@@ -671,12 +680,7 @@ export class UnifiedHealthService {
    * Get cache statistics
    */
   static getCacheStats(): { size: number; keys: string[] } {
-    const keys: string[] = [];
-    healthCache.cache.forEach((_, key) => keys.push(key));
-    return {
-      size: healthCache.cache.size,
-      keys,
-    };
+    return healthCache.getStats();
   }
 }
 

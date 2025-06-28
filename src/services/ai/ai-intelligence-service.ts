@@ -7,11 +7,11 @@
 
 import type { PatternData } from "../data/pattern-embedding-service";
 import { embeddingsService } from "./embeddings-service";
-import { type EnhancedPatternData, intelligenceOrchestrator } from "./intelligence-orchestrator";
-import { type PerplexityResearchResult, researchService } from "./research-service";
+import { type EnhancedPattern, intelligenceOrchestrator } from "./intelligence-orchestrator";
+import { type ResearchResult, researchService } from "./research-service";
 
 // Re-export types for backward compatibility
-export type { EnhancedPatternData, PerplexityResearchResult };
+export type { EnhancedPattern as EnhancedPatternData, ResearchResult as PerplexityResearchResult };
 
 /**
  * AI Intelligence Service - Facade Pattern
@@ -43,7 +43,11 @@ export class AIIntelligenceService {
       | "classification"
       | "clustering" = "search_document"
   ): Promise<number[][]> {
-    return embeddingsService.generateCohereEmbedding(texts, inputType);
+    // Adapt single-text service to handle arrays
+    const results = await Promise.all(
+      texts.map(text => embeddingsService.generateCohereEmbedding(text))
+    );
+    return results.map(result => result.vector);
   }
 
   /**
@@ -51,7 +55,8 @@ export class AIIntelligenceService {
    * @deprecated Use embeddingsService.generatePatternEmbedding directly
    */
   async generatePatternEmbedding(pattern: PatternData): Promise<number[]> {
-    return embeddingsService.generatePatternEmbedding(pattern);
+    const result = await embeddingsService.generatePatternEmbedding(pattern);
+    return result.embedding.vector;
   }
 
   /**
@@ -61,8 +66,10 @@ export class AIIntelligenceService {
   async conductMarketResearch(
     symbol: string,
     focus: "technical" | "fundamental" | "news" | "comprehensive" = "comprehensive"
-  ): Promise<PerplexityResearchResult> {
-    return researchService.conductMarketResearch(symbol, focus);
+  ): Promise<ResearchResult> {
+    // Adapt the research service interface to include focus in query
+    const query = `${symbol} ${focus} analysis`;
+    return researchService.conductMarketResearch(query);
   }
 
   /**
@@ -75,7 +82,7 @@ export class AIIntelligenceService {
       includeEmbedding?: boolean;
       researchFocus?: "technical" | "fundamental" | "news" | "comprehensive";
     } = {}
-  ): Promise<EnhancedPatternData> {
+  ): Promise<EnhancedPattern> {
     return intelligenceOrchestrator.enhancePatternWithAI(pattern, options);
   }
 
@@ -90,7 +97,7 @@ export class AIIntelligenceService {
       researchFocus?: "technical" | "fundamental" | "news" | "comprehensive";
       maxConcurrency?: number;
     } = {}
-  ): Promise<EnhancedPatternData[]> {
+  ): Promise<EnhancedPattern[]> {
     return intelligenceOrchestrator.enhanceMultiplePatterns(patterns, options);
   }
 
@@ -228,7 +235,7 @@ export class AIIntelligenceService {
    */
   async calculateAIEnhancedConfidence(
     pattern: PatternData & {
-      perplexityInsights?: PerplexityResearchResult;
+      perplexityInsights?: ResearchResult;
       aiContext?: {
         marketSentiment: "bullish" | "bearish" | "neutral";
         opportunityScore: number;
@@ -250,7 +257,8 @@ export class AIIntelligenceService {
 
     // Calculate AI research component
     if (pattern.perplexityInsights) {
-      aiResearch = pattern.perplexityInsights.confidenceBoost || 0;
+      // Use confidence from research result as confidence boost
+      aiResearch = Math.min(pattern.perplexityInsights.confidence * 10, 15); // Scale 0-1 to 0-15
     }
 
     // Calculate market sentiment component

@@ -53,7 +53,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       { NodeSDK },
       { BatchSpanProcessor, TraceIdRatioBasedSampler },
       semanticConventions,
-    ] = await Promise.all([
+    ]: any[] = await Promise.all([
       import("@opentelemetry/auto-instrumentations-node"),
       import("@opentelemetry/exporter-trace-otlp-http"), // HTTP instead of GRPC
       import("@opentelemetry/exporter-prometheus"),
@@ -102,7 +102,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       : new TraceIdRatioBasedSampler(1.0); // 100% sampling in development
 
     // Span processors
-    const spanProcessors = traceExporters.map(
+    const spanProcessors: any[] = traceExporters.map(
       (exporter) =>
         new BatchSpanProcessor(exporter, {
           maxQueueSize: isProduction ? 8192 : 2048,
@@ -139,7 +139,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
     const instrumentations = getNodeAutoInstrumentations({
       // HTTP instrumentation configuration
       "@opentelemetry/instrumentation-http": {
-        requestHook: (span, request) => {
+        requestHook: (span: any, request: any) => {
           // Add trading-specific attributes to HTTP requests
           const url = (request as any).url;
           if (url?.includes("mexc") || url?.includes("api.mexc.com")) {
@@ -149,7 +149,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
             });
           }
         },
-        responseHook: (span, response) => {
+        responseHook: (span: any, response: any) => {
           // Track API response status
           span.setAttributes({
             "http.response.status_class": `${Math.floor((response as any).statusCode / 100)}xx`,
@@ -170,7 +170,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       // Redis instrumentation (for cache monitoring)
       "@opentelemetry/instrumentation-redis": {
         enabled: true,
-        responseHook: (span, cmdName, cmdArgs) => {
+        responseHook: (span: any, cmdName: any, cmdArgs: any) => {
           span.setAttributes({
             "redis.operation": cmdName,
             "redis.args_count": cmdArgs.length,
@@ -208,7 +208,7 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       sdk
         .shutdown()
         .then(() => logger.info("[OpenTelemetry] SDK shut down successfully"))
-        .catch((error) => logger.error("[OpenTelemetry] Error shutting down SDK", error))
+        .catch((error: any) => logger.error("[OpenTelemetry] Error shutting down SDK", error))
         .finally(() => process.exit(0));
     });
 
@@ -291,7 +291,7 @@ export const TRADING_TELEMETRY_CONFIG = {
  */
 export async function initializeEnhancedTelemetry(): Promise<{
   success: boolean;
-  sdk?: NodeSDK;
+  sdk?: any;
   healthCheck: () => Promise<boolean>;
 }> {
   if (telemetryDisabled) {

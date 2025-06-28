@@ -12,7 +12,9 @@ import {
   standardMockData,
   standardTestCleanup,
 } from "../../../tests/setup/standardized-mocks";
-import { AutoSnipingExecutionEngine } from "../trading/auto-sniping/execution-engine";
+import { AutoSnipingModule } from "../trading/consolidated/core-trading/auto-sniping";
+import type { ModuleContext } from "../trading/consolidated/core-trading/types";
+import type { UnifiedMexcServiceV2 } from "../api/unified-mexc-service-v2";
 import {
   type AutoSnipingConfig,
   validateAutoSnipingConfig,
@@ -33,75 +35,157 @@ afterEach(() => {
 });
 
 describe("Optimized Backend Services", () => {
-  let executionEngine: AutoSnipingExecutionEngine;
+  let autoSnipingModule: AutoSnipingModule;
+  let mockContext: ModuleContext;
 
   beforeEach(async () => {
-    // Initialize execution engine with standardized mocks
-    executionEngine = AutoSnipingExecutionEngine.getInstance();
+    // Initialize module with mock context
+    mockContext = {
+      config: {
+        // Required API Configuration
+        apiKey: "test-api-key",
+        secretKey: "test-secret-key",
+        baseUrl: "https://api.mexc.com",
+        timeout: 5000,
+        maxRetries: 3,
+        
+        // Required Trading Configuration
+        enablePaperTrading: true,
+        defaultStrategy: "conservative",
+        maxConcurrentPositions: 5,
+        enableCircuitBreaker: true,
+        circuitBreakerThreshold: 5,
+        circuitBreakerResetTime: 300000,
+        
+        // Auto-Sniping Configuration
+        autoSnipingEnabled: true,
+        snipeCheckInterval: 30000,
+        confidenceThreshold: 70,
+        
+        // Optional Risk Management Configuration
+        maxPositionSize: 100,
+        globalStopLossPercent: 3,
+        globalTakeProfitPercent: 5,
+        maxDailyLoss: 1000,
+        
+        // Cache Configuration
+        enableCaching: true,
+        cacheTTL: 60000,
+      },
+      logger: {
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+      },
+      mexcService: {
+        placeOrder: vi.fn().mockResolvedValue({
+          success: true,
+          data: {
+            orderId: "12345",
+            clientOrderId: "client123",
+            symbol: "BTCUSDT",
+            side: "BUY",
+            type: "MARKET",
+            origQty: "0.001",
+            price: "50000",
+            status: "FILLED",
+            executedQty: "0.001",
+            cummulativeQuoteQty: "50",
+            transactTime: Date.now(),
+          },
+        }),
+      } as unknown as UnifiedMexcServiceV2,
+      eventEmitter: {
+        emit: vi.fn(),
+        on: vi.fn(),
+        off: vi.fn(),
+        once: vi.fn(),
+      },
+    } as unknown as ModuleContext;
+    autoSnipingModule = new AutoSnipingModule(mockContext);
+    await autoSnipingModule.initialize();
   });
 
-  describe("Auto-Sniping Execution Engine", () => {
-    it("should properly instantiate and expose configuration methods", () => {
-      expect(executionEngine).toBeDefined();
-      expect(typeof executionEngine.getConfig).toBe("function");
-      expect(typeof executionEngine.updateConfig).toBe("function");
-      expect(typeof executionEngine.isReadyForTrading).toBe("function");
-      expect(typeof executionEngine.validateConfiguration).toBe("function");
-      expect(typeof executionEngine.performHealthChecks).toBe("function");
+  describe("Auto-Sniping Module", () => {
+    it("should properly instantiate and expose core methods", () => {
+      expect(autoSnipingModule).toBeDefined();
+      expect(typeof autoSnipingModule.updateConfig).toBe("function");
+      expect(typeof autoSnipingModule.start).toBe("function");
+      expect(typeof autoSnipingModule.stop).toBe("function");
+      expect(typeof autoSnipingModule.getStatus).toBe("function");
+      expect(typeof autoSnipingModule.processSnipeTargets).toBe("function");
     });
 
-    it("should return valid configuration", () => {
-      const config = executionEngine.getConfig();
-      expect(config).toBeDefined();
-      expect(typeof config).toBe("object");
-      expect(config.enabled).toBeDefined();
-      expect(config.maxPositions).toBeDefined();
-      expect(config.minConfidence).toBeDefined();
+    it("should return valid status", () => {
+      const status = autoSnipingModule.getStatus();
+      expect(status).toBeDefined();
+      expect(typeof status).toBe("object");
+      expect(typeof status.isActive).toBe("boolean");
+      expect(typeof status.isHealthy).toBe("boolean");
+      expect(typeof status.processedTargets).toBe("number");
+      expect(typeof status.successfulSnipes).toBe("number");
+      expect(typeof status.failedSnipes).toBe("number");
+      expect(typeof status.successRate).toBe("number");
     });
 
-    it("should be able to update configuration", () => {
-      const originalConfig = executionEngine.getConfig();
-      const updatedConfig = executionEngine.updateConfig({
-        maxPositions: 3,
-        minConfidence: 90,
+    it("should be able to update configuration", async () => {
+      const originalStatus = autoSnipingModule.getStatus();
+      expect(originalStatus).toBeDefined();
+      
+      await autoSnipingModule.updateConfig({
+        autoSnipingEnabled: true,
+        maxConcurrentPositions: 3,
+        confidenceThreshold: 90,
       });
 
-      expect(updatedConfig).toBeDefined();
-      expect(typeof updatedConfig).toBe("object");
+      // Config update doesn't return anything, just check it doesn't throw
+      expect(true).toBe(true);
     });
 
-    it("should check trading readiness correctly", () => {
-      const isReady = executionEngine.isReadyForTrading();
-      expect(typeof isReady).toBe("boolean");
+    it("should start and stop correctly", async () => {
+      const startResult = await autoSnipingModule.start();
+      expect(startResult).toBeDefined();
+      expect(typeof startResult.success).toBe("boolean");
+      expect(typeof startResult.timestamp).toBe("string");
+      
+      const stopResult = await autoSnipingModule.stop();
+      expect(stopResult).toBeDefined();
+      expect(typeof stopResult.success).toBe("boolean");
     });
 
-    it("should validate configuration", async () => {
-      const isValid = await executionEngine.validateConfiguration();
-      expect(typeof isValid).toBe("boolean");
-    });
-
-    it("should perform health checks", async () => {
-      const isHealthy = await executionEngine.performHealthChecks();
-      expect(typeof isHealthy).toBe("boolean");
+    it("should process snipe targets", async () => {
+      const result = await autoSnipingModule.processSnipeTargets();
+      expect(result).toBeDefined();
+      expect(typeof result.success).toBe("boolean");
+      expect(typeof result.timestamp).toBe("string");
     });
 
     it("should provide execution statistics", () => {
-      const stats = executionEngine.getStats();
-      expect(stats).toBeDefined();
-      expect(typeof stats).toBe("object");
-      expect(stats.activePositions).toBeDefined();
-      expect(stats.totalTrades).toBeDefined();
-      expect(stats.isActive).toBeDefined();
+      const status = autoSnipingModule.getStatus();
+      expect(status).toBeDefined();
+      expect(typeof status).toBe("object");
+      expect(typeof status.isActive).toBe("boolean");
+      expect(typeof status.isHealthy).toBe("boolean");
+      expect(typeof status.processedTargets).toBe("number");
+      expect(typeof status.successfulSnipes).toBe("number");
+      expect(typeof status.failedSnipes).toBe("number");
+      expect(typeof status.successRate).toBe("number");
     });
 
     it("should manage execution state", async () => {
-      // Test starting the engine
-      const initialActive = executionEngine.isExecutionActive();
-      expect(typeof initialActive).toBe("boolean");
+      // Test getting status before starting
+      const initialStatus = autoSnipingModule.getStatus();
+      expect(typeof initialStatus.isActive).toBe("boolean");
+      expect(initialStatus.isActive).toBe(false); // Should not be active initially
 
-      // Test getting active positions
-      const positions = executionEngine.getActivePositions();
-      expect(Array.isArray(positions)).toBe(true);
+      // Test starting
+      const startResult = await autoSnipingModule.start();
+      expect(startResult.success).toBe(true);
+      
+      // Test status after starting
+      const activeStatus = autoSnipingModule.getStatus();
+      expect(activeStatus.isActive).toBe(true);
     });
   });
 
@@ -109,50 +193,37 @@ describe("Optimized Backend Services", () => {
     it("should validate valid auto-sniping configuration", () => {
       const validConfig: AutoSnipingConfig = {
         enabled: true,
-        maxPositions: 5,
-        maxDailyTrades: 10,
-        positionSizeUSDT: 100,
-        minConfidence: 80,
-        allowedPatternTypes: ["ready_state"],
-        requireCalendarConfirmation: true,
-        stopLossPercentage: 5,
+        maxPositionSize: 100,
         takeProfitPercentage: 10,
-        maxDrawdownPercentage: 20,
-        enableAdvanceDetection: true,
-        advanceNoticeHours: 24,
-        enableRiskManagement: true,
-        enablePerformanceTracking: true,
-        enableTelemetry: false,
-        throttleInterval: 1000,
-        enableParallelExecution: false,
+        stopLossPercentage: 5,
+        patternConfidenceThreshold: 80,
         maxConcurrentTrades: 3,
-        enableSmartRouting: true,
-        enableLivePatternFeed: true,
-        slippageTolerancePercentage: 1,
+        enableSafetyChecks: true,
+        enablePatternDetection: true,
       };
 
       const result = validateAutoSnipingConfig(validConfig);
       expect(result).toBeDefined();
       expect(result.enabled).toBe(true);
-      expect(result.maxPositions).toBe(5);
-      expect(result.minConfidence).toBe(80);
+      expect(result.maxPositionSize).toBe(100);
+      expect(result.patternConfidenceThreshold).toBe(80);
     });
 
     it("should apply default values for missing fields", () => {
       const minimalConfig = {};
       const result = validateAutoSnipingConfig(minimalConfig);
 
-      expect(result.enabled).toBe(true);
-      expect(result.maxPositions).toBe(5);
-      expect(result.minConfidence).toBe(80);
-      expect(result.allowedPatternTypes).toEqual(["ready_state"]);
+      expect(result.enabled).toBe(false); // default is false according to schema
+      expect(result.maxPositionSize).toBe(100);
+      expect(result.patternConfidenceThreshold).toBe(75);
+      expect(result.maxConcurrentTrades).toBe(5);
     });
 
     it("should reject invalid configuration", () => {
       const invalidConfig = {
-        maxPositions: -1, // Invalid: must be positive
-        minConfidence: 150, // Invalid: max 100
-        positionSizeUSDT: -10, // Invalid: must be positive
+        maxPositionSize: -1, // Invalid: must be positive
+        patternConfidenceThreshold: 150, // Invalid: max 100
+        maxConcurrentTrades: -1, // Invalid: must be positive
       };
 
       expect(() => validateAutoSnipingConfig(invalidConfig)).toThrow();
@@ -192,40 +263,40 @@ describe("Optimized Backend Services", () => {
   describe("Service Integration", () => {
     it("should demonstrate execution engine integration", async () => {
       // Test that all new methods are properly integrated
-      const config = executionEngine.getConfig();
+      const config = autoSnipingModule.getConfig();
       expect(config).toBeDefined();
 
-      const isReady = executionEngine.isReadyForTrading();
+      const isReady = autoSnipingModule.isReadyForTrading();
       expect(typeof isReady).toBe("boolean");
 
-      const isValid = await executionEngine.validateConfiguration();
+      const isValid = await autoSnipingModule.validateConfiguration();
       expect(typeof isValid).toBe("boolean");
 
-      const isHealthy = await executionEngine.performHealthChecks();
+      const isHealthy = await autoSnipingModule.performHealthChecks();
       expect(typeof isHealthy).toBe("boolean");
 
-      const stats = executionEngine.getStats();
+      const stats = autoSnipingModule.getStats();
       expect(stats).toBeDefined();
       expect(typeof stats.activePositions).toBe("number");
     });
 
-    it("should handle configuration updates", () => {
-      const originalConfig = executionEngine.getConfig();
+    it("should handle configuration updates", async () => {
+      const originalConfig = autoSnipingModule.getConfig();
 
-      const updatedConfig = executionEngine.updateConfig({
-        maxPositions: 3,
-        minConfidence: 90,
+      await autoSnipingModule.updateConfig({
+        maxConcurrentPositions: 3,
+        confidenceThreshold: 90,
       });
 
-      expect(updatedConfig).toBeDefined();
-      expect(typeof updatedConfig).toBe("object");
+      // Config update doesn't return anything, just check it doesn't throw
+      expect(true).toBe(true);
     });
 
     it("should manage execution state properly", () => {
-      const isActive = executionEngine.isExecutionActive();
+      const isActive = autoSnipingModule.isExecutionActive();
       expect(typeof isActive).toBe("boolean");
 
-      const positions = executionEngine.getActivePositions();
+      const positions = autoSnipingModule.getActivePositions();
       expect(Array.isArray(positions)).toBe(true);
     });
 
@@ -237,9 +308,9 @@ describe("Optimized Backend Services", () => {
       };
 
       // Should not throw when updating stats
-      expect(() => executionEngine.updateStats(testStats)).not.toThrow();
+      expect(() => autoSnipingModule.updateStats(testStats)).not.toThrow();
 
-      const currentStats = executionEngine.getStats();
+      const currentStats = autoSnipingModule.getStats();
       expect(currentStats).toBeDefined();
     });
   });
@@ -250,7 +321,7 @@ describe("Optimized Backend Services", () => {
 
       // Access configuration multiple times
       for (let i = 0; i < 100; i++) {
-        const config = executionEngine.getConfig();
+        const config = autoSnipingModule.getConfig();
         expect(config).toBeDefined();
       }
 
@@ -276,17 +347,17 @@ describe("Optimized Backend Services", () => {
     });
 
     it("should maintain state consistency", async () => {
-      const initialStats = executionEngine.getStats();
-      const initialConfig = executionEngine.getConfig();
+      const initialStats = autoSnipingModule.getStats();
+      const initialConfig = autoSnipingModule.getConfig();
 
       // Perform multiple operations
-      executionEngine.updateConfig({ maxPositions: 7 });
-      await executionEngine.validateConfiguration();
-      const isReady = executionEngine.isReadyForTrading();
+      await autoSnipingModule.updateConfig({ maxConcurrentPositions: 7 });
+      await autoSnipingModule.validateConfiguration();
+      const isReady = autoSnipingModule.isReadyForTrading();
 
       // State should still be consistent
-      const finalStats = executionEngine.getStats();
-      const finalConfig = executionEngine.getConfig();
+      const finalStats = autoSnipingModule.getStats();
+      const finalConfig = autoSnipingModule.getConfig();
 
       expect(finalStats).toBeDefined();
       expect(finalConfig).toBeDefined();

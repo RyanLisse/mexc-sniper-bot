@@ -229,8 +229,8 @@ export class CacheManager {
   async has(key: string): Promise<boolean> {
     return (
       this.l1Cache.has(key) ||
-      (this.l2Cache.has(key) && Date.now() <= this.l2Cache.get(key)?.expiresAt) ||
-      (this.l3Cache.has(key) && Date.now() <= this.l3Cache.get(key)?.expiresAt)
+      (this.l2Cache.has(key) && Date.now() <= (this.l2Cache.get(key)?.expiresAt || 0)) ||
+      (this.l3Cache.has(key) && Date.now() <= (this.l3Cache.get(key)?.expiresAt || 0))
     );
   }
 
@@ -427,7 +427,8 @@ export class CacheManager {
     }
 
     // Optimize L1 cache if it's near capacity
-    const l1Usage = this.l1Cache.size() / this.l1Cache.maxSize;
+    // Note: maxSize is private, using config value instead
+    const l1Usage = this.l1Cache.size() / this.config.maxSize;
     if (l1Usage > 0.8) {
       actions.push("L1 cache is near capacity, consider increasing size");
       improvements.l1UtilizationReduction = l1Usage - 0.6;

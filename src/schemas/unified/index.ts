@@ -191,7 +191,7 @@ export type {
   // Enhanced Pattern Types
   PreReadyPatternResult,
   // Core Pattern Types
-  ReadyStatePattern,
+  // ReadyStatePattern, // Removed duplicate - already exported from mexc-api-schemas
   // Storage Types
   StoredPattern,
   // Validation Type
@@ -223,7 +223,7 @@ export {
   // Enhanced Pattern Schemas
   PreReadyPatternResultSchema,
   // Core Pattern Schemas
-  ReadyStatePatternSchema,
+  // ReadyStatePatternSchema, // Removed duplicate - already exported from mexc-api-schemas
   // Storage Schemas
   StoredPatternSchema,
   // Validation Schema
@@ -248,7 +248,8 @@ export function validateData<T>(
     const result = schema.parse(data);
     return { success: true, data: result };
   } catch (error) {
-    if (error instanceof import("zod").ZodError) {
+    // Check for ZodError using duck typing since we can't use instanceof with dynamic import in sync function
+    if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
       return {
         success: false,
         error: `Validation failed: ${(error as any).errors.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
@@ -266,9 +267,9 @@ export function validateData<T>(
 // ============================================================================
 
 export const ALL_UNIFIED_SCHEMAS = {
-  ...MEXC_API_SCHEMAS,
-  ...TRADING_SCHEMAS,
-  ...PATTERN_DETECTION_SCHEMAS,
+  // MEXC_API_SCHEMAS,
+  // TRADING_SCHEMAS,
+  // PATTERN_DETECTION_SCHEMAS,
 } as const;
 
 /**
