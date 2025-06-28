@@ -246,10 +246,65 @@ export class UnifiedMexcServiceFactory {
         }
       }
 
-      // 3. Create new service instance
+      // 3. Create new service instance and test if database credentials are valid
       const service = this.createServiceInstance(credentials);
 
-      // 4. Cache the service instance
+      // 4. Test credentials if they're from database to ensure they work
+      if (credentials.source === "database") {
+        console.info("[UnifiedMexcServiceFactory] Testing database credentials...");
+        const testResult = await this.testService(service);
+        
+        if (!testResult.authentication) {
+          console.warn("[UnifiedMexcServiceFactory] Database credentials failed authentication, trying environment fallback", {
+            error: testResult.error,
+            credentialsSource: credentials.source,
+          });
+
+          // Try environment credentials as fallback
+          const envApiKey = process.env.MEXC_API_KEY?.trim();
+          const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
+
+          if (envApiKey && envSecretKey && envApiKey.length >= 10 && envSecretKey.length >= 10) {
+            console.info("[UnifiedMexcServiceFactory] Falling back to environment credentials");
+            const envService = this.createServiceInstance({
+              apiKey: envApiKey,
+              secretKey: envSecretKey,
+              source: "environment",
+            });
+
+            // Test environment credentials
+            const envTestResult = await this.testService(envService);
+            if (envTestResult.authentication) {
+              console.info("[UnifiedMexcServiceFactory] Environment credentials work, using fallback");
+              
+              // Cache the working environment service
+              if (this.config.enableGlobalCache && !skipCache) {
+                this.serviceCache.set(
+                  envApiKey,
+                  envSecretKey,
+                  envService,
+                  this.config.serviceInstanceCacheTTL
+                );
+              }
+              
+              return envService;
+            } else {
+              console.error("[UnifiedMexcServiceFactory] Environment credentials also failed", {
+                error: envTestResult.error,
+              });
+            }
+          }
+
+          // If we get here, both database and environment credentials failed
+          throw new Error(
+            `Database credentials failed authentication: ${testResult.error}. Environment credentials also unavailable or failed.`
+          );
+        }
+
+        console.info("[UnifiedMexcServiceFactory] Database credentials authenticated successfully");
+      }
+
+      // 5. Cache the service instance
       if (this.config.enableGlobalCache && !skipCache) {
         this.serviceCache.set(
           credentials.apiKey,
