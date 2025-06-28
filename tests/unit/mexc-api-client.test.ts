@@ -96,12 +96,12 @@ describe('MexcApiClient', () => {
     mockEnhancedCache = {} as any;
     mockPerformanceMonitoring = {} as any;
 
-    // Setup mock service constructors
+    // Setup mock service constructors with proper Vitest mocks
     mockAuthService = {
       hasCredentials: vi.fn(),
       generateSignature: vi.fn(),
       validateCredentials: vi.fn(),
-    } as any;
+    };
 
     mockRequestService = {
       executeHttpRequestWithContext: vi.fn(),
@@ -110,13 +110,13 @@ describe('MexcApiClient', () => {
       post: vi.fn(),
       put: vi.fn(),
       delete: vi.fn(),
-    } as any;
+    };
 
     mockRetryService = {
       shouldRetry: vi.fn(),
       calculateDelay: vi.fn(),
       classifyError: vi.fn(),
-    } as any;
+    };
 
     mockTradingService = {
       placeOrder: vi.fn(),
@@ -126,7 +126,7 @@ describe('MexcApiClient', () => {
       getOpenOrders: vi.fn(),
       getAccountInfo: vi.fn(),
       testCredentials: vi.fn(),
-    } as any;
+    };
 
     // Mock service constructors
     (MexcAuthService as any as Mock).mockImplementation(() => mockAuthService);
@@ -204,13 +204,13 @@ describe('MexcApiClient', () => {
       apiClient = new MexcApiClient(mockConfig, mockCache, mockReliabilityManager);
       
       // Setup mock return values
-      mockRequestService.createRequestContext.mockReturnValue({
+      (mockRequestService.createRequestContext as any).mockReturnValue({
         endpoint: '/test',
         method: 'GET',
         timestamp: Date.now(),
       } as RequestContext);
 
-      mockRequestService.executeHttpRequestWithContext.mockResolvedValue({
+      (mockRequestService.executeHttpRequestWithContext as any).mockResolvedValue({
         data: { success: true },
         status: 200,
         headers: {},
@@ -245,7 +245,7 @@ describe('MexcApiClient', () => {
 
       it('should return response from request service', async () => {
         const expectedResponse = { data: { serverTime: Date.now() } };
-        mockRequestService.executeHttpRequestWithContext.mockResolvedValue(expectedResponse);
+        (mockRequestService.executeHttpRequestWithContext as any).mockResolvedValue(expectedResponse);
 
         const result = await apiClient.get('/api/v3/time');
 
@@ -328,14 +328,14 @@ describe('MexcApiClient', () => {
     describe('Error handling in HTTP methods', () => {
       it('should propagate errors from request service', async () => {
         const error = new Error('Network error');
-        mockRequestService.executeHttpRequestWithContext.mockRejectedValue(error);
+        (mockRequestService.executeHttpRequestWithContext as any).mockRejectedValue(error);
 
         await expect(apiClient.get('/api/v3/ticker/price')).rejects.toThrow('Network error');
       });
 
       it('should handle timeout errors', async () => {
         const timeoutError = new Error('Request timeout');
-        mockRequestService.executeHttpRequestWithContext.mockRejectedValue(timeoutError);
+        (mockRequestService.executeHttpRequestWithContext as any).mockRejectedValue(timeoutError);
 
         await expect(apiClient.post('/api/v3/order', {})).rejects.toThrow('Request timeout');
       });

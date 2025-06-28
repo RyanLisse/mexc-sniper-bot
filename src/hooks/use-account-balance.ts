@@ -79,9 +79,9 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       }
 
       const result = {
-        balances: data.data.balances || [],
-        totalUsdtValue: data.data.totalUsdtValue || 0,
-        lastUpdated: data.data.lastUpdated || new Date().toISOString(),
+        balances: data.data?.balances || [],
+        totalUsdtValue: data.data?.totalUsdtValue || 0,
+        lastUpdated: data.data?.lastUpdated || new Date().toISOString(),
       };
 
       console.debug("[useAccountBalance] Returning balance data:", result);
