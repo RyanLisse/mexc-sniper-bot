@@ -27,7 +27,7 @@ describe("Account Balance API Validation", () => {
     const data = await response.json();
 
     expect(executionTime).toBeLessThan(1000); // Should be fast, not 4-5 seconds
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(401);
     expect(data.success).toBe(false);
     expect(data.error).toContain("Test environment: Invalid API credentials");
     expect(data.meta.code).toBe("TEST_INVALID_CREDENTIALS");

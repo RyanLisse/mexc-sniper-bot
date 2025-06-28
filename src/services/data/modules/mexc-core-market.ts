@@ -270,6 +270,40 @@ export class MexcCoreMarketClient {
   }
 
   /**
+   * Get all ticker data for all symbols (more efficient for portfolio calculations)
+   */
+  async getAllTickers(): Promise<MexcServiceResponse<any[]>> {
+    const startTime = Date.now();
+
+    try {
+      const config = this.httpClient.getConfig();
+      const url = `${config.baseUrl}/api/v3/ticker/24hr`;
+      const response = await this.httpClient.makeRequest(url, {
+        method: "GET",
+      });
+
+      if (Array.isArray(response.data)) {
+        return {
+          success: true,
+          data: response.data,
+          timestamp: Date.now(),
+          executionTimeMs: Date.now() - startTime,
+          source: "mexc-core-market",
+        };
+      }
+
+      return {
+        success: false,
+        error: "Invalid ticker data format",
+        timestamp: Date.now(),
+        source: "mexc-core-market",
+      };
+    } catch (error) {
+      return this.httpClient.handleError(error, "getAllTickers", startTime);
+    }
+  }
+
+  /**
    * Get order book for a symbol
    */
   async getOrderBook(

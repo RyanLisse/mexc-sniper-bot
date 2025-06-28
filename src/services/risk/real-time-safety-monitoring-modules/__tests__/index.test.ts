@@ -45,8 +45,8 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
         dailyPnL: 0,
         dailyVolume: 0,
       }),
-      stopAutoSniping: vi.fn().mockResolvedValue({ success: true }),
-      closeAllPositions: vi.fn().mockResolvedValue({ success: true, data: { closedCount: 0 } }),
+      stopExecution: vi.fn().mockResolvedValue({ success: true }),
+      emergencyCloseAll: vi.fn().mockResolvedValue(0),
     };
 
     mockPatternMonitoring = {
@@ -75,7 +75,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
     // Inject mocked dependencies
     safetyService.injectDependencies({
-      coreTrading: mockCoreTrading as CoreTradingService,
+      executionService: mockCoreTrading as CoreTradingService,
       patternMonitoring: mockPatternMonitoring as PatternMonitoringService,
       emergencySystem: mockEmergencySystem as EmergencySafetySystem,
       mexcService: mockMexcService as UnifiedMexcServiceV2,
@@ -266,8 +266,8 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
       expect(actions.length).toBeGreaterThan(0);
 
       // Check that emergency actions were executed
-      expect(mockCoreTrading.stopAutoSniping).toHaveBeenCalled();
-      expect(mockCoreTrading.closeAllPositions).toHaveBeenCalled();
+      expect(mockCoreTrading.stopExecution).toHaveBeenCalled();
+      expect(mockCoreTrading.emergencyCloseAll).toHaveBeenCalled();
 
       // Verify action properties
       actions.forEach((action) => {
@@ -281,8 +281,8 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
     it("should handle emergency response failures gracefully", async () => {
       // Mock service failure
-      mockCoreTrading.stopAutoSniping.mockRejectedValue(new Error("Service unavailable"));
-      mockCoreTrading.closeAllPositions.mockRejectedValue(new Error("Service unavailable"));
+      mockCoreTrading.stopExecution.mockRejectedValue(new Error("Service unavailable"));
+      mockCoreTrading.emergencyCloseAll.mockRejectedValue(new Error("Service unavailable"));
 
       const actions = await safetyService.triggerEmergencyResponse("Test failure handling");
 

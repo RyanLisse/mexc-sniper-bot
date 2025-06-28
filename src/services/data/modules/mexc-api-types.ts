@@ -5,6 +5,8 @@
  * Contains optimized query keys and type definitions.
  */
 
+// Import RiskAssessment from its actual location
+import type { RiskAssessment } from "../../../schemas/safety-schemas-extracted";
 import type {
   BalanceEntry,
   CalendarEntry,
@@ -13,10 +15,9 @@ import type {
   MarketStats,
   OrderBook,
   Portfolio,
-  RiskAssessment,
   SymbolEntry,
   Ticker,
-} from "@/src/schemas/unified/mexc-api-schemas";
+} from "../../../schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Optimized Query Key Factory

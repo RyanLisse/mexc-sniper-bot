@@ -423,7 +423,7 @@ export class DependencyContainer extends EventEmitter {
     }
 
     // Dispose all scoped services
-    for (const [serviceName, service] of scope.services) {
+    for (const [serviceName, service] of Array.from(scope.services.entries())) {
       if (service && typeof service.cleanup === "function") {
         try {
           service.cleanup();
@@ -486,7 +486,7 @@ export class DependencyContainer extends EventEmitter {
     const serviceStatuses: Array<{ name: string; healthy: boolean; error?: string }> = [];
     let allHealthy = true;
 
-    for (const [name, instance] of this.singletonInstances) {
+    for (const [name, instance] of Array.from(this.singletonInstances.entries())) {
       try {
         if (instance && typeof instance.isHealthy === "function") {
           const healthy = await instance.isHealthy();
@@ -510,12 +510,12 @@ export class DependencyContainer extends EventEmitter {
    */
   async dispose(): Promise<void> {
     // Dispose all scopes
-    for (const scopeId of this.scopes.keys()) {
+    for (const scopeId of Array.from(this.scopes.keys())) {
       this.disposeScope(scopeId);
     }
 
     // Dispose singleton services
-    for (const [name, instance] of this.singletonInstances) {
+    for (const [name, instance] of Array.from(this.singletonInstances.entries())) {
       if (instance && typeof instance.cleanup === "function") {
         try {
           await instance.cleanup();
@@ -545,7 +545,7 @@ export class DependencyContainer extends EventEmitter {
     totalScopedServices: number;
   } {
     let totalScopedServices = 0;
-    for (const scope of this.scopes.values()) {
+    for (const scope of Array.from(this.scopes.values())) {
       totalScopedServices += scope.services.size;
     }
 
@@ -567,7 +567,7 @@ export class DependencyContainer extends EventEmitter {
     const nodes: Array<{ id: string; lifetime: ServiceLifetime }> = [];
     const edges: Array<{ from: string; to: string }> = [];
 
-    for (const descriptor of this.services.values()) {
+    for (const descriptor of Array.from(this.services.values())) {
       nodes.push({ id: descriptor.name, lifetime: descriptor.lifetime });
 
       for (const dependency of descriptor.dependencies) {

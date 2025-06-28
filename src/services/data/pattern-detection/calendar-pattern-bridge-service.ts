@@ -10,6 +10,7 @@
 
 import type { PatternAnalysisRequest } from "@/src/core/pattern-detection";
 import { EnhancedPatternDetectionCore } from "@/src/core/pattern-detection/pattern-detection-core-enhanced";
+import type { AgentResponse } from "@/src/mexc-agents/base-agent";
 import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { CalendarWorkflow } from "@/src/mexc-agents/calendar-workflow";
 import type { CalendarEntry } from "@/src/services/api/mexc-unified-exports";
@@ -51,7 +52,7 @@ export class CalendarPatternBridgeService {
       console.debug("[calendar-pattern-bridge]", message, context || ""),
   };
   private isMonitoring = false;
-  private monitoringInterval: NodeJS.Timer | null = null;
+  private monitoringInterval: NodeJS.Timeout | null = null;
   private calendarAgent: CalendarAgent;
   private calendarWorkflow: CalendarWorkflow;
 
@@ -165,9 +166,17 @@ export class CalendarPatternBridgeService {
       const analysisResponse = await this.calendarAgent.scanForNewListings(changedEntries);
 
       // Analyze opportunities using CalendarWorkflow
+      const patternAnalysisResponse: AgentResponse = {
+        content: "Pattern analysis request",
+        metadata: {
+          agent: "calendar-pattern-bridge",
+          timestamp: new Date().toISOString(),
+        },
+      };
+
       const workflowResult = await this.calendarWorkflow.analyzeDiscoveryResults(
         analysisResponse,
-        { content: "Pattern analysis request", metadata: {} },
+        patternAnalysisResponse,
         { success: true, data: changedEntries }
       );
 

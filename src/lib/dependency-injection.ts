@@ -237,7 +237,7 @@ export class DIContainer {
     const scope = this.scopes.get(scopeId);
     if (scope) {
       // Call dispose on any disposable instances
-      for (const instance of scope.values()) {
+      for (const instance of Array.from(scope.values())) {
         if (instance && typeof instance === "object" && "dispose" in instance) {
           try {
             (instance as { dispose(): void }).dispose();
@@ -262,12 +262,12 @@ export class DIContainer {
    */
   clear(): void {
     // Dispose all scopes
-    for (const scopeId of this.scopes.keys()) {
+    for (const scopeId of Array.from(this.scopes.keys())) {
       this.disposeScope(scopeId);
     }
 
     // Dispose singleton instances
-    for (const registration of this.services.values()) {
+    for (const registration of Array.from(this.services.values())) {
       if (
         registration.instance &&
         typeof registration.instance === "object" &&
@@ -293,7 +293,7 @@ export class DIContainer {
     const child = new DIContainer(this.options);
 
     // Copy parent registrations (not instances)
-    for (const [identifier, registration] of this.services.entries()) {
+    for (const [identifier, registration] of Array.from(this.services.entries())) {
       child.services.set(identifier, {
         ...registration,
         instance: undefined, // Child containers get fresh instances

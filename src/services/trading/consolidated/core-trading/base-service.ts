@@ -41,14 +41,51 @@ import { validateConfig } from "./types";
  */
 export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   private logger = {
-    info: (message: string, context?: any) =>
-      console.info("[core-trading-service]", message, context || ""),
-    warn: (message: string, context?: any) =>
-      console.warn("[core-trading-service]", message, context || ""),
-    error: (message: string, context?: any) =>
-      console.error("[core-trading-service]", message, context || ""),
-    debug: (message: string, context?: any) =>
-      console.debug("[core-trading-service]", message, context || ""),
+    info: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        errorLogger.logInfo(message, { 
+          component: 'CoreTradingService',
+          operation: 'info',
+          ...context 
+        });
+      }).catch(() => {
+        console.info("[core-trading-service]", message, context || "");
+      });
+    },
+    warn: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        errorLogger.logWarning(message, { 
+          component: 'CoreTradingService',
+          operation: 'warning',
+          ...context 
+        });
+      }).catch(() => {
+        console.warn("[core-trading-service]", message, context || "");
+      });
+    },
+    error: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        const error = new Error(message);
+        errorLogger.logError(error, { 
+          component: 'CoreTradingService',
+          operation: 'error',
+          ...context 
+        });
+      }).catch(() => {
+        console.error("[core-trading-service]", message, context || "");
+      });
+    },
+    debug: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        errorLogger.logDebug(message, { 
+          component: 'CoreTradingService',
+          operation: 'debug',
+          ...context 
+        });
+      }).catch(() => {
+        console.debug("[core-trading-service]", message, context || "");
+      });
+    },
   };
 
   private static instance: CoreTradingService | null = null;
@@ -553,7 +590,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   private ensureInitialized(): void {
     if (!this.isInitialized) {
-      throw new Error("Core Trading Service is not initialized. Call initialize() first.");
+      const error = new Error("Core Trading Service is not initialized. Call initialize() first.");
+      this.logger.error("Service not initialized", {
+        component: 'CoreTradingService',
+        operation: 'ensureInitialized',
+        isInitialized: this.isInitialized,
+        context: { stack: new Error().stack }
+      });
+      throw error;
     }
   }
 

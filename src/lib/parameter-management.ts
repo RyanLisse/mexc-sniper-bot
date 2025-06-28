@@ -333,7 +333,10 @@ export class ParameterManager extends EventEmitter {
       // For now, use default values
       logger.info("Loaded current parameters from storage");
     } catch (error) {
-      logger.error("Failed to load current parameters, using defaults:", error);
+      logger.error(
+        "Failed to load current parameters, using defaults:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 

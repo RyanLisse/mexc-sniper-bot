@@ -219,7 +219,11 @@ describe("PortfolioService", () => {
         ],
       });
 
-      const result = await service.getPortfolio({ assets: ["BTC", "ETH"] });
+      const result = await service.getPortfolio({
+        assets: ["BTC", "ETH"],
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data.balances).toHaveLength(2);
@@ -240,6 +244,7 @@ describe("PortfolioService", () => {
         minBalance: 1,
         maxBalance: 10,
         excludeZeroBalances: false,
+        includeMetrics: true,
       });
 
       expect(result.success).toBe(true);
@@ -251,7 +256,7 @@ describe("PortfolioService", () => {
       mockCache.get.mockResolvedValue(null);
       mockApiClient.get.mockResolvedValue({ balances: [] });
 
-      await service.getPortfolio();
+      await service.getPortfolio({ includeMetrics: false, excludeZeroBalances: false });
 
       expect(mockCircuitBreaker.execute).toHaveBeenCalled();
     });
@@ -270,7 +275,7 @@ describe("PortfolioService", () => {
     it("should call getPortfolio with includeMetrics false", async () => {
       const spy = vi.spyOn(service, "getPortfolio");
 
-      await service.getBalances({ excludeZeroBalances: true, includeMetrics: true });
+      await service.getBalances({ excludeZeroBalances: true });
 
       expect(spy).toHaveBeenCalledWith({
         excludeZeroBalances: true,
@@ -414,7 +419,7 @@ describe("PortfolioService", () => {
       mockCache.get.mockResolvedValue(null);
       mockApiClient.get.mockResolvedValue({ balances: [] });
 
-      await service.getPortfolio();
+      await service.getPortfolio({ includeMetrics: false, excludeZeroBalances: false });
 
       expect(mockPerformanceMonitor.recordMetric).toHaveBeenCalledWith(
         "response_time",
@@ -445,7 +450,7 @@ describe("PortfolioService", () => {
         cached: true,
       });
 
-      await service.getPortfolio();
+      await service.getPortfolio({ includeMetrics: false, excludeZeroBalances: false });
 
       expect(mockPerformanceMonitor.recordMetric).toHaveBeenCalledWith("cache_hit", 1, {
         operation: "getPortfolio",
@@ -461,7 +466,10 @@ describe("PortfolioService", () => {
       customError.name = "PortfolioError";
       mockApiClient.get.mockRejectedValue(customError);
 
-      const result = await service.getPortfolio();
+      const result = await service.getPortfolio({
+        includeMetrics: false,
+        excludeZeroBalances: false,
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Custom Portfolio Error");
@@ -484,7 +492,10 @@ describe("PortfolioService", () => {
         ],
       });
 
-      const result = await service.getPortfolio({ includeMetrics: true });
+      const result = await service.getPortfolio({
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data.metrics.assetDistribution).toEqual({
@@ -504,7 +515,10 @@ describe("PortfolioService", () => {
         ],
       });
 
-      const result = await service.getPortfolio({ includeMetrics: true });
+      const result = await service.getPortfolio({
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data.metrics.diversificationScore).toBe(30); // 3 assets * 10
@@ -517,7 +531,10 @@ describe("PortfolioService", () => {
         balances: [],
       });
 
-      const result = await service.getPortfolio({ includeMetrics: true });
+      const result = await service.getPortfolio({
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      });
 
       expect(result.success).toBe(true);
       expect(result.data.metrics.totalValue).toBe(0);

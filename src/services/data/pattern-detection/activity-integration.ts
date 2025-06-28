@@ -28,9 +28,13 @@ export async function getActivityDataForSymbol(
 
     // Add currency condition - search for both base currency and full symbol
     if (baseCurrency !== symbol) {
-      whereConditions.push(
-        or(eq(coinActivities.currency, baseCurrency), eq(coinActivities.currency, symbol))
+      const currencyCondition = or(
+        eq(coinActivities.currency, baseCurrency),
+        eq(coinActivities.currency, symbol)
       );
+      if (currencyCondition) {
+        whereConditions.push(currencyCondition);
+      }
     } else {
       whereConditions.push(eq(coinActivities.currency, symbol));
     }

@@ -428,7 +428,7 @@ export function PatternMonitoringDashboard({
               <div className="space-y-3">
                 {recentPatterns.map((pattern: PatternMatch, index: number) => (
                   <div
-                    key={`pattern-${pattern.symbol}-${typeof pattern.detectedAt === 'number' ? pattern.detectedAt : pattern.detectedAt.getTime()}-${index}`}
+                    key={`pattern-${pattern.symbol}-${typeof pattern.detectedAt === "number" ? pattern.detectedAt : pattern.detectedAt.getTime()}-${index}`}
                     className="border rounded-lg p-3"
                   >
                     <div className="flex items-center justify-between mb-2">

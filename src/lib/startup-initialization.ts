@@ -5,12 +5,12 @@
  * Ensures critical systems are properly initialized before handling requests
  */
 
-import { calendarPatternBridgeService } from "@/src/services/data/pattern-detection/calendar-pattern-bridge-service";
-import { patternToDatabaseBridge } from "@/src/services/data/pattern-detection/pattern-to-database-bridge";
-import { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
-import { environmentValidation } from "@/src/services/risk/enhanced-environment-validation";
-import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
-import { strategyInitializationService } from "@/src/services/trading/strategy-initialization-service";
+import { calendarPatternBridgeService } from "../services/data/pattern-detection/calendar-pattern-bridge-service";
+import { patternToDatabaseBridge } from "../services/data/pattern-detection/pattern-to-database-bridge";
+import { PatternMonitoringService } from "../services/notification/pattern-monitoring-service";
+import { environmentValidation } from "../services/risk/enhanced-environment-validation";
+import { getCoreTrading } from "../services/trading/consolidated/core-trading/base-service";
+import { strategyInitializationService } from "../services/trading/strategy-initialization-service";
 
 interface StartupResult {
   success: boolean;

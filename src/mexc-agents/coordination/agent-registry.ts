@@ -243,7 +243,10 @@ export class AgentRegistry extends AgentRegistryCore {
         try {
           agent.instance.destroy();
         } catch (error) {
-          this.logger.warn(`Error destroying agent ${agent.id}:`, error);
+          this.logger.warn(
+            `Error destroying agent ${agent.id}:`,
+            error instanceof Error ? error.message : String(error)
+          );
         }
       }
     }
@@ -289,7 +292,10 @@ export class AgentRegistry extends AgentRegistryCore {
         // Run recovery asynchronously to avoid blocking health updates
         setImmediate(() => {
           this.attemptRecovery(agent).catch((error) => {
-            this.logger.error(`Auto-recovery failed for agent ${agent.id}:`, error);
+            this.logger.error(
+              `Auto-recovery failed for agent ${agent.id}:`,
+              error instanceof Error ? error.message : String(error)
+            );
           });
         });
       }
@@ -337,7 +343,10 @@ export class AgentRegistry extends AgentRegistryCore {
     try {
       await this.recoveryStrategies.attemptAgentRecovery(agent, (id) => this.getAgent(id));
     } catch (error) {
-      this.logger.error(`Recovery failed for agent ${agent.id}:`, error);
+      this.logger.error(
+        `Recovery failed for agent ${agent.id}:`,
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 }
@@ -357,7 +366,10 @@ export function initializeGlobalAgentRegistry(options?: AgentRegistryOptions): A
     try {
       globalRegistry.destroy();
     } catch (error) {
-      console.warn("Error destroying previous registry:", error);
+      console.warn(
+        "Error destroying previous registry:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
   globalRegistry = new AgentRegistry(options);
@@ -369,7 +381,10 @@ export function clearGlobalAgentRegistry(): void {
     try {
       globalRegistry.destroy();
     } catch (error) {
-      console.warn("Error destroying global registry:", error);
+      console.warn(
+        "Error destroying global registry:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
     globalRegistry = null;
   }

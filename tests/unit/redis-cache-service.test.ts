@@ -56,8 +56,13 @@ describe('RedisCacheService', () => {
     delete process.env.GITHUB_ACTIONS;
     delete process.env.VERCEL;
     // NODE_ENV is read-only in test environment, skip deletion
-    if (Object.getOwnPropertyDescriptor(process.env, 'NODE_ENV')?.writable) {
-      delete process.env.NODE_ENV;
+    const nodeEnvDescriptor = Object.getOwnPropertyDescriptor(process.env, 'NODE_ENV');
+    if (nodeEnvDescriptor?.writable !== false) {
+      try {
+        delete (process.env as any).NODE_ENV;
+      } catch (e) {
+        // Ignore error if NODE_ENV cannot be deleted
+      }
     }
     delete process.env.NEXT_PHASE;
     delete process.env.NEXT_BUILD;

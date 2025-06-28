@@ -37,7 +37,7 @@ export class PerformanceTracker {
     {
       trades: number;
       successRate: number;
-      totalPnL: number;
+      averagePnL: number;
       maxDrawdown: number;
     }
   > = {};

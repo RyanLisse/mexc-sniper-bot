@@ -79,6 +79,12 @@ class CredentialCache {
   clear(): void {
     this.cache.clear();
   }
+
+  getStats(): { size: number } {
+    return {
+      size: this.cache.size,
+    };
+  }
 }
 
 // ============================================================================
@@ -253,12 +259,15 @@ export class UnifiedMexcServiceFactory {
       if (credentials.source === "database") {
         console.info("[UnifiedMexcServiceFactory] Testing database credentials...");
         const testResult = await this.testService(service);
-        
+
         if (!testResult.authentication) {
-          console.warn("[UnifiedMexcServiceFactory] Database credentials failed authentication, trying environment fallback", {
-            error: testResult.error,
-            credentialsSource: credentials.source,
-          });
+          console.warn(
+            "[UnifiedMexcServiceFactory] Database credentials failed authentication, trying environment fallback",
+            {
+              error: testResult.error,
+              credentialsSource: credentials.source,
+            }
+          );
 
           // Try environment credentials as fallback
           const envApiKey = process.env.MEXC_API_KEY?.trim();
@@ -275,8 +284,10 @@ export class UnifiedMexcServiceFactory {
             // Test environment credentials
             const envTestResult = await this.testService(envService);
             if (envTestResult.authentication) {
-              console.info("[UnifiedMexcServiceFactory] Environment credentials work, using fallback");
-              
+              console.info(
+                "[UnifiedMexcServiceFactory] Environment credentials work, using fallback"
+              );
+
               // Cache the working environment service
               if (this.config.enableGlobalCache && !skipCache) {
                 this.serviceCache.set(
@@ -286,7 +297,7 @@ export class UnifiedMexcServiceFactory {
                   this.config.serviceInstanceCacheTTL
                 );
               }
-              
+
               return envService;
             } else {
               console.error("[UnifiedMexcServiceFactory] Environment credentials also failed", {
@@ -541,7 +552,7 @@ export class UnifiedMexcServiceFactory {
     serviceCache: { size: number; keys: string[] };
   } {
     return {
-      credentialCache: { size: this.credentialCache.cache.size },
+      credentialCache: this.credentialCache.getStats(),
       serviceCache: this.serviceCache.getStats(),
     };
   }

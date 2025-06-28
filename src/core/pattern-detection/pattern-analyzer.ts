@@ -11,12 +11,14 @@
  * - Comprehensive error handling
  */
 
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
+import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
 import type {
   CorrelationAnalysis,
   IPatternAnalyzer,
+  PatternContext,
   PatternMatch,
   ReadyStatePattern,
 } from "./interfaces";
@@ -32,13 +34,13 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   private readonly READY_STATE_PATTERN: ReadyStatePattern = { sts: 2, st: 2, tt: 4 };
   private readonly MIN_ADVANCE_HOURS = 3.5; // Core competitive advantage
   private logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: PatternContext | string) =>
       console.info("[pattern-analyzer]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: PatternContext | string) =>
       console.warn("[pattern-analyzer]", message, context || ""),
-    error: (message: string, context?: any, error?: Error) =>
+    error: (message: string, context?: PatternContext | string, error?: Error) =>
       console.error("[pattern-analyzer]", message, context || "", error || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: PatternContext | string) =>
       console.debug("[pattern-analyzer]", message, context || ""),
   };
 
@@ -86,7 +88,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         if (isExactMatch) {
           // Import confidence calculator (lazy loading)
           const { ConfidenceCalculator } = await import("./confidence-calculator");
-          const confidenceCalculator = new ConfidenceCalculator();
+          const confidenceCalculator = ConfidenceCalculator.getInstance();
 
           const confidence = await confidenceCalculator.calculateReadyStateConfidence(symbol);
 
@@ -114,7 +116,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
               patternType: "ready_state",
               confidence: enhancedConfidence,
               symbol: symbol.cd || "unknown",
-              vcoinId: (symbol as any).vcoinId,
+              vcoinId: (symbol as SymbolEntry & { vcoinId?: string }).vcoinId,
               indicators: {
                 sts: symbol.sts,
                 st: symbol.st,
@@ -192,7 +194,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         if (advanceHours >= this.MIN_ADVANCE_HOURS) {
           // Import confidence calculator (lazy loading)
           const { ConfidenceCalculator } = await import("./confidence-calculator");
-          const confidenceCalculator = new ConfidenceCalculator();
+          const confidenceCalculator = ConfidenceCalculator.getInstance();
 
           const confidence = await confidenceCalculator.calculateAdvanceOpportunityConfidence(
             entry,
@@ -225,9 +227,9 @@ export class PatternAnalyzer implements IPatternAnalyzer {
               symbol: entry.symbol,
               vcoinId: entry.vcoinId,
               indicators: {
-                sts: (entry as any).sts,
-                st: (entry as any).st,
-                tt: (entry as any).tt,
+                sts: (entry as CalendarEntry & { sts?: number }).sts,
+                st: (entry as CalendarEntry & { st?: number }).st,
+                tt: (entry as CalendarEntry & { tt?: number }).tt,
                 advanceHours,
                 marketConditions: {
                   projectType: this.classifyProject(entry.projectName || entry.symbol),
@@ -294,14 +296,17 @@ export class PatternAnalyzer implements IPatternAnalyzer {
           continue;
         }
 
-        const preReadyScore = await this.calculatePreReadyScore(symbol);
+        // Import confidence calculator (lazy loading)
+        const { ConfidenceCalculator } = await import("./confidence-calculator");
+        const confidenceCalculator = ConfidenceCalculator.getInstance();
+        const preReadyScore = await confidenceCalculator.calculatePreReadyScore(symbol);
 
         if (preReadyScore.isPreReady && preReadyScore.confidence >= 60) {
           const match: PatternMatch = {
             patternType: "pre_ready",
             confidence: preReadyScore.confidence,
             symbol: symbol.cd || "unknown",
-            vcoinId: (symbol as any).vcoinId,
+            vcoinId: (symbol as SymbolEntry & { vcoinId?: string }).vcoinId,
             indicators: {
               sts: symbol.sts,
               st: symbol.st,
@@ -416,31 +421,6 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     return true;
   }
 
-  private async calculatePreReadyScore(symbol: SymbolEntry): Promise<{
-    isPreReady: boolean;
-    confidence: number;
-    estimatedTimeToReady: number;
-  }> {
-    let confidence = 0;
-    let estimatedHours = 0;
-
-    // Status progression analysis
-    if (symbol.sts === 1 && symbol.st === 1) {
-      confidence = 60;
-      estimatedHours = 6; // Estimate 6 hours to ready
-    } else if (symbol.sts === 2 && symbol.st === 1) {
-      confidence = 75;
-      estimatedHours = 2; // Estimate 2 hours to ready
-    } else if (symbol.sts === 2 && symbol.st === 2 && symbol.tt !== 4) {
-      confidence = 85;
-      estimatedHours = 0.5; // Estimate 30 minutes to ready
-    }
-
-    const isPreReady = confidence > 0;
-
-    return { isPreReady, confidence, estimatedTimeToReady: estimatedHours };
-  }
-
   private assessReadyStateRisk(symbol: SymbolEntry): "low" | "medium" | "high" {
     // Low risk: Complete data, stable conditions
     if (symbol.cd && symbol.ca && symbol.ps !== undefined && symbol.qs !== undefined) {
@@ -544,7 +524,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   /**
    * Get activity data for a symbol (for enhanced analysis)
    */
-  private async getActivityDataForSymbol(symbol: string): Promise<any[]> {
+  private async getActivityDataForSymbol(symbol: string): Promise<ActivityData[]> {
     try {
       // Use the dedicated activity integration service
       const activityData = await fetchActivityData(symbol);
@@ -569,7 +549,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   /**
    * Calculate activity boost based on activity data
    */
-  private calculateActivityBoost(activities: any[]): number {
+  private calculateActivityBoost(activities: ActivityData[]): number {
     if (!activities || activities.length === 0) return 0;
 
     // Optimized reduce operation - more functional and efficient
@@ -592,7 +572,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   /**
    * Check if activities contain high priority types
    */
-  private hasHighPriorityActivity(activities: any[]): boolean {
+  private hasHighPriorityActivity(activities: ActivityData[]): boolean {
     if (!activities || activities.length === 0) return false;
 
     const highPriorityTypes = ["SUN_SHINE", "LAUNCHPAD", "IEO"];

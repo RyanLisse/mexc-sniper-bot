@@ -8,7 +8,7 @@
 export type BuildSafeLogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
 export interface BuildSafeLogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**

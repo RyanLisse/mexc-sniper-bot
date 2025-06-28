@@ -13,7 +13,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import WebSocket from "ws";
+import * as WebSocket from "ws";
 import type { CoordinatedCircuitBreaker } from "./coordinated-circuit-breaker";
 import { createCoordinatedMexcWebSocketBreaker } from "./coordinated-circuit-breaker";
 
@@ -83,14 +83,51 @@ export interface WebSocketConnectionHealth {
 
 export class RealTimePatternDetector {
   private logger = {
-    info: (message: string, context?: any) =>
-      console.info("[enhanced-mexc-websocket-service]", message, context || ""),
-    warn: (message: string, context?: any) =>
-      console.warn("[enhanced-mexc-websocket-service]", message, context || ""),
-    error: (message: string, context?: any, error?: Error) =>
-      console.error("[enhanced-mexc-websocket-service]", message, context || "", error || ""),
-    debug: (message: string, context?: any) =>
-      console.debug("[enhanced-mexc-websocket-service]", message, context || ""),
+    info: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        errorLogger.logInfo(message, { 
+          component: 'EnhancedMexcWebSocketService',
+          operation: 'info',
+          ...context 
+        });
+      }).catch(() => {
+        console.info("[enhanced-mexc-websocket-service]", message, context || "");
+      });
+    },
+    warn: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        errorLogger.logWarning(message, { 
+          component: 'EnhancedMexcWebSocketService',
+          operation: 'warning',
+          ...context 
+        });
+      }).catch(() => {
+        console.warn("[enhanced-mexc-websocket-service]", message, context || "");
+      });
+    },
+    error: (message: string, context?: any, error?: Error) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        const err = error || new Error(message);
+        errorLogger.logError(err, { 
+          component: 'EnhancedMexcWebSocketService',
+          operation: 'error',
+          ...context 
+        });
+      }).catch(() => {
+        console.error("[enhanced-mexc-websocket-service]", message, context || "", error || "");
+      });
+    },
+    debug: (message: string, context?: any) => {
+      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
+        errorLogger.logDebug(message, { 
+          component: 'EnhancedMexcWebSocketService',
+          operation: 'debug',
+          ...context 
+        });
+      }).catch(() => {
+        console.debug("[enhanced-mexc-websocket-service]", message, context || "");
+      });
+    },
   };
 
   private patternCallbacks = new Map<string, Set<(pattern: RealTimePatternMatch) => void>>();
@@ -259,7 +296,10 @@ export class RealTimePatternDetector {
         try {
           callback(pattern);
         } catch (error) {
-          console.error("Error in pattern callback:", error);
+          console.error(
+            "Error in pattern callback:",
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
     }
@@ -295,7 +335,7 @@ export class RealTimePatternDetector {
 
 export class EnhancedMexcWebSocketService extends EventEmitter {
   private static instance: EnhancedMexcWebSocketService;
-  private ws: WebSocket | null = null;
+  private ws: WebSocket.default | null = null;
   private circuitBreaker: CoordinatedCircuitBreaker;
   private patternDetector: RealTimePatternDetector;
   private isConnected = false;
@@ -365,7 +405,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
       console.info("🔗 Connecting to MEXC WebSocket...");
 
       // Create WebSocket connection
-      this.ws = new WebSocket(this.MEXC_WS_URL);
+      this.ws = new WebSocket.default(this.MEXC_WS_URL) as WebSocket.default;
 
       // Set up event handlers
       this.ws.on("open", this.handleOpen.bind(this));
@@ -384,7 +424,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
           resolve();
         });
 
-        this.ws?.once("error", (error) => {
+        this.ws?.once("error", (error: Error) => {
           clearTimeout(timeout);
           reject(error);
         });
@@ -392,6 +432,10 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     } catch (error) {
       this.isConnecting = false;
       this.connectionHealth.errorCount++;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (this.ws) {
+        this.ws = null;
+      }
       throw error;
     }
   }
@@ -465,7 +509,10 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
 
       this.emit("message", message);
     } catch (error) {
-      console.error("❌ Error parsing WebSocket message:", error);
+      console.error(
+        "❌ Error parsing WebSocket message:",
+        error instanceof Error ? error.message : String(error)
+      );
       this.connectionHealth.errorCount++;
     }
   }
@@ -550,7 +597,10 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
         try {
           callback(priceData);
         } catch (error) {
-          console.error("Error in price callback:", error);
+          console.error(
+            "Error in price callback:",
+            error instanceof Error ? error.message : String(error)
+          );
         }
       });
     }
@@ -690,8 +740,8 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
   }
 
   private resubscribeAll(): void {
-    for (const [symbol, types] of this.subscriptions.entries()) {
-      for (const type of types) {
+    for (const [symbol, types] of Array.from(this.subscriptions.entries())) {
+      for (const type of Array.from(types)) {
         this.sendSubscription(symbol, type);
       }
     }
@@ -788,7 +838,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
    * Check if connected
    */
   isWebSocketConnected(): boolean {
-    return this.isConnected && this.ws?.readyState === WebSocket.OPEN;
+    return this.isConnected && this.ws?.readyState === WebSocket.default.OPEN;
   }
 
   /**

@@ -9,18 +9,16 @@ import { z } from "zod";
 // Base execution status schema
 export const executionStatusSchema = z.enum(["idle", "running", "paused", "stopping", "error"]);
 
-// AutoSnipingConfig validation schema
+// AutoSnipingConfig validation schema (matching the actual interface)
 export const autoSnipingConfigSchema = z.object({
   enabled: z.boolean(),
-  maxPositions: z.number().min(1).max(50),
-  maxDailyTrades: z.number().min(1).max(100),
-  positionSizeUSDT: z.number().min(10).max(10000),
-  minConfidence: z.number().min(0).max(100),
-  enableAdvanceDetection: z.boolean(),
-  stopLossPercentage: z.number().min(0).max(50),
-  takeProfitPercentage: z.number().min(0).max(100),
-  maxDrawdownPercentage: z.number().min(5).max(50),
-  slippageTolerancePercentage: z.number().min(0.1).max(5),
+  maxPositionSize: z.number().positive(),
+  takeProfitPercentage: z.number().min(0.1).max(100),
+  stopLossPercentage: z.number().min(0.1).max(100),
+  patternConfidenceThreshold: z.number().min(50).max(100),
+  maxConcurrentTrades: z.number().min(1).max(10),
+  enableSafetyChecks: z.boolean(),
+  enablePatternDetection: z.boolean(),
 });
 
 // Component props schemas
@@ -47,24 +45,19 @@ export const configEditorPropsSchema = z.object({
   isUpdatingConfig: z.boolean(),
 });
 
-// Form validation schemas
+// Form validation schemas (matching the actual AutoSnipingConfig)
 export const configFormSchema = z.object({
   enabled: z.boolean(),
-  maxPositions: z.coerce.number().min(1, "Must be at least 1").max(50, "Cannot exceed 50"),
-  maxDailyTrades: z.coerce.number().min(1, "Must be at least 1").max(100, "Cannot exceed 100"),
-  positionSizeUSDT: z.coerce.number().min(10, "Minimum $10").max(10000, "Maximum $10,000"),
-  minConfidence: z.coerce.number().min(0, "Must be 0% or higher").max(100, "Cannot exceed 100%"),
-  enableAdvanceDetection: z.boolean(),
-  stopLossPercentage: z.coerce.number().min(0, "Cannot be negative").max(50, "Cannot exceed 50%"),
-  takeProfitPercentage: z.coerce
+  maxPositionSize: z.coerce.number().positive("Must be greater than 0"),
+  takeProfitPercentage: z.coerce.number().min(0.1, "Minimum 0.1%").max(100, "Cannot exceed 100%"),
+  stopLossPercentage: z.coerce.number().min(0.1, "Minimum 0.1%").max(100, "Cannot exceed 100%"),
+  patternConfidenceThreshold: z.coerce
     .number()
-    .min(0, "Cannot be negative")
+    .min(50, "Minimum 50%")
     .max(100, "Cannot exceed 100%"),
-  maxDrawdownPercentage: z.coerce.number().min(5, "Minimum 5%").max(50, "Cannot exceed 50%"),
-  slippageTolerancePercentage: z.coerce
-    .number()
-    .min(0.1, "Minimum 0.1%")
-    .max(5, "Cannot exceed 5%"),
+  maxConcurrentTrades: z.coerce.number().min(1, "Must be at least 1").max(10, "Cannot exceed 10"),
+  enableSafetyChecks: z.boolean(),
+  enablePatternDetection: z.boolean(),
 });
 
 // Alert severity schema

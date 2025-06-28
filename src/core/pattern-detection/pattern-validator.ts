@@ -11,7 +11,7 @@
  * - Extensible validation rules
  */
 
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
 import type { IPatternValidator, PatternAnalysisRequest, PatternMatch } from "./interfaces";
 
 /**

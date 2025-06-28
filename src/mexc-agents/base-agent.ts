@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import OpenAI from "openai";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
 import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
@@ -116,7 +116,7 @@ export class BaseAgent {
       messages,
       options,
     };
-    return crypto.createHash("sha256").update(JSON.stringify(keyData)).digest("hex");
+    return createHash("sha256").update(JSON.stringify(keyData)).digest("hex");
   }
 
   /**

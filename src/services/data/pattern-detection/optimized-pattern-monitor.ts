@@ -14,7 +14,9 @@
 import { z } from "zod";
 import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { PatternType } from "./optimized-auto-sniping-core";
+
+// PatternType is inlined below as the file doesn't exist
+type PatternType = "ready_state" | "pre_ready" | "launch_sequence" | "risk_warning";
 
 // ============================================================================
 // Pattern Monitoring Schemas
@@ -211,7 +213,7 @@ export class OptimizedPatternMonitor {
     const recentPatterns: EnhancedPatternMatch[] = [];
     const now = Date.now();
 
-    for (const [, cached] of this.patternCache) {
+    for (const cached of this.patternCache.values()) {
       // Only include non-expired patterns
       if (now - cached.timestamp <= cached.ttl) {
         recentPatterns.push(cached.pattern);
@@ -319,7 +321,10 @@ export class OptimizedPatternMonitor {
         symbol: pattern.symbol,
         patternType: pattern.patternType as PatternType,
         confidence: pattern.confidence,
-        timestamp: pattern.timestamp,
+        timestamp:
+          pattern.detectedAt instanceof Date
+            ? pattern.detectedAt.toISOString()
+            : new Date(pattern.detectedAt).toISOString(),
         riskLevel: pattern.riskLevel,
 
         // Enhanced data
@@ -336,7 +341,7 @@ export class OptimizedPatternMonitor {
 
         // Optional fields
         advanceNoticeHours: pattern.advanceNoticeHours,
-        volatility: pattern.volatility,
+        volatility: (pattern as any).volatility,
       });
 
       // Cache the enhanced pattern
@@ -355,7 +360,10 @@ export class OptimizedPatternMonitor {
         symbol: pattern.symbol,
         patternType: pattern.patternType as PatternType,
         confidence: pattern.confidence,
-        timestamp: pattern.timestamp,
+        timestamp:
+          pattern.detectedAt instanceof Date
+            ? pattern.detectedAt.toISOString()
+            : new Date(pattern.detectedAt).toISOString(),
         riskLevel: pattern.riskLevel,
         enhancedScore: pattern.confidence,
         scoreBreakdown: {
@@ -369,7 +377,10 @@ export class OptimizedPatternMonitor {
         eligibleForTrading: false,
         filterReasons: ["Enhancement failed"],
         priorityRank: 999,
-        firstDetected: pattern.timestamp,
+        firstDetected:
+          pattern.detectedAt instanceof Date
+            ? pattern.detectedAt.toISOString()
+            : new Date(pattern.detectedAt).toISOString(),
         lastUpdated: new Date().toISOString(),
         detectionCount: 1,
       });
@@ -402,11 +413,12 @@ export class OptimizedPatternMonitor {
 
     // Volume adjustment (if available)
     let volumeAdjustment = 0;
-    if (pattern.volume24h) {
-      if (pattern.volume24h > 1000000) {
+    const volume24h = (pattern as any).volume24h;
+    if (volume24h) {
+      if (volume24h > 1000000) {
         volumeAdjustment = 15;
         reasoning.push("High volume bonus: +15");
-      } else if (pattern.volume24h > 100000) {
+      } else if (volume24h > 100000) {
         volumeAdjustment = 5;
         reasoning.push("Medium volume bonus: +5");
       }
@@ -414,7 +426,8 @@ export class OptimizedPatternMonitor {
 
     // Calendar confirmation bonus
     let calendarBonus = 0;
-    if (pattern.calendarConfirmed) {
+    const calendarConfirmed = (pattern as any).calendarConfirmed;
+    if (calendarConfirmed) {
       calendarBonus = 10;
       reasoning.push("Calendar confirmation bonus: +10");
     }
@@ -449,7 +462,11 @@ export class OptimizedPatternMonitor {
     }
 
     // Check age
-    const age = Date.now() - new Date(pattern.timestamp).getTime();
+    const detectedTime =
+      pattern.detectedAt instanceof Date
+        ? pattern.detectedAt.getTime()
+        : new Date(pattern.detectedAt).getTime();
+    const age = Date.now() - detectedTime;
     if (age > criteria.maxAge) {
       reasons.push(
         `Pattern age ${Math.round(age / 1000)}s exceeds max ${Math.round(criteria.maxAge / 1000)}s`
@@ -501,7 +518,11 @@ export class OptimizedPatternMonitor {
     // For simplicity, use current timestamp as first detected
     // In production, this would track actual first detection time
     return {
-      firstDetected: isNewPattern ? pattern.timestamp : new Date(lastSeen).toISOString(),
+      firstDetected: isNewPattern
+        ? pattern.detectedAt instanceof Date
+          ? pattern.detectedAt.toISOString()
+          : new Date(pattern.detectedAt).toISOString()
+        : new Date(lastSeen).toISOString(),
       count: isNewPattern ? 1 : 2, // Simplified counting
     };
   }
@@ -518,7 +539,7 @@ export class OptimizedPatternMonitor {
     const now = Date.now();
     let cleanedCount = 0;
 
-    for (const [symbol, cached] of this.patternCache) {
+    for (const [symbol, cached] of Array.from(this.patternCache.entries())) {
       if (now - cached.timestamp > cached.ttl) {
         this.patternCache.delete(symbol);
         cleanedCount++;

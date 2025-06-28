@@ -114,7 +114,7 @@ export const MexcServiceResponseSchema = z.object({
   metadata: z.unknown().optional(),
 });
 
-export type MexcServiceResponse<T = any> = Omit<
+export type MexcServiceResponse<T = unknown> = Omit<
   z.infer<typeof MexcServiceResponseSchema>,
   "data"
 > & {
@@ -442,7 +442,7 @@ export const calculateActivityBoost = (activities: ActivityData[]): number => {
 };
 
 export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => {
-  return [...new Set(activities.map((activity) => activity.activityType))];
+  return Array.from(new Set(activities.map((activity) => activity.activityType)));
 };
 
 export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => {
@@ -544,10 +544,10 @@ export const validateTickerData = (data: unknown): Ticker => {
   return TickerSchema.parse(data);
 };
 
-export const validateMexcData = <T>(
-  schema: z.ZodSchema<T>,
+export const validateMexcData = <T extends z.ZodTypeAny>(
+  schema: T,
   data: unknown
-): { success: boolean; data?: T; error?: string } => {
+): { success: boolean; data?: z.infer<T>; error?: string } => {
   try {
     const result = schema.parse(data);
     return { success: true, data: result };
@@ -606,9 +606,9 @@ export const MEXC_API_SCHEMAS = {
 /**
  * Validate service response structure
  */
-export function validateServiceResponse<T>(
+export function validateServiceResponse<T = unknown>(
   data: unknown,
-  dataSchema?: z.ZodSchema<T>
+  dataSchema?: z.ZodTypeAny
 ): { success: boolean; data?: MexcServiceResponse<T>; error?: string } {
   const baseResponseSchema = z.object({
     success: z.boolean(),
@@ -673,3 +673,38 @@ export const hasCompleteData = (symbol: SymbolV2Entry): boolean => {
 };
 
 export type ReadyStatePattern = z.infer<typeof ReadyStatePatternSchema>;
+
+// ============================================================================
+// Portfolio and Market Data Schemas
+// ============================================================================
+
+/**
+ * Portfolio Schema - User portfolio information
+ */
+export const PortfolioSchema = z.object({
+  totalValue: z.number(),
+  totalValueUsdt: z.number().optional(),
+  totalPnL: z.number().optional(),
+  totalPnLPercent: z.number().optional(),
+  assets: z.array(BalanceEntrySchema),
+  lastUpdated: z.string().optional(),
+});
+
+export type Portfolio = z.infer<typeof PortfolioSchema>;
+
+/**
+ * Market Stats Schema - Market statistics
+ */
+export const MarketStatsSchema = z.object({
+  symbol: z.string(),
+  price: z.number(),
+  priceChange: z.number(),
+  priceChangePercent: z.number(),
+  volume: z.number(),
+  marketCap: z.number().optional(),
+  high24h: z.number().optional(),
+  low24h: z.number().optional(),
+  timestamp: z.number().optional(),
+});
+
+export type MarketStats = z.infer<typeof MarketStatsSchema>;

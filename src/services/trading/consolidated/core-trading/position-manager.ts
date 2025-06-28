@@ -206,13 +206,16 @@ export class PositionManager {
           // Update position
           position.currentPrice = currentPrice;
 
-          // Calculate unrealized P&L
+          // Calculate unrealized P&L with enhanced metrics
           const priceDiff = currentPrice - position.entryPrice;
           const positionPnL = priceDiff * position.quantity;
           position.unrealizedPnL = positionPnL;
           position.pnlPercentage = (priceDiff / position.entryPrice) * 100;
 
-          // Check stop-loss and take-profit conditions
+          // Enhanced risk calculations
+          await this.calculateEnhancedRiskMetrics(position);
+
+          // Check stop-loss and take-profit conditions with trailing stop logic
           await this.checkPositionTriggers(position);
 
           this.activePositions.set(positionId, position);
@@ -223,11 +226,14 @@ export class PositionManager {
       }
     }
 
-    // Update unrealized P&L total
+    // Update unrealized P&L total with portfolio-level calculations
     this.unrealizedPnL = Array.from(this.activePositions.values()).reduce(
       (total, pos) => total + (pos.unrealizedPnL || 0),
       0
     );
+
+    // Calculate portfolio-level risk metrics
+    await this.calculatePortfolioRiskMetrics();
 
     this.updateMetrics();
   }
@@ -404,7 +410,15 @@ export class PositionManager {
           reason,
         });
       } else {
-        throw new Error(mexcResult.error || "Failed to close position");
+        const error = new Error(mexcResult.error || "Failed to close position");
+        this.context.logger.error("MEXC position close failed", {
+          component: 'PositionManager',
+          operation: 'closeRealPosition',
+          positionId: position.id,
+          mexcError: mexcResult.error,
+          context: { position, exitPrice, reason }
+        });
+        throw error;
       }
     } catch (error) {
       const safeError = toSafeError(error);
@@ -442,6 +456,199 @@ export class PositionManager {
 
     const winningPositions = closedPositions.filter((p) => (p.realizedPnL || 0) > 0);
     return (winningPositions.length / closedPositions.length) * 100;
+  }
+
+  /**
+   * Calculate enhanced risk metrics for individual positions
+   */
+  private async calculateEnhancedRiskMetrics(position: Position): Promise<void> {
+    if (!position.currentPrice) return;
+
+    // Value at Risk calculation (simplified)
+    const positionValue = position.quantity * position.entryPrice;
+    const volatility = await this.estimateVolatility(position.symbol);
+    const confidenceLevel = 0.95; // 95% confidence
+    const timeHorizon = 1; // 1 day
+    const valueAtRisk = positionValue * volatility * Math.sqrt(timeHorizon) * 1.645; // 95% VaR
+
+    // Expected Shortfall (Conditional VaR)
+    const expectedShortfall = valueAtRisk * 1.25; // Simplified approximation
+
+    // Position-specific risk metrics
+    position.riskMetrics = {
+      valueAtRisk,
+      expectedShortfall,
+      volatility,
+      beta: await this.estimateBeta(position.symbol),
+      sharpeRatio: this.calculatePositionSharpeRatio(position),
+      maxFavorableExcursion: this.calculateMaxFavorableExcursion(position),
+      maxAdverseExcursion: this.calculateMaxAdverseExcursion(position),
+    };
+  }
+
+  /**
+   * Calculate portfolio-level risk metrics
+   */
+  private async calculatePortfolioRiskMetrics(): Promise<void> {
+    if (this.activePositions.size === 0) return;
+
+    const positions = Array.from(this.activePositions.values());
+    const totalValue = positions.reduce((sum, pos) => sum + pos.quantity * pos.entryPrice, 0);
+
+    // Portfolio concentration risk
+    const concentrationRisk = this.calculateConcentrationRisk(positions, totalValue);
+
+    // Portfolio correlation risk
+    const correlationRisk = await this.calculateCorrelationRisk(positions);
+
+    // Portfolio beta
+    const portfolioBeta = await this.calculatePortfolioBeta(positions, totalValue);
+
+    // Update portfolio metrics
+    this.state.metrics.portfolioRiskMetrics = {
+      concentrationRisk,
+      correlationRisk,
+      portfolioBeta,
+      diversificationRatio: this.calculateDiversificationRatio(positions),
+      maxDrawdownPercent: (this.maxDrawdown / totalValue) * 100,
+    };
+  }
+
+  /**
+   * Estimate volatility for a symbol (simplified)
+   */
+  private async estimateVolatility(symbol: string): Promise<number> {
+    try {
+      // In a real implementation, this would use historical price data
+      // For now, return a reasonable estimate based on asset type
+      if (symbol.includes("BTC")) return 0.04; // 4% daily volatility
+      if (symbol.includes("ETH")) return 0.05; // 5% daily volatility
+      return 0.03; // 3% default volatility
+    } catch {
+      return 0.03; // Fallback volatility
+    }
+  }
+
+  /**
+   * Estimate beta coefficient for a symbol
+   */
+  private async estimateBeta(symbol: string): Promise<number> {
+    try {
+      // Simplified beta estimation - would use market correlation in real implementation
+      if (symbol.includes("BTC")) return 1.0;
+      if (symbol.includes("ETH")) return 1.2;
+      return 0.8; // Default beta for altcoins
+    } catch {
+      return 1.0; // Market beta
+    }
+  }
+
+  /**
+   * Calculate position-specific Sharpe ratio
+   */
+  private calculatePositionSharpeRatio(position: Position): number {
+    if (!position.unrealizedPnL || !position.currentPrice) return 0;
+
+    const returns = (position.unrealizedPnL / (position.quantity * position.entryPrice)) * 100;
+    const riskFreeRate = 0; // Assume 0 for simplicity
+    const volatility = 5; // Estimated daily volatility percentage
+
+    return (returns - riskFreeRate) / volatility;
+  }
+
+  /**
+   * Calculate Maximum Favorable Excursion
+   */
+  private calculateMaxFavorableExcursion(position: Position): number {
+    // In a real implementation, this would track the highest unrealized profit
+    // For now, return current unrealized P&L if positive
+    return Math.max(0, position.unrealizedPnL || 0);
+  }
+
+  /**
+   * Calculate Maximum Adverse Excursion
+   */
+  private calculateMaxAdverseExcursion(position: Position): number {
+    // In a real implementation, this would track the worst unrealized loss
+    // For now, return current unrealized P&L if negative
+    return Math.min(0, position.unrealizedPnL || 0);
+  }
+
+  /**
+   * Calculate concentration risk
+   */
+  private calculateConcentrationRisk(positions: Position[], totalValue: number): number {
+    if (positions.length === 0 || totalValue === 0) return 0;
+
+    // Calculate Herfindahl-Hirschman Index for concentration
+    const weights = positions.map((pos) => (pos.quantity * pos.entryPrice) / totalValue);
+    const hhi = weights.reduce((sum, weight) => sum + weight * weight, 0);
+
+    // Convert to concentration risk (0-1 scale, where 1 is maximum concentration)
+    return hhi;
+  }
+
+  /**
+   * Calculate correlation risk between positions
+   */
+  private async calculateCorrelationRisk(positions: Position[]): Promise<number> {
+    if (positions.length < 2) return 0;
+
+    // Simplified correlation risk calculation
+    // In a real implementation, this would use historical correlations
+    let totalCorrelation = 0;
+    let pairCount = 0;
+
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const correlation = await this.estimateCorrelation(
+          positions[i].symbol,
+          positions[j].symbol
+        );
+        totalCorrelation += Math.abs(correlation);
+        pairCount++;
+      }
+    }
+
+    return pairCount > 0 ? totalCorrelation / pairCount : 0;
+  }
+
+  /**
+   * Estimate correlation between two symbols
+   */
+  private async estimateCorrelation(symbol1: string, symbol2: string): Promise<number> {
+    // Simplified correlation estimation
+    if (symbol1 === symbol2) return 1;
+    if (symbol1.includes("BTC") && symbol2.includes("ETH")) return 0.7;
+    if (symbol1.includes("BTC") || symbol2.includes("BTC")) return 0.5;
+    return 0.3; // Default correlation for crypto pairs
+  }
+
+  /**
+   * Calculate portfolio beta
+   */
+  private async calculatePortfolioBeta(positions: Position[], totalValue: number): Promise<number> {
+    if (positions.length === 0 || totalValue === 0) return 1;
+
+    let weightedBeta = 0;
+    for (const position of positions) {
+      const weight = (position.quantity * position.entryPrice) / totalValue;
+      const beta = await this.estimateBeta(position.symbol);
+      weightedBeta += weight * beta;
+    }
+
+    return weightedBeta;
+  }
+
+  /**
+   * Calculate diversification ratio
+   */
+  private calculateDiversificationRatio(positions: Position[]): number {
+    if (positions.length === 0) return 0;
+
+    // Simplified diversification ratio
+    // Perfect diversification = 1, no diversification = 0
+    return Math.min(1, positions.length / 10); // Assume 10 positions is well-diversified
   }
 
   /**

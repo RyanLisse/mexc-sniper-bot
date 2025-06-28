@@ -12,10 +12,10 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import { db } from "@/src/db";
-import { patternEmbeddings } from "@/src/db/schemas/patterns";
-import { toSafeError } from "@/src/lib/error-type-utils";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import { db } from "../../db";
+import { patternEmbeddings } from "../../db/schemas/patterns";
+import { toSafeError } from "../../lib/error-type-utils";
+import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
 import type { IPatternStorage } from "./interfaces";
 import {
   calculateOptimizedPatternSimilarity,

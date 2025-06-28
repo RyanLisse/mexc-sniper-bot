@@ -170,7 +170,11 @@ export class PortfolioService {
     operationType: "api_call",
   })
   async getBalances(filter?: PortfolioFilter): Promise<PortfolioResponse> {
-    const filterWithoutMetrics = { ...filter, includeMetrics: false };
+    const filterWithoutMetrics = {
+      excludeZeroBalances: false,
+      includeMetrics: false,
+      ...filter,
+    };
     return this.getPortfolio(filterWithoutMetrics);
   }
 
@@ -188,7 +192,10 @@ export class PortfolioService {
     error?: string;
   }> {
     try {
-      const portfolio = await this.getPortfolio({ includeMetrics: true });
+      const portfolio = await this.getPortfolio({
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      });
       if (!portfolio.success) {
         return { success: false, data: {}, error: portfolio.error };
       }
@@ -227,7 +234,10 @@ export class PortfolioService {
     error?: string;
   }> {
     try {
-      const portfolio = await this.getPortfolio({ includeMetrics: true });
+      const portfolio = await this.getPortfolio({
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      });
       if (!portfolio.success) {
         return {
           success: false,
@@ -277,9 +287,9 @@ export class PortfolioService {
 
     // Clear common cache patterns
     const commonKeys = [
-      this.generateCacheKey({}),
-      this.generateCacheKey({ excludeZeroBalances: true }),
-      this.generateCacheKey({ includeMetrics: true }),
+      this.generateCacheKey({ includeMetrics: false, excludeZeroBalances: false }),
+      this.generateCacheKey({ excludeZeroBalances: true, includeMetrics: false }),
+      this.generateCacheKey({ includeMetrics: true, excludeZeroBalances: false }),
       this.generateCacheKey({ excludeZeroBalances: true, includeMetrics: true }),
     ];
 

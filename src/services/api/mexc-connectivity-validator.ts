@@ -389,7 +389,10 @@ export class MexcConnectivityValidator {
       });
 
       const connectivityResponse = await mexcService.testConnectivity();
-      const connected = typeof connectivityResponse === 'boolean' ? connectivityResponse : connectivityResponse?.success || false;
+      const connected =
+        typeof connectivityResponse === "boolean"
+          ? connectivityResponse
+          : connectivityResponse?.success || false;
       if (!connected) {
         return { connected: false, authenticated: false, error: "API not reachable" };
       }

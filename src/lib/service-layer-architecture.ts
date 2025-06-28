@@ -571,7 +571,7 @@ export class ServiceRegistry {
   }
 
   async initializeAll(): Promise<void> {
-    for (const [name, service] of this.services) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       try {
         await service.initialize(this.dependencies);
         console.info(`✅ Service '${name}' initialized successfully`);
@@ -585,7 +585,7 @@ export class ServiceRegistry {
   async healthCheck(): Promise<Map<string, boolean>> {
     const healthStatus = new Map<string, boolean>();
 
-    for (const [name, service] of this.services) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       try {
         const isHealthy = await service.isHealthy();
         healthStatus.set(name, isHealthy);
@@ -599,7 +599,7 @@ export class ServiceRegistry {
   }
 
   async cleanup(): Promise<void> {
-    for (const [name, service] of this.services) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       try {
         await service.cleanup();
         console.info(`✅ Service '${name}' cleaned up successfully`);

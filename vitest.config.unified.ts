@@ -199,7 +199,7 @@ export default defineConfig({
     // Reporter configuration - optimized for performance
     reporters: process.env.CI 
       ? ['github-actions', 'json']
-      : process.env.VERBOSE_TESTS === 'true' ? ['verbose'] : [['default', { summary: false }]], // Minimal reporting for speed
+      : process.env.VERBOSE_TESTS === 'true' ? ['verbose'] : [['default', { summary: undefined }]], // Minimal reporting for speed
       
     // Output configuration
     outputFile: {
@@ -209,13 +209,6 @@ export default defineConfig({
     
     // Watch configuration
     watch: !process.env.CI,
-    watchIgnore: [
-      'node_modules/**',
-      'dist/**',
-      '.next/**',
-      'coverage/**',
-      'test-results/**'
-    ],
     
     // Performance monitoring - optimized for development efficiency
     logHeapUsage: process.env.LOG_HEAP_USAGE === 'true', // Enable via env var when needed
@@ -226,16 +219,10 @@ export default defineConfig({
     poolOptions: {
       threads: {
         isolate: false, // Reduce isolation overhead for better performance
-        singleThread: false,
         useAtomics: true,
         maxThreads: process.env.CI ? 4 : Math.max(2, Math.min(8, require('os').cpus().length - 1)), // Optimize thread count, reserve 1 CPU
         minThreads: 2, // Ensure minimum parallelism
       }
-    },
-    
-    // Experimental features
-    experimentalOptimizer: {
-      enabled: true
     }
   },
   
@@ -245,9 +232,6 @@ export default defineConfig({
   esbuild: {
     target: 'node18',
     sourcemap: true,
-    minify: false,
-    jsxFactory: 'React.createElement',
-    jsxFragment: 'React.Fragment',
   },
   
   // Define global constants

@@ -155,7 +155,7 @@ describe("MexcCoreClient", () => {
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
       expect(result.data?.[0].symbol).toBe("BTCUSDT");
-      expect(result.data?.[0].baseAsset).toBe("BTC");
+      expect((result.data?.[0] as any).baseAsset).toBe("BTC");
     });
 
     it("should filter symbols correctly", async () => {

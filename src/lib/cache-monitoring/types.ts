@@ -58,7 +58,7 @@ export interface CacheAlert {
   title: string;
   description: string;
   timestamp: number;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   resolved: boolean;
   resolvedAt?: number;
 }

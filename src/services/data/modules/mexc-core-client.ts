@@ -98,6 +98,13 @@ export class MexcCoreClient {
   }
 
   /**
+   * Get all ticker data for all symbols (efficient for portfolio calculations)
+   */
+  async getAllTickers(): Promise<MexcServiceResponse<any[]>> {
+    return this.marketClient.getAllTickers();
+  }
+
+  /**
    * Get order book for a symbol (required by tests)
    */
   async getOrderBook(

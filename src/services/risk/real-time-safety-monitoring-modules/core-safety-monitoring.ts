@@ -264,7 +264,7 @@ export class CoreSafetyMonitoring {
       // Update system metrics with real measurements
       this.riskMetrics.apiLatency = await this.measureApiLatency();
       this.riskMetrics.apiSuccessRate = await this.measureApiSuccessRate();
-      this.riskMetrics.memoryUsage = this.measureMemoryUsage();
+      this.riskMetrics.memoryUsage = await this.measureMemoryUsage();
 
       // Update pattern metrics
       this.riskMetrics.patternAccuracy = patternReport.stats.averageConfidence;

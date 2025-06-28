@@ -35,7 +35,7 @@ export interface UnifiedMexcConfig {
   apiResponseTTL?: number;
 }
 
-export interface MexcServiceResponse<T = any> {
+export interface MexcServiceResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -46,7 +46,7 @@ export interface MexcServiceResponse<T = any> {
   cached?: boolean;
   executionTimeMs?: number;
   retryCount?: number;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -445,7 +445,7 @@ export function validateMexcData<T>(
 /**
  * Get schema by name for dynamic validation
  */
-export function getMexcSchema(schemaName: keyof typeof ALL_MEXC_SCHEMAS): z.ZodSchema<any> {
+export function getMexcSchema(schemaName: keyof typeof ALL_MEXC_SCHEMAS): z.ZodSchema<unknown> {
   return ALL_MEXC_SCHEMAS[schemaName];
 }
 
@@ -455,7 +455,7 @@ export function getMexcSchema(schemaName: keyof typeof ALL_MEXC_SCHEMAS): z.ZodS
 export function validateServiceResponse<T>(
   data: unknown,
   dataSchema?: z.ZodSchema<T>
-): { success: boolean; data?: MexcServiceResponse<T>; error?: string } {
+): { success: boolean; data?: T; error?: string } {
   const baseResponseSchema = z.object({
     success: z.boolean(),
     data: dataSchema ? dataSchema.optional() : z.unknown().optional(),
@@ -470,5 +470,11 @@ export function validateServiceResponse<T>(
     metadata: z.unknown().optional(),
   });
 
-  return validateMexcData(baseResponseSchema, data);
+  const validationResult = validateMexcData(baseResponseSchema, data);
+
+  return {
+    success: validationResult.success,
+    data: validationResult.data as T,
+    error: validationResult.error,
+  };
 }

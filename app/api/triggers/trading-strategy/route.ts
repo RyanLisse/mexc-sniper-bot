@@ -1,28 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inngest } from "@/src/inngest/client";
+import { TradingStrategyRequestSchema } from "@/src/schemas/comprehensive-api-validation-schemas";
+import { validateRequestBody } from "@/src/lib/api-validation-middleware";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { 
-      symbol, 
-      analysisData,
-      riskParameters = {
-        maxPositionSize: 1000,
-        stopLossPercentage: 5,
-        takeProfitPercentage: 15
-      }
-    } = body;
-
-    if (!symbol) {
+    // Validate request body
+    const bodyValidation = await validateRequestBody(request, TradingStrategyRequestSchema);
+    if (!bodyValidation.success) {
+      console.warn('[API] ⚠️ Trading strategy validation failed:', bodyValidation.error);
       return NextResponse.json(
         {
           success: false,
-          error: "Symbol is required",
+          error: bodyValidation.error,
         },
-        { status: 400 }
+        { status: bodyValidation.statusCode }
       );
     }
+
+    const { symbol, analysisData, riskParameters } = bodyValidation.data;
 
     // Trigger the trading strategy creation workflow
     const event = await inngest.send({

@@ -326,7 +326,10 @@ export class EnhancedApiValidationService {
       });
 
       const serverTimeResponse = await mexcClient.getServerTime();
-      const serverTime = typeof serverTimeResponse === 'number' ? serverTimeResponse : (serverTimeResponse as any)?.data?.serverTime || Date.now();
+      const serverTime =
+        typeof serverTimeResponse === "number"
+          ? serverTimeResponse
+          : (serverTimeResponse as any)?.data?.serverTime || Date.now();
       const timeDiff = Math.abs(Date.now() - serverTime);
 
       // Check time synchronization

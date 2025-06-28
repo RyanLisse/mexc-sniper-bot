@@ -111,7 +111,10 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   }> {
     try {
       const connectivityResponse = await this.testConnectivity();
-      const connectivity = typeof connectivityResponse === 'boolean' ? connectivityResponse : connectivityResponse?.success || false;
+      const connectivity =
+        typeof connectivityResponse === "boolean"
+          ? connectivityResponse
+          : connectivityResponse?.success || false;
 
       let authentication = false;
       let canTrade = false;

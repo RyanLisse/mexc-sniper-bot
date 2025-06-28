@@ -4,7 +4,7 @@
  * Comprehensive type definitions for the multi-level cache system
  */
 
-export interface CacheEntry<T = any> {
+export interface CacheEntry<T = unknown> {
   key: string;
   value: T;
   timestamp: number;
@@ -74,7 +74,7 @@ export interface TTLConfig {
   health_status: number;
 }
 
-export interface CacheSetOptions<T = any> {
+export interface CacheSetOptions<T = unknown> {
   type?: CacheDataType;
   ttl?: number;
   level?: "L1" | "L2" | "L3" | "all";

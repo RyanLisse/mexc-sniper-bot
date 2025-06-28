@@ -16,7 +16,7 @@ export interface Phase {
   id: string;
   name: string;
   type: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
 }
 
 export interface StrategyExecutor {
@@ -28,7 +28,7 @@ export interface StrategyExecutor {
 export interface ExecutionResult {
   success: boolean;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 export interface ExecutionStatus {

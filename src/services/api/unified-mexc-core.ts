@@ -125,7 +125,9 @@ export class UnifiedMexcCoreModule {
   /**
    * Get basic symbol information by symbol name
    */
-  async getSymbolInfoBasic(symbolName: string): Promise<MexcServiceResponse<any>> {
+  async getSymbolInfoBasic(
+    symbolName: string
+  ): Promise<MexcServiceResponse<Record<string, unknown>>> {
     return this.cacheLayer.getOrSet(
       `symbol:basic:${symbolName}`,
       () => this.coreClient.getSymbolInfoBasic(symbolName),
@@ -218,7 +220,7 @@ export class UnifiedMexcCoreModule {
   /**
    * Get symbol data for analysis
    */
-  async getSymbolData(symbol: string): Promise<MexcServiceResponse<any>> {
+  async getSymbolData(symbol: string): Promise<MexcServiceResponse<Record<string, unknown>>> {
     return this.cacheLayer.getOrSet(
       `symbol:data:${symbol}`,
       () => this.coreClient.getSymbolInfoBasic(symbol),
@@ -540,17 +542,20 @@ export class UnifiedMexcCoreModule {
   /**
    * Normalize activity data to ensure consistent structure
    */
-  private normalizeActivityData(data: any): ActivityData[] {
+  private normalizeActivityData(data: unknown): ActivityData[] {
     try {
       if (!data) return [];
 
       // Handle single objects
       if (!Array.isArray(data)) {
-        return [this.normalizeActivityEntry(data)];
+        const normalized = this.normalizeActivityEntry(data);
+        return normalized ? [normalized] : [];
       }
 
       // Handle arrays
-      return data.map((entry) => this.normalizeActivityEntry(entry)).filter(Boolean);
+      return data
+        .map((entry) => this.normalizeActivityEntry(entry))
+        .filter((entry): entry is ActivityData => entry !== null);
     } catch (error) {
       this.logger.warn("Failed to normalize activity data:", error);
       return [];
@@ -560,20 +565,49 @@ export class UnifiedMexcCoreModule {
   /**
    * Normalize a single activity entry
    */
-  private normalizeActivityEntry(entry: any): ActivityData | null {
+  private normalizeActivityEntry(entry: unknown): ActivityData | null {
     try {
-      if (!entry || typeof entry !== "object") {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
         return null;
       }
 
-      return {
-        activityId: entry.activityId || entry.id || `activity_${Date.now()}`,
-        currency: entry.currency || entry.currencyCode || "",
-        currencyId: entry.currencyId || entry.vcoinId || "",
-        activityType: entry.activityType || entry.type || "UNKNOWN",
-        // Add other fields as needed based on the ActivityData schema
-        ...entry,
+      const entryRecord = entry as Record<string, unknown>;
+
+      // Safely extract properties with proper type checking
+      const getStringProperty = (key: string, fallback: string = ""): string => {
+        const value = entryRecord[key];
+        return typeof value === "string" ? value : fallback;
       };
+
+      const getNumberProperty = (key: string, fallback: number = 0): number => {
+        const value = entryRecord[key];
+        return typeof value === "number" ? value : fallback;
+      };
+
+      // Build ActivityData with safe property access
+      const activityData: ActivityData = {
+        activityId:
+          getStringProperty("activityId") || getStringProperty("id") || `activity_${Date.now()}`,
+        currency: getStringProperty("currency") || getStringProperty("currencyCode"),
+        currencyId: getStringProperty("currencyId") || getStringProperty("vcoinId"),
+        activityType: getStringProperty("activityType") || getStringProperty("type") || "UNKNOWN",
+        timestamp: getNumberProperty("timestamp", Date.now()),
+        amount: getNumberProperty("amount"),
+        price: getNumberProperty("price"),
+        volume: getNumberProperty("volume"),
+        significance: getNumberProperty("significance"),
+      };
+
+      // Only add additional properties if they exist and are safe to add
+      const additionalFields = ["description", "status", "transactionId", "blockNumber"];
+      additionalFields.forEach((field) => {
+        const value = entryRecord[field];
+        if (value !== undefined && value !== null) {
+          (activityData as Record<string, unknown>)[field] = value;
+        }
+      });
+
+      return activityData;
     } catch (error) {
       this.logger.warn("Failed to normalize activity entry:", {
         entry,

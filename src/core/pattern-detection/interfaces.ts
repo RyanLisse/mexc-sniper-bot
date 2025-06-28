@@ -5,12 +5,53 @@
  * These interfaces ensure clean architecture and testability.
  */
 
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import { z } from "zod";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
 
 // ============================================================================
 // Core Pattern Types (Preserved from original engine)
 // ============================================================================
+
+// Market conditions type schema
+export const MarketConditionsSchema = z.object({
+  volume: z.number().optional(),
+  priceChange: z.number().optional(),
+  marketCap: z.number().optional(),
+  tradingPairs: z.number().optional(),
+  volatility: z.number().optional(),
+  liquidityScore: z.number().optional(),
+});
+
+export type MarketConditions = z.infer<typeof MarketConditionsSchema>;
+
+// Historical pattern type schema
+export const HistoricalPatternSchema = z.object({
+  id: z.string(),
+  patternType: z.string(),
+  symbol: z.string(),
+  confidence: z.number().min(0).max(100),
+  detectedAt: z.date(),
+  successOutcome: z.boolean(),
+  metrics: z.object({
+    accuracy: z.number(),
+    profitability: z.number().optional(),
+    executionTime: z.number(),
+  }),
+});
+
+export type HistoricalPattern = z.infer<typeof HistoricalPatternSchema>;
+
+// Pattern context for error handling
+export const PatternContextSchema = z.object({
+  symbol: z.string().optional(),
+  patternType: z.string().optional(),
+  timestamp: z.date().optional(),
+  errorCode: z.string().optional(),
+  additionalData: z.record(z.unknown()).optional(),
+});
+
+export type PatternContext = z.infer<typeof PatternContextSchema>;
 
 export interface ReadyStatePattern {
   sts: 2; // Symbol Trading Status: Ready
@@ -35,7 +76,7 @@ export interface PatternMatch {
     st?: number;
     tt?: number;
     advanceHours?: number;
-    marketConditions?: Record<string, any>;
+    marketConditions?: MarketConditions;
   };
 
   // Activity Enhancement Data
@@ -54,7 +95,7 @@ export interface PatternMatch {
   recommendation: "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid";
 
   // Historical context
-  similarPatterns?: any[];
+  similarPatterns?: HistoricalPattern[];
   historicalSuccess?: number;
 }
 
@@ -144,13 +185,13 @@ export interface IPatternStorage {
   ): Promise<void>;
   getHistoricalSuccessRate(patternType: string): Promise<number>;
   findSimilarPatterns(
-    pattern: any,
+    pattern: PatternMatch,
     options?: {
       threshold?: number;
       limit?: number;
       sameTypeOnly?: boolean;
     }
-  ): Promise<any[]>;
+  ): Promise<HistoricalPattern[]>;
   clearCache(): void;
   getCacheStats(): {
     hitRatio: number;
@@ -247,7 +288,7 @@ export class PatternDetectionError extends Error {
   constructor(
     message: string,
     public code: string,
-    public context?: any
+    public context?: PatternContext
   ) {
     super(message);
     this.name = "PatternDetectionError";
@@ -258,7 +299,7 @@ export class PatternValidationError extends PatternDetectionError {
   constructor(
     message: string,
     public validationErrors: string[],
-    context?: any
+    context?: PatternContext
   ) {
     super(message, "VALIDATION_ERROR", context);
     this.name = "PatternValidationError";
@@ -269,7 +310,7 @@ export class PatternAnalysisError extends PatternDetectionError {
   constructor(
     message: string,
     public analysisType: string,
-    context?: any
+    context?: PatternContext
   ) {
     super(message, "ANALYSIS_ERROR", context);
     this.name = "PatternAnalysisError";

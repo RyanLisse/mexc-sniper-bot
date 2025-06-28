@@ -356,7 +356,7 @@ describe('AdvancedMultiPhaseTradingBot', () => {
       expect(advancedBot.getRiskMetrics).toBeDefined();
     });
 
-    it('should work with inherited methods after strategy switch', () => {
+    it('should work with inherited methods after strategy switch', async () => {
       // Note: Using available methods instead of non-existent ones
       const strategies = await advancedBot.listActiveStrategies();
       expect(strategies).toBeDefined();

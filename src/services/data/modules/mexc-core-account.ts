@@ -45,8 +45,9 @@ export class MexcCoreAccountClient {
       });
 
       // MEXC API returns account data directly in response, not nested under 'data'
-      if (response.balances && Array.isArray(response.balances)) {
-        const balances = response.balances
+      const responseData = response as any; // Cast to any for direct MEXC API access
+      if (responseData.balances && Array.isArray(responseData.balances)) {
+        const balances = responseData.balances
           .filter(
             (balance: any) =>
               Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0

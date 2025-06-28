@@ -356,79 +356,9 @@ export function initializeMexcApiMocks(): void {
     }))
   }));
 
-  vi.mock('@/src/services/trading/multi-phase-trading-bot', () => ({
-    MultiPhaseTradingBot: vi.fn().mockImplementation(() => ({
-      executeStrategy: vi.fn().mockResolvedValue({
-        success: true,
-        result: {
-          orderId: 'mock-order-123',
-          status: 'FILLED'
-        }
-      }),
-      getPositions: vi.fn().mockResolvedValue([]),
-      updatePosition: vi.fn().mockResolvedValue({
-        success: true
-      }),
-      // Add methods required by integration tests
-      calculateOptimalEntry: vi.fn().mockReturnValue({
-        entryPrice: 0.001,
-        confidence: 85,
-        adjustments: ['market_conditions_favorable'],
-        symbol: 'TESTUSDT'
-      }),
-      initializePosition: vi.fn().mockReturnValue({
-        success: true,
-        details: {
-          symbol: 'TESTUSDT',
-          entryPrice: 0.001,
-          amount: 1000,
-          timestamp: new Date().toISOString()
-        },
-        message: 'Position initialized successfully'
-      }),
-      onPriceUpdate: vi.fn().mockReturnValue({
-        actions: ['MONITOR'],
-        status: { 
-          priceIncrease: 0,
-          summary: { completedPhases: 0, totalRemaining: 1000, realizedProfit: 0, unrealizedProfit: 0 },
-          nextTarget: '25% gain'
-        }
-      }),
-      getPositionInfo: vi.fn().mockReturnValue({
-        hasPosition: true,
-        symbol: 'TESTUSDT',
-        entryPrice: 0.001,
-        currentPosition: 1000,
-        realizedPnL: 0,
-        unrealizedPnL: 0,
-        phases: {
-          total: 3,
-          completed: 0,
-          active: 1,
-          remaining: 3
-        }
-      }),
-      getPhaseStatus: vi.fn().mockReturnValue({
-        phaseDetails: [{ status: 'pending' }],
-        completedPhases: 0
-      }),
-      handlePartialFill: vi.fn().mockReturnValue({
-        success: true,
-        executedAmount: 200,
-        remainingAmount: 800
-      }),
-      performMaintenanceCleanup: vi.fn().mockReturnValue({
-        success: true,
-        cleanupTime: Date.now()
-      }),
-      getPendingPersistenceOperations: vi.fn().mockReturnValue({
-        hasPending: false,
-        operations: [],
-        count: 0,
-        lastAttempt: null
-      })
-    }))
-  }));
+  // Remove mock for multi-phase-trading-bot to use actual implementation
+  // This allows the tests to run against the real implementation
+  // vi.mock('@/src/services/trading/multi-phase-trading-bot', () => ({...
 
   // Mock the unified MEXC service using standardized utilities
   vi.mock('@/src/services/api/unified-mexc-service-v2', () => {

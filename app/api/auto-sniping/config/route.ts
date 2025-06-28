@@ -7,6 +7,12 @@ import {
   HTTP_STATUS 
 } from "@/src/lib/api-response";
 import { handleApiError } from "@/src/lib/error-handler";
+import { 
+  AutoSnipingActionRequestSchema, 
+  AutoSnipingConfigSchema,
+  validateApiRequest 
+} from "@/src/schemas/comprehensive-api-validation-schemas";
+import { validateRequestBody } from "@/src/lib/api-validation-middleware";
 
 const coreTrading = getCoreTrading();
 
@@ -71,19 +77,18 @@ export async function POST(request: NextRequest) {
   try {
     console.info('[API] 🔍 [DEBUG] Starting POST request for auto-sniping config');
     
-    const body = await request.json();
-    const { action, config } = body as { action: string; config?: Record<string, unknown> };
-    console.info('[API] 🔍 [DEBUG] Request body parsed:', { action, hasConfig: !!config });
-
-    if (!action) {
-      console.warn('[API] ⚠️ Missing action parameter');
+    // Validate request body
+    const bodyValidation = await validateRequestBody(request, AutoSnipingActionRequestSchema);
+    if (!bodyValidation.success) {
+      console.warn('[API] ⚠️ Request validation failed:', bodyValidation.error);
       return apiResponse(
-        createErrorResponse("Action is required", {
-          message: "Please specify action: update, start, or stop"
-        }),
-        HTTP_STATUS.BAD_REQUEST
+        createErrorResponse(bodyValidation.error),
+        bodyValidation.statusCode
       );
     }
+
+    const { action, config } = bodyValidation.data;
+    console.info('[API] 🔍 [DEBUG] Request validated:', { action, hasConfig: !!config });
 
     // Ensure service is initialized before any operations
     console.info('[API] 🔍 [DEBUG] Ensuring core trading service is initialized...');
@@ -113,22 +118,23 @@ export async function POST(request: NextRequest) {
     }
 
     switch (action) {
-      case "enable":
+      case "enable": {
         console.info("🚀 Auto-sniping is always enabled. Updating config:", { context: config });
         
         // Initialize if needed
+        let enabledStatus;
         try {
           if (config) {
             await coreTrading.updateConfig(config);
           }
-          var enabledStatus = await coreTrading.getServiceStatus();
+          enabledStatus = await coreTrading.getServiceStatus();
         } catch (error) {
           if (error instanceof Error && error.message.includes('not initialized')) {
             await coreTrading.initialize();
             if (config) {
               await coreTrading.updateConfig(config);
             }
-            var enabledStatus = await coreTrading.getServiceStatus();
+            enabledStatus = await coreTrading.getServiceStatus();
           } else {
             throw error;
           }
@@ -140,6 +146,7 @@ export async function POST(request: NextRequest) {
           ),
           HTTP_STATUS.OK
         );
+      }
 
       case "disable":
         console.info("⏹️ Auto-sniping cannot be disabled. Stopping execution instead.");
@@ -163,8 +170,18 @@ export async function POST(request: NextRequest) {
           );
         }
         
-        console.info("⚙️ Updating auto-sniping config:", { context: config });
-        await coreTrading.updateConfig(config);
+        // Validate configuration schema
+        const configValidation = validateApiRequest(AutoSnipingConfigSchema, config);
+        if (!configValidation.success) {
+          console.warn('[API] ⚠️ Config validation failed:', configValidation.error);
+          return apiResponse(
+            createErrorResponse(`Configuration validation failed: ${configValidation.error}`),
+            HTTP_STATUS.BAD_REQUEST
+          );
+        }
+        
+        console.info("⚙️ Updating auto-sniping config:", { context: configValidation.data });
+        await coreTrading.updateConfig(configValidation.data);
         
         const updatedStatus = await coreTrading.getServiceStatus();
         return apiResponse(

@@ -127,9 +127,7 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
       const result = client.send({
         type: 'system:heartbeat',
         channel: 'system',
-        data: { test: 'data' },
-        timestamp: Date.now(),
-        messageId: 'test-message-id'
+        data: { test: 'data' }
       });
       
       // Should queue message when disconnected

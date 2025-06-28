@@ -11,13 +11,13 @@
  * - Comprehensive validation framework
  */
 
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
 import {
   calculateActivityBoost,
   hasHighPriorityActivity,
 } from "../../schemas/unified/mexc-api-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
 import type { IConfidenceCalculator } from "./interfaces";
 
 /**
@@ -381,7 +381,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       if (!symbol) return [];
 
       // Import activity service dynamically to avoid circular dependencies
-      const { unifiedMexcService } = await import("@/src/services/api/unified-mexc-service-v2");
+      const { unifiedMexcService } = await import("../../services/api/unified-mexc-service-v2");
       const activityResponse = await unifiedMexcService.getRecentActivity(symbol);
       const recentActivities = activityResponse.success
         ? activityResponse.data?.activities || []
@@ -414,7 +414,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
   private async getAIEnhancement(symbol: SymbolEntry, currentConfidence: number): Promise<number> {
     try {
       // Real implementation: integrate with AI intelligence service
-      const { aiIntelligenceService } = await import("@/src/services/ai/ai-intelligence-service");
+      const { aiIntelligenceService } = await import("../../services/ai/ai-intelligence-service");
 
       const enhancement = await aiIntelligenceService.enhanceConfidence({
         symbol: symbol.symbol || symbol.cd,

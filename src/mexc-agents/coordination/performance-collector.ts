@@ -159,7 +159,10 @@ export class PerformanceCollector {
       try {
         await this.collectAllMetrics();
       } catch (error) {
-        this.logger.error("[PerformanceCollector] Periodic metrics collection failed:", error);
+        this.logger.error(
+          "[PerformanceCollector] Periodic metrics collection failed:",
+          error instanceof Error ? error.message : String(error)
+        );
       }
     }, this.collectionIntervalMs);
 
@@ -196,7 +199,10 @@ export class PerformanceCollector {
       // Persist to database
       await this.persistMetrics();
     } catch (error) {
-      this.logger.error("[PerformanceCollector] Failed to collect metrics:", error);
+      this.logger.error(
+        "[PerformanceCollector] Failed to collect metrics:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 
@@ -388,7 +394,10 @@ export class PerformanceCollector {
         this.systemSnapshotHistory = this.systemSnapshotHistory.slice(-this.maxHistorySize);
       }
     } catch (error) {
-      this.logger.error("[PerformanceCollector] Failed to collect system snapshot:", error);
+      this.logger.error(
+        "[PerformanceCollector] Failed to collect system snapshot:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 
@@ -446,7 +455,10 @@ export class PerformanceCollector {
 
       this.logger.info(`[PerformanceCollector] Recorded workflow metrics for ${result.workflowId}`);
     } catch (error) {
-      this.logger.error("[PerformanceCollector] Failed to record workflow metrics:", error);
+      this.logger.error(
+        "[PerformanceCollector] Failed to record workflow metrics:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 
@@ -658,7 +670,10 @@ export class PerformanceCollector {
 
       this.logger.info("[PerformanceCollector] Metrics persisted to database successfully");
     } catch (error) {
-      this.logger.error("[PerformanceCollector] Failed to persist metrics:", error);
+      this.logger.error(
+        "[PerformanceCollector] Failed to persist metrics:",
+        error instanceof Error ? error.message : String(error)
+      );
       // Fallback to file storage if database fails
       await this.persistToFile();
     }
@@ -693,7 +708,10 @@ export class PerformanceCollector {
         ON performance_snapshots(created_at)
       `);
     } catch (error) {
-      this.logger.warn("[PerformanceCollector] Failed to ensure performance tables:", error);
+      this.logger.warn(
+        "[PerformanceCollector] Failed to ensure performance tables:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 
@@ -725,7 +743,10 @@ export class PerformanceCollector {
       await fs.writeFile(filename, JSON.stringify(metricsData, null, 2));
       this.logger.info(`[PerformanceCollector] Metrics saved to file: ${filename}`);
     } catch (error) {
-      this.logger.error("[PerformanceCollector] Failed to persist to file:", error);
+      this.logger.error(
+        "[PerformanceCollector] Failed to persist to file:",
+        error instanceof Error ? error.message : String(error)
+      );
     }
   }
 

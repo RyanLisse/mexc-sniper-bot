@@ -429,11 +429,15 @@ export class WebSocketServerService extends EventEmitter {
       try {
         if (connection.ws.readyState === WebSocket.OPEN) {
           instrumentWebSocketSend(
+            message,
             () => {
               connection.ws.send(messageData);
             },
-            channel,
-            message.type
+            {
+              channel: channel,
+              messageType: message.type,
+              connectionId: connection.id,
+            }
           );
 
           this.connectionManager.incrementMessageCount(connection.id, "sent");

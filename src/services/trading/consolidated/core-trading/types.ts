@@ -167,6 +167,17 @@ export interface Position {
   fees?: number;
   notes?: string;
   tags: string[];
+
+  // Enhanced risk metrics
+  riskMetrics?: {
+    valueAtRisk: number;
+    expectedShortfall: number;
+    volatility: number;
+    beta: number;
+    sharpeRatio: number;
+    maxFavorableExcursion: number;
+    maxAdverseExcursion: number;
+  };
 }
 
 // ============================================================================
@@ -396,6 +407,7 @@ export interface AutoSnipeTarget {
   takeProfitCustom?: number;
   status: string;
   priority: number;
+  strategy?: string;
   createdAt: Date;
   targetExecutionTime?: Date | null;
   actualExecutionTime?: Date | null;
@@ -453,7 +465,16 @@ export interface ModuleState {
   isInitialized: boolean;
   isHealthy: boolean;
   lastActivity: Date;
-  metrics: Record<string, number>;
+  metrics: Record<string, number> & {
+    strategyPerformance?: Record<string, any>;
+    portfolioRiskMetrics?: {
+      concentrationRisk: number;
+      correlationRisk: number;
+      portfolioBeta: number;
+      diversificationRatio: number;
+      maxDrawdownPercent: number;
+    };
+  };
 }
 
 // ============================================================================
@@ -461,13 +482,13 @@ export interface ModuleState {
 // ============================================================================
 
 export function validateConfig(config: unknown): CoreTradingConfig {
-  return CoreTradingConfigSchema.parse(config);
+  return CoreTradingConfigSchema.parse(config) as CoreTradingConfig;
 }
 
 export function validateTradeParams(params: unknown): TradeParameters {
-  return TradeParametersSchema.parse(params);
+  return TradeParametersSchema.parse(params) as TradeParameters;
 }
 
 export function validateServiceStatus(status: unknown): ServiceStatus {
-  return ServiceStatusSchema.parse(status);
+  return ServiceStatusSchema.parse(status) as ServiceStatus;
 }

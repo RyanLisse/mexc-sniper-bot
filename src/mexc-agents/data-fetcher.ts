@@ -49,7 +49,10 @@ export class DataFetcher {
         source: "mexc-api",
       };
     } catch (error) {
-      this.logger.error("[DataFetcher] Calendar API call failed:", error);
+      this.logger.error(
+        "[DataFetcher] Calendar API call failed:",
+        error instanceof Error ? error.message : String(error)
+      );
       return {
         success: false,
         data: [],
@@ -89,7 +92,10 @@ export class DataFetcher {
         data: result,
       };
     } catch (error) {
-      this.logger.error(`[DataFetcher] Symbol API call failed for ${vcoinId}:`, error);
+      this.logger.error(
+        `[DataFetcher] Symbol API call failed for ${vcoinId}:`,
+        error instanceof Error ? error.message : String(error)
+      );
       return {
         vcoinId,
         symbol: "UNKNOWN",
@@ -132,7 +138,10 @@ export class DataFetcher {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      this.logger.error(`[DataFetcher] Market data fetch failed for ${symbol}:`, error);
+      this.logger.error(
+        `[DataFetcher] Market data fetch failed for ${symbol}:`,
+        error instanceof Error ? error.message : String(error)
+      );
       return {
         symbol,
         price: 0,
@@ -176,7 +185,10 @@ export class DataFetcher {
       const testResult = await this.mexcApiAgent.callMexcApi("/health");
       return testResult !== null;
     } catch (error) {
-      this.logger.error("[DataFetcher] Health check failed:", error);
+      this.logger.error(
+        "[DataFetcher] Health check failed:",
+        error instanceof Error ? error.message : String(error)
+      );
       return false;
     }
   }

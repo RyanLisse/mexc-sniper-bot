@@ -13,8 +13,9 @@
  */
 
 import { EventEmitter } from "node:events";
-import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
+import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
+import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
@@ -42,6 +43,14 @@ import {
 } from "./shared/algorithm-utils";
 // OPTIMIZATION: Shared utilities to reduce code duplication and improve performance
 import { createErrorContext, createPatternLogger } from "./shared/logger-utils";
+
+// AI Enhancement Types
+interface AIEnhancement {
+  enabled: boolean;
+  modelVersion?: string;
+  confidence: number;
+  insights?: string[];
+}
 
 /**
  * Pattern Detection Core Implementation
@@ -280,7 +289,7 @@ export class PatternDetectionCore extends EventEmitter {
     confidence: number;
     patternType: string;
     enhancedAnalysis?: boolean;
-    aiEnhancement?: any;
+    aiEnhancement?: AIEnhancement;
   } | null> {
     try {
       if (!symbol) return null;
@@ -335,7 +344,9 @@ export class PatternDetectionCore extends EventEmitter {
    *
    * Returns current performance metrics and cache statistics.
    */
-  getMetrics(): PatternDetectionMetrics & { cacheStats: any } {
+  getMetrics(): PatternDetectionMetrics & {
+    cacheStats: { hitRatio: number; size: number; memoryUsage: number };
+  } {
     const cacheStats = this.patternStorage.getCacheStats();
 
     return {
@@ -401,7 +412,7 @@ export class PatternDetectionCore extends EventEmitter {
   /**
    * Detect advance opportunities from calendar entries
    */
-  async detectAdvanceOpportunities(calendarEntries: any[]): Promise<PatternMatch[]> {
+  async detectAdvanceOpportunities(calendarEntries: CalendarEntry[]): Promise<PatternMatch[]> {
     try {
       return await this.patternAnalyzer.detectAdvanceOpportunities(calendarEntries);
     } catch (error) {
@@ -420,7 +431,7 @@ export class PatternDetectionCore extends EventEmitter {
    * Integrates with the activity data service to fetch real activity data
    * for enhanced pattern detection confidence.
    */
-  private async getActivityDataForSymbol(symbol: string): Promise<any[]> {
+  private async getActivityDataForSymbol(symbol: string): Promise<ActivityData[]> {
     try {
       // Use the dedicated activity integration service
       const activityData = await fetchActivityData(symbol);

@@ -26,6 +26,9 @@ export class MexcCoreHttpClient {
 
   private config: MexcApiConfig;
   private baseHeaders: Record<string, string>;
+  private lastRequestTime: number = 0;
+  private requestCount: number = 0;
+  private readonly maxRequestsPerSecond = 10; // MEXC API limit
 
   constructor(config: MexcApiConfig) {
     this.config = config;
@@ -48,24 +51,47 @@ export class MexcCoreHttpClient {
   ): Promise<MexcApiResponse> {
     const { timeout = this.config.timeout, ...fetchOptions } = options;
 
+    // Apply rate limiting
+    await this.applyRateLimit();
+
     const controller = new AbortController();
     setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers: {
-        ...this.baseHeaders,
-        ...fetchOptions.headers,
-      },
-      signal: controller.signal,
-    });
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers: {
+          ...this.baseHeaders,
+          ...fetchOptions.headers,
+        },
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errorText}`);
+      // Handle rate limit responses from MEXC
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("retry-after");
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.config.rateLimitDelay * 2;
+
+        this.logger.warn(`Rate limited by MEXC API. Waiting ${delay}ms before retry`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
+        // Retry once after rate limit delay
+        return this.makeRequest(url, options);
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      // Handle AbortError from timeout
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Request timeout after ${timeout}ms`);
+      }
+      throw error;
     }
-
-    return await response.json();
   }
 
   /**
@@ -97,6 +123,47 @@ export class MexcCoreHttpClient {
       timestamp: Date.now(),
       source: "mexc-core-http",
     };
+  }
+
+  // ============================================================================
+  // Private Rate Limiting Methods
+  // ============================================================================
+
+  /**
+   * Apply rate limiting to prevent exceeding MEXC API limits
+   */
+  private async applyRateLimit(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+
+    // Reset request count every second
+    if (timeSinceLastRequest >= 1000) {
+      this.requestCount = 0;
+      this.lastRequestTime = now;
+    }
+
+    // If we've reached the max requests per second, wait
+    if (this.requestCount >= this.maxRequestsPerSecond) {
+      const waitTime = 1000 - timeSinceLastRequest;
+      if (waitTime > 0) {
+        this.logger.debug(`Rate limiting: waiting ${waitTime}ms`);
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        this.requestCount = 0;
+        this.lastRequestTime = Date.now();
+      }
+    }
+
+    // Apply minimum delay between requests
+    if (timeSinceLastRequest < this.config.rateLimitDelay && this.requestCount > 0) {
+      const minDelay = this.config.rateLimitDelay - timeSinceLastRequest;
+      if (minDelay > 0) {
+        this.logger.debug(`Minimum delay: waiting ${minDelay}ms`);
+        await new Promise((resolve) => setTimeout(resolve, minDelay));
+      }
+    }
+
+    this.requestCount++;
+    this.lastRequestTime = Date.now();
   }
 
   // ============================================================================
@@ -172,6 +239,23 @@ export class MexcCoreHttpClient {
    */
   getConfig(): MexcApiConfig {
     return this.config;
+  }
+
+  /**
+   * Get rate limiting statistics for monitoring
+   */
+  getRateLimitStats(): {
+    requestCount: number;
+    maxRequestsPerSecond: number;
+    timeSinceLastRequest: number;
+    rateLimitDelay: number;
+  } {
+    return {
+      requestCount: this.requestCount,
+      maxRequestsPerSecond: this.maxRequestsPerSecond,
+      timeSinceLastRequest: Date.now() - this.lastRequestTime,
+      rateLimitDelay: this.config.rateLimitDelay,
+    };
   }
 }
 

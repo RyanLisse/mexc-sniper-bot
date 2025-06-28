@@ -100,8 +100,8 @@ export class CalendarListingsService {
     const startTime = Date.now();
 
     try {
-      // Validate input filter
-      const validatedFilter = filter ? CalendarFilterSchema.parse(filter) : {};
+      // Validate input filter with default limit
+      const validatedFilter = filter ? CalendarFilterSchema.parse(filter) : { limit: 100 };
 
       // Generate cache key
       const cacheKey = this.generateCacheKey(validatedFilter);
@@ -150,7 +150,7 @@ export class CalendarListingsService {
     operationType: "api_call",
   })
   async getActivePairs(): Promise<CalendarListingsResponse> {
-    return this.getListings({ status: "TRADING" });
+    return this.getListings({ status: "TRADING", limit: 100 });
   }
 
   /**
@@ -189,7 +189,7 @@ export class CalendarListingsService {
       };
     }
 
-    const allListings = await this.getListings();
+    const allListings = await this.getListings({ limit: 100 });
     if (!allListings.success) {
       return allListings;
     }
@@ -212,9 +212,9 @@ export class CalendarListingsService {
     // In a real implementation, you'd want to clear all cache keys with the prefix
     // This is a simplified version
     const keys = [
-      this.generateCacheKey({}),
-      this.generateCacheKey({ status: "TRADING" }),
-      this.generateCacheKey({ status: "PENDING" }),
+      this.generateCacheKey({ limit: 100 }),
+      this.generateCacheKey({ status: "TRADING", limit: 100 }),
+      this.generateCacheKey({ status: "PENDING", limit: 100 }),
     ];
 
     await Promise.all(keys.map((key) => this.config.cache?.set(key, null, 0)));

@@ -8,6 +8,11 @@
  * - Optimized bundle size through tree-shaking
  */
 
+import type {
+  MarketService,
+  PortfolioService,
+  TradingService,
+} from "@/src/application/interfaces/trading-repository";
 import type { ActivityQueryOptionsType } from "@/src/schemas/unified/mexc-api-schemas";
 // Build-safe imports - modular architecture
 import type {
@@ -35,7 +40,7 @@ import {
 // Unified MEXC Service v2
 // ============================================================================
 
-export class UnifiedMexcServiceV2 {
+export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, MarketService {
   // Simple console logger to avoid webpack bundling issues
   private logger = {
     info: (message: string, context?: any) =>
@@ -85,7 +90,346 @@ export class UnifiedMexcServiceV2 {
   }
 
   // ============================================================================
-  // Public API - Delegated to Modular Components
+  // Interface Method Implementations
+  // ============================================================================
+
+  // PortfolioService Interface Methods
+  async getAccountBalance(): Promise<{
+    success: boolean;
+    data?: Array<{
+      asset: string;
+      free: string;
+      locked: string;
+      total?: number;
+      usdtValue?: number;
+    }>;
+    error?: string;
+  }> {
+    return this.portfolioModule.getAccountBalance();
+  }
+
+  async getAccountInfo(): Promise<{
+    success: boolean;
+    data?: {
+      accountType: string;
+      canTrade: boolean;
+      canWithdraw: boolean;
+      canDeposit: boolean;
+      balances: Array<{
+        asset: string;
+        free: string;
+        locked: string;
+      }>;
+    };
+    error?: string;
+  }> {
+    return this.portfolioModule.getAccountInfo();
+  }
+
+  // TradingService Interface Methods
+  async executeTrade(params: {
+    symbol: string;
+    side: "BUY" | "SELL";
+    type: "MARKET" | "LIMIT" | "STOP_LIMIT";
+    quantity: number;
+    price?: number;
+    stopPrice?: number;
+    timeInForce?: "GTC" | "IOC" | "FOK";
+  }): Promise<{
+    success: boolean;
+    data?: {
+      orderId: string;
+      clientOrderId?: string;
+      symbol: string;
+      side: "BUY" | "SELL";
+      type: string;
+      quantity: string;
+      price?: string;
+      status: string;
+      fills?: Array<{
+        price: string;
+        quantity: string;
+        commission: string;
+        commissionAsset: string;
+      }>;
+    };
+    error?: string;
+    executionTime?: number;
+  }> {
+    return this.tradingModule.executeTrade(params);
+  }
+
+  async getOrderStatus(orderId: string): Promise<{
+    success: boolean;
+    data?: {
+      orderId: string;
+      symbol: string;
+      status: string;
+      side: "BUY" | "SELL";
+      type: string;
+      quantity: string;
+      price?: string;
+      executedQuantity: string;
+      cummulativeQuoteQuantity: string;
+      timeInForce?: string;
+      timestamp: number;
+    };
+    error?: string;
+  }> {
+    return this.tradingModule.getOrderStatus(orderId);
+  }
+
+  async cancelOrder(
+    orderId: string,
+    symbol?: string
+  ): Promise<{
+    success: boolean;
+    data?: {
+      orderId: string;
+      symbol: string;
+      status: string;
+    };
+    error?: string;
+  }> {
+    return this.tradingModule.cancelOrder(orderId, symbol);
+  }
+
+  async getTradeHistory(
+    symbol?: string,
+    limit?: number
+  ): Promise<{
+    success: boolean;
+    data?: Array<{
+      id: string;
+      orderId: string;
+      symbol: string;
+      side: "BUY" | "SELL";
+      quantity: string;
+      price: string;
+      commission: string;
+      commissionAsset: string;
+      timestamp: number;
+    }>;
+    error?: string;
+  }> {
+    return this.tradingModule.getTradeHistory(symbol, limit);
+  }
+
+  async getOpenOrders(symbol?: string): Promise<{
+    success: boolean;
+    data?: Array<{
+      orderId: string;
+      symbol: string;
+      side: "BUY" | "SELL";
+      type: string;
+      quantity: string;
+      price?: string;
+      status: string;
+      timestamp: number;
+    }>;
+    error?: string;
+  }> {
+    return this.tradingModule.getOpenOrders(symbol);
+  }
+
+  // MarketService Interface Methods
+  async getExchangeInfo(): Promise<{
+    success: boolean;
+    data?: {
+      symbols?: Array<{
+        symbol: string;
+        status: string;
+        baseAsset: string;
+        quoteAsset: string;
+      }>;
+    };
+    error?: string;
+  }> {
+    // Delegate to core module's exchange info via symbol data
+    try {
+      const symbolsResponse = await this.coreModule.getAllSymbols();
+      if (!symbolsResponse.success) {
+        return {
+          success: false,
+          error: symbolsResponse.error || "Failed to get exchange info",
+        };
+      }
+
+      const symbols = (symbolsResponse.data || []).map((symbol: any) => ({
+        symbol: symbol.symbol || "",
+        status: symbol.status || "UNKNOWN",
+        baseAsset: symbol.baseAsset || "",
+        quoteAsset: symbol.quoteAsset || "",
+      }));
+
+      return {
+        success: true,
+        data: { symbols },
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async getSymbolsData(): Promise<{
+    success: boolean;
+    data?: Array<{
+      symbol: string;
+      status: string;
+      baseAsset: string;
+      quoteAsset: string;
+    }>;
+    error?: string;
+  }> {
+    // Reuse the exchange info implementation
+    const exchangeResponse = await this.getExchangeInfo();
+    if (!exchangeResponse.success || !exchangeResponse.data) {
+      return {
+        success: false,
+        error: exchangeResponse.error || "Failed to get symbols data",
+      };
+    }
+
+    return {
+      success: true,
+      data: exchangeResponse.data.symbols || [],
+    };
+  }
+
+  async getTicker24hr(symbols?: string[]): Promise<{
+    success: boolean;
+    data?: Array<{
+      symbol: string;
+      lastPrice: string;
+      priceChangePercent: string;
+      volume: string;
+    }>;
+    error?: string;
+  }> {
+    // For now, delegate to single ticker and format as array
+    // TODO: Implement batch ticker functionality when available
+    try {
+      if (symbols && symbols.length === 1) {
+        const tickerResponse = await this.tradingModule.getTicker(symbols[0]);
+        if (!tickerResponse.success) {
+          return {
+            success: false,
+            error: tickerResponse.error || "Failed to get ticker",
+          };
+        }
+
+        const ticker = {
+          symbol: symbols[0],
+          lastPrice: tickerResponse.data?.lastPrice || "0",
+          priceChangePercent: tickerResponse.data?.priceChangePercent || "0",
+          volume: tickerResponse.data?.volume || "0",
+        };
+
+        return {
+          success: true,
+          data: [ticker],
+        };
+      }
+
+      // Return empty array for multiple symbols (not implemented yet)
+      return {
+        success: true,
+        data: [],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
+
+  async getTicker(symbol: string): Promise<{
+    success: boolean;
+    data?: {
+      symbol: string;
+      lastPrice: string;
+      priceChangePercent: string;
+      volume: string;
+    };
+    error?: string;
+  }> {
+    const tickerResponse = await this.tradingModule.getTicker(symbol);
+    if (!tickerResponse.success) {
+      return {
+        success: false,
+        error: tickerResponse.error || "Failed to get ticker",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        symbol,
+        lastPrice: tickerResponse.data?.lastPrice || "0",
+        priceChangePercent: tickerResponse.data?.priceChangePercent || "0",
+        volume: tickerResponse.data?.volume || "0",
+      },
+    };
+  }
+
+  async getSymbolStatus(symbol: string): Promise<{ status: string; trading: boolean }> {
+    try {
+      const exchangeResponse = await this.getExchangeInfo();
+      if (!exchangeResponse.success || !exchangeResponse.data) {
+        return { status: "ERROR", trading: false };
+      }
+
+      const symbolInfo = exchangeResponse.data.symbols?.find((s) => s.symbol === symbol);
+      if (!symbolInfo) {
+        return { status: "NOT_FOUND", trading: false };
+      }
+
+      return {
+        status: symbolInfo.status,
+        trading: symbolInfo.status === "TRADING",
+      };
+    } catch (error) {
+      return { status: "ERROR", trading: false };
+    }
+  }
+
+  async getOrderBookDepth(
+    symbol: string,
+    limit = 100
+  ): Promise<{
+    success: boolean;
+    data?: {
+      bids: [string, string][];
+      asks: [string, string][];
+      lastUpdateId: number;
+    };
+    error?: string;
+  }> {
+    // Delegate to trading module's order book functionality
+    const orderBookResponse = await this.tradingModule.getOrderBook(symbol, limit);
+    if (!orderBookResponse.success) {
+      return {
+        success: false,
+        error: orderBookResponse.error || "Failed to get order book",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        bids: orderBookResponse.data?.bids || [],
+        asks: orderBookResponse.data?.asks || [],
+        lastUpdateId: orderBookResponse.data?.lastUpdateId || Date.now(),
+      },
+    };
+  }
+
+  // ============================================================================
+  // Public API - Delegated to Modular Components (Legacy Methods)
   // ============================================================================
 
   // Calendar & Listings (Core Module)
@@ -151,7 +495,11 @@ export class UnifiedMexcServiceV2 {
 
       // Check if the response timestamp is within the timeframe
       // This represents when the activity data was last updated/fetched
-      const hasRecent = activityResponse.timestamp > cutoffTime;
+      const timestampValue =
+        typeof activityResponse.timestamp === "string"
+          ? new Date(activityResponse.timestamp).getTime()
+          : activityResponse.timestamp;
+      const hasRecent = timestampValue > cutoffTime;
 
       return hasRecent;
     } catch (error) {

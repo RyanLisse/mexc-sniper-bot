@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createApiResponse } from "@/src/lib/api-response";
 import { apiAuthWrapper } from "@/src/lib/api-auth";
+import { 
+  Phase3ConfigurationRequestSchema, 
+  Phase3ConfigurationSchema 
+} from "@/src/schemas/comprehensive-api-validation-schemas";
+import { validateRequestBody } from "@/src/lib/api-validation-middleware";
 
 // ======================
 // Types
@@ -124,31 +129,20 @@ export async function GET(request: NextRequest) {
 
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { configuration } = body;
-
-    if (!configuration) {
+    // Validate request body with Zod schema
+    const bodyValidation = await validateRequestBody(request, Phase3ConfigurationRequestSchema);
+    if (!bodyValidation.success) {
+      console.warn('[API] ⚠️ Phase3 config validation failed:', bodyValidation.error);
       return createApiResponse(
         {
           success: false,
-          error: "Configuration data is required",
+          error: bodyValidation.error,
         },
-        400
+        bodyValidation.statusCode
       );
     }
 
-    // Validate configuration structure
-    const validationResult = validateConfiguration(configuration);
-    if (!validationResult.valid) {
-      return createApiResponse(
-        {
-          success: false,
-          error: "Invalid configuration",
-          details: { errors: validationResult.errors },
-        },
-        400
-      );
-    }
+    const { configuration } = bodyValidation.data;
 
     // In a real implementation, this would save to database
     // For now, we'll simulate saving and return success

@@ -164,6 +164,68 @@ export {
 } from "./trading-schemas";
 
 // ============================================================================
+// API Validation Schemas and Types
+// ============================================================================
+
+export type {
+  AutoSnipingActionRequest,
+  AutoSnipingConfig,
+  CalendarPollTrigger,
+  CreateSnipeTargetRequest,
+  DataArchivalRequest,
+  DatabaseMigrateRequest,
+  DatabaseOptimizeRequest,
+  EmergencyTrigger,
+  ExecutionHistoryQuery,
+  MultiPhaseStrategyTrigger,
+  PatternAnalysisTrigger,
+  Phase3Configuration,
+  Phase3ConfigurationRequest,
+  PortfolioQueryRequest,
+  QueryPerformanceRequest,
+  RiskParameters,
+  SafetyTrigger,
+  ScheduleControlRequest,
+  SecurityMonitoringQuery,
+  SnipeTargetQuery,
+  SymbolWatchTrigger,
+  TradingStrategyRequest,
+  UpdateSnipeTargetRequest,
+  WebSocketConnectionRequest,
+} from "../comprehensive-api-validation-schemas";
+
+export {
+  AutoSnipingActionRequestSchema,
+  AutoSnipingConfigSchema,
+  CalendarPollTriggerSchema,
+  CreateSnipeTargetRequestSchema,
+  createValidatedSuccessResponse,
+  createValidationErrorResponse,
+  DataArchivalRequestSchema,
+  DatabaseMigrateRequestSchema,
+  DatabaseOptimizeRequestSchema,
+  EmergencyTriggerSchema,
+  ExecutionHistoryQuerySchema,
+  MultiPhaseStrategyTriggerSchema,
+  PatternAnalysisTriggerSchema,
+  Phase3ConfigurationRequestSchema,
+  Phase3ConfigurationSchema,
+  PortfolioQueryRequestSchema,
+  QueryPerformanceRequestSchema,
+  RiskParametersSchema,
+  SafetyTriggerSchema,
+  ScheduleControlRequestSchema,
+  SecurityMonitoringQuerySchema,
+  SnipeTargetQuerySchema,
+  SymbolWatchTriggerSchema,
+  TradingStrategyRequestSchema,
+  UpdateSnipeTargetRequestSchema,
+  validateApiQuery,
+  validateApiRequest,
+  WebSocketConnectionRequestSchema,
+} from "../comprehensive-api-validation-schemas";
+
+// ============================================================================
 // Pattern Detection Schemas and Types
 // ============================================================================
 

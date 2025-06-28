@@ -8,6 +8,7 @@
 import { count } from "drizzle-orm";
 import { db } from "@/src/db";
 import { strategyTemplates } from "@/src/db/schemas/strategies";
+import { getCoreTrading } from "../consolidated/core-trading/base-service";
 
 export interface StrategySystemHealth {
   templatesInitialized: boolean;

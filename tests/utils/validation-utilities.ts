@@ -7,8 +7,6 @@
 
 import { expect } from "vitest";
 
-import { expect } from "vitest";
-
 // ============================================================================
 // Numeric Validation Utilities
 // ============================================================================
@@ -328,18 +326,22 @@ export class TradingValidationUtils {
     baseArgs: any[],
     expectedBehavior: 'throws' | 'returns-null' | 'clamps' = 'throws'
   ): void {
+    // Map behavior for functions that don't support all options
+    const nanInfinityBehavior = expectedBehavior === 'clamps' ? 'returns-null' : expectedBehavior;
+    const positiveBehavior = expectedBehavior === 'clamps' ? 'returns-null' : expectedBehavior;
+    
     // Test NaN
-    NumericValidationUtils.assertHandlesNaN(fn, baseArgs, expectedBehavior);
+    NumericValidationUtils.assertHandlesNaN(fn, baseArgs, nanInfinityBehavior);
     
     // Test Infinity
-    NumericValidationUtils.assertHandlesInfinity(fn, baseArgs, expectedBehavior);
+    NumericValidationUtils.assertHandlesInfinity(fn, baseArgs, nanInfinityBehavior);
     
     // Test negative prices
     NumericValidationUtils.assertPositiveNumberValidation(
       fn, 
       priceArgIndex, 
       baseArgs, 
-      expectedBehavior
+      positiveBehavior
     );
   }
 
@@ -364,12 +366,16 @@ export class TradingValidationUtils {
     baseArgs: any[],
     expectedBehavior: 'throws' | 'returns-null' | 'clamps' = 'throws'
   ): void {
+    // Map clamps behavior for string functions that support it
+    const stringBehavior = expectedBehavior === 'clamps' ? 'clamps' : expectedBehavior;
+    const basicBehavior = expectedBehavior === 'clamps' ? 'returns-null' : expectedBehavior;
+    
     // Test empty string
     StringValidationUtils.assertHandlesEmptyString(
       fn,
       symbolArgIndex,
       baseArgs,
-      expectedBehavior
+      stringBehavior
     );
 
     // Test null/undefined
@@ -377,14 +383,14 @@ export class TradingValidationUtils {
       fn,
       symbolArgIndex,
       baseArgs,
-      expectedBehavior
+      stringBehavior
     );
 
     // Test invalid symbols
     const invalidSymbolArgs = [...baseArgs];
     invalidSymbolArgs[symbolArgIndex] = 'INVALID';
 
-    switch (expectedBehavior) {
+    switch (basicBehavior) {
       case 'throws':
         expect(() => fn(...invalidSymbolArgs)).toThrow();
         break;

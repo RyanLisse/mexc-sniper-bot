@@ -275,12 +275,12 @@ export class MexcCacheLayer {
   invalidateByPattern(pattern: string): number {
     let invalidated = 0;
 
-    for (const key of this.cache.keys()) {
+    Array.from(this.cache.keys()).forEach((key) => {
       if (key.includes(pattern)) {
         this.cache.delete(key);
         invalidated++;
       }
-    }
+    });
 
     this.metrics.deletions += invalidated;
     return invalidated;
@@ -322,12 +322,12 @@ export class MexcCacheLayer {
     const now = Date.now();
     let cleaned = 0;
 
-    for (const [key, entry] of this.cache.entries()) {
+    Array.from(this.cache.entries()).forEach(([key, entry]) => {
       if (now - entry.timestamp > entry.ttl) {
         this.cache.delete(key);
         cleaned++;
       }
-    }
+    });
 
     if (cleaned > 0) {
       this.metrics.evictions += cleaned;

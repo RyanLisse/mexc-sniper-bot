@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
-import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading.types";
+import type { CoreTradingConfig } from "@/src/services/trading/consolidated/core-trading/types";
 import { type AutoSnipingConfigForm, configFormSchema } from "../schemas/validation-schemas";
 
 interface ConfigEditorProps {
@@ -43,33 +43,15 @@ export function ConfigEditor({
 }: ConfigEditorProps) {
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
-  // Mapping between form field names and CoreTradingConfig field names
-  const fieldMapping: Record<string, keyof CoreTradingConfig> = {
-    enabled: "autoSnipingEnabled",
-    maxPositions: "maxConcurrentPositions",
-    maxDailyTrades: "maxConcurrentPositions", // Temp mapping - needs proper field
-    positionSizeUSDT: "maxPositionSize",
-    minConfidence: "confidenceThreshold",
-    enableAdvanceDetection: "autoSnipingEnabled", // Temp mapping - needs proper field
-    stopLossPercentage: "globalStopLossPercent",
-    takeProfitPercentage: "globalTakeProfitPercent",
-    maxDrawdownPercentage: "maxDailyLoss", // Temp mapping - needs conversion
-    slippageTolerancePercentage: "maxDailyLoss", // Temp mapping - needs proper field
-  };
+  // AutoSnipingConfig has the following fields:
+  // enabled, maxPositionSize, takeProfitPercentage, stopLossPercentage,
+  // patternConfidenceThreshold, maxConcurrentTrades, enableSafetyChecks, enablePatternDetection
 
   const getConfigValue = useCallback(
-    (field: string): any => {
-      const mappedField = fieldMapping[field];
-      if (mappedField) {
-        return configEditMode
-          ? ((tempConfig as any)?.[mappedField] ?? (config as any)?.[mappedField])
-          : (config as any)?.[mappedField];
-      }
-      // Fallback for direct field access
-      return configEditMode
-        ? ((tempConfig as any)?.[field as keyof CoreTradingConfig] ??
-            (config as any)?.[field as keyof CoreTradingConfig])
-        : (config as any)?.[field as keyof CoreTradingConfig];
+    (field: keyof AutoSnipingConfig): string | number | boolean | undefined => {
+      if (!config) return undefined;
+
+      return configEditMode ? (tempConfig[field] ?? config[field]) : config[field];
     },
     [configEditMode, tempConfig, config]
   );
@@ -178,12 +160,12 @@ export function ConfigEditor({
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="enabled"
-                    checked={getConfigValue("autoSnipingEnabled") as boolean}
-                    onCheckedChange={(checked) => handleConfigChange("autoSnipingEnabled", checked)}
+                    checked={getConfigValue("enabled") as boolean}
+                    onCheckedChange={(checked) => handleConfigChange("enabled", checked)}
                     disabled={!configEditMode}
                   />
                   <span className="text-sm text-gray-600">
-                    {getConfigValue("autoSnipingEnabled") ? "Enabled" : "Disabled"}
+                    {getConfigValue("enabled") ? "Enabled" : "Disabled"}
                   </span>
                 </div>
               </div>
@@ -195,9 +177,9 @@ export function ConfigEditor({
                   type="number"
                   min="1"
                   max="50"
-                  value={getConfigValue("maxConcurrentPositions") as number}
+                  value={getConfigValue("maxConcurrentTrades") as number}
                   onChange={(e) =>
-                    handleConfigChange("maxConcurrentPositions", Number.parseInt(e.target.value))
+                    handleConfigChange("maxConcurrentTrades", Number.parseInt(e.target.value))
                   }
                   disabled={!configEditMode}
                   className={validationErrors.maxPositions ? "border-red-500" : ""}
@@ -208,21 +190,21 @@ export function ConfigEditor({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="maxDailyTrades">Maximum Daily Trades</Label>
+                <Label htmlFor="maxConcurrentTrades2">Maximum Daily Trades</Label>
                 <Input
-                  id="maxDailyTrades"
+                  id="maxConcurrentTrades2"
                   type="number"
                   min="1"
                   max="100"
-                  value={getConfigValue("maxDailyTrades") as number}
+                  value={getConfigValue("maxConcurrentTrades") as number}
                   onChange={(e) =>
-                    handleConfigChange("maxDailyTrades", Number.parseInt(e.target.value))
+                    handleConfigChange("maxConcurrentTrades", Number.parseInt(e.target.value))
                   }
                   disabled={!configEditMode}
-                  className={validationErrors.maxDailyTrades ? "border-red-500" : ""}
+                  className={validationErrors.maxConcurrentTrades ? "border-red-500" : ""}
                 />
-                {validationErrors.maxDailyTrades && (
-                  <p className="text-sm text-red-500">{validationErrors.maxDailyTrades}</p>
+                {validationErrors.maxConcurrentTrades && (
+                  <p className="text-sm text-red-500">{validationErrors.maxConcurrentTrades}</p>
                 )}
               </div>
 
@@ -233,9 +215,9 @@ export function ConfigEditor({
                   type="number"
                   min="10"
                   step="10"
-                  value={getConfigValue("positionSizeUSDT") as number}
+                  value={getConfigValue("maxPositionSize") as number}
                   onChange={(e) =>
-                    handleConfigChange("positionSizeUSDT", Number.parseFloat(e.target.value))
+                    handleConfigChange("maxPositionSize", Number.parseFloat(e.target.value))
                   }
                   disabled={!configEditMode}
                   className={validationErrors.positionSizeUSDT ? "border-red-500" : ""}
@@ -260,9 +242,12 @@ export function ConfigEditor({
                   type="number"
                   min="0"
                   max="100"
-                  value={getConfigValue("confidenceThreshold") as number}
+                  value={getConfigValue("patternConfidenceThreshold") as number}
                   onChange={(e) =>
-                    handleConfigChange("confidenceThreshold", Number.parseFloat(e.target.value))
+                    handleConfigChange(
+                      "patternConfidenceThreshold",
+                      Number.parseFloat(e.target.value)
+                    )
                   }
                   disabled={!configEditMode}
                   className={validationErrors.minConfidence ? "border-red-500" : ""}
@@ -277,14 +262,14 @@ export function ConfigEditor({
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="enableAdvanceDetection"
-                    checked={getConfigValue("enableAdvanceDetection") as boolean}
+                    checked={getConfigValue("enablePatternDetection") as boolean}
                     onCheckedChange={(checked) =>
-                      handleConfigChange("enableAdvanceDetection", checked)
+                      handleConfigChange("enablePatternDetection", checked)
                     }
                     disabled={!configEditMode}
                   />
                   <span className="text-sm text-gray-600">
-                    {getConfigValue("enableAdvanceDetection") ? "Enabled" : "Disabled"}
+                    {getConfigValue("enablePatternDetection") ? "Enabled" : "Disabled"}
                   </span>
                 </div>
               </div>
@@ -338,48 +323,18 @@ export function ConfigEditor({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="maxDrawdownPercentage">Maximum Drawdown (%)</Label>
-                <Input
-                  id="maxDrawdownPercentage"
-                  type="number"
-                  min="5"
-                  max="50"
-                  step="1"
-                  value={getConfigValue("maxDrawdownPercentage") as number}
-                  onChange={(e) =>
-                    handleConfigChange("maxDrawdownPercentage", Number.parseFloat(e.target.value))
-                  }
-                  disabled={!configEditMode}
-                  className={validationErrors.maxDrawdownPercentage ? "border-red-500" : ""}
-                />
-                {validationErrors.maxDrawdownPercentage && (
-                  <p className="text-sm text-red-500">{validationErrors.maxDrawdownPercentage}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="slippageTolerancePercentage">Slippage Tolerance (%)</Label>
-                <Input
-                  id="slippageTolerancePercentage"
-                  type="number"
-                  min="0.1"
-                  max="5"
-                  step="0.1"
-                  value={getConfigValue("slippageTolerancePercentage") as number}
-                  onChange={(e) =>
-                    handleConfigChange(
-                      "slippageTolerancePercentage",
-                      Number.parseFloat(e.target.value)
-                    )
-                  }
-                  disabled={!configEditMode}
-                  className={validationErrors.slippageTolerancePercentage ? "border-red-500" : ""}
-                />
-                {validationErrors.slippageTolerancePercentage && (
-                  <p className="text-sm text-red-500">
-                    {validationErrors.slippageTolerancePercentage}
-                  </p>
-                )}
+                <Label htmlFor="enableSafetyChecks">Enable Safety Checks</Label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="enableSafetyChecks"
+                    checked={getConfigValue("enableSafetyChecks") as boolean}
+                    onCheckedChange={(checked) => handleConfigChange("enableSafetyChecks", checked)}
+                    disabled={!configEditMode}
+                  />
+                  <span className="text-sm text-gray-600">
+                    {getConfigValue("enableSafetyChecks") ? "Enabled" : "Disabled"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

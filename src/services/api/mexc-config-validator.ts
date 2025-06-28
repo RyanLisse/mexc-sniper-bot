@@ -258,7 +258,9 @@ export class MexcConfigValidator {
 
     try {
       // Check safety coordinator status
-      const safetyStatus = (this.safetyCoordinator as any).getCurrentStatus?.() || { overall: { systemStatus: "unknown" } };
+      const safetyStatus = (this.safetyCoordinator as any).getCurrentStatus?.() || {
+        overall: { systemStatus: "unknown" },
+      };
 
       if (safetyStatus.overall.systemStatus !== "operational") {
         return {
@@ -272,7 +274,9 @@ export class MexcConfigValidator {
       }
 
       // Validate circuit breaker functionality
-      const circuitBreakerStatus = await (this.mexcService as any).getCircuitBreakerStatus?.() || { success: true, data: { status: "CLOSED" } };
+      const circuitBreakerStatus = (await (
+        this.mexcService as any
+      ).getCircuitBreakerStatus?.()) || { success: true, data: { status: "CLOSED" } };
 
       if (!circuitBreakerStatus.success || circuitBreakerStatus.data?.status === "OPEN") {
         return {

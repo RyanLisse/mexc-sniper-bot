@@ -1,252 +1,588 @@
 /**
  * Multi-Phase Trading Bot
  *
- * Re-export module that provides the MultiPhaseTradingBot and AdvancedMultiPhaseTradingBot
- * for compatibility with existing imports and tests.
+ * Implementation that provides trading bot functionality for price-based phase execution.
+ * Designed to work with trading strategies and track completion status.
  */
 
-// Re-export from the main services
-export type {
-  MultiPhaseTradingService,
-  PhaseResult,
-  TradingPhase,
-  TradingStrategy,
-} from "../multi-phase-trading-service";
+import type { TradingStrategy } from "./trading-strategy-manager";
 
-export { PREDEFINED_STRATEGIES } from "../multi-phase-trading-service";
+// Types for the trading bot interface
+export interface BotStatus {
+  entryPrice: number;
+  position: number;
+  currentPrice?: number;
+  isComplete: boolean;
+  completionPercentage: number;
+  priceIncrease?: string;
+  summary: {
+    completedPhases: number;
+    totalPhases: number;
+  };
+  visualization?: string;
+}
 
-// Import the strategy builder for use in bot implementations
-import type { StrategyPattern } from "../multi-phase-strategy-builder";
-import type { TradingPhase, TradingStrategy } from "../multi-phase-trading-service";
+export interface PriceUpdateResult {
+  actions: string[];
+  status: BotStatus;
+}
+
+export interface PerformanceSummary {
+  realizedPnL: number;
+  unrealizedPnL: number;
+  totalPnL: number;
+  totalPnLPercent: number;
+  bestPhase?: { phase: number; profit: number };
+  worstPhase?: { phase: number; profit: number };
+  efficiency: number;
+}
+
+export interface RiskMetrics {
+  currentDrawdown: number;
+  maxDrawdown: number;
+  riskRewardRatio: number;
+  positionRisk: number;
+  stopLossLevel: number;
+}
+
+export interface PriceMovement {
+  price: number;
+  description: string;
+}
+
+export interface SimulationResult {
+  actions: string[];
+  status: BotStatus;
+  performance: PerformanceSummary;
+}
+
+export interface BotState {
+  entryPrice: number;
+  position: number;
+  strategy: TradingStrategy;
+  executorState: {
+    completedPhases: number[];
+    lastPrice?: number;
+  };
+}
 
 /**
  * Multi-Phase Trading Bot Implementation
  */
 export class MultiPhaseTradingBot {
-  private strategies: Map<string, TradingStrategy> = new Map();
-  private activeExecutions: Set<string> = new Set();
+  protected completedPhases: Set<number> = new Set();
+  protected lastPrice?: number;
+  private maxDrawdown = 0;
 
-  constructor(private config: { maxConcurrentStrategies?: number } = {}) {
-    this.config.maxConcurrentStrategies = config.maxConcurrentStrategies || 5;
+  constructor(
+    protected strategy: TradingStrategy,
+    protected entryPrice: number,
+    protected position: number
+  ) {
+    if (entryPrice <= 0) throw new Error("Entry price must be positive");
+    if (position <= 0) throw new Error("Position must be positive");
   }
 
   /**
-   * Execute a multi-phase trading strategy
+   * Process a price update and execute phases as needed
    */
-  async executeStrategy(strategy: StrategyPattern): Promise<string> {
-    const strategyId = `strategy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  onPriceUpdate(currentPrice: number): PriceUpdateResult {
+    this.lastPrice = currentPrice;
+    const actions: string[] = [];
 
-    if (this.activeExecutions.size >= this.config.maxConcurrentStrategies!) {
-      throw new Error("Maximum concurrent strategies reached");
-    }
+    // Calculate price increase percentage
+    const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
 
-    const tradingStrategy: TradingStrategy = {
-      ...strategy,
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      phases: [],
-    };
+    // Check each phase target
+    this.strategy.levels.forEach((level, index) => {
+      const phaseNumber = index + 1;
 
-    this.strategies.set(strategyId, tradingStrategy);
-    this.activeExecutions.add(strategyId);
-
-    // Simulate strategy execution
-    try {
-      await this.runStrategy(strategyId, tradingStrategy);
-      return strategyId;
-    } catch (error) {
-      this.activeExecutions.delete(strategyId);
-      throw error;
-    }
-  }
-
-  /**
-   * Pause a running strategy
-   */
-  async pauseStrategy(strategyId: string): Promise<void> {
-    const strategy = this.strategies.get(strategyId);
-    if (!strategy) {
-      throw new Error(`Strategy ${strategyId} not found`);
-    }
-
-    strategy.status = "paused";
-    strategy.updatedAt = new Date();
-  }
-
-  /**
-   * Resume a paused strategy
-   */
-  async resumeStrategy(strategyId: string): Promise<void> {
-    const strategy = this.strategies.get(strategyId);
-    if (!strategy) {
-      throw new Error(`Strategy ${strategyId} not found`);
-    }
-
-    strategy.status = "active";
-    strategy.updatedAt = new Date();
-  }
-
-  /**
-   * Stop a strategy
-   */
-  async stopStrategy(strategyId: string): Promise<void> {
-    const strategy = this.strategies.get(strategyId);
-    if (!strategy) {
-      throw new Error(`Strategy ${strategyId} not found`);
-    }
-
-    strategy.status = "completed";
-    strategy.updatedAt = new Date();
-    this.activeExecutions.delete(strategyId);
-  }
-
-  /**
-   * Get strategy status
-   */
-  async getStrategyStatus(strategyId: string): Promise<TradingStrategy | null> {
-    return this.strategies.get(strategyId) || null;
-  }
-
-  /**
-   * List all active strategies
-   */
-  async listActiveStrategies(): Promise<TradingStrategy[]> {
-    return Array.from(this.strategies.values()).filter((s) => s.status === "active");
-  }
-
-  /**
-   * Get all strategies
-   */
-  getAllStrategies(): TradingStrategy[] {
-    return Array.from(this.strategies.values());
-  }
-
-  /**
-   * Clear all strategies (for testing)
-   */
-  clearStrategies(): void {
-    this.strategies.clear();
-    this.activeExecutions.clear();
-  }
-
-  /**
-   * Private method to run a strategy
-   */
-  private async runStrategy(strategyId: string, strategy: TradingStrategy): Promise<void> {
-    // Simulate strategy execution with phases
-    const phaseCount = Math.floor(Math.random() * 3) + 1; // 1-3 phases
-
-    for (let i = 0; i < phaseCount; i++) {
-      const phase: TradingPhase = {
-        id: `phase_${i + 1}`,
-        name: `Phase ${i + 1}`,
-        status: "active",
-        startTime: new Date(),
-      };
-
-      strategy.phases.push(phase);
-
-      // Simulate phase execution time
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Simulate phase completion
-      const success = Math.random() > 0.1; // 90% success rate
-      phase.status = success ? "completed" : "failed";
-      phase.endTime = new Date();
-      phase.result = {
-        success,
-        profit: success ? Math.random() * 100 : -Math.random() * 50,
-        volume: Math.random() * 1000,
-        orders: [],
-        message: success ? "Phase completed successfully" : "Phase failed due to market conditions",
-      };
-
-      if (!success) {
-        strategy.status = "failed";
-        this.activeExecutions.delete(strategyId);
+      // Skip if phase already completed
+      if (this.completedPhases.has(phaseNumber)) {
         return;
       }
+
+      // Check if price target is reached
+      if (priceIncrease >= level.percentage) {
+        this.completedPhases.add(phaseNumber);
+        const sellAmount = Math.floor((this.position * level.sellPercentage) / 100);
+        actions.push(
+          `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} (+${level.percentage}%)`
+        );
+      }
+    });
+
+    return {
+      actions,
+      status: this.buildStatus(currentPrice),
+    };
+  }
+
+  /**
+   * Get current bot status
+   */
+  getStatus(): BotStatus {
+    return this.buildStatus(this.lastPrice);
+  }
+
+  /**
+   * Update position size
+   */
+  updatePosition(newPosition: number): void {
+    if (newPosition <= 0) throw new Error("Position must be positive");
+    this.position = newPosition;
+  }
+
+  /**
+   * Get performance summary
+   */
+  getPerformanceSummary(currentPrice: number): PerformanceSummary {
+    let realizedPnL = 0;
+    let bestPhase: { phase: number; profit: number } | undefined;
+    let worstPhase: { phase: number; profit: number } | undefined;
+
+    // Calculate realized P&L from completed phases
+    this.strategy.levels.forEach((level, index) => {
+      const phaseNumber = index + 1;
+      if (this.completedPhases.has(phaseNumber)) {
+        const sellAmount = (this.position * level.sellPercentage) / 100;
+        const profit = sellAmount * (currentPrice - this.entryPrice);
+        realizedPnL += profit;
+
+        if (!bestPhase || profit > bestPhase.profit) {
+          bestPhase = { phase: phaseNumber, profit };
+        }
+        if (!worstPhase || profit < worstPhase.profit) {
+          worstPhase = { phase: phaseNumber, profit };
+        }
+      }
+    });
+
+    // Calculate unrealized P&L from remaining position
+    const soldPercentage = this.strategy.levels
+      .filter((_, index) => this.completedPhases.has(index + 1))
+      .reduce((sum, level) => sum + level.sellPercentage, 0);
+    const remainingPosition = (this.position * (100 - soldPercentage)) / 100;
+    const unrealizedPnL = remainingPosition * (currentPrice - this.entryPrice);
+
+    const totalPnL = realizedPnL + unrealizedPnL;
+    const totalPnLPercent = (totalPnL / (this.position * this.entryPrice)) * 100;
+
+    // Calculate efficiency (percentage of available profit captured)
+    const maxPossibleProfit = this.position * (currentPrice - this.entryPrice);
+    const efficiency = maxPossibleProfit > 0 ? (totalPnL / maxPossibleProfit) * 100 : 0;
+
+    return {
+      realizedPnL,
+      unrealizedPnL,
+      totalPnL,
+      totalPnLPercent,
+      bestPhase,
+      worstPhase,
+      efficiency: Math.max(0, Math.min(100, efficiency)),
+    };
+  }
+
+  /**
+   * Get risk metrics
+   */
+  getRiskMetrics(currentPrice: number): RiskMetrics {
+    const priceChange = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const currentDrawdown = Math.max(0, -priceChange); // Only negative moves are drawdown
+    this.maxDrawdown = Math.max(this.maxDrawdown, currentDrawdown);
+
+    // Calculate risk-reward ratio based on strategy targets
+    const avgTarget =
+      this.strategy.levels.reduce((sum, level) => sum + level.percentage, 0) /
+      this.strategy.levels.length;
+    const stopLossPercent = 10; // 10% stop loss
+    const riskRewardRatio = avgTarget / stopLossPercent;
+
+    return {
+      currentDrawdown,
+      maxDrawdown: this.maxDrawdown,
+      riskRewardRatio,
+      positionRisk: Math.abs(priceChange),
+      stopLossLevel: this.entryPrice * (1 - stopLossPercent / 100),
+    };
+  }
+
+  /**
+   * Simulate price movements
+   */
+  simulatePriceMovements(movements: PriceMovement[]): SimulationResult[] {
+    const results: SimulationResult[] = [];
+
+    movements.forEach((movement) => {
+      const updateResult = this.onPriceUpdate(movement.price);
+      const performance = this.getPerformanceSummary(movement.price);
+
+      results.push({
+        actions: updateResult.actions,
+        status: updateResult.status,
+        performance,
+      });
+    });
+
+    return results;
+  }
+
+  /**
+   * Export bot state
+   */
+  exportState(): BotState {
+    return {
+      entryPrice: this.entryPrice,
+      position: this.position,
+      strategy: this.strategy,
+      executorState: {
+        completedPhases: Array.from(this.completedPhases),
+        lastPrice: this.lastPrice,
+      },
+    };
+  }
+
+  /**
+   * Import bot state
+   */
+  importState(state: BotState): void {
+    this.entryPrice = state.entryPrice;
+    this.position = state.position;
+    this.strategy = state.strategy;
+    this.completedPhases = new Set(state.executorState.completedPhases);
+    this.lastPrice = state.executorState.lastPrice;
+  }
+
+  /**
+   * Reset bot to initial state
+   */
+  reset(): void {
+    this.completedPhases.clear();
+    this.lastPrice = undefined;
+    this.maxDrawdown = 0;
+  }
+
+  /**
+   * Build status object
+   */
+  protected buildStatus(currentPrice?: number): BotStatus {
+    const totalPhases = this.strategy.levels.length;
+    const completedPhases = this.completedPhases.size;
+    const completionPercentage = (completedPhases / totalPhases) * 100;
+
+    let priceIncrease: string | undefined;
+    if (currentPrice) {
+      const increase = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+      priceIncrease = increase.toFixed(2) + "%";
     }
 
-    strategy.status = "completed";
-    strategy.updatedAt = new Date();
-    this.activeExecutions.delete(strategyId);
+    // Build visualization
+    const visualization = this.strategy.levels
+      .map((level, index) => {
+        const phaseNumber = index + 1;
+        const isCompleted = this.completedPhases.has(phaseNumber);
+        const emoji = isCompleted ? "✅" : "🎯";
+        return `${emoji} Phase ${phaseNumber} (+${level.percentage}%)`;
+      })
+      .join(" | ");
+
+    return {
+      entryPrice: this.entryPrice,
+      position: this.position,
+      currentPrice,
+      isComplete: completedPhases === totalPhases,
+      completionPercentage,
+      priceIncrease,
+      summary: {
+        completedPhases,
+        totalPhases,
+      },
+      visualization,
+    };
   }
 }
 
 /**
- * Advanced Multi-Phase Trading Bot with additional features
+ * Advanced Multi-Phase Trading Bot with strategy switching capabilities
  */
 export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
-  private riskLimits: {
-    maxDailyLoss: number;
-    maxPositionSize: number;
-    maxOpenPositions: number;
-  };
+  private strategies: Map<string, TradingStrategy>;
+  private currentStrategyId: string;
 
   constructor(
-    config: {
-      maxConcurrentStrategies?: number;
-      riskLimits?: {
-        maxDailyLoss?: number;
-        maxPositionSize?: number;
-        maxOpenPositions?: number;
-      };
-    } = {}
+    strategies: Record<string, TradingStrategy>,
+    initialStrategyId: string,
+    entryPrice: number,
+    position: number
   ) {
-    super(config);
+    const initialStrategy = strategies[initialStrategyId];
+    if (!initialStrategy) {
+      throw new Error(`Strategy '${initialStrategyId}' not found`);
+    }
 
-    this.riskLimits = {
-      maxDailyLoss: config.riskLimits?.maxDailyLoss || 1000,
-      maxPositionSize: config.riskLimits?.maxPositionSize || 500,
-      maxOpenPositions: config.riskLimits?.maxOpenPositions || 10,
+    super(initialStrategy, entryPrice, position);
+
+    this.strategies = new Map(Object.entries(strategies));
+    this.currentStrategyId = initialStrategyId;
+  }
+
+  /**
+   * Switch to a different strategy
+   */
+  switchStrategy(strategyId: string): boolean {
+    const strategy = this.strategies.get(strategyId);
+    if (!strategy) {
+      return false;
+    }
+
+    // Update the current strategy
+    this.strategy = strategy;
+    this.currentStrategyId = strategyId;
+    return true;
+  }
+
+  /**
+   * Get current strategy information
+   */
+  getCurrentStrategy(): { id: string; strategy: TradingStrategy } {
+    return {
+      id: this.currentStrategyId,
+      strategy: this.strategy,
     };
   }
 
   /**
-   * Execute strategy with advanced risk management
+   * List available strategy IDs
    */
-  async executeStrategy(strategy: StrategyPattern): Promise<string> {
-    // Perform risk checks before execution
-    await this.performRiskChecks(strategy);
-
-    return super.executeStrategy(strategy);
+  listStrategies(): string[] {
+    return Array.from(this.strategies.keys());
   }
 
   /**
-   * Perform risk management checks
+   * List all active strategies (inherited method override)
    */
-  private async performRiskChecks(strategy: StrategyPattern): Promise<void> {
-    const activeStrategies = await this.listActiveStrategies();
+  async listActiveStrategies(): Promise<TradingStrategy[]> {
+    return Array.from(this.strategies.values());
+  }
 
-    // Check max open positions
-    if (activeStrategies.length >= this.riskLimits.maxOpenPositions) {
-      throw new Error("Maximum open positions limit reached");
+  /**
+   * Enable real-time monitoring with websocket price updates
+   */
+  enableRealTimeMonitoring(wsCallback: (price: number) => void): void {
+    // In a real implementation, this would connect to MEXC websocket
+    // For now, simulate with periodic price updates
+    const simulationInterval = setInterval(() => {
+      if (this.lastPrice) {
+        // Simulate price movement (±2% random walk)
+        const change = (Math.random() - 0.5) * 0.04;
+        const newPrice = this.lastPrice * (1 + change);
+        wsCallback(newPrice);
+      }
+    }, 1000); // Update every second
+
+    // Store interval for cleanup
+    this.monitoringInterval = simulationInterval;
+  }
+
+  /**
+   * Disable real-time monitoring
+   */
+  disableRealTimeMonitoring(): void {
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+    }
+  }
+
+  /**
+   * Advanced position management with dynamic targets
+   */
+  updateDynamicTargets(marketConditions: {
+    volatility: number;
+    trend: "bullish" | "bearish" | "sideways";
+    volume: number;
+  }): void {
+    // Adjust strategy levels based on market conditions
+    const volatilityMultiplier = Math.max(0.5, Math.min(2.0, 1 + marketConditions.volatility));
+
+    this.strategy.levels = this.strategy.levels.map((level) => ({
+      ...level,
+      percentage: level.percentage * volatilityMultiplier,
+      sellPercentage:
+        marketConditions.trend === "bullish"
+          ? level.sellPercentage * 0.8 // Sell less in bullish market
+          : level.sellPercentage * 1.2, // Sell more in bearish market
+    }));
+  }
+
+  /**
+   * Implement trailing stop loss
+   */
+  private trailingStopLoss = {
+    enabled: false,
+    trailPercent: 5,
+    highestPrice: 0,
+    stopPrice: 0,
+  };
+
+  /**
+   * Enable trailing stop loss
+   */
+  enableTrailingStop(trailPercent: number): void {
+    this.trailingStopLoss.enabled = true;
+    this.trailingStopLoss.trailPercent = trailPercent;
+    this.trailingStopLoss.highestPrice = this.lastPrice || this.entryPrice;
+    this.trailingStopLoss.stopPrice = this.trailingStopLoss.highestPrice * (1 - trailPercent / 100);
+  }
+
+  /**
+   * Check trailing stop conditions
+   */
+  private checkTrailingStop(currentPrice: number): boolean {
+    if (!this.trailingStopLoss.enabled) return false;
+
+    // Update highest price
+    if (currentPrice > this.trailingStopLoss.highestPrice) {
+      this.trailingStopLoss.highestPrice = currentPrice;
+      this.trailingStopLoss.stopPrice =
+        currentPrice * (1 - this.trailingStopLoss.trailPercent / 100);
     }
 
-    // Check position size limits
-    if (
-      strategy.riskManagement?.positionSize &&
-      strategy.riskManagement.positionSize > this.riskLimits.maxPositionSize
-    ) {
-      throw new Error("Position size exceeds risk limits");
+    // Check if stop is triggered
+    return currentPrice <= this.trailingStopLoss.stopPrice;
+  }
+
+  /**
+   * Enhanced price update with advanced features
+   */
+  onAdvancedPriceUpdate(currentPrice: number, volume?: number): PriceUpdateResult {
+    this.lastPrice = currentPrice;
+    const actions: string[] = [];
+
+    // Check trailing stop first
+    if (this.checkTrailingStop(currentPrice)) {
+      actions.push(
+        `TRAILING STOP: Sell all ${this.position} units at ${currentPrice.toFixed(2)} (Trail: ${this.trailingStopLoss.trailPercent}%)`
+      );
+      this.reset(); // Close all positions
+      return {
+        actions,
+        status: this.buildStatus(currentPrice),
+      };
     }
 
-    // Additional risk checks can be added here
+    // Calculate price increase percentage
+    const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+
+    // Volume-weighted decisions
+    const volumeMultiplier = volume ? Math.min(2.0, Math.max(0.5, volume / 1000000)) : 1.0;
+
+    // Check each phase target with volume consideration
+    this.strategy.levels.forEach((level, index) => {
+      const phaseNumber = index + 1;
+
+      // Skip if phase already completed
+      if (this.completedPhases.has(phaseNumber)) {
+        return;
+      }
+
+      // Adjust target based on volume
+      const adjustedTarget = level.percentage * volumeMultiplier;
+
+      // Check if price target is reached
+      if (priceIncrease >= adjustedTarget) {
+        this.completedPhases.add(phaseNumber);
+        const sellAmount = Math.floor((this.position * level.sellPercentage) / 100);
+
+        actions.push(
+          `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} ` +
+            `(+${adjustedTarget.toFixed(2)}%, Vol: ${volumeMultiplier.toFixed(2)}x)`
+        );
+
+        // Update remaining position
+        this.position -= sellAmount;
+      }
+    });
+
+    return {
+      actions,
+      status: this.buildStatus(currentPrice),
+    };
   }
 
   /**
-   * Update risk limits
+   * Calculate position efficiency score
    */
-  updateRiskLimits(limits: Partial<typeof this.riskLimits>): void {
-    this.riskLimits = { ...this.riskLimits, ...limits };
+  calculateEfficiencyScore(currentPrice: number): number {
+    const currentReturn = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const maxPossibleReturn =
+      this.strategy.levels[this.strategy.levels.length - 1]?.percentage || 0;
+
+    if (maxPossibleReturn === 0) return 0;
+
+    const completionRatio = this.completedPhases.size / this.strategy.levels.length;
+    const returnRatio = Math.max(0, currentReturn) / maxPossibleReturn;
+
+    // Efficiency combines completion ratio and return capture
+    return (completionRatio * 0.6 + returnRatio * 0.4) * 100;
   }
 
   /**
-   * Get current risk limits
+   * Advanced risk assessment
    */
-  getRiskLimits() {
-    return { ...this.riskLimits };
+  assessRisk(
+    currentPrice: number,
+    marketData?: {
+      volatility: number;
+      correlation: number;
+      marketCap: number;
+    }
+  ): {
+    riskLevel: "low" | "medium" | "high" | "critical";
+    riskScore: number;
+    recommendations: string[];
+  } {
+    const priceChange = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const recommendations: string[] = [];
+    let riskScore = 0;
+
+    // Price-based risk
+    if (priceChange < -10) riskScore += 30;
+    else if (priceChange < -5) riskScore += 15;
+
+    // Position concentration risk
+    const positionValue = this.position * currentPrice;
+    if (positionValue > 100000)
+      riskScore += 20; // Large position
+    else if (positionValue > 50000) riskScore += 10;
+
+    // Market data risk (if available)
+    if (marketData) {
+      if (marketData.volatility > 0.1) riskScore += 25;
+      if (marketData.correlation > 0.8) riskScore += 15;
+      if (marketData.marketCap < 1000000) riskScore += 20;
+    }
+
+    // Generate recommendations
+    if (priceChange < -5) {
+      recommendations.push("Consider reducing position size due to drawdown");
+    }
+    if (this.completedPhases.size === 0 && priceChange > 5) {
+      recommendations.push("Consider taking partial profits");
+    }
+    if (!this.trailingStopLoss.enabled && priceChange > 10) {
+      recommendations.push("Consider enabling trailing stop to protect gains");
+    }
+
+    // Determine risk level
+    let riskLevel: "low" | "medium" | "high" | "critical";
+    if (riskScore < 20) riskLevel = "low";
+    else if (riskScore < 40) riskLevel = "medium";
+    else if (riskScore < 70) riskLevel = "high";
+    else riskLevel = "critical";
+
+    return { riskLevel, riskScore, recommendations };
   }
+
+  private monitoringInterval: NodeJS.Timeout | null = null;
 }

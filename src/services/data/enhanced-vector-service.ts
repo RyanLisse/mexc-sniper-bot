@@ -68,13 +68,13 @@ interface IndexStatus {
 
 export class EnhancedVectorService {
   private logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: unknown) =>
       console.info("[enhanced-vector-service]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: unknown) =>
       console.warn("[enhanced-vector-service]", message, context || ""),
-    error: (message: string, context?: any, error?: Error) =>
+    error: (message: string, context?: unknown, error?: Error) =>
       console.error("[enhanced-vector-service]", message, context || "", error || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: unknown) =>
       console.debug("[enhanced-vector-service]", message, context || ""),
   };
 
@@ -141,7 +141,7 @@ export class EnhancedVectorService {
    */
   async nativeSimilaritySearch(
     queryEmbedding: number[],
-    options: VectorSearchOptions = {}
+    options: Partial<VectorSearchOptions> = {}
   ): Promise<VectorSearchResult[]> {
     const validatedOptions = VectorSearchOptionsSchema.parse(options);
     const { threshold, limit, useNativeOps, patternType, symbolName, minConfidence, maxResults } =
@@ -380,7 +380,7 @@ export class EnhancedVectorService {
    */
   async findSimilarPatternsBatch(
     queryEmbeddings: number[][],
-    options: BatchSearchOptions = {}
+    options: Partial<BatchSearchOptions> = {}
   ): Promise<{ [index: number]: VectorSearchResult[] }> {
     const validatedOptions = BatchSearchOptionsSchema.parse(options);
     const { threshold, limit, useCache, enableParallel } = validatedOptions;

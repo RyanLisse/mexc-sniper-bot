@@ -333,8 +333,30 @@ export class MexcErrorRecoveryService {
     config: ErrorRecoveryConfig;
   } {
     return {
-      retryableErrorPatterns: this.classifier.RETRYABLE_ERRORS,
-      nonRetryableErrorPatterns: this.classifier.NON_RETRYABLE_ERRORS,
+      retryableErrorPatterns: [
+        "timeout",
+        "ECONNRESET",
+        "ENOTFOUND",
+        "ECONNREFUSED",
+        "500",
+        "502",
+        "503",
+        "504",
+        "network",
+        "fetch failed",
+        "Connection timeout",
+        "Rate limit exceeded",
+      ],
+      nonRetryableErrorPatterns: [
+        "400",
+        "401",
+        "403",
+        "404",
+        "422",
+        "signature",
+        "Api key info invalid",
+        "Invalid credentials",
+      ],
       config: { ...this.config },
     };
   }
