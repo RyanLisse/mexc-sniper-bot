@@ -9,6 +9,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { trace } from "@opentelemetry/api";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
+import { 
+  withEnhancedValidation,
+  validateExternalApiResponse,
+  CriticalDataValidator
+} from "@/src/lib/enhanced-validation-middleware";
+import {
+  validateMexcResponse,
+  validateAccountBalance
+} from "@/src/services/validation/comprehensive-validation-service";
+import { AccountBalanceSchema } from "@/src/schemas/external-api-validation-schemas";
 
 // Request validation schema - userId is optional for environment fallback
 const BalanceRequestSchema = z.object({
@@ -113,10 +123,35 @@ export async function GET(request: NextRequest) {
     
     let balanceResponse;
     try {
-      balanceResponse = await Promise.race([
+      const rawResponse = await Promise.race([
         mexcClient.getAccountBalances(),
         timeoutPromise
       ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
+      
+      // Validate the external API response structure for enhanced safety
+      const validationResult = validateExternalApiResponse(
+        z.object({
+          success: z.boolean(),
+          data: z.object({
+            balances: z.array(AccountBalanceSchema),
+            totalUsdtValue: z.number().nonnegative(),
+            lastUpdated: z.string(),
+          }).optional(),
+          error: z.string().optional(),
+          timestamp: z.string(),
+        }),
+        rawResponse,
+        "MEXC Account Balance API"
+      );
+      
+      if (!validationResult.success) {
+        console.warn("[BalanceAPI] Response validation failed:", validationResult.error);
+        // Continue with original response for backward compatibility
+      } else {
+        console.debug("[BalanceAPI] Response validation successful");
+      }
+      
+      balanceResponse = rawResponse;
     } catch (mexcError) {
       console.error("[BalanceAPI] MEXC API call failed:", mexcError);
       const fallbackData = createFallbackData(hasUserCredentials, credentialsType);

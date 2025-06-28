@@ -318,5 +318,85 @@
     "operation": "info",
     "service": "mexc-sniper-bot",
     "environment": "production"
+  },
+  {
+    "timestamp": "2025-06-28T16:49:00.581Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-06-28T16:49:00.211Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-06-28T16:49:00.275Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-06-28T16:49:00.693Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-06-28T16:49:17.709Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
   }
 ]

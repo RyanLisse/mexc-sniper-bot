@@ -139,7 +139,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
           "Error processing symbol",
           {
             symbol: symbol?.cd || "unknown",
-            error: safeError.message,
+            additionalData: { error: safeError.message },
           },
           safeError
         );
@@ -149,13 +149,15 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
     const duration = Date.now() - startTime;
     this.logger.info("Ready state detection completed", {
-      symbolsAnalyzed: symbols.length,
-      patternsFound: matches.length,
-      duration,
-      averageConfidence:
-        matches.length > 0
-          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
-          : 0,
+      additionalData: {
+        symbolsAnalyzed: symbols.length,
+        patternsFound: matches.length,
+        duration,
+        averageConfidence:
+          matches.length > 0
+            ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+            : 0,
+      },
     });
 
     return matches;
@@ -253,7 +255,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
           "Error processing calendar entry",
           {
             symbol: entry?.symbol || "unknown",
-            error: safeError.message,
+            additionalData: { error: safeError.message },
           },
           safeError
         );
@@ -263,16 +265,18 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
     const duration = Date.now() - startTime;
     this.logger.info("Advance opportunity detection completed", {
-      calendarEntriesAnalyzed: calendarEntries.length,
-      opportunitiesFound: matches.length,
-      duration,
-      minAdvanceHours: this.MIN_ADVANCE_HOURS,
-      averageAdvanceHours:
-        matches.length > 0
-          ? Math.round(
-              (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
-            ) / 10
-          : 0,
+      additionalData: {
+        calendarEntriesAnalyzed: calendarEntries.length,
+        opportunitiesFound: matches.length,
+        duration,
+        minAdvanceHours: this.MIN_ADVANCE_HOURS,
+        averageAdvanceHours:
+          matches.length > 0
+            ? Math.round(
+                (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+              ) / 10
+            : 0,
+      },
     });
 
     return matches;

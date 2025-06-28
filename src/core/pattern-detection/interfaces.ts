@@ -21,6 +21,8 @@ export const MarketConditionsSchema = z.object({
   tradingPairs: z.number().optional(),
   volatility: z.number().optional(),
   liquidityScore: z.number().optional(),
+  projectType: z.string().optional(),
+  launchTiming: z.string().optional(),
 });
 
 export type MarketConditions = z.infer<typeof MarketConditionsSchema>;

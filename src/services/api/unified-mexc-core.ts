@@ -17,6 +17,7 @@ import type {
 } from "../data/modules/mexc-api-types";
 import type { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
 import type { MexcCoreClient } from "../data/modules/mexc-core-client";
+import type { LoggerContext } from "@/src/types/logger-types";
 
 // ============================================================================
 // Activity API Input Validation Schemas
@@ -55,13 +56,13 @@ const _RecentActivityInputSchema = z.object({
 
 export class UnifiedMexcCoreModule {
   private logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LoggerContext) =>
       console.info("[unified-mexc-core]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LoggerContext) =>
       console.warn("[unified-mexc-core]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LoggerContext) =>
       console.error("[unified-mexc-core]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LoggerContext) =>
       console.debug("[unified-mexc-core]", message, context || ""),
   };
 

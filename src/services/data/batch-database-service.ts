@@ -18,6 +18,20 @@ import { db, executeWithRetry, monitoredQuery } from "@/src/db";
 import { patternEmbeddings, snipeTargets } from "@/src/db/schema";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import type {
+  DatabaseTransaction,
+  TransactionOperation,
+  DatabaseRow,
+  AggregationResult,
+  BatchOperationResult,
+  PatternEmbeddingRow,
+  SnipeTargetRow,
+  WhereConditions,
+  WhereConditionValue,
+  QueryParameter,
+  BuiltQuery,
+  UpdateValue
+} from "@/src/types/database-types";
 
 // ============================================================================
 // Types and Schemas
@@ -423,7 +437,7 @@ export class BatchDatabaseService {
 
       // Create lookup set for O(1) duplicate checking
       const existingCombinations = new Set(
-        existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
+        existingTargets.map((target: SnipeTargetRow) => `${target.userId}:${target.symbolName}`)
       );
 
       // Filter out duplicates
