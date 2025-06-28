@@ -109,7 +109,7 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
   return apiResponse(
     createSuccessResponse(response)
   );
-}, 'user-preferences-get');
+}, { operation: 'user-preferences-get' });
 
 // POST /api/user-preferences
 export const POST = withApiErrorHandling(async (request: NextRequest) => {
@@ -311,4 +311,4 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
       message: 'User preferences updated successfully'
     })
   );
-}, 'user-preferences-post');
+}, { operation: 'user-preferences-post' });

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
           { 
             fallbackData: [],
             serviceLayer: true,
-            executionTimeMs: symbolsResponse.executionTimeMs,
+            executionTimeMs: 'executionTimeMs' in symbolsResponse ? symbolsResponse.executionTimeMs : undefined,
           }
         ),
         HTTP_STATUS.INTERNAL_SERVER_ERROR
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
       createSuccessResponse(symbolsResponse.data, {
         count: symbolsResponse.data.length,
         vcoinId: vcoinId || null,
-        cached: symbolsResponse.cached,
-        executionTimeMs: symbolsResponse.executionTimeMs,
+        cached: 'cached' in symbolsResponse ? symbolsResponse.cached : undefined,
+        executionTimeMs: 'executionTimeMs' in symbolsResponse ? symbolsResponse.executionTimeMs : undefined,
         serviceLayer: true,
       })
     );

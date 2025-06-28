@@ -10,6 +10,10 @@
 
 import { sql } from "drizzle-orm";
 import { clearDbCache, db, executeWithRetry } from "../db";
+import { 
+  createCoordinatedDatabaseBreaker, 
+  type CoordinatedCircuitBreaker 
+} from "@/src/services/data/coordinated-circuit-breaker";
 
 interface ConnectionPoolConfig {
   maxConnections: number;
@@ -96,6 +100,7 @@ export class DatabaseConnectionPool {
   private cache: QueryResultCache;
   private healthCheckTimer: NodeJS.Timeout | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
+  private circuitBreaker: CoordinatedCircuitBreaker;
 
   constructor() {
     this.config = {
@@ -132,6 +137,9 @@ export class DatabaseConnectionPool {
       ttlMs: this.config.cacheTTLMs,
       enabled: this.config.enableQueryResultCaching,
     };
+
+    // Initialize circuit breaker for database operations
+    this.circuitBreaker = createCoordinatedDatabaseBreaker("database-connection-pool");
 
     this.startHealthChecks();
     this.startCacheCleanup();
@@ -189,40 +197,42 @@ export class DatabaseConnectionPool {
   }
 
   /**
-   * Execute query with connection management and retries
+   * Execute query with connection management, circuit breaker, and retries
    */
   private async executeWithConnectionManagement<T>(queryFn: () => Promise<T>): Promise<T> {
-    let lastError: any;
+    return this.circuitBreaker.execute(async () => {
+      let lastError: any;
 
-    for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
-      try {
-        // Use the existing db connection with optimization
-        const result = await executeWithRetry(queryFn, `Query execution attempt ${attempt}`);
-        this.metrics.successfulConnections++;
-        return result;
-      } catch (error) {
-        lastError = error;
-        this.metrics.failedConnections++;
+      for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+        try {
+          // Use the existing db connection with optimization
+          const result = await executeWithRetry(queryFn, `Query execution attempt ${attempt}`);
+          this.metrics.successfulConnections++;
+          return result;
+        } catch (error) {
+          lastError = error;
+          this.metrics.failedConnections++;
 
-        console.warn(
-          `Database query failed (attempt ${attempt}/${this.config.maxRetries}):`,
-          error
-        );
+          console.warn(
+            `Database query failed (attempt ${attempt}/${this.config.maxRetries}):`,
+            error
+          );
 
-        if (attempt < this.config.maxRetries) {
-          // Exponential backoff for retries
-          const delay = Math.min(1000 * 2 ** (attempt - 1), 5000);
-          await new Promise((resolve) => setTimeout(resolve, delay));
+          if (attempt < this.config.maxRetries) {
+            // Exponential backoff for retries
+            const delay = Math.min(1000 * 2 ** (attempt - 1), 5000);
+            await new Promise((resolve) => setTimeout(resolve, delay));
 
-          // Clear database cache on retry to get fresh connection
-          if (attempt === 2) {
-            clearDbCache();
+            // Clear database cache on retry to get fresh connection
+            if (attempt === 2) {
+              clearDbCache();
+            }
           }
         }
       }
-    }
 
-    throw lastError;
+      throw lastError;
+    });
   }
 
   /**
@@ -458,19 +468,26 @@ export class DatabaseConnectionPool {
   }
 
   /**
-   * Perform connection pool health check
+   * Perform connection pool health check with circuit breaker integration
    */
   private async performHealthCheck(): Promise<void> {
     try {
       const startTime = performance.now();
 
-      // Test database connectivity
-      await db.execute(sql`SELECT 1`);
+      // Test database connectivity through circuit breaker
+      await this.circuitBreaker.execute(async () => {
+        return await db.execute(sql`SELECT 1`);
+      });
 
       const responseTime = performance.now() - startTime;
 
-      // Update health metrics
-      if (responseTime > 5000) {
+      // Update health metrics considering both response time and circuit breaker state
+      const circuitBreakerHealthy = this.circuitBreaker.isHealthy();
+      const circuitBreakerState = this.circuitBreaker.getState();
+
+      if (!circuitBreakerHealthy || circuitBreakerState === "open") {
+        this.metrics.connectionPoolHealth = "critical";
+      } else if (responseTime > 5000 || circuitBreakerState === "half-open") {
         this.metrics.connectionPoolHealth = "critical";
       } else if (responseTime > 2000) {
         this.metrics.connectionPoolHealth = "degraded";
@@ -482,7 +499,7 @@ export class DatabaseConnectionPool {
       }
 
       console.info(
-        `💊 Health check completed: ${responseTime.toFixed(2)}ms (${this.metrics.connectionPoolHealth})`
+        `💊 Health check completed: ${responseTime.toFixed(2)}ms (${this.metrics.connectionPoolHealth}) - Circuit breaker: ${circuitBreakerState}`
       );
     } catch (error) {
       this.metrics.connectionPoolHealth = "critical";
@@ -557,6 +574,28 @@ export class DatabaseConnectionPool {
   }
 
   /**
+   * Get circuit breaker metrics
+   */
+  getCircuitBreakerMetrics() {
+    return this.circuitBreaker.getMetrics();
+  }
+
+  /**
+   * Get circuit breaker state
+   */
+  getCircuitBreakerState() {
+    return this.circuitBreaker.getState();
+  }
+
+  /**
+   * Reset circuit breaker manually (for emergency recovery)
+   */
+  resetCircuitBreaker(): void {
+    this.circuitBreaker.reset();
+    this.logger.info("Circuit breaker manually reset");
+  }
+
+  /**
    * Export performance report
    */
   exportPerformanceReport(): any {
@@ -564,6 +603,7 @@ export class DatabaseConnectionPool {
       timestamp: new Date().toISOString(),
       connectionPool: this.getConnectionMetrics(),
       cache: this.getCacheMetrics(),
+      circuitBreaker: this.getCircuitBreakerMetrics(),
       configuration: this.config,
       recommendations: this.generateRecommendations(),
     };
@@ -575,10 +615,35 @@ export class DatabaseConnectionPool {
   private generateRecommendations(): string[] {
     const recommendations: string[] = [];
     const cacheMetrics = this.getCacheMetrics();
+    const circuitBreakerMetrics = this.getCircuitBreakerMetrics();
 
     if (this.metrics.connectionPoolHealth === "critical") {
       recommendations.push(
         "Critical: Connection pool health is poor - investigate database connectivity"
+      );
+    }
+
+    if (circuitBreakerMetrics.state === "open") {
+      recommendations.push(
+        "Critical: Circuit breaker is OPEN - database operations are being rejected"
+      );
+    }
+
+    if (circuitBreakerMetrics.state === "half-open") {
+      recommendations.push(
+        "Warning: Circuit breaker is HALF-OPEN - monitoring recovery"
+      );
+    }
+
+    if (circuitBreakerMetrics.slowCallRate > 0.3) {
+      recommendations.push(
+        "High: High slow call rate detected - investigate query performance"
+      );
+    }
+
+    if (circuitBreakerMetrics.failureCount > 10) {
+      recommendations.push(
+        "Medium: High failure count in circuit breaker - monitor database stability"
       );
     }
 

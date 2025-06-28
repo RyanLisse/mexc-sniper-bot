@@ -39,6 +39,7 @@ interface StatsUpdate {
   successfulTrades?: number;
   failedTrades?: number;
   averageConfidence?: number;
+  timestamp?: number;
 }
 
 export class AutoSnipingModule {
@@ -1228,7 +1229,7 @@ export class AutoSnipingModule {
       });
 
       // Place opposite order to close position
-      const closeParams = {
+      const closeParams: TradeParameters = {
         symbol: position.symbol,
         side: position.side === "BUY" ? "SELL" : "BUY",
         type: "MARKET",
@@ -1287,7 +1288,7 @@ export class AutoSnipingModule {
       });
 
       // Place opposite order to close position
-      const closeParams = {
+      const closeParams: TradeParameters = {
         symbol: position.symbol,
         side: position.side === "BUY" ? "SELL" : "BUY",
         type: "MARKET",
@@ -1479,7 +1480,7 @@ export class AutoSnipingModule {
       }
 
       // Place opposite order to close position
-      const closeParams = {
+      const closeParams: TradeParameters = {
         symbol: position.symbol,
         side: position.side === "BUY" ? "SELL" : "BUY",
         type: "MARKET",
