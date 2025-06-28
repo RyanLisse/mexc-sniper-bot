@@ -87,7 +87,7 @@ async function debugReadyTargets() {
         console.log(`${idx + 1}. ${target.symbolName} (ID: ${target.id})`);
         console.log(`   Target Execution Time: ${target.targetExecutionTime}`);
         const executionTime = target.targetExecutionTime ? new Date(target.targetExecutionTime) : null;
-        const timeConditionMet = !executionTime || executionTime < now;
+        const timeConditionMet = !executionTime || executionTime < new Date();
         console.log(`   Would pass time condition: ${timeConditionMet}`);
       });
     }

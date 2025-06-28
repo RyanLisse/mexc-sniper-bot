@@ -87,48 +87,62 @@ export async function GET(request: NextRequest) {
     }
 
     // Get MEXC account balances using appropriate credentials
-    const mexcClient = await getUnifiedMexcService(userId ? { userId } : {});
-    console.info("[BalanceAPI] MEXC client created, calling getAccountBalances");
+    let mexcClient;
+    try {
+      mexcClient = await getUnifiedMexcService(userId ? { userId } : {});
+      console.info("[BalanceAPI] MEXC client created, calling getAccountBalances");
+    } catch (serviceError) {
+      console.error("[BalanceAPI] Failed to create MEXC service:", serviceError);
+      const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+      
+      return NextResponse.json({
+        success: false,
+        error: "Failed to initialize MEXC service - check API credentials configuration",
+        meta: {
+          fallbackData,
+          code: "SERVICE_INIT_ERROR",
+          details: serviceError instanceof Error ? serviceError.message : "Unknown service error",
+        },
+      }, { status: 503 });
+    }
     
     // Add timeout to prevent hanging requests
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error("Request timeout: MEXC API call took too long")), 15000);
     });
     
-    const balanceResponse = await Promise.race([
-      mexcClient.getAccountBalances(),
-      timeoutPromise
-    ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
-
-    if (!balanceResponse.success) {
-      console.error("[BalanceAPI] Failed to fetch real balance data", {
-        error: balanceResponse.error,
-        userId: userId || "environment-fallback",
-        responseData: balanceResponse.data,
-        timestamp: balanceResponse.timestamp,
-      });
-
+    let balanceResponse;
+    try {
+      balanceResponse = await Promise.race([
+        mexcClient.getAccountBalances(),
+        timeoutPromise
+      ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
+    } catch (mexcError) {
+      console.error("[BalanceAPI] MEXC API call failed:", mexcError);
       const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
-      const errorMessage = balanceResponse.error || "Failed to fetch account balance data";
+      const errorMessage = mexcError instanceof Error ? mexcError.message : "Unknown MEXC API error";
       
-      // Determine appropriate status code based on error type
+      // Handle specific MEXC errors with appropriate status codes
       let statusCode = 500;
       let errorCode = "MEXC_API_ERROR";
       
-      if (errorMessage.toLowerCase().includes("unauthorized") || 
-          errorMessage.toLowerCase().includes("invalid signature") ||
-          errorMessage.toLowerCase().includes("api key") ||
-          errorMessage.toLowerCase().includes("authentication")) {
+      if (errorMessage.includes("Signature for this request is not valid") ||
+          errorMessage.includes("signature") ||
+          errorMessage.includes("700002")) {
+        statusCode = 401;
+        errorCode = "MEXC_SIGNATURE_ERROR";
+      } else if (errorMessage.includes("Api key info invalid") ||
+                 errorMessage.includes("10072") ||
+                 errorMessage.includes("unauthorized")) {
         statusCode = 401;
         errorCode = "MEXC_AUTH_ERROR";
-      } else if (errorMessage.toLowerCase().includes("rate limit") ||
-                 errorMessage.toLowerCase().includes("too many requests")) {
+      } else if (errorMessage.includes("rate limit") ||
+                 errorMessage.includes("too many requests")) {
         statusCode = 429;
         errorCode = "MEXC_RATE_LIMIT";
-      } else if (errorMessage.toLowerCase().includes("service unavailable") ||
-                 errorMessage.toLowerCase().includes("maintenance")) {
-        statusCode = 503;
-        errorCode = "MEXC_SERVICE_UNAVAILABLE";
+      } else if (errorMessage.includes("timeout")) {
+        statusCode = 504;
+        errorCode = "REQUEST_TIMEOUT";
       }
 
       return NextResponse.json({
@@ -137,9 +151,33 @@ export async function GET(request: NextRequest) {
         meta: {
           fallbackData,
           code: errorCode,
-          details: "Check server logs for more information",
+          details: "MEXC API authentication failed - check credentials and IP allowlist",
         },
       }, { status: statusCode });
+    }
+
+    if (!balanceResponse.success) {
+      console.error("[BalanceAPI] Balance response indicates failure", {
+        error: balanceResponse.error,
+        userId: userId || "environment-fallback",
+        responseData: balanceResponse.data,
+        timestamp: balanceResponse.timestamp,
+      });
+
+      // At this point balanceResponse.success is false but no exception was thrown
+      // This indicates the MEXC client handled the error gracefully
+      const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+      const errorMessage = balanceResponse.error || "Failed to fetch account balance data";
+      
+      return NextResponse.json({
+        success: false,
+        error: errorMessage,
+        meta: {
+          fallbackData,
+          code: "MEXC_RESPONSE_ERROR",
+          details: "MEXC API returned an error response",
+        },
+      }, { status: 400 }); // Bad request since the API call was made but failed
     }
 
     const balanceData = balanceResponse.data;
@@ -166,39 +204,50 @@ export async function GET(request: NextRequest) {
     const hasUserCredentials = !!userId;
     const credentialsType = hasUserCredentials ? "user-specific" : "environment-fallback";
     
-    console.error("[BalanceAPI] Unexpected error", {
+    console.error("[BalanceAPI] Unexpected top-level error", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       type: typeof error,
       name: error instanceof Error ? error.name : "unknown",
       hasApiKey: !!process.env.MEXC_API_KEY,
       hasSecretKey: !!process.env.MEXC_SECRET_KEY,
+      userId: userId || "none",
     });
 
     const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
     const errorMessage = error instanceof Error ? error.message : String(error);
     
-    // Handle specific error types
+    // More specific error classification
     let statusCode = 500;
     let errorCode = "INTERNAL_SERVER_ERROR";
+    let userFriendlyMessage = "Internal server error occurred";
     
-    if (errorMessage.includes("Request timeout")) {
+    if (errorMessage.includes("Request timeout") || errorMessage.includes("timeout")) {
       statusCode = 504;
       errorCode = "REQUEST_TIMEOUT";
-    } else if (errorMessage.includes("Network") || errorMessage.includes("ENOTFOUND")) {
+      userFriendlyMessage = "Request timeout - MEXC API is taking too long to respond";
+    } else if (errorMessage.includes("Network") || errorMessage.includes("ENOTFOUND") || errorMessage.includes("ECONNREFUSED")) {
       statusCode = 503;
       errorCode = "NETWORK_ERROR";
+      userFriendlyMessage = "Network connectivity issue - unable to reach MEXC API";
+    } else if (errorMessage.includes("Database") || errorMessage.includes("credential")) {
+      statusCode = 503;
+      errorCode = "DATABASE_ERROR";
+      userFriendlyMessage = "Database connectivity issue - unable to retrieve credentials";
+    } else if (errorMessage.includes("Permission") || errorMessage.includes("Unauthorized")) {
+      statusCode = 403;
+      errorCode = "PERMISSION_ERROR";
+      userFriendlyMessage = "Permission denied - check API credentials and allowlist";
     }
 
     return NextResponse.json({
       success: false,
-      error: errorMessage.includes("Request timeout") 
-        ? "Request timeout - MEXC API is taking too long to respond" 
-        : "Internal server error - please check MEXC API credentials",
+      error: userFriendlyMessage,
       meta: {
         fallbackData,
         code: errorCode,
         details: errorMessage,
+        timestamp: new Date().toISOString(),
       },
     }, { status: statusCode });
   }

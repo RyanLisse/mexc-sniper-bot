@@ -7,7 +7,7 @@
 
 import type { MexcServiceResponse } from "@/src/schemas/unified/mexc-api-schemas";
 import { toSafeError } from "../../lib/error-type-utils";
-import type { MexcApiClient } from "./mexc-api-client-refactored";
+import type { MexcApiClient } from "./mexc-api-client";
 
 export interface OrderParams {
   symbol: string;

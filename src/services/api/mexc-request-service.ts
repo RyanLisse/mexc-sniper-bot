@@ -82,6 +82,7 @@ export class MexcRequestService {
         requestId: context.requestId,
         responseTime,
         cached: false,
+        timestamp: new Date().toISOString(),
         metadata: {
           endpoint: requestConfig.endpoint,
           method: requestConfig.method,

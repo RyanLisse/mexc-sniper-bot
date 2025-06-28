@@ -18,7 +18,7 @@ import type {
 // ============================================================================
 
 export class MexcTradingApiClient extends MexcAccountApiClient {
-  private logger = {
+  protected tradingLogger = {
     info: (message: string, context?: any) =>
       console.info("[mexc-trading-api]", message, context || ""),
     warn: (message: string, context?: any) =>
@@ -295,7 +295,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
 
       return {
         success: response.success,
-        data: response.success ? response.data : [],
+        data: response.success ? (response.data as any[]) : [],
         error: response.error,
         timestamp: new Date().toISOString(),
         requestId: response.requestId,
@@ -334,7 +334,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
 
       return {
         success: response.success,
-        data: response.success ? response.data : [],
+        data: response.success ? (response.data as any[]) : [],
         error: response.error,
         timestamp: new Date().toISOString(),
         requestId: response.requestId,

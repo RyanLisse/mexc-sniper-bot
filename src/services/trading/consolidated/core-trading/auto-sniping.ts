@@ -5,7 +5,7 @@
  * Extracted from the original monolithic core-trading.service.ts for modularity.
  */
 
-import { and, eq, lt } from "drizzle-orm";
+import { and, eq, lt, isNull, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
 import { toSafeError } from "@/src/lib/error-type-utils";
@@ -469,7 +469,7 @@ export class AutoSnipingModule {
         .where(
           and(
             eq(snipeTargets.status, "ready"),
-            snipeTargets.targetExecutionTime.isNull().or(lt(snipeTargets.targetExecutionTime, now))
+            or(isNull(snipeTargets.targetExecutionTime), lt(snipeTargets.targetExecutionTime, now))
           )
         )
         .orderBy(snipeTargets.priority, snipeTargets.createdAt)

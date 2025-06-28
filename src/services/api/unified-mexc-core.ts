@@ -431,7 +431,7 @@ export class UnifiedMexcCoreModule {
 
       // Check if the response timestamp is within the timeframe
       // This represents when the activity data was last updated/fetched
-      const hasRecent = activityResponse.timestamp > cutoffTime;
+      const hasRecent = new Date(activityResponse.timestamp).getTime() > cutoffTime;
 
       return hasRecent;
     } catch (error) {
