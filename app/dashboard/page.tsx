@@ -91,7 +91,7 @@ export default function DashboardPage() {
   };
   const { data: accountBalance, isLoading: balanceLoading } = useAccountBalance(
     {
-      userId: userId || "default-user", // Always provide a userId fallback
+      userId: userId || "system", // Always provide a userId fallback
       enabled: true, // Always enable the query
     },
   );
@@ -235,7 +235,7 @@ export default function DashboardPage() {
                 <OptimizedActivityFeed />
               </div>
               <div className="space-y-4">
-                <OptimizedAccountBalance userId={userId || "default-user"} />
+                <OptimizedAccountBalance userId={userId || "system"} />
                 <OptimizedTradingTargets
                   onExecuteSnipe={handleExecuteSnipe}
                   onRemoveTarget={handleRemoveTarget}

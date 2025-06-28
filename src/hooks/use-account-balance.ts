@@ -17,8 +17,8 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
   const { user, isAuthenticated } = useAuth();
 
-  // Use the provided userId or fallback to authenticated user ID or default
-  const effectiveUserId = userId || user?.id || "default-user";
+  // Use the provided userId or fallback to authenticated user ID or system
+  const effectiveUserId = userId || user?.id || "system";
 
   // Debug logging
   console.debug("[useAccountBalance] Hook initialized:", {

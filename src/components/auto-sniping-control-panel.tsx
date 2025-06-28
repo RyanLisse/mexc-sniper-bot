@@ -145,6 +145,8 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
         return { color: "yellow", icon: AlertTriangle, text: "Warning" };
       case "critical":
         return { color: "red", icon: AlertTriangle, text: "Critical" };
+      case "emergency":
+        return { color: "red", icon: AlertTriangle, text: "Emergency" };
       default:
         return { color: "gray", icon: Shield, text: "Unknown" };
     }

@@ -374,7 +374,7 @@ export function useSnipeTargets(userId?: string) {
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
     retry: false, // No retries to prevent storms
-    enabled: !!userId && isAuthenticated && user?.id === userId,
+    enabled: !!userId && (isAuthenticated || userId === "system"),
   });
 }
 
