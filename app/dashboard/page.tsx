@@ -38,13 +38,21 @@ import PerformanceMonitoringDashboard from "@/src/components/dashboard/performan
 import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
 import { Phase3IntegrationSummary } from "@/src/components/dashboard/phase3-integration-summary";
 import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
+import { useDeleteSnipeTarget } from "@/src/hooks/use-portfolio";
+import { useToast } from "@/src/components/ui/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const { toast } = useToast();
 
   // Use authenticated user ID
   const userId = user?.id;
+
+  // Hooks for trading operations
+  const deleteSnipeTarget = useDeleteSnipeTarget();
 
   // PHASE 6: Intelligent preloading for 70% faster dashboard loading
   useEffect(() => {
@@ -106,22 +114,129 @@ export default function DashboardPage() {
     });
 
   // Handler functions for trading targets
-  const handleExecuteSnipe = (target: any) => {
+  const handleExecuteSnipe = async (target: any) => {
     console.info("Executing snipe for target:", target);
-    // TODO: Implement snipe execution logic
+    
+    try {
+      // Execute snipe using the auto-sniping execution API
+      const response = await fetch('/api/auto-sniping/execution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: 'execute_single_target',
+          targetId: target.id,
+          symbol: target.symbolName,
+          positionSizeUsdt: target.positionSizeUsdt,
+          confidenceScore: target.confidenceScore,
+          strategy: target.entryStrategy || 'normal',
+          stopLossPercent: target.stopLossPercent,
+          takeProfitPercent: target.takeProfitCustom,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "Snipe Executed Successfully",
+          description: `Target ${target.symbolName} executed successfully`,
+          variant: "default",
+        });
+        
+        // Refresh portfolio and balance data
+        window.location.reload();
+      } else {
+        throw new Error(result.error || 'Failed to execute snipe');
+      }
+    } catch (error) {
+      console.error('Failed to execute snipe:', error);
+      toast({
+        title: "Snipe Execution Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleRemoveTarget = (vcoinId: string) => {
-    console.info("Removing target:", { vcoinId });
-    // TODO: Implement target removal logic
+  const handleRemoveTarget = async (targetId: string | number) => {
+    console.info("Removing target:", { targetId });
+    
+    try {
+      await deleteSnipeTarget.mutateAsync(Number(targetId));
+      
+      toast({
+        title: "Target Removed",
+        description: "Snipe target has been successfully removed",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Failed to remove target:', error);
+      toast({
+        title: "Removal Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
   };
+
+  // Fetch execution history for calculating metrics
+  const { data: executionHistoryData } = useQuery({
+    queryKey: ['execution-history', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+      const response = await fetch(
+        `/api/execution-history?userId=${encodeURIComponent(userId)}&fromDate=${thirtyDaysAgo}&limit=1000`,
+        { credentials: 'include' }
+      );
+      
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.success ? data.data : null;
+    },
+    enabled: !!userId,
+    staleTime: 60 * 1000, // 1 minute cache
+    placeholderData: null,
+  });
+
+  // Fetch historical balance for balance change calculation
+  const { data: historicalBalance } = useQuery({
+    queryKey: ['historical-balance', userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      const response = await fetch(
+        `/api/account/balance?userId=${encodeURIComponent(userId)}&timestamp=${twentyFourHoursAgo}`,
+        { credentials: 'include' }
+      );
+      
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.success ? data.data?.totalUsdtValue || 0 : 0;
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000, // 5 minute cache
+    placeholderData: 0,
+  });
 
   // Calculate metrics
   const totalBalance = accountBalance?.totalUsdtValue || 0;
-  const balanceChange = 0; // TODO: Calculate balance change from historical data
+  const balanceChange = totalBalance - (historicalBalance || totalBalance);
   const newListings = Array.isArray(calendarData) ? calendarData.length : 0;
   const activeTargets = Array.isArray(readyLaunches) ? readyLaunches.length : 0;
-  const winRate = 0; // TODO: Calculate win rate from portfolio data
+  
+  // Calculate win rate from execution history
+  const winRate = useMemo(() => {
+    if (!executionHistoryData?.summary) return 0;
+    
+    const { successRate } = executionHistoryData.summary;
+    return typeof successRate === 'number' ? successRate : 0;
+  }, [executionHistoryData]);
 
   // Debug logging
   console.debug("[Dashboard] Balance data:", {
@@ -143,8 +258,8 @@ export default function DashboardPage() {
               maximumFractionDigits: 2,
             })}`}
             change={balanceChange}
-            changeLabel="Trending up this month"
-            trend="up"
+            changeLabel={balanceChange >= 0 ? "24h increase" : "24h decrease"}
+            trend={balanceChange >= 0 ? "up" : "down"}
           />
           <MetricCard
             title="New Listings"
@@ -165,10 +280,10 @@ export default function DashboardPage() {
           <MetricCard
             title="Win Rate"
             value={`${winRate.toFixed(1)}%`}
-            change={4.5}
-            changeLabel="Steady performance increase"
-            description="Meets growth projections"
-            trend="up"
+            change={winRate > 50 ? +(winRate - 50).toFixed(1) : -(50 - winRate).toFixed(1)}
+            changeLabel={winRate > 50 ? "Above average performance" : "Below average performance"}
+            description={`Based on ${executionHistoryData?.summary?.totalExecutions || 0} trades`}
+            trend={winRate > 50 ? "up" : "down"}
           />
         </div>
 

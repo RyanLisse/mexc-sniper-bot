@@ -27,6 +27,7 @@ export interface TradingOrderData {
 export interface SymbolTickerData {
   symbol: string;
   price: string;
+  lastPrice: string; // Added missing lastPrice property
   priceChange: string;
   priceChangePercent: string;
   volume: string;
@@ -117,11 +118,29 @@ export class UnifiedMexcTradingModule implements TradingService {
    * Get symbol ticker with price information
    */
   async getSymbolTicker(symbol: string): Promise<MexcServiceResponse<SymbolTickerData>> {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       `ticker:${symbol}`,
       () => this.coreClient.getTicker(symbol),
       "realTime" // Short cache for ticker data
     );
+
+    // Ensure both price and lastPrice are available for backward compatibility
+    if (result.success && result.data) {
+      const data = result.data as any;
+      if (!data.lastPrice && data.price) {
+        data.lastPrice = data.price;
+      }
+      if (!data.price && data.lastPrice) {
+        data.price = data.lastPrice;
+      }
+      // If neither exists, ensure both are set to prevent undefined errors
+      if (!data.price && !data.lastPrice) {
+        data.price = "0";
+        data.lastPrice = "0";
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -179,6 +198,11 @@ export class UnifiedMexcTradingModule implements TradingService {
       const ticker = tickerResponse.data;
       const trades = tradesResponse.data;
 
+      // Ensure ticker data is available before proceeding
+      if (!ticker) {
+        throw new Error("Invalid ticker data received");
+      }
+
       // Calculate activity metrics from real trade data
       const activities = trades
         .filter((trade: any) => trade.T && trade.q && trade.p) // Valid trades with timestamp, quantity, price
@@ -188,7 +212,7 @@ export class UnifiedMexcTradingModule implements TradingService {
           const timestamp = trade.T || Date.now();
 
           // Calculate significance based on volume and price movement
-          const avgVolume = parseFloat(ticker.volume) / (24 * 60); // Average per minute
+          const avgVolume = parseFloat(ticker?.volume || "0") / (24 * 60); // Average per minute
           const volumeSignificance = Math.min(volume / (avgVolume * 10), 1); // Relative to 10x average
 
           // Determine activity type based on trade characteristics
@@ -218,7 +242,7 @@ export class UnifiedMexcTradingModule implements TradingService {
           : 0;
 
       // Score based on volume activity and significance (0-1 scale)
-      const volumeScore = Math.min(totalVolume / (parseFloat(ticker.volume) * 0.1), 1);
+      const volumeScore = Math.min(totalVolume / (parseFloat(ticker?.volume || "1") * 0.1), 1);
       const activityScore = volumeScore * 0.6 + avgSignificance * 0.4;
 
       return {
@@ -246,8 +270,11 @@ export class UnifiedMexcTradingModule implements TradingService {
         }
 
         const ticker = tickerResponse.data;
-        const priceChange = parseFloat(ticker.priceChangePercent) || 0;
-        const volume = parseFloat(ticker.volume) || 0;
+        if (!ticker) {
+          throw new Error("Invalid fallback ticker data received");
+        }
+        const priceChange = parseFloat(ticker.priceChangePercent || "0") || 0;
+        const volume = parseFloat(ticker.volume || "0") || 0;
 
         // Create basic activity indicators from ticker data
         const activities = [];
@@ -259,7 +286,7 @@ export class UnifiedMexcTradingModule implements TradingService {
             timestamp: currentTime - 30 * 60 * 1000, // 30 minutes ago
             activityType: priceChange > 0 ? "price_surge" : "price_drop",
             volume: volume * 0.1, // Estimate
-            price: parseFloat(ticker.price) || 0,
+            price: parseFloat(ticker.price || ticker.lastPrice || "0") || 0,
             significance: Math.min(Math.abs(priceChange) / 20, 1),
           });
         }
@@ -269,7 +296,7 @@ export class UnifiedMexcTradingModule implements TradingService {
             timestamp: currentTime - 15 * 60 * 1000, // 15 minutes ago
             activityType: "volume_spike",
             volume: volume * 0.05, // Estimate
-            price: parseFloat(ticker.price) || 0,
+            price: parseFloat(ticker.price || ticker.lastPrice || "0") || 0,
             significance: 0.5,
           });
         }
@@ -499,11 +526,11 @@ export class UnifiedMexcTradingModule implements TradingService {
       // Map internal response to interface format with safe property access
       const mappedData = {
         orderId:
-          result.data && typeof result.data.orderId !== "undefined"
+          result.data && result.data.orderId !== null && result.data.orderId !== undefined
             ? result.data.orderId.toString()
             : `order_${Date.now()}`,
         clientOrderId:
-          result.data && typeof result.data.clientOrderId !== "undefined"
+          result.data && result.data.clientOrderId !== null && result.data.clientOrderId !== undefined
             ? result.data.clientOrderId.toString()
             : undefined,
         symbol: params.symbol,
@@ -513,7 +540,7 @@ export class UnifiedMexcTradingModule implements TradingService {
         price: orderData.price || "0",
         status: result.data && typeof result.data.status === "string" ? result.data.status : "NEW",
         executedQty:
-          result.data && typeof result.data.executedQty !== "undefined"
+          result.data && result.data.executedQty !== null && result.data.executedQty !== undefined
             ? result.data.executedQty.toString()
             : "0",
         timestamp: new Date().toISOString(),
@@ -544,7 +571,12 @@ export class UnifiedMexcTradingModule implements TradingService {
         throw new Error("Failed to get ticker data");
       }
 
-      const price = tickerResponse.data.price ? parseFloat(tickerResponse.data.price) : 0;
+      // Use lastPrice first, then price as fallback
+      const price = tickerResponse.data.lastPrice 
+        ? parseFloat(tickerResponse.data.lastPrice) 
+        : tickerResponse.data.price 
+          ? parseFloat(tickerResponse.data.price) 
+          : 0;
       return price;
     } catch (error) {
       this.logger.error(`Failed to get current price for ${symbol}:`, error);

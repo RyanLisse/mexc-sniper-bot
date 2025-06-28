@@ -176,15 +176,15 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       return {
         success: result.success,
         data: result.data ? {
-          orderId: String(result.data.orderId || orderId),
+          orderId: String(result.data.orderId !== null && result.data.orderId !== undefined ? result.data.orderId : orderId),
           symbol: result.data.symbol || "",
           status: result.data.status || "",
           side: result.data.side as "BUY" | "SELL",
           type: result.data.type || "",
           quantity: result.data.quantity || "0",
           price: result.data.price,
-          executedQuantity: result.data.executedQty || "0",
-          cummulativeQuoteQuantity: result.data.cummulativeQuoteQty || "0",
+          executedQuantity: String(result.data.executedQty !== null && result.data.executedQty !== undefined ? result.data.executedQty : "0"),
+          cummulativeQuoteQuantity: String(result.data.cummulativeQuoteQty !== null && result.data.cummulativeQuoteQty !== undefined ? result.data.cummulativeQuoteQty : "0"),
           timeInForce: result.data.timeInForce,
           timestamp: Date.now(),
         } : undefined,
@@ -215,7 +215,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       return {
         success: result.success,
         data: result.data ? {
-          orderId: String(result.data.orderId || orderId),
+          orderId: String(result.data.orderId !== null && result.data.orderId !== undefined ? result.data.orderId : orderId),
           symbol: result.data.symbol || symbol || "",
           status: result.data.status || "CANCELED",
         } : undefined,
@@ -281,11 +281,11 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       return {
         success: result.success,
         data: result.data ? result.data.map((order: any) => ({
-          orderId: String(order.orderId || ""),
+          orderId: String(order.orderId !== null && order.orderId !== undefined ? order.orderId : ""),
           symbol: order.symbol || "",
           side: order.side as "BUY" | "SELL",
           type: order.type || "",
-          quantity: order.quantity || "0",
+          quantity: String(order.quantity !== null && order.quantity !== undefined ? order.quantity : "0"),
           price: order.price,
           status: order.status || "",
           timestamp: order.timestamp || Date.now(),
@@ -347,6 +347,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     success: boolean;
     data?: Array<{
       symbol: string;
+      price: string;
       lastPrice: string;
       priceChangePercent: string;
       volume: string;
@@ -367,7 +368,8 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
 
         const ticker = {
           symbol: symbols[0],
-          lastPrice: tickerResponse.data?.lastPrice || "0",
+          price: tickerResponse.data?.price || tickerResponse.data?.lastPrice || "0",
+          lastPrice: tickerResponse.data?.lastPrice || tickerResponse.data?.price || "0",
           priceChangePercent: tickerResponse.data?.priceChangePercent || "0",
           volume: tickerResponse.data?.volume || "0",
         };
@@ -395,6 +397,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     success: boolean;
     data?: {
       symbol: string;
+      price: string;
       lastPrice: string;
       priceChangePercent: string;
       volume: string;
@@ -413,7 +416,8 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       success: true,
       data: {
         symbol,
-        lastPrice: tickerResponse.data?.lastPrice || "0",
+        price: tickerResponse.data?.price || tickerResponse.data?.lastPrice || "0",
+        lastPrice: tickerResponse.data?.lastPrice || tickerResponse.data?.price || "0",
         priceChangePercent: tickerResponse.data?.priceChangePercent || "0",
         volume: tickerResponse.data?.volume || "0",
       },
@@ -510,8 +514,37 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     return this.coreModule.getSymbolsForVcoins(vcoinIds);
   }
 
-  async getSymbolsData(): Promise<MexcServiceResponse<SymbolEntry[]>> {
-    return this.coreModule.getSymbolsData();
+  async getSymbolsData(): Promise<{
+    success: boolean;
+    data?: Array<{
+      symbol: string;
+      status: string;
+      baseAsset: string;
+      quoteAsset: string;
+    }>;
+    error?: string;
+  }> {
+    const coreResult = await this.coreModule.getSymbolsData();
+    
+    if (!coreResult.success) {
+      return {
+        success: false,
+        error: coreResult.error || "Failed to get symbols data",
+      };
+    }
+
+    // Transform the core data to match MarketService interface
+    const transformedData = (coreResult.data || []).map((symbol: any) => ({
+      symbol: symbol.symbol || "",
+      status: symbol.sts === 1 ? "TRADING" : "INACTIVE",
+      baseAsset: symbol.symbol ? symbol.symbol.split("USDT")[0] : "",
+      quoteAsset: "USDT", // Most MEXC symbols are against USDT
+    }));
+
+    return {
+      success: true,
+      data: transformedData,
+    };
   }
 
   async getBulkActivityData(
@@ -554,7 +587,16 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
 
   // Account & Portfolio (Portfolio Module)
   async getAccountBalance(): Promise<MexcServiceResponse<BalanceEntry[]>> {
-    return this.portfolioModule.getAccountBalance();
+    const result = await this.portfolioModule.getAccountBalance();
+    
+    // Convert to MexcServiceResponse format with timestamp
+    return {
+      success: result.success,
+      data: result.data as BalanceEntry[],
+      error: result.error,
+      timestamp: Date.now(),
+      source: "unified-mexc-service-v2",
+    };
   }
 
   async getAccountBalances(): Promise<
@@ -567,7 +609,23 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       performance24h: { change: number; changePercent: number };
     }>
   > {
-    return this.portfolioModule.getAccountBalances();
+    const result = await this.portfolioModule.getAccountBalances();
+    
+    // Convert to MexcServiceResponse format with timestamp
+    return {
+      success: result.success,
+      data: result.data as {
+        balances: BalanceEntry[];
+        totalUsdtValue: number;
+        totalValue: number;
+        totalValueBTC: number;
+        allocation: Record<string, number>;
+        performance24h: { change: number; changePercent: number };
+      },
+      error: result.error,
+      timestamp: Date.now(),
+      source: "unified-mexc-service-v2",
+    };
   }
 
   // Trading Methods (Trading Module)
@@ -608,7 +666,22 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       balances: BalanceEntry[];
     }>
   > {
-    return this.portfolioModule.getAccountInfo();
+    const result = await this.portfolioModule.getAccountInfo();
+    
+    // Convert to MexcServiceResponse format with timestamp
+    return {
+      success: result.success,
+      data: result.data as {
+        accountType: string;
+        canTrade: boolean;
+        canWithdraw: boolean;
+        canDeposit: boolean;
+        balances: BalanceEntry[];
+      },
+      error: result.error,
+      timestamp: Date.now(),
+      source: "unified-mexc-service-v2",
+    };
   }
 
   async getTotalPortfolioValue(): Promise<number> {

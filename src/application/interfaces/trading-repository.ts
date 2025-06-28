@@ -239,6 +239,7 @@ export interface MarketService {
     success: boolean;
     data?: Array<{
       symbol: string;
+      price: string;
       lastPrice: string;
       priceChangePercent: string;
       volume: string;
@@ -253,6 +254,7 @@ export interface MarketService {
     success: boolean;
     data?: {
       symbol: string;
+      price: string;
       lastPrice: string;
       priceChangePercent: string;
       volume: string;

@@ -430,6 +430,75 @@ export class MexcMarketDataClient extends MexcClientCore {
     }
   }
 
+  /**
+   * Get kline/candlestick data for historical charts
+   */
+  async getKlines(
+    symbol: string,
+    interval: string = "1d",
+    limit: number = 500,
+    startTime?: number,
+    endTime?: number
+  ): Promise<UnifiedMexcResponse<Array<[number, string, string, string, string, string, number, string, number, string, string]>>> {
+    try {
+      console.info(`[MexcMarketData] Fetching klines for ${symbol} with interval ${interval}, limit ${limit}`);
+
+      // Build endpoint with parameters
+      const params = new URLSearchParams({
+        symbol,
+        interval,
+        limit: limit.toString(),
+      });
+
+      if (startTime) {
+        params.append('startTime', startTime.toString());
+      }
+      if (endTime) {
+        params.append('endTime', endTime.toString());
+      }
+
+      const endpoint = `/api/v3/klines?${params.toString()}`;
+      const response = await this.makeRequest<Array<[number, string, string, string, string, string, number, string, number, string, string]>>(endpoint);
+
+      if (!response.success) {
+        return {
+          success: false,
+          data: [],
+          error: response.error,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Validate that we have array data
+      if (!Array.isArray(response.data)) {
+        return {
+          success: false,
+          data: [],
+          error: "Invalid klines response format",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      console.info(`[MexcMarketData] Retrieved ${response.data.length} kline data points`);
+
+      return {
+        success: true,
+        data: response.data,
+        timestamp: new Date().toISOString(),
+        cached: response.cached,
+        requestId: response.requestId,
+      };
+    } catch (error) {
+      console.error("[MexcMarketData] Klines data failed:", error);
+      return {
+        success: false,
+        data: [],
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
   // ============================================================================
   // Connectivity and Health
   // ============================================================================

@@ -10,7 +10,7 @@
  * - Secure key storage patterns
  */
 
-import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "crypto";
 
 // Constants for cryptographic operations
 const ALGORITHM = "aes-256-gcm";

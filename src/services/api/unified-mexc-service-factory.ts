@@ -104,7 +104,7 @@ class ServiceInstanceCache {
 
   private createCacheKey(apiKey: string, secretKey: string): string {
     // Create a hash to avoid storing credentials in cache key
-    const crypto = require("node:crypto");
+    const crypto = require("crypto");
     return crypto
       .createHash("sha256")
       .update(`${apiKey}:${secretKey}`)

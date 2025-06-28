@@ -5,7 +5,7 @@
  * Extracted from mexc-api-client.ts for better modularity.
  */
 
-import * as crypto from "node:crypto";
+import * as crypto from "crypto";
 import type {
   MexcServiceResponse,
   UnifiedMexcConfig,

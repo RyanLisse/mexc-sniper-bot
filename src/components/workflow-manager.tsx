@@ -50,6 +50,13 @@ interface WorkflowExecution {
   duration?: number;
   error?: string;
   result?: any;
+  metadata?: {
+    type: string;
+    message: string;
+    symbolName?: string;
+    vcoinId?: string;
+    level: string;
+  };
 }
 
 const workflowIcons: Record<string, any> = {
@@ -204,35 +211,30 @@ export function WorkflowManager() {
   });
 
   // Fetch workflow executions
-  const { data: executions } = useQuery<WorkflowExecution[]>({
+  const { data: executionsResponse, isLoading: executionsLoading } = useQuery({
     queryKey: ["workflow-executions", selectedWorkflow, executionFilter],
     queryFn: async () => {
-      if (!selectedWorkflow) return [];
+      if (!selectedWorkflow) return null;
 
-      // Mock execution history
-      const mockExecutions: WorkflowExecution[] = [];
-      for (let i = 0; i < 20; i++) {
-        const status = i % 10 === 0 ? "failed" : i % 5 === 0 ? "running" : "success";
-        mockExecutions.push({
-          id: `exec-${i}`,
-          workflowId: selectedWorkflow,
-          status: status as any,
-          startTime: new Date(Date.now() - i * 30 * 60 * 1000).toISOString(),
-          duration: status === "running" ? undefined : Math.floor(Math.random() * 20000) + 5000,
-          error: status === "failed" ? "Connection timeout to MEXC API" : undefined,
-          result:
-            status === "success"
-              ? { itemsProcessed: Math.floor(Math.random() * 100) + 1 }
-              : undefined,
-        });
+      const params = new URLSearchParams({
+        workflowId: selectedWorkflow,
+        status: executionFilter,
+        limit: "20",
+        offset: "0",
+      });
+
+      const response = await fetch(`/api/workflow-executions?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch workflow executions");
       }
 
-      return mockExecutions.filter(
-        (exec) => executionFilter === "all" || exec.status === executionFilter
-      );
+      return response.json();
     },
     enabled: !!selectedWorkflow,
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  const executions = executionsResponse?.success ? executionsResponse.data.executions : [];
 
   // Trigger workflow
   const triggerWorkflow = useMutation({
@@ -272,11 +274,28 @@ export function WorkflowManager() {
       if (!response.ok) throw new Error("Failed to trigger workflow");
       return response.json();
     },
-    onSuccess: (_, workflowId) => {
+    onSuccess: async (_, workflowId) => {
       toast({
         title: "Workflow Triggered",
         description: `Successfully triggered ${workflows?.find((w) => w.id === workflowId)?.name}`,
       });
+      
+      // Log workflow execution start
+      try {
+        await fetch('/api/workflow-executions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workflowId,
+            type: 'manual_trigger',
+            message: `Workflow ${workflows?.find((w) => w.id === workflowId)?.name} triggered manually`,
+            level: 'info',
+          }),
+        });
+      } catch (error) {
+        console.warn('Failed to log workflow execution:', error);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["workflow-status"] });
       queryClient.invalidateQueries({ queryKey: ["workflow-executions"] });
     },
@@ -571,42 +590,62 @@ export function WorkflowManager() {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-96">
-              <div className="space-y-2">
-                {executions?.map((execution) => (
-                  <div
-                    key={execution.id}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {execution.status === "success" && (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      )}
-                      {execution.status === "failed" && (
-                        <AlertCircle className="h-4 w-4 text-red-500" />
-                      )}
-                      {execution.status === "running" && (
-                        <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
-                      )}
-                      <div>
-                        <p className="text-sm font-medium">
-                          {new Date(execution.startTime).toLocaleString()}
-                        </p>
-                        {execution.error && (
-                          <p className="text-xs text-red-500">{execution.error}</p>
+              {executionsLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">Loading execution history...</span>
+                </div>
+              ) : !executions || executions.length === 0 ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-center text-muted-foreground">
+                    <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No execution history found</p>
+                    <p className="text-xs">Trigger the workflow to see executions</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {executions.map((execution: WorkflowExecution) => (
+                    <div
+                      key={execution.id}
+                      className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        {execution.status === "success" && (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
                         )}
-                        {execution.result && (
-                          <p className="text-xs text-muted-foreground">
-                            Processed {execution.result.itemsProcessed} items
+                        {execution.status === "failed" && (
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        {execution.status === "running" && (
+                          <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
+                        )}
+                        <div>
+                          <p className="text-sm font-medium">
+                            {new Date(execution.startTime).toLocaleString()}
                           </p>
-                        )}
+                          {execution.error && (
+                            <p className="text-xs text-red-500">{execution.error}</p>
+                          )}
+                          {execution.result && (
+                            <p className="text-xs text-muted-foreground">
+                              {execution.result.message || 
+                               (execution.result.itemsProcessed && `Processed ${execution.result.itemsProcessed} items`) ||
+                               "Execution completed successfully"}
+                            </p>
+                          )}
+                          {execution.metadata && execution.metadata.symbolName && (
+                            <p className="text-xs text-blue-500">Symbol: {execution.metadata.symbolName}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {execution.duration ? formatDuration(execution.duration) : "Running..."}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {execution.duration ? formatDuration(execution.duration) : "Running..."}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </ScrollArea>
           </CardContent>
         </Card>

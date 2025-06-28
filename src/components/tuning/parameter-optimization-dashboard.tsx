@@ -66,81 +66,73 @@ interface SystemHealth {
   lastOptimization: Date | null;
 }
 
-// Mock data for development/demo purposes
-const mockPerformanceMetrics = [
-  {
-    timestamp: new Date().toISOString(),
-    operation: "parameter_optimization",
-    responseTime: 250,
-    throughput: 12.5,
-    errorRate: 0.02,
-    successRate: 0.98,
-    cpuUsage: 45,
-    memoryUsage: 512,
-    activeConnections: 8,
-  },
-];
+// Additional interface definitions for real API data
+interface PerformanceMetricsData {
+  timestamp: string;
+  operation: string;
+  responseTime: number;
+  throughput: number;
+  errorRate: number;
+  successRate: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  activeConnections: number;
+}
 
-const mockABTests = [
-  {
-    id: "test-1",
-    name: "Take Profit Optimization",
-    description: "Testing different take profit strategies",
-    status: "completed" as const,
-    startDate: "2024-01-01",
-    endDate: "2024-01-15",
-    variants: [],
-    metrics: {
-      totalParticipants: 1000,
-      duration: 14,
-      significance: 95.2,
-      improvementPercent: 12.5,
-    },
-  },
-];
+interface ABTestData {
+  id: string;
+  name: string;
+  description: string;
+  status: "running" | "completed" | "failed" | "paused";
+  startDate: string;
+  endDate?: string;
+  variants: any[];
+  metrics: {
+    totalParticipants: number;
+    duration: number;
+    significance: number;
+    improvementPercent: number;
+  };
+}
 
-const mockSafetyConstraints = [
-  {
-    id: "max-position-size",
-    name: "Maximum Position Size",
-    description: "Limit maximum position size to prevent overexposure",
-    type: "threshold" as const,
-    category: "risk" as const,
-    severity: "critical" as const,
-    enabled: true,
-    locked: true,
-    value: 10000,
-    defaultValue: 5000,
-    validation: { min: 1000, max: 50000 },
-    currentStatus: "ok" as const,
-    lastChecked: new Date().toISOString(),
-    violationCount: 0,
-  },
-];
+interface SafetyConstraintData {
+  id: string;
+  name: string;
+  description: string;
+  type: "threshold" | "range" | "boolean";
+  category: "risk" | "performance" | "system";
+  severity: "low" | "medium" | "high" | "critical";
+  enabled: boolean;
+  locked: boolean;
+  value: number | boolean;
+  defaultValue: number | boolean;
+  validation: { min?: number; max?: number };
+  currentStatus: "ok" | "warning" | "violation";
+  lastChecked: string;
+  violationCount: number;
+}
 
-const mockOptimizationRuns = [
-  {
-    id: "run-1",
-    name: "Risk Parameter Optimization",
-    algorithm: "Bayesian Optimization",
-    status: "completed" as const,
-    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-    endTime: new Date().toISOString(),
-    progress: 100,
-    currentIteration: 50,
-    maxIterations: 50,
-    bestScore: 0.85,
-    improvementPercent: 15.2,
-    parameters: { riskThreshold: 0.05, positionSize: 5000 },
-    objective: "Maximize Sharpe Ratio",
-    metadata: {
-      totalEvaluations: 500,
-      convergenceReached: true,
-      executionTime: 3600,
-      resourceUsage: { cpu: 45, memory: 512 },
-    },
-  },
-];
+interface OptimizationRunData {
+  id: string;
+  name: string;
+  algorithm: string;
+  status: "running" | "completed" | "failed" | "stopped";
+  startTime: string;
+  endTime?: string;
+  progress: number;
+  currentIteration: number;
+  maxIterations: number;
+  bestScore: number;
+  improvementPercent: number;
+  parameters: Record<string, any>;
+  objective: string;
+  metadata: {
+    totalEvaluations: number;
+    convergenceReached: boolean;
+    executionTime: number;
+    resourceUsage: { cpu: number; memory: number };
+  };
+}
 
 export function ParameterOptimizationDashboard() {
   const [activeOptimizations, setActiveOptimizations] = useState<OptimizationStatus[]>([]);
@@ -149,27 +141,77 @@ export function ParameterOptimizationDashboard() {
   const [_selectedOptimization, _setSelectedOptimization] = useState<string | null>(null);
   const [refreshInterval, _setRefreshInterval] = useState(5000); // 5 seconds
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Additional state for real API data
+  const [performanceMetricsData, setPerformanceMetricsData] = useState<PerformanceMetricsData[]>([]);
+  const [abTestData, setAbTestData] = useState<ABTestData[]>([]);
+  const [safetyConstraints, setSafetyConstraints] = useState<SafetyConstraintData[]>([]);
+  const [optimizationHistory, setOptimizationHistory] = useState<OptimizationRunData[]>([]);
+  const [dataLoadingStates, setDataLoadingStates] = useState({
+    performance: false,
+    abTests: false,
+    safety: false,
+    history: false,
+  });
+  const [dataErrors, setDataErrors] = useState<Record<string, string | null>>({
+    performance: null,
+    abTests: null,
+    safety: null,
+    history: null,
+  });
 
   // Fetch dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
+        
+        // Reset data errors
+        setDataErrors({
+          performance: null,
+          abTests: null,
+          safety: null,
+          history: null,
+        });
 
         // Fetch active optimizations
-        const optimizationsResponse = await fetch("/api/tuning/optimizations");
-        const optimizations = await optimizationsResponse.json();
-        setActiveOptimizations(optimizations);
+        try {
+          const optimizationsResponse = await fetch("/api/tuning/optimizations");
+          if (!optimizationsResponse.ok) {
+            throw new Error(`Failed to fetch optimizations: ${optimizationsResponse.status}`);
+          }
+          const optimizations = await optimizationsResponse.json();
+          setActiveOptimizations(optimizations);
+        } catch (error) {
+          console.error("Failed to fetch active optimizations:", error);
+          setActiveOptimizations([]);
+        }
 
         // Fetch performance metrics
-        const metricsResponse = await fetch("/api/tuning/performance-metrics");
-        const metrics = await metricsResponse.json();
-        setPerformanceMetrics(metrics);
+        try {
+          const metricsResponse = await fetch("/api/tuning/performance-metrics");
+          if (!metricsResponse.ok) {
+            throw new Error(`Failed to fetch performance metrics: ${metricsResponse.status}`);
+          }
+          const metrics = await metricsResponse.json();
+          setPerformanceMetrics(metrics);
+        } catch (error) {
+          console.error("Failed to fetch performance metrics:", error);
+          setPerformanceMetrics(null);
+        }
 
         // Fetch system health
-        const healthResponse = await fetch("/api/tuning/system-health");
-        const health = await healthResponse.json();
-        setSystemHealth(health);
+        try {
+          const healthResponse = await fetch("/api/tuning/system-health");
+          if (!healthResponse.ok) {
+            throw new Error(`Failed to fetch system health: ${healthResponse.status}`);
+          }
+          const health = await healthResponse.json();
+          setSystemHealth(health);
+        } catch (error) {
+          console.error("Failed to fetch system health:", error);
+          setSystemHealth(null);
+        }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
@@ -182,6 +224,61 @@ export function ParameterOptimizationDashboard() {
 
     return () => clearInterval(interval);
   }, [refreshInterval]);
+
+  // Fetch additional data for tabs (performance metrics data, A/B tests, safety constraints, history)
+  const fetchTabData = async (tabType: string) => {
+    setDataLoadingStates(prev => ({ ...prev, [tabType]: true }));
+    setDataErrors(prev => ({ ...prev, [tabType]: null }));
+
+    try {
+      switch (tabType) {
+        case 'performance':
+          const perfResponse = await fetch("/api/tuning/performance-metrics/detailed");
+          if (!perfResponse.ok) {
+            throw new Error(`Failed to fetch detailed performance metrics: ${perfResponse.status}`);
+          }
+          const perfData = await perfResponse.json();
+          setPerformanceMetricsData(perfData);
+          break;
+
+        case 'abTests':
+          const abTestResponse = await fetch("/api/tuning/ab-tests");
+          if (!abTestResponse.ok) {
+            throw new Error(`Failed to fetch A/B tests: ${abTestResponse.status}`);
+          }
+          const abTestData = await abTestResponse.json();
+          setAbTestData(abTestData);
+          break;
+
+        case 'safety':
+          const safetyResponse = await fetch("/api/tuning/safety-constraints");
+          if (!safetyResponse.ok) {
+            throw new Error(`Failed to fetch safety constraints: ${safetyResponse.status}`);
+          }
+          const safetyData = await safetyResponse.json();
+          setSafetyConstraints(safetyData);
+          break;
+
+        case 'history':
+          const historyResponse = await fetch("/api/tuning/optimization-history");
+          if (!historyResponse.ok) {
+            throw new Error(`Failed to fetch optimization history: ${historyResponse.status}`);
+          }
+          const historyData = await historyResponse.json();
+          setOptimizationHistory(historyData);
+          break;
+
+        default:
+          console.warn(`Unknown tab type: ${tabType}`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error(`Failed to fetch ${tabType} data:`, error);
+      setDataErrors(prev => ({ ...prev, [tabType]: errorMessage }));
+    } finally {
+      setDataLoadingStates(prev => ({ ...prev, [tabType]: false }));
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -401,7 +498,18 @@ export function ParameterOptimizationDashboard() {
       )}
 
       {/* Main Dashboard Tabs */}
-      <Tabs defaultValue="control" className="space-y-6">
+      <Tabs defaultValue="control" className="space-y-6" onValueChange={(value) => {
+        // Fetch data when tab is clicked (except for control and parameters which don't need additional data)
+        if (['performance', 'abTests', 'safety', 'history'].includes(value)) {
+          const tabMap: Record<string, string> = {
+            'performance': 'performance',
+            'ab-testing': 'abTests',
+            'safety': 'safety',
+            'history': 'history'
+          };
+          fetchTabData(tabMap[value] || value);
+        }
+      }}>
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="control">Control Panel</TabsTrigger>
           <TabsTrigger value="parameters">Parameters</TabsTrigger>
@@ -423,19 +531,111 @@ export function ParameterOptimizationDashboard() {
         </TabsContent>
 
         <TabsContent value="performance">
-          <PerformanceMetricsView metrics={mockPerformanceMetrics} />
+          {dataLoadingStates.performance ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+                <p className="mt-2 text-gray-600">Loading performance metrics...</p>
+              </div>
+            </div>
+          ) : dataErrors.performance ? (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Failed to load performance metrics: {dataErrors.performance}
+                <Button 
+                  variant="link" 
+                  className="ml-2 p-0 h-auto text-red-600 underline"
+                  onClick={() => fetchTabData('performance')}
+                >
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <PerformanceMetricsView metrics={performanceMetricsData} />
+          )}
         </TabsContent>
 
         <TabsContent value="ab-testing">
-          <ABTestResults tests={mockABTests} />
+          {dataLoadingStates.abTests ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+                <p className="mt-2 text-gray-600">Loading A/B tests...</p>
+              </div>
+            </div>
+          ) : dataErrors.abTests ? (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Failed to load A/B tests: {dataErrors.abTests}
+                <Button 
+                  variant="link" 
+                  className="ml-2 p-0 h-auto text-red-600 underline"
+                  onClick={() => fetchTabData('abTests')}
+                >
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <ABTestResults tests={abTestData} />
+          )}
         </TabsContent>
 
         <TabsContent value="safety">
-          <SafetyConstraints constraints={mockSafetyConstraints} />
+          {dataLoadingStates.safety ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+                <p className="mt-2 text-gray-600">Loading safety constraints...</p>
+              </div>
+            </div>
+          ) : dataErrors.safety ? (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Failed to load safety constraints: {dataErrors.safety}
+                <Button 
+                  variant="link" 
+                  className="ml-2 p-0 h-auto text-red-600 underline"
+                  onClick={() => fetchTabData('safety')}
+                >
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <SafetyConstraints constraints={safetyConstraints} />
+          )}
         </TabsContent>
 
         <TabsContent value="history">
-          <OptimizationHistory runs={mockOptimizationRuns} />
+          {dataLoadingStates.history ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
+                <p className="mt-2 text-gray-600">Loading optimization history...</p>
+              </div>
+            </div>
+          ) : dataErrors.history ? (
+            <Alert className="border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                Failed to load optimization history: {dataErrors.history}
+                <Button 
+                  variant="link" 
+                  className="ml-2 p-0 h-auto text-red-600 underline"
+                  onClick={() => fetchTabData('history')}
+                >
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <OptimizationHistory runs={optimizationHistory} />
+          )}
         </TabsContent>
       </Tabs>
 
