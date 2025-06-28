@@ -79,7 +79,7 @@ export function ConsolidatedCredentialStatus({
     return "success";
   };
 
-  const overallStatus = getOverallStatus();
+  const _overallStatus = getOverallStatus();
 
   // Generate action suggestions based on status
   const getActionSuggestions = () => {

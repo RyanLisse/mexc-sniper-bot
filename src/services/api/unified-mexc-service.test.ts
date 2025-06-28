@@ -23,7 +23,7 @@ const TestConfigSchema = z.object({
 });
 
 // Expected Response Schemas
-const CalendarResponseSchema = z.object({
+const _CalendarResponseSchema = z.object({
   success: z.boolean(),
   data: z.array(
     z.object({
@@ -37,7 +37,7 @@ const CalendarResponseSchema = z.object({
   error: z.string().optional(),
 });
 
-const SymbolsResponseSchema = z.object({
+const _SymbolsResponseSchema = z.object({
   success: z.boolean(),
   data: z.array(
     z.object({
@@ -51,7 +51,7 @@ const SymbolsResponseSchema = z.object({
 });
 
 describe("UnifiedMexcService - TDD Refactoring", () => {
-  let mexcService: any;
+  let _mexcService: any;
   let mockConfig: any;
 
   beforeEach(() => {
@@ -77,7 +77,7 @@ describe("UnifiedMexcService - TDD Refactoring", () => {
   describe("Service Initialization", () => {
     it("should initialize service with valid configuration", async () => {
       // Arrange
-      const validConfig = TestConfigSchema.parse(mockConfig);
+      const _validConfig = TestConfigSchema.parse(mockConfig);
 
       // Act & Assert - This will fail initially (TDD)
       expect(() => {
@@ -100,8 +100,8 @@ describe("UnifiedMexcService - TDD Refactoring", () => {
 
       // Act - Initialize without explicit config
       const configWithoutKeys = { ...mockConfig };
-      delete configWithoutKeys.apiKey;
-      delete configWithoutKeys.secretKey;
+      configWithoutKeys.apiKey = undefined;
+      configWithoutKeys.secretKey = undefined;
 
       // Assert - Should use env vars (will fail initially)
       expect(() => {
@@ -162,7 +162,7 @@ describe("UnifiedMexcService - TDD Refactoring", () => {
 
     it("should fetch calendar listings with proper validation", async () => {
       // Arrange
-      const expectedResponse = {
+      const _expectedResponse = {
         success: true,
         data: [
           {
@@ -198,7 +198,7 @@ describe("UnifiedMexcService - TDD Refactoring", () => {
 
     it("should implement caching for performance", async () => {
       // Arrange
-      const cacheKey = "calendar-listings";
+      const _cacheKey = "calendar-listings";
 
       // Act - First call
       // await mexcService.getCalendarListings();
@@ -285,7 +285,7 @@ describe("UnifiedMexcService - TDD Refactoring", () => {
   describe("Performance Optimizations", () => {
     it("should support TanStack Query integration", () => {
       // Arrange - Check for proper query key factories
-      const expectedQueryKeys = {
+      const _expectedQueryKeys = {
         calendar: expect.any(Function),
         symbols: expect.any(Function),
         serverTime: expect.any(Function),

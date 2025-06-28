@@ -9,6 +9,7 @@ import { and, eq, lt } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
 import { toSafeError } from "@/src/lib/error-type-utils";
+import { TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
 import type {
   AutoSnipeTarget,
   ModuleContext,
@@ -327,13 +328,23 @@ export class AutoSnipingModule {
     this.context.logger.info(`Executing snipe target: ${target.symbolName}`, {
       confidence: target.confidenceScore,
       amount: target.positionSizeUsdt,
+      strategy: target.strategy || "normal",
     });
 
     // Update target status to executing
     await this.updateSnipeTargetStatus(target.id, "executing");
 
     try {
-      // Prepare trade parameters
+      // Initialize trading strategy manager
+      const strategyManager = new TradingStrategyManager(target.strategy || "normal");
+      const strategy = strategyManager.getActiveStrategy();
+
+      this.context.logger.info(`Using strategy: ${strategy.name}`, {
+        levels: strategy.levels.length,
+        firstPhaseTarget: strategy.levels[0]?.percentage,
+      });
+
+      // Prepare trade parameters for initial buy order
       const tradeParams: TradeParameters = {
         symbol: target.symbolName,
         side: "BUY",
@@ -344,21 +355,38 @@ export class AutoSnipingModule {
         confidenceScore: target.confidenceScore,
         stopLossPercent: target.stopLossPercent,
         takeProfitPercent: target.takeProfitCustom,
+        strategy: target.strategy || "normal",
       };
 
-      // Execute the trade through manual trading module
+      // Execute the initial buy order
       const result = await this.executeTradeViaManualModule(tradeParams);
 
       if (result.success) {
-        // Update target status to completed
+        // Update target status to completed (initial order)
         await this.updateSnipeTargetStatus(target.id, "completed");
 
-        // Emit auto-snipe event
-        this.context.eventEmitter.emit("auto_snipe_executed", { target, result });
+        // Set up multi-phase strategy monitoring if trade was successful
+        if (result.data?.executedQty && result.data?.avgPrice) {
+          await this.setupMultiPhaseMonitoring(target, strategy, {
+            entryPrice: parseFloat(result.data.avgPrice),
+            quantity: parseFloat(result.data.executedQty),
+            orderId: result.data.orderId,
+          });
+        }
 
-        this.context.logger.info("Snipe target executed successfully", {
+        // Emit auto-snipe event with strategy info
+        this.context.eventEmitter.emit("auto_snipe_executed", {
+          target,
+          result,
+          strategy: strategy.name,
+        });
+
+        this.context.logger.info("Snipe target executed successfully with strategy", {
           symbol: target.symbolName,
           orderId: result.data?.orderId,
+          strategy: strategy.name,
+          entryPrice: result.data?.avgPrice,
+          quantity: result.data?.executedQty,
         });
       } else {
         // Update target status to failed
@@ -370,6 +398,58 @@ export class AutoSnipingModule {
       const safeError = toSafeError(error);
       await this.updateSnipeTargetStatus(target.id, "failed", safeError.message);
       throw error;
+    }
+  }
+
+  /**
+   * Set up multi-phase strategy monitoring for executed positions
+   */
+  private async setupMultiPhaseMonitoring(
+    target: AutoSnipeTarget,
+    strategy: any,
+    tradeInfo: { entryPrice: number; quantity: number; orderId: string }
+  ): Promise<void> {
+    try {
+      this.context.logger.info(`Setting up multi-phase monitoring for ${target.symbolName}`, {
+        strategy: strategy.name,
+        entryPrice: tradeInfo.entryPrice,
+        quantity: tradeInfo.quantity,
+        levels: strategy.levels.length,
+      });
+
+      // Create monitoring context for this position
+      const monitoringContext = {
+        symbol: target.symbolName,
+        strategyId: strategy.id,
+        entryPrice: tradeInfo.entryPrice,
+        totalQuantity: tradeInfo.quantity,
+        remainingQuantity: tradeInfo.quantity,
+        originalOrderId: tradeInfo.orderId,
+        levels: strategy.levels,
+        executedLevels: [] as number[],
+        createdAt: new Date().toISOString(),
+      };
+
+      // Emit event to start strategy monitoring
+      // This would be handled by a separate strategy monitoring service
+      this.context.eventEmitter.emit("multi_phase_strategy_started", {
+        target,
+        strategy,
+        tradeInfo,
+        monitoringContext,
+      });
+
+      this.context.logger.info(`Multi-phase monitoring initiated for ${target.symbolName}`, {
+        targetLevels: strategy.levels.map((level: any) => `${level.percentage}%`),
+        firstTarget: strategy.levels[0]?.percentage,
+      });
+    } catch (error) {
+      const safeError = toSafeError(error);
+      this.context.logger.error(`Failed to setup multi-phase monitoring for ${target.symbolName}`, {
+        error: safeError.message,
+        strategy: strategy.name,
+      });
+      // Continue execution even if monitoring setup fails
     }
   }
 
@@ -575,12 +655,12 @@ export class AutoSnipingModule {
       const config = this.context.config;
       return (
         config &&
-        typeof config.autoSnipingEnabled === 'boolean' &&
-        typeof config.confidenceThreshold === 'number' &&
+        typeof config.autoSnipingEnabled === "boolean" &&
+        typeof config.confidenceThreshold === "number" &&
         config.confidenceThreshold >= 0 &&
         config.confidenceThreshold <= 100
       );
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -592,7 +672,7 @@ export class AutoSnipingModule {
     try {
       // Basic health check logic
       return this.state.isInitialized && this.state.isHealthy;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -606,7 +686,8 @@ export class AutoSnipingModule {
       totalTrades: this.processedTargets,
       successfulTrades: this.successfulSnipes,
       failedTrades: this.failedSnipes,
-      successRate: this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+      successRate:
+        this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
       timestamp: Date.now(),
     };
   }

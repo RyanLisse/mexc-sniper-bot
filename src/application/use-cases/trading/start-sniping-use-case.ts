@@ -4,12 +4,16 @@
  */
 
 import { z } from "zod";
+import type {
+  NotificationService,
+  TradingRepository,
+  TradingService,
+} from "@/src/application/interfaces/trading-repository";
 import { Trade } from "@/src/domain/entities/trading/trade";
-import type { TradingRepository, TradingService, NotificationService } from "@/src/application/interfaces/trading-repository";
-import { 
-  DomainValidationError, 
+import {
+  BusinessRuleViolationError,
+  DomainValidationError,
   InvalidTradeParametersError,
-  BusinessRuleViolationError 
 } from "@/src/domain/errors/trading-errors";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
@@ -66,7 +70,7 @@ export class StartSnipingUseCase {
       const savedTrade = await this.tradingRepository.saveTrade(trade);
 
       // Start execution
-      const executionResult = await this.executeTradeStart(savedTrade, validatedInput);
+      const _executionResult = await this.executeTradeStart(savedTrade, validatedInput);
 
       // Update trade with execution details
       const updatedTrade = savedTrade.startExecution();
@@ -88,10 +92,9 @@ export class StartSnipingUseCase {
         trade: finalTrade,
         timestamp,
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
-      
+
       this.logger.error("Failed to start auto-sniping", {
         input,
         error: safeError,
@@ -108,14 +111,10 @@ export class StartSnipingUseCase {
 
   private validateInput(input: StartSnipingInput): StartSnipingInput {
     const result = StartSnipingInputSchema.safeParse(input);
-    
+
     if (!result.success) {
       const firstError = result.error.errors[0];
-      throw new DomainValidationError(
-        firstError.path.join("."),
-        input,
-        firstError.message
-      );
+      throw new DomainValidationError(firstError.path.join("."), input, firstError.message);
     }
 
     return result.data;
@@ -132,9 +131,11 @@ export class StartSnipingUseCase {
     }
 
     // Check for active trades on the same symbol for the user
-    const activeTradesForSymbol = await this.tradingRepository.findActiveTradesByUserId(input.userId);
-    const existingTradeForSymbol = activeTradesForSymbol.find(trade => 
-      trade.symbol === input.symbol && trade.isAutoSnipe
+    const activeTradesForSymbol = await this.tradingRepository.findActiveTradesByUserId(
+      input.userId
+    );
+    const existingTradeForSymbol = activeTradesForSymbol.find(
+      (trade) => trade.symbol === input.symbol && trade.isAutoSnipe
     );
 
     if (existingTradeForSymbol) {
@@ -154,7 +155,8 @@ export class StartSnipingUseCase {
 
     // Check maximum concurrent positions
     const activeTrades = await this.tradingRepository.findActiveTradesByUserId(input.userId);
-    if (activeTrades.length >= 10) { // Business rule: max 10 concurrent positions
+    if (activeTrades.length >= 10) {
+      // Business rule: max 10 concurrent positions
       throw new BusinessRuleViolationError(
         "Maximum concurrent positions reached (10)",
         `User: ${input.userId}, Active: ${activeTrades.length}`
@@ -180,7 +182,7 @@ export class StartSnipingUseCase {
     try {
       // Get current market price for reference
       const currentPrice = await this.tradingService.getCurrentPrice(input.symbol);
-      
+
       this.logger.info("Trade execution initialized", {
         tradeId: trade.id,
         symbol: input.symbol,
@@ -191,7 +193,6 @@ export class StartSnipingUseCase {
 
       // The actual trade execution will be handled by the auto-sniping service
       // This use case just sets up the trade record and validates prerequisites
-      
     } catch (error) {
       const safeError = toSafeError(error);
       throw new InvalidTradeParametersError(
@@ -210,7 +211,7 @@ export class StartSnipingUseCase {
   }> {
     try {
       const activeTrades = await this.tradingRepository.findActiveTradesByUserId(userId);
-      const activeSnipeTrades = activeTrades.filter(trade => trade.isAutoSnipe);
+      const activeSnipeTrades = activeTrades.filter((trade) => trade.isAutoSnipe);
       const maxAllowed = 10;
 
       if (activeSnipeTrades.length >= maxAllowed) {
@@ -227,7 +228,6 @@ export class StartSnipingUseCase {
         activeTradesCount: activeSnipeTrades.length,
         maxAllowed,
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to check user sniping eligibility", {

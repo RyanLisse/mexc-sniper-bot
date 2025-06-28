@@ -31,7 +31,7 @@ export class MexcMarketDataClient extends MexcClientCore {
   private exchangeSymbolsCache: ExchangeSymbol[] | null = null;
   private exchangeSymbolsCacheTime = 0;
   private readonly symbolsCacheExpiry = 300000; // 5 minutes
-  private logger = {
+  protected marketLogger = {
     info: (message: string, context?: any) =>
       console.info("[mexc-market-data]", message, context || ""),
     warn: (message: string, context?: any) =>
@@ -437,7 +437,7 @@ export class MexcMarketDataClient extends MexcClientCore {
   /**
    * Test connectivity with error recovery
    */
-  async testConnectivity(): Promise<boolean> {
+  async testConnectivity(): Promise<UnifiedMexcResponse<{ status: string }>> {
     const recoveryService = getGlobalErrorRecoveryService();
 
     try {
@@ -451,23 +451,47 @@ export class MexcMarketDataClient extends MexcClientCore {
 
       const success = Boolean(result.success && result.data?.success);
       console.info("[MexcMarketData] Connectivity test result:", success);
-      return success;
+      return {
+        success: result.success,
+        data: { status: success ? "connected" : "failed" },
+        error: result.error,
+        timestamp: new Date().toISOString(),
+        requestId: result.requestId,
+      };
     } catch (error) {
       console.error("[MexcMarketData] Connectivity test failed:", error);
-      return false;
+      return {
+        success: false,
+        data: { status: "failed" },
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 
   /**
    * Get server time (fallback to local time if API fails)
    */
-  async getServerTime(): Promise<number> {
+  async getServerTime(): Promise<UnifiedMexcResponse<{ serverTime: number }>> {
     try {
       const response = await this.makeRequest<{ serverTime: number }>("/api/v3/time");
-      return response.success ? response.data.serverTime : Date.now();
+      if (response.success) {
+        return response;
+      }
+      return {
+        success: false,
+        data: { serverTime: Date.now() },
+        error: response.error || "Failed to get server time",
+        timestamp: new Date().toISOString(),
+      };
     } catch (error) {
       console.error("[MexcMarketData] Failed to get server time:", error);
-      return Date.now();
+      return {
+        success: false,
+        data: { serverTime: Date.now() },
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 

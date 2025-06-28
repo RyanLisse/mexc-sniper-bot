@@ -159,6 +159,40 @@ export const usePatternSniper = () => {
     setPendingDetection(newPending);
   }, [calendarData, isMonitoring, calendarTargets, pendingDetection]);
 
+  // Convert ready token to snipe target
+  const processReadyToken = useCallback(
+    (vcoinId: string, symbol: SymbolV2Entry, calendar: CalendarEntry): SnipeTarget => {
+      if (!symbol.ot || !symbol.ca) {
+        throw new Error(`Missing required symbol data for ${vcoinId}`);
+      }
+
+      const launchTime = new Date(
+        typeof symbol.ot === "number" || typeof symbol.ot === "string" ? symbol.ot : Date.now()
+      );
+      const hoursAdvance = (launchTime.getTime() - Date.now()) / (1000 * 60 * 60);
+
+      const orderParams: SchemaOrderParameters = {
+        symbol: String(symbol.ca),
+        side: "BUY",
+        type: "MARKET",
+        quantity: "100", // Default $100 USDT (as string)
+      };
+
+      return {
+        vcoinId,
+        symbol: String(symbol.ca),
+        projectName: calendar.projectName,
+        priceDecimalPlaces: symbol.ps || 2,
+        quantityDecimalPlaces: symbol.qs || 6,
+        launchTime,
+        discoveredAt: new Date(),
+        hoursAdvanceNotice: hoursAdvance,
+        orderParameters: orderParams,
+      };
+    },
+    []
+  );
+
   // Process symbols data to detect ready states
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex state processing logic with multiple conditions
   useEffect(() => {
@@ -199,41 +233,14 @@ export const usePatternSniper = () => {
 
     setPendingDetection(newPending);
     setReadyTargets(newReady);
-  }, [symbolsData, pendingDetection, calendarTargets, readyTargets, isMonitoring]);
-
-  // Convert ready token to snipe target
-  const processReadyToken = useCallback(
-    (vcoinId: string, symbol: SymbolV2Entry, calendar: CalendarEntry): SnipeTarget => {
-      if (!symbol.ot || !symbol.ca) {
-        throw new Error(`Missing required symbol data for ${vcoinId}`);
-      }
-
-      const launchTime = new Date(
-        typeof symbol.ot === "number" || typeof symbol.ot === "string" ? symbol.ot : Date.now()
-      );
-      const hoursAdvance = (launchTime.getTime() - Date.now()) / (1000 * 60 * 60);
-
-      const orderParams: SchemaOrderParameters = {
-        symbol: symbol.ca,
-        side: "BUY",
-        type: "MARKET",
-        quantity: "100", // Default $100 USDT (as string)
-      };
-
-      return {
-        vcoinId,
-        symbol: symbol.ca,
-        projectName: calendar.projectName,
-        priceDecimalPlaces: symbol.ps || 2,
-        quantityDecimalPlaces: symbol.qs || 6,
-        launchTime,
-        discoveredAt: new Date(),
-        hoursAdvanceNotice: hoursAdvance,
-        orderParameters: orderParams,
-      };
-    },
-    []
-  );
+  }, [
+    symbolsData,
+    pendingDetection,
+    calendarTargets,
+    readyTargets,
+    isMonitoring,
+    processReadyToken,
+  ]);
 
   // Auto-execution monitoring
   useEffect(() => {
@@ -259,7 +266,7 @@ export const usePatternSniper = () => {
     }, 1000); // Check every second
 
     return () => clearInterval(interval);
-  }, [isMonitoring, readyTargets, executedTargets]);
+  }, [isMonitoring, readyTargets, executedTargets, executeSnipe]);
 
   // Execute snipe order with auto exit manager integration
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex snipe execution logic with multiple error handling and state management

@@ -30,7 +30,7 @@ export const queryClient = new QueryClient({
     queries: {
       staleTime: 2 * 60 * 1000, // 2 minutes - reduced for more up-to-date data
       gcTime: 10 * 60 * 1000, // 10 minutes (previously cacheTime)
-      retry: (failureCount, error) => {
+      retry: (_failureCount, error) => {
         // Don't retry on 4xx errors (client errors)
         if (
           error instanceof Error &&

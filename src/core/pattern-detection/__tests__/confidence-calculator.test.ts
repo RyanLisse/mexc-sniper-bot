@@ -209,7 +209,7 @@ describe("ConfidenceCalculator - TDD Implementation", () => {
         } else {
           expect(aiConfidence).toBeGreaterThan(memeConfidence);
         }
-      } catch (error) {
+      } catch (_error) {
         console.warn("Confidence calculator not fully implemented - skipping comparison");
         expect(true).toBe(true); // Pass the test if implementation is incomplete
       }

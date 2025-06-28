@@ -91,7 +91,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
         if (aiEnhancement > 0) {
           confidence += Math.min(aiEnhancement, 20); // Cap AI boost at 20 points
         }
-      } catch (error) {
+      } catch (_error) {
         // AI enhancement is optional - continue without it
       }
 
@@ -155,7 +155,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
             confidence += 8; // Strong boost for near-term launches with high activity
           }
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue without activity enhancement
       }
 
@@ -242,7 +242,7 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
    */
   validateConfidenceScore(score: number): boolean {
     if (typeof score !== "number") return false;
-    if (isNaN(score) || !isFinite(score)) return false;
+    if (Number.isNaN(score) || !Number.isFinite(score)) return false;
     return score >= 0 && score <= 100;
   }
 
@@ -383,15 +383,17 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       // Import activity service dynamically to avoid circular dependencies
       const { unifiedMexcService } = await import("@/src/services/api/unified-mexc-service-v2");
       const activityResponse = await unifiedMexcService.getRecentActivity(symbol);
-      const recentActivities = activityResponse.success ? activityResponse.data?.activities || [] : [];
+      const recentActivities = activityResponse.success
+        ? activityResponse.data?.activities || []
+        : [];
 
       // Transform RecentActivityData structure to ActivityData structure
       const activities: ActivityData[] = recentActivities.map((activity, index) => ({
-        currency: symbol.replace('USDT', ''),
+        currency: symbol.replace("USDT", ""),
         activityId: `activity-${activity.timestamp}-${index}`,
-        currencyId: `${symbol.replace('USDT', '')}-id`,
+        currencyId: `${symbol.replace("USDT", "")}-id`,
         activityType: activity.activityType.toUpperCase(),
-        symbol: symbol
+        symbol: symbol,
       }));
 
       return activities;

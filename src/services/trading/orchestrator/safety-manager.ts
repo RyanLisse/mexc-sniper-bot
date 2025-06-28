@@ -375,7 +375,7 @@ export class SafetyManager {
         severity: passed ? "info" : "critical",
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         checkType: "account_balance",
         passed: false,
@@ -405,7 +405,7 @@ export class SafetyManager {
         severity: passed ? "info" : "warning",
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         checkType: "position_limits",
         passed: false,
@@ -435,7 +435,7 @@ export class SafetyManager {
         severity: passed ? "info" : "critical",
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         checkType: "risk_exposure",
         passed: false,
@@ -466,7 +466,7 @@ export class SafetyManager {
         severity: passed ? "info" : "critical",
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         checkType: "drawdown_limits",
         passed: false,
@@ -507,7 +507,7 @@ export class SafetyManager {
         severity: passed ? "info" : "warning",
         timestamp: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         checkType: "market_conditions",
         passed: false,
@@ -597,7 +597,7 @@ export class SafetyManager {
   /**
    * Get symbol volatility (simulated)
    */
-  private async getSymbolVolatility(symbol: string): Promise<number> {
+  private async getSymbolVolatility(_symbol: string): Promise<number> {
     return Math.random() * 0.6; // 0-60% volatility
   }
 

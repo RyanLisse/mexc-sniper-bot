@@ -321,7 +321,7 @@ export class CalendarPatternBridgeService {
    */
   private updateStatistics(
     changedEntries: CalendarEntry[],
-    patternCandidates: CalendarEntry[],
+    _patternCandidates: CalendarEntry[],
     processingTime: number
   ): void {
     this.stats.totalEventsProcessed++;

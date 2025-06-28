@@ -1,8 +1,8 @@
 /**
  * Use Case Execution Metrics and Instrumentation
- * 
+ *
  * Phase 3: Clean Architecture Migration - Monitoring & Observability
- * 
+ *
  * This module provides comprehensive instrumentation for use case execution:
  * - Performance metrics collection (latency, errors, throughput)
  * - Distributed tracing for cross-domain operations
@@ -10,8 +10,8 @@
  * - Use case execution wrapper with automatic metrics
  */
 
-import { trace, metrics, context, SpanStatusCode, SpanKind } from '@opentelemetry/api';
-import { z } from 'zod';
+import { context, metrics, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import { z } from "zod";
 
 // ============================================================================
 // Types and Interfaces
@@ -58,7 +58,7 @@ const UseCaseExecutionSchema = z.object({
   correlationId: z.string().optional(),
   domain: z.string().min(1),
   operation: z.string().min(1),
-  version: z.string().default('1.0.0'),
+  version: z.string().default("1.0.0"),
 });
 
 // ============================================================================
@@ -66,34 +66,40 @@ const UseCaseExecutionSchema = z.object({
 // ============================================================================
 
 export class UseCaseMetricsCollector {
-  private readonly tracer = trace.getTracer('use-case-execution', '1.0.0');
-  private readonly meter = metrics.getMeter('use-case-metrics', '1.0.0');
-  
+  private readonly tracer = trace.getTracer("use-case-execution", "1.0.0");
+  private readonly meter = metrics.getMeter("use-case-metrics", "1.0.0");
+
   // Metrics instruments
-  private readonly executionCounter = this.meter.createCounter('use_case_executions_total', {
-    description: 'Total number of use case executions',
+  private readonly executionCounter = this.meter.createCounter("use_case_executions_total", {
+    description: "Total number of use case executions",
   });
 
-  private readonly latencyHistogram = this.meter.createHistogram('use_case_latency_ms', {
-    description: 'Use case execution latency in milliseconds',
-    unit: 'ms',
+  private readonly latencyHistogram = this.meter.createHistogram("use_case_latency_ms", {
+    description: "Use case execution latency in milliseconds",
+    unit: "ms",
   });
 
-  private readonly errorCounter = this.meter.createCounter('use_case_errors_total', {
-    description: 'Total number of use case execution errors',
+  private readonly errorCounter = this.meter.createCounter("use_case_errors_total", {
+    description: "Total number of use case execution errors",
   });
 
-  private readonly businessMetricsGauge = this.meter.createGauge('use_case_business_metrics', {
-    description: 'Business metrics from use case execution',
+  private readonly businessMetricsGauge = this.meter.createGauge("use_case_business_metrics", {
+    description: "Business metrics from use case execution",
   });
 
-  private readonly concurrentExecutionsGauge = this.meter.createGauge('use_case_concurrent_executions', {
-    description: 'Number of concurrent use case executions',
-  });
+  private readonly concurrentExecutionsGauge = this.meter.createGauge(
+    "use_case_concurrent_executions",
+    {
+      description: "Number of concurrent use case executions",
+    }
+  );
 
-  private readonly validationErrorCounter = this.meter.createCounter('use_case_validation_errors_total', {
-    description: 'Total number of input validation errors',
-  });
+  private readonly validationErrorCounter = this.meter.createCounter(
+    "use_case_validation_errors_total",
+    {
+      description: "Total number of input validation errors",
+    }
+  );
 
   private readonly thresholds: UseCasePerformanceThresholds = {
     latencyWarningMs: 1000,
@@ -114,39 +120,39 @@ export class UseCaseMetricsCollector {
   ): Promise<TOutput> {
     // Validate context
     const validatedContext = this.validateContext(useCaseContext);
-    
+
     // Create execution session
     const sessionId = this.createSession(validatedContext);
-    
+
     // Start span for distributed tracing
     const span = this.tracer.startSpan(
       `use-case.${validatedContext.domain}.${validatedContext.operation}`,
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          'use_case.name': validatedContext.useCaseName,
-          'use_case.domain': validatedContext.domain,
-          'use_case.operation': validatedContext.operation,
-          'use_case.version': validatedContext.version,
-          'use_case.user_id': validatedContext.userId,
-          'use_case.correlation_id': validatedContext.correlationId,
+          "use_case.name": validatedContext.useCaseName,
+          "use_case.domain": validatedContext.domain,
+          "use_case.operation": validatedContext.operation,
+          "use_case.version": validatedContext.version,
+          "use_case.user_id": validatedContext.userId,
+          "use_case.correlation_id": validatedContext.correlationId,
         },
       }
     );
 
     const startTime = Date.now();
-    let result: TOutput | undefined = undefined;
+    let result: TOutput | undefined;
     let error: Error | undefined;
-    let inputValidation: UseCaseMetrics['inputValidation'];
+    let inputValidation: UseCaseMetrics["inputValidation"];
 
     try {
       // Validate input if schema is available
       inputValidation = await this.validateInput(input);
-      
+
       if (inputValidation && !inputValidation.valid) {
         this.recordValidationErrors(validatedContext, inputValidation.errors || []);
-        span.setStatus({ code: SpanStatusCode.ERROR, message: 'Input validation failed' });
-        throw new Error(`Input validation failed: ${inputValidation.errors?.join(', ')}`);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: "Input validation failed" });
+        throw new Error(`Input validation failed: ${inputValidation.errors?.join(", ")}`);
       }
 
       // Execute use case in span context (using OpenTelemetry context)
@@ -156,20 +162,18 @@ export class UseCaseMetricsCollector {
       });
 
       span.setStatus({ code: SpanStatusCode.OK });
-      
     } catch (err) {
       error = err instanceof Error ? err : new Error(String(err));
-      span.setStatus({ 
-        code: SpanStatusCode.ERROR, 
-        message: error.message 
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: error.message,
       });
       span.recordException(error);
       // Re-throw error to ensure method doesn't continue to return statement
       throw error;
-      
     } finally {
       const executionTime = Date.now() - startTime;
-      
+
       // Record metrics
       const metrics: UseCaseMetrics = {
         executionTime,
@@ -181,18 +185,18 @@ export class UseCaseMetricsCollector {
       };
 
       this.recordMetrics(validatedContext, metrics);
-      
+
       // Add execution details to span
       span.setAttributes({
-        'use_case.execution_time_ms': executionTime,
-        'use_case.success': !error,
-        'use_case.error_type': error?.constructor.name || '',
-        'use_case.input_valid': inputValidation?.valid || true,
+        "use_case.execution_time_ms": executionTime,
+        "use_case.success": !error,
+        "use_case.error_type": error?.constructor.name || "",
+        "use_case.input_valid": inputValidation?.valid || true,
       });
 
       // End span
       span.end();
-      
+
       // End session
       this.endSession(sessionId);
     }
@@ -217,14 +221,14 @@ export class UseCaseMetricsCollector {
       domain: context.domain,
       operation: context.operation,
       metric: metricName,
-      unit: unit || 'count',
+      unit: unit || "count",
     });
   }
 
   /**
    * Get performance statistics for monitoring dashboard
    */
-  getPerformanceStats(useCaseName?: string): {
+  getPerformanceStats(_useCaseName?: string): {
     totalExecutions: number;
     averageLatency: number;
     errorRate: number;
@@ -256,31 +260,30 @@ export class UseCaseMetricsCollector {
 
   private validateContext(context: UseCaseExecutionContext): UseCaseExecutionContext {
     const result = UseCaseExecutionSchema.safeParse(context);
-    
+
     if (!result.success) {
       throw new Error(`Invalid use case context: ${result.error.errors[0]?.message}`);
     }
-    
+
     return result.data;
   }
 
-  private async validateInput<T>(input: T): Promise<UseCaseMetrics['inputValidation']> {
+  private async validateInput<T>(input: T): Promise<UseCaseMetrics["inputValidation"]> {
     try {
       // Basic validation - would be enhanced with actual schema validation
       if (input === null || input === undefined) {
         return {
           valid: false,
-          errors: ['Input is required'],
+          errors: ["Input is required"],
         };
       }
 
       // Additional validation logic would go here
       return { valid: true };
-      
     } catch (error) {
       return {
         valid: false,
-        errors: [error instanceof Error ? error.message : 'Unknown validation error'],
+        errors: [error instanceof Error ? error.message : "Unknown validation error"],
       };
     }
   }
@@ -288,9 +291,9 @@ export class UseCaseMetricsCollector {
   private createSession(context: UseCaseExecutionContext): string {
     const sessionId = `${context.useCaseName}-${Date.now()}-${Math.random()}`;
     const startTime = Date.now();
-    
+
     this.activeSessions.set(sessionId, startTime);
-    
+
     // Update concurrent executions metric
     this.concurrentExecutionsGauge.record(this.activeSessions.size, {
       use_case: context.useCaseName,
@@ -302,27 +305,24 @@ export class UseCaseMetricsCollector {
 
   private endSession(sessionId: string): void {
     this.activeSessions.delete(sessionId);
-    
+
     // Update concurrent executions metric
     this.concurrentExecutionsGauge.record(this.activeSessions.size);
   }
 
-  private recordMetrics(
-    context: UseCaseExecutionContext,
-    metrics: UseCaseMetrics
-  ): void {
+  private recordMetrics(context: UseCaseExecutionContext, metrics: UseCaseMetrics): void {
     const labels = {
       use_case: context.useCaseName,
       domain: context.domain,
       operation: context.operation,
-      version: context.version || '1.0.0',
+      version: context.version || "1.0.0",
     };
 
     // Record execution count
     this.executionCounter.add(1, {
       ...labels,
       success: metrics.success.toString(),
-      error_type: metrics.errorType || 'none',
+      error_type: metrics.errorType || "none",
     });
 
     // Record latency
@@ -332,7 +332,7 @@ export class UseCaseMetricsCollector {
     if (!metrics.success) {
       this.errorCounter.add(1, {
         ...labels,
-        error_type: metrics.errorType || 'unknown',
+        error_type: metrics.errorType || "unknown",
       });
     }
 
@@ -350,10 +350,7 @@ export class UseCaseMetricsCollector {
     this.checkThresholds(context, metrics);
   }
 
-  private recordValidationErrors(
-    context: UseCaseExecutionContext,
-    errors: string[]
-  ): void {
+  private recordValidationErrors(context: UseCaseExecutionContext, errors: string[]): void {
     this.validationErrorCounter.add(errors.length, {
       use_case: context.useCaseName,
       domain: context.domain,
@@ -363,32 +360,32 @@ export class UseCaseMetricsCollector {
 
   private async extractBusinessMetrics<T>(
     result?: T,
-    error?: Error
+    _error?: Error
   ): Promise<Record<string, number>> {
     const metrics: Record<string, number> = {};
 
     // Extract metrics based on result type
-    if (result && typeof result === 'object') {
+    if (result && typeof result === "object") {
       // Trading domain metrics
-      if ('trade' in result) {
+      if ("trade" in result) {
         metrics.trade_volume = 1;
-        if (result.trade && typeof result.trade === 'object' && 'quantity' in result.trade) {
+        if (result.trade && typeof result.trade === "object" && "quantity" in result.trade) {
           metrics.trade_quantity = Number(result.trade.quantity) || 0;
         }
       }
 
       // Pattern detection metrics
-      if ('confidence' in result) {
+      if ("confidence" in result) {
         metrics.pattern_confidence = Number(result.confidence) || 0;
       }
 
       // Portfolio metrics
-      if ('balance' in result) {
+      if ("balance" in result) {
         metrics.portfolio_value = Number(result.balance) || 0;
       }
 
       // Execution time for specific operations
-      if ('executionTime' in result) {
+      if ("executionTime" in result) {
         metrics.operation_duration = Number(result.executionTime) || 0;
       }
     }
@@ -396,10 +393,7 @@ export class UseCaseMetricsCollector {
     return metrics;
   }
 
-  private checkThresholds(
-    context: UseCaseExecutionContext,
-    metrics: UseCaseMetrics
-  ): void {
+  private checkThresholds(context: UseCaseExecutionContext, metrics: UseCaseMetrics): void {
     // Check latency thresholds
     if (metrics.executionTime > this.thresholds.latencyErrorMs) {
       console.error(`[UseCaseMetrics] High latency detected`, {
@@ -426,25 +420,15 @@ export class UseCaseMetricsCollector {
 /**
  * Decorator function to automatically instrument use case executions
  */
-export function withUseCaseMetrics<TInput, TOutput>(
-  context: UseCaseExecutionContext
-) {
-  return function (
-    target: any,
-    propertyName: string,
-    descriptor: PropertyDescriptor
-  ) {
+export function withUseCaseMetrics<TInput, TOutput>(context: UseCaseExecutionContext) {
+  return (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => {
     const method = descriptor.value;
     const collector = getUseCaseMetricsCollector();
 
     descriptor.value = async function (input: TInput): Promise<TOutput> {
-      return await collector.instrumentUseCaseExecution(
-        context,
-        input,
-        async (validatedInput) => {
-          return await method.call(this, validatedInput);
-        }
-      );
+      return await collector.instrumentUseCaseExecution(context, input, async (validatedInput) => {
+        return await method.call(this, validatedInput);
+      });
     };
 
     return descriptor;
@@ -461,11 +445,7 @@ export function createInstrumentedUseCase<TInput, TOutput>(
   const collector = getUseCaseMetricsCollector();
 
   return async (input: TInput): Promise<TOutput> => {
-    return await collector.instrumentUseCaseExecution(
-      context,
-      input,
-      useCase
-    );
+    return await collector.instrumentUseCaseExecution(context, input, useCase);
   };
 }
 
@@ -491,7 +471,7 @@ export function resetUseCaseMetricsCollector(): void {
 // ============================================================================
 
 export interface UseCaseMetricsHealth {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   totalExecutions: number;
   averageLatency: number;
   errorRate: number;
@@ -503,12 +483,12 @@ export function getUseCaseMetricsHealth(): UseCaseMetricsHealth {
   const collector = getUseCaseMetricsCollector();
   const stats = collector.getPerformanceStats();
 
-  let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-  
+  let status: "healthy" | "degraded" | "unhealthy" = "healthy";
+
   if (stats.errorRate > 10 || stats.averageLatency > 5000) {
-    status = 'unhealthy';
+    status = "unhealthy";
   } else if (stats.errorRate > 5 || stats.averageLatency > 1000) {
-    status = 'degraded';
+    status = "degraded";
   }
 
   return {

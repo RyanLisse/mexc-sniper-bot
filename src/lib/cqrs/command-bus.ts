@@ -1,12 +1,12 @@
 /**
  * CQRS Command Bus Implementation
- * 
+ *
  * Handles command execution with validation, authorization, and event emission.
  * Part of Phase 3 Production Readiness - Event Sourcing and CQRS patterns.
  */
 
-import { EventEmitter } from "events";
-import { eventStoreManager, EventFactory, type DomainEvent } from "../event-sourcing/event-store";
+import { EventEmitter } from "node:events";
+import { type DomainEvent, EventFactory, eventStoreManager } from "../event-sourcing/event-store";
 
 // Base Command Interface
 export interface Command {
@@ -56,20 +56,14 @@ export class CommandBus extends EventEmitter {
   /**
    * Register command handler
    */
-  registerHandler<T extends Command>(
-    commandType: string,
-    handler: CommandHandler<T>
-  ): void {
+  registerHandler<T extends Command>(commandType: string, handler: CommandHandler<T>): void {
     this.handlers.set(commandType, handler);
   }
 
   /**
    * Register command validator
    */
-  registerValidator<T extends Command>(
-    commandType: string,
-    validator: CommandValidator<T>
-  ): void {
+  registerValidator<T extends Command>(commandType: string, validator: CommandValidator<T>): void {
     this.validators.set(commandType, validator);
   }
 
@@ -164,10 +158,7 @@ export class CommandBus extends EventEmitter {
  * Command Middleware Interface
  */
 export interface CommandMiddleware {
-  execute<T extends Command>(
-    command: T,
-    next: (command: T) => Promise<T>
-  ): Promise<T | null>;
+  execute<T extends Command>(command: T, next: (command: T) => Promise<T>): Promise<T | null>;
 }
 
 /**
@@ -211,12 +202,12 @@ export class AuthorizationMiddleware implements CommandMiddleware {
     next: (command: T) => Promise<T>
   ): Promise<T | null> {
     const requiredRoles = this.permissions.get(command.type);
-    
+
     if (requiredRoles && requiredRoles.length > 0) {
       // In real implementation, check user roles from auth service
       const userRoles = await this.getUserRoles(command.metadata.userId);
-      
-      const hasPermission = requiredRoles.some(role => userRoles.includes(role));
+
+      const hasPermission = requiredRoles.some((role) => userRoles.includes(role));
       if (!hasPermission) {
         console.warn(`[AUTH] Access denied for command: ${command.type}`, {
           userId: command.metadata.userId,

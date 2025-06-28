@@ -91,30 +91,24 @@ export function withAuth(handler: Function, _requiredRole = "user") {
     // Extract and validate authentication headers
     const authHeader = request.headers.get("authorization");
     const apiKey = request.headers.get("x-api-key");
-    
+
     // Check for valid authentication
     if (!authHeader && !apiKey) {
-      return new Response(
-        JSON.stringify({ error: "Authentication required" }), 
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
-    
+
     // For now, accept any bearer token or API key
     // Future: Implement proper token validation
     const isAuthenticated = authHeader?.startsWith("Bearer ") || Boolean(apiKey);
-    
+
     if (!isAuthenticated) {
-      return new Response(
-        JSON.stringify({ error: "Invalid authentication credentials" }), 
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Invalid authentication credentials" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
     return handler(request);
   };

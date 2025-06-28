@@ -4,7 +4,7 @@
  * Handles market research using Perplexity and other AI providers
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Research result schema
 export const ResearchResultSchema = z.object({
@@ -28,7 +28,7 @@ export class ResearchService {
    */
   async conductMarketResearch(query: string): Promise<ResearchResult> {
     const cacheKey = `research_${query}`;
-    
+
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
@@ -37,15 +37,11 @@ export class ResearchService {
     const result: ResearchResult = {
       query,
       findings: [
-        'Market shows bullish sentiment',
-        'Trading volume increasing',
-        'Technical indicators suggest upward trend',
+        "Market shows bullish sentiment",
+        "Trading volume increasing",
+        "Technical indicators suggest upward trend",
       ],
-      sources: [
-        'CoinGecko API',
-        'Binance Market Data',
-        'Technical Analysis',
-      ],
+      sources: ["CoinGecko API", "Binance Market Data", "Technical Analysis"],
       confidence: Math.random() * 0.3 + 0.7, // 0.7-1.0
       timestamp: Date.now(),
     };

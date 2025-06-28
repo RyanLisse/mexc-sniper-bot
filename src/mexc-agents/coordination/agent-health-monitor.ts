@@ -1,6 +1,4 @@
-// Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type { AgentResponse } from "../base-agent";
-import type { AgentHealth, AgentStatus, RegisteredAgent } from "./agent-registry-core";
+import type { RegisteredAgent } from "./agent-registry-core";
 
 export interface HealthCheckResult {
   success: boolean;

@@ -98,7 +98,7 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       totalUsdtValue: 0,
       lastUpdated: new Date().toISOString(),
     }, // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {

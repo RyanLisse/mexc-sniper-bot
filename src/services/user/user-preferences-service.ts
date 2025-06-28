@@ -1,23 +1,25 @@
 /**
  * User Preferences Service
- * 
+ *
  * Manages user configuration and preferences for trading operations
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // User Preferences Schema
 export const UserPreferencesSchema = z.object({
   id: z.string(),
   userId: z.string(),
-  riskTolerance: z.enum(['low', 'medium', 'high']).default('medium'),
+  riskTolerance: z.enum(["low", "medium", "high"]).default("medium"),
   maxPositionSize: z.number().min(0).max(100).default(10),
   autoTradingEnabled: z.boolean().default(false),
-  notificationSettings: z.object({
-    email: z.boolean().default(true),
-    webhook: z.boolean().default(false),
-    urgentOnly: z.boolean().default(false),
-  }).default({}),
+  notificationSettings: z
+    .object({
+      email: z.boolean().default(true),
+      webhook: z.boolean().default(false),
+      urgentOnly: z.boolean().default(false),
+    })
+    .default({}),
   tradingPairs: z.array(z.string()).default([]),
   stopLossPercentage: z.number().min(0).max(50).default(5),
   takeProfitPercentage: z.number().min(1).max(100).default(15),
@@ -42,7 +44,10 @@ export class UserPreferencesService {
     return this.preferences.get(userId) || null;
   }
 
-  async updateUserPreferences(userId: string, updates: Partial<UserPreferences>): Promise<UserPreferences> {
+  async updateUserPreferences(
+    userId: string,
+    updates: Partial<UserPreferences>
+  ): Promise<UserPreferences> {
     const existing = this.preferences.get(userId);
     const updated = {
       ...existing,
@@ -57,7 +62,10 @@ export class UserPreferencesService {
     return validated;
   }
 
-  async createUserPreferences(userId: string, preferences: Partial<UserPreferences> = {}): Promise<UserPreferences> {
+  async createUserPreferences(
+    userId: string,
+    preferences: Partial<UserPreferences> = {}
+  ): Promise<UserPreferences> {
     const newPreferences = UserPreferencesSchema.parse({
       ...preferences,
       id: `pref_${userId}`,

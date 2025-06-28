@@ -418,16 +418,16 @@ export class EnhancedCredentialValidator {
       const dbModule = await import("@/src/db");
       const schemaModule = await import("@/src/db/schema");
       const drizzleModule = await import("drizzle-orm");
-      
+
       const { db } = dbModule;
       const { apiCredentials } = schemaModule;
       const { eq, and } = drizzleModule;
-      
+
       // Get user ID from request context or headers
       // Note: This would typically come from authenticated session
       // For now, we'll return the environment-based credentials
       // Future: Implement proper user session context to get userId
-      
+
       // Example query structure (commented out until user context is available):
       // const userCreds = await db
       //   .select({
@@ -443,11 +443,16 @@ export class EnhancedCredentialValidator {
       //     )
       //   )
       //   .limit(1);
-      
+
       // For now, fall back to environment credentials
-      console.info("[enhanced-mexc-credential-validator] Database credential retrieval prepared, using environment fallback");
+      console.info(
+        "[enhanced-mexc-credential-validator] Database credential retrieval prepared, using environment fallback"
+      );
     } catch (error) {
-      console.warn("[enhanced-mexc-credential-validator] Database credential retrieval failed:", error);
+      console.warn(
+        "[enhanced-mexc-credential-validator] Database credential retrieval failed:",
+        error
+      );
       // Continue with environment fallback
     }
 
@@ -569,7 +574,9 @@ export class EnhancedCredentialValidator {
   }
 
   private shouldAttemptReset(): boolean {
-    return !!(this.circuitBreaker.nextAttemptTime && new Date() >= this.circuitBreaker.nextAttemptTime);
+    return !!(
+      this.circuitBreaker.nextAttemptTime && new Date() >= this.circuitBreaker.nextAttemptTime
+    );
   }
 
   private resetCircuitBreaker(): void {

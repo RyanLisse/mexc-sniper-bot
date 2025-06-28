@@ -5,7 +5,7 @@
  * Extracted from the original monolithic implementation for better maintainability.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { toSafeError } from "../../../lib/error-type-utils";
 import { PatternProcessor } from "./pattern-processor";
 import { PositionMonitor } from "./position-monitor";

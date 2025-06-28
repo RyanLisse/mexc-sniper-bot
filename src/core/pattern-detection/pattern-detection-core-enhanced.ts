@@ -7,7 +7,7 @@
  * This completes the missing bridge: Pattern Detection → Event Emission → Target Creation
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
 import { ConfidenceCalculator } from "./confidence-calculator";

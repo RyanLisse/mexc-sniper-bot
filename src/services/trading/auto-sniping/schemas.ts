@@ -4,24 +4,23 @@
  * Validation schemas for auto-sniping functionality.
  */
 
-// Re-export core trading schemas
-export {
-  AutoSnipeTargetSchema,
-  TradeResultSchema,
-  TradeParametersSchema,
-  CoreTradingConfigSchema,
-  ServiceStatusSchema,
-  PerformanceMetricsSchema,
-} from "../consolidated/core-trading.types";
-
 // Re-export types
 export type {
   AutoSnipeTarget,
-  TradeResult,
-  TradeParameters,
   CoreTradingConfig,
-  ServiceStatus,
   PerformanceMetrics,
+  ServiceStatus,
+  TradeParameters,
+  TradeResult,
+} from "../consolidated/core-trading.types";
+// Re-export core trading schemas
+export {
+  AutoSnipeTargetSchema,
+  CoreTradingConfigSchema,
+  PerformanceMetricsSchema,
+  ServiceStatusSchema,
+  TradeParametersSchema,
+  TradeResultSchema,
 } from "../consolidated/core-trading.types";
 
 // Additional auto-sniping specific schemas
@@ -60,10 +59,10 @@ export function validateAutoSnipingConfig(config: unknown): AutoSnipingConfig {
 
 export function validateExecutionPosition(position: unknown): any {
   // Simple validation for execution position - return the position if valid
-  if (typeof position === 'object' && position !== null) {
+  if (typeof position === "object" && position !== null) {
     return position;
   }
-  throw new Error('Invalid execution position');
+  throw new Error("Invalid execution position");
 }
 
 export function validateAutoSnipingMetrics(metrics: unknown): metrics is AutoSnipingMetrics {

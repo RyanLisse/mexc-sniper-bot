@@ -14,7 +14,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "@/src/core/pattern-detection";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { AutoSnipingConfig, ExecutionPosition } from "./optimized-auto-sniping-core";
+import type { ExecutionPosition } from "./optimized-auto-sniping-core";
 
 // ============================================================================
 // Risk Management Schemas
@@ -566,7 +566,6 @@ export class OptimizedRiskManager {
         return "block";
       case "medium":
         return riskScore > 40 ? "warn" : "allow";
-      case "low":
       default:
         return "allow";
     }
@@ -609,7 +608,7 @@ export class OptimizedRiskManager {
 
   private calculateMaxSafePositionSize(
     pattern: PatternMatch,
-    activePositions: ExecutionPosition[],
+    _activePositions: ExecutionPosition[],
     riskScore: number
   ): number {
     let maxSize = this.riskLimits.maxPositionSize;
@@ -626,8 +625,8 @@ export class OptimizedRiskManager {
   }
 
   private calculateOptimalStopLoss(
-    pattern: PatternMatch,
-    positionSize: number
+    _pattern: PatternMatch,
+    _positionSize: number
   ): number | undefined {
     if (this.stopLossConfig.type === "percentage") {
       // Assuming we have a current price (would be fetched in real implementation)
@@ -638,8 +637,8 @@ export class OptimizedRiskManager {
   }
 
   private calculateOptimalTakeProfit(
-    pattern: PatternMatch,
-    positionSize: number
+    _pattern: PatternMatch,
+    _positionSize: number
   ): number | undefined {
     if (this.takeProfitConfig.type === "percentage") {
       // Assuming we have a current price (would be fetched in real implementation)
@@ -651,7 +650,7 @@ export class OptimizedRiskManager {
 
   private calculateTrailingStopLoss(
     currentPrice: number,
-    entryPrice: number,
+    _entryPrice: number,
     currentStopLoss: number
   ): number {
     const trailingDistance = this.stopLossConfig.trailingDistance || 5; // 5% default

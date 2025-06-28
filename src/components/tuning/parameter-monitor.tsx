@@ -122,6 +122,18 @@ export function ParameterMonitor() {
       }
     };
 
+    const calculateTrend = (changes: ParameterChange[]): "up" | "down" | "stable" => {
+      if (changes.length < 2) return "stable";
+
+      const recent = changes.slice(0, 2);
+      const current = typeof recent[0].newValue === "number" ? recent[0].newValue : 0;
+      const previous = typeof recent[1].newValue === "number" ? recent[1].newValue : 0;
+
+      if (current > previous) return "up";
+      if (current < previous) return "down";
+      return "stable";
+    };
+
     fetchParameters();
     const interval = setInterval(fetchParameters, 10000); // Update every 10 seconds
 
@@ -146,18 +158,6 @@ export function ParameterMonitor() {
 
     setFilteredParameters(filtered);
   }, [parameters, selectedCategory, searchTerm]);
-
-  const calculateTrend = (changes: ParameterChange[]): "up" | "down" | "stable" => {
-    if (changes.length < 2) return "stable";
-
-    const recent = changes.slice(0, 2);
-    const current = typeof recent[0].newValue === "number" ? recent[0].newValue : 0;
-    const previous = typeof recent[1].newValue === "number" ? recent[1].newValue : 0;
-
-    if (current > previous) return "up";
-    if (current < previous) return "down";
-    return "stable";
-  };
 
   const handleEdit = (parameterName: string, currentValue: any) => {
     setEditingParameter(parameterName);

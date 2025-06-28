@@ -79,7 +79,7 @@ const defaultErrorLogger: ErrorLogger = {
 
 const errorLogger: ErrorLogger = defaultErrorLogger;
 
-export function setErrorLogger(logger: any) {
+export function setErrorLogger(_logger: any) {
   // Logger setter implementation
 }
 // ============================================================================

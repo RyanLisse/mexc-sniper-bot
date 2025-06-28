@@ -2,40 +2,42 @@
 
 /**
  * Feature Flag Dashboard
- * 
+ *
  * Comprehensive dashboard for managing feature flags with rollout controls,
  * A/B testing, and real-time monitoring.
  */
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Badge } from '@/src/components/ui/badge';
-import { Button } from '@/src/components/ui/button';
-import { Progress } from '@/src/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { Input } from '@/src/components/ui/input';
-import { Label } from '@/src/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
-import { Switch } from '@/src/components/ui/switch';
-import { Textarea } from '@/src/components/ui/textarea';
 import {
-  Flag,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Play,
-  Pause,
-  StopCircle,
-  BarChart3,
-  Settings,
-  Eye,
-  Clock,
-  Target,
-  FlaskConical,
-  Shield,
   Activity,
-} from 'lucide-react';
+  AlertTriangle,
+  BarChart3,
+  Eye,
+  Flag,
+  FlaskConical,
+  Pause,
+  Play,
+  StopCircle,
+  Target,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Input } from "@/src/components/ui/input";
+import { Label } from "@/src/components/ui/label";
+import { Progress } from "@/src/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { Textarea } from "@/src/components/ui/textarea";
 
 interface FeatureFlagConfig {
   name: string;
@@ -76,19 +78,19 @@ export function FeatureFlagDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [selectedFlag, setSelectedFlag] = useState<string | null>(null);
   const [newFlagForm, setNewFlagForm] = useState({
-    name: '',
-    description: '',
-    strategy: 'percentage',
+    name: "",
+    description: "",
+    strategy: "percentage",
     enabled: false,
     percentage: 0,
-    environments: ['development'],
+    environments: ["development"],
   });
 
   // Fetch feature flags data
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/feature-flags?analytics=true');
+      const response = await fetch("/api/feature-flags?analytics=true");
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -96,7 +98,7 @@ export function FeatureFlagDashboard() {
       setData(result.data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch feature flags');
+      setError(err instanceof Error ? err.message : "Failed to fetch feature flags");
     } finally {
       setLoading(false);
     }
@@ -105,12 +107,12 @@ export function FeatureFlagDashboard() {
   // Update feature flag
   const updateFlag = async (flagName: string, updates: any) => {
     try {
-      const response = await fetch('/api/feature-flags', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/feature-flags", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           flagName,
-          action: 'update',
+          action: "update",
           ...updates,
         }),
       });
@@ -121,20 +123,20 @@ export function FeatureFlagDashboard() {
 
       await fetchData(); // Refresh data
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update flag');
+      setError(err instanceof Error ? err.message : "Failed to update flag");
     }
   };
 
   // Emergency disable flag
   const emergencyDisable = async (flagName: string) => {
     try {
-      const response = await fetch('/api/feature-flags', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/feature-flags", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           flagName,
-          action: 'emergency_disable',
-          reason: 'Emergency disable from dashboard',
+          action: "emergency_disable",
+          reason: "Emergency disable from dashboard",
         }),
       });
 
@@ -144,20 +146,20 @@ export function FeatureFlagDashboard() {
 
       await fetchData(); // Refresh data
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to disable flag');
+      setError(err instanceof Error ? err.message : "Failed to disable flag");
     }
   };
 
   // Create new feature flag
   const createFlag = async () => {
     try {
-      const response = await fetch('/api/feature-flags', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/feature-flags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: 'create',
+          action: "create",
           ...newFlagForm,
-          createdBy: 'dashboard',
+          createdBy: "dashboard",
         }),
       });
 
@@ -166,17 +168,17 @@ export function FeatureFlagDashboard() {
       }
 
       setNewFlagForm({
-        name: '',
-        description: '',
-        strategy: 'percentage',
+        name: "",
+        description: "",
+        strategy: "percentage",
         enabled: false,
         percentage: 0,
-        environments: ['development'],
+        environments: ["development"],
       });
 
       await fetchData(); // Refresh data
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create flag');
+      setError(err instanceof Error ? err.message : "Failed to create flag");
     }
   };
 
@@ -184,7 +186,7 @@ export function FeatureFlagDashboard() {
     fetchData();
     const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchData]);
 
   if (loading && !data) {
     return (
@@ -219,24 +221,37 @@ export function FeatureFlagDashboard() {
 
   const getStrategyIcon = (strategy: string) => {
     switch (strategy) {
-      case 'all_users': return <Users className="h-4 w-4" />;
-      case 'percentage': return <BarChart3 className="h-4 w-4" />;
-      case 'a_b_test': return <FlaskConical className="h-4 w-4" />;
-      case 'gradual': return <TrendingUp className="h-4 w-4" />;
-      case 'canary': return <Target className="h-4 w-4" />;
-      default: return <Flag className="h-4 w-4" />;
+      case "all_users":
+        return <Users className="h-4 w-4" />;
+      case "percentage":
+        return <BarChart3 className="h-4 w-4" />;
+      case "a_b_test":
+        return <FlaskConical className="h-4 w-4" />;
+      case "gradual":
+        return <TrendingUp className="h-4 w-4" />;
+      case "canary":
+        return <Target className="h-4 w-4" />;
+      default:
+        return <Flag className="h-4 w-4" />;
     }
   };
 
   const getStrategyColor = (strategy: string) => {
     switch (strategy) {
-      case 'all_users': return 'bg-green-100 text-green-800';
-      case 'percentage': return 'bg-blue-100 text-blue-800';
-      case 'a_b_test': return 'bg-purple-100 text-purple-800';
-      case 'gradual': return 'bg-yellow-100 text-yellow-800';
-      case 'canary': return 'bg-orange-100 text-orange-800';
-      case 'disabled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "all_users":
+        return "bg-green-100 text-green-800";
+      case "percentage":
+        return "bg-blue-100 text-blue-800";
+      case "a_b_test":
+        return "bg-purple-100 text-purple-800";
+      case "gradual":
+        return "bg-yellow-100 text-yellow-800";
+      case "canary":
+        return "bg-orange-100 text-orange-800";
+      case "disabled":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -257,9 +272,7 @@ export function FeatureFlagDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            {data.count} flags
-          </Badge>
+          <Badge variant="outline">{data.count} flags</Badge>
           <Button onClick={fetchData} variant="outline" size="sm">
             <Activity className="h-4 w-4 mr-1" />
             Refresh
@@ -323,9 +336,12 @@ export function FeatureFlagDashboard() {
           <div className="grid gap-4">
             {flags.map(([flagName, flag]) => {
               const flagAnalytics = data.analytics.byFlag[flagName];
-              
+
               return (
-                <Card key={flagName} className={selectedFlag === flagName ? "ring-2 ring-blue-500" : ""}>
+                <Card
+                  key={flagName}
+                  className={selectedFlag === flagName ? "ring-2 ring-blue-500" : ""}
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -350,7 +366,9 @@ export function FeatureFlagDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedFlag(selectedFlag === flagName ? null : flagName)}
+                          onClick={() =>
+                            setSelectedFlag(selectedFlag === flagName ? null : flagName)
+                          }
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -359,7 +377,11 @@ export function FeatureFlagDashboard() {
                           size="sm"
                           onClick={() => updateFlag(flagName, { enabled: !flag.enabled })}
                         >
-                          {flag.enabled ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                          {flag.enabled ? (
+                            <Pause className="h-4 w-4" />
+                          ) : (
+                            <Play className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           variant="destructive"
@@ -374,10 +396,10 @@ export function FeatureFlagDashboard() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-600 mb-4">{flag.description}</p>
-                    
+
                     {/* Flag Configuration */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      {flag.strategy === 'percentage' && flag.percentage !== undefined && (
+                      {flag.strategy === "percentage" && flag.percentage !== undefined && (
                         <div>
                           <Label className="text-sm font-medium">Rollout %</Label>
                           <div className="mt-1">
@@ -386,11 +408,11 @@ export function FeatureFlagDashboard() {
                           </div>
                         </div>
                       )}
-                      
+
                       <div>
                         <Label className="text-sm font-medium">Environments</Label>
                         <div className="mt-1 flex gap-1">
-                          {flag.environments?.map(env => (
+                          {flag.environments?.map((env) => (
                             <Badge key={env} variant="outline" className="text-xs">
                               {env}
                             </Badge>
@@ -400,15 +422,13 @@ export function FeatureFlagDashboard() {
 
                       <div>
                         <Label className="text-sm font-medium">Created</Label>
-                        <div className="text-sm text-gray-600">
-                          {formatDate(flag.createdAt)}
-                        </div>
+                        <div className="text-sm text-gray-600">{formatDate(flag.createdAt)}</div>
                       </div>
 
                       <div>
                         <Label className="text-sm font-medium">Tags</Label>
                         <div className="mt-1 flex gap-1">
-                          {flag.tags.map(tag => (
+                          {flag.tags.map((tag) => (
                             <Badge key={tag} variant="outline" className="text-xs">
                               {tag}
                             </Badge>
@@ -449,7 +469,9 @@ export function FeatureFlagDashboard() {
                               min="0"
                               max="100"
                               value={flag.percentage || 0}
-                              onChange={(e) => updateFlag(flagName, { percentage: parseInt(e.target.value) })}
+                              onChange={(e) =>
+                                updateFlag(flagName, { percentage: parseInt(e.target.value) })
+                              }
                             />
                           </div>
                           <div>
@@ -472,22 +494,26 @@ export function FeatureFlagDashboard() {
                             </Select>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-4">
                           <div className="flex items-center space-x-2">
                             <Switch
                               id={`${flagName}-tracking`}
                               checked={flag.trackingEnabled}
-                              onCheckedChange={(checked) => updateFlag(flagName, { trackingEnabled: checked })}
+                              onCheckedChange={(checked) =>
+                                updateFlag(flagName, { trackingEnabled: checked })
+                              }
                             />
                             <Label htmlFor={`${flagName}-tracking`}>Tracking Enabled</Label>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <Switch
                               id={`${flagName}-rollback`}
                               checked={flag.rollbackOnError}
-                              onCheckedChange={(checked) => updateFlag(flagName, { rollbackOnError: checked })}
+                              onCheckedChange={(checked) =>
+                                updateFlag(flagName, { rollbackOnError: checked })
+                              }
                             />
                             <Label htmlFor={`${flagName}-rollback`}>Auto Rollback</Label>
                           </div>
@@ -518,7 +544,7 @@ export function FeatureFlagDashboard() {
                     placeholder="my_new_feature"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="flag-strategy">Strategy</Label>
                   <Select
@@ -549,7 +575,7 @@ export function FeatureFlagDashboard() {
                 />
               </div>
 
-              {newFlagForm.strategy === 'percentage' && (
+              {newFlagForm.strategy === "percentage" && (
                 <div>
                   <Label htmlFor="flag-percentage">Initial Percentage</Label>
                   <Input
@@ -558,7 +584,9 @@ export function FeatureFlagDashboard() {
                     min="0"
                     max="100"
                     value={newFlagForm.percentage}
-                    onChange={(e) => setNewFlagForm({ ...newFlagForm, percentage: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setNewFlagForm({ ...newFlagForm, percentage: parseInt(e.target.value) })
+                    }
                   />
                 </div>
               )}
@@ -567,7 +595,9 @@ export function FeatureFlagDashboard() {
                 <Switch
                   id="flag-enabled"
                   checked={newFlagForm.enabled}
-                  onCheckedChange={(checked) => setNewFlagForm({ ...newFlagForm, enabled: checked })}
+                  onCheckedChange={(checked) =>
+                    setNewFlagForm({ ...newFlagForm, enabled: checked })
+                  }
                 />
                 <Label htmlFor="flag-enabled">Enable immediately</Label>
               </div>
@@ -584,9 +614,9 @@ export function FeatureFlagDashboard() {
           <div className="grid gap-4">
             {flags.map(([flagName, flag]) => {
               const flagAnalytics = data.analytics.byFlag[flagName];
-              
+
               if (!flagAnalytics || flagAnalytics.evaluations === 0) return null;
-              
+
               return (
                 <Card key={flagName}>
                   <CardHeader>
@@ -601,12 +631,12 @@ export function FeatureFlagDashboard() {
                         <Label className="text-sm font-medium">Total Evaluations</Label>
                         <div className="text-2xl font-bold">{flagAnalytics.evaluations}</div>
                       </div>
-                      
+
                       <div>
                         <Label className="text-sm font-medium">Times Enabled</Label>
                         <div className="text-2xl font-bold">{flagAnalytics.enabledCount}</div>
                       </div>
-                      
+
                       <div>
                         <Label className="text-sm font-medium">Enable Rate</Label>
                         <div className="text-2xl font-bold">
@@ -614,14 +644,13 @@ export function FeatureFlagDashboard() {
                         </div>
                         <Progress value={flagAnalytics.enabledRate * 100} className="h-2 mt-1" />
                       </div>
-                      
+
                       <div>
                         <Label className="text-sm font-medium">Last Evaluated</Label>
                         <div className="text-sm text-gray-600">
-                          {flagAnalytics.lastEvaluated 
+                          {flagAnalytics.lastEvaluated
                             ? formatDate(flagAnalytics.lastEvaluated)
-                            : 'Never'
-                          }
+                            : "Never"}
                         </div>
                       </div>
                     </div>

@@ -100,7 +100,7 @@ export function usePortfolio(userId: string) {
       },
       recentActivity: [],
     }, // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
@@ -154,7 +154,7 @@ export function useSnipeTargets(userId: string, status?: string) {
     gcTime: 2 * 60 * 1000, // 2 minutes garbage collection
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {

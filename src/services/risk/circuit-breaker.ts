@@ -57,7 +57,7 @@ export class CircuitBreaker {
           debug: (message: string, context?: any) =>
             console.debug("[circuit-breaker]", message, context || ""),
         };
-      } catch (error) {
+      } catch (_error) {
         // Fallback to console logging during build time
         this._logger = {
           debug: console.debug.bind(console),

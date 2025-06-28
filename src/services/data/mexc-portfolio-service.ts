@@ -126,7 +126,7 @@ export class MexcPortfolioService extends BaseMexcService {
         btcValue = total;
         // Get BTC/USDT price for USDT value
         const btcTicker = tickerMap.get("BTCUSDT");
-        if (btcTicker && btcTicker.lastPrice) {
+        if (btcTicker?.lastPrice) {
           usdtValue = total * Number.parseFloat(btcTicker.lastPrice);
         }
       } else {
@@ -136,7 +136,7 @@ export class MexcPortfolioService extends BaseMexcService {
           tickerMap.get(`${balance.asset}BTC`) ||
           tickerMap.get(`${balance.asset}ETH`);
 
-        if (assetTicker && assetTicker.lastPrice && assetTicker.priceChangePercent) {
+        if (assetTicker?.lastPrice && assetTicker.priceChangePercent) {
           const price = Number.parseFloat(assetTicker.lastPrice);
           const priceChange = Number.parseFloat(assetTicker.priceChangePercent);
 
@@ -146,7 +146,7 @@ export class MexcPortfolioService extends BaseMexcService {
             btcValue = total * price;
             // Convert to USDT using BTC price
             const btcTicker = tickerMap.get("BTCUSDT");
-            if (btcTicker && btcTicker.lastPrice) {
+            if (btcTicker?.lastPrice) {
               usdtValue = btcValue * Number.parseFloat(btcTicker.lastPrice);
             }
           }

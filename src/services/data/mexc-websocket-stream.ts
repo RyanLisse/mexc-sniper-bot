@@ -5,7 +5,7 @@
  * while using the new modular WebSocket services architecture
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   NotificationMessage,
   TradingPriceMessage,

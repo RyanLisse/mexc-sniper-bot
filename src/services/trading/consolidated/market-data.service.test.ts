@@ -28,7 +28,7 @@ const MarketDataConfigSchema = z.object({
   maxWebSocketConnections: z.number().positive("Max WebSocket connections must be positive"),
 });
 
-const PriceDataSchema = z.object({
+const _PriceDataSchema = z.object({
   symbol: z.string(),
   price: z.number().positive("Price must be positive"),
   volume: z.number().nonnegative("Volume cannot be negative"),
@@ -39,7 +39,7 @@ const PriceDataSchema = z.object({
   timestamp: z.number().positive("Timestamp must be positive"),
 });
 
-const PatternDetectionResultSchema = z.object({
+const _PatternDetectionResultSchema = z.object({
   symbol: z.string(),
   pattern: z.enum([
     "bullish_divergence",
@@ -57,7 +57,7 @@ const PatternDetectionResultSchema = z.object({
   metadata: z.record(z.any()).optional(),
 });
 
-const KlineDataSchema = z.object({
+const _KlineDataSchema = z.object({
   symbol: z.string(),
   interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d"]),
   openTime: z.number(),
@@ -71,7 +71,7 @@ const KlineDataSchema = z.object({
 });
 
 describe("MarketDataService - TDD Implementation", () => {
-  let marketDataService: any;
+  let _marketDataService: any;
   let mockConfig: any;
 
   beforeEach(() => {
@@ -100,7 +100,7 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("Service Initialization", () => {
     it("should initialize service with valid configuration", () => {
       // Arrange
-      const validConfig = MarketDataConfigSchema.parse(mockConfig);
+      const _validConfig = MarketDataConfigSchema.parse(mockConfig);
 
       // Act & Assert - This will fail initially (TDD)
       expect(() => {
@@ -157,7 +157,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should fetch current price for a symbol", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
+      const _symbol = "BTCUSDT";
 
       // Act - This will fail initially (TDD)
       // const priceData = await marketDataService.getCurrentPrice(symbol);
@@ -171,7 +171,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should fetch multiple symbol prices in batch", async () => {
       // Arrange
-      const symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT"];
+      const _symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT"];
 
       // Act
       // const pricesData = await marketDataService.getMultiplePrices(symbols);
@@ -186,8 +186,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should subscribe to real-time price updates", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const priceUpdateCallback = vi.fn();
+      const _symbol = "BTCUSDT";
+      const _priceUpdateCallback = vi.fn();
 
       // Act
       // await marketDataService.subscribeToPriceUpdates(symbol, priceUpdateCallback);
@@ -199,7 +199,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should handle WebSocket reconnection", async () => {
       // Arrange - Simulate WebSocket disconnection
-      const reconnectSpy = vi.fn();
+      const _reconnectSpy = vi.fn();
       // marketDataService.onReconnect(reconnectSpy);
 
       // Act - Simulate connection loss and recovery
@@ -240,9 +240,9 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should fetch kline data for a symbol", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const interval = "1h";
-      const limit = 100;
+      const _symbol = "BTCUSDT";
+      const _interval = "1h";
+      const _limit = 100;
 
       // Act
       // const klineData = await marketDataService.getKlineData(symbol, interval, limit);
@@ -257,11 +257,11 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should support different time intervals", async () => {
       // Arrange
-      const symbol = "ETHUSDT";
+      const _symbol = "ETHUSDT";
       const intervals = ["1m", "5m", "15m", "1h", "1d"];
 
       // Act & Assert
-      for (const interval of intervals) {
+      for (const _interval of intervals) {
         // const klineData = await marketDataService.getKlineData(symbol, interval, 10);
         // expect(klineData[0].interval).toBe(interval);
       }
@@ -270,8 +270,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should implement caching for kline data", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const interval = "1h";
+      const _symbol = "BTCUSDT";
+      const _interval = "1h";
 
       // Act - Make two identical requests
       // await marketDataService.getKlineData(symbol, interval, 100);
@@ -286,8 +286,8 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("Pattern Detection", () => {
     it("should detect bullish divergence patterns", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const historicalData = {
+      const _symbol = "BTCUSDT";
+      const _historicalData = {
         // Mock historical price and volume data
         prices: [48000, 47000, 47500, 49000, 48500, 50000],
         volumes: [1000, 1200, 800, 1500, 900, 2000],
@@ -307,8 +307,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should detect volume spike patterns", async () => {
       // Arrange
-      const symbol = "ETHUSDT";
-      const volumeData = [100, 120, 90, 110, 95, 500]; // Last value is a spike
+      const _symbol = "ETHUSDT";
+      const _volumeData = [100, 120, 90, 110, 95, 500]; // Last value is a spike
 
       // Act
       // const patterns = await marketDataService.detectVolumePatterns(symbol, volumeData);
@@ -322,8 +322,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should detect support and resistance levels", async () => {
       // Arrange
-      const symbol = "ADAUSDT";
-      const priceData = [1.2, 1.18, 1.21, 1.19, 1.2, 1.22, 1.19, 1.21]; // Support around 1.19-1.20
+      const _symbol = "ADAUSDT";
+      const _priceData = [1.2, 1.18, 1.21, 1.19, 1.2, 1.22, 1.19, 1.21]; // Support around 1.19-1.20
 
       // Act
       // const levels = await marketDataService.detectSupportResistance(symbol, priceData);
@@ -336,8 +336,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should filter patterns by confidence threshold", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const confidenceThreshold = 80;
+      const _symbol = "BTCUSDT";
+      const _confidenceThreshold = 80;
 
       // Act
       // const allPatterns = await marketDataService.detectAllPatterns(symbol);
@@ -353,7 +353,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should emit pattern detection events", async () => {
       // Arrange
-      const patternDetectedCallback = vi.fn();
+      const _patternDetectedCallback = vi.fn();
       // marketDataService.onPatternDetected(patternDetectedCallback);
 
       // Act
@@ -375,7 +375,7 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("Price Alerts and Monitoring", () => {
     it("should create price alert for symbol", async () => {
       // Arrange
-      const alertConfig = {
+      const _alertConfig = {
         symbol: "BTCUSDT",
         type: "price_above",
         targetPrice: 55000,
@@ -394,10 +394,10 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should trigger alert when price condition is met", async () => {
       // Arrange
-      const alertTriggeredCallback = vi.fn();
+      const _alertTriggeredCallback = vi.fn();
       // marketDataService.onAlertTriggered(alertTriggeredCallback);
 
-      const alertConfig = {
+      const _alertConfig = {
         symbol: "BTCUSDT",
         type: "price_above",
         targetPrice: 50000,
@@ -422,7 +422,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should manage multiple alerts for different symbols", async () => {
       // Arrange
-      const alerts = [
+      const _alerts = [
         { symbol: "BTCUSDT", type: "price_above", targetPrice: 55000 },
         { symbol: "ETHUSDT", type: "price_below", targetPrice: 3000 },
         { symbol: "ADAUSDT", type: "volume_spike", volumeThreshold: 1000000 },
@@ -441,7 +441,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should disable and enable alerts", async () => {
       // Arrange
-      const alertConfig = {
+      const _alertConfig = {
         symbol: "BTCUSDT",
         type: "price_above",
         targetPrice: 55000,
@@ -468,9 +468,9 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("Technical Analysis", () => {
     it("should calculate moving averages", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const period = 20;
-      const priceData = Array.from({ length: 50 }, (_, i) => 50000 + Math.random() * 1000);
+      const _symbol = "BTCUSDT";
+      const _period = 20;
+      const _priceData = Array.from({ length: 50 }, (_, _i) => 50000 + Math.random() * 1000);
 
       // Act
       // const sma = await marketDataService.calculateSMA(symbol, period, priceData);
@@ -486,9 +486,9 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should calculate RSI (Relative Strength Index)", async () => {
       // Arrange
-      const symbol = "ETHUSDT";
-      const period = 14;
-      const priceData = [3000, 3050, 2980, 3100, 3020, 3150, 2950, 3200, 3080, 3250];
+      const _symbol = "ETHUSDT";
+      const _period = 14;
+      const _priceData = [3000, 3050, 2980, 3100, 3020, 3150, 2950, 3200, 3080, 3250];
 
       // Act
       // const rsi = await marketDataService.calculateRSI(symbol, period, priceData);
@@ -501,8 +501,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should calculate MACD indicators", async () => {
       // Arrange
-      const symbol = "ADAUSDT";
-      const priceData = Array.from({ length: 50 }, (_, i) => 1.2 + Math.random() * 0.1);
+      const _symbol = "ADAUSDT";
+      const _priceData = Array.from({ length: 50 }, (_, _i) => 1.2 + Math.random() * 0.1);
 
       // Act
       // const macd = await marketDataService.calculateMACD(symbol, priceData);
@@ -516,10 +516,10 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should calculate Bollinger Bands", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
-      const period = 20;
-      const multiplier = 2;
-      const priceData = Array.from({ length: 30 }, (_, i) => 50000 + Math.random() * 1000);
+      const _symbol = "BTCUSDT";
+      const _period = 20;
+      const _multiplier = 2;
+      const _priceData = Array.from({ length: 30 }, (_, _i) => 50000 + Math.random() * 1000);
 
       // Act
       // const bands = await marketDataService.calculateBollingerBands(symbol, period, multiplier, priceData);
@@ -537,7 +537,7 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("WebSocket Management", () => {
     it("should manage multiple WebSocket connections", async () => {
       // Arrange
-      const symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT"];
+      const _symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT"];
 
       // Act
       // await Promise.all(
@@ -555,7 +555,7 @@ describe("MarketDataService - TDD Implementation", () => {
     it("should handle WebSocket connection limits", async () => {
       // Arrange
       const maxConnections = mockConfig.maxWebSocketConnections;
-      const symbols = Array.from({ length: maxConnections + 2 }, (_, i) => `SYMBOL${i}USDT`);
+      const _symbols = Array.from({ length: maxConnections + 2 }, (_, i) => `SYMBOL${i}USDT`);
 
       // Act
       // const results = await Promise.allSettled(
@@ -587,7 +587,7 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("Caching and Performance", () => {
     it("should implement intelligent caching for price data", async () => {
       // Arrange
-      const symbol = "BTCUSDT";
+      const _symbol = "BTCUSDT";
 
       // Act - Make multiple requests
       // await marketDataService.getCurrentPrice(symbol);
@@ -601,8 +601,8 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should respect cache TTL settings", async () => {
       // Arrange
-      const symbol = "ETHUSDT";
-      const shortCacheTTL = 100; // 100ms
+      const _symbol = "ETHUSDT";
+      const _shortCacheTTL = 100; // 100ms
 
       // Act
       // await marketDataService.getCurrentPrice(symbol);
@@ -666,7 +666,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should handle WebSocket disconnections gracefully", async () => {
       // Arrange
-      const disconnectionCallback = vi.fn();
+      const _disconnectionCallback = vi.fn();
       // marketDataService.onWebSocketDisconnection(disconnectionCallback);
 
       // Act
@@ -682,7 +682,7 @@ describe("MarketDataService - TDD Implementation", () => {
   describe("Service Integration", () => {
     it("should integrate with Core Trading Service", async () => {
       // Arrange
-      const mockTradingService = {
+      const _mockTradingService = {
         onMarketDataUpdate: vi.fn(),
         onPatternDetected: vi.fn(),
       };
@@ -703,7 +703,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should integrate with Notification Service", async () => {
       // Arrange
-      const mockNotificationService = {
+      const _mockNotificationService = {
         sendAlert: vi.fn(),
       };
 
@@ -727,7 +727,7 @@ describe("MarketDataService - TDD Implementation", () => {
 
     it("should provide market data to Risk Management Service", async () => {
       // Arrange
-      const mockRiskService = {
+      const _mockRiskService = {
         updateMarketRisk: vi.fn(),
       };
 

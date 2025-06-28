@@ -615,10 +615,10 @@ export class PerformanceCollector {
       // Import database connection and schemas
       const { db } = await import("@/src/db");
       const { sql } = await import("drizzle-orm");
-      
+
       // Create performance metrics tables if they don't exist
       await this.ensurePerformanceTables(db);
-      
+
       const timestamp = new Date();
       // Get current metrics from history arrays
       const currentAgentMetrics = Array.from(this.agentMetricsHistory.values()).flat();
@@ -631,7 +631,7 @@ export class PerformanceCollector {
         workflow_metrics: JSON.stringify(currentWorkflowMetrics),
         system_metrics: JSON.stringify(currentSystemMetrics),
         collection_interval: this.collectionIntervalMs,
-        created_at: timestamp
+        created_at: timestamp,
       };
 
       // Insert performance snapshot using raw SQL for flexibility
@@ -667,7 +667,7 @@ export class PerformanceCollector {
   private async ensurePerformanceTables(db: any): Promise<void> {
     try {
       const { sql } = await import("drizzle-orm");
-      
+
       // Create performance_snapshots table if it doesn't exist
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS performance_snapshots (
@@ -687,7 +687,7 @@ export class PerformanceCollector {
         CREATE INDEX IF NOT EXISTS idx_performance_snapshots_timestamp 
         ON performance_snapshots(timestamp)
       `);
-      
+
       await db.execute(sql`
         CREATE INDEX IF NOT EXISTS idx_performance_snapshots_created_at 
         ON performance_snapshots(created_at)
@@ -700,15 +700,15 @@ export class PerformanceCollector {
   private async persistToFile(): Promise<void> {
     try {
       // Fallback to file storage if database is unavailable
-      const fs = await import('fs/promises');
-      const path = await import('path');
-      
-      const metricsDir = path.join(process.cwd(), '.metrics');
+      const fs = await import("node:fs/promises");
+      const path = await import("node:path");
+
+      const metricsDir = path.join(process.cwd(), ".metrics");
       await fs.mkdir(metricsDir, { recursive: true });
-      
-      const timestamp = new Date().toISOString().replace(/:/g, '-');
+
+      const timestamp = new Date().toISOString().replace(/:/g, "-");
       const filename = path.join(metricsDir, `performance-${timestamp}.json`);
-      
+
       // Get current metrics from history arrays
       const currentAgentMetrics = Array.from(this.agentMetricsHistory.values()).flat();
       const currentWorkflowMetrics = this.workflowMetricsHistory.slice(-50); // Last 50 workflows
@@ -719,9 +719,9 @@ export class PerformanceCollector {
         agentMetrics: currentAgentMetrics,
         workflowMetrics: currentWorkflowMetrics,
         systemMetrics: currentSystemMetrics,
-        collectionInterval: this.collectionIntervalMs
+        collectionInterval: this.collectionIntervalMs,
       };
-      
+
       await fs.writeFile(filename, JSON.stringify(metricsData, null, 2));
       this.logger.info(`[PerformanceCollector] Metrics saved to file: ${filename}`);
     } catch (error) {

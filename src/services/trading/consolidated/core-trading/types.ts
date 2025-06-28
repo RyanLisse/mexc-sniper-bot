@@ -5,7 +5,7 @@
  * Extracted from the original monolithic implementation for better maintainability.
  */
 
-import type { EventEmitter } from "events";
+import type { EventEmitter } from "node:events";
 import { z } from "zod";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";

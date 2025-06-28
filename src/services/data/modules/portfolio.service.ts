@@ -397,7 +397,7 @@ export class PortfolioService {
       if (!cached) return null;
 
       return PortfolioResponseSchema.parse(cached);
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

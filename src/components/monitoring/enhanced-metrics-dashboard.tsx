@@ -2,29 +2,26 @@
 
 /**
  * Enhanced Metrics Dashboard
- * 
+ *
  * Phase 3 monitoring dashboard component that displays comprehensive
  * performance metrics with real-time updates and alerting capabilities.
  */
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { Badge } from '@/src/components/ui/badge';
-import { Progress } from '@/src/components/ui/progress';
-import { Button } from '@/src/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/tabs';
-import { 
-  Activity, 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle,
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
   DollarSign,
   Shield,
-  Zap,
-  Clock
-} from 'lucide-react';
+  XCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/src/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Progress } from "@/src/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 
 interface EnhancedMetrics {
   timestamp: string;
@@ -80,7 +77,7 @@ interface EnhancedMetrics {
     averageSlippage: number;
   };
   health: {
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: "healthy" | "degraded" | "unhealthy";
     issues: string[];
     score: number;
   };
@@ -96,7 +93,7 @@ export function EnhancedMetricsDashboard() {
   // Fetch metrics data
   const fetchMetrics = async () => {
     try {
-      const response = await fetch('/api/monitoring/enhanced-metrics');
+      const response = await fetch("/api/monitoring/enhanced-metrics");
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -105,7 +102,7 @@ export function EnhancedMetricsDashboard() {
       setError(null);
       setLastUpdate(new Date());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch metrics');
+      setError(err instanceof Error ? err.message : "Failed to fetch metrics");
     } finally {
       setLoading(false);
     }
@@ -114,14 +111,14 @@ export function EnhancedMetricsDashboard() {
   // Auto-refresh effect
   useEffect(() => {
     fetchMetrics();
-    
+
     if (autoRefresh) {
       const interval = setInterval(fetchMetrics, 10000); // Every 10 seconds
       return () => clearInterval(interval);
     }
-    
+
     return undefined;
-  }, [autoRefresh]);
+  }, [autoRefresh, fetchMetrics]);
 
   if (loading) {
     return (
@@ -155,9 +152,9 @@ export function EnhancedMetricsDashboard() {
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 2,
     }).format(value);
   };
@@ -172,19 +169,27 @@ export function EnhancedMetricsDashboard() {
 
   const getHealthBadgeColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'bg-green-100 text-green-800';
-      case 'degraded': return 'bg-yellow-100 text-yellow-800';
-      case 'unhealthy': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "healthy":
+        return "bg-green-100 text-green-800";
+      case "degraded":
+        return "bg-yellow-100 text-yellow-800";
+      case "unhealthy":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getHealthIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return <CheckCircle className="h-4 w-4" />;
-      case 'degraded': return <AlertTriangle className="h-4 w-4" />;
-      case 'unhealthy': return <XCircle className="h-4 w-4" />;
-      default: return <Activity className="h-4 w-4" />;
+      case "healthy":
+        return <CheckCircle className="h-4 w-4" />;
+      case "degraded":
+        return <AlertTriangle className="h-4 w-4" />;
+      case "unhealthy":
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <Activity className="h-4 w-4" />;
     }
   };
 
@@ -194,21 +199,15 @@ export function EnhancedMetricsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Enhanced Performance Metrics</h2>
-          <p className="text-gray-600">
-            Last updated: {lastUpdate.toLocaleTimeString()}
-          </p>
+          <p className="text-gray-600">Last updated: {lastUpdate.toLocaleTimeString()}</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className={getHealthBadgeColor(metrics.health.status)}>
             {getHealthIcon(metrics.health.status)}
             <span className="ml-1">{metrics.health.status.toUpperCase()}</span>
           </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setAutoRefresh(!autoRefresh)}
-          >
-            {autoRefresh ? 'Pause' : 'Resume'} Auto-refresh
+          <Button variant="outline" size="sm" onClick={() => setAutoRefresh(!autoRefresh)}>
+            {autoRefresh ? "Pause" : "Resume"} Auto-refresh
           </Button>
           <Button size="sm" onClick={fetchMetrics}>
             Refresh Now
@@ -282,7 +281,9 @@ export function EnhancedMetricsDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${metrics.trading.profitability.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div
+                  className={`text-2xl font-bold ${metrics.trading.profitability.totalPnL >= 0 ? "text-green-600" : "text-red-600"}`}
+                >
                   {formatCurrency(metrics.trading.profitability.totalPnL)}
                 </div>
                 <p className="text-xs text-gray-600">
@@ -383,9 +384,7 @@ export function EnhancedMetricsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="text-2xl font-bold">
-                    {metrics.trading.risk.riskScore}/100
-                  </div>
+                  <div className="text-2xl font-bold">{metrics.trading.risk.riskScore}/100</div>
                   <Progress value={metrics.trading.risk.riskScore} className="h-2" />
                 </div>
               </CardContent>
@@ -416,9 +415,9 @@ export function EnhancedMetricsDashboard() {
                   <div className="text-2xl font-bold">
                     {metrics.performance.system.memoryUsageMB.toFixed(1)} MB
                   </div>
-                  <Progress 
-                    value={(metrics.performance.system.memoryUsageMB / 1024) * 100} 
-                    className="h-2" 
+                  <Progress
+                    value={(metrics.performance.system.memoryUsageMB / 1024) * 100}
+                    className="h-2"
                   />
                 </div>
               </CardContent>
@@ -443,9 +442,7 @@ export function EnhancedMetricsDashboard() {
                 <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {metrics.performance.alerts.active}
-                </div>
+                <div className="text-2xl font-bold">{metrics.performance.alerts.active}</div>
                 {metrics.performance.alerts.lastAlert && (
                   <p className="text-xs text-gray-600">
                     Last: {metrics.performance.alerts.lastAlert}

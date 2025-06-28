@@ -13,7 +13,6 @@ import type {
   SnipeTarget,
   TradeExecutionResult,
   TradeParameters,
-  TradingPosition,
 } from "./types";
 
 export class TradeExecutor {

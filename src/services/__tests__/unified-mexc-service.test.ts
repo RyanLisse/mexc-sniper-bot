@@ -5,13 +5,12 @@
  * UnifiedMexcService before we implement the modular architecture.
  */
 
-import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import type {
   CalendarEntry,
   ExchangeInfo,
   MexcServiceResponse,
-  UnifiedMexcConfig,
 } from "@/src/schemas/unified/mexc-api-schemas";
 import type { UnifiedMexcConfigV2 } from "../api/unified-mexc-config";
 
@@ -40,7 +39,7 @@ const CalendarListingResponseSchema = z.object({
 });
 
 describe("UnifiedMexcService - TDD Refactoring", () => {
-  let mexcService: any;
+  let _mexcService: any;
   let mockConfig: UnifiedMexcConfigV2;
 
   beforeEach(() => {
@@ -54,18 +53,18 @@ describe("UnifiedMexcService - TDD Refactoring", () => {
       maxRetries: 3,
       retryDelay: 1000,
       rateLimitDelay: 100,
-      
+
       // Cache Configuration
       enableCaching: true,
       cacheTTL: 30000,
       apiResponseTTL: 1500,
-      
+
       // Reliability Configuration
       enableCircuitBreaker: true,
       enableRateLimiter: true,
       maxFailures: 5,
       resetTimeout: 60000,
-      
+
       // Feature Flags
       enableEnhancedFeatures: true,
     };

@@ -152,7 +152,7 @@ export class MexcRateLimiter {
         : undefined;
 
       const retryAfterSeconds = retryAfterHeader
-        ? Number.parseInt(headers![retryAfterHeader], 10)
+        ? Number.parseInt(headers?.[retryAfterHeader], 10)
         : 60;
 
       // Significantly reduce rate limit temporarily

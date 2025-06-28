@@ -1,26 +1,26 @@
 /**
  * Trading Integration Example
- * 
+ *
  * Demonstrates how to integrate enhanced feature flags with the trading system
  * for controlled rollouts and A/B testing of new trading features.
  */
 
-import { 
-  enhancedFeatureFlagManager, 
-  evaluateFeatureFlag, 
-  UserContext,
-  EnhancedFeatureFlagConfig,
-} from './enhanced-feature-flag-manager';
-import { tradingDomainFeatureFlags } from './trading-domain-flags';
+import {
+  type EnhancedFeatureFlagConfig,
+  enhancedFeatureFlagManager,
+  evaluateFeatureFlag,
+  type UserContext,
+} from "./enhanced-feature-flag-manager";
+import { tradingDomainFeatureFlags } from "./trading-domain-flags";
 
 /**
  * Trading-specific feature flag configurations
  */
 export const TRADING_FEATURE_FLAGS: EnhancedFeatureFlagConfig[] = [
   {
-    name: 'enhanced_pattern_detection',
-    description: 'Enable AI-enhanced pattern detection with machine learning algorithms',
-    strategy: 'gradual',
+    name: "enhanced_pattern_detection",
+    description: "Enable AI-enhanced pattern detection with machine learning algorithms",
+    strategy: "gradual",
     enabled: true,
     gradualRollout: {
       enabled: true,
@@ -34,25 +34,25 @@ export const TRADING_FEATURE_FLAGS: EnhancedFeatureFlagConfig[] = [
         performanceDegradation: 0.15,
       },
     },
-    environments: ['development', 'staging', 'production'],
+    environments: ["development", "staging", "production"],
     userAttributes: {
-      tradingExperience: 'advanced',
+      tradingExperience: "advanced",
     },
     trackingEnabled: true,
-    metricsNamespace: 'trading_pattern_detection',
+    metricsNamespace: "trading_pattern_detection",
     killSwitchEnabled: true,
     rollbackOnError: true,
     maxErrorRate: 0.05,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    createdBy: 'trading_team',
-    tags: ['trading', 'ai', 'pattern-detection', 'gradual-rollout'],
+    createdBy: "trading_team",
+    tags: ["trading", "ai", "pattern-detection", "gradual-rollout"],
   },
-  
+
   {
-    name: 'advanced_risk_management',
-    description: 'Enhanced risk management with real-time portfolio monitoring',
-    strategy: 'a_b_test',
+    name: "advanced_risk_management",
+    description: "Enhanced risk management with real-time portfolio monitoring",
+    strategy: "a_b_test",
     enabled: true,
     abTest: {
       enabled: true,
@@ -66,34 +66,34 @@ export const TRADING_FEATURE_FLAGS: EnhancedFeatureFlagConfig[] = [
           flags: { enabled: true },
         },
       },
-      conversionMetric: 'portfolio_performance',
+      conversionMetric: "portfolio_performance",
       significance: 0.95,
     },
-    environments: ['production'],
+    environments: ["production"],
     userAttributes: {
-      userType: 'premium',
+      userType: "premium",
     },
     trackingEnabled: true,
-    metricsNamespace: 'risk_management',
+    metricsNamespace: "risk_management",
     killSwitchEnabled: true,
     rollbackOnError: true,
     maxErrorRate: 0.05,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    createdBy: 'risk_team',
-    tags: ['trading', 'risk', 'a-b-test'],
+    createdBy: "risk_team",
+    tags: ["trading", "risk", "a-b-test"],
   },
 
   {
-    name: 'smart_order_routing',
-    description: 'Intelligent order routing for optimal execution',
-    strategy: 'canary',
+    name: "smart_order_routing",
+    description: "Intelligent order routing for optimal execution",
+    strategy: "canary",
     enabled: true,
     percentage: 15,
-    environments: ['production'],
+    environments: ["production"],
     userAttributes: {
-      riskTolerance: 'high',
-      tradingExperience: 'advanced',
+      riskTolerance: "high",
+      tradingExperience: "advanced",
     },
     trackingEnabled: true,
     killSwitchEnabled: true,
@@ -101,8 +101,8 @@ export const TRADING_FEATURE_FLAGS: EnhancedFeatureFlagConfig[] = [
     maxErrorRate: 0.05,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    createdBy: 'execution_team',
-    tags: ['trading', 'execution', 'canary'],
+    createdBy: "execution_team",
+    tags: ["trading", "execution", "canary"],
   },
 ];
 
@@ -110,7 +110,7 @@ export const TRADING_FEATURE_FLAGS: EnhancedFeatureFlagConfig[] = [
  * Initialize trading feature flags
  */
 export function initializeTradingFeatureFlags(): void {
-  TRADING_FEATURE_FLAGS.forEach(config => {
+  TRADING_FEATURE_FLAGS.forEach((config) => {
     enhancedFeatureFlagManager.registerFlag(config);
   });
 }
@@ -119,26 +119,25 @@ export function initializeTradingFeatureFlags(): void {
  * Trading feature flag evaluation wrapper
  */
 export class TradingFeatureFlagService {
-  
   /**
    * Check if enhanced pattern detection is enabled for a user
    */
   async isEnhancedPatternDetectionEnabled(userContext: UserContext): Promise<boolean> {
-    return evaluateFeatureFlag('enhanced_pattern_detection', userContext, false);
+    return evaluateFeatureFlag("enhanced_pattern_detection", userContext, false);
   }
 
   /**
    * Check if advanced risk management is enabled for a user
    */
   async isAdvancedRiskManagementEnabled(userContext: UserContext): Promise<boolean> {
-    return evaluateFeatureFlag('advanced_risk_management', userContext, false);
+    return evaluateFeatureFlag("advanced_risk_management", userContext, false);
   }
 
   /**
    * Check if smart order routing is enabled for a user
    */
   async isSmartOrderRoutingEnabled(userContext: UserContext): Promise<boolean> {
-    return evaluateFeatureFlag('smart_order_routing', userContext, false);
+    return evaluateFeatureFlag("smart_order_routing", userContext, false);
   }
 
   /**
@@ -149,7 +148,7 @@ export class TradingFeatureFlagService {
       userId,
       portfolioId: additionalData?.portfolioId,
       email: additionalData?.email,
-      userType: additionalData?.subscriptionLevel || 'free',
+      userType: additionalData?.subscriptionLevel || "free",
       registrationDate: additionalData?.registrationDate,
       country: additionalData?.country,
       tradingExperience: this.determineTradingExperience(additionalData),
@@ -170,15 +169,13 @@ export class TradingFeatureFlagService {
     advancedRiskManagement: boolean;
     smartOrderRouting: boolean;
   }> {
-    const [
-      enhancedPatternDetection,
-      advancedRiskManagement,
-      smartOrderRouting,
-    ] = await Promise.all([
-      this.isEnhancedPatternDetectionEnabled(userContext),
-      this.isAdvancedRiskManagementEnabled(userContext),
-      this.isSmartOrderRoutingEnabled(userContext),
-    ]);
+    const [enhancedPatternDetection, advancedRiskManagement, smartOrderRouting] = await Promise.all(
+      [
+        this.isEnhancedPatternDetectionEnabled(userContext),
+        this.isAdvancedRiskManagementEnabled(userContext),
+        this.isSmartOrderRoutingEnabled(userContext),
+      ]
+    );
 
     return {
       enhancedPatternDetection,
@@ -192,49 +189,51 @@ export class TradingFeatureFlagService {
    */
   async getTradingConfiguration(userContext: UserContext): Promise<{
     useCleanArchitecture: boolean;
-    patternDetectionEngine: 'legacy' | 'enhanced';
-    riskManagementLevel: 'basic' | 'advanced';
-    orderRoutingStrategy: 'simple' | 'smart';
-    monitoringLevel: 'basic' | 'enhanced';
+    patternDetectionEngine: "legacy" | "enhanced";
+    riskManagementLevel: "basic" | "advanced";
+    orderRoutingStrategy: "simple" | "smart";
+    monitoringLevel: "basic" | "enhanced";
   }> {
     // Get traditional trading domain flags
     const useCleanArchitecture = tradingDomainFeatureFlags.isCleanArchitectureTradingEnabled();
-    
+
     // Get enhanced feature flags
     const flags = await this.evaluateAllTradingFlags(userContext);
 
     return {
       useCleanArchitecture,
-      patternDetectionEngine: flags.enhancedPatternDetection ? 'enhanced' : 'legacy',
-      riskManagementLevel: flags.advancedRiskManagement ? 'advanced' : 'basic',
-      orderRoutingStrategy: flags.smartOrderRouting ? 'smart' : 'simple',
-      monitoringLevel: tradingDomainFeatureFlags.isPerformanceMonitoringEnabled() ? 'enhanced' : 'basic',
+      patternDetectionEngine: flags.enhancedPatternDetection ? "enhanced" : "legacy",
+      riskManagementLevel: flags.advancedRiskManagement ? "advanced" : "basic",
+      orderRoutingStrategy: flags.smartOrderRouting ? "smart" : "simple",
+      monitoringLevel: tradingDomainFeatureFlags.isPerformanceMonitoringEnabled()
+        ? "enhanced"
+        : "basic",
     };
   }
 
   // Private helper methods
-  private determineTradingExperience(userData: any): 'beginner' | 'intermediate' | 'advanced' {
+  private determineTradingExperience(userData: any): "beginner" | "intermediate" | "advanced" {
     const totalTrades = userData?.totalTrades || 0;
     const accountAge = userData?.accountAgeDays || 0;
-    
+
     if (totalTrades > 1000 && accountAge > 365) {
-      return 'advanced';
+      return "advanced";
     } else if (totalTrades > 100 && accountAge > 90) {
-      return 'intermediate';
+      return "intermediate";
     }
-    return 'beginner';
+    return "beginner";
   }
 
-  private determineRiskTolerance(userData: any): 'low' | 'medium' | 'high' {
+  private determineRiskTolerance(userData: any): "low" | "medium" | "high" {
     const maxPositionSize = userData?.maxPositionSizePercent || 0;
     const avgLeverage = userData?.avgLeverage || 1;
-    
+
     if (maxPositionSize > 20 || avgLeverage > 5) {
-      return 'high';
+      return "high";
     } else if (maxPositionSize > 10 || avgLeverage > 2) {
-      return 'medium';
+      return "medium";
     }
-    return 'low';
+    return "low";
   }
 }
 
@@ -251,11 +250,11 @@ export class ExampleTradingService {
   ): Promise<any> {
     // Get user context
     const userContext = this.featureFlagService.getUserContextFromSession(userId, userSessionData);
-    
+
     // Get trading configuration based on feature flags
     const config = await this.featureFlagService.getTradingConfiguration(userContext);
-    
-    console.log('Trading configuration for user:', {
+
+    console.log("Trading configuration for user:", {
       userId,
       config,
     });
@@ -274,36 +273,37 @@ export class ExampleTradingService {
     userSessionData: any
   ): Promise<any> {
     const userContext = this.featureFlagService.getUserContextFromSession(userId, userSessionData);
-    const useEnhanced = await this.featureFlagService.isEnhancedPatternDetectionEnabled(userContext);
+    const useEnhanced =
+      await this.featureFlagService.isEnhancedPatternDetectionEnabled(userContext);
 
     if (useEnhanced) {
-      console.log('Using enhanced AI pattern detection for user:', userId);
+      console.log("Using enhanced AI pattern detection for user:", userId);
       return this.analyzePatternWithAI(symbolData);
     } else {
-      console.log('Using legacy pattern detection for user:', userId);
+      console.log("Using legacy pattern detection for user:", userId);
       return this.analyzePatternLegacy(symbolData);
     }
   }
 
   // Mock implementations
-  private async executeTradeWithCleanArchitecture(tradeData: any, config: any): Promise<any> {
+  private async executeTradeWithCleanArchitecture(_tradeData: any, config: any): Promise<any> {
     // Implementation would use clean architecture with feature-specific logic
-    return { status: 'executed', method: 'clean_architecture', config };
+    return { status: "executed", method: "clean_architecture", config };
   }
 
-  private async executeTradeWithLegacySystem(tradeData: any): Promise<any> {
+  private async executeTradeWithLegacySystem(_tradeData: any): Promise<any> {
     // Implementation would use legacy trading system
-    return { status: 'executed', method: 'legacy' };
+    return { status: "executed", method: "legacy" };
   }
 
-  private async analyzePatternWithAI(symbolData: any): Promise<any> {
+  private async analyzePatternWithAI(_symbolData: any): Promise<any> {
     // Implementation would use AI-enhanced pattern detection
-    return { pattern: 'bullish_reversal', confidence: 0.87, method: 'ai_enhanced' };
+    return { pattern: "bullish_reversal", confidence: 0.87, method: "ai_enhanced" };
   }
 
-  private async analyzePatternLegacy(symbolData: any): Promise<any> {
+  private async analyzePatternLegacy(_symbolData: any): Promise<any> {
     // Implementation would use traditional pattern detection
-    return { pattern: 'bullish_reversal', confidence: 0.65, method: 'legacy' };
+    return { pattern: "bullish_reversal", confidence: 0.65, method: "legacy" };
   }
 }
 

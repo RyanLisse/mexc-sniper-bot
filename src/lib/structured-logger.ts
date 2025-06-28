@@ -12,7 +12,7 @@ const isBrowser = typeof window !== "undefined";
 const isNode = typeof process !== "undefined" && process.versions?.node;
 
 // Build-safe trace fallback - completely static, no dynamic imports
-const NOOP_TRACE = {
+const _NOOP_TRACE = {
   getActiveSpan: () => null,
 } as const;
 
@@ -406,7 +406,10 @@ export class StructuredLogger implements ILogger {
  * Build-safe logger factory - Always returns simple console logger
  * Eliminates webpack bundling issues completely
  */
-export function createSafeLogger(component: string, service: string = "mexc-trading-bot"): ILogger {
+export function createSafeLogger(
+  component: string,
+  _service: string = "mexc-trading-bot"
+): ILogger {
   // Validate inputs
   if (typeof component !== "string" || !component) {
     component = "unknown";
@@ -472,7 +475,7 @@ export function createClientLogger(
  * Fallback logger for build-time safety
  * Creates a logger-like object that uses console methods when StructuredLogger fails
  */
-function createFallbackLogger(component: string, service: string): StructuredLogger {
+function _createFallbackLogger(component: string, _service: string): StructuredLogger {
   // Create a minimal logger-like object that mimics StructuredLogger interface
   const fallbackLogger = {
     debug: (message: string, context?: LogContext) =>

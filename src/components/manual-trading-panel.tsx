@@ -111,7 +111,7 @@ const TradingForm = ({
 
       onTrade(order);
     },
-    [selectedAsset, quantity, price, orderType, side, selectedAssetData]
+    [selectedAsset, quantity, price, orderType, side, selectedAssetData, onTrade]
   );
 
   const resetForm = useCallback(() => {

@@ -81,7 +81,7 @@ export async function checkMexcApiHealth(): Promise<HealthStatus> {
     testUrl.searchParams.set("timestamp", Date.now().toString());
 
     // Create signature for authenticated request
-    const crypto = require("crypto");
+    const crypto = require("node:crypto");
     const queryString = testUrl.searchParams.toString();
     const signature = crypto
       .createHmac("sha256", process.env.MEXC_SECRET_KEY)

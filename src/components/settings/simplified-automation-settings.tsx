@@ -33,7 +33,7 @@ export function SimplifiedAutomationSettings({
   isLoading = false,
   className = "",
 }: SimplifiedAutomationSettingsProps) {
-  const [isDirty, setIsDirty] = useState(false);
+  const [_isDirty, setIsDirty] = useState(false);
 
   const handleToggle = (enabled: boolean) => {
     setIsDirty(true);

@@ -1,9 +1,5 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type {
-  WorkflowContext,
-  WorkflowExecutionResult,
-  WorkflowStepResult,
-} from "./workflow-engine-types";
+import type { WorkflowContext, WorkflowExecutionResult } from "./workflow-engine-types";
 
 /**
  * Workflow execution tracking, metadata generation, and history management

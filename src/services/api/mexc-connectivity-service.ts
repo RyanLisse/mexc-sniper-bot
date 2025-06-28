@@ -10,10 +10,8 @@ import { ErrorFactory } from "@/src/lib/error-types";
 import {
   type ConnectivityMetrics,
   type ConnectivityTestRequest,
-  ConnectivityTestRequestSchema,
   type ConnectivityTestResponse,
   ConnectivityTestResponseSchema,
-  validateMexcApiRequest,
   validateMexcApiResponse,
 } from "@/src/schemas/mexc-api-validation-schemas";
 import { getRecommendedMexcService } from "./mexc-unified-exports";

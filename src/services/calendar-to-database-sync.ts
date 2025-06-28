@@ -5,7 +5,7 @@
  * This creates a single source of truth and solves rate limiting issues.
  */
 
-import { and, eq, gte, inArray, lt } from "drizzle-orm";
+import { and, eq, inArray, lt } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets, user } from "@/src/db/schema";
 
@@ -198,7 +198,7 @@ export class CalendarToDatabaseSyncService {
         const isWithinWindow = launchTime < now + timeWindow;
 
         return isUpcoming && isWithinWindow && entry.vcoinId && entry.vcoinNameFull;
-      } catch (error) {
+      } catch (_error) {
         console.warn(`Invalid launch time for ${entry.vcoinId}:`, entry.firstOpenTime);
         return false;
       }
@@ -273,7 +273,7 @@ export class CalendarToDatabaseSyncService {
     try {
       const cutoffTime = new Date(Date.now() - timeWindowHours * 60 * 60 * 1000);
 
-      const cleanupResult = await db
+      const _cleanupResult = await db
         .delete(snipeTargets)
         .where(
           and(

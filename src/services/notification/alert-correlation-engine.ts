@@ -67,7 +67,7 @@ export class AlertCorrelationEngine {
           debug: (message: string, context?: any) =>
             console.debug("[alert-correlation-engine]", message, context || ""),
         };
-      } catch (error) {
+      } catch (_error) {
         this._logger = {
           debug: console.debug.bind(console),
           info: console.info.bind(console),

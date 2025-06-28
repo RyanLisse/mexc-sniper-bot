@@ -18,11 +18,13 @@
  */
 
 // Import types from schemas module
+// Import MexcServiceResponse from schemas
 import type {
   BalanceEntry,
   CalendarEntry,
   ExchangeSymbol,
   Kline,
+  MexcServiceResponse,
   OrderBook,
   OrderParameters,
   OrderResult,
@@ -34,7 +36,6 @@ import type {
 // Import the production-ready unified client (modular)
 import {
   getUnifiedMexcClient as getUnifiedMexcClientFactory,
-  resetUnifiedMexcClient,
   type UnifiedMexcClient,
 } from "./mexc-client-factory";
 // Import the new unified V2 service
@@ -44,8 +45,6 @@ import {
   type UnifiedMexcConfigV2,
   UnifiedMexcServiceV2,
 } from "./unified-mexc-service-v2";
-// Import MexcServiceResponse from schemas
-import type { MexcServiceResponse } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Primary Exports - Use These (Updated to use UnifiedMexcServiceV2)

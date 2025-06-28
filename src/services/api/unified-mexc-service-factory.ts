@@ -8,7 +8,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { apiCredentials, db } from "@/src/db";
-import { getUnifiedMexcClient, UnifiedMexcClient } from "./mexc-client-factory";
+import { UnifiedMexcClient } from "./mexc-client-factory";
 import type { UnifiedMexcConfig } from "./mexc-client-types";
 import { getEncryptionService } from "./secure-encryption-service";
 
@@ -98,7 +98,7 @@ class ServiceInstanceCache {
 
   private createCacheKey(apiKey: string, secretKey: string): string {
     // Create a hash to avoid storing credentials in cache key
-    const crypto = require("crypto");
+    const crypto = require("node:crypto");
     return crypto
       .createHash("sha256")
       .update(`${apiKey}:${secretKey}`)

@@ -4,16 +4,16 @@
  * Manages WebSocket connections for real-time market data
  */
 
-import { EventEmitter } from 'events';
-import { z } from 'zod';
+import { EventEmitter } from "node:events";
+import { z } from "zod";
 
 // WebSocket connection state
 export const ConnectionState = z.enum([
-  'disconnected',
-  'connecting',
-  'connected',
-  'reconnecting',
-  'error'
+  "disconnected",
+  "connecting",
+  "connected",
+  "reconnecting",
+  "error",
 ]);
 
 export type ConnectionStateType = z.infer<typeof ConnectionState>;
@@ -24,10 +24,12 @@ export const WebSocketMessageSchema = z.object({
   method: z.string(),
   params: z.record(z.any()).optional(),
   result: z.any().optional(),
-  error: z.object({
-    code: z.number(),
-    message: z.string(),
-  }).optional(),
+  error: z
+    .object({
+      code: z.number(),
+      message: z.string(),
+    })
+    .optional(),
 });
 
 export type WebSocketMessage = z.infer<typeof WebSocketMessageSchema>;
@@ -41,12 +43,12 @@ export const SubscriptionSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export type Subscription = z.infer<typeof SubscriptionSchema>;/**
+export type Subscription = z.infer<typeof SubscriptionSchema>; /**
  * WebSocket Manager Class
  */
 export class WebSocketManager extends EventEmitter {
   private ws: WebSocket | null = null;
-  private state: ConnectionStateType = 'disconnected';
+  private state: ConnectionStateType = "disconnected";
   private subscriptions = new Map<string, Subscription>();
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -63,38 +65,37 @@ export class WebSocketManager extends EventEmitter {
    * Connect to WebSocket
    */
   async connect(): Promise<void> {
-    if (this.state === 'connected' || this.state === 'connecting') {
+    if (this.state === "connected" || this.state === "connecting") {
       return;
     }
 
-    this.setState('connecting');
-    
+    this.setState("connecting");
+
     try {
-      if (typeof WebSocket !== 'undefined') {
+      if (typeof WebSocket !== "undefined") {
         this.ws = new WebSocket(this.url);
       } else {
         // Node.js environment - mock WebSocket
         this.ws = this.createMockWebSocket();
       }
-      
+
       this.setupEventListeners();
-      
     } catch (error) {
-      this.setState('error');
-      this.emit('error', error);
+      this.setState("error");
+      this.emit("error", error);
       throw error;
     }
-  }  /**
+  } /**
    * Setup WebSocket event listeners
    */
   private setupEventListeners(): void {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      this.setState('connected');
+      this.setState("connected");
       this.reconnectAttempts = 0;
       this.startHeartbeat();
-      this.emit('connected');
+      this.emit("connected");
       this.resubscribeAll();
     };
 
@@ -102,28 +103,28 @@ export class WebSocketManager extends EventEmitter {
       try {
         const data = JSON.parse(event.data);
         this.handleMessage(data);
-      } catch (error) {
-        this.emit('error', new Error('Failed to parse message'));
+      } catch (_error) {
+        this.emit("error", new Error("Failed to parse message"));
       }
     };
 
     this.ws.onclose = () => {
-      this.setState('disconnected');
+      this.setState("disconnected");
       this.stopHeartbeat();
-      this.emit('disconnected');
+      this.emit("disconnected");
       this.handleReconnect();
     };
 
     this.ws.onerror = (error) => {
-      this.setState('error');
-      this.emit('error', error);
+      this.setState("error");
+      this.emit("error", error);
     };
-  }  /**
+  } /**
    * Subscribe to a channel
    */
   subscribe(channel: string, callback: (data: any) => void, symbol?: string): string {
-    const id = `${channel}_${symbol || 'all'}_${Date.now()}`;
-    
+    const id = `${channel}_${symbol || "all"}_${Date.now()}`;
+
     const subscription: Subscription = {
       id,
       channel,
@@ -134,7 +135,7 @@ export class WebSocketManager extends EventEmitter {
 
     this.subscriptions.set(id, subscription);
 
-    if (this.state === 'connected') {
+    if (this.state === "connected") {
       this.sendSubscription(subscription);
     }
 
@@ -151,17 +152,17 @@ export class WebSocketManager extends EventEmitter {
     subscription.isActive = false;
     this.subscriptions.delete(subscriptionId);
 
-    if (this.state === 'connected') {
+    if (this.state === "connected") {
       this.sendUnsubscription(subscription);
     }
 
     return true;
-  }  /**
+  } /**
    * Send subscription message
    */
   private sendSubscription(subscription: Subscription): void {
     const message = {
-      method: 'SUBSCRIBE',
+      method: "SUBSCRIBE",
       params: [subscription.channel],
       id: subscription.id,
     };
@@ -173,7 +174,7 @@ export class WebSocketManager extends EventEmitter {
    */
   private sendUnsubscription(subscription: Subscription): void {
     const message = {
-      method: 'UNSUBSCRIBE',
+      method: "UNSUBSCRIBE",
       params: [subscription.channel],
       id: subscription.id,
     };
@@ -193,9 +194,9 @@ export class WebSocketManager extends EventEmitter {
       this.handleSubscriptionResponse(data);
     } else if (data.error) {
       // Error message
-      this.emit('error', new Error(data.error.message));
+      this.emit("error", new Error(data.error.message));
     }
-  }  /**
+  } /**
    * Handle market data messages
    */
   private handleMarketData(data: any): void {
@@ -224,7 +225,7 @@ export class WebSocketManager extends EventEmitter {
    * Send message to WebSocket
    */
   private send(message: any): void {
-    if (this.ws && this.state === 'connected') {
+    if (this.ws && this.state === "connected") {
       this.ws.send(JSON.stringify(message));
     }
   }
@@ -234,7 +235,7 @@ export class WebSocketManager extends EventEmitter {
    */
   private setState(state: ConnectionStateType): void {
     this.state = state;
-    this.emit('stateChange', state);
+    this.emit("stateChange", state);
   }
 
   /**
@@ -253,9 +254,9 @@ export class WebSocketManager extends EventEmitter {
       this.ws = null;
     }
     this.stopHeartbeat();
-    this.setState('disconnected');
+    this.setState("disconnected");
   }
 }
 
 // Export singleton instance
-export const wsManager = new WebSocketManager('wss://wbs.mexc.com/ws');
+export const wsManager = new WebSocketManager("wss://wbs.mexc.com/ws");

@@ -1,4 +1,4 @@
-import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import { SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { and, count, eq, gte, inArray } from "drizzle-orm";
 import {
   alertInstances,
@@ -7,7 +7,6 @@ import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
 } from "@/src/db/schemas/alerts";
-import { TRADING_TELEMETRY_CONFIG } from "../../lib/opentelemetry-setup";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";
@@ -83,7 +82,7 @@ export class NotificationService {
           debug: (message: string, context?: any) =>
             console.debug("[notification-service]", message, context || ""),
         };
-      } catch (error) {
+      } catch (_error) {
         // Fallback to console logging during build time
         this._logger = {
           debug: console.debug.bind(console),
@@ -284,7 +283,7 @@ export class NotificationService {
             )
           )
           .limit(1);
-        
+
         if (acknowledgments.length > 0) {
           console.info(`Alert ${alert.id} has been acknowledged, skipping escalation`);
           return;
@@ -337,10 +336,10 @@ export class NotificationService {
     const matchResults = await Promise.all(
       channels.map(async (channel) => ({
         channel,
-        matches: await this.channelMatchesAlert(channel, alert)
+        matches: await this.channelMatchesAlert(channel, alert),
       }))
     );
-    return matchResults.filter(result => result.matches).map(result => result.channel);
+    return matchResults.filter((result) => result.matches).map((result) => result.channel);
   }
 
   private async channelMatchesAlert(
@@ -366,7 +365,7 @@ export class NotificationService {
           .from(alertRules)
           .where(eq(alertRules.id, alert.ruleId))
           .limit(1);
-        
+
         if (alertRule.length > 0 && alertRule[0].category) {
           if (!categories.includes(alertRule[0].category)) {
             return false;
@@ -604,22 +603,22 @@ export class NotificationService {
           steps: JSON.stringify([
             { delay: 300, channels: [], condition: "unacknowledged" }, // 5 minutes
             { delay: 900, channels: [], condition: "unacknowledged" }, // 15 minutes
-            { delay: 1800, channels: [], condition: "unresolved" }     // 30 minutes
-          ])
+            { delay: 1800, channels: [], condition: "unresolved" }, // 30 minutes
+          ]),
         },
         high: {
           steps: JSON.stringify([
             { delay: 600, channels: [], condition: "unacknowledged" }, // 10 minutes
-            { delay: 1800, channels: [], condition: "unresolved" }     // 30 minutes
-          ])
+            { delay: 1800, channels: [], condition: "unresolved" }, // 30 minutes
+          ]),
         },
         medium: {
           steps: JSON.stringify([
-            { delay: 1800, channels: [], condition: "unresolved" }     // 30 minutes
-          ])
-        }
+            { delay: 1800, channels: [], condition: "unresolved" }, // 30 minutes
+          ]),
+        },
       };
-      
+
       // Return policy based on alert severity
       const policy = severityPolicies[alert.severity as keyof typeof severityPolicies];
       return policy || null;

@@ -5,10 +5,9 @@
  * exit strategies for trading positions with real-time validation.
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import type { ExitStrategy } from "../types/exit-strategies";
 import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";

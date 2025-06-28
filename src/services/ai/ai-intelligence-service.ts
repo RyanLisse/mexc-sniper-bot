@@ -37,7 +37,7 @@ export class AIIntelligenceService {
    */
   async generateCohereEmbedding(
     texts: string[],
-    inputType:
+    _inputType:
       | "search_document"
       | "search_query"
       | "classification"
@@ -45,9 +45,9 @@ export class AIIntelligenceService {
   ): Promise<number[][]> {
     // Adapt single-text service to handle arrays
     const results = await Promise.all(
-      texts.map(text => embeddingsService.generateCohereEmbedding(text))
+      texts.map((text) => embeddingsService.generateCohereEmbedding(text))
     );
-    return results.map(result => result.vector);
+    return results.map((result) => result.vector);
   }
 
   /**

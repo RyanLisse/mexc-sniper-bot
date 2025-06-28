@@ -163,7 +163,7 @@ export class MexcAuthService {
       }
 
       // Generate test signature to verify secret
-      const testString = "test=true&timestamp=" + Date.now();
+      const testString = `test=true&timestamp=${Date.now()}`;
       const signature = this.createSignature(testString);
 
       if (!signature || signature.length !== 64) {

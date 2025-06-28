@@ -59,9 +59,16 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
   }
 
   /**
-   * Get cache statistics
+   * Get cache statistics (override for base compatibility)
    */
-  getCacheStats(): {
+  getCacheStats() {
+    return super.getCacheStats();
+  }
+
+  /**
+   * Get extended cache statistics with exchange data
+   */
+  getExtendedCacheStats(): {
     requestCache: { size: number; maxSize: number; hitRate?: number; missRate?: number };
     exchangeSymbolsCount: number;
     exchangeCacheValid: boolean;
@@ -123,7 +130,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
         }
       }
 
-      const cacheStats = this.getCacheStats();
+      const cacheStats = this.getExtendedCacheStats();
 
       return {
         connectivity,
@@ -159,7 +166,7 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
       initialized: true,
       hasCredentials: this.hasCredentials(),
       cacheEnabled: this.config.enableCaching,
-      totalCacheSize: this.getCacheStats().requestCache.size,
+      totalCacheSize: this.getExtendedCacheStats().requestCache.size,
       version: "2.0.0-modular",
     };
   }

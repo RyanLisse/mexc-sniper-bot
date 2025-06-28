@@ -278,13 +278,14 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
         case "/api/v3/etf/calendar":
         case "/calendar":
           logger.info(`[MexcApiAgent] Fetching calendar data via service layer`);
-          serviceResponse = await this.mexcService.getCalendarListings() as ServiceResponse<unknown>;
+          serviceResponse =
+            (await this.mexcService.getCalendarListings()) as ServiceResponse<unknown>;
           break;
 
         case "/api/v3/etf/symbols":
         case "/symbols": {
           logger.info(`[MexcApiAgent] Fetching symbols data via service layer`);
-          serviceResponse = await this.mexcService.getSymbolsData() as ServiceResponse<unknown>;
+          serviceResponse = (await this.mexcService.getSymbolsData()) as ServiceResponse<unknown>;
           break;
         }
 
@@ -301,7 +302,8 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
 
         case "/account/balances":
           logger.info(`[MexcApiAgent] Fetching account balances via service layer`);
-          serviceResponse = await this.mexcService.getAccountBalances() as ServiceResponse<unknown>;
+          serviceResponse =
+            (await this.mexcService.getAccountBalances()) as ServiceResponse<unknown>;
           break;
 
         case "/health": {
@@ -310,7 +312,7 @@ Focus on actionable trading signals with specific entry/exit criteria and risk m
           const healthResult = {
             healthy: true,
             timestamp: new Date().toISOString(),
-            status: "Service layer health check not implemented"
+            status: "Service layer health check not implemented",
           };
           serviceResponse = {
             success: healthResult.healthy,
@@ -625,14 +627,14 @@ Provide actionable insights for service quality improvement and reliability enha
       }
 
       const patternData = patternResponse.data as any;
-      
+
       // These methods don't exist yet, provide fallbacks
       const performanceMetrics = {
         message: "getMetrics method not implemented in service layer",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
       const circuitBreakerStatus = {
-        data: { status: "unknown", message: "getCircuitBreakerStatus method not implemented" }
+        data: { status: "unknown", message: "getCircuitBreakerStatus method not implemented" },
       };
 
       // Generate AI analysis of patterns with enhanced context
@@ -784,8 +786,14 @@ Focus on actionable trading signals with performance-aware recommendations.
       logger.info(`[MexcApiAgent] Getting comprehensive service status`);
 
       // Create fallback implementations for missing service methods
-      const healthCheck = { status: "fulfilled" as const, value: { healthy: true, timestamp: new Date().toISOString() } };
-      const metrics = { status: "fulfilled" as const, value: { message: "getMetrics not implemented" } };
+      const healthCheck = {
+        status: "fulfilled" as const,
+        value: { healthy: true, timestamp: new Date().toISOString() },
+      };
+      const metrics = {
+        status: "fulfilled" as const,
+        value: { message: "getMetrics not implemented" },
+      };
       const cacheStats = { status: "fulfilled" as const, value: { hitRate: 0, size: 0 } };
       const circuitBreakerStatus = { status: "fulfilled" as const, value: { status: "unknown" } };
 

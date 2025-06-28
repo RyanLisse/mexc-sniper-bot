@@ -14,7 +14,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { z } from "zod";
-import { queryKeys } from "../lib/query-client";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -223,7 +222,6 @@ export function OptimizedAgentsDashboard({
           text: status === "starting" ? "Starting" : "Stopping",
           variant: "secondary" as const,
         };
-      case "inactive":
       default:
         return {
           color: "gray",

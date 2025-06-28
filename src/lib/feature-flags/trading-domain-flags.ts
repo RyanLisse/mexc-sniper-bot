@@ -10,24 +10,24 @@ export const TradingDomainFeatureFlagsSchema = z.object({
   enableCleanArchitectureTrading: z.boolean().default(false),
   enableDomainEventsPublishing: z.boolean().default(false),
   enableNewTradingUseCases: z.boolean().default(false),
-  
+
   // Repository features
   enableDrizzleTradingRepository: z.boolean().default(false),
   enableRepositoryMigration: z.boolean().default(false),
-  
+
   // Service adapter features
   enableMexcServiceAdapter: z.boolean().default(false),
   enableNotificationServiceAdapter: z.boolean().default(false),
-  
+
   // Auto-sniping specific features
   enableCleanArchAutoSniping: z.boolean().default(false),
   enableDomainBasedValidation: z.boolean().default(false),
-  
+
   // Safety and rollback features
   enableLegacyFallback: z.boolean().default(true),
   enableDualWriteMode: z.boolean().default(false),
   enablePerformanceMonitoring: z.boolean().default(true),
-  
+
   // Debugging and development
   enableVerboseDomainLogging: z.boolean().default(false),
   enableTestingMode: z.boolean().default(false),
@@ -47,12 +47,12 @@ export const DEFAULT_TRADING_DOMAIN_FLAGS: TradingDomainFeatureFlags = {
   enableNotificationServiceAdapter: false,
   enableCleanArchAutoSniping: false,
   enableDomainBasedValidation: false,
-  
+
   // Safety features enabled by default
   enableLegacyFallback: true,
   enableDualWriteMode: false,
   enablePerformanceMonitoring: true,
-  
+
   // Development features
   enableVerboseDomainLogging: false,
   enableTestingMode: false,
@@ -206,9 +206,11 @@ export class TradingDomainFeatureFlagManager {
   }
 
   canExecuteRealTrades(): boolean {
-    return this.isCleanArchitectureTradingEnabled() && 
-           this.isMexcServiceAdapterEnabled() && 
-           !this.isTestingModeEnabled();
+    return (
+      this.isCleanArchitectureTradingEnabled() &&
+      this.isMexcServiceAdapterEnabled() &&
+      !this.isTestingModeEnabled()
+    );
   }
 
   // Update flags
@@ -240,7 +242,9 @@ export class TradingDomainFeatureFlagManager {
 
     // Check for incompatible flag combinations
     if (this.flags.enableCleanArchAutoSniping && !this.flags.enableCleanArchitectureTrading) {
-      errors.push("Clean Architecture auto-sniping requires Clean Architecture trading to be enabled");
+      errors.push(
+        "Clean Architecture auto-sniping requires Clean Architecture trading to be enabled"
+      );
     }
 
     if (this.flags.enableNewTradingUseCases && !this.flags.enableCleanArchitectureTrading) {
@@ -248,12 +252,20 @@ export class TradingDomainFeatureFlagManager {
     }
 
     if (this.flags.enableDomainEventsPublishing && !this.flags.enableCleanArchitectureTrading) {
-      warnings.push("Domain events publishing without Clean Architecture trading may not work as expected");
+      warnings.push(
+        "Domain events publishing without Clean Architecture trading may not work as expected"
+      );
     }
 
     // Check for safety concerns
-    if (this.flags.enableCleanArchitectureTrading && !this.flags.enableLegacyFallback && !this.flags.enableDualWriteMode) {
-      warnings.push("No fallback mechanism enabled - consider enabling legacy fallback or dual write mode");
+    if (
+      this.flags.enableCleanArchitectureTrading &&
+      !this.flags.enableLegacyFallback &&
+      !this.flags.enableDualWriteMode
+    ) {
+      warnings.push(
+        "No fallback mechanism enabled - consider enabling legacy fallback or dual write mode"
+      );
     }
 
     if (!this.flags.enablePerformanceMonitoring && this.flags.enableCleanArchitectureTrading) {
@@ -272,7 +284,9 @@ export class TradingDomainFeatureFlagManager {
 export const tradingDomainFeatureFlags = new TradingDomainFeatureFlagManager();
 
 // Export convenience functions
-export const isTradingDomainFeatureEnabled = (feature: keyof TradingDomainFeatureFlags): boolean => {
+export const isTradingDomainFeatureEnabled = (
+  feature: keyof TradingDomainFeatureFlags
+): boolean => {
   return tradingDomainFeatureFlags.getCurrentFlags()[feature];
 };
 

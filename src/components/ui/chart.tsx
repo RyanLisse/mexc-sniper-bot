@@ -8,29 +8,30 @@ export interface ChartConfig {
 }
 
 // Safely lazy load Recharts ResponsiveContainer to reduce initial bundle size with error handling
-const ResponsiveContainer = lazy(async () => {
+const _ResponsiveContainer = lazy(async () => {
   try {
     const module = await import("recharts");
     return { default: module.ResponsiveContainer };
   } catch (error) {
     console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
     // Return fallback component that renders safely with ResponsiveContainer-compatible interface
-    const FallbackComponent = React.forwardRef<HTMLDivElement, { 
-      children?: React.ReactNode; 
-      className?: string;
-      width?: string | number;
-      height?: string | number;
-    }>(
-      ({ children, className }, ref) => (
-        <div
-          ref={ref}
-          className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
-        >
-          Chart temporarily unavailable
-          {children && <div style={{ display: "none" }}>{children}</div>}
-        </div>
-      )
-    );
+    const FallbackComponent = React.forwardRef<
+      HTMLDivElement,
+      {
+        children?: React.ReactNode;
+        className?: string;
+        width?: string | number;
+        height?: string | number;
+      }
+    >(({ children, className }, ref) => (
+      <div
+        ref={ref}
+        className={`w-full h-96 flex items-center justify-center border border-gray-200 rounded text-gray-500 ${className || ""}`}
+      >
+        Chart temporarily unavailable
+        {children && <div style={{ display: "none" }}>{children}</div>}
+      </div>
+    ));
     FallbackComponent.displayName = "ChartFallback";
     return { default: FallbackComponent as any };
   }
@@ -54,9 +55,7 @@ export function ChartContainer({
       }
     >
       <Suspense fallback={<div className="w-full h-96 animate-pulse bg-gray-100 rounded" />}>
-        <div className={`w-full h-96 ${className || ''}`}>
-          {children}
-        </div>
+        <div className={`w-full h-96 ${className || ""}`}>{children}</div>
       </Suspense>
     </ErrorBoundary>
   );

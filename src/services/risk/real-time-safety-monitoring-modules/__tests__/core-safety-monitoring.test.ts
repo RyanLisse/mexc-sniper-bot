@@ -554,7 +554,7 @@ describe("CoreSafetyMonitoring", () => {
       expect(typeof result).toBe("object");
 
       // Invalid data should be sanitized to safe defaults
-      expect(isNaN(result.currentDrawdown)).toBe(false);
+      expect(Number.isNaN(result.currentDrawdown)).toBe(false);
       expect(result.successRate).toBeLessThanOrEqual(100);
       expect(result.successRate).toBeGreaterThanOrEqual(0);
     });

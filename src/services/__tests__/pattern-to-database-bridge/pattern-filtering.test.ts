@@ -94,10 +94,11 @@ describe("Pattern to Database Bridge - Pattern Filtering", () => {
       patternType: "ready_state",
       matches: patterns,
       metadata: {
-        duration: 100,
         source: "test_source",
+        timestamp: new Date(),
         averageConfidence: 80,
-        highConfidenceCount: 1,
+        algorithmVersion: "v1.0",
+        processingTime: 100,
       },
     };
 
@@ -178,10 +179,11 @@ describe("Pattern to Database Bridge - Pattern Filtering", () => {
       patternType: "patterns_detected",
       matches: patterns,
       metadata: {
-        duration: 100,
         source: "test_source",
+        timestamp: new Date(),
         averageConfidence: 87.5,
-        highConfidenceCount: 2,
+        algorithmVersion: "v1.0",
+        processingTime: 100,
       },
     };
 
@@ -265,10 +267,11 @@ describe("Pattern to Database Bridge - Pattern Filtering", () => {
       patternType: "ready_state",
       matches: patterns,
       metadata: {
-        duration: 100,
         source: "test_source",
+        timestamp: new Date(),
         averageConfidence: 85,
-        highConfidenceCount: 2,
+        algorithmVersion: "v1.0",
+        processingTime: 100,
       },
     };
 

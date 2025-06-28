@@ -4,17 +4,27 @@
  */
 
 import { z } from "zod";
-import { Trade } from "@/src/domain/entities/trading/trade";
-import { Order, OrderSide, OrderType, OrderStatus, TimeInForce } from "@/src/domain/value-objects/trading/order";
-import { Money } from "@/src/domain/value-objects/trading/money";
-import { Price } from "@/src/domain/value-objects/trading/price";
-import type { TradingRepository, TradingService, NotificationService } from "@/src/application/interfaces/trading-repository";
-import { 
-  DomainValidationError, 
-  InvalidTradeParametersError,
+import type {
+  NotificationService,
+  TradingRepository,
+  TradingService,
+} from "@/src/application/interfaces/trading-repository";
+import type { Trade } from "@/src/domain/entities/trading/trade";
+import {
   BusinessRuleViolationError,
-  InvalidOrderStateError
+  DomainValidationError,
+  InvalidOrderStateError,
+  InvalidTradeParametersError,
 } from "@/src/domain/errors/trading-errors";
+import { Money } from "@/src/domain/value-objects/trading/money";
+import {
+  Order,
+  OrderSide,
+  OrderStatus,
+  OrderType,
+  TimeInForce,
+} from "@/src/domain/value-objects/trading/order";
+import { Price } from "@/src/domain/value-objects/trading/price";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 // Input validation schema
@@ -86,8 +96,8 @@ export class ExecuteTradeUseCase {
 
       // Update trade with execution results
       const updatedTrade = await this.updateTradeWithResults(
-        tradeWithOrder, 
-        updatedOrder, 
+        tradeWithOrder,
+        updatedOrder,
         executionResult
       );
 
@@ -98,7 +108,10 @@ export class ExecuteTradeUseCase {
       if (executionResult.success) {
         await this.notificationService.notifyTradeExecution(finalTrade);
       } else {
-        await this.notificationService.notifyTradeFailure(finalTrade, executionResult.error || "Unknown error");
+        await this.notificationService.notifyTradeFailure(
+          finalTrade,
+          executionResult.error || "Unknown error"
+        );
       }
 
       const executionTime = Date.now() - startTime;
@@ -120,11 +133,10 @@ export class ExecuteTradeUseCase {
         error: executionResult.error,
         timestamp,
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       const executionTime = Date.now() - startTime;
-      
+
       this.logger.error("Trade execution failed", {
         input,
         error: safeError,
@@ -143,14 +155,10 @@ export class ExecuteTradeUseCase {
 
   private validateInput(input: ExecuteTradeInput): ExecuteTradeInput {
     const result = ExecuteTradeInputSchema.safeParse(input);
-    
+
     if (!result.success) {
       const firstError = result.error.errors[0];
-      throw new DomainValidationError(
-        firstError.path.join("."),
-        input,
-        firstError.message
-      );
+      throw new DomainValidationError(firstError.path.join("."), input, firstError.message);
     }
 
     // Additional validation rules
@@ -163,11 +171,7 @@ export class ExecuteTradeUseCase {
     }
 
     if (result.data.type === "LIMIT" && !result.data.price) {
-      throw new DomainValidationError(
-        "price",
-        input,
-        "Price is required for LIMIT orders"
-      );
+      throw new DomainValidationError("price", input, "Price is required for LIMIT orders");
     }
 
     if (result.data.type === "STOP_LIMIT" && !result.data.stopPrice) {
@@ -183,7 +187,7 @@ export class ExecuteTradeUseCase {
 
   private async getTrade(tradeId: string): Promise<Trade> {
     const trade = await this.tradingRepository.findTradeById(tradeId);
-    
+
     if (!trade) {
       throw new InvalidTradeParametersError("tradeId", `Trade not found: ${tradeId}`);
     }
@@ -244,19 +248,27 @@ export class ExecuteTradeUseCase {
 
   private mapOrderType(type: string): OrderType {
     switch (type) {
-      case "MARKET": return OrderType.MARKET;
-      case "LIMIT": return OrderType.LIMIT;
-      case "STOP_LIMIT": return OrderType.STOP_LIMIT;
-      default: return OrderType.MARKET;
+      case "MARKET":
+        return OrderType.MARKET;
+      case "LIMIT":
+        return OrderType.LIMIT;
+      case "STOP_LIMIT":
+        return OrderType.STOP_LIMIT;
+      default:
+        return OrderType.MARKET;
     }
   }
 
   private mapTimeInForce(timeInForce: string): TimeInForce {
     switch (timeInForce) {
-      case "GTC": return TimeInForce.GTC;
-      case "IOC": return TimeInForce.IOC;
-      case "FOK": return TimeInForce.FOK;
-      default: return TimeInForce.IOC;
+      case "GTC":
+        return TimeInForce.GTC;
+      case "IOC":
+        return TimeInForce.IOC;
+      case "FOK":
+        return TimeInForce.FOK;
+      default:
+        return TimeInForce.IOC;
     }
   }
 
@@ -279,19 +291,19 @@ export class ExecuteTradeUseCase {
   private updateOrderWithResults(order: Order, executionResult: any): Order {
     if (executionResult.success && executionResult.data) {
       const data = executionResult.data;
-      
+
       if (data.status === "FILLED") {
         return order.markAsFilled(
           parseFloat(data.executedQty),
           parseFloat(data.price),
           undefined, // cumulativeQuoteQty
-          undefined  // fees
+          undefined // fees
         );
       } else if (data.status === "PARTIALLY_FILLED") {
         return order.markAsPartiallyFilled(
           parseFloat(data.executedQty),
           parseFloat(data.price),
-          undefined  // fees
+          undefined // fees
         );
       } else {
         return order.markAsSubmitted(data.orderId);
@@ -302,8 +314,8 @@ export class ExecuteTradeUseCase {
   }
 
   private async updateTradeWithResults(
-    trade: Trade, 
-    order: Order, 
+    trade: Trade,
+    order: Order,
     executionResult: any
   ): Promise<Trade> {
     // Update trade with order
@@ -311,7 +323,7 @@ export class ExecuteTradeUseCase {
 
     if (executionResult.success && executionResult.data) {
       const data = executionResult.data;
-      
+
       if (data.status === "FILLED") {
         // First, ensure trade is in executing state
         if (!updatedTrade.isExecuting()) {
@@ -319,12 +331,7 @@ export class ExecuteTradeUseCase {
         }
 
         // Calculate trade completion details
-        const entryPrice = Price.create(
-          parseFloat(data.price),
-          trade.symbol,
-          "mexc",
-          8
-        );
+        const entryPrice = Price.create(parseFloat(data.price), trade.symbol, "mexc", 8);
 
         const quantity = parseFloat(data.executedQty);
         const totalCost = Money.create(
@@ -339,14 +346,12 @@ export class ExecuteTradeUseCase {
           undefined, // exitPrice - will be set when position is closed
           quantity,
           totalCost,
-          undefined  // totalRevenue - will be set when position is closed
+          undefined // totalRevenue - will be set when position is closed
         );
       }
     } else {
       // Mark trade as failed
-      updatedTrade = updatedTrade.markAsFailed(
-        executionResult.error || "Trade execution failed"
-      );
+      updatedTrade = updatedTrade.markAsFailed(executionResult.error || "Trade execution failed");
     }
 
     return updatedTrade;
@@ -374,7 +379,7 @@ export class ExecuteTradeUseCase {
   }> {
     try {
       const trade = await this.tradingRepository.findTradeById(tradeId);
-      
+
       if (!trade) {
         return {
           canExecute: false,
@@ -403,7 +408,6 @@ export class ExecuteTradeUseCase {
         canExecute: true,
         trade,
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       return {

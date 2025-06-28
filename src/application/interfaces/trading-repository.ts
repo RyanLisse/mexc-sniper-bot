@@ -4,7 +4,6 @@
  */
 
 import type { Trade } from "@/src/domain/entities/trading/trade";
-import type { Position } from "@/src/services/trading/consolidated/core-trading/types";
 
 export interface TradingRepository {
   /**
@@ -45,7 +44,11 @@ export interface TradingRepository {
   /**
    * Get trading performance metrics for a user
    */
-  getTradingMetrics(userId: string, fromDate?: Date, toDate?: Date): Promise<{
+  getTradingMetrics(
+    userId: string,
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<{
     totalTrades: number;
     successfulTrades: number;
     totalPnL: number;

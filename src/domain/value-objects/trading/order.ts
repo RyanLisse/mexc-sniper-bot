@@ -127,7 +127,7 @@ export class Order extends ValueObject<OrderProps> {
       const firstError = validationResult.error.errors[0];
       throw new DomainValidationError(
         firstError.path.join("."),
-        'invalid value',
+        "invalid value",
         firstError.message
       );
     }
@@ -327,9 +327,12 @@ export class Order extends ValueObject<OrderProps> {
   }
 
   isFinalized(): boolean {
-    return [OrderStatus.FILLED, OrderStatus.CANCELLED, OrderStatus.REJECTED, OrderStatus.EXPIRED].includes(
-      this.props.status
-    );
+    return [
+      OrderStatus.FILLED,
+      OrderStatus.CANCELLED,
+      OrderStatus.REJECTED,
+      OrderStatus.EXPIRED,
+    ].includes(this.props.status);
   }
 
   getFillPercentage(): number {

@@ -27,7 +27,7 @@ export class Money extends ValueObject<MoneyProps> {
 
   static create(amount: number, currency: string, precision: number = 8): Money {
     const moneyProps: MoneyProps = {
-      amount: Math.round(amount * Math.pow(10, precision)) / Math.pow(10, precision),
+      amount: Math.round(amount * 10 ** precision) / 10 ** precision,
       currency: currency.toUpperCase(),
       precision,
     };
@@ -37,7 +37,7 @@ export class Money extends ValueObject<MoneyProps> {
 
   static fromString(amountStr: string, currency: string, precision: number = 8): Money {
     const amount = parseFloat(amountStr);
-    if (isNaN(amount)) {
+    if (Number.isNaN(amount)) {
       throw new DomainValidationError("amount", amountStr, "Invalid numeric format");
     }
     return Money.create(amount, currency, precision);
@@ -58,7 +58,7 @@ export class Money extends ValueObject<MoneyProps> {
       const firstError = validationResult.error.errors[0];
       throw new DomainValidationError(
         firstError.path.join("."),
-        'invalid value',
+        "invalid value",
         firstError.message
       );
     }
@@ -165,7 +165,11 @@ export class Money extends ValueObject<MoneyProps> {
   // Currency conversion (requires exchange rate)
   convertTo(targetCurrency: string, exchangeRate: number, precision: number = 8): Money {
     if (exchangeRate <= 0) {
-      throw new DomainValidationError("exchangeRate", exchangeRate, "Exchange rate must be positive");
+      throw new DomainValidationError(
+        "exchangeRate",
+        exchangeRate,
+        "Exchange rate must be positive"
+      );
     }
     return Money.create(this.props.amount * exchangeRate, targetCurrency, precision);
   }
@@ -198,7 +202,11 @@ export class Money extends ValueObject<MoneyProps> {
   // Static utility methods
   static max(...moneys: Money[]): Money {
     if (moneys.length === 0) {
-      throw new DomainValidationError("moneys", "empty array", "At least one Money instance required");
+      throw new DomainValidationError(
+        "moneys",
+        "empty array",
+        "At least one Money instance required"
+      );
     }
 
     return moneys.reduce((max, current) => (current.isGreaterThan(max) ? current : max));
@@ -206,7 +214,11 @@ export class Money extends ValueObject<MoneyProps> {
 
   static min(...moneys: Money[]): Money {
     if (moneys.length === 0) {
-      throw new DomainValidationError("moneys", "empty array", "At least one Money instance required");
+      throw new DomainValidationError(
+        "moneys",
+        "empty array",
+        "At least one Money instance required"
+      );
     }
 
     return moneys.reduce((min, current) => (current.isLessThan(min) ? current : min));
@@ -214,7 +226,11 @@ export class Money extends ValueObject<MoneyProps> {
 
   static sum(...moneys: Money[]): Money {
     if (moneys.length === 0) {
-      throw new DomainValidationError("moneys", "empty array", "At least one Money instance required");
+      throw new DomainValidationError(
+        "moneys",
+        "empty array",
+        "At least one Money instance required"
+      );
     }
 
     return moneys.reduce((sum, current) => sum.add(current));

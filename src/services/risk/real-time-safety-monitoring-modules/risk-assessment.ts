@@ -160,7 +160,7 @@ export class RiskAssessment {
   public async assessPortfolioRisk(): Promise<PortfolioRiskAssessment> {
     try {
       const positions = this.config.executionService.getActivePositions();
-      const config = this.config.executionService.getConfig();
+      const _config = this.config.executionService.getConfig();
 
       const totalValue = this.calculatePortfolioValue(positions);
       const totalExposure = positions.reduce(
@@ -216,8 +216,8 @@ export class RiskAssessment {
    */
   public async assessPerformanceRisk(): Promise<PerformanceRiskAssessment> {
     try {
-      const positions = this.config.executionService.getActivePositions();
-      const config = this.config.executionService.getConfig();
+      const _positions = this.config.executionService.getActivePositions();
+      const _config = this.config.executionService.getConfig();
 
       // Mock execution stats since getExecutionReport doesn't exist
       const mockStats = {

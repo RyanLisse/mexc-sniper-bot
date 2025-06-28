@@ -11,7 +11,7 @@
  * - Bulk pattern processing
  */
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, executeWithRetry, monitoredQuery } from "@/src/db";
 import { patternEmbeddings, snipeTargets, userPreferences } from "@/src/db/schema";

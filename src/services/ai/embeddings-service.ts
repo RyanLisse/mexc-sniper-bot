@@ -4,7 +4,7 @@
  * Handles AI embeddings generation using Cohere and other providers
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Embedding result schema
 export const EmbeddingResultSchema = z.object({
@@ -37,7 +37,7 @@ export class EmbeddingsService {
    */
   async generateCohereEmbedding(text: string): Promise<EmbeddingResult> {
     const cacheKey = `cohere_${text}`;
-    
+
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
     }
@@ -45,7 +45,7 @@ export class EmbeddingsService {
     // Mock Cohere embedding generation
     const embedding: EmbeddingResult = {
       vector: Array.from({ length: 1024 }, () => Math.random() - 0.5),
-      model: 'cohere-embed-v4',
+      model: "cohere-embed-v4",
       dimensions: 1024,
       timestamp: Date.now(),
     };
@@ -59,11 +59,11 @@ export class EmbeddingsService {
    */
   async generatePatternEmbedding(patternData: any): Promise<PatternEmbedding> {
     const embedding = await this.generateCohereEmbedding(JSON.stringify(patternData));
-    
+
     return {
       patternId: patternData?.id || `pattern_${Date.now()}`,
       embedding,
-      description: patternData?.description || 'Trading pattern',
+      description: patternData?.description || "Trading pattern",
       confidence: Math.random() * 0.4 + 0.6, // 0.6-1.0
     };
   }
@@ -74,12 +74,12 @@ export class EmbeddingsService {
   async enhancePatternDescription(description: string): Promise<string> {
     // Mock enhancement
     const enhancements = [
-      'AI-enhanced',
-      'machine learning optimized',
-      'algorithmically refined',
-      'data-driven',
+      "AI-enhanced",
+      "machine learning optimized",
+      "algorithmically refined",
+      "data-driven",
     ];
-    
+
     const enhancement = enhancements[Math.floor(Math.random() * enhancements.length)];
     return `${enhancement} ${description}`;
   }

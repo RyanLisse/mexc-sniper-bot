@@ -511,7 +511,7 @@ export class RealTimeCredentialMonitor {
     });
   }
 
-  private handleCredentialStatusChange(result: CredentialValidationResult): void {
+  private handleCredentialStatusChange(_result: CredentialValidationResult): void {
     // This method is called when the credential validator detects changes
     // We can use this to trigger immediate status updates
     if (this.isMonitoring) {

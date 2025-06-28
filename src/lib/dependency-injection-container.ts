@@ -20,7 +20,7 @@
  * - Circular dependency detection
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { BaseService, ServiceDependencies } from "./service-layer-architecture";
 
 // ============================================================================

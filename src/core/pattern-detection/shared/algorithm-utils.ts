@@ -222,7 +222,7 @@ export function estimateOptimizedMemoryUsage(cache: Map<string, any>): number {
     memoryUsage += key.length * 2; // UTF-16 characters
 
     // Estimate object size without JSON.stringify overhead
-    if (value && value.data) {
+    if (value?.data) {
       memoryUsage += typeof value.data === "string" ? value.data.length * 2 : 100; // Estimated object overhead
     }
 

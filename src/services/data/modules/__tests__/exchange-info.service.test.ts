@@ -8,7 +8,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createExchangeInfoService,
   type ExchangeInfoConfig,
-  ExchangeInfoResponseSchema,
   ExchangeInfoSchema,
   ExchangeInfoService,
   SymbolFilterSchema,

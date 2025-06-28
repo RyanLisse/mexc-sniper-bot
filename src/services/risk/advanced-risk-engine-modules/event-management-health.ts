@@ -8,7 +8,7 @@
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   MarketConditions,
   PortfolioRiskMetrics,

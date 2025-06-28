@@ -96,7 +96,7 @@ export class MexcRequestService {
    */
   private async executeHttpRequest<T>(
     requestConfig: ApiRequestConfig,
-    context: RequestContext
+    _context: RequestContext
   ): Promise<HttpResponse<T>> {
     const timeout = this.calculateTimeout(requestConfig);
     const url = this.buildUrl(requestConfig);

@@ -5,17 +5,15 @@
  * slippage analysis, execution costs, and latency metrics.
  */
 
-import React, { lazy, memo, Suspense, useMemo } from "react";
-import { ErrorBoundary } from "../error-boundary";
-
+import { memo, Suspense, useMemo } from "react";
 // Import Recharts components directly to avoid complex dynamic import typing issues
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { generateChartCellKey, generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
+import { ErrorBoundary } from "../error-boundary";
 
 export const ExecutionTab = memo(function ExecutionTab({
   data,

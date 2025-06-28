@@ -9,7 +9,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type ErrorSeverity,
   errorHandler,
-  RecoveryStrategy,
   type StandardizedError,
   type StandardizedErrorContext,
 } from "@/src/lib/standardized-error-handler";

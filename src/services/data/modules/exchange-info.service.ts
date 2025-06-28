@@ -381,7 +381,7 @@ export class ExchangeInfoService {
 
       // Validate cached data
       return ExchangeInfoResponseSchema.parse(cached);
-    } catch (error) {
+    } catch (_error) {
       // Invalid cached data, ignore and fetch fresh
       return null;
     }

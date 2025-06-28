@@ -4,12 +4,12 @@
  * Handles AI pattern recognition and embedding generation for trading patterns
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Pattern data schema
 export const PatternDataSchema = z.object({
   id: z.string(),
-  type: z.enum(['price', 'volume', 'technical', 'market']),
+  type: z.enum(["price", "volume", "technical", "market"]),
   timestamp: z.number(),
   data: z.record(z.any()),
   confidence: z.number().min(0).max(1),
@@ -48,7 +48,7 @@ export class PatternEmbeddingService {
    */
   async generateEmbedding(pattern: PatternData): Promise<EmbeddingVector> {
     const cacheKey = `${pattern.id}-${pattern.timestamp}`;
-    
+
     if (this.embeddingCache.has(cacheKey)) {
       return this.embeddingCache.get(cacheKey)!;
     }
@@ -57,7 +57,7 @@ export class PatternEmbeddingService {
     const embedding: EmbeddingVector = {
       vector: Array.from({ length: 128 }, () => Math.random()),
       dimensions: 128,
-      model: 'pattern-v1',
+      model: "pattern-v1",
       timestamp: Date.now(),
     };
 
@@ -97,7 +97,7 @@ export class PatternEmbeddingService {
    */
   private calculateCosineSimilarity(vectorA: number[], vectorB: number[]): number {
     if (vectorA.length !== vectorB.length) {
-      throw new Error('Vectors must have the same dimensions');
+      throw new Error("Vectors must have the same dimensions");
     }
 
     let dotProduct = 0;
@@ -140,7 +140,10 @@ export class PatternEmbeddingService {
   /**
    * Detect pattern trends (placeholder implementation)
    */
-  async detectPatternTrends(patternType: string, timeWindows: any[]): Promise<{
+  async detectPatternTrends(
+    patternType: string,
+    timeWindows: any[]
+  ): Promise<{
     trends: any[];
     insights: any[];
     alerts: any[];
@@ -151,17 +154,20 @@ export class PatternEmbeddingService {
         window,
         trend: index % 2 === 0 ? "increasing" : "decreasing",
         confidence: 0.7,
-        volume: Math.random() * 100
+        volume: Math.random() * 100,
       })),
       insights: [`Pattern ${patternType} shows moderate activity`],
-      alerts: []
+      alerts: [],
     };
   }
 
   /**
    * Analyze historical performance (placeholder implementation)
    */
-  async analyzeHistoricalPerformance(patternType: string, timeRange: any): Promise<{
+  async analyzeHistoricalPerformance(
+    patternType: string,
+    _timeRange: any
+  ): Promise<{
     summary: {
       totalPatterns: number;
       successRate: number;
@@ -175,18 +181,18 @@ export class PatternEmbeddingService {
       summary: {
         totalPatterns: 53,
         successRate: 0.72,
-        avgProfit: 2.5
+        avgProfit: 2.5,
       },
       breakdown: [
         { patternType: "ready_state", successRate: 0.75, trades: 20 },
         { patternType: "breakout", successRate: 0.68, trades: 18 },
-        { patternType: "momentum", successRate: 0.70, trades: 15 }
+        { patternType: "momentum", successRate: 0.7, trades: 15 },
       ],
       recommendations: [
         `Pattern ${patternType} shows consistent performance`,
         "Consider increasing position size for this pattern type",
-        "Monitor performance during high volatility periods"
-      ]
+        "Monitor performance during high volatility periods",
+      ],
     };
   }
 }

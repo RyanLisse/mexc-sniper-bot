@@ -95,12 +95,6 @@ export function SystemArchitectureOverview() {
   const [error, setError] = useState<string | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSystemOverview();
-    const interval = setInterval(fetchSystemOverview, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchSystemOverview = async () => {
     try {
       const response = await fetch("/api/monitoring/system-overview");
@@ -116,6 +110,12 @@ export function SystemArchitectureOverview() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSystemOverview();
+    const interval = setInterval(fetchSystemOverview, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [fetchSystemOverview]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

@@ -7,17 +7,17 @@
 
 // Re-export from the main services
 export type {
-  TradingPhase,
-  PhaseResult,
-  TradingStrategy,
   MultiPhaseTradingService,
+  PhaseResult,
+  TradingPhase,
+  TradingStrategy,
 } from "../multi-phase-trading-service";
 
 export { PREDEFINED_STRATEGIES } from "../multi-phase-trading-service";
 
 // Import the strategy builder for use in bot implementations
 import type { StrategyPattern } from "../multi-phase-strategy-builder";
-import type { TradingStrategy, PhaseResult, TradingPhase } from "../multi-phase-trading-service";
+import type { TradingPhase, TradingStrategy } from "../multi-phase-trading-service";
 
 /**
  * Multi-Phase Trading Bot Implementation
@@ -35,7 +35,7 @@ export class MultiPhaseTradingBot {
    */
   async executeStrategy(strategy: StrategyPattern): Promise<string> {
     const strategyId = `strategy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     if (this.activeExecutions.size >= this.config.maxConcurrentStrategies!) {
       throw new Error("Maximum concurrent strategies reached");
     }
@@ -112,7 +112,7 @@ export class MultiPhaseTradingBot {
    * List all active strategies
    */
   async listActiveStrategies(): Promise<TradingStrategy[]> {
-    return Array.from(this.strategies.values()).filter(s => s.status === "active");
+    return Array.from(this.strategies.values()).filter((s) => s.status === "active");
   }
 
   /**
@@ -136,7 +136,7 @@ export class MultiPhaseTradingBot {
   private async runStrategy(strategyId: string, strategy: TradingStrategy): Promise<void> {
     // Simulate strategy execution with phases
     const phaseCount = Math.floor(Math.random() * 3) + 1; // 1-3 phases
-    
+
     for (let i = 0; i < phaseCount; i++) {
       const phase: TradingPhase = {
         id: `phase_${i + 1}`,
@@ -148,7 +148,7 @@ export class MultiPhaseTradingBot {
       strategy.phases.push(phase);
 
       // Simulate phase execution time
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Simulate phase completion
       const success = Math.random() > 0.1; // 90% success rate
@@ -186,7 +186,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
   };
 
   constructor(
-    config: { 
+    config: {
       maxConcurrentStrategies?: number;
       riskLimits?: {
         maxDailyLoss?: number;
@@ -196,7 +196,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     } = {}
   ) {
     super(config);
-    
+
     this.riskLimits = {
       maxDailyLoss: config.riskLimits?.maxDailyLoss || 1000,
       maxPositionSize: config.riskLimits?.maxPositionSize || 500,
@@ -210,7 +210,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
   async executeStrategy(strategy: StrategyPattern): Promise<string> {
     // Perform risk checks before execution
     await this.performRiskChecks(strategy);
-    
+
     return super.executeStrategy(strategy);
   }
 
@@ -219,15 +219,17 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
    */
   private async performRiskChecks(strategy: StrategyPattern): Promise<void> {
     const activeStrategies = await this.listActiveStrategies();
-    
+
     // Check max open positions
     if (activeStrategies.length >= this.riskLimits.maxOpenPositions) {
       throw new Error("Maximum open positions limit reached");
     }
 
     // Check position size limits
-    if (strategy.riskManagement?.positionSize && 
-        strategy.riskManagement.positionSize > this.riskLimits.maxPositionSize) {
+    if (
+      strategy.riskManagement?.positionSize &&
+      strategy.riskManagement.positionSize > this.riskLimits.maxPositionSize
+    ) {
       throw new Error("Position size exceeds risk limits");
     }
 

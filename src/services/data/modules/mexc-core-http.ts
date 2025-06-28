@@ -87,7 +87,7 @@ export class MexcCoreHttpClient {
   /**
    * Handle errors consistently across all methods
    */
-  handleError(error: unknown, methodName: string, startTime: number): MexcServiceResponse<never> {
+  handleError(error: unknown, methodName: string, _startTime: number): MexcServiceResponse<never> {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     this.logger.error(`[MexcCoreHttpClient.${methodName}] Error:`, errorMessage);
 
@@ -145,7 +145,7 @@ export class MexcCoreHttpClient {
     }
 
     try {
-      const crypto = require("crypto");
+      const crypto = require("node:crypto");
       return crypto.createHmac("sha256", this.config.secretKey).update(data).digest("hex");
     } catch (error) {
       this.logger.error("Failed to create MEXC signature:", error);

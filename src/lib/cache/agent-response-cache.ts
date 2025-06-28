@@ -11,7 +11,6 @@ import type {
   AgentCacheConfig,
   CachedAgentResponse,
   CacheInvalidationCriteria,
-  CacheKeyOptions,
 } from "./agent-cache-types";
 import { CachePerformanceMonitor } from "./cache-performance-monitor";
 
@@ -163,7 +162,7 @@ export class AgentResponseCache {
         // Check age-based criteria
         if (criteria.olderThan) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
-          if (cached?.metadata?.timestamp && typeof cached.metadata.timestamp === 'string') {
+          if (cached?.metadata?.timestamp && typeof cached.metadata.timestamp === "string") {
             const age = Date.now() - new Date(cached.metadata.timestamp).getTime();
             shouldDelete = age > criteria.olderThan;
           }
@@ -181,7 +180,9 @@ export class AgentResponseCache {
         if (criteria.tags && criteria.tags.length > 0 && !shouldDelete) {
           const cached = await globalCacheManager.get<AgentResponse>(key);
           if (cached?.metadata?.tags && Array.isArray(cached.metadata.tags)) {
-            const hasMatchingTag = criteria.tags.some((tag) => (cached.metadata!.tags as string[]).includes(tag));
+            const hasMatchingTag = criteria.tags.some((tag) =>
+              (cached.metadata?.tags as string[]).includes(tag)
+            );
             shouldDelete = hasMatchingTag;
           }
         }
@@ -196,7 +197,7 @@ export class AgentResponseCache {
           const cached = await globalCacheManager.get<AgentResponse>(key);
           if (cached?.metadata?.dependencies && Array.isArray(cached.metadata.dependencies)) {
             const hasMatchingDependency = criteria.dependencies.some((dep) =>
-              (cached.metadata!.dependencies as string[]).includes(dep)
+              (cached.metadata?.dependencies as string[]).includes(dep)
             );
             shouldDelete = hasMatchingDependency;
           }
@@ -262,9 +263,10 @@ export class AgentResponseCache {
         if (cached) {
           totalSize += JSON.stringify(cached).length;
 
-          const timestamp = cached.metadata?.timestamp && typeof cached.metadata.timestamp === 'string'
-            ? new Date(cached.metadata.timestamp).getTime()
-            : Date.now();
+          const timestamp =
+            cached.metadata?.timestamp && typeof cached.metadata.timestamp === "string"
+              ? new Date(cached.metadata.timestamp).getTime()
+              : Date.now();
 
           oldestEntry = Math.min(oldestEntry, timestamp);
           newestEntry = Math.max(newestEntry, timestamp);

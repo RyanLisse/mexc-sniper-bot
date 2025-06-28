@@ -136,7 +136,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       }
 
       // Server-side: Log to console only (no browser globals available)
-      console.error('Server-side error:', error.message, error.stack);
+      console.error("Server-side error:", error.message, error.stack);
 
       this.logger.info("Error logged to monitoring services", { errorId: error.name });
     } catch (loggingError) {

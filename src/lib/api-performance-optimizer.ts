@@ -13,7 +13,7 @@
  * - Performance metrics and monitoring
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 
 interface RequestConfig {
   url: string;

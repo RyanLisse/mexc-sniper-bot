@@ -169,7 +169,7 @@ export function OptimizationControlPanel({
 
   React.useEffect(() => {
     validateConfiguration();
-  }, [config, systemHealth]);
+  }, [validateConfiguration]);
 
   const handleStartOptimization = async () => {
     if (!isConfigValid) return;

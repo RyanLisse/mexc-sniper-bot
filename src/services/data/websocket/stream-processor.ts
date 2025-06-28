@@ -5,7 +5,7 @@
  * Extracted from mexc-websocket-stream.ts for modularity
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -301,7 +301,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
       webSocketServer.broadcast({
         type: "trading:price",
         channel: "trading:prices",
-        data: price
+        data: price,
       });
     });
 
@@ -311,7 +311,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
       webSocketServer.broadcast({
         type: "trading:signal",
         channel: "trading:signals",
-        data: signal
+        data: signal,
       });
     });
 
@@ -321,7 +321,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
       webSocketServer.broadcast({
         type: "notification:info",
         channel: "notifications:global",
-        data: notification
+        data: notification,
       });
     });
   }

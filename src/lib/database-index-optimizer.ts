@@ -336,7 +336,7 @@ export class DatabaseIndexOptimizer {
           );
           return;
         }
-      } catch (schemaError) {
+      } catch (_schemaError) {
         // Information schema not available (e.g., mock database in tests)
         console.info(
           `📋 Schema validation skipped for index '${index.name}' - likely running in test/mock environment`

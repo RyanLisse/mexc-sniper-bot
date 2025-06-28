@@ -1,23 +1,25 @@
 /**
  * User Preferences Schema Definitions
- * 
+ *
  * Zod schemas for user preference validation and type safety
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Base user preferences schema
 export const UserPreferencesSchema = z.object({
   id: z.string().min(1),
   userId: z.string().min(1),
-  riskTolerance: z.enum(['low', 'medium', 'high']).default('medium'),
+  riskTolerance: z.enum(["low", "medium", "high"]).default("medium"),
   maxPositionSize: z.number().min(0).max(100).default(10),
   autoTradingEnabled: z.boolean().default(false),
-  notificationSettings: z.object({
-    email: z.boolean().default(true),
-    webhook: z.boolean().default(false),
-    urgentOnly: z.boolean().default(false),
-  }).default({}),
+  notificationSettings: z
+    .object({
+      email: z.boolean().default(true),
+      webhook: z.boolean().default(false),
+      urgentOnly: z.boolean().default(false),
+    })
+    .default({}),
   tradingPairs: z.array(z.string()).default([]),
   stopLossPercentage: z.number().min(0).max(50).default(5),
   takeProfitPercentage: z.number().min(1).max(100).default(15),
@@ -30,13 +32,13 @@ export const RiskPreferencesSchema = z.object({
   maxDailyLoss: z.number().min(0).default(1000),
   maxDrawdown: z.number().min(0).max(50).default(20),
   emergencyStopEnabled: z.boolean().default(true),
-  riskLevel: z.enum(['conservative', 'moderate', 'aggressive']).default('moderate'),
-  positionSizingMethod: z.enum(['fixed', 'percentage', 'kelly']).default('percentage'),
+  riskLevel: z.enum(["conservative", "moderate", "aggressive"]).default("moderate"),
+  positionSizingMethod: z.enum(["fixed", "percentage", "kelly"]).default("percentage"),
 });
 
-// Trading preferences  
+// Trading preferences
 export const TradingPreferencesSchema = z.object({
-  preferredTimeframes: z.array(z.string()).default(['1h', '4h']),
+  preferredTimeframes: z.array(z.string()).default(["1h", "4h"]),
   maxSimultaneousPositions: z.number().min(1).max(20).default(5),
   slippageTolerance: z.number().min(0).max(10).default(0.5),
   orderTimeoutSeconds: z.number().min(10).max(300).default(30),

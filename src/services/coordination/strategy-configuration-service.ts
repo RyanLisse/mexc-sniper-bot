@@ -10,7 +10,7 @@
  * 4. Provide real-time strategy performance feedback
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { UserTradingPreferences } from "@/src/hooks/use-user-preferences";
 import { toSafeError } from "../../lib/error-type-utils";
 import { EnhancedOrchestrator } from "../../mexc-agents/coordination/enhanced-orchestrator";

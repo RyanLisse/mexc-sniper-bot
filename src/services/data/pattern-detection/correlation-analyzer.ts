@@ -415,7 +415,7 @@ function groupSymbolsByStatus(symbols: SymbolEntry[]): Record<string, SymbolEntr
       else {
         groups.unknown.push(symbol);
       }
-    } catch (error) {
+    } catch (_error) {
       groups.unknown.push(symbol);
     }
   }
@@ -646,7 +646,7 @@ function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
       clusterSize: maxClusterSize,
       timeWindow: bestTimeWindow,
     };
-  } catch (error) {
+  } catch (_error) {
     return { hasCluster: false, clusterSize: 0, timeWindow: 0 };
   }
 }
@@ -723,7 +723,7 @@ function classifySymbolsBySector(symbols: SymbolEntry[]): Record<string, SymbolE
       } else {
         sectors.Other.push(symbol);
       }
-    } catch (error) {
+    } catch (_error) {
       sectors.Other.push(symbol);
     }
   }
@@ -779,7 +779,7 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
     }
 
     return { strength, insights, recommendations };
-  } catch (error) {
+  } catch (_error) {
     return { strength: 0, insights: ["Technical analysis failed"], recommendations: [] };
   }
 }
@@ -801,7 +801,7 @@ function calculateQualityScoreCorrelation(scores: number[]): number {
     if (standardDeviation / mean < 0.4) return 0.4;
 
     return 0.2;
-  } catch (error) {
+  } catch (_error) {
     return 0;
   }
 }

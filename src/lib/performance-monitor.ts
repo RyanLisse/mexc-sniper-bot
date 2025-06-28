@@ -7,7 +7,7 @@
  */
 
 import { errorHandler } from "./standardized-error-handler";
-import { createLogger, type LogContext } from "./unified-logger";
+import { createLogger } from "./unified-logger";
 
 const logger = createLogger("performance-monitor", {
   enableStructuredLogging: true,
@@ -358,7 +358,7 @@ export class PerformanceMonitor {
     const cutoffTime = Date.now() - timeRangeMs;
     const summary: Record<string, any> = {};
 
-    for (const [key, metrics] of this.metrics) {
+    for (const [_key, metrics] of this.metrics) {
       const recentMetrics = metrics.filter(
         (m) => m.timestamp > cutoffTime && m.category === category
       );

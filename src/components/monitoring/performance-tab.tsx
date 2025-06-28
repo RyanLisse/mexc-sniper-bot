@@ -5,12 +5,17 @@
  * best/worst trades, and P&L distribution charts.
  */
 
-import { lazy, memo, Suspense, useMemo } from "react";
-import { ErrorBoundary } from "../error-boundary";
-
+import { memo, Suspense, useMemo } from "react";
 // Import Recharts components directly to avoid complex dynamic import typing issues
-import { AreaChart, Area, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { createTooltipFormatter, generateListKey } from "../../lib/react-utilities";

@@ -13,16 +13,14 @@ import { getCachedCredentials } from "@/src/lib/credential-cache";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import {
   type TradingOrderRequest,
-  TradingOrderRequestSchema,
   type TradingOrderResponse,
   TradingOrderResponseSchema,
-  validateMexcApiRequest,
   validateMexcApiResponse,
 } from "@/src/schemas/mexc-api-validation-schemas";
+import type { OrderParameters } from "@/src/services/api/mexc-client-types";
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
-import type { OrderParameters } from "@/src/services/api/mexc-client-types";
 
 // ============================================================================
 // Types & Interfaces

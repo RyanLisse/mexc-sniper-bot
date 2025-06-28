@@ -25,7 +25,7 @@ export interface PerformanceOptimizationConfig {
 
 // Default performance configuration
 const DEFAULT_CONFIG: PerformanceOptimizationConfig = {
-  enableBundleAnalysis: process.env.NODE_ENV === 'development',
+  enableBundleAnalysis: process.env.NODE_ENV === "development",
   enableComponentMetrics: true,
   preloadCriticalComponents: true,
   maxBundleSize: 500, // 500KB
@@ -43,16 +43,13 @@ class PerformanceOptimizer {
   }
 
   // Track component loading performance
-  async trackComponentLoad<T>(
-    componentName: string,
-    loadFunction: () => Promise<T>
-  ): Promise<T> {
+  async trackComponentLoad<T>(componentName: string, loadFunction: () => Promise<T>): Promise<T> {
     const startTime = performance.now();
-    
+
     try {
       const result = await loadFunction();
       const loadTime = performance.now() - startTime;
-      
+
       if (this.config.enableComponentMetrics) {
         this.recordLoadingMetric({
           componentName,
@@ -72,7 +69,7 @@ class PerformanceOptimizer {
       return result;
     } catch (error) {
       const loadTime = performance.now() - startTime;
-      
+
       if (this.config.enableComponentMetrics) {
         this.recordLoadingMetric({
           componentName,
@@ -92,7 +89,7 @@ class PerformanceOptimizer {
     components: Array<{
       name: string;
       loader: () => Promise<any>;
-      priority: 'critical' | 'high' | 'medium' | 'low';
+      priority: "critical" | "high" | "medium" | "low";
     }>
   ): Promise<{
     successful: string[];
@@ -114,11 +111,11 @@ class PerformanceOptimizer {
     );
 
     // Load critical components immediately
-    const criticalComponents = sortedComponents.filter(c => c.priority === 'critical');
-    const nonCriticalComponents = sortedComponents.filter(c => c.priority !== 'critical');
+    const criticalComponents = sortedComponents.filter((c) => c.priority === "critical");
+    const nonCriticalComponents = sortedComponents.filter((c) => c.priority !== "critical");
 
     // Load critical components in parallel
-    const criticalResults = await Promise.allSettled(
+    const _criticalResults = await Promise.allSettled(
       criticalComponents.map(async (component) => {
         try {
           await this.trackComponentLoad(component.name, component.loader);
@@ -133,11 +130,11 @@ class PerformanceOptimizer {
 
     // Small delay to avoid blocking critical rendering
     if (nonCriticalComponents.length > 0) {
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     // Load non-critical components with lower priority
-    const nonCriticalResults = await Promise.allSettled(
+    const _nonCriticalResults = await Promise.allSettled(
       nonCriticalComponents.map(async (component) => {
         try {
           await this.trackComponentLoad(component.name, component.loader);
@@ -151,7 +148,7 @@ class PerformanceOptimizer {
     );
 
     const totalTime = performance.now() - startTime;
-    
+
     console.info(
       `Preloaded ${successful.length}/${components.length} components in ${totalTime.toFixed(2)}ms`
     );
@@ -174,7 +171,7 @@ class PerformanceOptimizer {
     recentFailures: ComponentLoadingMetrics[];
   } {
     const metrics = this.loadingMetrics;
-    
+
     if (metrics.length === 0) {
       return {
         totalComponents: 0,
@@ -186,30 +183,33 @@ class PerformanceOptimizer {
       };
     }
 
-    const successfulLoads = metrics.filter(m => !m.failed);
-    const failures = metrics.filter(m => m.failed);
-    
-    const averageLoadTime = successfulLoads.length > 0
-      ? successfulLoads.reduce((sum, m) => sum + m.loadTime, 0) / successfulLoads.length
-      : 0;
+    const successfulLoads = metrics.filter((m) => !m.failed);
+    const failures = metrics.filter((m) => m.failed);
 
-    const slowestComponent = successfulLoads.length > 0
-      ? successfulLoads.reduce((prev, current) => 
-          prev.loadTime > current.loadTime ? prev : current
-        )
-      : null;
+    const averageLoadTime =
+      successfulLoads.length > 0
+        ? successfulLoads.reduce((sum, m) => sum + m.loadTime, 0) / successfulLoads.length
+        : 0;
 
-    const fastestComponent = successfulLoads.length > 0
-      ? successfulLoads.reduce((prev, current) => 
-          prev.loadTime < current.loadTime ? prev : current
-        )
-      : null;
+    const slowestComponent =
+      successfulLoads.length > 0
+        ? successfulLoads.reduce((prev, current) =>
+            prev.loadTime > current.loadTime ? prev : current
+          )
+        : null;
+
+    const fastestComponent =
+      successfulLoads.length > 0
+        ? successfulLoads.reduce((prev, current) =>
+            prev.loadTime < current.loadTime ? prev : current
+          )
+        : null;
 
     const failureRate = metrics.length > 0 ? failures.length / metrics.length : 0;
-    
+
     // Recent failures (last 10 minutes)
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
-    const recentFailures = failures.filter(f => f.timestamp > tenMinutesAgo);
+    const recentFailures = failures.filter((f) => f.timestamp > tenMinutesAgo);
 
     return {
       totalComponents: metrics.length,
@@ -229,33 +229,33 @@ class PerformanceOptimizer {
   } {
     const analytics = this.getPerformanceAnalytics();
     const recommendations: string[] = [];
-    
+
     // Components that load quickly should be critical
     const criticalComponents = this.loadingMetrics
-      .filter(m => !m.failed && m.loadTime < this.config.maxLoadTime / 2)
-      .map(m => m.componentName);
+      .filter((m) => !m.failed && m.loadTime < this.config.maxLoadTime / 2)
+      .map((m) => m.componentName);
 
     // Components that load slowly should be deferred
     const deferredComponents = this.loadingMetrics
-      .filter(m => !m.failed && m.loadTime > this.config.maxLoadTime)
-      .map(m => m.componentName);
+      .filter((m) => !m.failed && m.loadTime > this.config.maxLoadTime)
+      .map((m) => m.componentName);
 
     // Generate recommendations
     if (analytics.failureRate > 0.1) {
       recommendations.push(
-        'High failure rate detected. Consider adding more robust error boundaries.'
+        "High failure rate detected. Consider adding more robust error boundaries."
       );
     }
 
     if (analytics.averageLoadTime > this.config.maxLoadTime) {
       recommendations.push(
-        'Average load time exceeds threshold. Consider code splitting or bundle optimization.'
+        "Average load time exceeds threshold. Consider code splitting or bundle optimization."
       );
     }
 
     if (analytics.recentFailures.length > 3) {
       recommendations.push(
-        'Multiple recent failures detected. Check network conditions and error handling.'
+        "Multiple recent failures detected. Check network conditions and error handling."
       );
     }
 
@@ -274,7 +274,7 @@ class PerformanceOptimizer {
 
   private recordLoadingMetric(metric: ComponentLoadingMetrics): void {
     this.loadingMetrics.push(metric);
-    
+
     // Keep only last 100 metrics to prevent memory bloat
     if (this.loadingMetrics.length > 100) {
       this.loadingMetrics = this.loadingMetrics.slice(-100);
@@ -288,22 +288,22 @@ export const performanceOptimizer = new PerformanceOptimizer();
 // Performance monitoring hook for React components
 export function usePerformanceMonitoring(componentName: string) {
   const startTime = performance.now();
-  
+
   return {
     markRenderComplete: () => {
       const renderTime = performance.now() - startTime;
-      
-      if (performanceOptimizer['config'].enableComponentMetrics) {
+
+      if (performanceOptimizer.config.enableComponentMetrics) {
         console.debug(`${componentName} render time: ${renderTime.toFixed(2)}ms`);
       }
-      
+
       return renderTime;
     },
   };
 }
 
 // Bundle size estimation utilities
-export function estimateBundleSize(componentName: string): Promise<number> {
+export function estimateBundleSize(_componentName: string): Promise<number> {
   // This is a simplified estimation - in real implementation,
   // you'd use webpack-bundle-analyzer or similar tools
   return Promise.resolve(Math.random() * 100 + 50); // Placeholder
@@ -312,9 +312,11 @@ export function estimateBundleSize(componentName: string): Promise<number> {
 // Export performance utilities
 export const PerformanceUtils = {
   trackComponentLoad: performanceOptimizer.trackComponentLoad.bind(performanceOptimizer),
-  preloadComponentsWithPriority: performanceOptimizer.preloadComponentsWithPriority.bind(performanceOptimizer),
+  preloadComponentsWithPriority:
+    performanceOptimizer.preloadComponentsWithPriority.bind(performanceOptimizer),
   isComponentPreloaded: performanceOptimizer.isComponentPreloaded.bind(performanceOptimizer),
   getPerformanceAnalytics: performanceOptimizer.getPerformanceAnalytics.bind(performanceOptimizer),
-  generateOptimizedImportStrategy: performanceOptimizer.generateOptimizedImportStrategy.bind(performanceOptimizer),
+  generateOptimizedImportStrategy:
+    performanceOptimizer.generateOptimizedImportStrategy.bind(performanceOptimizer),
   clearMetrics: performanceOptimizer.clearMetrics.bind(performanceOptimizer),
 };

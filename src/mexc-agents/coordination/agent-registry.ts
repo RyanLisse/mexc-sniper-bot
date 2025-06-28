@@ -261,7 +261,7 @@ export class AgentRegistry extends AgentRegistryCore {
     if (!agent) return;
 
     const health = agent.health;
-    const thresholds = agent.thresholds;
+    const _thresholds = agent.thresholds;
 
     health.lastChecked = result.timestamp;
     health.responseTime = result.responseTime;

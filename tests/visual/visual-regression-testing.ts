@@ -528,14 +528,41 @@ export class VisualRegressionEngine {
         const navigation = performance.getEntriesByType('navigation' as any)[0] as any
         const paint = performance.getEntriesByType('paint' as any) as any[]
         
-        const fcp = paint.find(entry => entry.name === 'first-contentful-paint')
+        const fcp = paint?.find(entry => entry?.name === 'first-contentful-paint')
+        
+        // Safely collect Web Vitals with proper null checks
+        let largestContentfulPaint = 0
+        let cumulativeLayoutShift = 0
+        
+        try {
+          // Check if PerformanceObserver is available for LCP
+          if (typeof PerformanceObserver !== 'undefined') {
+            const lcpEntries = performance.getEntriesByType('largest-contentful-paint' as any) as any[]
+            if (lcpEntries?.length > 0) {
+              largestContentfulPaint = lcpEntries[lcpEntries.length - 1]?.startTime || 0
+            }
+            
+            // Check for layout-shift entries for CLS
+            const clsEntries = performance.getEntriesByType('layout-shift' as any) as any[]
+            if (clsEntries?.length > 0) {
+              cumulativeLayoutShift = clsEntries
+                .filter(entry => entry && !entry.hadRecentInput)
+                .reduce((sum, entry) => sum + (entry.value || 0), 0)
+            }
+          }
+        } catch (vitalsError) {
+          // Web Vitals APIs not available, use fallback values
+          console.warn('Web Vitals collection failed:', vitalsError)
+        }
         
         return {
           firstContentfulPaint: fcp?.startTime || 0,
-          largestContentfulPaint: 0, // Would need LCP API
-          cumulativeLayoutShift: 0, // Would need CLS API
-          firstInputDelay: 0, // Would need FID API
-          timeToInteractive: navigation.loadEventEnd - navigation.fetchStart,
+          largestContentfulPaint,
+          cumulativeLayoutShift,
+          firstInputDelay: 0, // Would need FID API with proper observer
+          timeToInteractive: navigation?.loadEventEnd && navigation?.fetchStart 
+            ? navigation.loadEventEnd - navigation.fetchStart 
+            : 0,
           speedIndex: 0, // Would need Speed Index calculation
           totalBlockingTime: 0 // Would need TBT calculation
         }
@@ -758,8 +785,8 @@ export class VisualRegressionEngine {
     )
 
     const performanceIssues = results.filter(r => 
-      r.performanceMetrics?.largestContentfulPaint > 2500 || 
-      r.performanceMetrics?.cumulativeLayoutShift > 0.1
+      (r.performanceMetrics?.largestContentfulPaint && r.performanceMetrics.largestContentfulPaint > 2500) || 
+      (r.performanceMetrics?.cumulativeLayoutShift && r.performanceMetrics.cumulativeLayoutShift > 0.1)
     ).length
 
     const recommendations = this.generateRecommendations(results)
@@ -796,7 +823,9 @@ export class VisualRegressionEngine {
     }
 
     // Performance recommendations
-    const slowTests = results.filter(r => r.performanceMetrics?.largestContentfulPaint > 2500)
+    const slowTests = results.filter(r => 
+      r.performanceMetrics?.largestContentfulPaint && r.performanceMetrics.largestContentfulPaint > 2500
+    )
     if (slowTests.length > 0) {
       recommendations.push(`Optimize performance for ${slowTests.length} tests with slow LCP (>2.5s)`)
     }

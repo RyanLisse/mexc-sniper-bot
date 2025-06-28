@@ -10,14 +10,12 @@ import {
   Play,
   RefreshCw,
   Target,
-  TrendingUp,
 } from "lucide-react";
 import { z } from "zod";
 import { queryKeys } from "../lib/query-client";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Progress } from "./ui/progress";
 
 // Zod schema for workflow status validation
 const WorkflowStatusSchema = z.object({
@@ -164,8 +162,8 @@ export function StreamlinedWorkflowStatus({
   const StatusIcon = statusConfig.icon;
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
 
-  const isSystemRunning = workflow?.systemStatus === "running";
-  const isAnyWorkflowActive =
+  const _isSystemRunning = workflow?.systemStatus === "running";
+  const _isAnyWorkflowActive =
     workflow?.discoveryRunning || workflow?.sniperActive || workflow?.patternDetectionActive;
 
   const handleToggleWorkflow = (workflowType: string, isActive: boolean) => {

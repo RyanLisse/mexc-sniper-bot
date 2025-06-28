@@ -396,13 +396,13 @@ describe("PatternToDatabaseBridge Unit Tests", () => {
       if (originalEnv !== undefined) {
         process.env.DEFAULT_USER_ID = originalEnv;
       } else {
-        delete process.env.DEFAULT_USER_ID;
+        process.env.DEFAULT_USER_ID = undefined;
       }
     });
 
     it("should use default fallback when no mapping or environment variable", () => {
       const originalEnv = process.env.DEFAULT_USER_ID;
-      delete process.env.DEFAULT_USER_ID;
+      process.env.DEFAULT_USER_ID = undefined;
 
       const bridgeAny = bridge as any;
       const pattern = { activityInfo: { activityTypes: ["unmapped_source"] } };

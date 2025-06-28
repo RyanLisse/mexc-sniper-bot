@@ -3,17 +3,11 @@
  * Implements the TradingRepository interface using Drizzle ORM
  */
 
-import { eq, and, desc, gte, lte, count, sql } from "drizzle-orm";
-import { db } from "@/src/db";
-import { 
-  snipeTargets, 
-  transactions
-} from "@/src/db/schemas/trading";
+import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { TradingRepository } from "@/src/application/interfaces/trading-repository";
+import { db } from "@/src/db";
+import { snipeTargets, transactions } from "@/src/db/schemas/trading";
 import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
-import { Order, OrderStatus, OrderSide, OrderType, TimeInForce } from "@/src/domain/value-objects/trading/order";
-import { Money } from "@/src/domain/value-objects/trading/money";
-import { Price } from "@/src/domain/value-objects/trading/price";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 export class DrizzleTradingRepository implements TradingRepository {
@@ -38,10 +32,7 @@ export class DrizzleTradingRepository implements TradingRepository {
       const tradeData = this.tradeToDbFormat(trade);
 
       // Insert into snipe targets table (adapting existing schema)
-      const [insertedTrade] = await db
-        .insert(snipeTargets)
-        .values(tradeData)
-        .returning();
+      const [insertedTrade] = await db.insert(snipeTargets).values(tradeData).returning();
 
       // Also insert into transactions table for tracking
       if (trade.hasOrders()) {
@@ -54,7 +45,6 @@ export class DrizzleTradingRepository implements TradingRepository {
       });
 
       return trade;
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to save trade", {
@@ -81,7 +71,6 @@ export class DrizzleTradingRepository implements TradingRepository {
       }
 
       return this.dbToTradeFormat(result[0]);
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find trade by ID", {
@@ -102,7 +91,6 @@ export class DrizzleTradingRepository implements TradingRepository {
         .limit(limit);
 
       return results.map((row: any) => this.dbToTradeFormat(row)).filter(Boolean) as Trade[];
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find trades by user ID", {
@@ -123,7 +111,6 @@ export class DrizzleTradingRepository implements TradingRepository {
         .limit(limit);
 
       return results.map((row: any) => this.dbToTradeFormat(row)).filter(Boolean) as Trade[];
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find trades by symbol", {
@@ -137,20 +124,19 @@ export class DrizzleTradingRepository implements TradingRepository {
   async findActiveTradesByUserId(userId: string): Promise<Trade[]> {
     try {
       const activeStatuses = ["ready", "executing", "pending"];
-      
+
       const results = await db
         .select()
         .from(snipeTargets)
         .where(
           and(
             sql`${snipeTargets.errorMessage} LIKE ${`%userId:${userId}%`}`,
-            sql`${snipeTargets.status} IN (${activeStatuses.map(s => `'${s}'`).join(",")})`
+            sql`${snipeTargets.status} IN (${activeStatuses.map((s) => `'${s}'`).join(",")})`
           )
         )
         .orderBy(desc(snipeTargets.createdAt));
 
       return results.map((row: any) => this.dbToTradeFormat(row)).filter(Boolean) as Trade[];
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find active trades by user ID", {
@@ -181,11 +167,8 @@ export class DrizzleTradingRepository implements TradingRepository {
 
       // Update with new trade data
       const updateData = this.tradeToDbUpdateFormat(trade);
-      
-      await db
-        .update(snipeTargets)
-        .set(updateData)
-        .where(eq(snipeTargets.id, existing[0].id));
+
+      await db.update(snipeTargets).set(updateData).where(eq(snipeTargets.id, existing[0].id));
 
       // Update orders if any
       if (trade.hasOrders()) {
@@ -198,7 +181,6 @@ export class DrizzleTradingRepository implements TradingRepository {
       });
 
       return trade;
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to update trade", {
@@ -217,12 +199,9 @@ export class DrizzleTradingRepository implements TradingRepository {
         .where(sql`${snipeTargets.errorMessage} LIKE ${`%tradeId:${id}%`}`);
 
       // Delete related transactions
-      await db
-        .delete(transactions)
-        .where(sql`${transactions.notes} LIKE ${`%tradeId:${id}%`}`);
+      await db.delete(transactions).where(sql`${transactions.notes} LIKE ${`%tradeId:${id}%`}`);
 
       this.logger.info("Trade deleted successfully", { tradeId: id });
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to delete trade", {
@@ -234,8 +213,8 @@ export class DrizzleTradingRepository implements TradingRepository {
   }
 
   async getTradingMetrics(
-    userId: string, 
-    fromDate?: Date, 
+    userId: string,
+    fromDate?: Date,
     toDate?: Date
   ): Promise<{
     totalTrades: number;
@@ -245,9 +224,7 @@ export class DrizzleTradingRepository implements TradingRepository {
     averageExecutionTime: number;
   }> {
     try {
-      let whereConditions = [
-        sql`${snipeTargets.errorMessage} LIKE ${`%userId:${userId}%`}`
-      ];
+      const whereConditions = [sql`${snipeTargets.errorMessage} LIKE ${`%userId:${userId}%`}`];
 
       if (fromDate) {
         whereConditions.push(gte(snipeTargets.createdAt, fromDate));
@@ -266,12 +243,7 @@ export class DrizzleTradingRepository implements TradingRepository {
       const [successfulResult] = await db
         .select({ count: count() })
         .from(snipeTargets)
-        .where(
-          and(
-            ...whereConditions,
-            eq(snipeTargets.status, "completed")
-          )
-        );
+        .where(and(...whereConditions, eq(snipeTargets.status, "completed")));
 
       // Calculate basic metrics
       const totalTrades = totalResult.count;
@@ -287,7 +259,6 @@ export class DrizzleTradingRepository implements TradingRepository {
         successRate,
         averageExecutionTime: 0, // Would be calculated from execution timestamps
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to get trading metrics", {
@@ -351,7 +322,7 @@ export class DrizzleTradingRepository implements TradingRepository {
   private dbToTradeFormat(row: any): Trade | null {
     try {
       let tradeMetadata: any = {};
-      
+
       if (row.errorMessage) {
         try {
           tradeMetadata = JSON.parse(row.errorMessage);
@@ -383,7 +354,6 @@ export class DrizzleTradingRepository implements TradingRepository {
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
       });
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to convert DB row to Trade", {
@@ -396,23 +366,35 @@ export class DrizzleTradingRepository implements TradingRepository {
 
   private mapTradeStatusToDb(status: TradeStatus): string {
     switch (status) {
-      case TradeStatus.PENDING: return "ready";
-      case TradeStatus.EXECUTING: return "executing";
-      case TradeStatus.COMPLETED: return "completed";
-      case TradeStatus.FAILED: return "failed";
-      case TradeStatus.CANCELLED: return "cancelled";
-      default: return "ready";
+      case TradeStatus.PENDING:
+        return "ready";
+      case TradeStatus.EXECUTING:
+        return "executing";
+      case TradeStatus.COMPLETED:
+        return "completed";
+      case TradeStatus.FAILED:
+        return "failed";
+      case TradeStatus.CANCELLED:
+        return "cancelled";
+      default:
+        return "ready";
     }
   }
 
   private mapDbStatusToTrade(status: string): TradeStatus {
     switch (status) {
-      case "ready": return TradeStatus.PENDING;
-      case "executing": return TradeStatus.EXECUTING;
-      case "completed": return TradeStatus.COMPLETED;
-      case "failed": return TradeStatus.FAILED;
-      case "cancelled": return TradeStatus.CANCELLED;
-      default: return TradeStatus.PENDING;
+      case "ready":
+        return TradeStatus.PENDING;
+      case "executing":
+        return TradeStatus.EXECUTING;
+      case "completed":
+        return TradeStatus.COMPLETED;
+      case "failed":
+        return TradeStatus.FAILED;
+      case "cancelled":
+        return TradeStatus.CANCELLED;
+      default:
+        return TradeStatus.PENDING;
     }
   }
 
@@ -431,7 +413,8 @@ export class DrizzleTradingRepository implements TradingRepository {
           buyOrderId: order.side === "BUY" ? order.exchangeOrderId || order.id : null,
           sellPrice: order.side === "SELL" ? order.price : null,
           sellQuantity: order.side === "SELL" ? order.quantity : null,
-          sellTotalRevenue: order.side === "SELL" ? (order.quantity || 0) * (order.price || 0) : null,
+          sellTotalRevenue:
+            order.side === "SELL" ? (order.quantity || 0) * (order.price || 0) : null,
           sellTimestamp: order.side === "SELL" ? order.createdAt : null,
           sellOrderId: order.side === "SELL" ? order.exchangeOrderId || order.id : null,
           fees: order.fees || 0,

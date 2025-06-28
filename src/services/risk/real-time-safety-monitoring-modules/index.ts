@@ -34,7 +34,10 @@ import {
   EmergencyStopCoordinator,
   type EmergencyStopEvent,
 } from "@/src/services/risk/emergency-stop-coordinator";
-import { getCoreTrading, type CoreTradingService } from "@/src/services/trading/consolidated/core-trading/base-service";
+import {
+  type CoreTradingService,
+  getCoreTrading,
+} from "@/src/services/trading/consolidated/core-trading/base-service";
 import {
   type AlertGenerationData,
   AlertManagement,

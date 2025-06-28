@@ -12,12 +12,22 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ErrorBoundary } from "../error-boundary";
-
+import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 // Import Recharts components directly to avoid complex dynamic import typing issues
-import { PieChart, Area, Line, Pie, Cell, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, AreaChart, LineChart } from "recharts";
-
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +41,7 @@ import {
   type PerformanceMetrics,
   useSkeletonItems,
 } from "../../lib/react-utilities";
+import { ErrorBoundary } from "../error-boundary";
 
 interface PerformanceData {
   timestamp: string;
@@ -531,7 +542,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                       <div className="flex gap-2">
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground mb-1">Response Time</p>
-                          <Progress value={Math.min(((metrics.responseTime ?? 0) / 1000) * 100, 100)} />
+                          <Progress
+                            value={Math.min(((metrics.responseTime ?? 0) / 1000) * 100, 100)}
+                          />
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground mb-1">Success Rate</p>
@@ -578,7 +591,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                       <div className="flex gap-2">
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground mb-1">Response Time</p>
-                          <Progress value={Math.min(((metrics.responseTime ?? 0) / 1000) * 100, 100)} />
+                          <Progress
+                            value={Math.min(((metrics.responseTime ?? 0) / 1000) * 100, 100)}
+                          />
                         </div>
                         <div className="flex-1">
                           <p className="text-xs text-muted-foreground mb-1">Success Rate</p>

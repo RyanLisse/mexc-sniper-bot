@@ -4,9 +4,9 @@
  * Coordinates AI services for enhanced pattern analysis
  */
 
-import { z } from 'zod';
-import { embeddingsService } from './embeddings-service';
-import { researchService } from './research-service';
+import { z } from "zod";
+import { embeddingsService } from "./embeddings-service";
+import { researchService } from "./research-service";
 
 // Enhanced pattern schema
 export const EnhancedPatternSchema = z.object({
@@ -31,17 +31,21 @@ export class IntelligenceOrchestrator {
    * Enhance pattern with AI
    */
   async enhancePatternWithAI(
-    pattern: any, 
+    pattern: any,
     options: {
       includeResearch?: boolean;
       includeEmbedding?: boolean;
       researchFocus?: "technical" | "fundamental" | "news" | "comprehensive";
     } = {}
   ): Promise<EnhancedPattern> {
-    const { includeResearch = true, includeEmbedding = true, researchFocus = 'comprehensive' } = options;
+    const {
+      includeResearch = true,
+      includeEmbedding = true,
+      researchFocus = "comprehensive",
+    } = options;
 
     const tasks = [];
-    
+
     if (includeEmbedding) {
       tasks.push(embeddingsService.generatePatternEmbedding(pattern));
     } else {
@@ -49,16 +53,21 @@ export class IntelligenceOrchestrator {
     }
 
     if (includeResearch) {
-      const query = `${pattern?.symbol || 'market'} ${researchFocus} analysis`;
+      const query = `${pattern?.symbol || "market"} ${researchFocus} analysis`;
       tasks.push(researchService.conductMarketResearch(query));
     } else {
       tasks.push(Promise.resolve(null));
     }
 
-    tasks.push(embeddingsService.enhancePatternDescription(pattern?.description || 'trading pattern'));
+    tasks.push(
+      embeddingsService.enhancePatternDescription(pattern?.description || "trading pattern")
+    );
 
     const [embedding, research, enhancedDescriptionResult] = await Promise.all(tasks);
-    const enhancedDescription = typeof enhancedDescriptionResult === 'string' ? enhancedDescriptionResult : 'AI-enhanced trading pattern';
+    const enhancedDescription =
+      typeof enhancedDescriptionResult === "string"
+        ? enhancedDescriptionResult
+        : "AI-enhanced trading pattern";
 
     return {
       id: pattern?.id || `enhanced_${Date.now()}`,
@@ -67,13 +76,13 @@ export class IntelligenceOrchestrator {
         embedding,
         research,
         description: enhancedDescription,
-        confidence: 
-          embedding && research && typeof embedding === 'object' && typeof research === 'object' 
-            ? (embedding.confidence + research.confidence) / 2 
-            : embedding && typeof embedding === 'object' 
-              ? embedding.confidence 
-              : research && typeof research === 'object' 
-                ? research.confidence 
+        confidence:
+          embedding && research && typeof embedding === "object" && typeof research === "object"
+            ? (embedding.confidence + research.confidence) / 2
+            : embedding && typeof embedding === "object"
+              ? embedding.confidence
+              : research && typeof research === "object"
+                ? research.confidence
                 : 0.8,
       },
       timestamp: Date.now(),
@@ -94,16 +103,16 @@ export class IntelligenceOrchestrator {
   ): Promise<EnhancedPattern[]> {
     const { maxConcurrency = 5 } = options;
     const results: EnhancedPattern[] = [];
-    
+
     // Process patterns in batches to control concurrency
     for (let i = 0; i < patterns.length; i += maxConcurrency) {
       const batch = patterns.slice(i, i + maxConcurrency);
       const batchResults = await Promise.all(
-        batch.map(pattern => this.enhancePatternWithAI(pattern, options))
+        batch.map((pattern) => this.enhancePatternWithAI(pattern, options))
       );
       results.push(...batchResults);
     }
-    
+
     return results;
   }
 
@@ -111,15 +120,15 @@ export class IntelligenceOrchestrator {
    * Get service health status
    */
   async getServiceHealth(): Promise<{
-    embeddings: { status: 'healthy' | 'degraded' | 'unhealthy'; latency: number };
-    research: { status: 'healthy' | 'degraded' | 'unhealthy'; latency: number };
-    overall: 'healthy' | 'degraded' | 'unhealthy';
+    embeddings: { status: "healthy" | "degraded" | "unhealthy"; latency: number };
+    research: { status: "healthy" | "degraded" | "unhealthy"; latency: number };
+    overall: "healthy" | "degraded" | "unhealthy";
   }> {
     // Mock health check - in real implementation this would ping services
     return {
-      embeddings: { status: 'healthy', latency: 50 },
-      research: { status: 'healthy', latency: 200 },
-      overall: 'healthy',
+      embeddings: { status: "healthy", latency: 50 },
+      research: { status: "healthy", latency: 200 },
+      overall: "healthy",
     };
   }
 

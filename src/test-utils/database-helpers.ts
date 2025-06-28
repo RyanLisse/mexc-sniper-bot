@@ -116,7 +116,7 @@ export async function cleanupTestData(userId: string): Promise<void> {
     // Clean up user (if exists)
     try {
       await db.delete(user).where(eq(user.id, userId));
-    } catch (error) {
+    } catch (_error) {
       // User table might not exist, ignore
     }
   } catch (error) {

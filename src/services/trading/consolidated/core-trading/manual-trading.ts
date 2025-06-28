@@ -373,7 +373,7 @@ export class ManualTradingModule {
       if (ticker.success && ticker.data?.price) {
         return parseFloat(ticker.data.price);
       }
-    } catch (error) {
+    } catch (_error) {
       this.context.logger.debug("Could not get real price for simulation", { symbol });
     }
 
@@ -446,7 +446,7 @@ export class ManualTradingModule {
   /**
    * Update trade metrics
    */
-  private updateTradeMetrics(result: TradeResult, params: TradeParameters): void {
+  private updateTradeMetrics(result: TradeResult, _params: TradeParameters): void {
     this.totalTrades++;
     this.state.metrics.totalTrades++;
 
@@ -467,7 +467,7 @@ export class ManualTradingModule {
   /**
    * Handle trade failure for circuit breaker
    */
-  private handleTradeFailure(error: Error): void {
+  private handleTradeFailure(_error: Error): void {
     this.circuitBreakerFailures++;
 
     if (

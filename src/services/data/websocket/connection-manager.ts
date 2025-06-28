@@ -93,18 +93,18 @@ export class MexcConnectionManager {
           clearTimeout(timeout);
         };
 
-        this.ws!.once("open", () => {
+        this.ws?.once("open", () => {
           cleanup();
           resolve();
         });
 
-        this.ws!.once("error", (error) => {
+        this.ws?.once("error", (error) => {
           cleanup();
           this.cleanup();
           reject(error);
         });
 
-        this.ws!.once("close", (code, reason) => {
+        this.ws?.once("close", (code, reason) => {
           cleanup();
           this.cleanup();
           reject(new Error(`Connection closed during establishment: ${code} - ${reason}`));

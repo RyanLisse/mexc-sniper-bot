@@ -37,7 +37,7 @@ const DEFAULT_OPTIONS: Required<ConnectivityMonitorOptions> = {
 
 export function useConnectivityMonitor(options: ConnectivityMonitorOptions = {}) {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
   const { data: connectivity, refetch, isLoading, error } = useMexcConnectivity();
 
   const [healthMetrics, setHealthMetrics] = useState<ConnectivityHealthMetrics>({

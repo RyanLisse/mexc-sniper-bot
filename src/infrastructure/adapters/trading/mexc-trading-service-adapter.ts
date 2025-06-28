@@ -4,9 +4,9 @@
  */
 
 import type { TradingService } from "@/src/application/interfaces/trading-repository";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
-import { toSafeError } from "@/src/lib/error-type-utils";
 
 export class MexcTradingServiceAdapter implements TradingService {
   constructor(
@@ -102,10 +102,9 @@ export class MexcTradingServiceAdapter implements TradingService {
       });
 
       return transformedResult;
-
     } catch (error) {
       const safeError = toSafeError(error);
-      
+
       this.logger.error("Trade execution failed", {
         params,
         error: safeError,
@@ -124,13 +123,12 @@ export class MexcTradingServiceAdapter implements TradingService {
     try {
       // Get ticker price from MEXC service
       const result = await this.mexcService.getTicker(symbol);
-      
+
       if (!result.success || !result.data) {
         throw new Error(result.error || `Failed to get price for ${symbol}`);
       }
 
       return parseFloat(result.data.price);
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to get current price", {
@@ -145,14 +143,13 @@ export class MexcTradingServiceAdapter implements TradingService {
     try {
       // Check if symbol exists and is tradeable
       const symbolInfo = await this.mexcService.getSymbolInfoBasic(symbol);
-      
+
       if (!symbolInfo.success || !symbolInfo.data) {
         return false;
       }
 
       // Check if symbol is in trading status
       return symbolInfo.data.status === "TRADING";
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.warn("Failed to check trading status", {
@@ -217,8 +214,8 @@ export class MexcTradingServiceAdapter implements TradingService {
   private async executePaperTrade(params: any, startTime: number): Promise<any> {
     // Simulate trade execution for paper trading
     const simulatedPrice = await this.getCurrentPrice(params.symbol);
-    const quantity = params.quantity || (params.quoteOrderQty! / simulatedPrice);
-    
+    const quantity = params.quantity || params.quoteOrderQty! / simulatedPrice;
+
     return {
       success: true,
       data: {
@@ -243,7 +240,7 @@ export class MexcTradingServiceAdapter implements TradingService {
       // Test connection with a simple API call
       const result = await this.mexcService.getServerTime();
       return result.success;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -257,7 +254,7 @@ export class MexcTradingServiceAdapter implements TradingService {
   } | null> {
     try {
       const symbolInfo = await this.mexcService.getSymbolInfoBasic(symbol);
-      
+
       if (!symbolInfo.success || !symbolInfo.data) {
         return null;
       }
@@ -272,7 +269,6 @@ export class MexcTradingServiceAdapter implements TradingService {
         stepSize: parseFloat(lotSizeFilter?.stepSize || "1"),
         minNotional: parseFloat(notionalFilter?.minNotional || "1"),
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.warn("Failed to get trading limits", {

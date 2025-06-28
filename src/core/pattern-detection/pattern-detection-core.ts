@@ -12,7 +12,7 @@
  * - Event emission for pattern-target bridge integration
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";

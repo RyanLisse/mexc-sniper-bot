@@ -2,11 +2,14 @@
  * Start Sniping Use Case Tests
  */
 
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from "vitest";
-import { StartSnipingUseCase } from "../start-sniping-use-case";
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import type {
+  NotificationService,
+  TradingRepository,
+  TradingService,
+} from "@/src/application/interfaces/trading-repository";
 import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
-import type { TradingRepository, TradingService, NotificationService } from "@/src/application/interfaces/trading-repository";
-import { DomainValidationError, BusinessRuleViolationError } from "@/src/domain/errors/trading-errors";
+import { StartSnipingUseCase } from "../start-sniping-use-case";
 
 type MockedTradingRepository = {
   [K in keyof TradingRepository]: MockedFunction<TradingRepository[K]>;
@@ -82,10 +85,10 @@ describe("StartSnipingUseCase", () => {
       mockTradingService.canTrade.mockResolvedValue(true);
       mockTradingRepository.findActiveTradesByUserId.mockResolvedValue([]);
       mockTradingService.getCurrentPrice.mockResolvedValue(50000);
-      
+
       const savedTrade = Trade.create(validInput);
       mockTradingRepository.saveTrade.mockResolvedValue(savedTrade);
-      
+
       const executingTrade = savedTrade.startExecution();
       mockTradingRepository.updateTrade.mockResolvedValue(executingTrade);
 
@@ -180,7 +183,7 @@ describe("StartSnipingUseCase", () => {
 
     it("should reject if user has reached maximum concurrent positions", async () => {
       // Arrange
-      const activeTrades = Array.from({ length: 10 }, (_, i) => 
+      const activeTrades = Array.from({ length: 10 }, (_, i) =>
         Trade.create({
           userId: validInput.userId,
           symbol: `COIN${i}USDT`,
@@ -233,13 +236,13 @@ describe("StartSnipingUseCase", () => {
       mockTradingService.canTrade.mockResolvedValue(true);
       mockTradingRepository.findActiveTradesByUserId.mockResolvedValue([]);
       mockTradingService.getCurrentPrice.mockResolvedValue(50000);
-      
+
       let savedTrade: Trade;
       mockTradingRepository.saveTrade.mockImplementation(async (trade) => {
         savedTrade = trade;
         return trade;
       });
-      
+
       const executingTrade = Trade.create(validInput).startExecution();
       mockTradingRepository.updateTrade.mockResolvedValue(executingTrade);
 
@@ -248,14 +251,14 @@ describe("StartSnipingUseCase", () => {
 
       // Assert
       expect(savedTrade!).toBeDefined();
-      expect(savedTrade!.userId).toBe(validInput.userId);
-      expect(savedTrade!.symbol).toBe("BTCUSDT");
-      expect(savedTrade!.isAutoSnipe).toBe(true);
-      expect(savedTrade!.confidenceScore).toBe(85);
-      expect(savedTrade!.stopLossPercent).toBe(5);
-      expect(savedTrade!.takeProfitPercent).toBe(10);
-      expect(savedTrade!.paperTrade).toBe(false);
-      expect(savedTrade!.status).toBe(TradeStatus.PENDING);
+      expect(savedTrade?.userId).toBe(validInput.userId);
+      expect(savedTrade?.symbol).toBe("BTCUSDT");
+      expect(savedTrade?.isAutoSnipe).toBe(true);
+      expect(savedTrade?.confidenceScore).toBe(85);
+      expect(savedTrade?.stopLossPercent).toBe(5);
+      expect(savedTrade?.takeProfitPercent).toBe(10);
+      expect(savedTrade?.paperTrade).toBe(false);
+      expect(savedTrade?.status).toBe(TradeStatus.PENDING);
     });
   });
 
@@ -275,7 +278,7 @@ describe("StartSnipingUseCase", () => {
 
     it("should return false when user has too many active trades", async () => {
       // Arrange
-      const activeTrades = Array.from({ length: 10 }, (_, i) => 
+      const activeTrades = Array.from({ length: 10 }, (_, i) =>
         Trade.create({
           userId: "user123",
           symbol: `COIN${i}USDT`,

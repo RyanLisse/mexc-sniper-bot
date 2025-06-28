@@ -457,7 +457,7 @@ async function applyAuthMiddleware(
         });
         break;
 
-      case "admin":
+      case "admin": {
         context.user = await requireApiAuth(request, {
           rateLimitType: "authStrict",
           skipRateLimit: true,
@@ -467,7 +467,7 @@ async function applyAuthMiddleware(
         if (!context.user || !context.user.id) {
           throw new Error("Admin authentication failed - no valid user context");
         }
-        
+
         // Additional admin validation could be added here
         // For example: checking specific admin email domains or user flags
         const isValidAdmin = context.user.email && context.user.emailVerified;
@@ -482,6 +482,7 @@ async function applyAuthMiddleware(
           metadata: { adminAccess: true, granted: true },
         });
         break;
+      }
 
       case "user-access":
         context.user = await requireApiAuth(request, {

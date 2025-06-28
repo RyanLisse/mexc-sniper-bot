@@ -57,12 +57,12 @@ export const UnifiedMexcConfigSchema = z.object({
   passphrase: z.string().optional(),
   baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
   timeout: z.number().positive("Timeout must be positive").default(10000),
-  
+
   // Cache Configuration
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().positive("Cache TTL must be positive").default(30000),
   apiResponseTTL: z.number().positive("API response TTL must be positive").default(1500),
-  
+
   // Reliability Configuration
   enableCircuitBreaker: z.boolean().default(true),
   enableRateLimiter: z.boolean().default(true),
@@ -71,12 +71,18 @@ export const UnifiedMexcConfigSchema = z.object({
   maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
   retryDelay: z.number().nonnegative("Retry delay cannot be negative").default(1000),
   rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
-  
+
   // Trading Configuration
   enablePaperTrading: z.boolean().default(true),
-  circuitBreakerThreshold: z.number().positive("Circuit breaker threshold must be positive").default(5),
-  circuitBreakerResetTime: z.number().positive("Circuit breaker reset time must be positive").default(30000),
-  
+  circuitBreakerThreshold: z
+    .number()
+    .positive("Circuit breaker threshold must be positive")
+    .default(5),
+  circuitBreakerResetTime: z
+    .number()
+    .positive("Circuit breaker reset time must be positive")
+    .default(30000),
+
   // Optional test configurations
   enableTestMode: z.boolean().optional(),
   enableMetrics: z.boolean().optional(),
@@ -138,7 +144,7 @@ export const SymbolEntrySchema = z.object({
   sts: z.number(), // Symbol Trading Status
   st: z.number(), // Symbol State
   tt: z.number(), // Trading Time
-  ca: z.string().optional(), // Contract Address - string for hex addresses
+  ca: z.union([z.string(), z.number()]).optional(), // Contract Address - allow both string and number for compatibility
   ps: z.number().optional(),
   qs: z.number().optional(),
   ot: z.number().optional(), // Open Time - number timestamp
@@ -620,12 +626,12 @@ export function validateServiceResponse<T>(
   });
 
   const validationResult = validateMexcData(baseResponseSchema, data);
-  
+
   // Cast the result to match the expected return type
   return {
     success: validationResult.success,
     data: validationResult.data as MexcServiceResponse<T>,
-    error: validationResult.error
+    error: validationResult.error,
   };
 }
 

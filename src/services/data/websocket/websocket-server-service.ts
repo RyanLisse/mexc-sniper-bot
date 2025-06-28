@@ -215,7 +215,7 @@ export class WebSocketServerService extends EventEmitter {
       // Close server
       if (this.wss) {
         await new Promise<void>((resolve, reject) => {
-          this.wss!.close((error) => {
+          this.wss?.close((error) => {
             if (error) {
               reject(error);
             } else {

@@ -5,6 +5,10 @@
  * NaN handling, and out-of-range values across the trading system.
  */
 
+import { expect } from "vitest";
+
+import { expect } from "vitest";
+
 // ============================================================================
 // Numeric Validation Utilities
 // ============================================================================
@@ -70,7 +74,7 @@ export class NumericValidationUtils {
     argIndex: number,
     baseArgs: any[],
     validRange: { min: number; max: number },
-    expectedBehavior: 'throws' | 'clamps' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' = 'throws'
   ): void {
     // Test below minimum
     const belowMinArgs = [...baseArgs];
@@ -84,11 +88,6 @@ export class NumericValidationUtils {
       case 'throws':
         expect(() => fn(...belowMinArgs)).toThrow();
         expect(() => fn(...aboveMaxArgs)).toThrow();
-        break;
-      case 'clamps':
-        // Should not throw, but clamp to valid range
-        expect(() => fn(...belowMinArgs)).not.toThrow();
-        expect(() => fn(...aboveMaxArgs)).not.toThrow();
         break;
       case 'returns-null':
         expect(fn(...belowMinArgs)).toBeNull();
@@ -104,7 +103,7 @@ export class NumericValidationUtils {
     fn: (...args: any[]) => T,
     argIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'clamps' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' = 'throws'
   ): void {
     this.assertRangeValidation(
       fn,
@@ -155,7 +154,7 @@ export class StringValidationUtils {
     fn: (...args: any[]) => T,
     argIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'returns-null' | 'returns-default' = 'throws',
+    expectedBehavior: 'throws' | 'returns-null' | 'returns-default' | 'clamps' = 'throws',
     defaultValue?: T
   ): void {
     const emptyStringArgs = [...baseArgs];
@@ -181,7 +180,7 @@ export class StringValidationUtils {
     fn: (...args: any[]) => T,
     argIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' | 'clamps' = 'throws'
   ): void {
     const nullArgs = [...baseArgs];
     nullArgs[argIndex] = null;
@@ -253,7 +252,7 @@ export class ArrayValidationUtils {
     fn: (...args: any[]) => T,
     argIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'returns-null' | 'returns-empty' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' | 'returns-empty' | 'clamps' = 'throws'
   ): void {
     const emptyArrayArgs = [...baseArgs];
     emptyArrayArgs[argIndex] = [];
@@ -268,6 +267,9 @@ export class ArrayValidationUtils {
       case 'returns-empty':
         const result = fn(...emptyArrayArgs);
         expect(Array.isArray(result) && result.length === 0).toBe(true);
+        break;
+      case 'clamps':
+        expect(() => fn(...emptyArrayArgs)).not.toThrow();
         break;
     }
   }
@@ -324,7 +326,7 @@ export class TradingValidationUtils {
     fn: (...args: any[]) => T,
     priceArgIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' | 'clamps' = 'throws'
   ): void {
     // Test NaN
     NumericValidationUtils.assertHandlesNaN(fn, baseArgs, expectedBehavior);
@@ -348,7 +350,7 @@ export class TradingValidationUtils {
     fn: (...args: any[]) => T,
     quantityArgIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' | 'clamps' = 'throws'
   ): void {
     this.assertPriceValidation(fn, quantityArgIndex, baseArgs, expectedBehavior);
   }
@@ -360,7 +362,7 @@ export class TradingValidationUtils {
     fn: (...args: any[]) => T,
     symbolArgIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' | 'clamps' = 'throws'
   ): void {
     // Test empty string
     StringValidationUtils.assertHandlesEmptyString(
@@ -399,7 +401,7 @@ export class TradingValidationUtils {
     fn: (...args: any[]) => T,
     percentageArgIndex: number,
     baseArgs: any[],
-    expectedBehavior: 'throws' | 'clamps' | 'returns-null' = 'throws'
+    expectedBehavior: 'throws' | 'returns-null' = 'throws'
   ): void {
     NumericValidationUtils.assertPercentageValidation(
       fn,
@@ -423,7 +425,7 @@ export class ValidationTestSuite {
     testConfig: {
       baseArgs: any[];
       parameterTypes: ('number' | 'string' | 'array' | 'price' | 'quantity' | 'symbol' | 'percentage')[];
-      expectedBehavior?: 'throws' | 'returns-null' | 'clamps';
+      expectedBehavior?: 'throws' | 'returns-null';
     }
   ): void {
     const { baseArgs, parameterTypes, expectedBehavior = 'throws' } = testConfig;

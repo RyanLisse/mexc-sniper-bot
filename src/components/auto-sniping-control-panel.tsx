@@ -1,17 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertTriangle,
-  Pause,
-  Play,
-  RefreshCw,
-  Settings,
-  Shield,
-  Target,
-  TrendingUp,
-  Zap,
-} from "lucide-react";
+import { AlertTriangle, Pause, Play, RefreshCw, Settings, Shield, Target } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { queryKeys } from "../lib/query-client";

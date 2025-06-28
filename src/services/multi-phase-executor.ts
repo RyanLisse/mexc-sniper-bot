@@ -1,6 +1,6 @@
 /**
  * Multi-Phase Executor Service
- * 
+ *
  * Placeholder implementation for multi-phase trading strategy execution.
  * This service manages the execution of complex multi-step trading strategies.
  */
@@ -41,30 +41,30 @@ export interface ExecutionStatus {
 /**
  * Creates a strategy executor from a strategy definition
  */
-export function createExecutorFromStrategy(strategy: Strategy): StrategyExecutor {
+export function createExecutorFromStrategy(_strategy: Strategy): StrategyExecutor {
   return {
     async execute(): Promise<ExecutionResult> {
       // Placeholder implementation
-      console.warn('Multi-phase executor not implemented yet');
+      console.warn("Multi-phase executor not implemented yet");
       return {
         success: false,
-        message: 'Multi-phase executor is not implemented yet'
+        message: "Multi-phase executor is not implemented yet",
       };
     },
-    
+
     async stop(): Promise<void> {
       // Placeholder implementation
-      console.warn('Multi-phase executor stop not implemented yet');
+      console.warn("Multi-phase executor stop not implemented yet");
     },
-    
+
     getStatus(): ExecutionStatus {
       // Placeholder implementation
       return {
         isRunning: false,
         progress: 0,
-        lastUpdate: new Date()
+        lastUpdate: new Date(),
       };
-    }
+    },
   };
 }
 

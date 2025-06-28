@@ -334,7 +334,7 @@ export function UnifiedStatusCard({
 // Mini Status Display for compact areas
 export function MiniStatusDisplay() {
   const { getOverallStatus, getStatusMessage } = useStatus();
-  const overallStatus = getOverallStatus();
+  const _overallStatus = getOverallStatus();
   const statusMessage = getStatusMessage();
 
   return (
@@ -350,7 +350,7 @@ export function MiniStatusDisplay() {
 // Status Tooltip Component for header areas
 export function StatusTooltip() {
   const { status, getOverallStatus } = useStatus();
-  const overallStatus = getOverallStatus();
+  const _overallStatus = getOverallStatus();
 
   return (
     <div className="p-3 space-y-2 text-sm">

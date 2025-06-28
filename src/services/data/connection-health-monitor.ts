@@ -232,7 +232,7 @@ export class ConnectionHealthMonitor {
     consecutiveFailures: number;
     uptime: number;
   } {
-    const now = Date.now();
+    const _now = Date.now();
     const recentChecks = this.getRecentHealthChecks(1); // Last hour
     const successfulChecks = recentChecks.filter((check) => check.success).length;
     const failedChecks = recentChecks.length - successfulChecks;
@@ -420,7 +420,7 @@ export class ConnectionHealthMonitor {
   /**
    * Get recent alerts
    */
-  getRecentAlerts(hours = 24): PerformanceAlert[] {
+  getRecentAlerts(_hours = 24): PerformanceAlert[] {
     // In a production system, alerts would be stored persistently
     // For now, we'll generate synthetic recent alerts based on current metrics
     const alerts: PerformanceAlert[] = [];
@@ -475,7 +475,7 @@ export class ConnectionHealthMonitor {
     }
   }
 
-  private checkForAlerts(result: HealthCheckResult): void {
+  private checkForAlerts(_result: HealthCheckResult): void {
     const metrics = this.getHealthMetrics();
 
     // Check failure rate

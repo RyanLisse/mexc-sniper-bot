@@ -7,6 +7,7 @@
 
 import { calendarPatternBridgeService } from "@/src/services/data/pattern-detection/calendar-pattern-bridge-service";
 import { patternToDatabaseBridge } from "@/src/services/data/pattern-detection/pattern-to-database-bridge";
+import { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import { environmentValidation } from "@/src/services/risk/enhanced-environment-validation";
 import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 import { strategyInitializationService } from "@/src/services/trading/strategy-initialization-service";
@@ -77,7 +78,7 @@ export class StartupInitializer {
     // Validate environment configuration first
     try {
       console.info("[Startup] Validating environment configuration...");
-      const envValidation = environmentValidation.validateEnvironment();
+      const _envValidation = environmentValidation.validateEnvironment();
       const healthSummary = environmentValidation.getHealthSummary();
 
       if (healthSummary.status === "critical") {
@@ -94,7 +95,9 @@ export class StartupInitializer {
         );
 
         if (healthSummary.status === "warning") {
-          console.warn(`[Startup] ⚠️ Environment warnings: Missing ${healthSummary.missing}, Invalid ${healthSummary.invalid}`);
+          console.warn(
+            `[Startup] ⚠️ Environment warnings: Missing ${healthSummary.missing}, Invalid ${healthSummary.invalid}`
+          );
           console.warn(
             "[Startup] 💡 Consider running: bun run scripts/environment-setup.ts --template"
           );
@@ -188,6 +191,26 @@ export class StartupInitializer {
       failed.push("calendar-pattern-bridge");
       errors["calendar-pattern-bridge"] = errorMessage;
       console.error("[Startup] ❌ Calendar-Pattern Bridge initialization failed:", errorMessage);
+    }
+
+    // Initialize Pattern Monitoring Service for real-time pattern tracking
+    try {
+      console.info("[Startup] Initializing Pattern Monitoring Service...");
+
+      // Start real-time pattern monitoring
+      const patternMonitor = PatternMonitoringService.getInstance();
+      await patternMonitor.startMonitoring();
+
+      initialized.push("pattern-monitoring");
+      console.info("[Startup] ✅ Pattern Monitoring Service initialized and tracking");
+      console.info(
+        "[Startup] 📊 Real-time monitoring enabled: Pattern Detection Events → Statistics → Alerts"
+      );
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      failed.push("pattern-monitoring");
+      errors["pattern-monitoring"] = errorMessage;
+      console.error("[Startup] ❌ Pattern Monitoring Service initialization failed:", errorMessage);
     }
 
     // Add other critical system initializations here as needed

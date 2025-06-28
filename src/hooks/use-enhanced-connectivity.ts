@@ -513,14 +513,8 @@ export function useConnectivityHealth() {
  * Trading-focused hook for trading interfaces
  */
 export function useTradingConnectivity() {
-  const { 
-    connectivity, 
-    analysis, 
-    refresh, 
-    forceRefresh,
-    resetCircuitBreaker,
-    testCredentials 
-  } = useEnhancedConnectivity();
+  const { connectivity, analysis, refresh, forceRefresh, resetCircuitBreaker, testCredentials } =
+    useEnhancedConnectivity();
 
   return {
     canTrade: analysis?.canTrade || false,

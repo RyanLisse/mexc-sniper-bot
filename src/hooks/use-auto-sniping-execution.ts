@@ -8,8 +8,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { AutoSnipingConfig } from "@/src/components/auto-sniping-control-panel";
 import { ApiClient } from "@/src/lib/api-client";
-import { createLogger, type LogContext } from "@/src/lib/unified-logger";
-import type { ApiErrorResponse, ApiResponse } from "@/src/types/common-interfaces";
+import { createLogger } from "@/src/lib/unified-logger";
+import type { ApiResponse } from "@/src/types/common-interfaces";
 
 // Define missing types for auto-sniping execution
 export interface AutoSnipingExecutionReport {
@@ -332,7 +332,7 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]);
+  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
 
   // Stop execution - FIX: Add missing dependencies
   const stopExecution = useCallback(async (): Promise<boolean> => {
@@ -366,7 +366,7 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, [logger]);
+  }, []);
 
   // Pause execution - FIX: Add missing dependencies
   const pauseExecution = useCallback(async (): Promise<boolean> => {
@@ -399,7 +399,7 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, [logger]);
+  }, []);
 
   // Resume execution - FIX: Add missing dependencies
   const resumeExecution = useCallback(async (): Promise<boolean> => {
@@ -432,7 +432,7 @@ export function useAutoSnipingExecution(
       }));
       return false;
     }
-  }, [logger]);
+  }, []);
 
   // Close position - FIX: Remove circular dependencies
   const closePosition = useCallback(
@@ -470,7 +470,7 @@ export function useAutoSnipingExecution(
         return false;
       }
     },
-    [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]
+    [loadExecutionReport, includePositions, includeHistory, includeAlerts]
   );
 
   // Emergency close all - FIX: Add missing dependencies
@@ -503,7 +503,7 @@ export function useAutoSnipingExecution(
       }));
       return 0;
     }
-  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]);
+  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
 
   // Update configuration - FIX: Add missing dependencies
   const updateConfig = useCallback(
@@ -542,46 +542,43 @@ export function useAutoSnipingExecution(
         return false;
       }
     },
-    [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]
+    [loadExecutionReport, includePositions, includeHistory, includeAlerts]
   );
 
   // Acknowledge alert - FIX: Add missing dependencies
-  const acknowledgeAlert = useCallback(
-    async (alertId: string): Promise<boolean> => {
-      try {
-        await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
-          action: "acknowledge_alert",
+  const acknowledgeAlert = useCallback(async (alertId: string): Promise<boolean> => {
+    try {
+      await ApiClient.post<ApiResponse<{ message: string }>>("/api/auto-sniping/execution", {
+        action: "acknowledge_alert",
+        alertId,
+      });
+
+      // Update local state
+      setState((prev) => ({
+        ...prev,
+        activeAlerts: prev.activeAlerts.map((alert) =>
+          alert.id === alertId ? { ...alert, acknowledged: true } : alert
+        ),
+        unacknowledgedAlertsCount: Math.max(0, prev.unacknowledgedAlertsCount - 1),
+      }));
+
+      return true;
+    } catch (error) {
+      logger.error(
+        "Failed to acknowledge alert",
+        {
+          operation: "acknowledge_alert",
           alertId,
-        });
-
-        // Update local state
-        setState((prev) => ({
-          ...prev,
-          activeAlerts: prev.activeAlerts.map((alert) =>
-            alert.id === alertId ? { ...alert, acknowledged: true } : alert
-          ),
-          unacknowledgedAlertsCount: Math.max(0, prev.unacknowledgedAlertsCount - 1),
-        }));
-
-        return true;
-      } catch (error) {
-        logger.error(
-          "Failed to acknowledge alert",
-          {
-            operation: "acknowledge_alert",
-            alertId,
-          },
-          error instanceof Error ? error : new Error(String(error))
-        );
-        setState((prev) => ({
-          ...prev,
-          error: error instanceof Error ? error.message : "Failed to acknowledge alert",
-        }));
-        return false;
-      }
-    },
-    [logger]
-  );
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
+      setState((prev) => ({
+        ...prev,
+        error: error instanceof Error ? error.message : "Failed to acknowledge alert",
+      }));
+      return false;
+    }
+  }, []);
 
   // Clear acknowledged alerts - FIX: Add missing dependencies
   const clearAcknowledgedAlerts = useCallback(async (): Promise<number> => {
@@ -611,7 +608,7 @@ export function useAutoSnipingExecution(
       }));
       return 0;
     }
-  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts, logger]);
+  }, [loadExecutionReport, includePositions, includeHistory, includeAlerts]);
 
   // Refresh data (alias for loadExecutionReport) - FIX: Add missing dependencies
   const refreshData = useCallback(async () => {
@@ -632,7 +629,14 @@ export function useAutoSnipingExecution(
 
       setAutoRefreshInterval(interval);
     },
-    [refreshInterval, loadExecutionReport, includePositions, includeHistory, includeAlerts, autoRefreshInterval]
+    [
+      refreshInterval,
+      loadExecutionReport,
+      includePositions,
+      includeHistory,
+      includeAlerts,
+      autoRefreshInterval,
+    ]
   );
 
   // Stop auto-refresh
@@ -669,7 +673,14 @@ export function useAutoSnipingExecution(
         setAutoRefreshInterval(null);
       }
     };
-  }, [autoRefresh, refreshInterval, includePositions, includeHistory, includeAlerts, loadExecutionReport]);
+  }, [
+    autoRefresh,
+    refreshInterval,
+    includePositions,
+    includeHistory,
+    includeAlerts,
+    loadExecutionReport,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -679,7 +690,7 @@ export function useAutoSnipingExecution(
         setAutoRefreshInterval(null);
       }
     };
-  }, []);
+  }, [autoRefreshInterval]);
 
   return {
     // State

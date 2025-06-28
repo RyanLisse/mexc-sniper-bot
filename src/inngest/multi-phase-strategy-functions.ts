@@ -5,18 +5,20 @@ import { RiskManagerAgent } from "@/src/mexc-agents/risk-manager-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
 import { db } from "../db";
-import { createExecutorFromStrategy, type Strategy as ExecutorStrategy, type StrategyExecutor } from "../services/multi-phase-executor";
+import {
+  createExecutorFromStrategy,
+  type Strategy as ExecutorStrategy,
+  type StrategyExecutor,
+} from "../services/multi-phase-executor";
 import {
   MultiPhaseStrategyBuilder,
-  StrategyPatterns,
   type StrategyPattern,
-  type PatternPhase,
+  StrategyPatterns,
 } from "../services/multi-phase-strategy-builder";
 import {
   multiPhaseTradingService,
   PREDEFINED_STRATEGIES,
   type TradingStrategy,
-  type TradingPhase,
 } from "../services/multi-phase-trading-service";
 import { inngest } from "./client";
 
@@ -140,7 +142,7 @@ export const createMultiPhaseStrategy = inngest.createFunction(
         recommendedTemplate = "AGGRESSIVE_MOMENTUM";
       }
 
-      const baseStrategy = PREDEFINED_STRATEGIES[recommendedTemplate];
+      const _baseStrategy = PREDEFINED_STRATEGIES[recommendedTemplate];
 
       // Create custom strategy if needed
       const builder = new MultiPhaseStrategyBuilder();
@@ -220,7 +222,9 @@ export const createMultiPhaseStrategy = inngest.createFunction(
 
       try {
         // Execute the strategy using the available interface
-        const strategyId = await multiPhaseTradingService.executeStrategy(strategyRecommendation.strategy as StrategyPattern);
+        const strategyId = await multiPhaseTradingService.executeStrategy(
+          strategyRecommendation.strategy as StrategyPattern
+        );
 
         return {
           created: true,
@@ -232,7 +236,7 @@ export const createMultiPhaseStrategy = inngest.createFunction(
             entryPrice: Number(entryPrice),
             positionSize,
             positionSizeUsdt,
-            status: 'active' as const
+            status: "active" as const,
           },
         };
       } catch (error) {
@@ -361,34 +365,38 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
             if (!strategyStatus) {
               throw new Error(`Strategy ${strategy.id} not found`);
             }
-            
+
             // Convert TradingStrategy to ExecutorStrategy format
             const executorStrategy: ExecutorStrategy = {
               id: strategyStatus.id,
               name: strategyStatus.name,
               description: strategyStatus.description,
-              phases: strategyStatus.phases.map((phase): { id: string; name: string; type: string; parameters: Record<string, any> } => ({
-                id: phase.id,
-                name: phase.name,
-                type: phase.status || 'pending',
-                parameters: {}
-              }))
+              phases: strategyStatus.phases.map(
+                (
+                  phase
+                ): { id: string; name: string; type: string; parameters: Record<string, any> } => ({
+                  id: phase.id,
+                  name: phase.name,
+                  type: phase.status || "pending",
+                  parameters: {},
+                })
+              ),
             };
-            
+
             const executor = createExecutorFromStrategy(executorStrategy);
             const status = executor.getStatus();
-            
+
             // Derive analytics from status
             const analytics = {
               executionTrend: status.isRunning ? "active" : "idle",
-              progress: status.progress
+              progress: status.progress,
             };
 
             // Derive basic metrics from strategy status
             const metrics = {
               totalPnlPercent: 0, // Placeholder value
               successRate: 50, // Placeholder value
-              totalTrades: strategyStatus.phases?.length || 0
+              totalTrades: strategyStatus.phases?.length || 0,
             };
 
             return {
@@ -397,7 +405,7 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
               status: strategy.status,
               metrics,
               analytics,
-              phases: `${strategyStatus?.phases?.filter(p => p.status === 'completed').length || 0}/${strategyStatus?.phases?.length || 0}`,
+              phases: `${strategyStatus?.phases?.filter((p) => p.status === "completed").length || 0}/${strategyStatus?.phases?.length || 0}`,
             };
           } catch (error) {
             return {
@@ -489,35 +497,37 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
         id: strategy.id,
         name: strategy.name,
         description: strategy.description,
-        phases: strategy.phases.map((phase): { id: string; name: string; type: string; parameters: Record<string, any> } => ({
-          id: phase.id,
-          name: phase.name,
-          type: phase.status || 'pending',
-          parameters: {}
-        }))
+        phases: strategy.phases.map(
+          (phase): { id: string; name: string; type: string; parameters: Record<string, any> } => ({
+            id: phase.id,
+            name: phase.name,
+            type: phase.status || "pending",
+            parameters: {},
+          })
+        ),
       };
-      
+
       const executor = createExecutorFromStrategy(executorStrategy);
       const status = executor.getStatus();
-      
+
       // Derive analytics from status
       const analytics = {
         executionTrend: status.isRunning ? "active" : "idle",
-        progress: status.progress
+        progress: status.progress,
       };
-      
+
       // Derive basic performance metrics from strategy
       const performanceMetrics = {
         totalPnlPercent: 0, // Placeholder value
         successRate: 50, // Placeholder value
-        totalTrades: strategy.phases?.length || 0
+        totalTrades: strategy.phases?.length || 0,
       };
 
       return {
         strategy,
         analytics,
         performanceMetrics,
-        currentPhases: strategy.phases?.filter(p => p.status === 'completed').length || 0,
+        currentPhases: strategy.phases?.filter((p) => p.status === "completed").length || 0,
         totalPhases: strategy.phases?.length || 0,
         efficiency: analytics.executionTrend,
       };
@@ -566,7 +576,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
       if (strategyAnalysis.analytics.executionTrend === "declining") {
         const conservativeBuilder = new MultiPhaseStrategyBuilder();
         conservativeBuilder.addPhase(StrategyPatterns.GRADUAL_ACCUMULATION.phases[0]);
-        
+
         const conservativeStrategy = conservativeBuilder.build();
 
         variations.push({
@@ -786,8 +796,8 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
       }
 
       // Scenario 3: Volatility-adapted alternative
-      const volatilityStrategy = String(marketAnalysis.marketInsights).includes("volatile") 
-        ? StrategyPatterns.QUICK_ENTRY 
+      const volatilityStrategy = String(marketAnalysis.marketInsights).includes("volatile")
+        ? StrategyPatterns.QUICK_ENTRY
         : StrategyPatterns.GRADUAL_ACCUMULATION;
 
       scenarios.push({
@@ -904,11 +914,11 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
           name: strategy.name,
           description: strategy.description,
           phases: strategy.phases.map((phase) => ({
-            id: phase.id || '',
-            name: phase.name || 'Unknown Phase',
-            type: phase.status || 'pending',
-            parameters: {}
-          }))
+            id: phase.id || "",
+            name: phase.name || "Unknown Phase",
+            type: phase.status || "pending",
+            parameters: {},
+          })),
         };
         return createExecutorFromStrategy(executorStrategy);
       });
@@ -922,10 +932,10 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
               phase: 1,
               amount: 0.1,
               expectedProfit: 0.05 * currentPrice,
-            }
+            },
           ],
           totalPhases: strategy.phases.length,
-          currentPhase: strategy.phases.findIndex(p => p.status === 'active') + 1,
+          currentPhase: strategy.phases.findIndex((p) => p.status === "active") + 1,
         };
       });
 
@@ -936,7 +946,9 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
         for (const phase of execution.phasesToExecute) {
           try {
             // Record phase execution - placeholder implementation
-            console.log(`Executing phase ${phase.phase} at price ${currentPrice} with amount ${phase.amount}`);
+            console.log(
+              `Executing phase ${phase.phase} at price ${currentPrice} with amount ${phase.amount}`
+            );
 
             results.push({
               phase: phase.phase,
@@ -969,7 +981,9 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
           await multiPhaseTradingService.stopStrategy(strategyId);
         } else {
           // Strategy still active - log status update (no direct update method available)
-          console.log(`Strategy ${strategyId} execution status updated - active with price ${currentPrice}`);
+          console.log(
+            `Strategy ${strategyId} execution status updated - active with price ${currentPrice}`
+          );
         }
       });
 

@@ -1,9 +1,9 @@
 /**
  * Enhanced Feature Flag Manager
- * 
+ *
  * Advanced feature flag system with rollout controls, A/B testing,
  * monitoring, and dynamic configuration management.
- * 
+ *
  * Phase 3 Enhancement Features:
  * - Percentage-based user rollouts
  * - A/B testing framework
@@ -13,19 +13,18 @@
  * - Environment-specific configurations
  */
 
+import { metrics, trace } from "@opentelemetry/api";
 import { z } from "zod";
-import { metrics, trace } from '@opentelemetry/api';
-import { TradingDomainFeatureFlags, ROLLOUT_PHASES } from './trading-domain-flags';
 
 // Rollout strategy types
 export const RolloutStrategySchema = z.enum([
-  'all_users',        // Enable for all users
-  'percentage',       // Enable for X% of users
-  'user_list',        // Enable for specific users
-  'a_b_test',         // A/B testing configuration
-  'gradual',          // Gradual rollout over time
-  'canary',           // Canary deployment
-  'disabled',         // Completely disabled
+  "all_users", // Enable for all users
+  "percentage", // Enable for X% of users
+  "user_list", // Enable for specific users
+  "a_b_test", // A/B testing configuration
+  "gradual", // Gradual rollout over time
+  "canary", // Canary deployment
+  "disabled", // Completely disabled
 ]);
 
 export type RolloutStrategy = z.infer<typeof RolloutStrategySchema>;
@@ -33,10 +32,12 @@ export type RolloutStrategy = z.infer<typeof RolloutStrategySchema>;
 // A/B test configuration
 export const ABTestConfigSchema = z.object({
   enabled: z.boolean(),
-  groups: z.record(z.object({
-    percentage: z.number().min(0).max(100),
-    flags: z.record(z.boolean()),
-  })),
+  groups: z.record(
+    z.object({
+      percentage: z.number().min(0).max(100),
+      flags: z.record(z.boolean()),
+    })
+  ),
   conversionMetric: z.string().optional(),
   significance: z.number().min(0).max(1).default(0.95),
 });
@@ -66,26 +67,26 @@ export const EnhancedFeatureFlagConfigSchema = z.object({
   description: z.string(),
   strategy: RolloutStrategySchema,
   enabled: z.boolean(),
-  
+
   // Rollout configurations
   percentage: z.number().min(0).max(100).optional(),
   userList: z.array(z.string()).optional(),
   abTest: ABTestConfigSchema.optional(),
   gradualRollout: GradualRolloutConfigSchema.optional(),
-  
+
   // Targeting
   environments: z.array(z.string()).optional(),
   userAttributes: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
-  
+
   // Monitoring
   trackingEnabled: z.boolean().default(true),
   metricsNamespace: z.string().optional(),
-  
+
   // Safety
   killSwitchEnabled: z.boolean().default(true),
   rollbackOnError: z.boolean().default(true),
   maxErrorRate: z.number().min(0).max(1).default(0.05),
-  
+
   // Metadata
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -100,11 +101,11 @@ export const UserContextSchema = z.object({
   userId: z.string(),
   portfolioId: z.string().optional(),
   email: z.string().email().optional(),
-  userType: z.enum(['free', 'premium', 'enterprise']).optional(),
+  userType: z.enum(["free", "premium", "enterprise"]).optional(),
   registrationDate: z.string().datetime().optional(),
   country: z.string().optional(),
-  tradingExperience: z.enum(['beginner', 'intermediate', 'advanced']).optional(),
-  riskTolerance: z.enum(['low', 'medium', 'high']).optional(),
+  tradingExperience: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+  riskTolerance: z.enum(["low", "medium", "high"]).optional(),
   customAttributes: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 
@@ -131,24 +132,24 @@ export interface FeatureFlagEvaluation {
  * Provides advanced feature flag capabilities with rollout controls
  */
 export class EnhancedFeatureFlagManager {
-  private meter = metrics.getMeter('feature-flags', '1.0.0');
-  private tracer = trace.getTracer('feature-flags', '1.0.0');
-  
+  private meter = metrics.getMeter("feature-flags", "1.0.0");
+  private tracer = trace.getTracer("feature-flags", "1.0.0");
+
   private flagConfigurations = new Map<string, EnhancedFeatureFlagConfig>();
   private evaluationCache = new Map<string, FeatureFlagEvaluation>();
   private evaluationMetrics = new Map<string, { evaluations: number; enabled: number }>();
-  
+
   // Metrics
-  private evaluationCounter = this.meter.createCounter('feature_flags_evaluations_total', {
-    description: 'Total number of feature flag evaluations',
+  private evaluationCounter = this.meter.createCounter("feature_flags_evaluations_total", {
+    description: "Total number of feature flag evaluations",
   });
-  
-  private enabledCounter = this.meter.createCounter('feature_flags_enabled_total', {
-    description: 'Total number of times feature flags were enabled',
+
+  private enabledCounter = this.meter.createCounter("feature_flags_enabled_total", {
+    description: "Total number of times feature flags were enabled",
   });
-  
-  private abTestParticipantCounter = this.meter.createCounter('ab_test_participants_total', {
-    description: 'Total number of A/B test participants',
+
+  private abTestParticipantCounter = this.meter.createCounter("ab_test_participants_total", {
+    description: "Total number of A/B test participants",
   });
 
   constructor() {
@@ -160,26 +161,26 @@ export class EnhancedFeatureFlagManager {
    * Evaluate feature flag for a user
    */
   async evaluateFlag(
-    flagName: string, 
+    flagName: string,
     userContext: UserContext,
     defaultValue: boolean = false
   ): Promise<FeatureFlagEvaluation> {
-    const span = this.tracer.startSpan('feature_flag.evaluate', {
+    const span = this.tracer.startSpan("feature_flag.evaluate", {
       attributes: {
-        'feature_flag.name': flagName,
-        'user.id': userContext.userId,
+        "feature_flag.name": flagName,
+        "user.id": userContext.userId,
       },
     });
 
     try {
       const config = this.flagConfigurations.get(flagName);
-      
+
       if (!config) {
-        span.setAttributes({ 'feature_flag.found': false });
+        span.setAttributes({ "feature_flag.found": false });
         return {
           flagName,
           enabled: defaultValue,
-          strategy: 'disabled',
+          strategy: "disabled",
           userInTargetGroup: false,
           evaluationTime: new Date(),
           metadata: {},
@@ -188,21 +189,21 @@ export class EnhancedFeatureFlagManager {
 
       // Check if flag is globally disabled
       if (!config.enabled) {
-        return this.createEvaluation(flagName, false, 'disabled', false, {});
+        return this.createEvaluation(flagName, false, "disabled", false, {});
       }
 
       // Evaluate based on strategy
       let enabled = false;
       let userInTargetGroup = false;
-      let metadata: any = {};
+      const metadata: any = {};
 
       switch (config.strategy) {
-        case 'all_users':
+        case "all_users":
           enabled = true;
           userInTargetGroup = true;
           break;
 
-        case 'percentage':
+        case "percentage": {
           const userHash = this.hashUser(userContext.userId, flagName);
           const userPercentile = userHash % 100;
           enabled = userPercentile < (config.percentage || 0);
@@ -210,19 +211,20 @@ export class EnhancedFeatureFlagManager {
           metadata.percentage = config.percentage;
           metadata.userHash = userHash.toString();
           break;
+        }
 
-        case 'user_list':
+        case "user_list":
           enabled = config.userList?.includes(userContext.userId) || false;
           userInTargetGroup = enabled;
           break;
 
-        case 'a_b_test':
+        case "a_b_test": {
           const abResult = this.evaluateABTest(config.abTest!, userContext);
           enabled = abResult.enabled;
           userInTargetGroup = abResult.inTargetGroup;
           metadata.abTestGroup = abResult.group;
           metadata.experimentId = `${flagName}_ab_test`;
-          
+
           if (abResult.inTargetGroup) {
             this.abTestParticipantCounter.add(1, {
               flag_name: flagName,
@@ -230,21 +232,21 @@ export class EnhancedFeatureFlagManager {
             });
           }
           break;
+        }
 
-        case 'gradual':
+        case "gradual": {
           const gradualResult = this.evaluateGradualRollout(config.gradualRollout!, userContext);
           enabled = gradualResult.enabled;
           userInTargetGroup = gradualResult.inTargetGroup;
           metadata.rolloutPhase = gradualResult.phase;
           metadata.currentPercentage = gradualResult.currentPercentage;
           break;
+        }
 
-        case 'canary':
+        case "canary":
           enabled = this.evaluateCanaryDeployment(config, userContext);
           userInTargetGroup = enabled;
           break;
-
-        case 'disabled':
         default:
           enabled = false;
           userInTargetGroup = false;
@@ -253,7 +255,7 @@ export class EnhancedFeatureFlagManager {
 
       // Apply environment filtering
       if (config.environments && config.environments.length > 0) {
-        const currentEnv = process.env.NODE_ENV || 'development';
+        const currentEnv = process.env.NODE_ENV || "development";
         if (!config.environments.includes(currentEnv)) {
           enabled = false;
           userInTargetGroup = false;
@@ -269,23 +271,28 @@ export class EnhancedFeatureFlagManager {
         }
       }
 
-      const evaluation = this.createEvaluation(flagName, enabled, config.strategy, userInTargetGroup, metadata);
-      
+      const evaluation = this.createEvaluation(
+        flagName,
+        enabled,
+        config.strategy,
+        userInTargetGroup,
+        metadata
+      );
+
       // Track metrics
       this.recordEvaluation(flagName, enabled);
-      
+
       // Cache evaluation
       const cacheKey = `${flagName}:${userContext.userId}`;
       this.evaluationCache.set(cacheKey, evaluation);
 
       span.setAttributes({
-        'feature_flag.enabled': enabled,
-        'feature_flag.strategy': config.strategy,
-        'feature_flag.user_in_target': userInTargetGroup,
+        "feature_flag.enabled": enabled,
+        "feature_flag.strategy": config.strategy,
+        "feature_flag.user_in_target": userInTargetGroup,
       });
 
       return evaluation;
-
     } finally {
       span.end();
     }
@@ -316,7 +323,7 @@ export class EnhancedFeatureFlagManager {
 
     const validatedConfig = EnhancedFeatureFlagConfigSchema.parse(updated);
     this.flagConfigurations.set(flagName, validatedConfig);
-    
+
     // Clear cache for this flag
     this.clearFlagCache(flagName);
   }
@@ -343,7 +350,7 @@ export class EnhancedFeatureFlagManager {
     // Aggregate analytics for all flags
     let totalEvaluations = 0;
     let totalEnabled = 0;
-    let lastEvaluated: Date | null = null;
+    const lastEvaluated: Date | null = null;
 
     for (const [, metrics] of this.evaluationMetrics) {
       totalEvaluations += metrics.evaluations;
@@ -373,11 +380,11 @@ export class EnhancedFeatureFlagManager {
 
     this.updateFlag(flagName, {
       enabled: false,
-      strategy: 'disabled',
+      strategy: "disabled",
     });
 
     console.warn(`[Feature Flag] Emergency disabled: ${flagName}. Reason: ${reason}`);
-    
+
     // TODO: Send alert notification
   }
 
@@ -386,7 +393,7 @@ export class EnhancedFeatureFlagManager {
    */
   startGradualRollout(flagName: string, config: GradualRolloutConfig): void {
     this.updateFlag(flagName, {
-      strategy: 'gradual',
+      strategy: "gradual",
       gradualRollout: {
         ...config,
         enabled: true,
@@ -421,32 +428,38 @@ export class EnhancedFeatureFlagManager {
     };
   }
 
-  private hashUser(userId: string, salt: string = ''): number {
+  private hashUser(userId: string, salt: string = ""): number {
     let hash = 0;
     const str = userId + salt;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
   }
 
-  private evaluateABTest(config: ABTestConfig, userContext: UserContext): {
+  private evaluateABTest(
+    config: ABTestConfig,
+    userContext: UserContext
+  ): {
     enabled: boolean;
     inTargetGroup: boolean;
     group: string;
   } {
     if (!config.enabled) {
-      return { enabled: false, inTargetGroup: false, group: 'control' };
+      return { enabled: false, inTargetGroup: false, group: "control" };
     }
 
-    const userHash = this.hashUser(userContext.userId, 'ab_test');
+    const userHash = this.hashUser(userContext.userId, "ab_test");
     const userPercentile = userHash % 100;
-    
+
     let currentPercentile = 0;
     for (const [groupName, groupConfig] of Object.entries(config.groups)) {
-      if (userPercentile >= currentPercentile && userPercentile < currentPercentile + groupConfig.percentage) {
+      if (
+        userPercentile >= currentPercentile &&
+        userPercentile < currentPercentile + groupConfig.percentage
+      ) {
         return {
           enabled: groupConfig.flags.enabled || false,
           inTargetGroup: true,
@@ -456,30 +469,33 @@ export class EnhancedFeatureFlagManager {
       currentPercentile += groupConfig.percentage;
     }
 
-    return { enabled: false, inTargetGroup: false, group: 'control' };
+    return { enabled: false, inTargetGroup: false, group: "control" };
   }
 
-  private evaluateGradualRollout(config: GradualRolloutConfig, userContext: UserContext): {
+  private evaluateGradualRollout(
+    config: GradualRolloutConfig,
+    userContext: UserContext
+  ): {
     enabled: boolean;
     inTargetGroup: boolean;
     phase: string;
     currentPercentage: number;
   } {
     if (!config.enabled) {
-      return { enabled: false, inTargetGroup: false, phase: 'disabled', currentPercentage: 0 };
+      return { enabled: false, inTargetGroup: false, phase: "disabled", currentPercentage: 0 };
     }
 
     const now = new Date();
     const startTime = new Date(config.startTime);
     const hoursElapsed = (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-    
+
     const incrementsCompleted = Math.floor(hoursElapsed / config.incrementIntervalHours);
     const currentPercentage = Math.min(
-      config.startPercentage + (incrementsCompleted * config.incrementPercentage),
+      config.startPercentage + incrementsCompleted * config.incrementPercentage,
       config.targetPercentage
     );
 
-    const userHash = this.hashUser(userContext.userId, 'gradual');
+    const userHash = this.hashUser(userContext.userId, "gradual");
     const userPercentile = userHash % 100;
     const enabled = userPercentile < currentPercentage;
 
@@ -491,34 +507,40 @@ export class EnhancedFeatureFlagManager {
     };
   }
 
-  private evaluateCanaryDeployment(config: EnhancedFeatureFlagConfig, userContext: UserContext): boolean {
+  private evaluateCanaryDeployment(
+    _config: EnhancedFeatureFlagConfig,
+    userContext: UserContext
+  ): boolean {
     // Implement canary logic - enable for specific user types or environments
-    const isCanaryUser = userContext.userType === 'enterprise' || 
-                        userContext.tradingExperience === 'advanced';
-    
+    const isCanaryUser =
+      userContext.userType === "enterprise" || userContext.tradingExperience === "advanced";
+
     if (isCanaryUser) {
-      const userHash = this.hashUser(userContext.userId, 'canary');
-      return (userHash % 100) < 10; // 10% of canary users
+      const userHash = this.hashUser(userContext.userId, "canary");
+      return userHash % 100 < 10; // 10% of canary users
     }
-    
+
     return false;
   }
 
-  private evaluateUserTargeting(targetAttributes: Record<string, any>, userContext: UserContext): boolean {
+  private evaluateUserTargeting(
+    targetAttributes: Record<string, any>,
+    userContext: UserContext
+  ): boolean {
     for (const [key, targetValue] of Object.entries(targetAttributes)) {
       const userValue = (userContext as any)[key] || userContext.customAttributes?.[key];
-      
+
       if (userValue !== targetValue) {
         return false;
       }
     }
-    
+
     return true;
   }
 
   private recordEvaluation(flagName: string, enabled: boolean): void {
     this.evaluationCounter.add(1, { flag_name: flagName });
-    
+
     if (enabled) {
       this.enabledCounter.add(1, { flag_name: flagName });
     }
@@ -552,9 +574,9 @@ export class EnhancedFeatureFlagManager {
     // Initialize with trading domain flags
     const tradingFlags: EnhancedFeatureFlagConfig[] = [
       {
-        name: 'clean_architecture_trading',
-        description: 'Enable Clean Architecture trading implementation',
-        strategy: 'gradual',
+        name: "clean_architecture_trading",
+        description: "Enable Clean Architecture trading implementation",
+        strategy: "gradual",
         enabled: true,
         gradualRollout: {
           enabled: true,
@@ -565,24 +587,24 @@ export class EnhancedFeatureFlagManager {
           startTime: new Date().toISOString(),
           rollbackThreshold: {
             errorRate: 0.05,
-            performanceDegradation: 0.20,
+            performanceDegradation: 0.2,
           },
         },
-        environments: ['development', 'staging', 'production'],
+        environments: ["development", "staging", "production"],
         trackingEnabled: true,
         killSwitchEnabled: true,
         rollbackOnError: true,
         maxErrorRate: 0.05,
-        metricsNamespace: 'trading_domain',
+        metricsNamespace: "trading_domain",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        createdBy: 'system',
-        tags: ['trading', 'architecture', 'gradual'],
+        createdBy: "system",
+        tags: ["trading", "architecture", "gradual"],
       },
       {
-        name: 'enhanced_monitoring',
-        description: 'Enable enhanced performance monitoring',
-        strategy: 'percentage',
+        name: "enhanced_monitoring",
+        description: "Enable enhanced performance monitoring",
+        strategy: "percentage",
         enabled: true,
         percentage: 50,
         trackingEnabled: true,
@@ -591,12 +613,12 @@ export class EnhancedFeatureFlagManager {
         maxErrorRate: 0.05,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        createdBy: 'system',
-        tags: ['monitoring', 'performance'],
+        createdBy: "system",
+        tags: ["monitoring", "performance"],
       },
     ];
 
-    tradingFlags.forEach(flag => this.registerFlag(flag));
+    tradingFlags.forEach((flag) => this.registerFlag(flag));
   }
 
   private startBackgroundTasks(): void {
@@ -612,8 +634,8 @@ export class EnhancedFeatureFlagManager {
   }
 
   private monitorGradualRollouts(): void {
-    for (const [flagName, config] of this.flagConfigurations) {
-      if (config.strategy === 'gradual' && config.gradualRollout?.enabled) {
+    for (const [_flagName, config] of this.flagConfigurations) {
+      if (config.strategy === "gradual" && config.gradualRollout?.enabled) {
         // Check if rollout should progress automatically
         // Implementation would check current metrics and decide whether to continue
       }
@@ -621,7 +643,7 @@ export class EnhancedFeatureFlagManager {
   }
 
   private monitorErrorRates(): void {
-    for (const [flagName, config] of this.flagConfigurations) {
+    for (const [_flagName, config] of this.flagConfigurations) {
       if (config.rollbackOnError) {
         // Check error rates and rollback if threshold exceeded
         // Implementation would integrate with error monitoring
@@ -639,7 +661,11 @@ export const evaluateFeatureFlag = async (
   userContext: UserContext,
   defaultValue: boolean = false
 ): Promise<boolean> => {
-  const evaluation = await enhancedFeatureFlagManager.evaluateFlag(flagName, userContext, defaultValue);
+  const evaluation = await enhancedFeatureFlagManager.evaluateFlag(
+    flagName,
+    userContext,
+    defaultValue
+  );
   return evaluation.enabled;
 };
 

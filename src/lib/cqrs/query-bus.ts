@@ -1,12 +1,12 @@
 /**
  * CQRS Query Bus Implementation
- * 
+ *
  * Handles query execution with caching, pagination, and read model projections.
  * Part of Phase 3 Production Readiness - Event Sourcing and CQRS patterns.
  */
 
-import { EventEmitter } from "events";
-import { eventStoreManager, type DomainEvent } from "../event-sourcing/event-store";
+import { EventEmitter } from "node:events";
+import { type DomainEvent, eventStoreManager } from "../event-sourcing/event-store";
 
 // Base Query Interface
 export interface Query {
@@ -86,12 +86,12 @@ export class QueryBus extends EventEmitter {
    */
   async execute<TResult = any>(query: Query): Promise<QueryResult<TResult>> {
     const startTime = Date.now();
-    
+
     try {
       // Check cache first
       const cacheKey = this.generateCacheKey(query);
       const cached = this.getFromCache(cacheKey);
-      
+
       if (cached) {
         const result = {
           ...cached,
@@ -101,7 +101,7 @@ export class QueryBus extends EventEmitter {
             cacheHit: true,
           },
         };
-        
+
         this.emit("query_executed", { query, result, cached: true });
         return result;
       }
@@ -114,7 +114,7 @@ export class QueryBus extends EventEmitter {
 
       // Execute query
       const result = await handler.handle(query);
-      
+
       // Update execution metadata
       result.metadata = {
         ...result.metadata,
@@ -206,9 +206,9 @@ export class QueryBus extends EventEmitter {
 /**
  * Base Query Handler
  */
-export abstract class BaseQueryHandler<TQuery extends Query, TResult = any> 
-  implements QueryHandler<TQuery, TResult> {
-  
+export abstract class BaseQueryHandler<TQuery extends Query, TResult = any>
+  implements QueryHandler<TQuery, TResult>
+{
   abstract handle(query: TQuery): Promise<QueryResult<TResult>>;
 
   canHandle(query: Query): boolean {
@@ -259,7 +259,7 @@ export class InMemoryReadModelStore {
       typeStore = new Map();
       this.models.set(model.type, typeStore);
     }
-    
+
     typeStore.set(model.id, model);
   }
 
@@ -282,7 +282,7 @@ export class InMemoryReadModelStore {
 
     // Apply simple filtering
     if (filter) {
-      models = models.filter(model => {
+      models = models.filter((model) => {
         return Object.entries(filter).every(([key, value]) => {
           return model.data[key] === value;
         });
@@ -337,7 +337,7 @@ export abstract class BaseReadModelProjection implements ReadModelProjection {
   async rebuild(): Promise<void> {
     // Clear existing models
     await this.store.clear(this.projectionName);
-    
+
     // Replay all events
     await eventStoreManager.replayEvents(undefined, (event) => this.handle(event));
   }

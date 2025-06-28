@@ -75,7 +75,7 @@ function getLogger(): {
         debug: (message: string, context?: any) =>
           console.debug("[api-response]", message, context || ""),
       };
-    } catch (error) {
+    } catch (_error) {
       // Fallback to console logging during build time
       _logger = {
         debug: console.debug.bind(console),

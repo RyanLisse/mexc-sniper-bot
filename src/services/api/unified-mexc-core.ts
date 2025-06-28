@@ -40,7 +40,7 @@ const BulkActivityInputSchema = z.object({
     .optional(),
 });
 
-const RecentActivityInputSchema = z.object({
+const _RecentActivityInputSchema = z.object({
   currency: z.string().min(1, "Currency cannot be empty"),
   timeframeMs: z
     .number()

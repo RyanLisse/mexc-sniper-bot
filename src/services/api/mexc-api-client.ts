@@ -22,12 +22,6 @@ import type { EnhancedUnifiedCacheSystem } from "@/src/lib/enhanced-unified-cach
 import type { PerformanceMonitoringService } from "@/src/lib/performance-monitoring-service";
 import type { UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 import type { CircuitBreaker } from "../risk/circuit-breaker";
-import { MexcRequestCache } from "./mexc-request-cache";
-import { MexcAuthService } from "./mexc-auth-service";
-import { MexcRetryService } from "./mexc-retry-service";
-import { MexcRequestService } from "./mexc-request-service";
-import { MexcTradingService } from "./mexc-trading-service";
-
 // Import and export all types for backward compatibility
 import type {
   ApiClientStats,
@@ -45,6 +39,11 @@ import type {
   RetryConfig,
   TimeoutConfig,
 } from "./mexc-api-types";
+import { MexcAuthService } from "./mexc-auth-service";
+import type { MexcRequestCache } from "./mexc-request-cache";
+import { MexcRequestService } from "./mexc-request-service";
+import { MexcRetryService } from "./mexc-retry-service";
+import { MexcTradingService } from "./mexc-trading-service";
 
 export type {
   ApiClientStats,
@@ -97,8 +96,8 @@ export class MexcApiClient {
     config: Required<UnifiedMexcConfig>,
     cache: MexcRequestCache,
     reliabilityManager: CircuitBreaker,
-    enhancedCache?: EnhancedUnifiedCacheSystem,
-    performanceMonitoring?: PerformanceMonitoringService
+    _enhancedCache?: EnhancedUnifiedCacheSystem,
+    _performanceMonitoring?: PerformanceMonitoringService
   ) {
     this.config = config;
     this.cache = cache;

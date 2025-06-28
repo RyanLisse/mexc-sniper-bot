@@ -49,7 +49,6 @@ export class TradingNotificationServiceAdapter implements NotificationService {
       // - Push notifications
       // - Webhook calls
       // - Slack/Discord notifications
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to send trade execution notification", {
@@ -98,7 +97,6 @@ export class TradingNotificationServiceAdapter implements NotificationService {
       if (trade.isCompleted() && pnlPercentage && pnlPercentage > 0) {
         this.sendSuccessNotification(trade, pnlPercentage);
       }
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to send trade completion notification", {
@@ -136,7 +134,6 @@ export class TradingNotificationServiceAdapter implements NotificationService {
 
       // Failure notification logic would go here
       this.sendFailureNotification(trade, error);
-
     } catch (notificationError) {
       const safeError = toSafeError(notificationError);
       this.logger.error("Failed to send trade failure notification", {
@@ -182,7 +179,10 @@ export class TradingNotificationServiceAdapter implements NotificationService {
 
   // Additional notification methods
 
-  async notifyPositionUpdate(trade: Trade, updateType: "stop_loss" | "take_profit" | "partial_fill"): Promise<void> {
+  async notifyPositionUpdate(
+    trade: Trade,
+    updateType: "stop_loss" | "take_profit" | "partial_fill"
+  ): Promise<void> {
     try {
       this.logger.info("Position update notification", {
         tradeId: trade.id,
@@ -201,7 +201,6 @@ export class TradingNotificationServiceAdapter implements NotificationService {
           timestamp: new Date().toISOString(),
         });
       }
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to send position update notification", {
@@ -212,7 +211,10 @@ export class TradingNotificationServiceAdapter implements NotificationService {
     }
   }
 
-  async notifyRiskAlert(trade: Trade, alertType: "stop_loss_triggered" | "max_loss_approaching"): Promise<void> {
+  async notifyRiskAlert(
+    trade: Trade,
+    alertType: "stop_loss_triggered" | "max_loss_approaching"
+  ): Promise<void> {
     try {
       this.logger.warn("Risk alert notification", {
         tradeId: trade.id,
@@ -234,7 +236,6 @@ export class TradingNotificationServiceAdapter implements NotificationService {
 
       // Send urgent notification for risk alerts
       this.sendRiskAlertNotification(trade, alertType);
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to send risk alert notification", {

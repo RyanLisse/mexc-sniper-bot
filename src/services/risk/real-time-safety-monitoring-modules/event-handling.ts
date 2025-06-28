@@ -408,7 +408,7 @@ export class EventHandling {
       this.stats.totalExecutions++;
 
       // Clear any previous error
-      delete operation.lastError;
+      operation.lastError = undefined;
     } catch (error) {
       const duration = timer.end({
         operationId: operation.id,

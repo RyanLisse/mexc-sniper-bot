@@ -16,7 +16,7 @@
  * improved modularity, testability, and maintainability.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { TradeRiskAssessment } from "@/src/mexc-agents/risk-manager-agent";
 // Import schemas and types
 import type {

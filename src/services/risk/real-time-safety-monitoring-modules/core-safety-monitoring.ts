@@ -178,7 +178,7 @@ export class CoreSafetyMonitoring {
           executionReport = await this.config.executionService.getExecutionReport();
         } else {
           // Fallback: construct a basic execution report from available methods
-          const activePositions = await this.config.executionService.getActivePositions() || [];
+          const activePositions = (await this.config.executionService.getActivePositions()) || [];
           const performanceMetrics = await this.config.executionService.getPerformanceMetrics();
           executionReport = {
             stats: {
@@ -575,7 +575,7 @@ export class CoreSafetyMonitoring {
         await this.config.executionService.getServiceStatus();
       }
       return Date.now() - startTime;
-    } catch (error) {
+    } catch (_error) {
       return 5000; // High latency on failure
     }
   }

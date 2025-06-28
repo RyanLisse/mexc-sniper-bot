@@ -11,7 +11,7 @@
  * - Provides centralized emergency management
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import {
   CircuitBreakerCoordinator,
   CoordinatedCircuitBreakerRegistry,
@@ -478,7 +478,7 @@ export class EmergencyStopCoordinator extends EventEmitter {
     coordinatedServicesCount: number;
     circuitBreakersCount: number;
   } {
-    const metrics = this.circuitBreakerCoordinator.getMetrics();
+    const _metrics = this.circuitBreakerCoordinator.getMetrics();
 
     return {
       emergencyCount: 0, // Would track this in production

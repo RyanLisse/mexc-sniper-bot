@@ -9,7 +9,7 @@
  * - Order execution
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { getRecommendedMexcService } from "../api/mexc-unified-exports";
 import { EmergencySafetySystem } from "../risk/emergency-safety-system";
 import { enhancedRiskManagementService } from "../risk/enhanced-risk-management-service";

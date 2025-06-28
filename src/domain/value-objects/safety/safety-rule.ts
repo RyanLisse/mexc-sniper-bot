@@ -8,7 +8,7 @@ import { ValueObject } from "../../base/value-object";
 import { DomainValidationError } from "../../errors/trading-errors";
 
 // Safety rule types
-export type SafetyRuleType = 
+export type SafetyRuleType =
   | "drawdown_threshold"
   | "position_risk"
   | "concentration_limit"
@@ -22,9 +22,14 @@ export type SafetyRuleType =
 
 export type SafetyRulePriority = "low" | "medium" | "high" | "critical";
 
-export type SafetyRuleOperator = "greater_than" | "less_than" | "equal_to" | "greater_than_or_equal" | "less_than_or_equal";
+export type SafetyRuleOperator =
+  | "greater_than"
+  | "less_than"
+  | "equal_to"
+  | "greater_than_or_equal"
+  | "less_than_or_equal";
 
-export type SafetyRuleAction = 
+export type SafetyRuleAction =
   | "alert_only"
   | "reduce_position"
   | "close_position"
@@ -62,17 +67,17 @@ const SafetyRuleTypeSchema = z.enum([
   "exposure_limit",
   "leverage_limit",
   "volatility_threshold",
-  "custom"
+  "custom",
 ]);
 
 const SafetyRulePrioritySchema = z.enum(["low", "medium", "high", "critical"]);
 
 const SafetyRuleOperatorSchema = z.enum([
   "greater_than",
-  "less_than", 
+  "less_than",
   "equal_to",
   "greater_than_or_equal",
-  "less_than_or_equal"
+  "less_than_or_equal",
 ]);
 
 const SafetyRuleActionSchema = z.enum([
@@ -81,7 +86,7 @@ const SafetyRuleActionSchema = z.enum([
   "close_position",
   "halt_trading",
   "emergency_stop",
-  "custom_action"
+  "custom_action",
 ]);
 
 const SafetyRulePropsSchema = z.object({
@@ -128,7 +133,7 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     super(props);
   }
 
-  static create(props: Omit<SafetyRuleProps, 'id' | 'createdAt' | 'triggerCount'>): SafetyRule {
+  static create(props: Omit<SafetyRuleProps, "id" | "createdAt" | "triggerCount">): SafetyRule {
     const safetyRuleProps: SafetyRuleProps = {
       ...props,
       id: `safety_rule_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -150,7 +155,7 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
       const firstError = validationResult.error.errors[0];
       throw new DomainValidationError(
         firstError.path.join("."),
-        'invalid value',
+        "invalid value",
         firstError.message
       );
     }
@@ -174,7 +179,7 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
           );
         }
         break;
-      
+
       case "position_risk":
         if (props.threshold <= 0 || props.threshold > 50) {
           throw new DomainValidationError(
@@ -380,7 +385,10 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     return true;
   }
 
-  private createNonTriggeredResult(context: SafetyRuleEvaluationContext, reason: string): SafetyRuleEvaluationResult {
+  private createNonTriggeredResult(
+    context: SafetyRuleEvaluationContext,
+    reason: string
+  ): SafetyRuleEvaluationResult {
     const variance = context.currentValue - this.threshold;
     const variancePercentage = this.threshold !== 0 ? (variance / this.threshold) * 100 : 0;
 
@@ -404,12 +412,18 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
 
   private getOperatorText(): string {
     switch (this.operator) {
-      case "greater_than": return ">";
-      case "less_than": return "<";
-      case "equal_to": return "=";
-      case "greater_than_or_equal": return ">=";
-      case "less_than_or_equal": return "<=";
-      default: return "?";
+      case "greater_than":
+        return ">";
+      case "less_than":
+        return "<";
+      case "equal_to":
+        return "=";
+      case "greater_than_or_equal":
+        return ">=";
+      case "less_than_or_equal":
+        return "<=";
+      default:
+        return "?";
     }
   }
 
@@ -524,7 +538,10 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     if (!this.lastTriggered) {
       return 0;
     }
-    const daysSinceCreation = Math.max(1, Math.floor((Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24)));
+    const daysSinceCreation = Math.max(
+      1,
+      Math.floor((Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+    );
     return this.triggerCount / daysSinceCreation;
   }
 

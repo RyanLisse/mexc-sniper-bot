@@ -85,7 +85,7 @@ export class AnomalyDetectionService {
           debug: (message: string, context?: any) =>
             console.debug("[anomaly-detection-service]", message, context || ""),
         };
-      } catch (error) {
+      } catch (_error) {
         this._logger = {
           debug: console.debug.bind(console),
           info: console.info.bind(console),

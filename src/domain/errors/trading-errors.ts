@@ -36,7 +36,9 @@ export class OrderExecutionError extends TradingDomainError {
   readonly errorCode = "ORDER_EXECUTION_ERROR";
 
   constructor(reason: string, exchangeError?: string) {
-    super(`Order execution failed: ${reason}${exchangeError ? ` (Exchange: ${exchangeError})` : ""}`);
+    super(
+      `Order execution failed: ${reason}${exchangeError ? ` (Exchange: ${exchangeError})` : ""}`
+    );
   }
 }
 
@@ -177,7 +179,9 @@ export class StaleMarketDataError extends TradingDomainError {
   readonly errorCode = "STALE_MARKET_DATA";
 
   constructor(symbol: string, lastUpdate: Date, maxAge: number) {
-    super(`Market data for ${symbol} is stale. Last update: ${lastUpdate.toISOString()}, Max age: ${maxAge}ms`);
+    super(
+      `Market data for ${symbol} is stale. Last update: ${lastUpdate.toISOString()}, Max age: ${maxAge}ms`
+    );
   }
 }
 
@@ -221,7 +225,11 @@ export class TradingErrorFactory {
     return new InvalidTradeParametersError(parameter, reason);
   }
 
-  static insufficientBalance(required: number, available: number, asset: string): InsufficientBalanceError {
+  static insufficientBalance(
+    required: number,
+    available: number,
+    asset: string
+  ): InsufficientBalanceError {
     return new InsufficientBalanceError(required, available, asset);
   }
 
@@ -237,7 +245,11 @@ export class TradingErrorFactory {
     return new StrategyNotFoundError(strategyId);
   }
 
-  static riskLimitExceeded(limitType: string, current: number, limit: number): RiskLimitExceededError {
+  static riskLimitExceeded(
+    limitType: string,
+    current: number,
+    limit: number
+  ): RiskLimitExceededError {
     return new RiskLimitExceededError(limitType, current, limit);
   }
 

@@ -26,8 +26,8 @@ import {
 import {
   agentPerformanceMetrics,
   insertAgentPerformanceMetricsSchema,
-  insertWorkflowPerformanceMetricsSchema,
   insertSystemPerformanceSnapshotSchema,
+  insertWorkflowPerformanceMetricsSchema,
   performanceAlerts,
   performanceBaselines,
   systemPerformanceSnapshots,
@@ -121,10 +121,10 @@ export {
 };
 
 // Export validation schemas
-export { 
-  insertAgentPerformanceMetricsSchema, 
+export {
+  insertAgentPerformanceMetricsSchema,
   insertWorkflowPerformanceMetricsSchema,
-  insertSystemPerformanceSnapshotSchema 
+  insertSystemPerformanceSnapshotSchema,
 };
 
 export type * from "./schemas/alerts";

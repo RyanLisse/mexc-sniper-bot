@@ -111,9 +111,9 @@ describe("AdvancedRiskEngine - Modular Integration", () => {
         liquidityIndex: 15, // Below emergency threshold
       };
 
-      let emergencyTriggered = false;
+      let _emergencyTriggered = false;
       riskEngine.on("risk_threshold_exceeded", () => {
-        emergencyTriggered = true;
+        _emergencyTriggered = true;
       });
 
       await riskEngine.updateMarketConditions(emergencyConditions);

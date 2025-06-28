@@ -5,8 +5,7 @@
  * Monitors positions in real-time and executes protective trades automatically.
  */
 
-import { EventEmitter } from "events";
-import { enhancedRiskManagementService } from "../risk/enhanced-risk-management-service";
+import { EventEmitter } from "node:events";
 import { mexcTradingService } from "./mexc-trading-service";
 import { type Position, portfolioTrackingService } from "./portfolio-tracking-service";
 

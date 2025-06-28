@@ -7,7 +7,7 @@
 import { createLogger } from "../unified-logger";
 import type { CacheEntry, CacheMetrics } from "./types";
 
-const logger = createLogger("lru-cache", {
+const _logger = createLogger("lru-cache", {
   enableStructuredLogging: process.env.NODE_ENV === "production",
   enablePerformanceLogging: true,
 });

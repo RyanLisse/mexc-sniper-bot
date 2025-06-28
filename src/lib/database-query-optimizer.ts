@@ -661,7 +661,7 @@ export class DatabaseQueryOptimizer {
       const baseQuery = `SELECT * FROM ${table} ${whereClause}`;
 
       // Execute EXPLAIN for cost estimation
-      const explainQuery = analyzeExecution
+      const _explainQuery = analyzeExecution
         ? `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${baseQuery}`
         : `EXPLAIN (FORMAT JSON) ${baseQuery}`;
 

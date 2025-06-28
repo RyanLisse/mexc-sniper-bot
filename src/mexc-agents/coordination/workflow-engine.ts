@@ -2,14 +2,10 @@
 import type { AgentRegistry } from "./agent-registry";
 import { WorkflowDependencyResolver } from "./workflow-dependency-resolver";
 import type {
-  FailureStrategy,
   WorkflowContext,
   WorkflowDefinition,
-  WorkflowExecutionMode,
   WorkflowExecutionResult,
   WorkflowStepConfig,
-  WorkflowStepResult,
-  WorkflowStepStatus,
 } from "./workflow-engine-types";
 import { WorkflowExecutionTracker } from "./workflow-execution-tracker";
 import { WorkflowStepExecutor } from "./workflow-step-executor";

@@ -12,7 +12,7 @@
  * - Memory-efficient streaming data management
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import WebSocket from "ws";
 import type { CoordinatedCircuitBreaker } from "./coordinated-circuit-breaker";
 import { createCoordinatedMexcWebSocketBreaker } from "./coordinated-circuit-breaker";
@@ -148,7 +148,7 @@ export class RealTimePatternDetector {
       this.patternCallbacks.set(symbol, new Set());
     }
 
-    this.patternCallbacks.get(symbol)!.add(callback);
+    this.patternCallbacks.get(symbol)?.add(callback);
 
     return () => {
       const callbacks = this.patternCallbacks.get(symbol);
@@ -233,7 +233,7 @@ export class RealTimePatternDetector {
   }
 
   private calculateAdvanceNotice(
-    status: RealTimeSymbolStatus,
+    _status: RealTimeSymbolStatus,
     priceData: RealTimePriceData
   ): number {
     // Estimate advance notice based on pattern strength and market conditions
@@ -379,12 +379,12 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
           reject(new Error("WebSocket connection timeout"));
         }, 10000);
 
-        this.ws!.once("open", () => {
+        this.ws?.once("open", () => {
           clearTimeout(timeout);
           resolve();
         });
 
-        this.ws!.once("error", (error) => {
+        this.ws?.once("error", (error) => {
           clearTimeout(timeout);
           reject(error);
         });
@@ -586,7 +586,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     if (!this.priceCallbacks.has(normalizedSymbol)) {
       this.priceCallbacks.set(normalizedSymbol, new Set());
     }
-    this.priceCallbacks.get(normalizedSymbol)!.add(callback);
+    this.priceCallbacks.get(normalizedSymbol)?.add(callback);
 
     // Subscribe to ticker stream
     this.addSubscription(normalizedSymbol, "ticker");
@@ -615,7 +615,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
     if (!this.statusCallbacks.has(normalizedSymbol)) {
       this.statusCallbacks.set(normalizedSymbol, new Set());
     }
-    this.statusCallbacks.get(normalizedSymbol)!.add(callback);
+    this.statusCallbacks.get(normalizedSymbol)?.add(callback);
 
     return () => {
       const callbacks = this.statusCallbacks.get(normalizedSymbol);

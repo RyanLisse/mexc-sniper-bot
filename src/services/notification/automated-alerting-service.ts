@@ -64,7 +64,7 @@ export class AutomatedAlertingService {
           debug: (message: string, context?: any) =>
             console.debug("[automated-alerting-service]", message, context || ""),
         };
-      } catch (error) {
+      } catch (_error) {
         this._logger = {
           debug: console.debug.bind(console),
           info: console.info.bind(console),
@@ -679,7 +679,7 @@ export class AutomatedAlertingService {
     try {
       const { db } = await import("@/src/db");
       const { sql } = await import("drizzle-orm");
-      
+
       // Query performance snapshots for historical metrics
       const historicalData = await db.execute(sql`
         SELECT timestamp, agent_metrics, workflow_metrics, system_metrics
@@ -687,37 +687,43 @@ export class AutomatedAlertingService {
         WHERE timestamp > ${cutoff.toISOString()}
         ORDER BY timestamp ASC
       `);
-      
+
       // Extract specific metric from historical data
       for (const row of historicalData.rows) {
         try {
           const agentMetrics = JSON.parse(row.agent_metrics as string);
           const workflowMetrics = JSON.parse(row.workflow_metrics as string);
           const systemMetrics = JSON.parse(row.system_metrics as string);
-          
+
           // Search for the metric in different metric categories
           const allMetrics = { ...agentMetrics, ...workflowMetrics, ...systemMetrics };
-          
+
           if (allMetrics[metricName]) {
             metrics.push({
               timestamp: new Date(row.timestamp as string),
-              value: typeof allMetrics[metricName] === 'object' 
-                ? allMetrics[metricName].value || allMetrics[metricName].average || 0
-                : allMetrics[metricName],
-              source: 'database',
+              value:
+                typeof allMetrics[metricName] === "object"
+                  ? allMetrics[metricName].value || allMetrics[metricName].average || 0
+                  : allMetrics[metricName],
+              source: "database",
               metadata: {
                 snapshotId: row.id,
-                metricCategory: Object.keys(agentMetrics).includes(metricName) ? 'agent' :
-                              Object.keys(workflowMetrics).includes(metricName) ? 'workflow' : 'system'
-              }
+                metricCategory: Object.keys(agentMetrics).includes(metricName)
+                  ? "agent"
+                  : Object.keys(workflowMetrics).includes(metricName)
+                    ? "workflow"
+                    : "system",
+              },
             });
           }
         } catch (parseError) {
           this.logger.warn(`Failed to parse historical metrics data:`, parseError);
         }
       }
-      
-      this.logger.info(`Retrieved ${metrics.length} metrics for ${metricName} (${historicalData.rows.length} from database)`);
+
+      this.logger.info(
+        `Retrieved ${metrics.length} metrics for ${metricName} (${historicalData.rows.length} from database)`
+      );
     } catch (error) {
       this.logger.warn(`Failed to retrieve historical metrics for ${metricName}:`, error);
     }

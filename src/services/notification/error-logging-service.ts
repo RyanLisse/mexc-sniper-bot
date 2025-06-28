@@ -209,12 +209,14 @@ export class ErrorLoggingService {
       const monitoringEndpoints = [
         process.env.SENTRY_DSN && this.sendToSentry(entries),
         process.env.DATADOG_API_KEY && this.sendToDatadog(entries),
-        process.env.LOGFLARE_API_KEY && this.sendToLogflare(entries)
+        process.env.LOGFLARE_API_KEY && this.sendToLogflare(entries),
       ].filter(Boolean);
 
       if (monitoringEndpoints.length > 0) {
         await Promise.allSettled(monitoringEndpoints);
-        this.getLogger().info(`Sent ${entries.length} error logs to ${monitoringEndpoints.length} monitoring service(s)`);
+        this.getLogger().info(
+          `Sent ${entries.length} error logs to ${monitoringEndpoints.length} monitoring service(s)`
+        );
       } else {
         // Fallback to local webhook if configured
         await this.sendToWebhook(entries);
@@ -226,13 +228,13 @@ export class ErrorLoggingService {
 
   private async sendToSentry(entries: ErrorLogEntry[]): Promise<void> {
     // Send critical errors to Sentry
-    const criticalEntries = entries.filter(entry => entry.level === 'error');
+    const criticalEntries = entries.filter((entry) => entry.level === "error");
     for (const entry of criticalEntries) {
       // Use console.error to potentially trigger Sentry capture
-      console.error('[SENTRY]', entry.message, { 
+      console.error("[SENTRY]", entry.message, {
         context: entry.context,
         stack: entry.stack,
-        timestamp: entry.timestamp 
+        timestamp: entry.timestamp,
       });
     }
   }
@@ -240,23 +242,23 @@ export class ErrorLoggingService {
   private async sendToDatadog(entries: ErrorLogEntry[]): Promise<void> {
     // Send structured logs to Datadog
     const payload = {
-      service: 'mexc-sniper-bot',
-      ddsource: 'error-logging-service',
-      logs: entries.map(entry => ({
+      service: "mexc-sniper-bot",
+      ddsource: "error-logging-service",
+      logs: entries.map((entry) => ({
         timestamp: entry.timestamp.toISOString(),
         level: entry.level,
         message: entry.message,
-        attributes: entry.context
-      }))
+        attributes: entry.context,
+      })),
     };
-    
+
     // Log structured data for Datadog agent pickup
-    console.log('[DATADOG]', JSON.stringify(payload));
+    console.log("[DATADOG]", JSON.stringify(payload));
   }
 
   private async sendToLogflare(entries: ErrorLogEntry[]): Promise<void> {
     // Send to Logflare for real-time log streaming
-    const logflareData = entries.map(entry => ({
+    const logflareData = entries.map((entry) => ({
       timestamp: entry.timestamp.toISOString(),
       level: entry.level,
       message: entry.message,
@@ -264,11 +266,11 @@ export class ErrorLoggingService {
         error_code: entry.errorCode,
         user_id: entry.userId,
         request_id: entry.requestId,
-        ...entry.context
-      }
+        ...entry.context,
+      },
     }));
-    
-    console.log('[LOGFLARE]', JSON.stringify(logflareData));
+
+    console.log("[LOGFLARE]", JSON.stringify(logflareData));
   }
 
   private async sendToWebhook(entries: ErrorLogEntry[]): Promise<void> {
@@ -276,17 +278,17 @@ export class ErrorLoggingService {
     if (process.env.ERROR_WEBHOOK_URL) {
       const webhookPayload = {
         timestamp: new Date().toISOString(),
-        service: 'error-logging-service',
+        service: "error-logging-service",
         count: entries.length,
-        errors: entries.map(entry => ({
+        errors: entries.map((entry) => ({
           level: entry.level,
           message: entry.message,
           timestamp: entry.timestamp,
-          context: entry.context
-        }))
+          context: entry.context,
+        })),
       };
-      
-      console.log('[WEBHOOK]', JSON.stringify(webhookPayload));
+
+      console.log("[WEBHOOK]", JSON.stringify(webhookPayload));
     }
   }
 

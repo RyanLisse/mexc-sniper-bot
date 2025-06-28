@@ -30,7 +30,7 @@ import {
 // Unified Logger Implementation - Type Safe and Structured
 // ============================================================================
 
-import { createLogger, type LogContext } from "./unified-logger";
+import { createLogger } from "./unified-logger";
 
 const logger = createLogger("api-route-handler", {
   enableStructuredLogging: process.env.NODE_ENV === "production",

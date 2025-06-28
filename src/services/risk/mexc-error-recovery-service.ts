@@ -333,8 +333,8 @@ export class MexcErrorRecoveryService {
     config: ErrorRecoveryConfig;
   } {
     return {
-      retryableErrorPatterns: this.classifier["RETRYABLE_ERRORS"],
-      nonRetryableErrorPatterns: this.classifier["NON_RETRYABLE_ERRORS"],
+      retryableErrorPatterns: this.classifier.RETRYABLE_ERRORS,
+      nonRetryableErrorPatterns: this.classifier.NON_RETRYABLE_ERRORS,
       config: { ...this.config },
     };
   }

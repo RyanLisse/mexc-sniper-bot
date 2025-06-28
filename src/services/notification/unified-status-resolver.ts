@@ -323,7 +323,7 @@ export class UnifiedStatusResolver {
   private determineOverallStatus(
     credentials: UnifiedCredentialStatus,
     network: UnifiedNetworkStatus,
-    rawData?: any
+    _rawData?: any
   ): StatusResolutionResult["overall"] {
     // Network connectivity is first priority
     if (!network.connected) {

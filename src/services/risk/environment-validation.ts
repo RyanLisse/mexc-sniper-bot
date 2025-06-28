@@ -9,11 +9,7 @@ import type {
   EnvironmentValidationResult,
   EnvironmentVariable,
 } from "@/src/config/environment/types";
-import {
-  ENVIRONMENT_VARIABLES,
-  getCriticalMissing,
-  getRequiredVariables,
-} from "@/src/config/environment/variables";
+import { ENVIRONMENT_VARIABLES, getCriticalMissing } from "@/src/config/environment/variables";
 
 export class EnvironmentValidation {
   private static instance: EnvironmentValidation;

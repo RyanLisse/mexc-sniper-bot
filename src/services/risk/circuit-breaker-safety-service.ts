@@ -8,7 +8,7 @@
  * attempting to disable trading simultaneously.
  */
 
-import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import { SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { TRADING_TELEMETRY_CONFIG } from "@/src/lib/opentelemetry-setup";
 import { UnifiedErrorHandler } from "@/src/lib/unified-error-handling";
 import {
@@ -119,7 +119,7 @@ export class CircuitBreakerSafetyService {
           debug: (message: string, context?: any) =>
             console.debug("[circuit-breaker-safety-service]", message, context || ""),
         };
-      } catch (error) {
+      } catch (_error) {
         // Fallback to console logging during build time
         this._logger = {
           debug: console.debug.bind(console),
@@ -257,7 +257,7 @@ export class CircuitBreakerSafetyService {
    * Execute safe circuit breaker recovery process with coordination
    * FIXED: Now uses coordinated circuit breaker to prevent race conditions
    */
-  async executeCircuitBreakerRecovery(reliabilityManager: any): Promise<RecoveryResult> {
+  async executeCircuitBreakerRecovery(_reliabilityManager: any): Promise<RecoveryResult> {
     return await this.tracer.startActiveSpan(
       "trading.circuit_breaker_recovery",
       {

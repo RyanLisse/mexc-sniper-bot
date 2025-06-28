@@ -5,23 +5,9 @@
  * Integrates with existing error utilities and logging systems.
  */
 
-import { type ApiResponse, createApiResponse } from "./api-response";
-import {
-  isServerError,
-  isTimeoutError,
-  type SafeError,
-  toSafeError,
-} from "./error-type-utils";
-import {
-  type ApiError,
-  type ApplicationError,
-  isApiError,
-  isNetworkError,
-  isValidationError,
-  NetworkError,
-  TimeoutError,
-  ValidationError,
-} from "./errors";
+import type { ApiResponse } from "./api-response";
+import { isServerError, isTimeoutError } from "./error-type-utils";
+import { type ApiError, isApiError, isNetworkError, isValidationError } from "./errors";
 import { createLogger, type LogContext } from "./unified-logger";
 
 const logger = createLogger("error-handler", {
@@ -401,7 +387,7 @@ export class StandardizedErrorHandler {
     return ErrorCategory.BUSINESS_LOGIC;
   }
 
-  private determineSeverity(error: Error, category: ErrorCategory): ErrorSeverity {
+  private determineSeverity(_error: Error, category: ErrorCategory): ErrorSeverity {
     // Critical errors
     if (category === ErrorCategory.SYSTEM || category === ErrorCategory.DATABASE) {
       return ErrorSeverity.CRITICAL;
@@ -421,7 +407,7 @@ export class StandardizedErrorHandler {
     return ErrorSeverity.LOW;
   }
 
-  private determineRecoveryStrategy(error: Error, category: ErrorCategory): RecoveryStrategy {
+  private determineRecoveryStrategy(_error: Error, category: ErrorCategory): RecoveryStrategy {
     if (category === ErrorCategory.NETWORK || category === ErrorCategory.RATE_LIMIT) {
       return RecoveryStrategy.RETRY;
     }
@@ -441,7 +427,7 @@ export class StandardizedErrorHandler {
     return RecoveryStrategy.NONE;
   }
 
-  private generateUserMessage(error: Error, category: ErrorCategory): string {
+  private generateUserMessage(_error: Error, category: ErrorCategory): string {
     switch (category) {
       case ErrorCategory.VALIDATION:
         return "Please check your input and try again";

@@ -373,7 +373,7 @@ Always provide detailed, actionable insights with proper risk management conside
 
   // Removed duplicate private optimizeStrategy method - using the public one
 
-  private async recommendStrategy(request: StrategyRequest): Promise<StrategyResponse> {
+  private async recommendStrategy(_request: StrategyRequest): Promise<StrategyResponse> {
     // Implementation for strategy recommendations
     const recommendations = [
       "Consider multi-phase exit strategy for better risk management",
@@ -589,7 +589,7 @@ Always provide detailed, actionable insights with proper risk management conside
             strategyType: "multi-phase",
             riskLevel: "medium" as const,
             analysisTimestamp: new Date().toISOString(),
-          }
+          },
         },
         recommendations: [
           "Monitor phase transition signals carefully",
@@ -687,7 +687,7 @@ Always provide detailed, actionable insights with proper risk management conside
             strategyType: "symbol-specific",
             riskLevel: "medium" as const,
             analysisTimestamp: new Date().toISOString(),
-          }
+          },
         },
         recommendations: [
           `Focus on ${symbol} historical performance patterns`,

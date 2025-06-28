@@ -9,7 +9,7 @@ import type {
 } from "../../../core/pattern-detection/interfaces";
 import { EnhancedPatternDetectionCore } from "../../../core/pattern-detection/pattern-detection-core-enhanced";
 import { db } from "../../../db";
-import { snipeTargets, userPreferences } from "../../../db/schema";
+import { snipeTargets } from "../../../db/schema";
 import {
   cleanupTestData,
   createTestUser,
@@ -170,23 +170,37 @@ export function createMockPatternEventData(
   overrides: Partial<PatternDetectionEventData> = {}
 ): PatternDetectionEventData {
   return {
-    timestamp: Date.now(),
-    patterns: [
+    patternType: "ready_state",
+    matches: [
       {
         vcoinId: "test-coin-123",
         symbol: "TESTUSDT",
         patternType: "ready_state",
         confidence: 85,
-        metadata: {
-          exchange: "binance",
-          listingTime: new Date(Date.now() + 300000), // 5 minutes from now
-          status: "ready",
-          riskLevel: "low",
+        indicators: {
+          sts: 2,
+          st: 2,
+          tt: 4,
+        },
+        activityInfo: {
+          activities: [],
+          activityBoost: 1.0,
+          hasHighPriorityActivity: false,
+          activityTypes: ["test_source"],
         },
         detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       },
     ],
-    detectionReason: "automated_scan",
+    metadata: {
+      source: "test_source",
+      timestamp: new Date(),
+      averageConfidence: 85,
+      algorithmVersion: "v1.0",
+      processingTime: 100,
+    },
     ...overrides,
   };
 }
@@ -195,15 +209,23 @@ export function createMockPattern(overrides: Partial<PatternMatch> = {}): Patter
   return {
     vcoinId: "test-coin-123",
     symbol: "TESTUSDT",
-    patternType: "binance_listing_detected",
+    patternType: "ready_state",
     confidence: 85,
-    metadata: {
-      exchange: "binance",
-      listingTime: Date.now() + 300000,
-      status: "ready",
-      riskLevel: "low",
+    indicators: {
+      sts: 2,
+      st: 2,
+      tt: 4,
     },
-    detectedAt: Date.now(),
+    activityInfo: {
+      activities: [],
+      activityBoost: 1.0,
+      hasHighPriorityActivity: false,
+      activityTypes: ["test_source"],
+    },
+    detectedAt: new Date(),
+    advanceNoticeHours: 0,
+    riskLevel: "low",
+    recommendation: "immediate_action",
     ...overrides,
   };
 }

@@ -7,19 +7,17 @@
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  setupServiceMocks,
   setupStandardizedTests,
-  standardMockData,
   standardTestCleanup,
 } from "../../../tests/setup/standardized-mocks";
-import { AutoSnipingModule } from "../trading/consolidated/core-trading/auto-sniping";
-import type { ModuleContext } from "../trading/consolidated/core-trading/types";
 import type { UnifiedMexcServiceV2 } from "../api/unified-mexc-service-v2";
 import {
   type AutoSnipingConfig,
   validateAutoSnipingConfig,
   validateExecutionPosition,
 } from "../trading/auto-sniping/schemas";
+import { AutoSnipingModule } from "../trading/consolidated/core-trading/auto-sniping";
+import type { ModuleContext } from "../trading/consolidated/core-trading/types";
 
 // Use standardized test setup
 beforeAll(() => {
@@ -48,7 +46,7 @@ describe("Optimized Backend Services", () => {
         baseUrl: "https://api.mexc.com",
         timeout: 5000,
         maxRetries: 3,
-        
+
         // Required Trading Configuration
         enablePaperTrading: true,
         defaultStrategy: "conservative",
@@ -56,18 +54,18 @@ describe("Optimized Backend Services", () => {
         enableCircuitBreaker: true,
         circuitBreakerThreshold: 5,
         circuitBreakerResetTime: 300000,
-        
+
         // Auto-Sniping Configuration
         autoSnipingEnabled: true,
         snipeCheckInterval: 30000,
         confidenceThreshold: 70,
-        
+
         // Optional Risk Management Configuration
         maxPositionSize: 100,
         globalStopLossPercent: 3,
         globalTakeProfitPercent: 5,
         maxDailyLoss: 1000,
-        
+
         // Cache Configuration
         enableCaching: true,
         cacheTTL: 60000,
@@ -132,7 +130,7 @@ describe("Optimized Backend Services", () => {
     it("should be able to update configuration", async () => {
       const originalStatus = autoSnipingModule.getStatus();
       expect(originalStatus).toBeDefined();
-      
+
       await autoSnipingModule.updateConfig({
         autoSnipingEnabled: true,
         maxConcurrentPositions: 3,
@@ -148,7 +146,7 @@ describe("Optimized Backend Services", () => {
       expect(startResult).toBeDefined();
       expect(typeof startResult.success).toBe("boolean");
       expect(typeof startResult.timestamp).toBe("string");
-      
+
       const stopResult = await autoSnipingModule.stop();
       expect(stopResult).toBeDefined();
       expect(typeof stopResult.success).toBe("boolean");
@@ -182,7 +180,7 @@ describe("Optimized Backend Services", () => {
       // Test starting
       const startResult = await autoSnipingModule.start();
       expect(startResult.success).toBe(true);
-      
+
       // Test status after starting
       const activeStatus = autoSnipingModule.getStatus();
       expect(activeStatus.isActive).toBe(true);
@@ -281,7 +279,7 @@ describe("Optimized Backend Services", () => {
     });
 
     it("should handle configuration updates", async () => {
-      const originalConfig = autoSnipingModule.getConfig();
+      const _originalConfig = autoSnipingModule.getConfig();
 
       await autoSnipingModule.updateConfig({
         maxConcurrentPositions: 3,
@@ -347,8 +345,8 @@ describe("Optimized Backend Services", () => {
     });
 
     it("should maintain state consistency", async () => {
-      const initialStats = autoSnipingModule.getStats();
-      const initialConfig = autoSnipingModule.getConfig();
+      const _initialStats = autoSnipingModule.getStats();
+      const _initialConfig = autoSnipingModule.getConfig();
 
       // Perform multiple operations
       await autoSnipingModule.updateConfig({ maxConcurrentPositions: 7 });

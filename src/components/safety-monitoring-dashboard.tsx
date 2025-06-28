@@ -14,7 +14,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useSafetyMonitoring } from "../hooks/use-safety-monitoring";
 import { cn } from "../lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";

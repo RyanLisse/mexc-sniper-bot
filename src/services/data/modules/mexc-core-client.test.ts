@@ -102,7 +102,7 @@ describe("MexcCoreClient", () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
-      expect(result.data![0].vcoinId).toBe("BTC123");
+      expect(result.data?.[0].vcoinId).toBe("BTC123");
       expect(result.source).toBe("mexc-core-market");
     });
 
@@ -154,8 +154,8 @@ describe("MexcCoreClient", () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(1);
-      expect(result.data![0].symbol).toBe("BTCUSDT");
-      expect(result.data![0].baseAsset).toBe("BTC");
+      expect(result.data?.[0].symbol).toBe("BTCUSDT");
+      expect(result.data?.[0].baseAsset).toBe("BTC");
     });
 
     it("should filter symbols correctly", async () => {
@@ -198,8 +198,8 @@ describe("MexcCoreClient", () => {
 
       expect(result.success).toBe(true);
       expect(result.data).toHaveLength(2); // Only BTC and USDT (ETH filtered out)
-      expect(result.data![0].asset).toBe("BTC");
-      expect(result.data![1].asset).toBe("USDT");
+      expect(result.data?.[0].asset).toBe("BTC");
+      expect(result.data?.[1].asset).toBe("USDT");
     });
   });
 

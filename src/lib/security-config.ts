@@ -5,7 +5,7 @@
  * Implements security best practices and headers for web application protection.
  */
 
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const SECURITY_CONFIG = {
   // Security Headers for Production

@@ -16,7 +16,7 @@
  * - emergency-management.ts: Emergency procedures and crisis response
  */
 
-import EventEmitter from "events";
+import EventEmitter from "node:events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 export { EmergencyManager } from "./safety/emergency-management";
@@ -110,7 +110,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
 
     // Create a mock safety monitor agent
     const mockSafetyMonitor = {
-      requestAgentConsensus: async (request: any) => {
+      requestAgentConsensus: async (_request: any) => {
         return {
           consensus: { achieved: true, approvalRate: 1.0 },
           processingTime: 100,
@@ -151,7 +151,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
         this.alertsManager,
         safetyMetrics
       );
-    } catch (error) {
+    } catch (_error) {
       // Fallback: create a minimal emergency manager mock
       this.emergencyManager = {
         isEmergencyActive: () => false,
@@ -272,7 +272,7 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
   /**
    * Trigger emergency procedure
    */
-  async triggerEmergencyProcedure(type: string, context?: any): Promise<void> {
+  async triggerEmergencyProcedure(type: string, _context?: any): Promise<void> {
     const result = await this.emergencyManager.executeProcedure(type, "system");
     if (!result) {
       throw new Error(`Failed to execute emergency procedure: ${type}`);

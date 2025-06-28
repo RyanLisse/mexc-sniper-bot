@@ -5,7 +5,7 @@
  * This replaces the original monolithic core-trading.service.ts implementation.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
@@ -381,7 +381,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       successRate: performanceMetrics.successRate,
       totalProfit: performanceMetrics.totalPnL,
       lastExecution: baseStatus.lastTradeTime?.toISOString() || new Date().toISOString(),
-      safetyStatus: baseStatus.currentRiskLevel === "critical" ? "unsafe" : "safe",
+      safetyStatus: this.mapRiskLevelToSafetyStatus(baseStatus.currentRiskLevel),
       patternDetectionActive: autoSnipingStatus.isActive,
       executionCount: performanceMetrics.totalTrades,
       successCount: performanceMetrics.successfulTrades,
@@ -523,7 +523,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Acknowledge alert
    */
-  async acknowledgeAlert(alertId: string): Promise<ServiceResponse<void>> {
+  async acknowledgeAlert(_alertId: string): Promise<ServiceResponse<void>> {
     this.ensureInitialized();
     // Implementation would depend on alert system
     return {
@@ -570,6 +570,26 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       return "medium";
     } else {
       return "low";
+    }
+  }
+
+  /**
+   * Map risk level to safety status enum
+   */
+  private mapRiskLevelToSafetyStatus(
+    riskLevel: string
+  ): "safe" | "warning" | "critical" | "emergency" {
+    switch (riskLevel) {
+      case "low":
+        return "safe";
+      case "medium":
+        return "warning";
+      case "high":
+        return "critical";
+      case "critical":
+        return "emergency";
+      default:
+        return "safe";
     }
   }
 

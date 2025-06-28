@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, desc, eq, lt, sql } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/src/db";
 import {
   type NewWorkflowActivity,

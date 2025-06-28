@@ -312,8 +312,8 @@ export class StreamlinedPatternOrchestrator {
           riskLevel: "medium",
           parameters: {
             description: `Strategy for ${request.input.vcoinId}: Ready state pattern detected with ${readyPatterns.length} matches`,
-            patternMatches: readyPatterns.length
-          }
+            patternMatches: readyPatterns.length,
+          },
         });
         results.agentResponses!["strategy-creation"] = strategyResponse;
       }

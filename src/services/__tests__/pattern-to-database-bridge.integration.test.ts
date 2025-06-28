@@ -6,14 +6,14 @@
  */
 
 import { and, eq } from "drizzle-orm";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { PatternMatch } from "../../core/pattern-detection/interfaces";
 import {
   EnhancedPatternDetectionCore,
   type PatternDetectionEventData,
 } from "../../core/pattern-detection/pattern-detection-core-enhanced";
 import { db } from "../../db";
-import { snipeTargets, userPreferences } from "../../db/schema";
+import { snipeTargets } from "../../db/schema";
 // Test utilities
 import {
   cleanupTestData,

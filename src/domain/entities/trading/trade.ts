@@ -5,16 +5,16 @@
 
 import { z } from "zod";
 import { AggregateRoot } from "../../base/aggregate-root";
-import { Order, OrderSide, OrderStatus, OrderType, TimeInForce } from "../../value-objects/trading/order";
-import { Money } from "../../value-objects/trading/money";
-import { Price } from "../../value-objects/trading/price";
-import { TradingEventFactory } from "../../events/trading-events";
 import {
-  DomainValidationError,
-  InvalidTradeParametersError,
-  InvalidOrderStateError,
   BusinessRuleViolationError,
+  DomainValidationError,
+  InvalidOrderStateError,
+  InvalidTradeParametersError,
 } from "../../errors/trading-errors";
+import { TradingEventFactory } from "../../events/trading-events";
+import type { Money } from "../../value-objects/trading/money";
+import { type Order, OrderSide } from "../../value-objects/trading/order";
+import type { Price } from "../../value-objects/trading/price";
 
 // Trade status enumeration
 export enum TradeStatus {
@@ -144,7 +144,7 @@ export class Trade extends AggregateRoot<string> {
       const firstError = validationResult.error.errors[0];
       throw new DomainValidationError(
         firstError.path.join("."),
-        'invalid value',
+        "invalid value",
         firstError.message
       );
     }
@@ -315,7 +315,9 @@ export class Trade extends AggregateRoot<string> {
   }
 
   isFinalized(): boolean {
-    return [TradeStatus.COMPLETED, TradeStatus.FAILED, TradeStatus.CANCELLED].includes(this.props.status);
+    return [TradeStatus.COMPLETED, TradeStatus.FAILED, TradeStatus.CANCELLED].includes(
+      this.props.status
+    );
   }
 
   hasOrders(): boolean {
@@ -323,24 +325,24 @@ export class Trade extends AggregateRoot<string> {
   }
 
   hasActiveOrders(): boolean {
-    return this.props.orders.some(order => order.isActive());
+    return this.props.orders.some((order) => order.isActive());
   }
 
   getBuyOrders(): Order[] {
-    return this.props.orders.filter(order => order.side === OrderSide.BUY);
+    return this.props.orders.filter((order) => order.side === OrderSide.BUY);
   }
 
   getSellOrders(): Order[] {
-    return this.props.orders.filter(order => order.side === OrderSide.SELL);
+    return this.props.orders.filter((order) => order.side === OrderSide.SELL);
   }
 
   getFilledOrders(): Order[] {
-    return this.props.orders.filter(order => order.isFilled());
+    return this.props.orders.filter((order) => order.isFilled());
   }
 
   getTotalExecutedQuantity(): number {
     return this.props.orders
-      .filter(order => order.executedQuantity)
+      .filter((order) => order.executedQuantity)
       .reduce((total, order) => total + (order.executedQuantity || 0), 0);
   }
 
@@ -377,7 +379,7 @@ export class Trade extends AggregateRoot<string> {
   }
 
   updateOrder(orderId: string, updatedOrder: Order): Trade {
-    const orderIndex = this.props.orders.findIndex(order => order.id === orderId);
+    const orderIndex = this.props.orders.findIndex((order) => order.id === orderId);
     if (orderIndex === -1) {
       throw new InvalidTradeParametersError("orderId", `Order ${orderId} not found in trade`);
     }
@@ -558,7 +560,7 @@ export class Trade extends AggregateRoot<string> {
       totalRevenue: this.props.totalRevenue?.toPlainObject(),
       realizedPnL: this.props.realizedPnL?.toPlainObject(),
       fees: this.props.fees?.toPlainObject(),
-      orders: this.props.orders.map(order => order.toPlainObject()),
+      orders: this.props.orders.map((order) => order.toPlainObject()),
     } as any;
   }
 }

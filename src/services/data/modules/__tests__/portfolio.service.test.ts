@@ -11,8 +11,6 @@ import {
   type PortfolioConfig,
   PortfolioFilterSchema,
   PortfolioMetricsSchema,
-  PortfolioResponseSchema,
-  PortfolioSchema,
   PortfolioService,
 } from "../portfolio.service";
 

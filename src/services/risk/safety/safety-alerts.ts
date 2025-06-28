@@ -5,7 +5,7 @@
  * Provides centralized alert processing with real-time notifications.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type { WebSocketServerService } from "../websocket-server";
 import type { SafetyAction, SafetyAlert, SafetyCoordinatorConfig } from "./safety-types";
 

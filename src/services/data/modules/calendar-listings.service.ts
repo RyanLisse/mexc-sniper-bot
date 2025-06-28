@@ -255,7 +255,7 @@ export class CalendarListingsService {
 
       // Validate cached data
       return CalendarListingsResponseSchema.parse(cached);
-    } catch (error) {
+    } catch (_error) {
       // Invalid cached data, ignore and fetch fresh
       return null;
     }

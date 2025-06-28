@@ -5,7 +5,7 @@
  * Preserves the competitive advantage with 3.5+ hour advance detection.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import {
   calculateActivityBoost,
   getUniqueActivityTypes,
@@ -42,10 +42,6 @@ export class ReadyStateDetector extends EventEmitter {
     debug: (message: string, context?: any) =>
       console.debug("[ready-state-detector]", message, context || ""),
   };
-
-  constructor() {
-    super();
-  }
 
   /**
    * Core Pattern Detection - The Heart of Our Competitive Advantage
@@ -478,7 +474,7 @@ export class ReadyStateDetector extends EventEmitter {
           confidence += 8; // Extra boost for near-term launches with high activity
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Continue without activity enhancement
     }
 
@@ -765,7 +761,7 @@ export class ReadyStateDetector extends EventEmitter {
     return score;
   }
 
-  private assessMarketConditions(symbol: SymbolEntry): number {
+  private assessMarketConditions(_symbol: SymbolEntry): number {
     let score = 0;
     const now = new Date();
 

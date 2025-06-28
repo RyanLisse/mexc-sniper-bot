@@ -37,7 +37,7 @@ export class Price extends ValueObject<PriceProps> {
     timestamp?: Date
   ): Price {
     const priceProps: PriceProps = {
-      value: Math.round(value * Math.pow(10, precision)) / Math.pow(10, precision),
+      value: Math.round(value * 10 ** precision) / 10 ** precision,
       symbol: symbol.toUpperCase(),
       timestamp: timestamp || new Date(),
       source,
@@ -55,7 +55,7 @@ export class Price extends ValueObject<PriceProps> {
     timestamp?: Date
   ): Price {
     const value = parseFloat(valueStr);
-    if (isNaN(value)) {
+    if (Number.isNaN(value)) {
       throw new DomainValidationError("value", valueStr, "Invalid numeric format");
     }
     return Price.create(value, symbol, source, precision, timestamp);
@@ -72,7 +72,7 @@ export class Price extends ValueObject<PriceProps> {
       const firstError = validationResult.error.errors[0];
       throw new DomainValidationError(
         firstError.path.join("."),
-        'invalid value',
+        "invalid value",
         firstError.message
       );
     }
@@ -114,14 +114,18 @@ export class Price extends ValueObject<PriceProps> {
 
   isEqualTo(other: Price): boolean {
     this.ensureSameSymbol(other);
-    return Math.abs(this.props.value - other.props.value) < Math.pow(10, -this.props.precision);
+    return Math.abs(this.props.value - other.props.value) < 10 ** -this.props.precision;
   }
 
   // Calculate percentage difference
   percentageDifferenceFrom(other: Price): number {
     this.ensureSameSymbol(other);
     if (other.props.value === 0) {
-      throw new DomainValidationError("other.value", 0, "Cannot calculate percentage from zero price");
+      throw new DomainValidationError(
+        "other.value",
+        0,
+        "Cannot calculate percentage from zero price"
+      );
     }
     return ((this.props.value - other.props.value) / other.props.value) * 100;
   }
@@ -177,10 +181,19 @@ export class Price extends ValueObject<PriceProps> {
   // Calculate take profit price
   calculateTakeProfit(percentage: number): Price {
     if (percentage <= 0) {
-      throw new DomainValidationError("percentage", percentage, "Take profit percentage must be positive");
+      throw new DomainValidationError(
+        "percentage",
+        percentage,
+        "Take profit percentage must be positive"
+      );
     }
     const takeProfitValue = this.props.value * (1 + percentage / 100);
-    return Price.create(takeProfitValue, this.props.symbol, this.props.source, this.props.precision);
+    return Price.create(
+      takeProfitValue,
+      this.props.symbol,
+      this.props.source,
+      this.props.precision
+    );
   }
 
   // Calculate slippage from expected price
@@ -220,34 +233,42 @@ export class Price extends ValueObject<PriceProps> {
   // Static utility methods
   static findHighest(...prices: Price[]): Price {
     if (prices.length === 0) {
-      throw new DomainValidationError("prices", "empty array", "At least one Price instance required");
+      throw new DomainValidationError(
+        "prices",
+        "empty array",
+        "At least one Price instance required"
+      );
     }
 
-    return prices.reduce((highest, current) => 
-      current.isHigherThan(highest) ? current : highest
-    );
+    return prices.reduce((highest, current) => (current.isHigherThan(highest) ? current : highest));
   }
 
   static findLowest(...prices: Price[]): Price {
     if (prices.length === 0) {
-      throw new DomainValidationError("prices", "empty array", "At least one Price instance required");
+      throw new DomainValidationError(
+        "prices",
+        "empty array",
+        "At least one Price instance required"
+      );
     }
 
-    return prices.reduce((lowest, current) => 
-      current.isLowerThan(lowest) ? current : lowest
-    );
+    return prices.reduce((lowest, current) => (current.isLowerThan(lowest) ? current : lowest));
   }
 
   static calculateAverage(...prices: Price[]): Price {
     if (prices.length === 0) {
-      throw new DomainValidationError("prices", "empty array", "At least one Price instance required");
+      throw new DomainValidationError(
+        "prices",
+        "empty array",
+        "At least one Price instance required"
+      );
     }
 
     // Ensure all prices are for the same symbol
     const symbol = prices[0].symbol;
     const source = prices[0].source;
     const precision = prices[0].precision;
-    
+
     for (const price of prices) {
       if (price.symbol !== symbol) {
         throw new DomainValidationError(

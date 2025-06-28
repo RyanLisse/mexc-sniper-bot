@@ -10,7 +10,6 @@ import type {
   BalanceEntry,
   CalendarEntry,
   MexcApiConfig,
-  MexcApiResponse,
   MexcServiceResponse,
   SymbolEntry,
 } from "./mexc-api-types";

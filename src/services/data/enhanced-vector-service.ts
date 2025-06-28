@@ -15,7 +15,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, executeWithRetry, monitoredQuery } from "@/src/db";
-import { patternEmbeddings, patternSimilarityCache } from "@/src/db/schema";
+import { patternEmbeddings } from "@/src/db/schema";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 // ============================================================================
@@ -130,7 +130,7 @@ export class EnhancedVectorService {
 
       this.pgvectorAvailable = result.length > 0;
       return this.pgvectorAvailable;
-    } catch (error) {
+    } catch (_error) {
       this.pgvectorAvailable = false;
       return false;
     }
@@ -173,17 +173,17 @@ export class EnhancedVectorService {
       const parameters: any[] = [];
 
       if (patternType) {
-        conditions.push("pattern_type = $" + (parameters.length + 1));
+        conditions.push(`pattern_type = $${parameters.length + 1}`);
         parameters.push(patternType);
       }
 
       if (symbolName) {
-        conditions.push("symbol_name = $" + (parameters.length + 1));
+        conditions.push(`symbol_name = $${parameters.length + 1}`);
         parameters.push(symbolName);
       }
 
       if (minConfidence) {
-        conditions.push("confidence >= $" + (parameters.length + 1));
+        conditions.push(`confidence >= $${parameters.length + 1}`);
         parameters.push(minConfidence);
       }
 
@@ -217,7 +217,7 @@ export class EnhancedVectorService {
             // Replace PostgreSQL-style placeholders with actual values
             let queryWithParams = query;
             parameters.forEach((param, index) => {
-              const placeholder = `$${index + 1}`;
+              const _placeholder = `$${index + 1}`;
               const value = typeof param === "string" ? `'${param.replace(/'/g, "''")}'` : param;
               queryWithParams = queryWithParams.replace(
                 new RegExp(`\\$${index + 1}`, "g"),

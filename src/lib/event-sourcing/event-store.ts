@@ -1,11 +1,11 @@
 /**
  * Event Store Implementation
- * 
+ *
  * Core event sourcing infrastructure for Phase 3 Production Readiness.
  * Provides persistent event storage, replay capabilities, and snapshot management.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 
 // Core Event Sourcing Types
 export interface DomainEvent {
@@ -49,7 +49,7 @@ export interface EventStoreConfig {
 
 /**
  * In-Memory Event Store
- * 
+ *
  * Production implementation would use PostgreSQL, EventStore, or similar
  */
 export class InMemoryEventStore extends EventEmitter {
@@ -78,7 +78,7 @@ export class InMemoryEventStore extends EventEmitter {
     events: DomainEvent[]
   ): Promise<void> {
     const aggregateEvents = this.events.get(aggregateId) || [];
-    
+
     // Optimistic concurrency check
     if (aggregateEvents.length !== expectedVersion) {
       throw new Error(
@@ -120,7 +120,7 @@ export class InMemoryEventStore extends EventEmitter {
     fromVersion: number = 0
   ): Promise<DomainEvent[]> {
     const events = this.events.get(aggregateId) || [];
-    return events.filter(event => event.eventVersion > fromVersion);
+    return events.filter((event) => event.eventVersion > fromVersion);
   }
 
   /**
@@ -132,7 +132,7 @@ export class InMemoryEventStore extends EventEmitter {
     limit: number = this.config.maxEventsPerRead
   ): Promise<DomainEvent[]> {
     const allEvents: DomainEvent[] = [];
-    
+
     for (const aggregateEvents of this.events.values()) {
       for (const event of aggregateEvents) {
         if (event.eventType === eventType) {
@@ -144,9 +144,7 @@ export class InMemoryEventStore extends EventEmitter {
     }
 
     // Sort by timestamp
-    allEvents.sort((a, b) => 
-      a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime()
-    );
+    allEvents.sort((a, b) => a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime());
 
     return allEvents.slice(0, limit);
   }
@@ -159,20 +157,18 @@ export class InMemoryEventStore extends EventEmitter {
     limit: number = this.config.maxEventsPerRead
   ): Promise<DomainEvent[]> {
     const allEvents: DomainEvent[] = [];
-    
+
     for (const aggregateEvents of this.events.values()) {
       allEvents.push(...aggregateEvents);
     }
 
     // Filter by timestamp if provided
-    const filteredEvents = fromTimestamp 
-      ? allEvents.filter(event => event.metadata.timestamp >= fromTimestamp)
+    const filteredEvents = fromTimestamp
+      ? allEvents.filter((event) => event.metadata.timestamp >= fromTimestamp)
       : allEvents;
 
     // Sort by timestamp
-    filteredEvents.sort((a, b) => 
-      a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime()
-    );
+    filteredEvents.sort((a, b) => a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime());
 
     return filteredEvents.slice(0, limit);
   }
@@ -203,9 +199,7 @@ export class InMemoryEventStore extends EventEmitter {
   } {
     const totalAggregates = this.events.size;
     const totalSnapshots = this.snapshots.size;
-    const averageEventsPerAggregate = totalAggregates > 0 
-      ? this.eventCounter / totalAggregates 
-      : 0;
+    const averageEventsPerAggregate = totalAggregates > 0 ? this.eventCounter / totalAggregates : 0;
 
     return {
       totalEvents: this.eventCounter,
@@ -247,7 +241,7 @@ export class InMemoryEventStore extends EventEmitter {
     if (!events || events.length === 0) return;
 
     const latestEvent = events[events.length - 1];
-    
+
     // Simple snapshot - in real implementation, this would rebuild aggregate state
     const snapshot: AggregateSnapshot = {
       aggregateId,
@@ -307,7 +301,7 @@ export const eventStore = new InMemoryEventStore();
 
 /**
  * Event Store Manager
- * 
+ *
  * Higher-level interface for event sourcing operations
  */
 export class EventStoreManager {
@@ -321,7 +315,7 @@ export class EventStoreManager {
     aggregateFactory: (events: DomainEvent[]) => T
   ): Promise<T | null> {
     const events = await this.eventStore.getEventsForAggregate(aggregateId);
-    
+
     if (events.length === 0) {
       return null;
     }

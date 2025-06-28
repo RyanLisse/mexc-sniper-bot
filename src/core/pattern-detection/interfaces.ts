@@ -19,7 +19,12 @@ export interface ReadyStatePattern {
 }
 
 export interface PatternMatch {
-  patternType: "ready_state" | "pre_ready" | "launch_sequence" | "risk_warning";
+  patternType:
+    | "ready_state"
+    | "pre_ready"
+    | "launch_sequence"
+    | "risk_warning"
+    | "binance_listing_detected";
   confidence: number; // 0-100 confidence score
   symbol: string;
   vcoinId?: string;
@@ -42,7 +47,7 @@ export interface PatternMatch {
   };
 
   // Analysis metadata
-  detectedAt: Date;
+  detectedAt: Date | number; // Support both Date objects and timestamps
   advanceNoticeHours: number;
   estimatedTimeToReady?: number; // Estimated time in hours until pattern becomes ready
   riskLevel: "low" | "medium" | "high";
@@ -220,13 +225,17 @@ export interface PatternDetectionMetrics {
 
 export interface PatternDetectionEventData {
   patternType: string;
-  matches: PatternMatch[];
+  patterns?: PatternMatch[]; // For legacy compatibility
+  matches?: PatternMatch[]; // For new usage
+  detectionReason?: string; // Additional field for tests
+  timestamp?: number; // Root-level timestamp
   metadata: {
     source: string;
     timestamp: Date;
     averageConfidence: number;
     algorithmVersion: string;
     processingTime: number;
+    duration?: number; // Additional duration field
   };
 }
 

@@ -261,7 +261,7 @@ export class CacheHelpers {
   formatCacheKeyForDisplay(cacheKey: string): string {
     // Truncate long cache keys for better readability
     if (cacheKey.length > 80) {
-      return cacheKey.substring(0, 40) + "..." + cacheKey.substring(cacheKey.length - 37);
+      return `${cacheKey.substring(0, 40)}...${cacheKey.substring(cacheKey.length - 37)}`;
     }
     return cacheKey;
   }

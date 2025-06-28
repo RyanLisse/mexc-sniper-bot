@@ -4,12 +4,11 @@
  * TDD tests for the modular calendar listings service
  */
 
-import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CalendarEntrySchema,
   CalendarFilterSchema,
   type CalendarListingsConfig,
-  CalendarListingsResponseSchema,
   CalendarListingsService,
   createCalendarListingsService,
 } from "../calendar-listings.service";

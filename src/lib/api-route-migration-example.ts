@@ -116,7 +116,7 @@ export const GET = createPublicApiRoute(
     enableTiming: true,
     enableResponseValidation: true,
   },
-  async (context, { query }) => {
+  async (_context, { query }) => {
     // Note: logger is available from the module scope, not from context
 
     // Set defaults for optional parameters

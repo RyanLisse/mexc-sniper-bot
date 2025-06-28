@@ -7,10 +7,8 @@
 
 import {
   type ApiCredentialsTestRequest,
-  ApiCredentialsTestRequestSchema,
   type ApiCredentialsTestResponse,
   ApiCredentialsTestResponseSchema,
-  validateMexcApiRequest,
   validateMexcApiResponse,
 } from "@/src/schemas/mexc-api-validation-schemas";
 import { syncAfterCredentialTest } from "@/src/services/notification/status-synchronization-service";

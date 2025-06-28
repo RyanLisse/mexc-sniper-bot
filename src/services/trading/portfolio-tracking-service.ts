@@ -5,9 +5,8 @@
  * position tracking, and performance analytics.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import { getRecommendedMexcService } from "../api/mexc-unified-exports";
-import type { BalanceEntry } from "../data/modules/mexc-api-types";
 
 export interface Position {
   symbol: string;

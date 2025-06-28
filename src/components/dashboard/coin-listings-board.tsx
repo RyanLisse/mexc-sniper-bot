@@ -463,7 +463,7 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
   } = useProcessedCoinData();
 
   // Memoized event handlers
-  const handleExecuteFromAll = useCallback(
+  const _handleExecuteFromAll = useCallback(
     (coin: any) => {
       const target = readyTargets.find((t) => t.vcoinId === coin.vcoinId);
       if (target) executeSnipe(target);
@@ -471,14 +471,14 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
     [readyTargets, executeSnipe]
   );
 
-  const handleRemoveTarget = useCallback(
+  const _handleRemoveTarget = useCallback(
     (vcoinId: string) => {
       removeTarget(vcoinId);
     },
     [removeTarget]
   );
 
-  const handleExecuteSnipe = useCallback(
+  const _handleExecuteSnipe = useCallback(
     (target: any) => {
       executeSnipe(target);
     },

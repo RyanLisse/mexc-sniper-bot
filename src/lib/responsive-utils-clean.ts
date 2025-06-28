@@ -217,7 +217,7 @@ export function parseBreakpointValue(value: BreakpointKey | number | string): nu
     // Handle px values
     if (value.endsWith("px")) {
       const parsed = Number.parseInt(value.replace("px", ""), 10);
-      if (isNaN(parsed)) throw new Error(`Invalid breakpoint value: ${value}`);
+      if (Number.isNaN(parsed)) throw new Error(`Invalid breakpoint value: ${value}`);
       return parsed;
     }
 

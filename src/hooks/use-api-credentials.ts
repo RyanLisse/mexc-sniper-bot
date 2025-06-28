@@ -58,7 +58,7 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
     gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
     refetchOnWindowFocus: false,
     placeholderData: null, // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
@@ -270,7 +270,7 @@ export function useTestApiCredentials() {
         ...result.data,
       };
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       console.info("[DEBUG] API credentials test succeeded, invalidating status caches");
 
       // Invalidate all related caches when credentials test succeeds

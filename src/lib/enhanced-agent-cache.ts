@@ -46,6 +46,7 @@ export { CachePerformanceMonitor } from "./cache/cache-performance-monitor";
 export { CacheWarmingManager } from "./cache/cache-warming";
 export { WorkflowCache } from "./cache/workflow-cache";
 
+import type { AgentResponse } from "@/src/types/common-interfaces";
 import type {
   AgentCacheAnalytics,
   AgentCacheConfig,
@@ -56,7 +57,6 @@ import type {
   WorkflowCacheEntry,
   WorkflowInvalidationCriteria,
 } from "./cache/agent-cache-types";
-import type { AgentResponse } from "@/src/types/common-interfaces";
 import { AgentHealthCacheManager } from "./cache/agent-health-cache";
 import { AgentResponseCache } from "./cache/agent-response-cache";
 import { CacheAnalyticsManager } from "./cache/cache-analytics";
@@ -414,7 +414,7 @@ export const globalEnhancedAgentCache = new EnhancedAgentCache({
 /**
  * Enhanced cache decorator for agent methods
  */
-export function withAgentCache<T extends (...args: any[]) => Promise<AgentResponse>>(
+export function withAgentCache<_T extends (...args: any[]) => Promise<AgentResponse>>(
   agentId: string,
   options: {
     ttl?: number;

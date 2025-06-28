@@ -64,7 +64,11 @@ export function createPatternLogger(moduleName: string): PatternLogger {
  */
 export function validateConfidenceScore(score: number): boolean {
   return (
-    typeof score === "number" && !isNaN(score) && isFinite(score) && score >= 0 && score <= 100
+    typeof score === "number" &&
+    !Number.isNaN(score) &&
+    Number.isFinite(score) &&
+    score >= 0 &&
+    score <= 100
   );
 }
 

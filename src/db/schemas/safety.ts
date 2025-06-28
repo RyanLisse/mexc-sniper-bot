@@ -355,23 +355,23 @@ export const errorLogs = pgTable(
   "error_logs",
   {
     id: serial("id").primaryKey(),
-    
+
     // Log Details
     level: text("level").notNull(), // "debug", "info", "warn", "error", "fatal"
     message: text("message").notNull(),
     error_code: text("error_code"),
     stack_trace: text("stack_trace"),
-    
+
     // Context Information
     user_id: text("user_id"),
     session_id: text("session_id"),
     metadata: text("metadata"), // JSON string
     context: text("context"), // JSON string
-    
+
     // Source Information
     service: text("service").notNull().default("unknown"), // "mexc_api", "database", "inngest", etc.
     component: text("component"), // specific component or module
-    
+
     // Timing
     timestamp: timestamp("timestamp").notNull(),
     created_at: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
@@ -386,7 +386,10 @@ export const errorLogs = pgTable(
     errorCodeIdx: index("error_logs_error_code_idx").on(table.error_code),
     // Compound indexes for common queries
     levelTimestampIdx: index("error_logs_level_timestamp_idx").on(table.level, table.timestamp),
-    serviceTimestampIdx: index("error_logs_service_timestamp_idx").on(table.service, table.timestamp),
+    serviceTimestampIdx: index("error_logs_service_timestamp_idx").on(
+      table.service,
+      table.timestamp
+    ),
     userLevelIdx: index("error_logs_user_level_idx").on(table.user_id, table.level),
   })
 );

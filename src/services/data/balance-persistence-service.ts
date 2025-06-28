@@ -286,7 +286,7 @@ export class BalancePersistenceService {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - 90);
 
-      const result = await db
+      const _result = await db
         .delete(balanceSnapshots)
         .where(
           and(

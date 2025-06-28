@@ -88,10 +88,11 @@ describe("Pattern to Database Bridge - Event Integration", () => {
       patternType: "ready_state",
       matches: [testPatternMatch],
       metadata: {
-        duration: 100,
         source: "test_source",
+        timestamp: new Date(),
         averageConfidence: 85,
-        highConfidenceCount: 1,
+        algorithmVersion: "v1.0",
+        processingTime: 100,
       },
     };
 
@@ -224,10 +225,11 @@ describe("Pattern to Database Bridge - Event Integration", () => {
       patternType: "patterns_detected",
       matches: patterns,
       metadata: {
-        duration: 150,
         source: "test_source",
+        timestamp: new Date(),
         averageConfidence: 81.67,
-        highConfidenceCount: 2,
+        algorithmVersion: "v1.0",
+        processingTime: 150,
       },
     };
 

@@ -12,12 +12,10 @@
  * - Event Management & Health (< 500 lines)
  */
 
-import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import type { TradeRiskAssessment } from "@/src/mexc-agents/risk-manager-agent";
 import type {
   MarketConditions,
-  PortfolioRiskMetrics,
   PositionRiskProfile,
   RiskAlert,
   RiskEngineConfig,
@@ -33,7 +31,7 @@ const TestTradeRequestSchema = z.object({
   marketData: z.record(z.unknown()).optional(),
 });
 
-const TestRiskAssessmentResponseSchema = z.object({
+const _TestRiskAssessmentResponseSchema = z.object({
   approved: z.boolean(),
   riskScore: z.number().min(0).max(100),
   reasons: z.array(z.string()),
@@ -147,7 +145,7 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
     });
 
     it("should reject high-risk trades", async () => {
-      const highRiskTrade = {
+      const _highRiskTrade = {
         symbol: "ALTCOIN",
         side: "buy" as const,
         quantity: 1000000, // Extremely large quantity
@@ -178,7 +176,7 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
 
     it("should apply dynamic risk adjustments", () => {
       const baseRiskScore = 50;
-      const highVolatilityConditions = { ...mockMarketConditions, volatilityIndex: 80 };
+      const _highVolatilityConditions = { ...mockMarketConditions, volatilityIndex: 80 };
 
       // High volatility should increase risk score
       const volatilityAdjustment = 1 + (0.8 * mockConfig.volatilityMultiplier - 1);
@@ -261,7 +259,7 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
 
   describe("Dynamic Calculations Module", () => {
     it("should calculate dynamic stop-loss recommendations", () => {
-      const entryPrice = 45000;
+      const _entryPrice = 45000;
       const currentPrice = 46000;
       const volatility = mockMarketConditions.volatilityIndex / 100;
       const liquidity = mockMarketConditions.liquidityIndex / 100;
@@ -280,7 +278,7 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
     });
 
     it("should calculate dynamic take-profit recommendations", () => {
-      const entryPrice = 45000;
+      const _entryPrice = 45000;
       const currentPrice = 46000;
       const volatility = mockMarketConditions.volatilityIndex / 100;
 
@@ -312,7 +310,7 @@ describe("Advanced Risk Engine - TDD Module Refactoring", () => {
 
       const positionSizeRatio =
         positionRequest.requestedPositionSize / positionRequest.portfolioValue;
-      const maxPortfolioPercentage = 0.05; // 5%
+      const _maxPortfolioPercentage = 0.05; // 5%
 
       const expectedValidation = {
         approved: true,

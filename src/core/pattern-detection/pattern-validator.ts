@@ -159,7 +159,7 @@ export class PatternValidator implements IPatternValidator {
             ? entry.firstOpenTime
             : new Date(entry.firstOpenTime).getTime();
 
-        if (isNaN(timestamp)) {
+        if (Number.isNaN(timestamp)) {
           errors.push("First open time is not a valid timestamp");
         } else {
           const now = Date.now();

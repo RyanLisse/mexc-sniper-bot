@@ -6,13 +6,7 @@
  */
 
 import { toSafeError } from "../../../lib/error-type-utils";
-import type {
-  ModuleContext,
-  ModuleState,
-  OpportunityAssessment,
-  PatternMatch,
-  ServiceResponse,
-} from "./types";
+import type { ModuleContext, ModuleState, OpportunityAssessment, PatternMatch } from "./types";
 
 export class PatternProcessor {
   private context: ModuleContext;

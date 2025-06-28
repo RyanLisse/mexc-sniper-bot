@@ -29,6 +29,18 @@ export async function GET(request: NextRequest) {
     // Extract userId from query parameters (optional)
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
+    
+    // Validate userId format if provided
+    if (userId && userId.trim().length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Invalid userId: cannot be empty",
+        meta: {
+          code: "INVALID_USER_ID",
+          details: "userId must be a non-empty string if provided",
+        },
+      }, { status: 400 });
+    }
 
     // Determine if we have user credentials or should use environment fallback
     const hasUserCredentials = !!userId;
@@ -55,7 +67,7 @@ export async function GET(request: NextRequest) {
           code: "TEST_INVALID_CREDENTIALS",
           details: "Using test credentials in test environment",
         },
-      }, { status: 500 });
+      }, { status: 401 });
     }
 
     // Check if credentials are available before proceeding
@@ -77,7 +89,16 @@ export async function GET(request: NextRequest) {
     // Get MEXC account balances using appropriate credentials
     const mexcClient = await getUnifiedMexcService(userId ? { userId } : {});
     console.info("[BalanceAPI] MEXC client created, calling getAccountBalances");
-    const balanceResponse = await mexcClient.getAccountBalances();
+    
+    // Add timeout to prevent hanging requests
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Request timeout: MEXC API call took too long")), 15000);
+    });
+    
+    const balanceResponse = await Promise.race([
+      mexcClient.getAccountBalances(),
+      timeoutPromise
+    ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
 
     if (!balanceResponse.success) {
       console.error("[BalanceAPI] Failed to fetch real balance data", {
@@ -88,16 +109,37 @@ export async function GET(request: NextRequest) {
       });
 
       const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+      const errorMessage = balanceResponse.error || "Failed to fetch account balance data";
+      
+      // Determine appropriate status code based on error type
+      let statusCode = 500;
+      let errorCode = "MEXC_API_ERROR";
+      
+      if (errorMessage.toLowerCase().includes("unauthorized") || 
+          errorMessage.toLowerCase().includes("invalid signature") ||
+          errorMessage.toLowerCase().includes("api key") ||
+          errorMessage.toLowerCase().includes("authentication")) {
+        statusCode = 401;
+        errorCode = "MEXC_AUTH_ERROR";
+      } else if (errorMessage.toLowerCase().includes("rate limit") ||
+                 errorMessage.toLowerCase().includes("too many requests")) {
+        statusCode = 429;
+        errorCode = "MEXC_RATE_LIMIT";
+      } else if (errorMessage.toLowerCase().includes("service unavailable") ||
+                 errorMessage.toLowerCase().includes("maintenance")) {
+        statusCode = 503;
+        errorCode = "MEXC_SERVICE_UNAVAILABLE";
+      }
 
       return NextResponse.json({
         success: false,
-        error: balanceResponse.error || "Failed to fetch account balance data",
+        error: errorMessage,
         meta: {
           fallbackData,
-          code: "MEXC_API_ERROR",
+          code: errorCode,
           details: "Check server logs for more information",
         },
-      }, { status: 500 });
+      }, { status: statusCode });
     }
 
     const balanceData = balanceResponse.data;
@@ -134,15 +176,30 @@ export async function GET(request: NextRequest) {
     });
 
     const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Handle specific error types
+    let statusCode = 500;
+    let errorCode = "INTERNAL_SERVER_ERROR";
+    
+    if (errorMessage.includes("Request timeout")) {
+      statusCode = 504;
+      errorCode = "REQUEST_TIMEOUT";
+    } else if (errorMessage.includes("Network") || errorMessage.includes("ENOTFOUND")) {
+      statusCode = 503;
+      errorCode = "NETWORK_ERROR";
+    }
 
     return NextResponse.json({
       success: false,
-      error: "Internal server error - please check MEXC API credentials",
+      error: errorMessage.includes("Request timeout") 
+        ? "Request timeout - MEXC API is taking too long to respond" 
+        : "Internal server error - please check MEXC API credentials",
       meta: {
         fallbackData,
-        code: "INTERNAL_SERVER_ERROR",
-        details: error instanceof Error ? error.message : String(error),
+        code: errorCode,
+        details: errorMessage,
       },
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 }

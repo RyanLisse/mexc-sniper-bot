@@ -462,7 +462,7 @@ export class PositionMonitor {
   /**
    * Get current price for a symbol (simulated)
    */
-  private async getCurrentPrice(symbol: string): Promise<number> {
+  private async getCurrentPrice(_symbol: string): Promise<number> {
     // Simulate price movement - in real implementation would call API
     const basePrice = 100 + Math.random() * 1000;
     const volatility = 0.02; // 2% volatility

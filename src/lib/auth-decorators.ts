@@ -242,7 +242,7 @@ export function tradingRoute<T extends any[]>(
           }
         );
       }
-      
+
       // Future: Add role-based trading permissions when user roles are implemented
       // For now, all authenticated users can trade
       return await handler(request, user, ...args);

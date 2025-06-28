@@ -195,9 +195,15 @@ export class MexcConfigurationService {
       enableCaching: env.MEXC_ENABLE_CACHING,
       cacheTTL: env.MEXC_CACHE_TTL,
       enableCircuitBreaker: env.MEXC_ENABLE_CIRCUIT_BREAKER,
+      enableRateLimiter: true, // Required property from schema
+      maxFailures: 5, // Required property from schema
+      resetTimeout: 60000, // Required property from schema
+      enablePaperTrading: this.config.trading.paperTradingMode, // Required property from schema
+      circuitBreakerThreshold: 5, // Required property from schema
+      circuitBreakerResetTime: 30000, // Required property from schema
       enableMetrics: env.MEXC_ENABLE_METRICS,
-      // Removed enableEnhancedCaching and enablePerformanceMonitoring - not in UnifiedMexcConfigSchema
       apiResponseTTL: env.MEXC_API_RESPONSE_TTL,
+      enableTestMode: false, // Optional property - set to false for production
     };
   }
 

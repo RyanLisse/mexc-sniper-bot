@@ -8,11 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
 import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
-import type {
-  RiskMetrics,
-  SafetyAlert,
-  SafetyConfiguration,
-} from "../../../schemas/safety-monitoring-schemas";
+import type { SafetyConfiguration } from "../../../schemas/safety-monitoring-schemas";
 import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
@@ -238,7 +234,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
       // Get the safety report to potentially trigger alerts
       safetyService.getSafetyReport().then(() => {
-        const report = safetyService.getSafetyReportWithoutUpdate();
+        const _report = safetyService.getSafetyReportWithoutUpdate();
         // Check if there are any alerts to acknowledge
         // In a real scenario, we'd have a more predictable way to generate alerts
       });

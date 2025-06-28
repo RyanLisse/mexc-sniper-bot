@@ -55,7 +55,7 @@ export class CachePerformanceMonitor {
   /**
    * Track cache hit for performance metrics
    */
-  async trackCacheHit(agentId: string, cacheKey: string, responseTime?: number): Promise<void> {
+  async trackCacheHit(agentId: string, _cacheKey: string, responseTime?: number): Promise<void> {
     if (!this.config.enablePerformanceTracking) {
       return;
     }
@@ -88,8 +88,8 @@ export class CachePerformanceMonitor {
    */
   async trackCacheSet(
     agentId: string,
-    cacheKey: string,
-    ttl: number,
+    _cacheKey: string,
+    _ttl: number,
     responseTime?: number
   ): Promise<void> {
     if (!this.config.enablePerformanceTracking) {
@@ -151,7 +151,7 @@ export class CachePerformanceMonitor {
   /**
    * Track failed execution
    */
-  async trackCacheError(agentId: string, error: Error, responseTime?: number): Promise<void> {
+  async trackCacheError(agentId: string, _error: Error, responseTime?: number): Promise<void> {
     if (!this.config.enablePerformanceTracking) {
       return;
     }

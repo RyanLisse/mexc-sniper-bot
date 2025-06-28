@@ -215,27 +215,37 @@ export function validateRiskMetrics(data: unknown): RiskMetrics {
  * Sanitize risk metrics data to convert NaN and invalid values to safe defaults
  */
 function sanitizeRiskMetricsData(data: unknown): any {
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== "object") {
     return {};
   }
 
-  const sanitized = { ...data as any };
-  
+  const sanitized = { ...(data as any) };
+
   // List of numeric fields that should be sanitized
   const numericFields = [
-    'currentDrawdown', 'maxDrawdown', 'portfolioValue', 'totalExposure', 
-    'concentrationRisk', 'successRate', 'consecutiveLosses', 'averageSlippage',
-    'apiLatency', 'apiSuccessRate', 'memoryUsage', 'patternAccuracy', 
-    'detectionFailures', 'falsePositiveRate'
+    "currentDrawdown",
+    "maxDrawdown",
+    "portfolioValue",
+    "totalExposure",
+    "concentrationRisk",
+    "successRate",
+    "consecutiveLosses",
+    "averageSlippage",
+    "apiLatency",
+    "apiSuccessRate",
+    "memoryUsage",
+    "patternAccuracy",
+    "detectionFailures",
+    "falsePositiveRate",
   ];
 
   // Sanitize each numeric field
   for (const field of numericFields) {
     if (field in sanitized) {
       const value = sanitized[field];
-      
+
       // Convert NaN, Infinity, or non-numeric values to appropriate defaults
-      if (typeof value !== 'number' || !Number.isFinite(value)) {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
         sanitized[field] = getDefaultValueForField(field);
       }
       // Ensure values are within reasonable bounds
@@ -243,7 +253,17 @@ function sanitizeRiskMetricsData(data: unknown): any {
         sanitized[field] = 0;
       }
       // Special handling for percentage fields
-      else if (['concentrationRisk', 'successRate', 'apiSuccessRate', 'memoryUsage', 'patternAccuracy', 'falsePositiveRate'].includes(field) && value > 100) {
+      else if (
+        [
+          "concentrationRisk",
+          "successRate",
+          "apiSuccessRate",
+          "memoryUsage",
+          "patternAccuracy",
+          "falsePositiveRate",
+        ].includes(field) &&
+        value > 100
+      ) {
         sanitized[field] = 100;
       }
     }
@@ -272,7 +292,7 @@ function getDefaultValueForField(field: string): number {
     detectionFailures: 0,
     falsePositiveRate: 0,
   };
-  
+
   return defaults[field] ?? 0;
 }
 

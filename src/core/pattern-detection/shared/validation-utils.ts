@@ -105,7 +105,7 @@ export function validateCalendarEntry(entry: CalendarEntry): ValidationResult {
         ? entry.firstOpenTime
         : new Date(entry.firstOpenTime).getTime();
 
-    if (isNaN(timestamp)) {
+    if (Number.isNaN(timestamp)) {
       errors.push("First open time is not a valid timestamp");
     } else {
       const now = Date.now();
@@ -236,6 +236,10 @@ export function validateAnalysisRequest(request: PatternAnalysisRequest): Valida
  */
 export function validateConfidenceScore(score: number): boolean {
   return (
-    typeof score === "number" && !isNaN(score) && isFinite(score) && score >= 0 && score <= 100
+    typeof score === "number" &&
+    !Number.isNaN(score) &&
+    Number.isFinite(score) &&
+    score >= 0 &&
+    score <= 100
   );
 }

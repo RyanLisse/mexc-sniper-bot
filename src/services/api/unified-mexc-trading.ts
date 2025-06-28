@@ -143,8 +143,8 @@ export class UnifiedMexcTradingModule {
    * Get recent activity for a symbol (for pattern detection)
    */
   async getRecentActivity(
-    symbol: string,
-    hours: number = 24
+    _symbol: string,
+    _hours: number = 24
   ): Promise<MexcServiceResponse<RecentActivityData>> {
     try {
       // For now, return mock data structure that tests expect

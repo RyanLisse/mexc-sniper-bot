@@ -109,7 +109,7 @@ export function createTestDatabaseManager(): TestDatabaseManager {
         // Create user if not exists
         await db.execute(sql`
           INSERT INTO users (id, email, name, avatar_url, created_at, updated_at)
-          VALUES (${userId}, ${userId + "@test.com"}, ${"Test User"}, '', NOW(), NOW())
+          VALUES (${userId}, ${`${userId}@test.com`}, ${"Test User"}, '', NOW(), NOW())
           ON CONFLICT (id) DO NOTHING
         `);
 

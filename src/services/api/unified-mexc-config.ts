@@ -17,6 +17,11 @@ import type {
 
 export interface UnifiedMexcConfigV2 extends MexcApiConfig, MexcCacheConfig, MexcReliabilityConfig {
   enableEnhancedFeatures?: boolean;
+  enablePaperTrading?: boolean;
+  circuitBreakerThreshold?: number;
+  circuitBreakerResetTime?: number;
+  enableTestMode?: boolean;
+  enableMetrics?: boolean;
 }
 
 // ============================================================================
@@ -45,8 +50,17 @@ export const DEFAULT_CONFIG: Required<UnifiedMexcConfigV2> = {
   maxFailures: 5,
   resetTimeout: 60000,
 
+  // Trading Configuration - Add missing properties
+  enablePaperTrading: true,
+  circuitBreakerThreshold: 5,
+  circuitBreakerResetTime: 30000,
+
   // Feature Flags
   enableEnhancedFeatures: true,
+
+  // Optional test configurations
+  enableTestMode: false,
+  enableMetrics: true,
 };
 
 // ============================================================================

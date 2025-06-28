@@ -10,12 +10,7 @@
 import { AlertTriangle, HelpCircle, Home, RefreshCw } from "lucide-react";
 import type React from "react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import {
-  ErrorSeverity,
-  errorHandler,
-  RecoveryStrategy,
-  type StandardizedErrorContext,
-} from "../../lib/standardized-error-handler";
+import { errorHandler, type StandardizedErrorContext } from "../../lib/standardized-error-handler";
 import { createLogger } from "../../lib/unified-logger";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -56,7 +51,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+  static getDerivedStateFromError(_error: Error): ErrorBoundaryState {
     return { hasError: true };
   }
 

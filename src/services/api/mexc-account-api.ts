@@ -6,7 +6,6 @@
  */
 
 import { getGlobalErrorRecoveryService } from "../risk/mexc-error-recovery-service";
-import { MexcClientCore } from "./mexc-client-core";
 import type { BalanceEntry, UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
 import { BalanceEntrySchema } from "./mexc-client-types";
 import { MexcMarketDataClient } from "./mexc-market-data";
@@ -16,7 +15,7 @@ import { MexcMarketDataClient } from "./mexc-market-data";
 // ============================================================================
 
 export class MexcAccountApiClient extends MexcMarketDataClient {
-  private logger = {
+  protected accountLogger = {
     info: (message: string, context?: any) =>
       console.info("[mexc-account-api]", message, context || ""),
     warn: (message: string, context?: any) =>
@@ -138,8 +137,8 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       // Handle nested MEXC API response structure: response.data.data.balances
       // MEXC API returns data.data = null when account has no balances (valid case)
       const actualBalances =
-        (accountResponse.data && 'balances' in accountResponse.data 
-          ? (accountResponse.data as { balances: any[] }).balances 
+        (accountResponse.data && "balances" in accountResponse.data
+          ? (accountResponse.data as { balances: any[] }).balances
           : []) || [];
       const hasValidData = accountResponse.success && accountResponse.data;
 
@@ -147,7 +146,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         console.error("[MexcAccountApi] Account response validation failed:", {
           success: accountResponse.success,
           hasData: !!accountResponse.data,
-          hasDirectBalances: !!(accountResponse.data && 'balances' in accountResponse.data),
+          hasDirectBalances: !!(accountResponse.data && "balances" in accountResponse.data),
           hasActualBalances: !!actualBalances,
           error: accountResponse.error,
           data: accountResponse.data,
@@ -245,7 +244,7 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
             if (price && price > 0) {
               usdtValue = total * price;
-              this.logger.debug(
+              this.accountLogger.debug(
                 `[MexcAccountApi] USDT conversion: ${balance.asset} (${total}) @ ${price} = ${usdtValue.toFixed(6)} USDT`
               );
             }

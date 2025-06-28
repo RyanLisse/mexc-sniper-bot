@@ -209,7 +209,7 @@ export default defineConfig({
     
     // Watch configuration
     watch: !process.env.CI,
-    watchExclude: [
+    watchIgnore: [
       'node_modules/**',
       'dist/**',
       '.next/**',

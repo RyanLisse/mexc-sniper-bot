@@ -7,11 +7,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import type { ApiResponse } from "./api-response";
-import {
-  errorHandler,
-  handleApiError,
-  type StandardizedErrorContext,
-} from "./standardized-error-handler";
+import { handleApiError, type StandardizedErrorContext } from "./standardized-error-handler";
 import { createLogger } from "./unified-logger";
 
 const logger = createLogger("api-error-middleware", {

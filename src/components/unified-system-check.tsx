@@ -378,7 +378,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
   // Run initial system check
   useEffect(() => {
     runSystemCheck();
-  }, []);
+  }, [runSystemCheck]);
 
   const {
     icon: OverallIcon,

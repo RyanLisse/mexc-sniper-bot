@@ -147,7 +147,7 @@ export class WorkflowCache {
 
           // Also check local workflow cache
           for (const [key, entry] of this.workflowCache.entries()) {
-            if (entry.dependencies && entry.dependencies.includes(dependency)) {
+            if (entry.dependencies?.includes(dependency)) {
               this.workflowCache.delete(key);
             }
           }

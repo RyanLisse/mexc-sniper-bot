@@ -502,11 +502,11 @@ export class AlertConfigurationService {
             ...(templateAsAny.correlationKey && {
               correlationKey: templateAsAny.correlationKey,
             }),
-            ...(templateAsAny.parentRuleId && { 
-              parentRuleId: templateAsAny.parentRuleId 
+            ...(templateAsAny.parentRuleId && {
+              parentRuleId: templateAsAny.parentRuleId,
             }),
-            ...(templateAsAny.customFields && { 
-              customFields: templateAsAny.customFields 
+            ...(templateAsAny.customFields && {
+              customFields: templateAsAny.customFields,
             }),
           };
           const ruleId = await this.createAlertRule(validatedTemplate, createdBy);

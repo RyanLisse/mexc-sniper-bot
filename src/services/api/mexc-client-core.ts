@@ -20,7 +20,7 @@ export class MexcClientCore {
   private lastRequestTime = 0;
   protected cache: MexcRequestCache;
   private requestCounter = 0;
-  private logger = {
+  protected logger = {
     info: (message: string, context?: any) =>
       console.info("[mexc-client-core]", message, context || ""),
     warn: (message: string, context?: any) =>
@@ -92,7 +92,7 @@ export class MexcClientCore {
 
     // Create a copy of params excluding the signature parameter
     const signatureParams = { ...params };
-    delete signatureParams.signature;
+    signatureParams.signature = undefined;
 
     const queryString = new URLSearchParams(
       Object.entries(signatureParams)

@@ -2,14 +2,17 @@
  * Execute Trade Use Case Tests
  */
 
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from "vitest";
-import { ExecuteTradeUseCase } from "../execute-trade-use-case";
-import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
-import { Order, OrderStatus, OrderSide, OrderType, TimeInForce } from "@/src/domain/value-objects/trading/order";
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from "vitest";
+import type {
+  NotificationService,
+  TradingRepository,
+  TradingService,
+} from "@/src/application/interfaces/trading-repository";
+import { Trade } from "@/src/domain/entities/trading/trade";
 import { Money } from "@/src/domain/value-objects/trading/money";
+import { OrderSide, OrderType, TimeInForce } from "@/src/domain/value-objects/trading/order";
 import { Price } from "@/src/domain/value-objects/trading/price";
-import type { TradingRepository, TradingService, NotificationService } from "@/src/application/interfaces/trading-repository";
-import { DomainValidationError, InvalidTradeParametersError, BusinessRuleViolationError } from "@/src/domain/errors/trading-errors";
+import { ExecuteTradeUseCase } from "../execute-trade-use-case";
 
 type MockedTradingRepository = {
   [K in keyof TradingRepository]: MockedFunction<TradingRepository[K]>;
@@ -97,7 +100,7 @@ describe("ExecuteTradeUseCase", () => {
       // Arrange
       mockTradingRepository.findTradeById.mockResolvedValue(mockTrade);
       mockTradingService.canTrade.mockResolvedValue(true);
-      
+
       const mockExecutionResult = {
         success: true,
         data: {
@@ -114,7 +117,7 @@ describe("ExecuteTradeUseCase", () => {
         executionTime: 150,
       };
       mockTradingService.executeTrade.mockResolvedValue(mockExecutionResult);
-      
+
       // Mock the updateTrade to return any Trade instance
       mockTradingRepository.updateTrade.mockImplementation(async (trade) => trade);
 
@@ -155,7 +158,7 @@ describe("ExecuteTradeUseCase", () => {
     it("should reject if neither quantity nor quoteOrderQty is provided", async () => {
       // Arrange
       const invalidInput = { ...validInput };
-      delete (invalidInput as any).quoteOrderQty;
+      (invalidInput as any).quoteOrderQty = undefined;
 
       // Act
       const result = await useCase.execute(invalidInput);
@@ -167,8 +170,8 @@ describe("ExecuteTradeUseCase", () => {
 
     it("should reject LIMIT orders without price", async () => {
       // Arrange
-      const invalidInput = { 
-        ...validInput, 
+      const invalidInput = {
+        ...validInput,
         type: "LIMIT" as const,
       };
 
@@ -259,14 +262,14 @@ describe("ExecuteTradeUseCase", () => {
       // Arrange
       mockTradingRepository.findTradeById.mockResolvedValue(mockTrade);
       mockTradingService.canTrade.mockResolvedValue(true);
-      
+
       const failedExecutionResult = {
         success: false,
         error: "Insufficient balance",
         executionTime: 100,
       };
       mockTradingService.executeTrade.mockResolvedValue(failedExecutionResult);
-      
+
       const failedTrade = mockTrade.markAsFailed("Insufficient balance");
       mockTradingRepository.updateTrade.mockResolvedValue(failedTrade);
 
@@ -286,7 +289,7 @@ describe("ExecuteTradeUseCase", () => {
       // Arrange
       mockTradingRepository.findTradeById.mockResolvedValue(mockTrade);
       mockTradingService.canTrade.mockResolvedValue(true);
-      
+
       const mockExecutionResult = {
         success: true,
         data: {
@@ -302,7 +305,7 @@ describe("ExecuteTradeUseCase", () => {
         },
       };
       mockTradingService.executeTrade.mockResolvedValue(mockExecutionResult);
-      
+
       let updatedTrade: Trade | undefined;
       mockTradingRepository.updateTrade.mockImplementation(async (trade) => {
         updatedTrade = trade;
@@ -314,11 +317,11 @@ describe("ExecuteTradeUseCase", () => {
 
       // Assert
       expect(updatedTrade).toBeDefined();
-      expect(updatedTrade!.hasOrders()).toBe(true);
-      
-      const orders = updatedTrade!.orders;
+      expect(updatedTrade?.hasOrders()).toBe(true);
+
+      const orders = updatedTrade?.orders;
       expect(orders).toHaveLength(1);
-      
+
       const order = orders[0];
       expect(order.symbol).toBe("BTCUSDT");
       expect(order.side).toBe(OrderSide.BUY);
@@ -333,7 +336,7 @@ describe("ExecuteTradeUseCase", () => {
       // Arrange
       mockTradingRepository.findTradeById.mockResolvedValue(mockTrade);
       mockTradingService.canTrade.mockResolvedValue(true);
-      
+
       const partialFillResult = {
         success: true,
         data: {
@@ -349,7 +352,7 @@ describe("ExecuteTradeUseCase", () => {
         },
       };
       mockTradingService.executeTrade.mockResolvedValue(partialFillResult);
-      
+
       let updatedTrade: Trade | undefined;
       mockTradingRepository.updateTrade.mockImplementation(async (trade) => {
         updatedTrade = trade;
@@ -360,7 +363,7 @@ describe("ExecuteTradeUseCase", () => {
       await useCase.execute(validInput);
 
       // Assert
-      const order = updatedTrade!.orders[0];
+      const order = updatedTrade?.orders[0];
       expect(order.isPartiallyFilled()).toBe(true);
       expect(order.executedQuantity).toBe(0.001);
       expect(order.executedPrice).toBe(50000);
@@ -422,7 +425,7 @@ describe("ExecuteTradeUseCase", () => {
         isAutoSnipe: true,
         confidenceScore: 85,
       }).startExecution();
-      
+
       const entryPrice = Price.create(50000, "BTCUSDT", "mexc", 2);
       const totalCost = Money.create(100, "USDT", 2);
       const totalRevenue = Money.create(110, "USDT", 2);

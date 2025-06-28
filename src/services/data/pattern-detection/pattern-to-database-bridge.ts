@@ -18,7 +18,7 @@ import { db } from "../../../db";
 import { snipeTargets, userPreferences } from "../../../db/schema";
 import { toSafeError } from "../../../lib/error-type-utils";
 
-import { createLogger, type LogContext } from "../../../lib/unified-logger";
+import { createLogger } from "../../../lib/unified-logger";
 
 // ============================================================================
 // Configuration Schema

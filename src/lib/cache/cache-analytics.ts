@@ -14,13 +14,7 @@
  */
 
 import { globalCacheManager } from "../cache-manager";
-import type {
-  AgentCacheAnalytics,
-  AgentCacheConfig,
-  AgentCacheMetrics,
-  AgentHealthCache,
-  WorkflowCacheEntry,
-} from "./agent-cache-types";
+import type { AgentCacheAnalytics, AgentCacheConfig, AgentCacheMetrics } from "./agent-cache-types";
 import type { AgentHealthCacheManager } from "./agent-health-cache";
 import type { CachePerformanceMonitor } from "./cache-performance-monitor";
 import type { WorkflowCache } from "./workflow-cache";

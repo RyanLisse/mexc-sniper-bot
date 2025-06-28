@@ -75,7 +75,7 @@ export function StreamlinedCredentialStatus({
     },
     staleTime: 30000, // Increased to 30 seconds to reduce conflicts
     refetchInterval: autoRefresh ? 60000 : false, // Reduced frequency to 60 seconds
-    retry: (failureCount, error) => failureCount < 2,
+    retry: (failureCount, _error) => failureCount < 2,
   });
 
   // Refresh mutation

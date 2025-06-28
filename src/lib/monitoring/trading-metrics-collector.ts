@@ -1,9 +1,9 @@
 /**
  * Trading Metrics Collector
- * 
+ *
  * Specialized metrics collection for trading operations with real-time
  * performance tracking, profitability analysis, and risk monitoring.
- * 
+ *
  * Phase 3 Enhancement Features:
  * - Real-time P&L tracking
  * - Trade execution success rates
@@ -12,8 +12,8 @@
  * - Pattern detection effectiveness
  */
 
-import { metrics, trace } from '@opentelemetry/api';
-import { enhancedPerformanceMonitor } from './enhanced-performance-monitor';
+import { metrics, trace } from "@opentelemetry/api";
+import { enhancedPerformanceMonitor } from "./enhanced-performance-monitor";
 
 export interface TradeExecutionMetrics {
   symbol: string;
@@ -21,8 +21,8 @@ export interface TradeExecutionMetrics {
   slippage: number;
   fillRate: number;
   success: boolean;
-  orderType: 'market' | 'limit' | 'stop';
-  side: 'buy' | 'sell';
+  orderType: "market" | "limit" | "stop";
+  side: "buy" | "sell";
   quantity: number;
   price: number;
 }
@@ -56,42 +56,42 @@ export interface MarketDataMetrics {
  * Comprehensive metrics collection for trading system performance
  */
 export class TradingMetricsCollector {
-  private meter = metrics.getMeter('trading-metrics', '1.0.0');
-  private tracer = trace.getTracer('trading-metrics', '1.0.0');
+  private meter = metrics.getMeter("trading-metrics", "1.0.0");
+  private tracer = trace.getTracer("trading-metrics", "1.0.0");
 
   // Trading-specific counters and histograms
-  private tradesCounter = this.meter.createCounter('trades_total', {
-    description: 'Total number of trades executed',
+  private tradesCounter = this.meter.createCounter("trades_total", {
+    description: "Total number of trades executed",
   });
 
-  private pnlGauge = this.meter.createUpDownCounter('pnl_total', {
-    description: 'Total profit and loss',
-    unit: 'USD',
+  private pnlGauge = this.meter.createUpDownCounter("pnl_total", {
+    description: "Total profit and loss",
+    unit: "USD",
   });
 
-  private executionLatencyHistogram = this.meter.createHistogram('trade_execution_latency_ms', {
-    description: 'Trade execution latency in milliseconds',
-    unit: 'ms',
+  private executionLatencyHistogram = this.meter.createHistogram("trade_execution_latency_ms", {
+    description: "Trade execution latency in milliseconds",
+    unit: "ms",
   });
 
-  private slippageHistogram = this.meter.createHistogram('trade_slippage_bp', {
-    description: 'Trade slippage in basis points',
-    unit: 'bp',
+  private slippageHistogram = this.meter.createHistogram("trade_slippage_bp", {
+    description: "Trade slippage in basis points",
+    unit: "bp",
   });
 
-  private patternAccuracyHistogram = this.meter.createHistogram('pattern_accuracy_percent', {
-    description: 'Pattern detection accuracy percentage',
-    unit: 'percent',
+  private patternAccuracyHistogram = this.meter.createHistogram("pattern_accuracy_percent", {
+    description: "Pattern detection accuracy percentage",
+    unit: "percent",
   });
 
-  private riskExposureGauge = this.meter.createUpDownCounter('risk_exposure_percent', {
-    description: 'Current risk exposure as percentage of portfolio',
-    unit: 'percent',
+  private riskExposureGauge = this.meter.createUpDownCounter("risk_exposure_percent", {
+    description: "Current risk exposure as percentage of portfolio",
+    unit: "percent",
   });
 
-  private marketDataLatencyHistogram = this.meter.createHistogram('market_data_latency_ms', {
-    description: 'Market data latency in milliseconds',
-    unit: 'ms',
+  private marketDataLatencyHistogram = this.meter.createHistogram("market_data_latency_ms", {
+    description: "Market data latency in milliseconds",
+    unit: "ms",
   });
 
   private readonly metricsCache = new Map<string, any>();
@@ -108,8 +108,8 @@ export class TradingMetricsCollector {
    * Record trade execution metrics
    */
   recordTradeExecution(metrics: TradeExecutionMetrics): void {
-    const span = this.tracer.startSpan('trading.execution.record');
-    
+    const span = this.tracer.startSpan("trading.execution.record");
+
     try {
       // Update counters
       this.tradesCounter.add(1, {
@@ -138,33 +138,28 @@ export class TradingMetricsCollector {
       }
 
       // Calculate rolling averages
-      this.realtimeMetrics.averageExecutionTime = 
-        (this.realtimeMetrics.averageExecutionTime * 0.9) + (metrics.executionTime * 0.1);
-      
-      this.realtimeMetrics.averageSlippage = 
-        (this.realtimeMetrics.averageSlippage * 0.9) + (metrics.slippage * 0.1);
+      this.realtimeMetrics.averageExecutionTime =
+        this.realtimeMetrics.averageExecutionTime * 0.9 + metrics.executionTime * 0.1;
+
+      this.realtimeMetrics.averageSlippage =
+        this.realtimeMetrics.averageSlippage * 0.9 + metrics.slippage * 0.1;
 
       // Cache for reporting
       this.metricsCache.set(`trade_${Date.now()}`, metrics);
 
       // Track with enhanced performance monitor
-      enhancedPerformanceMonitor.trackTradingExecution(
-        'trade_execution',
-        async () => metrics,
-        {
-          symbol: metrics.symbol,
-          order_type: metrics.orderType,
-          side: metrics.side,
-        }
-      );
-
-      span.setAttributes({
-        'trading.symbol': metrics.symbol,
-        'trading.execution_time': metrics.executionTime,
-        'trading.slippage': metrics.slippage,
-        'trading.success': metrics.success,
+      enhancedPerformanceMonitor.trackTradingExecution("trade_execution", async () => metrics, {
+        symbol: metrics.symbol,
+        order_type: metrics.orderType,
+        side: metrics.side,
       });
 
+      span.setAttributes({
+        "trading.symbol": metrics.symbol,
+        "trading.execution_time": metrics.executionTime,
+        "trading.slippage": metrics.slippage,
+        "trading.success": metrics.success,
+      });
     } finally {
       span.end();
     }
@@ -174,8 +169,8 @@ export class TradingMetricsCollector {
    * Record pattern detection performance
    */
   recordPatternDetection(metrics: PatternDetectionMetrics): void {
-    const span = this.tracer.startSpan('pattern.detection.record');
-    
+    const span = this.tracer.startSpan("pattern.detection.record");
+
     try {
       // Record accuracy
       this.patternAccuracyHistogram.record(metrics.confidence, {
@@ -191,12 +186,11 @@ export class TradingMetricsCollector {
       );
 
       span.setAttributes({
-        'pattern.symbol': metrics.symbol,
-        'pattern.type': metrics.patternType,
-        'pattern.confidence': metrics.confidence,
-        'pattern.processing_time': metrics.processingTime,
+        "pattern.symbol": metrics.symbol,
+        "pattern.type": metrics.patternType,
+        "pattern.confidence": metrics.confidence,
+        "pattern.processing_time": metrics.processingTime,
       });
-
     } finally {
       span.end();
     }
@@ -232,7 +226,7 @@ export class TradingMetricsCollector {
       data_quality: metrics.dataQuality.toString(),
     });
 
-    enhancedPerformanceMonitor.trackWebSocketLatency(metrics.latency, 'market_data');
+    enhancedPerformanceMonitor.trackWebSocketLatency(metrics.latency, "market_data");
   }
 
   /**
@@ -264,7 +258,7 @@ export class TradingMetricsCollector {
   } {
     const trades = this.realtimeMetrics.totalTrades;
     const successfulTrades = this.realtimeMetrics.successfulTrades;
-    
+
     return {
       execution: {
         totalTrades: trades,
@@ -301,22 +295,22 @@ export class TradingMetricsCollector {
   /**
    * Export metrics for external analysis
    */
-  exportMetrics(format: 'json' | 'csv' = 'json'): string {
+  exportMetrics(format: "json" | "csv" = "json"): string {
     const data = {
       timestamp: new Date().toISOString(),
       performance: this.getTradingPerformanceSummary(),
       realtime: this.getRealtimeMetrics(),
       cached_trades: Array.from(this.metricsCache.entries())
-        .filter(([key]) => key.startsWith('trade_'))
+        .filter(([key]) => key.startsWith("trade_"))
         .slice(-100), // Last 100 trades
     };
 
-    if (format === 'csv') {
+    if (format === "csv") {
       // Convert to CSV format (simplified)
       const csv = [
-        'timestamp,total_trades,success_rate,total_pnl,current_exposure',
-        `${data.timestamp},${data.performance.execution.totalTrades},${data.performance.execution.successRate},${data.performance.profitability.totalPnL},${data.performance.risk.currentExposure}`
-      ].join('\n');
+        "timestamp,total_trades,success_rate,total_pnl,current_exposure",
+        `${data.timestamp},${data.performance.execution.totalTrades},${data.performance.execution.successRate},${data.performance.profitability.totalPnL},${data.performance.risk.currentExposure}`,
+      ].join("\n");
       return csv;
     }
 
@@ -325,9 +319,9 @@ export class TradingMetricsCollector {
 
   // Private helper methods
   private getProfitableTradesCount(): number {
-    return Array.from(this.metricsCache.entries())
-      .filter(([key, trade]) => key.startsWith('trade_') && trade.pnl > 0)
-      .length;
+    return Array.from(this.metricsCache.entries()).filter(
+      ([key, trade]) => key.startsWith("trade_") && trade.pnl > 0
+    ).length;
   }
 
   private calculateMaxDrawdown(): number {
@@ -349,20 +343,19 @@ export class TradingMetricsCollector {
 
   private getPatternDetectionsToday(): number {
     const today = new Date().toDateString();
-    return Array.from(this.metricsCache.entries())
-      .filter(([key, data]) => 
-        key.startsWith('pattern_') && 
-        new Date(data.timestamp).toDateString() === today
-      ).length;
+    return Array.from(this.metricsCache.entries()).filter(
+      ([key, data]) =>
+        key.startsWith("pattern_") && new Date(data.timestamp).toDateString() === today
+    ).length;
   }
 
   private calculateAveragePatternConfidence(): number {
     const patterns = Array.from(this.metricsCache.entries())
-      .filter(([key]) => key.startsWith('pattern_'))
+      .filter(([key]) => key.startsWith("pattern_"))
       .map(([, data]) => data.confidence);
-    
-    return patterns.length > 0 
-      ? patterns.reduce((sum, conf) => sum + conf, 0) / patterns.length 
+
+    return patterns.length > 0
+      ? patterns.reduce((sum, conf) => sum + conf, 0) / patterns.length
       : 0;
   }
 

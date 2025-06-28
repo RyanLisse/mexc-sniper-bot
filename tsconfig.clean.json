@@ -14,7 +14,7 @@
   },
   "include": [
     "src/domain/**/*",
-    "src/application/**/*", 
+    "src/application/**/*",
     "src/infrastructure/**/*",
     "src/presentation/**/*"
   ],

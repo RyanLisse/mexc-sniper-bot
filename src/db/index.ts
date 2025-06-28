@@ -169,13 +169,8 @@ function createMockDatabase() {
     }),
     delete: () => createThenable([]),
     transaction: async (cb: any) => {
-      // Ensure transaction callback gets proper mock database
-      try {
-        const result = await cb(createMockDatabase());
-        return result;
-      } catch (error) {
-        throw error;
-      }
+      const result = await cb(createMockDatabase());
+      return result;
     },
     // Add connection cleanup for tests
     end: async () => Promise.resolve(),
@@ -359,7 +354,7 @@ export async function healthCheck() {
 }
 
 // Internal health check implementation
-async function internalHealthCheck() {
+async function _internalHealthCheck() {
   try {
     const startTime = Date.now();
     await db.execute(sql`SELECT 1`);
@@ -451,7 +446,7 @@ export async function getUserPreferences(userId: string): Promise<any | null> {
     try {
       if (prefs.readyStatePattern && typeof prefs.readyStatePattern === "string") {
         const parts = prefs.readyStatePattern.split(",").map(Number);
-        if (parts.length >= 3 && parts.every((p: number) => !isNaN(p) && p > 0)) {
+        if (parts.length >= 3 && parts.every((p: number) => !Number.isNaN(p) && p > 0)) {
           patternParts = parts;
         }
       }

@@ -28,7 +28,7 @@ export function useMexcCalendar() {
     refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
@@ -74,7 +74,7 @@ export function useMexcSymbols(vcoinId?: string) {
     refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: [], // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
@@ -113,7 +113,7 @@ export function useMexcServerTime() {
     refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus
     placeholderData: Date.now(), // Prevent loading flicker with current time
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {
@@ -407,7 +407,7 @@ export function useMexcAccount(userId?: string) {
     refetchInterval: false, // Disable automatic refetch to prevent storms
     refetchOnWindowFocus: false, // Don't refetch on window focus for account data
     placeholderData: null, // Prevent loading flicker
-    retry: (failureCount, error) => {
+    retry: (_failureCount, error) => {
       // Don't retry auth errors
       const errorMessage = error?.message || "";
       if (errorMessage.includes("401") || errorMessage.includes("403")) {

@@ -52,7 +52,7 @@ const errorLogger: ErrorLogger = defaultErrorLogger;
 /**
  * Set custom error logger
  */
-export function setErrorLogger(logger: any) {
+export function setErrorLogger(_logger: any) {
   // Logger setter implementation
 }
 /**

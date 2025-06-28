@@ -1,28 +1,27 @@
 /**
  * Trading Domain Commands and Handlers
- * 
+ *
  * Demonstrates Event Sourcing and CQRS patterns applied to trading domain.
  * Part of Phase 3 Production Readiness implementation.
  */
 
-import { 
-  type Command, 
-  type CommandResult, 
+import { type DomainEvent, eventStoreManager } from "../event-sourcing/event-store";
+import {
   BaseCommandHandler,
+  type Command,
+  CommandFactory,
+  type CommandResult,
   commandBus,
-  CommandFactory
 } from "./command-bus";
-import { 
-  type Query,
-  type QueryResult,
+import {
   BaseQueryHandler,
   BaseReadModelProjection,
-  type ReadModel,
+  type Query,
+  QueryFactory,
+  type QueryResult,
   queryBus,
   readModelStore,
-  QueryFactory
 } from "./query-bus";
-import { eventStoreManager, type DomainEvent } from "../event-sourcing/event-store";
 
 // Trading Commands
 export interface CreateTradeCommand extends Command {
@@ -132,7 +131,7 @@ export class CreateTradeCommandHandler extends BaseCommandHandler<CreateTradeCom
 
   async handle(command: CreateTradeCommand): Promise<CommandResult> {
     const { payload } = command;
-    
+
     // Business logic validation
     if (payload.quantity <= 0) {
       return {
@@ -180,11 +179,11 @@ export class ExecuteTradeCommandHandler extends BaseCommandHandler<ExecuteTradeC
 
   async handle(command: ExecuteTradeCommand): Promise<CommandResult> {
     const { payload } = command;
-    
+
     // Get current trade state from events
     const events = await eventStoreManager.getEventsForAggregate(command.aggregateId);
     const currentVersion = events.length;
-    
+
     if (currentVersion === 0) {
       return {
         success: false,
@@ -196,7 +195,7 @@ export class ExecuteTradeCommandHandler extends BaseCommandHandler<ExecuteTradeC
     }
 
     // Check if trade is in valid state for execution
-    const tradeCreatedEvent = events.find(e => e.eventType === "TRADE_CREATED");
+    const tradeCreatedEvent = events.find((e) => e.eventType === "TRADE_CREATED");
     if (!tradeCreatedEvent) {
       return {
         success: false,
@@ -239,7 +238,7 @@ export class CancelTradeCommandHandler extends BaseCommandHandler<CancelTradeCom
   async handle(command: CancelTradeCommand): Promise<CommandResult> {
     const events = await eventStoreManager.getEventsForAggregate(command.aggregateId);
     const currentVersion = events.length;
-    
+
     if (currentVersion === 0) {
       return {
         success: false,
@@ -251,7 +250,7 @@ export class CancelTradeCommandHandler extends BaseCommandHandler<CancelTradeCom
     }
 
     // Check if trade can be cancelled
-    const isAlreadyExecuted = events.some(e => e.eventType === "TRADE_EXECUTED");
+    const isAlreadyExecuted = events.some((e) => e.eventType === "TRADE_EXECUTED");
     if (isAlreadyExecuted) {
       return {
         success: false,
@@ -262,18 +261,12 @@ export class CancelTradeCommandHandler extends BaseCommandHandler<CancelTradeCom
       };
     }
 
-    return this.saveEvents(
-      command.aggregateId,
-      "Trade",
-      currentVersion,
-      "TRADE_CANCELLED",
-      {
-        tradeId: command.aggregateId,
-        reason: command.payload.reason,
-        status: "CANCELLED",
-        cancelledAt: new Date(),
-      }
-    );
+    return this.saveEvents(command.aggregateId, "Trade", currentVersion, "TRADE_CANCELLED", {
+      tradeId: command.aggregateId,
+      reason: command.payload.reason,
+      status: "CANCELLED",
+      cancelledAt: new Date(),
+    });
   }
 }
 
@@ -287,9 +280,9 @@ export class GetTradeQueryHandler extends BaseQueryHandler<GetTradeQuery, TradeR
 
   async handle(query: GetTradeQuery): Promise<QueryResult<TradeReadModel>> {
     const { tradeId } = query.parameters;
-    
+
     const model = await readModelStore.get("Trade", tradeId);
-    
+
     if (!model) {
       return {
         success: false,
@@ -318,67 +311,70 @@ export class GetTradeQueryHandler extends BaseQueryHandler<GetTradeQuery, TradeR
 /**
  * Get User Trades Query Handler
  */
-export class GetUserTradesQueryHandler extends BaseQueryHandler<GetUserTradesQuery, TradeReadModel[]> {
+export class GetUserTradesQueryHandler extends BaseQueryHandler<
+  GetUserTradesQuery,
+  TradeReadModel[]
+> {
   protected getSupportedQueryType(): string {
     return "GET_USER_TRADES";
   }
 
   async handle(query: GetUserTradesQuery): Promise<QueryResult<TradeReadModel[]>> {
     const { userId, status, limit = 10, offset = 0 } = query.parameters;
-    
+
     // Get all trades for user
     const allModels = await readModelStore.getAll("Trade", { userId });
-    
+
     // Filter by status if provided
     let filteredModels = allModels;
     if (status) {
-      filteredModels = allModels.filter(model => 
-        (model.data as TradeReadModel).status === status
+      filteredModels = allModels.filter(
+        (model) => (model.data as TradeReadModel).status === status
       );
     }
 
     // Sort by creation date (newest first)
-    filteredModels.sort((a, b) => 
-      new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime()
+    filteredModels.sort(
+      (a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime()
     );
 
     // Apply pagination
     const total = filteredModels.length;
     const paginatedModels = filteredModels.slice(offset, offset + limit);
-    const trades = paginatedModels.map(model => model.data as TradeReadModel);
+    const trades = paginatedModels.map((model) => model.data as TradeReadModel);
 
-    return this.createPaginatedResult(
-      trades,
-      Math.floor(offset / limit) + 1,
-      limit,
-      total
-    );
+    return this.createPaginatedResult(trades, Math.floor(offset / limit) + 1, limit, total);
   }
 }
 
 /**
  * Get Trading Stats Query Handler
  */
-export class GetTradingStatsQueryHandler extends BaseQueryHandler<GetTradingStatsQuery, TradingStatsReadModel> {
+export class GetTradingStatsQueryHandler extends BaseQueryHandler<
+  GetTradingStatsQuery,
+  TradingStatsReadModel
+> {
   protected getSupportedQueryType(): string {
     return "GET_TRADING_STATS";
   }
 
   async handle(query: GetTradingStatsQuery): Promise<QueryResult<TradingStatsReadModel>> {
     const { userId, symbol, fromDate, toDate } = query.parameters;
-    
+
     // Build filter
     const filter: any = {};
     if (userId) filter.userId = userId;
     if (symbol) filter.symbol = symbol;
-    
-    const statsModel = await readModelStore.get("TradingStats", 
-      `${userId || 'global'}_${symbol || 'all'}`);
-    
+
+    const statsModel = await readModelStore.get(
+      "TradingStats",
+      `${userId || "global"}_${symbol || "all"}`
+    );
+
     if (!statsModel) {
       // Return empty stats if not found
       const emptyStats: TradingStatsReadModel = {
-        id: `${userId || 'global'}_${symbol || 'all'}`,
+        id: `${userId || "global"}_${symbol || "all"}`,
         userId: userId || "global",
         symbol,
         totalTrades: 0,
@@ -523,7 +519,7 @@ export class TradingStatsProjection extends BaseReadModelProjection {
 
   private async updateStatsForTradeCreated(event: DomainEvent): Promise<void> {
     const statsId = `${event.payload.userId}_all`;
-    let stats = await this.getModel(statsId);
+    const stats = await this.getModel(statsId);
 
     if (!stats) {
       const newStats: TradingStatsReadModel = {
@@ -549,10 +545,11 @@ export class TradingStatsProjection extends BaseReadModelProjection {
     } else {
       const statsData = stats.data as TradingStatsReadModel;
       statsData.totalTrades++;
-      
+
       // Update average confidence
       const totalConfidence = statsData.averageConfidence * (statsData.totalTrades - 1);
-      statsData.averageConfidence = (totalConfidence + (event.payload.confidenceScore || 0)) / statsData.totalTrades;
+      statsData.averageConfidence =
+        (totalConfidence + (event.payload.confidenceScore || 0)) / statsData.totalTrades;
 
       await this.saveModel({
         ...stats,
@@ -565,7 +562,7 @@ export class TradingStatsProjection extends BaseReadModelProjection {
   private async updateStatsForTradeExecuted(event: DomainEvent): Promise<void> {
     // Get the original trade data to get userId
     const tradeEvents = await eventStoreManager.getEventsForAggregate(event.aggregateId);
-    const createEvent = tradeEvents.find(e => e.eventType === "TRADE_CREATED");
+    const createEvent = tradeEvents.find((e) => e.eventType === "TRADE_CREATED");
     if (!createEvent) return;
 
     const statsId = `${createEvent.payload.userId}_all`;
@@ -629,20 +626,25 @@ export class TradingCommandFactory {
     } = {}
   ): CreateTradeCommand {
     const tradeId = `trade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    return CommandFactory.createCommand("CREATE_TRADE", tradeId, {
-      userId,
-      symbol,
-      side,
-      quantity,
-      price: options.price,
-      orderType: options.orderType || "MARKET",
-      isAutoSnipe: options.isAutoSnipe || false,
-      confidenceScore: options.confidenceScore,
-    }, {
-      userId,
-      correlationId: options.correlationId,
-    }) as CreateTradeCommand;
+
+    return CommandFactory.createCommand(
+      "CREATE_TRADE",
+      tradeId,
+      {
+        userId,
+        symbol,
+        side,
+        quantity,
+        price: options.price,
+        orderType: options.orderType || "MARKET",
+        isAutoSnipe: options.isAutoSnipe || false,
+        confidenceScore: options.confidenceScore,
+      },
+      {
+        userId,
+        correlationId: options.correlationId,
+      }
+    ) as CreateTradeCommand;
   }
 
   static executeTrade(
@@ -652,28 +654,34 @@ export class TradingCommandFactory {
     mexcOrderId: string,
     correlationId?: string
   ): ExecuteTradeCommand {
-    return CommandFactory.createCommand("EXECUTE_TRADE", tradeId, {
+    return CommandFactory.createCommand(
+      "EXECUTE_TRADE",
       tradeId,
-      executedPrice,
-      executedQuantity,
-      executionTime: new Date(),
-      mexcOrderId,
-    }, {
-      correlationId,
-    }) as ExecuteTradeCommand;
+      {
+        tradeId,
+        executedPrice,
+        executedQuantity,
+        executionTime: new Date(),
+        mexcOrderId,
+      },
+      {
+        correlationId,
+      }
+    ) as ExecuteTradeCommand;
   }
 
-  static cancelTrade(
-    tradeId: string,
-    reason: string,
-    correlationId?: string
-  ): CancelTradeCommand {
-    return CommandFactory.createCommand("CANCEL_TRADE", tradeId, {
+  static cancelTrade(tradeId: string, reason: string, correlationId?: string): CancelTradeCommand {
+    return CommandFactory.createCommand(
+      "CANCEL_TRADE",
       tradeId,
-      reason,
-    }, {
-      correlationId,
-    }) as CancelTradeCommand;
+      {
+        tradeId,
+        reason,
+      },
+      {
+        correlationId,
+      }
+    ) as CancelTradeCommand;
   }
 }
 

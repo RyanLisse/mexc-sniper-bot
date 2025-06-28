@@ -199,17 +199,6 @@ export function AlertCenter() {
     }
   }, [buildApiParams, applyClientFilters]);
 
-  useEffect(() => {
-    fetchAlerts();
-    setupRealTimeConnection();
-
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
-  }, [fetchAlerts]);
-
   const setupRealTimeConnection = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -241,6 +230,17 @@ export function AlertCenter() {
       setTimeout(setupRealTimeConnection, 5000);
     };
   };
+
+  useEffect(() => {
+    fetchAlerts();
+    setupRealTimeConnection();
+
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [fetchAlerts, setupRealTimeConnection]);
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {

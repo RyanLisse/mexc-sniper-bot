@@ -249,7 +249,12 @@ export function validateData<T>(
     return { success: true, data: result };
   } catch (error) {
     // Check for ZodError using duck typing since we can't use instanceof with dynamic import in sync function
-    if (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as any).errors)) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "errors" in error &&
+      Array.isArray((error as any).errors)
+    ) {
       return {
         success: false,
         error: `Validation failed: ${(error as any).errors.map((e: any) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,

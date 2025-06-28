@@ -5,7 +5,7 @@
  * Provides centralized emergency coordination with automated responses.
  */
 
-import { EventEmitter } from "events";
+import { EventEmitter } from "node:events";
 import type {
   AgentConsensusRequest,
   SafetyMonitorAgent,
@@ -448,7 +448,7 @@ export class EmergencyManager extends EventEmitter {
   /**
    * Execute an emergency step
    */
-  private async executeEmergencyStep(step: EmergencyStep, procedureId: string): Promise<void> {
+  private async executeEmergencyStep(step: EmergencyStep, _procedureId: string): Promise<void> {
     console.info(`[EmergencyManager] Executing step: ${step.name}`);
 
     // Add timeout wrapper

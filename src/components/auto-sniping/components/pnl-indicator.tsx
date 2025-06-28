@@ -26,7 +26,7 @@ export function PnLIndicator({ position }: PnLIndicatorProps) {
     typeof position.currentPrice === "string"
       ? Number.parseFloat(position.currentPrice)
       : position.currentPrice;
-  const quantity =
+  const _quantity =
     typeof position.quantity === "string"
       ? Number.parseFloat(position.quantity)
       : position.quantity;

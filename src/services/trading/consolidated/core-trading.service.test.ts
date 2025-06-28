@@ -25,7 +25,7 @@ const TradingConfigSchema = z.object({
   defaultStrategy: z.enum(["conservative", "balanced", "aggressive"]),
 });
 
-const TradeParametersSchema = z.object({
+const _TradeParametersSchema = z.object({
   symbol: z.string().min(1, "Symbol required"),
   side: z.enum(["BUY", "SELL"]),
   type: z.enum(["MARKET", "LIMIT", "STOP", "STOP_LIMIT"]),
@@ -36,7 +36,7 @@ const TradeParametersSchema = z.object({
   timeInForce: z.enum(["GTC", "IOC", "FOK"]).optional(),
 });
 
-const TradeResultSchema = z.object({
+const _TradeResultSchema = z.object({
   success: z.boolean(),
   data: z
     .object({
@@ -55,7 +55,7 @@ const TradeResultSchema = z.object({
   error: z.string().optional(),
 });
 
-const AutoSnipeTargetSchema = z.object({
+const _AutoSnipeTargetSchema = z.object({
   id: z.number(),
   symbolName: z.string(),
   vcoinId: z.number(),
@@ -68,7 +68,7 @@ const AutoSnipeTargetSchema = z.object({
 });
 
 describe("CoreTradingService - TDD Implementation", () => {
-  let tradingService: any;
+  let _tradingService: any;
   let mockConfig: any;
 
   beforeEach(() => {
@@ -94,7 +94,7 @@ describe("CoreTradingService - TDD Implementation", () => {
   describe("Service Initialization", () => {
     it("should initialize service with valid configuration", () => {
       // Arrange
-      const validConfig = TradingConfigSchema.parse(mockConfig);
+      const _validConfig = TradingConfigSchema.parse(mockConfig);
 
       // Act & Assert - This will fail initially (TDD)
       expect(() => {
@@ -116,8 +116,8 @@ describe("CoreTradingService - TDD Implementation", () => {
       process.env.MEXC_SECRET_KEY = "env-secret-key";
 
       const configWithoutKeys = { ...mockConfig };
-      delete configWithoutKeys.apiKey;
-      delete configWithoutKeys.secretKey;
+      configWithoutKeys.apiKey = undefined;
+      configWithoutKeys.secretKey = undefined;
 
       // Act & Assert - Should use env vars (will fail initially)
       expect(() => {
@@ -158,7 +158,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should execute market buy order successfully", async () => {
       // Arrange
-      const tradeParams = {
+      const _tradeParams = {
         symbol: "BTCUSDT",
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -178,7 +178,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should execute limit sell order successfully", async () => {
       // Arrange
-      const tradeParams = {
+      const _tradeParams = {
         symbol: "BTCUSDT",
         side: "SELL" as const,
         type: "LIMIT" as const,
@@ -198,7 +198,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should handle trade validation errors", async () => {
       // Arrange
-      const invalidParams = {
+      const _invalidParams = {
         symbol: "", // Invalid empty symbol
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -212,7 +212,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should implement position size validation", async () => {
       // Arrange
-      const oversizedTrade = {
+      const _oversizedTrade = {
         symbol: "BTCUSDT",
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -272,7 +272,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should execute auto-snipe with confidence threshold", async () => {
       // Arrange
-      const highConfidenceTarget = {
+      const _highConfidenceTarget = {
         id: 2,
         symbolName: "HOTTOKEN",
         confidenceScore: 95, // Above threshold
@@ -291,7 +291,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should skip low confidence targets", async () => {
       // Arrange
-      const lowConfidenceTarget = {
+      const _lowConfidenceTarget = {
         id: 3,
         symbolName: "RISKTOKEN",
         confidenceScore: 45, // Below default 75% threshold
@@ -309,7 +309,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should implement paper trading mode for auto-snipes", async () => {
       // Arrange - Enable paper trading
-      const paperTradingTarget = {
+      const _paperTradingTarget = {
         id: 4,
         symbolName: "PAPERTOKEN",
         confidenceScore: 80,
@@ -330,7 +330,7 @@ describe("CoreTradingService - TDD Implementation", () => {
   describe("Multi-Phase Trading Strategies", () => {
     it("should execute conservative strategy with multiple phases", async () => {
       // Arrange
-      const conservativeParams = {
+      const _conservativeParams = {
         symbol: "BTCUSDT",
         totalAmount: 1000,
         strategy: "conservative",
@@ -349,7 +349,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should implement aggressive strategy with faster execution", async () => {
       // Arrange
-      const aggressiveParams = {
+      const _aggressiveParams = {
         symbol: "ETHUSDT",
         totalAmount: 500,
         strategy: "aggressive",
@@ -394,7 +394,7 @@ describe("CoreTradingService - TDD Implementation", () => {
   describe("Strategy Management", () => {
     it("should load predefined trading strategies", () => {
       // Arrange
-      const expectedStrategies = ["conservative", "balanced", "aggressive"];
+      const _expectedStrategies = ["conservative", "balanced", "aggressive"];
 
       // Act
       // const strategies = tradingService.getAvailableStrategies();
@@ -406,7 +406,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should allow custom strategy configuration", () => {
       // Arrange
-      const customStrategy = {
+      const _customStrategy = {
         name: "custom_scalping",
         maxPositionSize: 0.05,
         stopLossPercent: 5,
@@ -425,7 +425,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should validate strategy parameters", () => {
       // Arrange
-      const invalidStrategy = {
+      const _invalidStrategy = {
         name: "invalid",
         maxPositionSize: 1.5, // Invalid > 1.0
         stopLossPercent: -5, // Invalid negative
@@ -440,7 +440,7 @@ describe("CoreTradingService - TDD Implementation", () => {
   describe("Position Management", () => {
     it("should track active positions", async () => {
       // Arrange - Execute a trade first
-      const tradeParams = {
+      const _tradeParams = {
         symbol: "BTCUSDT",
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -459,7 +459,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should enforce maximum concurrent positions", async () => {
       // Arrange - Try to exceed max positions (5)
-      const trades = Array(6).fill({
+      const _trades = Array(6).fill({
         symbol: "BTCUSDT",
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -479,7 +479,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should implement stop-loss and take-profit", async () => {
       // Arrange
-      const positionWithStops = {
+      const _positionWithStops = {
         symbol: "ETHUSDT",
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -611,7 +611,7 @@ describe("CoreTradingService - TDD Implementation", () => {
   describe("Integration Points", () => {
     it("should integrate with risk management service", async () => {
       // Arrange
-      const riskySrade = {
+      const _riskySrade = {
         symbol: "VOLATILETOKEN",
         side: "BUY" as const,
         type: "MARKET" as const,
@@ -629,7 +629,7 @@ describe("CoreTradingService - TDD Implementation", () => {
 
     it("should integrate with notification service", async () => {
       // Arrange
-      const notificationSpy = vi.fn();
+      const _notificationSpy = vi.fn();
       // tradingService.onTradeExecuted(notificationSpy);
 
       // Act
