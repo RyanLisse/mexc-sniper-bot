@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/src/db";
 import { patternEmbeddings } from "@/src/db/schemas/patterns";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
-import type { IPatternStorage } from "../interfaces";
+import type { IPatternStorage, PatternMatch } from "../interfaces";
 
 describe("PatternStorage - TDD Implementation", () => {
   let patternStorage: IPatternStorage;
@@ -179,11 +179,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it("should find similar patterns with default options", async () => {
       // PatternStorage is fully implemented
 
-      const testPattern = {
-        symbolName: "TESTUSDT",
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+      const testPattern: PatternMatch = {
+        patternType: "ready_state",
+        symbol: "TESTUSDT",
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       };
 
       const similarPatterns = await patternStorage.findSimilarPatterns(testPattern);
@@ -196,11 +200,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it("should respect threshold parameter", async () => {
       // PatternStorage is fully implemented
 
-      const testPattern = {
-        symbolName: "THRESHOLDUSDT",
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+      const testPattern: PatternMatch = {
+        patternType: "ready_state",
+        symbol: "THRESHOLDUSDT",
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       };
 
       const highThresholdResults = await patternStorage.findSimilarPatterns(testPattern, {
@@ -218,11 +226,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it("should respect limit parameter", async () => {
       // PatternStorage is fully implemented
 
-      const testPattern = {
-        symbolName: "LIMITUSDT",
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+      const testPattern: PatternMatch = {
+        patternType: "ready_state",
+        symbol: "LIMITUSDT",
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       };
 
       const limitedResults = await patternStorage.findSimilarPatterns(testPattern, {
@@ -235,11 +247,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it("should filter by same type when sameTypeOnly is true", async () => {
       // PatternStorage is fully implemented
 
-      const testPattern = {
-        symbolName: "SAMETYPEUSDT",
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+      const testPattern: PatternMatch = {
+        patternType: "ready_state",
+        symbol: "SAMETYPEUSDT",
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       };
 
       const sameTypeResults = await patternStorage.findSimilarPatterns(testPattern, {
@@ -248,8 +264,8 @@ describe("PatternStorage - TDD Implementation", () => {
 
       // All results should be the same type
       sameTypeResults.forEach((pattern) => {
-        if (pattern.type) {
-          expect(pattern.type).toBe("ready_state");
+        if (pattern.patternType) {
+          expect(pattern.patternType).toBe("ready_state");
         }
       });
     });
@@ -257,11 +273,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it("should handle empty results gracefully", async () => {
       // PatternStorage is fully implemented
 
-      const uniquePattern = {
-        symbolName: "UNIQUEUSDT",
-        type: "very_rare_pattern",
-        data: { sts: 999, st: 999, tt: 999 },
+      const uniquePattern: PatternMatch = {
+        patternType: "ready_state", // Use valid pattern type from interface
+        symbol: "UNIQUEUSDT",
         confidence: 1,
+        indicators: { sts: 999, st: 999, tt: 999 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "avoid",
       };
 
       const results = await patternStorage.findSimilarPatterns(uniquePattern, {
@@ -300,11 +320,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it("should improve performance with caching", async () => {
       // PatternStorage is fully implemented
 
-      const testPattern = {
-        symbolName: "CACHEUSDT",
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+      const testPattern: PatternMatch = {
+        patternType: "ready_state",
+        symbol: "CACHEUSDT",
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       };
 
       // First call (should cache)
@@ -329,10 +353,14 @@ describe("PatternStorage - TDD Implementation", () => {
 
       // Fill cache with many patterns
       const patterns = Array.from({ length: 100 }, (_, i) => ({
-        symbolName: `CACHE${i}USDT`,
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+        patternType: "ready_state" as const,
+        symbol: `CACHE${i}USDT`,
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low" as const,
+        recommendation: "immediate_action" as const,
       }));
 
       for (const pattern of patterns) {
@@ -390,11 +418,15 @@ describe("PatternStorage - TDD Implementation", () => {
     it.skip("should maintain performance under load", async () => {
       // PatternStorage is fully implemented
 
-      const testPattern = {
-        symbolName: "LOADTESTUSDT",
-        type: "ready_state",
-        data: { sts: 2, st: 2, tt: 4 },
+      const testPattern: PatternMatch = {
+        patternType: "ready_state",
+        symbol: "LOADTESTUSDT",
         confidence: 85,
+        indicators: { sts: 2, st: 2, tt: 4 },
+        detectedAt: new Date(),
+        advanceNoticeHours: 0,
+        riskLevel: "low",
+        recommendation: "immediate_action",
       };
 
       const startTime = Date.now();
