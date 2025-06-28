@@ -237,7 +237,7 @@ describe("StartSnipingUseCase", () => {
       mockTradingRepository.findActiveTradesByUserId.mockResolvedValue([]);
       mockTradingService.getCurrentPrice.mockResolvedValue(50000);
 
-      let savedTrade: Trade;
+      let savedTrade!: Trade;
       mockTradingRepository.saveTrade.mockImplementation(async (trade) => {
         savedTrade = trade;
         return trade;

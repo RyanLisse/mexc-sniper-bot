@@ -321,8 +321,9 @@ describe("ExecuteTradeUseCase", () => {
 
       const orders = updatedTrade?.orders;
       expect(orders).toHaveLength(1);
+      expect(orders).toBeDefined();
 
-      const order = orders[0];
+      const order = orders![0];
       expect(order.symbol).toBe("BTCUSDT");
       expect(order.side).toBe(OrderSide.BUY);
       expect(order.type).toBe(OrderType.MARKET);
@@ -363,10 +364,11 @@ describe("ExecuteTradeUseCase", () => {
       await useCase.execute(validInput);
 
       // Assert
-      const order = updatedTrade?.orders[0];
-      expect(order.isPartiallyFilled()).toBe(true);
-      expect(order.executedQuantity).toBe(0.001);
-      expect(order.executedPrice).toBe(50000);
+      const order = updatedTrade?.orders?.[0];
+      expect(order).toBeDefined();
+      expect(order!.isPartiallyFilled()).toBe(true);
+      expect(order!.executedQuantity).toBe(0.001);
+      expect(order!.executedPrice).toBe(50000);
     });
 
     it("should handle trading service exceptions", async () => {

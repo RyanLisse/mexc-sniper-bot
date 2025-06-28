@@ -272,6 +272,11 @@ class PerformanceOptimizer {
     this.preloadedComponents.clear();
   }
 
+  // Get current configuration
+  getConfig(): PerformanceOptimizationConfig {
+    return this.config;
+  }
+
   private recordLoadingMetric(metric: ComponentLoadingMetrics): void {
     this.loadingMetrics.push(metric);
 
@@ -293,7 +298,7 @@ export function usePerformanceMonitoring(componentName: string) {
     markRenderComplete: () => {
       const renderTime = performance.now() - startTime;
 
-      if (performanceOptimizer.config.enableComponentMetrics) {
+      if (performanceOptimizer.getConfig().enableComponentMetrics) {
         console.debug(`${componentName} render time: ${renderTime.toFixed(2)}ms`);
       }
 
@@ -319,4 +324,5 @@ export const PerformanceUtils = {
   generateOptimizedImportStrategy:
     performanceOptimizer.generateOptimizedImportStrategy.bind(performanceOptimizer),
   clearMetrics: performanceOptimizer.clearMetrics.bind(performanceOptimizer),
+  getConfig: performanceOptimizer.getConfig.bind(performanceOptimizer),
 };

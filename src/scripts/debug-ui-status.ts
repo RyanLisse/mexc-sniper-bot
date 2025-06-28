@@ -28,7 +28,7 @@ async function main() {
     }
 
     // Show each target with its exact details
-    allTargetsRaw.forEach((target, index) => {
+    allTargetsRaw.forEach((target: any, index: number) => {
       console.log(`${index + 1}. Target Details:`);
       console.log(`   🏷️  ID: ${target.id}`);
       console.log(`   👤 User ID: "${target.userId}"`);
@@ -43,7 +43,7 @@ async function main() {
     });
 
     // Check specific user ID queries
-    const userIds = [...new Set(allTargetsRaw.map((t) => t.userId))];
+    const userIds = [...new Set(allTargetsRaw.map((t: any) => t.userId))];
     console.log("👥 UNIQUE USER IDS FOUND:");
     console.log("=========================");
     userIds.forEach((userId, index) => {
@@ -59,10 +59,10 @@ async function main() {
       const userTargets = await db
         .select()
         .from(snipeTargets)
-        .where(eq(snipeTargets.userId, userId));
+        .where(eq(snipeTargets.userId, String(userId)));
 
       console.log(`User ID "${userId}": ${userTargets.length} targets`);
-      userTargets.forEach((target, index) => {
+      userTargets.forEach((target: any, index: number) => {
         console.log(`  ${index + 1}. ${target.symbolName} (${target.status})`);
       });
     }
@@ -88,9 +88,9 @@ async function main() {
     // Status breakdown
     console.log("\n📋 STATUS BREAKDOWN:");
     console.log("====================");
-    const statuses = [...new Set(allTargetsRaw.map((t) => t.status))];
+    const statuses = [...new Set(allTargetsRaw.map((t: any) => t.status))];
     statuses.forEach((status) => {
-      const count = allTargetsRaw.filter((t) => t.status === status).length;
+      const count = allTargetsRaw.filter((t: any) => t.status === status).length;
       console.log(`${status}: ${count} targets`);
     });
 
@@ -98,15 +98,15 @@ async function main() {
     console.log("\n🚦 EXECUTION READINESS:");
     console.log("========================");
 
-    const readyTargets = allTargetsRaw.filter((t) => t.status === "ready");
-    const pendingTargets = allTargetsRaw.filter((t) => t.status === "pending");
+    const readyTargets = allTargetsRaw.filter((t: any) => t.status === "ready");
+    const pendingTargets = allTargetsRaw.filter((t: any) => t.status === "pending");
 
     console.log(`✅ Ready for execution: ${readyTargets.length}`);
     console.log(`⏳ Pending (needs trigger): ${pendingTargets.length}`);
 
     if (readyTargets.length > 0) {
       console.log("\n✅ READY TARGETS (should be buyable):");
-      readyTargets.forEach((target, index) => {
+      readyTargets.forEach((target: any, index: number) => {
         console.log(`${index + 1}. ${target.symbolName}`);
         console.log(`   👤 User: "${target.userId}"`);
         console.log(`   💰 Amount: $${target.positionSizeUsdt}`);
@@ -123,6 +123,5 @@ async function main() {
   }
 }
 
-if (import.meta.main) {
-  main();
-}
+// Run the main function
+main();

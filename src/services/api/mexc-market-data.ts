@@ -456,7 +456,7 @@ export class MexcMarketDataClient extends MexcClientCore {
         data: { status: success ? "connected" : "failed" },
         error: result.error,
         timestamp: new Date().toISOString(),
-        requestId: result.requestId,
+        requestId: (result as any).requestId || `test-${Date.now()}`,
       };
     } catch (error) {
       console.error("[MexcMarketData] Connectivity test failed:", error);

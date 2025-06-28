@@ -51,7 +51,7 @@ async function main() {
       console.log("❌ No active snipe targets found for today and tomorrow");
     } else {
       console.log(`✅ Found ${activeTargets.length} active snipe targets:`);
-      activeTargets.forEach((target, index) => {
+      activeTargets.forEach((target: any, index: number) => {
         console.log(`\n${index + 1}. ${target.symbolName}`);
         console.log(`   📊 Confidence: ${target.confidenceScore}%`);
         console.log(`   💰 Position Size: $${target.positionSizeUsdt} USDT`);
@@ -76,7 +76,7 @@ async function main() {
       console.log("❌ No pending snipe targets found");
     } else {
       console.log(`✅ Found ${allPendingTargets.length} pending snipe targets:`);
-      allPendingTargets.slice(0, 10).forEach((target, index) => {
+      allPendingTargets.slice(0, 10).forEach((target: any, index: number) => {
         console.log(`\n${index + 1}. ${target.symbolName}`);
         console.log(`   📊 Confidence: ${target.confidenceScore}%`);
         console.log(`   💰 Position Size: $${target.positionSizeUsdt} USDT`);
@@ -100,15 +100,15 @@ async function main() {
       .orderBy(balanceSnapshots.timestamp)
       .limit(20);
 
+    let totalUsdValue = 0;
+
     if (latestBalances.length === 0) {
       console.log("❌ No balance snapshots found");
     } else {
       console.log(`✅ Found ${latestBalances.length} balance entries:`);
-
-      let totalUsdValue = 0;
       const assetSummary: Record<string, { amount: number; usdValue: number }> = {};
 
-      latestBalances.forEach((balance) => {
+      latestBalances.forEach((balance: any) => {
         const asset = balance.asset;
         if (!assetSummary[asset]) {
           assetSummary[asset] = { amount: 0, usdValue: 0 };
@@ -173,6 +173,5 @@ async function main() {
   }
 }
 
-if (import.meta.main) {
-  main();
-}
+// Run the main function
+main();

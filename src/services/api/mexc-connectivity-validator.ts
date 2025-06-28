@@ -306,7 +306,7 @@ export class MexcConnectivityValidator {
 
         // Check if we can potentially place orders
         result.trading.ordersAllowed =
-          result.authentication.canTrade && result.trading.hasUsdtPairs;
+          (result.authentication.canTrade || false) && result.trading.hasUsdtPairs;
 
         console.info("[MexcConnectivityValidator] ✅ Trading capabilities checked:", {
           totalSymbols: symbols.length,
@@ -388,7 +388,8 @@ export class MexcConnectivityValidator {
         skipCache: true, // Skip cache for quick checks
       });
 
-      const connected = await mexcService.testConnectivity();
+      const connectivityResponse = await mexcService.testConnectivity();
+      const connected = typeof connectivityResponse === 'boolean' ? connectivityResponse : connectivityResponse?.success || false;
       if (!connected) {
         return { connected: false, authenticated: false, error: "API not reachable" };
       }

@@ -110,7 +110,8 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
     performance: { cacheHitRate: number; lastRequestTime: number };
   }> {
     try {
-      const connectivity = await this.testConnectivity();
+      const connectivityResponse = await this.testConnectivity();
+      const connectivity = typeof connectivityResponse === 'boolean' ? connectivityResponse : connectivityResponse?.success || false;
 
       let authentication = false;
       let canTrade = false;

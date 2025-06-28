@@ -242,32 +242,6 @@ export const usePatternSniper = () => {
     processReadyToken,
   ]);
 
-  // Auto-execution monitoring
-  useEffect(() => {
-    if (!isMonitoring || readyTargets.size === 0) return;
-
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newExecuted = new Set(executedTargets);
-
-      for (const [symbol, target] of Array.from(readyTargets)) {
-        if (executedTargets.has(symbol)) continue;
-
-        const timeUntil = target.launchTime.getTime() - now.getTime();
-
-        // Execute within 5 seconds of launch time
-        if (timeUntil <= 0 && timeUntil > -5000) {
-          executeSnipe(target);
-          newExecuted.add(symbol);
-        }
-      }
-
-      setExecutedTargets(newExecuted);
-    }, 1000); // Check every second
-
-    return () => clearInterval(interval);
-  }, [isMonitoring, readyTargets, executedTargets, executeSnipe]);
-
   // Execute snipe order with auto exit manager integration
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex snipe execution logic with multiple error handling and state management
   const executeSnipe = useCallback(async (target: SnipeTarget, userId?: string) => {
@@ -412,6 +386,32 @@ export const usePatternSniper = () => {
       alert(`Trading execution error: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   }, []);
+
+  // Auto-execution monitoring
+  useEffect(() => {
+    if (!isMonitoring || readyTargets.size === 0) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newExecuted = new Set(executedTargets);
+
+      for (const [symbol, target] of Array.from(readyTargets)) {
+        if (executedTargets.has(symbol)) continue;
+
+        const timeUntil = target.launchTime.getTime() - now.getTime();
+
+        // Execute within 5 seconds of launch time
+        if (timeUntil <= 0 && timeUntil > -5000) {
+          executeSnipe(target);
+          newExecuted.add(symbol);
+        }
+      }
+
+      setExecutedTargets(newExecuted);
+    }, 1000); // Check every second
+
+    return () => clearInterval(interval);
+  }, [isMonitoring, readyTargets, executedTargets, executeSnipe]);
 
   // Control functions
   const startMonitoring = useCallback(() => {

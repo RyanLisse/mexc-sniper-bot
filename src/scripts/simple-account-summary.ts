@@ -65,9 +65,9 @@ async function main() {
     if (allTargets.length === 0) {
       console.log("❌ No snipe targets found");
     } else {
-      const pendingTargets = allTargets.filter((t) => t.status === "pending");
-      const readyTargets = allTargets.filter((t) => t.status === "ready");
-      const completedTargets = allTargets.filter((t) => t.status === "completed");
+      const pendingTargets = allTargets.filter((t: any) => t.status === "pending");
+      const readyTargets = allTargets.filter((t: any) => t.status === "ready");
+      const completedTargets = allTargets.filter((t: any) => t.status === "completed");
 
       console.log(`📋 Total Targets: ${allTargets.length}`);
       console.log(`⏳ Pending: ${pendingTargets.length}`);
@@ -76,7 +76,7 @@ async function main() {
 
       if (pendingTargets.length > 0) {
         console.log("⏳ PENDING TARGETS:");
-        pendingTargets.slice(0, 5).forEach((target, index) => {
+        pendingTargets.slice(0, 5).forEach((target: any, index: number) => {
           console.log(`${index + 1}. ${target.symbolName}`);
           console.log(`   📊 Confidence: ${target.confidenceScore}%`);
           console.log(`   💰 Position Size: $${target.positionSizeUsdt} USDT`);
@@ -88,7 +88,7 @@ async function main() {
 
       if (readyTargets.length > 0) {
         console.log("✅ READY TARGETS:");
-        readyTargets.forEach((target, index) => {
+        readyTargets.forEach((target: any, index: number) => {
           console.log(`${index + 1}. ${target.symbolName}`);
           console.log(`   📊 Confidence: ${target.confidenceScore}%`);
           console.log(`   💰 Position Size: $${target.positionSizeUsdt} USDT`);
@@ -102,8 +102,8 @@ async function main() {
 
       // Calculate total allocation
       const totalAllocation = allTargets
-        .filter((t) => t.status === "pending" || t.status === "ready")
-        .reduce((sum, target) => sum + target.positionSizeUsdt, 0);
+        .filter((t: any) => t.status === "pending" || t.status === "ready")
+        .reduce((sum: any, target: any) => sum + target.positionSizeUsdt, 0);
 
       console.log("💹 ALLOCATION SUMMARY:");
       console.log("======================");
@@ -128,6 +128,5 @@ async function main() {
   }
 }
 
-if (import.meta.main) {
-  main();
-}
+// Run the main function
+main();
