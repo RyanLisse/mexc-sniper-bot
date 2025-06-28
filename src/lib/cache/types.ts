@@ -57,7 +57,15 @@ export type CacheDataType =
   | "user_preferences"
   | "workflow_result"
   | "performance_metrics"
-  | "health_status";
+  | "health_status"
+  | "market_data"
+  | "user_data"
+  | "config"
+  | "health_check"
+  | "pattern_analysis"
+  | "trading_signal"
+  | "session"
+  | "generic";
 
 export type CacheInvalidationStrategy = "time_based" | "event_based" | "manual" | "smart";
 

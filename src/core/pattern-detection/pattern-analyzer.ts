@@ -235,7 +235,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 advanceHours,
                 marketConditions: {
                   projectType: this.classifyProject(entry.projectName || entry.symbol),
-                  launchTiming: this.assessLaunchTiming(launchTimestamp),
+                  launchTiming: JSON.stringify(this.assessLaunchTiming(launchTimestamp)),
                 },
               },
               detectedAt: new Date(),

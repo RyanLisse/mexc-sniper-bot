@@ -132,7 +132,7 @@ export class BundleOptimizationService {
     };
 
     tradingComponents.forEach((componentName) => {
-      const metadata = this.componentRegistry.get(componentName);
+      let metadata = this.componentRegistry.get(componentName);
       if (!metadata) {
         // Estimate metadata for trading components
         const estimatedMetadata: ComponentMetadata = {

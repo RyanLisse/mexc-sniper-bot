@@ -51,6 +51,12 @@ export const PatternContextSchema = z.object({
   timestamp: z.date().optional(),
   errorCode: z.string().optional(),
   additionalData: z.record(z.unknown()).optional(),
+  // Additional fields for enhanced logging
+  error: z.string().optional(),
+  count: z.number().optional(),
+  symbolsAnalyzed: z.number().optional(),
+  validation: z.string().optional(),
+  activityTypes: z.array(z.string()).optional(),
 });
 
 export type PatternContext = z.infer<typeof PatternContextSchema>;

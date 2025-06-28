@@ -46,7 +46,7 @@ export class PerformanceCacheOptimizer {
   private config: CacheOptimizationConfig;
   private usagePatterns = new Map<string, CacheUsagePattern>();
   private prefetchQueue = new Set<string>();
-  private compressionCache = new LRUCache<string, string>(1000);
+  private compressionCache = new LRUCache<string>(1000);
   private prefetchWorkers = new Set<Promise<void>>();
 
   constructor(
@@ -132,10 +132,10 @@ export class PerformanceCacheOptimizer {
       if (shouldCompress) {
         // Store in compression cache
         const compressed = await this.compress(serialized);
-        this.compressionCache.set(key, compressed);
+        this.compressionCache.set(key, compressed, ttl || 300000); // 5 minutes default
 
         // Store metadata in main cache
-        return this.cacheManager.set(
+        await this.cacheManager.set(
           key + ":meta",
           {
             compressed: true,
@@ -154,7 +154,7 @@ export class PerformanceCacheOptimizer {
         this.updatePriority(key, options.priority);
       }
 
-      return success;
+      return Boolean(success);
     } catch (error) {
       console.warn("[PerformanceCacheOptimizer] Set operation failed:", error);
       return false;
@@ -282,6 +282,13 @@ export class PerformanceCacheOptimizer {
       trading_signal: 3000, // 3 seconds
       session: 1800000, // 30 minutes
       generic: 60000, // 1 minute
+      // Additional required types
+      pattern_detection: 120000, // 2 minutes
+      query_result: 300000, // 5 minutes
+      session_data: 1800000, // 30 minutes
+      user_preferences: 3600000, // 1 hour
+      performance_metrics: 60000, // 1 minute
+      health_status: 10000, // 10 seconds
     };
 
     return ttlMap[type || "generic"];
@@ -514,4 +521,4 @@ export function getPerformanceCacheOptimizer(
   return globalOptimizer!;
 }
 
-export { PerformanceCacheOptimizer };
+// PerformanceCacheOptimizer is already exported above
