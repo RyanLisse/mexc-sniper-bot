@@ -281,8 +281,8 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
     it("should handle emergency response failures gracefully", async () => {
       // Mock service failure
-      mockCoreTrading.stopExecution.mockRejectedValue(new Error("Service unavailable"));
-      mockCoreTrading.emergencyCloseAll.mockRejectedValue(new Error("Service unavailable"));
+      (mockCoreTrading.stopExecution as any)?.mockRejectedValue(new Error("Service unavailable"));
+      (mockCoreTrading.emergencyCloseAll as any)?.mockRejectedValue(new Error("Service unavailable"));
 
       const actions = await safetyService.triggerEmergencyResponse("Test failure handling");
 
@@ -302,7 +302,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
 
     it("should return false for high risk scenarios", async () => {
       // Mock high-risk performance metrics
-      mockCoreTrading.getPerformanceMetrics.mockResolvedValue({
+      (mockCoreTrading.getPerformanceMetrics as any)?.mockResolvedValue({
         totalTrades: 100,
         successfulTrades: 30,
         failedTrades: 70,
@@ -434,11 +434,11 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   describe("Error Handling and Resilience", () => {
     it("should handle service failures gracefully", async () => {
       // Mock service failures
-      mockCoreTrading.getPerformanceMetrics.mockRejectedValue(new Error("Service unavailable"));
-      mockPatternMonitoring.getMonitoringReport.mockRejectedValue(
+      (mockCoreTrading.getPerformanceMetrics as any)?.mockRejectedValue(new Error("Service unavailable"));
+      (mockPatternMonitoring.getMonitoringReport as any)?.mockRejectedValue(
         new Error("Pattern service down")
       );
-      mockEmergencySystem.performSystemHealthCheck.mockRejectedValue(
+      (mockEmergencySystem.performSystemHealthCheck as any)?.mockRejectedValue(
         new Error("Emergency system failure")
       );
 

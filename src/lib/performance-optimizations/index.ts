@@ -60,6 +60,15 @@ export {
   usePerformanceMonitoring,
 } from "../performance-optimization";
 
+// Import instances for internal use
+import { bundleOptimizer } from "../bundle-optimization-service";
+import { globalCacheManager } from "../cache";
+import { getPerformanceCacheOptimizer } from "../cache/performance-cache-optimizer";
+import { enhancedMemoryManager } from "../enhanced-memory-manager";
+import { globalLazyLoader } from "../lazy-loading-optimizer";
+import { memoryManager } from "../memory-leak-optimizer";
+import { performanceOptimizer } from "../performance-optimization";
+
 // ============================================================================
 // Integrated Performance Optimizer
 // ============================================================================

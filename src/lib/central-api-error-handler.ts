@@ -618,8 +618,8 @@ export class CircuitBreaker {
     } catch (error) {
       this.onFailure();
 
-      if (fallback && this.state === "OPEN") {
-        this.logger.warn("Circuit breaker opened, using fallback", {
+      if (fallback) {
+        this.logger.warn("Circuit breaker failed, using fallback", {
           component: "circuit-breaker",
           operation: "execute",
           metadata: { failures: this.failures, state: this.state },

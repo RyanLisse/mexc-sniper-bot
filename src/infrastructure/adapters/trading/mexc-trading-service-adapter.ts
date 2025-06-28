@@ -7,16 +7,18 @@ import type { TradingService } from "@/src/application/interfaces/trading-reposi
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
+import type { LoggerContext } from "@/src/types/logger-types";
+import type { TradingOrderData } from "@/src/services/api/unified-mexc-trading";
 
 export class MexcTradingServiceAdapter implements TradingService {
   constructor(
     private readonly mexcService: UnifiedMexcServiceV2,
     private readonly safetyCoordinator?: ComprehensiveSafetyCoordinator,
     private readonly logger: {
-      info: (message: string, context?: any) => void;
-      warn: (message: string, context?: any) => void;
-      error: (message: string, context?: any) => void;
-      debug: (message: string, context?: any) => void;
+      info: (message: string, context?: LoggerContext) => void;
+      warn: (message: string, context?: LoggerContext) => void;
+      error: (message: string, context?: LoggerContext) => void;
+      debug: (message: string, context?: LoggerContext) => void;
     } = console
   ) {}
 
@@ -106,8 +108,10 @@ export class MexcTradingServiceAdapter implements TradingService {
       const safeError = toSafeError(error);
 
       this.logger.error("Trade execution failed", {
-        params,
-        error: safeError,
+        symbol: params.symbol,
+        side: params.side,
+        type: params.type,
+        error: safeError.message,
         executionTime: Date.now() - startTime,
       });
 
@@ -133,7 +137,7 @@ export class MexcTradingServiceAdapter implements TradingService {
       const safeError = toSafeError(error);
       this.logger.error("Failed to get current price", {
         symbol,
-        error: safeError,
+        error: safeError.message,
       });
       throw safeError;
     }
@@ -149,69 +153,107 @@ export class MexcTradingServiceAdapter implements TradingService {
       }
 
       // Check if symbol is in trading status
-      return symbolInfo.data.status === "TRADING";
+      return (symbolInfo.data as any)?.status === "TRADING";
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.warn("Failed to check trading status", {
         symbol,
-        error: safeError,
+        error: safeError.message,
       });
       return false;
     }
   }
 
-  private prepareMexcParams(params: any): any {
-    const mexcParams: any = {
+  private prepareMexcParams(params: {
+    symbol: string;
+    side: "BUY" | "SELL";
+    type: "MARKET" | "LIMIT" | "STOP_LIMIT";
+    quantity?: number;
+    quoteOrderQty?: number;
+    price?: number;
+    stopPrice?: number;
+    timeInForce?: "GTC" | "IOC" | "FOK";
+    isAutoSnipe?: boolean;
+  }): TradingOrderData {
+    // Determine the quantity to use
+    const quantity = params.quantity 
+      ? params.quantity.toString() 
+      : params.quoteOrderQty 
+        ? params.quoteOrderQty.toString() 
+        : "0";
+
+    const mexcParams: TradingOrderData = {
       symbol: params.symbol,
       side: params.side,
-      type: params.type,
+      type: params.type as "LIMIT" | "MARKET", // Map to supported types
+      quantity,
       timeInForce: params.timeInForce || "IOC",
     };
 
-    // Add quantity parameters
-    if (params.quantity) {
-      mexcParams.quantity = params.quantity;
-    }
-    if (params.quoteOrderQty) {
-      mexcParams.quoteOrderQty = params.quoteOrderQty;
-    }
-
-    // Add price parameters
-    if (params.price) {
-      mexcParams.price = params.price;
-    }
-    if (params.stopPrice) {
-      mexcParams.stopPrice = params.stopPrice;
-    }
-
-    // Add client order ID for tracking
-    if (params.isAutoSnipe) {
-      mexcParams.newClientOrderId = `auto-snipe-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Add price for limit orders
+    if (params.price && (params.type === "LIMIT" || params.type === "STOP_LIMIT")) {
+      mexcParams.price = params.price.toString();
     }
 
     return mexcParams;
   }
 
-  private transformMexcResponse(mexcData: any, startTime: number): any {
+  private transformMexcResponse(mexcData: Record<string, unknown>, startTime: number): {
+    success: boolean;
+    data: {
+      orderId: string;
+      clientOrderId?: string;
+      symbol: string;
+      side: string;
+      type: string;
+      quantity: string;
+      price: string;
+      status: string;
+      executedQty: string;
+      timestamp: string;
+    };
+    executionTime: number;
+  } {
     return {
       success: true,
       data: {
-        orderId: mexcData.orderId?.toString() || mexcData.id?.toString(),
-        clientOrderId: mexcData.clientOrderId,
-        symbol: mexcData.symbol,
-        side: mexcData.side,
-        type: mexcData.type,
-        quantity: mexcData.origQty || mexcData.quantity?.toString(),
-        price: mexcData.price?.toString() || "0",
-        status: mexcData.status,
-        executedQty: mexcData.executedQty?.toString() || "0",
-        timestamp: new Date(mexcData.transactTime || Date.now()).toISOString(),
+        orderId: String(mexcData.orderId || mexcData.id || ""),
+        clientOrderId: mexcData.clientOrderId ? String(mexcData.clientOrderId) : undefined,
+        symbol: String(mexcData.symbol || ""),
+        side: String(mexcData.side || ""),
+        type: String(mexcData.type || ""),
+        quantity: String(mexcData.origQty || mexcData.quantity || "0"),
+        price: String(mexcData.price || "0"),
+        status: String(mexcData.status || ""),
+        executedQty: String(mexcData.executedQty || "0"),
+        timestamp: new Date(Number(mexcData.transactTime) || Date.now()).toISOString(),
       },
       executionTime: Date.now() - startTime,
     };
   }
 
-  private async executePaperTrade(params: any, startTime: number): Promise<any> {
+  private async executePaperTrade(params: {
+    symbol: string;
+    side: "BUY" | "SELL";
+    type: "MARKET" | "LIMIT" | "STOP_LIMIT";
+    quantity?: number;
+    quoteOrderQty?: number;
+  }, startTime: number): Promise<{
+    success: boolean;
+    data: {
+      orderId: string;
+      clientOrderId: string;
+      symbol: string;
+      side: string;
+      type: string;
+      quantity: string;
+      price: string;
+      status: string;
+      executedQty: string;
+      timestamp: string;
+    };
+    executionTime: number;
+  }> {
     // Simulate trade execution for paper trading
     const simulatedPrice = await this.getCurrentPrice(params.symbol);
     const quantity = params.quantity || params.quoteOrderQty! / simulatedPrice;
@@ -259,7 +301,7 @@ export class MexcTradingServiceAdapter implements TradingService {
         return null;
       }
 
-      const filters = symbolInfo.data.filters || [];
+      const filters = (symbolInfo.data as any)?.filters || [];
       const lotSizeFilter = filters.find((f: any) => f.filterType === "LOT_SIZE");
       const notionalFilter = filters.find((f: any) => f.filterType === "MIN_NOTIONAL");
 
@@ -273,7 +315,7 @@ export class MexcTradingServiceAdapter implements TradingService {
       const safeError = toSafeError(error);
       this.logger.warn("Failed to get trading limits", {
         symbol,
-        error: safeError,
+        error: safeError.message,
       });
       return null;
     }

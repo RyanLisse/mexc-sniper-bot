@@ -4,7 +4,7 @@
  * Helper functions for cache operations and management
  */
 
-import crypto from "node:crypto";
+import * as crypto from "node:crypto";
 import { createLogger } from "../unified-logger";
 import type { CacheDataType, CacheEntry } from "./types";
 
@@ -90,7 +90,7 @@ export function cleanupLevel(cache: Map<string, CacheEntry>): number {
   const now = Date.now();
   let cleaned = 0;
 
-  for (const [key, entry] of cache.entries()) {
+  for (const [key, entry] of Array.from(cache.entries())) {
     if (now > entry.expiresAt) {
       cache.delete(key);
       cleaned++;

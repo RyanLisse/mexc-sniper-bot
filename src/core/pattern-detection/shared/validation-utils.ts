@@ -7,7 +7,7 @@
  * OPTIMIZATION: Replaces duplicate validation logic across multiple modules
  */
 
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "../../../services/api/mexc-unified-exports";
 import type { PatternAnalysisRequest, PatternMatch } from "../interfaces";
 
 export interface ValidationResult {

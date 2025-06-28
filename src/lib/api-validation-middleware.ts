@@ -5,7 +5,7 @@ import {
   createErrorResponse,
   createValidationErrorResponse,
   HTTP_STATUS,
-} from "@/src/lib/api-response";
+} from "./api-response";
 
 /**
  * API Validation Middleware
@@ -166,7 +166,9 @@ export function createValidationErrorApiResponse(validationResult: ValidationRes
     throw new Error("Cannot create error response for successful validation");
   }
 
-  return apiResponse(createErrorResponse(validationResult.error), validationResult.statusCode);
+  // Type assertion is safe here since we've checked !success
+  const errorResult = validationResult as { success: false; error: string; statusCode: number };
+  return apiResponse(createErrorResponse(errorResult.error), errorResult.statusCode);
 }
 
 export function handleValidationError(field: string, message: string) {
@@ -186,7 +188,9 @@ interface ValidationConfig<TBody, TQuery, TParams> {
 export function withValidation<TBody = any, TQuery = any, TParams = any>(
   config: ValidationConfig<TBody, TQuery, TParams>
 ) {
-  return <THandler extends Function>(handler: THandler): THandler =>
+  return <THandler extends (request: NextRequest, context?: any) => any>(
+    handler: THandler
+  ): THandler =>
     (async (request: NextRequest, context?: any) => {
       const validationResults: Record<string, any> = {};
 

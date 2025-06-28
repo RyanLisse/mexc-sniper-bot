@@ -10,6 +10,7 @@ import { CacheManager } from "./cache-manager";
 // Core classes
 export { CacheManager } from "./cache-manager";
 export { LRUCache } from "./lru-cache";
+export { PerformanceCacheOptimizer, getPerformanceCacheOptimizer } from "./performance-cache-optimizer";
 
 // Types
 export type {

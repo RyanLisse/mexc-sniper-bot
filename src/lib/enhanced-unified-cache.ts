@@ -294,7 +294,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
     value: T,
     dataType: CacheDataType = "generic",
     customTTL?: number
-  ): Promise<void> {
+  ): Promise<boolean> {
     const startTime = Date.now();
     const ttl = customTTL || this.getTTLForDataType(dataType);
 
@@ -316,8 +316,10 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
       }
 
       this.updateEnhancedResponseTime("overall", Date.now() - startTime);
+      return true;
     } catch (error) {
       console.error("[EnhancedUnifiedCache] Set operation failed:", error);
+      return false;
     }
   }
 
@@ -579,7 +581,7 @@ export class EnhancedUnifiedCacheSystem extends UnifiedCacheSystem {
   }
 
   async performCacheWarming(): Promise<void> {
-    for (const [name, strategy] of this.warmupStrategies) {
+    for (const [name, strategy] of Array.from(this.warmupStrategies)) {
       try {
         await strategy();
       } catch (error) {

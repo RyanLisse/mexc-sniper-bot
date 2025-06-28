@@ -347,7 +347,7 @@ export function validateMexcResponse<T extends z.ZodSchema>(
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessage = error.errors
-        .map((err) => `${err.path.join(".")}: ${err.message}`)
+        .map((err) => `${(err.path as string[]).join(".")}: ${err.message}`)
         .join(", ");
       
       console.error(`[MEXC API Validation] ${apiEndpoint} validation failed:`, {
@@ -384,7 +384,7 @@ export function validateCriticalTradingData<T extends z.ZodSchema>(
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errorMessage = error.errors
-        .map((err) => `${err.path.join(".")}: ${err.message}`)
+        .map((err) => `${(err.path as string[]).join(".")}: ${err.message}`)
         .join(", ");
       
       console.error(`[CriticalValidation] CRITICAL FAILURE - ${dataType} validation failed:`, {

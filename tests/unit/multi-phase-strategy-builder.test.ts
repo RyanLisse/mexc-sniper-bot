@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { MultiPhaseStrategyBuilder, StrategyPatterns } from "@/src/services/trading/multi-phase-strategy-builder";
+import { MultiPhaseStrategyBuilder, StrategyPatterns } from "@/src/services/multi-phase-strategy-builder";
 
 describe('MultiPhaseStrategyBuilder', () => {
   let builder: MultiPhaseStrategyBuilder;
@@ -122,7 +122,7 @@ describe('MultiPhaseStrategyBuilder', () => {
       expect(strategy.levels[3].percentage).toBe(20); // 5*4 = 20
 
       // Scalping should have quick exits
-      strategy.levels.forEach(level => {
+      strategy.levels.forEach((level: any) => {
         expect(level.percentage).toBeLessThanOrEqual(20);
       });
     });
@@ -133,7 +133,7 @@ describe('MultiPhaseStrategyBuilder', () => {
       expect(strategy.levels).toHaveLength(5);
 
       // DCA should have equal sell percentages
-      strategy.levels.forEach(level => {
+      strategy.levels.forEach((level: any) => {
         expect(level.sellPercentage).toBe(20); // 100/5 = 20
       });
 
@@ -413,7 +413,7 @@ describe('StrategyPatterns', () => {
 
       expect(strategy.levels).toHaveLength(4); // createScalpingStrategy(40)
       // Sideways should have many small targets for range trading
-      strategy.levels.forEach(level => {
+      strategy.levels.forEach((level: any) => {
         expect(level.percentage).toBeLessThanOrEqual(40);
       });
     });
@@ -440,7 +440,7 @@ describe('StrategyPatterns', () => {
         }
         
         // Should have valid sell percentages
-        const totalSell = strategy.levels.reduce((sum, level) => sum + level.sellPercentage, 0);
+        const totalSell = strategy.levels.reduce((sum: number, level: any) => sum + level.sellPercentage, 0);
         expect(totalSell).toBeLessThanOrEqual(100);
       });
     });

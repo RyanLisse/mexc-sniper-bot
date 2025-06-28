@@ -154,7 +154,7 @@ export class PerformanceCacheOptimizer {
         this.updatePriority(key, options.priority);
       }
 
-      return Boolean(success);
+      return success;
     } catch (error) {
       console.warn("[PerformanceCacheOptimizer] Set operation failed:", error);
       return false;
@@ -189,7 +189,7 @@ export class PerformanceCacheOptimizer {
     const currentTime = Date.now();
 
     // Find related keys based on patterns
-    for (const [key, pattern] of this.usagePatterns) {
+    for (const [key, pattern] of Array.from(this.usagePatterns)) {
       if (key === accessedKey) continue;
 
       // Same type correlation
@@ -320,12 +320,12 @@ export class PerformanceCacheOptimizer {
         const compressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
 
         let offset = 0;
-        for (const chunk of chunks) {
+        for (const chunk of Array.from(chunks)) {
           compressed.set(chunk, offset);
           offset += chunk.length;
         }
 
-        return btoa(String.fromCharCode(...compressed));
+        return btoa(String.fromCharCode(...Array.from(compressed)));
       } catch (error) {
         console.warn("[PerformanceCacheOptimizer] Compression failed:", error);
       }
@@ -359,7 +359,7 @@ export class PerformanceCacheOptimizer {
         const decompressed = new Uint8Array(chunks.reduce((acc, chunk) => acc + chunk.length, 0));
 
         let offset = 0;
-        for (const chunk of chunks) {
+        for (const chunk of Array.from(chunks)) {
           decompressed.set(chunk, offset);
           offset += chunk.length;
         }
@@ -447,7 +447,7 @@ export class PerformanceCacheOptimizer {
   private cleanupOldPatterns(): void {
     const cutoffTime = Date.now() - 3600000; // 1 hour
 
-    for (const [key, pattern] of this.usagePatterns) {
+    for (const [key, pattern] of Array.from(this.usagePatterns)) {
       if (pattern.lastAccessed < cutoffTime && pattern.accessCount < 5) {
         this.usagePatterns.delete(key);
       }
@@ -462,7 +462,7 @@ export class PerformanceCacheOptimizer {
       console.info("[PerformanceCacheOptimizer] High cache latency detected, optimizing...");
 
       // Preload critical patterns
-      for (const [key, pattern] of this.usagePatterns) {
+      for (const [key, pattern] of Array.from(this.usagePatterns)) {
         if (pattern.priority === "critical" && pattern.predictedNextAccess < Date.now() + 300000) {
           this.triggerIntelligentPrefetch(key);
         }

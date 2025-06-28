@@ -373,6 +373,11 @@ export const ActivityDataSchema = z.object({
   currencyId: z.string(),
   activityType: z.string(),
   symbol: z.string().optional(), // Add optional symbol field for test compatibility
+  timestamp: z.number().optional(),
+  amount: z.number().optional(),
+  price: z.number().optional(),
+  volume: z.number().optional(),
+  significance: z.number().optional(),
 });
 
 /**

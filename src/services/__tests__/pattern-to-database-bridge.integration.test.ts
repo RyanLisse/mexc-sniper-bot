@@ -1392,8 +1392,8 @@ describe("PatternToDatabaseBridge Integration Tests", () => {
           st: 2,
           tt: 4,
           marketConditions: {
-            volume: "high",
-            volatility: "normal",
+            volume: 1000000,
+            volatility: 0.05,
           },
         },
         activityInfo: {

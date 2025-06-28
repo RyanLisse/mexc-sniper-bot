@@ -131,11 +131,11 @@ export class CacheManager {
   /**
    * Set value in appropriate cache level based on data type
    */
-  async set<T = any>(key: string, value: T, options: CacheSetOptions<T> = {}): Promise<void> {
+  async set<T = any>(key: string, value: T, options: CacheSetOptions<T> = {}): Promise<boolean> {
     // Handle invalid values gracefully
     if (value === undefined || value === null) {
       logger.warn("Attempting to cache undefined or null value", { key });
-      return;
+      return false;
     }
 
     const { type = "api_response", level = "all" } = options;
@@ -153,7 +153,7 @@ export class CacheManager {
             ? serializationError.message
             : String(serializationError),
       });
-      return;
+      return false;
     }
 
     const metadata = {
@@ -188,12 +188,14 @@ export class CacheManager {
 
       this.globalMetrics.sets++;
       this.emit("set", key, value);
+      return true;
     } catch (error) {
       logger.error(
         "Set error:",
         { key, type },
         error instanceof Error ? error : new Error(String(error))
       );
+      return false;
     }
   }
 
@@ -300,7 +302,7 @@ export class CacheManager {
     const allEntries: Array<{ key: string; hits: number; lastAccessed: number }> = [];
 
     // L2 cache entries
-    for (const [key, entry] of this.l2Cache) {
+    for (const [key, entry] of Array.from(this.l2Cache)) {
       allEntries.push({
         key,
         hits: entry.accessCount,
@@ -309,7 +311,7 @@ export class CacheManager {
     }
 
     // L3 cache entries
-    for (const [key, entry] of this.l3Cache) {
+    for (const [key, entry] of Array.from(this.l3Cache)) {
       allEntries.push({
         key,
         hits: entry.accessCount,
@@ -347,7 +349,7 @@ export class CacheManager {
     }
 
     // Count from all cache levels
-    const allEntries = [...this.l2Cache.values(), ...this.l3Cache.values()];
+    const allEntries = [...Array.from(this.l2Cache.values()), ...Array.from(this.l3Cache.values())];
 
     for (const entry of allEntries) {
       const type = entry.metadata?.type || "api_response";
@@ -481,7 +483,7 @@ export class CacheManager {
   private emit(event: string, key: string, value: any): void {
     const listeners = this.eventListeners.get(event);
     if (listeners) {
-      for (const listener of listeners) {
+      for (const listener of Array.from(listeners)) {
         try {
           listener(key, value);
         } catch (error) {
@@ -520,12 +522,12 @@ export class CacheManager {
     l1Keys.forEach((key) => keys.add(key));
 
     // Get keys from L2 cache
-    for (const key of this.l2Cache.keys()) {
+    for (const key of Array.from(this.l2Cache.keys())) {
       keys.add(key);
     }
 
     // Get keys from L3 cache
-    for (const key of this.l3Cache.keys()) {
+    for (const key of Array.from(this.l3Cache.keys())) {
       keys.add(key);
     }
 
@@ -581,7 +583,7 @@ export class CacheManager {
 
     try {
       // Check L2 cache entries
-      for (const [key, entry] of this.l2Cache) {
+      for (const [key, entry] of Array.from(this.l2Cache)) {
         if (entry.metadata?.type === type) {
           await this.delete(key);
           invalidated++;
@@ -589,7 +591,7 @@ export class CacheManager {
       }
 
       // Check L3 cache entries
-      for (const [key, entry] of this.l3Cache) {
+      for (const [key, entry] of Array.from(this.l3Cache)) {
         if (entry.metadata?.type === type) {
           await this.delete(key);
           invalidated++;
@@ -616,7 +618,7 @@ export class CacheManager {
 
     try {
       // Check L2 cache entries
-      for (const [key, entry] of this.l2Cache) {
+      for (const [key, entry] of Array.from(this.l2Cache)) {
         if (entry.metadata?.dependencies?.includes(dependency)) {
           await this.delete(key);
           invalidated++;
@@ -624,7 +626,7 @@ export class CacheManager {
       }
 
       // Check L3 cache entries
-      for (const [key, entry] of this.l3Cache) {
+      for (const [key, entry] of Array.from(this.l3Cache)) {
         if (entry.metadata?.dependencies?.includes(dependency)) {
           await this.delete(key);
           invalidated++;

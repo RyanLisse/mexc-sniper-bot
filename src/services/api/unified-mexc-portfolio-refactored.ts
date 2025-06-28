@@ -118,8 +118,8 @@ class PortfolioCalculationUtils {
     priceData: Record<string, number>
   ): BalanceEntry[] {
     return rawBalances.map(balance => {
-      const free = parseFloat(balance.free || "0");
-      const locked = parseFloat(balance.locked || "0");
+      const free = parseFloat(String(balance.free || "0"));
+      const locked = parseFloat(String(balance.locked || "0"));
       const total = free + locked;
 
       let usdtValue = 0;

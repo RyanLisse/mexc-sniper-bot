@@ -138,7 +138,7 @@ export class PatternDetectionCore extends EventEmitter {
           throw new PatternDetectionError(
             `Invalid analysis request: ${validation.errors.join(", ")}`,
             "VALIDATION_ERROR",
-            { validation }
+            { validation: validation.errors.join(", ") }
           );
         }
 
@@ -228,7 +228,7 @@ export class PatternDetectionCore extends EventEmitter {
         console.info("Pattern detection event emitted", {
           eventType: "patterns_detected",
           patternsCount: filteredMatches.length,
-          patternTypes: [...new Set(filteredMatches.map((m) => m.patternType))],
+          patternTypes: Array.from(new Set(filteredMatches.map((m) => m.patternType))),
         });
       }
 
@@ -322,6 +322,8 @@ export class PatternDetectionCore extends EventEmitter {
         enhancedAnalysis: true,
         aiEnhancement: match.activityInfo
           ? {
+              enabled: true,
+              confidence: match.confidence,
               activities: match.activityInfo.activities,
               activityBoost: match.activityInfo.activityBoost,
               hasHighPriorityActivity: match.activityInfo.hasHighPriorityActivity,
@@ -443,7 +445,7 @@ export class PatternDetectionCore extends EventEmitter {
         this.logger.debug("Activity data fetched", {
           symbol,
           count: activityData.length,
-          activityTypes: [...new Set(activityData.map((a) => a.activityType))],
+          activityTypes: Array.from(new Set(activityData.map((a) => a.activityType))),
         });
       }
 

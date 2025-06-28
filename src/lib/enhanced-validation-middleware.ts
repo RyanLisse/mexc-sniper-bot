@@ -12,7 +12,15 @@ import {
   createErrorResponse,
   createValidationErrorResponse,
   HTTP_STATUS,
-} from "@/src/lib/api-response";
+} from "./api-response";
+
+// ============================================================================
+// Enhanced NextRequest Type with IP Property
+// ============================================================================
+
+interface ExtendedNextRequest extends NextRequest {
+  ip?: string;
+}
 
 // ============================================================================
 // Enhanced Validation Types
@@ -128,8 +136,8 @@ export class ValidationError extends Error {
     return this.zodError.errors.map((err) => ({
       field: err.path.join("."),
       expected: err.code,
-      received: err.received,
-      path: err.path,
+      received: (err as any).received,
+      path: err.path as string[],
       message: err.message,
     }));
   }
@@ -140,7 +148,7 @@ export class ValidationError extends Error {
 // ============================================================================
 
 export async function validateRequestBodyEnhanced<T extends z.ZodSchema>(
-  request: NextRequest,
+  request: ExtendedNextRequest,
   schema: T,
   context?: Partial<ValidationContext>
 ): Promise<EnhancedValidationResult<z.infer<T>>> {
@@ -188,8 +196,8 @@ export async function validateRequestBodyEnhanced<T extends z.ZodSchema>(
       const errorDetails = result.error.errors.map((err) => ({
         field: err.path.join("."),
         expected: err.code,
-        received: err.received?.toString() || "undefined",
-        path: err.path,
+        received: (err as any).received?.toString() || "undefined",
+        path: err.path as string[],
       }));
 
       return {
@@ -275,8 +283,8 @@ export function validateExternalApiResponse<T extends z.ZodSchema>(
         details: result.error.errors.map((err) => ({
           field: err.path.join("."),
           expected: err.code,
-          received: err.received?.toString() || "undefined",
-          path: err.path,
+          received: (err as any).received?.toString() || "undefined",
+          path: err.path as string[],
         })),
       };
     }
@@ -432,8 +440,10 @@ interface EnhancedValidationConfig<TBody, TQuery, TParams> {
 export function withEnhancedValidation<TBody = any, TQuery = any, TParams = any>(
   config: EnhancedValidationConfig<TBody, TQuery, TParams>
 ) {
-  return <THandler extends Function>(handler: THandler): THandler =>
-    (async (request: NextRequest, context?: any) => {
+  return <THandler extends (request: ExtendedNextRequest, context?: any) => any>(
+    handler: THandler
+  ): THandler =>
+    (async (request: ExtendedNextRequest, context?: any) => {
       if (config.skipValidation) {
         return handler(request, context);
       }
@@ -561,11 +571,11 @@ function extractFieldNames(obj: any, prefix: string = ""): string[] {
   return fields;
 }
 
-export function getValidatedData<T>(request: NextRequest, key: 'body' | 'query' | 'params'): T {
+export function getValidatedData<T>(request: ExtendedNextRequest, key: 'body' | 'query' | 'params'): T {
   return (request as any).validated?.[key];
 }
 
-export function getValidationContext(request: NextRequest): ValidationContext | undefined {
+export function getValidationContext(request: ExtendedNextRequest): ValidationContext | undefined {
   return (request as any).validationContext;
 }
 

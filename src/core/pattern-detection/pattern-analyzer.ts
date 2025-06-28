@@ -108,7 +108,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 activities: activityData,
                 activityBoost,
                 hasHighPriorityActivity: this.hasHighPriorityActivity(activityData),
-                activityTypes: [...new Set(activityData.map((a) => a.activityType))], // More efficient unique operation
+                activityTypes: Array.from(new Set(activityData.map((a) => a.activityType))), // More efficient unique operation
               };
             }
 
@@ -219,7 +219,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 activities: activityData,
                 activityBoost,
                 hasHighPriorityActivity: this.hasHighPriorityActivity(activityData),
-                activityTypes: [...new Set(activityData.map((a) => a.activityType))], // More efficient unique operation
+                activityTypes: Array.from(new Set(activityData.map((a) => a.activityType))), // More efficient unique operation
               };
             }
 
@@ -536,7 +536,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       this.logger.debug("Activity data fetched", {
         symbol,
         count: activityData.length,
-        activityTypes: [...new Set(activityData.map((a) => a.activityType))],
+        activityTypes: Array.from(new Set(activityData.map((a) => a.activityType))),
       });
 
       return activityData;

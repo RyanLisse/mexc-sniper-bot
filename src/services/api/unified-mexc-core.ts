@@ -186,7 +186,10 @@ export class UnifiedMexcCoreModule {
               cached: false,
             };
           } catch (error) {
-            this.logger.error(`Activity API error for ${normalizedCurrency}:`, error);
+            this.logger.error(`Activity API error for ${normalizedCurrency}:`, {
+              currency: normalizedCurrency,
+              error: error instanceof Error ? error.message : String(error),
+            });
 
             // Re-throw the error so it bubbles up and makes the whole response fail
             throw error;
@@ -207,7 +210,10 @@ export class UnifiedMexcCoreModule {
         };
       }
 
-      this.logger.error(`Activity data validation error:`, error);
+      this.logger.error(`Activity data validation error:`, {
+        error: error instanceof Error ? error.message : String(error),
+        operationType: "validation",
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown validation error",
@@ -402,7 +408,10 @@ export class UnifiedMexcCoreModule {
         };
       }
 
-      this.logger.error(`Bulk activity data error:`, error);
+      this.logger.error(`Bulk activity data error:`, {
+        error: error instanceof Error ? error.message : String(error),
+        operationType: "bulk-processing",
+      });
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown bulk processing error",
@@ -438,7 +447,10 @@ export class UnifiedMexcCoreModule {
 
       return hasRecent;
     } catch (error) {
-      this.logger.warn(`Failed to check recent activity for ${currency}:`, error);
+      this.logger.warn(`Failed to check recent activity for ${currency}:`, {
+        currency,
+        error: error instanceof Error ? error.message : String(error),
+      });
       return false;
     }
   }
@@ -558,7 +570,10 @@ export class UnifiedMexcCoreModule {
         .map((entry) => this.normalizeActivityEntry(entry))
         .filter((entry): entry is ActivityData => entry !== null);
     } catch (error) {
-      this.logger.warn("Failed to normalize activity data:", error);
+      this.logger.warn("Failed to normalize activity data:", {
+        error: error instanceof Error ? error.message : String(error),
+        operationType: "data-normalization",
+      });
       return [];
     }
   }
@@ -611,9 +626,9 @@ export class UnifiedMexcCoreModule {
       return activityData;
     } catch (error) {
       this.logger.warn("Failed to normalize activity entry:", {
-        entry,
+        operationType: "entry-normalization",
         error: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
+        hasEntry: !!entry,
       });
       return null;
     }

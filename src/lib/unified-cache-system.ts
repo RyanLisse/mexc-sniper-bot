@@ -19,8 +19,8 @@
  * - Redis compatibility for horizontal scaling
  */
 
-import crypto from "node:crypto";
-import type { AgentResponse } from "@/src/mexc-agents/base-agent";
+import * as crypto from "node:crypto";
+import type { AgentResponse } from "../mexc-agents/base-agent";
 
 // ============================================================================
 // Core Types and Interfaces
@@ -206,7 +206,7 @@ class MemoryCache implements CacheBackend {
     let oldestKey = "";
     let oldestTime = Number.POSITIVE_INFINITY;
 
-    for (const [key, time] of this.accessOrder.entries()) {
+    for (const [key, time] of Array.from(this.accessOrder.entries())) {
       if (time < oldestTime) {
         oldestTime = time;
         oldestKey = key;
@@ -220,7 +220,7 @@ class MemoryCache implements CacheBackend {
 
   getMemoryUsage(): number {
     let totalSize = 0;
-    for (const entry of this.cache.values()) {
+    for (const entry of Array.from(this.cache.values())) {
       totalSize += JSON.stringify(entry.value).length;
     }
     return totalSize;
@@ -454,7 +454,7 @@ export class UnifiedCacheSystem {
     value: T,
     dataType: CacheDataType = "generic",
     customTTL?: number
-  ): Promise<void> {
+  ): Promise<boolean> {
     try {
       const strategy = this.strategyManager.getStrategy(dataType);
       const ttl = customTTL || strategy.ttl;
@@ -487,9 +487,11 @@ export class UnifiedCacheSystem {
 
       this.metrics.sets++;
       this.updateMemoryUsage();
+      return true;
     } catch (error) {
       this.metrics.errors++;
       console.error("[UnifiedCache] Set error:", error);
+      return false;
     }
   }
 
@@ -794,7 +796,7 @@ export class UnifiedCacheSystem {
   async getKeys(pattern?: string): Promise<string[]> {
     const l1Keys = await this.l1Cache.keys();
     const l2Keys = await this.l2Cache.keys();
-    const allKeys = [...new Set([...l1Keys, ...l2Keys])];
+    const allKeys = [...Array.from(new Set([...l1Keys, ...l2Keys]))];
 
     if (pattern) {
       const regex = new RegExp(pattern);

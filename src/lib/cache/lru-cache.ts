@@ -59,7 +59,7 @@ export class LRUCache<T = any> {
     return entry.value;
   }
 
-  set(key: string, value: T, ttl: number, metadata?: CacheEntry<T>["metadata"]): void {
+  set(key: string, value: T, ttl: number, metadata?: CacheEntry<T>["metadata"]): boolean {
     const now = Date.now();
 
     // Remove oldest entry if at capacity
@@ -84,6 +84,7 @@ export class LRUCache<T = any> {
     this.cache.set(key, entry);
     this.metrics.sets++;
     this.updateTotalSize();
+    return true;
   }
 
   delete(key: string): boolean {
@@ -125,7 +126,7 @@ export class LRUCache<T = any> {
     const now = Date.now();
     let cleaned = 0;
 
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (now > entry.expiresAt) {
         this.cache.delete(key);
         cleaned++;

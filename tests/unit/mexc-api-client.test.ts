@@ -49,33 +49,24 @@ describe('MexcApiClient', () => {
     mockConfig = {
       apiKey: 'test_api_key',
       secretKey: 'test_secret_key',
+      passphrase: 'test_passphrase',
       baseUrl: 'https://api.mexc.com',
-      testnet: false,
       timeout: 10000,
       maxRetries: 3,
       retryDelay: 1000,
-      enableRateLimiting: true,
+      rateLimitDelay: 100,
       enableCaching: true,
+      cacheTTL: 30000,
+      apiResponseTTL: 1500,
       enableCircuitBreaker: true,
-      rateLimit: {
-        requestsPerSecond: 10,
-        requestsPerMinute: 600,
-        burstLimit: 20,
-      },
-      trading: {
-        enabledPairs: ['BTC/USDT', 'ETH/USDT'],
-        defaultOrderType: 'LIMIT',
-        defaultTimeInForce: 'GTC',
-        minOrderValue: 10,
-        maxOrderValue: 10000,
-        enableStopLoss: true,
-        enableTakeProfit: true,
-      },
-      credentials: {
-        encrypted: true,
-        keyDerivation: 'pbkdf2',
-        iterations: 100000,
-      },
+      enableRateLimiter: true,
+      maxFailures: 5,
+      resetTimeout: 60000,
+      enablePaperTrading: true,
+      circuitBreakerThreshold: 5,
+      circuitBreakerResetTime: 30000,
+      enableTestMode: true,
+      enableMetrics: false,
     };
 
     // Setup mock dependencies
@@ -99,26 +90,27 @@ describe('MexcApiClient', () => {
     // Setup mock service constructors with proper Vitest mocks
     mockAuthService = {
       hasCredentials: vi.fn(),
-      generateSignature: vi.fn(),
+      createSignature: vi.fn(),
       validateCredentials: vi.fn(),
     };
 
     mockRequestService = {
       executeHttpRequestWithContext: vi.fn(),
       createRequestContext: vi.fn(),
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-    };
+    } as any;
 
     mockRetryService = {
       shouldRetry: vi.fn(),
-      calculateDelay: vi.fn(),
       classifyError: vi.fn(),
-    };
+    } as any;
 
     mockTradingService = {
+      logger: {} as any,
+      apiClient: {} as any,
+      getBalances: vi.fn(),
+      getExchangeInfo: vi.fn(),
+      getTicker: vi.fn(),
+      getKlines: vi.fn(),
       placeOrder: vi.fn(),
       getOrderBook: vi.fn(),
       getOrderStatus: vi.fn(),
@@ -126,7 +118,7 @@ describe('MexcApiClient', () => {
       getOpenOrders: vi.fn(),
       getAccountInfo: vi.fn(),
       testCredentials: vi.fn(),
-    };
+    } as any;
 
     // Mock service constructors
     (MexcAuthService as any as Mock).mockImplementation(() => mockAuthService);
@@ -208,6 +200,10 @@ describe('MexcApiClient', () => {
         endpoint: '/test',
         method: 'GET',
         timestamp: Date.now(),
+        requestId: 'test-request-id',
+        priority: 'medium',
+        attempt: 1,
+        startTime: Date.now(),
       } as RequestContext);
 
       (mockRequestService.executeHttpRequestWithContext as any).mockResolvedValue({
@@ -348,7 +344,7 @@ describe('MexcApiClient', () => {
     });
 
     it('should delegate hasCredentials to auth service', () => {
-      mockAuthService.hasCredentials.mockReturnValue(true);
+      (mockAuthService.hasCredentials as any).mockReturnValue(true);
 
       const result = apiClient.hasCredentials();
 
@@ -357,7 +353,7 @@ describe('MexcApiClient', () => {
     });
 
     it('should handle missing credentials', () => {
-      mockAuthService.hasCredentials.mockReturnValue(false);
+      (mockAuthService.hasCredentials as any).mockReturnValue(false);
 
       const result = apiClient.hasCredentials();
 
@@ -386,7 +382,7 @@ describe('MexcApiClient', () => {
           price: '45000',
         };
         const expectedResult = { orderId: '12345', status: 'NEW' };
-        mockTradingService.placeOrder.mockResolvedValue(expectedResult);
+        (mockTradingService.placeOrder as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.placeOrder(orderParams);
 
@@ -398,7 +394,7 @@ describe('MexcApiClient', () => {
         const symbol = 'BTCUSDT';
         const orderId = '12345';
         const expectedResult = { orderId, status: 'FILLED', executedQty: '0.001' };
-        mockTradingService.getOrderStatus.mockResolvedValue(expectedResult);
+        (mockTradingService.getOrderStatus as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.getOrderStatus(symbol, orderId);
 
@@ -410,7 +406,7 @@ describe('MexcApiClient', () => {
         const symbol = 'BTCUSDT';
         const orderId = '12345';
         const expectedResult = { orderId, status: 'CANCELED' };
-        mockTradingService.cancelOrder.mockResolvedValue(expectedResult);
+        (mockTradingService.cancelOrder as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.cancelOrder(symbol, orderId);
 
@@ -421,7 +417,7 @@ describe('MexcApiClient', () => {
       it('should delegate getOpenOrders with symbol to trading service', async () => {
         const symbol = 'BTCUSDT';
         const expectedResult = [{ orderId: '12345', symbol, status: 'NEW' }];
-        mockTradingService.getOpenOrders.mockResolvedValue(expectedResult);
+        (mockTradingService.getOpenOrders as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.getOpenOrders(symbol);
 
@@ -434,7 +430,7 @@ describe('MexcApiClient', () => {
           { orderId: '12345', symbol: 'BTCUSDT', status: 'NEW' },
           { orderId: '67890', symbol: 'ETHUSDT', status: 'PARTIALLY_FILLED' },
         ];
-        mockTradingService.getOpenOrders.mockResolvedValue(expectedResult);
+        (mockTradingService.getOpenOrders as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.getOpenOrders();
 
@@ -452,7 +448,7 @@ describe('MexcApiClient', () => {
           bids: [['45000', '0.1'], ['44999', '0.2']],
           asks: [['45001', '0.15'], ['45002', '0.25']],
         };
-        mockTradingService.getOrderBook.mockResolvedValue(expectedResult);
+        (mockTradingService.getOrderBook as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.getOrderBook(symbol, limit);
 
@@ -462,7 +458,7 @@ describe('MexcApiClient', () => {
 
       it('should use default limit for getOrderBook', async () => {
         const symbol = 'ETHUSDT';
-        mockTradingService.getOrderBook.mockResolvedValue({});
+        (mockTradingService.getOrderBook as any).mockResolvedValue({});
 
         await apiClient.getOrderBook(symbol);
 
@@ -473,14 +469,18 @@ describe('MexcApiClient', () => {
     describe('Account Information', () => {
       it('should delegate getAccountInfo to trading service', async () => {
         const expectedResult: AccountInfo = {
+          accountType: 'SPOT',
+          canTrade: true,
+          canWithdraw: true,
+          canDeposit: true,
           balances: [
             { asset: 'BTC', free: '0.1', locked: '0.01' },
             { asset: 'USDT', free: '1000', locked: '100' },
           ],
-          totalWalletBalance: '50000',
-          availableBalance: '45000',
+          permissions: ['SPOT'],
+          updateTime: Date.now(),
         };
-        mockTradingService.getAccountInfo.mockResolvedValue(expectedResult);
+        (mockTradingService.getAccountInfo as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.getAccountInfo();
 
@@ -494,7 +494,7 @@ describe('MexcApiClient', () => {
           message: 'Credentials are valid',
           permissions: ['SPOT'],
         };
-        mockTradingService.testCredentials.mockResolvedValue(expectedResult);
+        (mockTradingService.testCredentials as any).mockResolvedValue(expectedResult);
 
         const result = await apiClient.testCredentials();
 
@@ -506,14 +506,14 @@ describe('MexcApiClient', () => {
     describe('Trading method error handling', () => {
       it('should propagate errors from trading service', async () => {
         const error = new Error('Insufficient balance');
-        mockTradingService.placeOrder.mockRejectedValue(error);
+        (mockTradingService.placeOrder as any).mockRejectedValue(error);
 
         await expect(apiClient.placeOrder({} as OrderParams)).rejects.toThrow('Insufficient balance');
       });
 
       it('should handle authentication errors', async () => {
         const authError = new Error('Invalid API key');
-        mockTradingService.testCredentials.mockRejectedValue(authError);
+        (mockTradingService.testCredentials as any).mockRejectedValue(authError);
 
         await expect(apiClient.testCredentials()).rejects.toThrow('Invalid API key');
       });
@@ -577,9 +577,9 @@ describe('MexcApiClient', () => {
       expect(config.timeout).toBe(mockConfig.timeout);
       expect(config.maxRetries).toBe(mockConfig.maxRetries);
       expect(config.retryDelay).toBe(mockConfig.retryDelay);
-      expect(config.rateLimit).toEqual(mockConfig.rateLimit);
-      expect(config.trading).toEqual(mockConfig.trading);
-      expect(config.credentials).toEqual(mockConfig.credentials);
+      expect(config.rateLimitDelay).toBe(mockConfig.rateLimitDelay);
+      expect(config.enablePaperTrading).toBe(mockConfig.enablePaperTrading);
+      expect(config.circuitBreakerThreshold).toBe(mockConfig.circuitBreakerThreshold);
     });
 
     it('should not allow config modification through getter', () => {
@@ -683,7 +683,7 @@ describe('MexcApiClient', () => {
     });
 
     it('should handle null/undefined parameters gracefully', async () => {
-      mockRequestService.executeHttpRequestWithContext.mockResolvedValue({});
+      (mockRequestService.executeHttpRequestWithContext as any).mockResolvedValue({});
 
       await expect(apiClient.get('/test', null)).resolves.not.toThrow();
       await expect(apiClient.get('/test', undefined)).resolves.not.toThrow();
@@ -702,7 +702,7 @@ describe('MexcApiClient', () => {
     });
 
     it('should handle concurrent requests', async () => {
-      mockRequestService.executeHttpRequestWithContext.mockImplementation(
+      (mockRequestService.executeHttpRequestWithContext as any).mockImplementation(
         async () => {
           await new Promise(resolve => setTimeout(resolve, 10));
           return { data: { success: true } };
@@ -732,7 +732,7 @@ describe('MexcApiClient', () => {
         })),
       };
 
-      mockRequestService.executeHttpRequestWithContext.mockResolvedValue({});
+      (mockRequestService.executeHttpRequestWithContext as any).mockResolvedValue({});
 
       await expect(apiClient.post('/bulk-data', largePayload)).resolves.not.toThrow();
       expect(mockRequestService.executeHttpRequestWithContext).toHaveBeenCalledWith(
@@ -760,7 +760,7 @@ describe('MexcApiClient', () => {
     });
 
     it('should handle rapid successive requests', async () => {
-      mockRequestService.executeHttpRequestWithContext.mockResolvedValue({ data: {} });
+      (mockRequestService.executeHttpRequestWithContext as any).mockResolvedValue({ data: {} });
 
       const startTime = Date.now();
       const promises = Array(100).fill(0).map((_, i) => 

@@ -103,7 +103,7 @@ export function optimizedCacheInvalidation(cache: Map<string, any>, patterns: st
   const keysToDelete: string[] = [];
 
   // Single-pass iteration with efficient Set lookup
-  for (const key of cache.keys()) {
+  for (const key of Array.from(cache.keys())) {
     if (patternsSet.has(key) || patterns.some((pattern) => key.includes(pattern))) {
       keysToDelete.push(key);
     }

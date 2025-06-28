@@ -31,7 +31,7 @@ import type {
   OrderStatus,
   SymbolEntry,
   Ticker,
-} from "@/src/schemas/unified/mexc-api-schemas";
+} from "../../schemas/unified/mexc-api-schemas";
 // Import logger
 // Import the production-ready unified client (modular)
 import {

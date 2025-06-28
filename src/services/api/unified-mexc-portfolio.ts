@@ -286,24 +286,24 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
 
           // Enhance balances with real USDT values
           const enhancedBalances = rawBalances.map((balance: Record<string, unknown>) => {
-            const free = parseFloat(balance.free || "0");
-            const locked = parseFloat(balance.locked || "0");
+            const free = parseFloat(String(balance.free || "0"));
+            const locked = parseFloat(String(balance.locked || "0"));
             const total = free + locked;
 
             let usdtValue = 0;
             if (balance.asset === "USDT") {
               usdtValue = total;
             } else {
-              const price = priceData[balance.asset];
+              const price = priceData[String(balance.asset || "")];
               if (price && price > 0) {
                 usdtValue = total * price;
               }
             }
 
             return {
-              asset: balance.asset,
-              free: balance.free,
-              locked: balance.locked,
+              asset: String(balance.asset || ""),
+              free: String(balance.free || "0"),
+              locked: String(balance.locked || "0"),
               total,
               usdtValue: Number.parseFloat(usdtValue.toFixed(6)),
             };
@@ -312,9 +312,8 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
           return {
             success: true,
             data: enhancedBalances,
-            timestamp: Date.now(),
-            source: "unified-mexc-portfolio",
-          };
+            timestamp: new Date().toISOString(),
+          } as MexcServiceResponse<BalanceEntry[]>;
         } catch (error) {
           this.logger.error("Error in getAccountBalanceInternal:", error);
           return {
@@ -378,25 +377,26 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
       // Transform raw balances to include calculated fields with real prices
       const balances = await Promise.all(
         rawBalances.map(async (balance: Record<string, unknown>) => {
-          const free = parseFloat(balance.free || "0");
-          const locked = parseFloat(balance.locked || "0");
+          const free = parseFloat(String(balance.free || "0"));
+          const locked = parseFloat(String(balance.locked || "0"));
           const total = free + locked;
 
           // Calculate USDT value using real-time prices
           let usdtValue = 0;
-          if (balance.asset === "USDT") {
+          const assetName = String(balance.asset || "");
+          if (assetName === "USDT") {
             usdtValue = total;
           } else {
-            const price = priceData[balance.asset];
+            const price = priceData[assetName];
             if (price && price > 0) {
               usdtValue = total * price;
             }
           }
 
           return {
-            asset: balance.asset,
-            free: balance.free,
-            locked: balance.locked,
+            asset: assetName,
+            free: String(balance.free || "0"),
+            locked: String(balance.locked || "0"),
             total,
             usdtValue: Number.parseFloat(usdtValue.toFixed(6)),
           };
@@ -436,9 +436,8 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
           allocation,
           performance24h,
         },
-        timestamp: Date.now(),
-        source: "unified-mexc-portfolio",
-      };
+        timestamp: new Date().toISOString(),
+      } as MexcServiceResponse<any>;
     } catch (error) {
       this.logger.error("Error in getAccountBalancesInternal:", error);
       return {
@@ -534,7 +533,7 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
 
             // Get BTC/USDT rate for conversions
             const btcUsdtTicker = tickerMap.get("BTCUSDT");
-            const btcUsdtRate = btcUsdtTicker ? parseFloat(btcUsdtTicker.lastPrice) : 0;
+            const btcUsdtRate = btcUsdtTicker ? parseFloat(String(btcUsdtTicker.lastPrice)) : 0;
 
             if (btcUsdtRate > 0) {
               priceData["BTC"] = btcUsdtRate;
@@ -547,7 +546,7 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
               const usdtTicker = tickerMap.get(usdtSymbol);
 
               if (usdtTicker?.lastPrice) {
-                const price = parseFloat(usdtTicker.lastPrice);
+                const price = parseFloat(String(usdtTicker.lastPrice));
                 if (price > 0) {
                   priceData[asset] = price;
                   continue;
@@ -560,7 +559,7 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
                 const btcTicker = tickerMap.get(btcSymbol);
 
                 if (btcTicker?.lastPrice) {
-                  const btcPrice = parseFloat(btcTicker.lastPrice);
+                  const btcPrice = parseFloat(String(btcTicker.lastPrice));
                   if (btcPrice > 0) {
                     priceData[asset] = btcPrice * btcUsdtRate;
                   }
@@ -692,8 +691,8 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
             if (tickerMap && tickerMap.has(symbol)) {
               // Use cached ticker data
               const ticker = tickerMap.get(symbol);
-              priceChangePercent = ticker.priceChangePercent
-                ? parseFloat(ticker.priceChangePercent)
+              priceChangePercent = ticker?.priceChangePercent
+                ? parseFloat(String(ticker.priceChangePercent))
                 : 0;
             } else {
               // Fallback to individual ticker request
@@ -906,8 +905,8 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
           totalAssets: assetCount,
           totalValue: portfolio.totalUsdtValue || portfolio.totalValue,
           performance24h: {
-            pnl: portfolio.totalPnL || 0,
-            pnlPercent: portfolio.totalPnLPercent || 0,
+            pnl: (portfolio as any).totalPnL || 0,
+            pnlPercent: (portfolio as any).totalPnLPercent || 0,
           },
         },
         risk: {
@@ -956,7 +955,7 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
         // Get BTC/USDT price for USDT value
         const btcTicker = tickerMap.get("BTCUSDT");
         if (btcTicker?.lastPrice) {
-          usdtValue = total * Number.parseFloat(btcTicker.lastPrice);
+          usdtValue = total * Number.parseFloat(String(btcTicker.lastPrice));
         }
       } else {
         // Try to find ticker for this asset
@@ -966,17 +965,17 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
           tickerMap.get(`${balance.asset}ETH`);
 
         if (assetTicker?.lastPrice && assetTicker.priceChangePercent) {
-          const price = Number.parseFloat(assetTicker.lastPrice);
-          const priceChange = Number.parseFloat(assetTicker.priceChangePercent);
+          const price = Number.parseFloat(String(assetTicker.lastPrice));
+          const priceChange = Number.parseFloat(String(assetTicker.priceChangePercent));
 
-          if (assetTicker.symbol.endsWith("USDT")) {
+          if (String(assetTicker.symbol).endsWith("USDT")) {
             usdtValue = total * price;
-          } else if (assetTicker.symbol.endsWith("BTC")) {
+          } else if (String(assetTicker.symbol).endsWith("BTC")) {
             const btcValue = total * price;
             // Convert to USDT using BTC price
             const btcTicker = tickerMap.get("BTCUSDT");
             if (btcTicker?.lastPrice) {
-              usdtValue = btcValue * Number.parseFloat(btcTicker.lastPrice);
+              usdtValue = btcValue * Number.parseFloat(String(btcTicker.lastPrice));
             }
           }
 
