@@ -50,6 +50,9 @@ interface AIEnhancement {
   modelVersion?: string;
   confidence: number;
   insights?: string[];
+  activities?: ActivityData[];
+  activityBoost?: number;
+  hasHighPriorityActivity?: boolean;
 }
 
 /**

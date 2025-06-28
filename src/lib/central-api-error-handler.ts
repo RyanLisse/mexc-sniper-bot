@@ -280,7 +280,7 @@ export function handleApiError(error: unknown, context?: ErrorContext): NextResp
     const errorMessage = error.message.toLowerCase();
 
     // Database connectivity issues
-    if (this.isDatabaseError(errorMessage)) {
+    if (isDatabaseError(errorMessage)) {
       return apiResponse(
         createErrorResponse("Database connectivity issue - service temporarily unavailable", {
           code: "DB_CONNECTION_ERROR",
@@ -295,7 +295,7 @@ export function handleApiError(error: unknown, context?: ErrorContext): NextResp
     }
 
     // Authentication/authorization errors
-    if (this.isAuthError(errorMessage)) {
+    if (isAuthError(errorMessage)) {
       return apiResponse(
         createErrorResponse("Authentication required", {
           code: "AUTH_ERROR",
@@ -309,7 +309,7 @@ export function handleApiError(error: unknown, context?: ErrorContext): NextResp
     }
 
     // Rate limiting errors
-    if (this.isRateLimitError(errorMessage)) {
+    if (isRateLimitError(errorMessage)) {
       return apiResponse(
         createErrorResponse("Rate limit exceeded - please try again later", {
           code: "RATE_LIMIT_ERROR",

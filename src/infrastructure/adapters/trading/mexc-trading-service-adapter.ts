@@ -128,7 +128,7 @@ export class MexcTradingServiceAdapter implements TradingService {
         throw new Error(result.error || `Failed to get price for ${symbol}`);
       }
 
-      return parseFloat(result.data.price);
+      return parseFloat(result.data.lastPrice);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to get current price", {

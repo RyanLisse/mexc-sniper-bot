@@ -487,7 +487,7 @@ export class PerformanceCacheOptimizer {
     return {
       totalPatterns: this.usagePatterns.size,
       prefetchQueueSize: this.prefetchQueue.size,
-      compressionCacheSize: this.compressionCache.size,
+      compressionCacheSize: this.compressionCache.size(),
       activeWorkers: this.prefetchWorkers.size,
     };
   }
