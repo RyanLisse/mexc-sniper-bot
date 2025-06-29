@@ -5,7 +5,7 @@
  * and other over-engineered test infrastructure with simple, reliable helpers.
  */
 
-import { vi, expect } from 'vitest';
+import { expect, vi } from 'vitest';
 
 // ============================================================================
 // Test Data Factories

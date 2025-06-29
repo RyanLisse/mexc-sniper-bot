@@ -9,6 +9,7 @@ import { trace } from "@opentelemetry/api";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { executeWithCircuitBreaker } from "@/src/lib/database-circuit-breaker";
+import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
 import { executeWithRateLimit } from "@/src/lib/database-rate-limiter";
 import { 
   CriticalDataValidator, 
@@ -16,7 +17,6 @@ import {
   withEnhancedValidation
 } from "@/src/lib/enhanced-validation-middleware";
 import { recordCostMetrics, withCostMonitoring } from "@/src/middleware/cost-monitor";
-import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
 import { AccountBalanceSchema } from "@/src/schemas/external-api-validation-schemas";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 import {

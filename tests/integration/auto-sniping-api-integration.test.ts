@@ -4,9 +4,9 @@
  * Tests the auto-sniping API endpoints for real functionality
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { GET, POST, PUT, DELETE } from '@/app/api/auto-sniping/execution/route';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { DELETE, GET, POST, PUT } from '@/app/api/auto-sniping/execution/route';
 import { getCoreTrading, resetCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 
 // Mock environment variables

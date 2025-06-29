@@ -5,14 +5,13 @@
  * for database operations.
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { getCostDashboardData, addCostAlert, getEndpointOptimizationAdvice } from "@/src/lib/cost-monitoring-dashboard-service";
+import { NextRequest, NextResponse } from "next/server";
+import { apiResponse } from "@/src/lib/api-response";
+import { addCostAlert, getCostDashboardData, getEndpointOptimizationAdvice } from "@/src/lib/cost-monitoring-dashboard-service";
 import { globalDatabaseCostProtector } from "@/src/lib/database-cost-protector";
 import { getBatchingStats } from "@/src/lib/database-query-batching-service";
-import { getQueryCacheStats } from "@/src/lib/database-query-cache-middleware";
-import { apiResponse } from "@/src/lib/api-response";
-import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
+import { getQueryCacheStats, withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
 
 async function getDashboardHandler(request: NextRequest): Promise<NextResponse> {
   try {

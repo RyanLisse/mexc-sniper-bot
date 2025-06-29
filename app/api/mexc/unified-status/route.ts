@@ -9,8 +9,8 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { RATE_LIMIT_CONFIGS, withRateLimit } from "@/src/lib/api-rate-limiter";
 import { apiResponse, handleApiError } from "@/src/lib/api-response";
-import { toSafeError } from "@/src/lib/error-type-utils";
 import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import { getUnifiedStatus } from "@/src/services/notification/unified-status-resolver";
 
 interface UnifiedStatusResponse {

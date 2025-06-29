@@ -12,12 +12,12 @@
 import { EventEmitter } from 'node:events';
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { db } from '@/src/db';
+import type { SnipeTarget } from '@/src/db/schemas/trading';
 import { executionHistory, snipeTargets, transactions } from '@/src/db/schemas/trading';
 import { toSafeError } from '@/src/lib/error-type-utils';
 import { UnifiedMexcServiceV2 } from '../api/unified-mexc-service-v2';
 import { getCoreTrading } from './consolidated/core-trading/base-service';
 import type { ServiceResponse, TradeResult } from './consolidated/core-trading/types';
-import type { SnipeTarget } from '@/src/db/schemas/trading';
 
 // Enhanced interfaces for complete functionality
 export interface SnipeConfiguration {

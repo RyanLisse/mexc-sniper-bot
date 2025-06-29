@@ -1,6 +1,6 @@
 import { apiResponse, createHealthResponse, handleApiError } from "@/src/lib/api-response";
-import { checkAuthTables, checkDatabaseHealth } from "@/src/lib/db-health-check";
 import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
+import { checkAuthTables, checkDatabaseHealth } from "@/src/lib/db-health-check";
 
 // Rate limiting for health checks (30-second intervals)
 const rateLimitCache = new Map<string, number>();

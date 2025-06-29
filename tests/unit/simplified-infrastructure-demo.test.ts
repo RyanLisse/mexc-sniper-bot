@@ -5,8 +5,8 @@
  * that replaces the complex multi-file mock system with clean, focused testing.
  */
 
-import { describe, expect, it, beforeEach } from 'vitest';
-import { testDataFactory, mockResponseHelper, testUtils, serviceMockHelper } from '../utils/simple-test-helpers';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { mockResponseHelper, serviceMockHelper, testDataFactory, testUtils } from '../utils/simple-test-helpers';
 
 describe('Simplified Test Infrastructure Demo', () => {
   beforeEach(() => {

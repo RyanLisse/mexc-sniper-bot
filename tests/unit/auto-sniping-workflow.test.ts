@@ -5,9 +5,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCoreTrading, resetCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
-import { getCompleteAutoSnipingService, resetCompleteAutoSnipingService } from '@/src/services/trading/complete-auto-sniping-service';
 import type { AutoSnipeTarget, SnipeConfiguration } from '@/src/services/trading/complete-auto-sniping-service';
+import { getCompleteAutoSnipingService, resetCompleteAutoSnipingService } from '@/src/services/trading/complete-auto-sniping-service';
+import { getCoreTrading, resetCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 
 // Use the simplified test infrastructure that's already configured
 describe('Auto-Sniping Integration Tests', () => {

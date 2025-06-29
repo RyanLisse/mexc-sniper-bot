@@ -6,8 +6,8 @@
  */
 
 import { globalDatabaseCostProtector } from "./database-cost-protector";
-import { globalQueryCacheMiddleware } from "./database-query-cache-middleware";
 import { globalQueryBatchingService } from "./database-query-batching-service";
+import { globalQueryCacheMiddleware } from "./database-query-cache-middleware";
 
 export interface CostDashboardData {
   overview: {

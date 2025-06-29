@@ -5,11 +5,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { globalDatabaseCostProtector } from "@/src/lib/database-cost-protector";
-import { globalQueryCacheMiddleware } from "@/src/lib/database-query-cache-middleware";
-import { globalQueryBatchingService } from "@/src/lib/database-query-batching-service";
 import { apiResponse } from "@/src/lib/api-response";
-import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
+import { globalDatabaseCostProtector } from "@/src/lib/database-cost-protector";
+import { globalQueryBatchingService } from "@/src/lib/database-query-batching-service";
+import { globalQueryCacheMiddleware, withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
 
 async function getStatsHandler(request: NextRequest): Promise<NextResponse> {
   try {
