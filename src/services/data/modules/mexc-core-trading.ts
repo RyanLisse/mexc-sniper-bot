@@ -243,6 +243,54 @@ export class MexcCoreTradingClient {
     }
   }
 
+  /**
+   * Get user trade history
+   */
+  async getUserTrades(options: {
+    symbol?: string;
+    limit?: number;
+    startTime?: number;
+    endTime?: number;
+  }): Promise<MexcServiceResponse<any[]>> {
+    const startTimeMs = Date.now();
+
+    try {
+      const config = this.httpClient.getConfig();
+      const params = new URLSearchParams({
+        timestamp: Date.now().toString(),
+        limit: (options.limit || 100).toString(),
+      });
+
+      if (options.symbol) {
+        params.append("symbol", options.symbol);
+      }
+
+      if (options.startTime) {
+        params.append("startTime", options.startTime.toString());
+      }
+
+      if (options.endTime) {
+        params.append("endTime", options.endTime.toString());
+      }
+
+      const url = `${config.baseUrl}/api/v3/myTrades?${params.toString()}`;
+
+      const response = await this.httpClient.makeAuthenticatedRequest(url, {
+        method: "GET",
+      });
+
+      return {
+        success: true,
+        data: response.data || response,
+        timestamp: Date.now(),
+        executionTimeMs: Date.now() - startTimeMs,
+        source: "mexc-core-trading",
+      };
+    } catch (error) {
+      return this.httpClient.handleError(error, "getUserTrades", startTimeMs);
+    }
+  }
+
   // ============================================================================
   // Trading Utility Methods
   // ============================================================================

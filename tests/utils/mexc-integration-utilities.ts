@@ -347,8 +347,14 @@ export function teardownMexcIntegrationTest(mexcService?: MockedMexcService): vo
     
     // Comprehensive cleanup
     cleanupMexcTestEnvironment();
-    vi.clearAllMocks();
-    vi.clearAllTimers();
+    
+    // Only call vi methods if available
+    if (typeof vi !== 'undefined' && vi.clearAllMocks) {
+      vi.clearAllMocks();
+    }
+    if (typeof vi !== 'undefined' && vi.clearAllTimers) {
+      vi.clearAllTimers();
+    }
     
     // Allow time for async cleanup to complete
     if (typeof globalThis.gc === 'function') {

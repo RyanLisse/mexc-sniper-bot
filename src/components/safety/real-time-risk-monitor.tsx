@@ -76,6 +76,9 @@ interface StressTestResult {
  * - Dynamic risk thresholds
  */
 export function RealTimeRiskMonitor() {
+  // Local state for risk history
+  const [localRiskHistory, setLocalRiskHistory] = useState<RealTimeRiskData[]>([]);
+
   // Fetch current risk metrics from API
   const { data: currentRisk, isLoading: riskLoading } = useQuery({
     queryKey: ["risk-metrics", "current"],
@@ -202,7 +205,7 @@ export function RealTimeRiskMonitor() {
       {/* Real-Time Alerts */}
       {activeAlerts && activeAlerts.length > 0 && (
         <div className="space-y-2">
-          {activeAlerts.map((alert) => (
+          {activeAlerts.map((alert: RiskAlert) => (
             <Alert
               key={alert.id}
               className={`border-${alert.severity === "critical" ? "red" : alert.severity === "high" ? "orange" : "yellow"}-500`}
@@ -364,7 +367,7 @@ export function RealTimeRiskMonitor() {
                       `${symbol}: ${riskContribution.toFixed(1)}%`
                     }
                   >
-                    {positionRisks.map((risk, index) => (
+                    {positionRisks.map((risk: PositionRisk, index: number) => (
                       <Cell
                         key={generateChartCellKey(index, risk.symbol)}
                         fill={pieColors[index % pieColors.length]}
@@ -479,7 +482,7 @@ export function RealTimeRiskMonitor() {
                   </tr>
                 </thead>
                 <tbody>
-                  {positionRisks.map((position) => (
+                  {positionRisks.map((position: PositionRisk) => (
                     <tr key={position.symbol} className="border-b hover:bg-muted/50">
                       <td className="p-2 font-medium">{position.symbol}</td>
                       <td className="p-2 text-right">${position.size.toLocaleString()}</td>

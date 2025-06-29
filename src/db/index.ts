@@ -88,15 +88,15 @@ function createPostgresClient() {
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
 
-  // PostgreSQL connection configuration
+  // PostgreSQL connection configuration - QUOTA CRISIS OPTIMIZATION
   const connectionConfig = {
-    // Connection pool settings
-    max: isProduction ? 20 : 10, // Increased max connections for better concurrency
-    idle_timeout: 20, // 20 seconds idle timeout
-    connect_timeout: 10, // Reduced to 10 seconds for faster failures
+    // QUOTA OPTIMIZATION: Severely reduced connection pool settings
+    max: isProduction ? 6 : 4, // CRITICAL REDUCTION: From 20/10 to 6/4 for quota management
+    idle_timeout: 15, // Reduced from 20 to 15 seconds for faster connection recycling
+    connect_timeout: 8, // Reduced from 10 to 8 seconds for faster failures
 
-    // Keep alive settings for better connection stability (TCP keepalive interval in seconds)
-    keep_alive: 60,
+    // Keep alive settings optimized for quota efficiency
+    keep_alive: 90, // Increased to 90 seconds for better connection reuse
 
     // SSL/TLS settings for NeonDB
     ssl: isProduction ? "require" : ("prefer" as any),
@@ -104,12 +104,16 @@ function createPostgresClient() {
     // Performance optimizations
     prepare: !isTest, // Prepared statements (disabled in tests for compatibility)
 
-    // Connection handling
+    // Connection handling - QUOTA OPTIMIZED
     connection: {
-      application_name: "mexc-sniper-bot",
-      statement_timeout: 15000, // Reduced to 15 seconds for faster responses
-      idle_in_transaction_session_timeout: 15000, // Reduced to 15 seconds
-      lock_timeout: 10000, // 10 seconds for lock timeouts
+      application_name: "mexc-sniper-bot-quota-optimized",
+      statement_timeout: 12000, // REDUCED: From 15s to 12s for faster responses
+      idle_in_transaction_session_timeout: 10000, // REDUCED: From 15s to 10s
+      lock_timeout: 8000, // REDUCED: From 10s to 8s for lock timeouts
+      // Additional quota optimization settings
+      tcp_keepalives_idle: 600, // 10 minutes - longer keepalive for connection reuse
+      tcp_keepalives_interval: 30, // 30 seconds between keepalive probes
+      tcp_keepalives_count: 3, // 3 failed probes before connection considered dead
     },
 
     // Transform for compatibility
@@ -119,6 +123,10 @@ function createPostgresClient() {
 
     // Debug settings (only in development)
     debug: process.env.NODE_ENV === "development" && process.env.DATABASE_DEBUG === "true",
+
+    // QUOTA PROTECTION: Additional connection-level optimizations
+    fetch_types: false, // Disable automatic type fetching to reduce overhead
+    publications: "none", // Disable publication fetching for quota savings
   };
 
   try {

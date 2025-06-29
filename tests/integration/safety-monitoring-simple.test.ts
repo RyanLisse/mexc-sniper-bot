@@ -6,19 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-// Mock service dependencies to prevent build-time initialization issues
-vi.mock("@/src/services/trading/consolidated/core-trading/base-service", () => ({
-  getCoreTrading: vi.fn(() => ({
-    initialize: vi.fn().mockResolvedValue(undefined),
-    getServiceStatus: vi.fn().mockResolvedValue({ initialized: true }),
-  })),
-}));
-
-vi.mock("@/src/lib/api-auth", () => ({
-  apiAuthWrapper: vi.fn().mockImplementation((handler) => handler),
-}));
+import { describe, expect, it } from "vitest";
 
 describe("Simplified Safety Monitoring API Tests", () => {
   

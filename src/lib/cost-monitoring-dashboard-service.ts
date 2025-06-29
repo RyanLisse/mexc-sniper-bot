@@ -298,7 +298,10 @@ class CostMonitoringDashboardService {
     const endpointMetrics = globalDatabaseCostProtector.getEndpointMetrics();
     const endpoints: CostDashboardData['endpoints'] = [];
     
-    for (const [endpoint, metrics] of endpointMetrics) {
+    // Handle different return types from getEndpointMetrics
+    const metricsMap = endpointMetrics instanceof Map ? endpointMetrics : new Map();
+    
+    for (const [endpoint, metrics] of metricsMap) {
       const endpointCacheStats = cacheStats.endpoints || {};
       const cacheHitRate = endpointCacheStats[endpoint]?.hitRate || 0;
       
@@ -406,7 +409,10 @@ class CostMonitoringDashboardService {
     const endpointMetrics = globalDatabaseCostProtector.getEndpointMetrics();
     const slowQueries: Array<{ endpoint: string; duration: number; count: number }> = [];
     
-    for (const [endpoint, metrics] of endpointMetrics) {
+    // Handle different return types from getEndpointMetrics
+    const metricsMap = endpointMetrics instanceof Map ? endpointMetrics : new Map();
+    
+    for (const [endpoint, metrics] of metricsMap) {
       if (metrics.averageDuration > 500) { // Consider >500ms as slow
         slowQueries.push({
           endpoint,
@@ -625,7 +631,10 @@ class CostMonitoringDashboardService {
     potentialSavings: number;
   } {
     const endpointMetrics = globalDatabaseCostProtector.getEndpointMetrics();
-    const metrics = endpointMetrics.get(endpoint);
+    
+    // Handle different return types from getEndpointMetrics
+    const metricsMap = endpointMetrics instanceof Map ? endpointMetrics : new Map();
+    const metrics = metricsMap.get(endpoint);
     
     if (!metrics) {
       return {

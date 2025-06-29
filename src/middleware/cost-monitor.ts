@@ -323,13 +323,13 @@ export function withCostMonitoring<T extends (...args: any[]) => Promise<NextRes
     let dataTransfer = 0;
     
     // Track query count (this would need integration with your database layer)
-    const originalQuery = globalThis.databaseQueryCount || 0;
+    const originalQuery = (globalThis as any).databaseQueryCount || 0;
     
     try {
       const response = await handler(...args);
       
       const duration = Date.now() - startTime;
-      queryCount = (globalThis.databaseQueryCount || 0) - originalQuery;
+      queryCount = ((globalThis as any).databaseQueryCount || 0) - originalQuery;
       
       // Estimate data transfer size from response
       const responseText = await response.clone().text();
@@ -347,7 +347,7 @@ export function withCostMonitoring<T extends (...args: any[]) => Promise<NextRes
       
     } catch (error) {
       const duration = Date.now() - startTime;
-      queryCount = (globalThis.databaseQueryCount || 0) - originalQuery;
+      queryCount = ((globalThis as any).databaseQueryCount || 0) - originalQuery;
       
       // Record failed operation metrics
       await globalCostMonitor.recordOperation({

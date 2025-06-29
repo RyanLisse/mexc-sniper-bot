@@ -14,6 +14,7 @@ import {
   createCoordinatedDatabaseBreaker 
 } from "@/src/services/data/coordinated-circuit-breaker";
 import { clearDbCache, db, executeWithRetry } from "../db";
+import { databaseQuotaMonitor } from "./database-quota-monitor";
 
 interface ConnectionPoolConfig {
   maxConnections: number;
@@ -26,6 +27,12 @@ interface ConnectionPoolConfig {
   enableQueryResultCaching: boolean;
   cacheMaxSize: number;
   cacheTTLMs: number;
+  enableQueryDeduplication: boolean;
+  maxDataTransferMB: number;
+  dataTransferWindowMs: number;
+  enableRequestBatching: boolean;
+  maxBatchSize: number;
+  batchWindowMs: number;
 }
 
 interface ConnectionMetrics {
@@ -39,6 +46,10 @@ interface ConnectionMetrics {
   averageConnectionTime: number;
   peakConnections: number;
   connectionPoolHealth: "healthy" | "degraded" | "critical";
+  dataTransferMB: number;
+  deduplicatedQueries: number;
+  batchedRequests: number;
+  quotaUtilization: number;
 }
 
 interface CacheMetrics {
@@ -68,6 +79,36 @@ interface QueryResultCache {
   currentMemoryMB: number;
   ttlMs: number;
   enabled: boolean;
+}
+
+interface QueryDeduplication {
+  enabled: boolean;
+  pendingQueries: Map<string, Promise<any>>;
+  dedupedCount: number;
+}
+
+interface DataTransferTracker {
+  currentWindowMB: number;
+  windowStartTime: number;
+  windowDurationMs: number;
+  maxMB: number;
+  totalTransferMB: number;
+  requestsThrottled: number;
+}
+
+interface RequestBatcher {
+  enabled: boolean;
+  pendingRequests: Array<{
+    queryFn: () => Promise<any>;
+    resolve: (value: any) => void;
+    reject: (error: any) => void;
+    timestamp: number;
+    cacheKey?: string;
+  }>;
+  batchTimer: NodeJS.Timeout | null;
+  maxBatchSize: number;
+  windowMs: number;
+  totalBatched: number;
 }
 
 export class DatabaseConnectionPool {
@@ -101,19 +142,28 @@ export class DatabaseConnectionPool {
   private healthCheckTimer: NodeJS.Timeout | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
   private circuitBreaker: CoordinatedCircuitBreaker;
+  private queryDeduplication: QueryDeduplication;
+  private dataTransferTracker: DataTransferTracker;
+  private requestBatcher: RequestBatcher;
 
   constructor() {
     this.config = {
-      maxConnections: 18, // NEONDB OPTIMIZATION: Reduced from 100 to 18 for cost efficiency
-      minConnections: 4, // Reduced from 10 to 4 for optimal resource usage
-      acquireTimeoutMs: 3000, // Reduced from 5s to 3s for faster failure detection
-      idleTimeoutMs: 30000, // Increased from 15s to 30s for better connection reuse
-      maxRetries: 3,
-      healthCheckIntervalMs: 300000, // Increased to 5 minutes to reduce DB load
+      maxConnections: 8, // QUOTA CRISIS OPTIMIZATION: Further reduced from 18 to 8 for critical quota management
+      minConnections: 2, // Reduced from 4 to 2 for minimal resource usage
+      acquireTimeoutMs: 2000, // Reduced from 3s to 2s for faster failure detection
+      idleTimeoutMs: 45000, // Increased from 30s to 45s for maximum connection reuse
+      maxRetries: 2, // Reduced retries to minimize quota usage
+      healthCheckIntervalMs: 600000, // Increased to 10 minutes to minimize DB load
       enableConnectionReuse: true,
       enableQueryResultCaching: true,
-      cacheMaxSize: 2000, // Increased cache size for better hit rates
-      cacheTTLMs: 900000, // Increased to 15 minutes for aggressive caching
+      cacheMaxSize: 5000, // Increased cache size for maximum hit rates
+      cacheTTLMs: 1800000, // Increased to 30 minutes for aggressive caching
+      enableQueryDeduplication: true, // QUOTA OPTIMIZATION: Prevent duplicate queries
+      maxDataTransferMB: 100, // QUOTA PROTECTION: 100MB per 5-minute window
+      dataTransferWindowMs: 300000, // 5-minute rolling window for transfer monitoring
+      enableRequestBatching: true, // QUOTA OPTIMIZATION: Batch requests to reduce overhead
+      maxBatchSize: 50, // Batch up to 50 requests together
+      batchWindowMs: 100, // 100ms batching window for optimal throughput
     };
 
     this.metrics = {
@@ -127,6 +177,10 @@ export class DatabaseConnectionPool {
       averageConnectionTime: 0,
       peakConnections: 0,
       connectionPoolHealth: "healthy",
+      dataTransferMB: 0,
+      deduplicatedQueries: 0,
+      batchedRequests: 0,
+      quotaUtilization: 0,
     };
 
     this.cache = {
@@ -138,11 +192,39 @@ export class DatabaseConnectionPool {
       enabled: this.config.enableQueryResultCaching,
     };
 
+    // Initialize query deduplication system
+    this.queryDeduplication = {
+      enabled: this.config.enableQueryDeduplication,
+      pendingQueries: new Map(),
+      dedupedCount: 0,
+    };
+
+    // Initialize data transfer tracking
+    this.dataTransferTracker = {
+      currentWindowMB: 0,
+      windowStartTime: Date.now(),
+      windowDurationMs: this.config.dataTransferWindowMs,
+      maxMB: this.config.maxDataTransferMB,
+      totalTransferMB: 0,
+      requestsThrottled: 0,
+    };
+
+    // Initialize request batching system
+    this.requestBatcher = {
+      enabled: this.config.enableRequestBatching,
+      pendingRequests: [],
+      batchTimer: null,
+      maxBatchSize: this.config.maxBatchSize,
+      windowMs: this.config.batchWindowMs,
+      totalBatched: 0,
+    };
+
     // Initialize circuit breaker for database operations
     this.circuitBreaker = createCoordinatedDatabaseBreaker("database-connection-pool");
 
     this.startHealthChecks();
     this.startCacheCleanup();
+    this.startDataTransferMonitoring();
   }
 
   static getInstance(): DatabaseConnectionPool {
@@ -157,7 +239,7 @@ export class DatabaseConnectionPool {
   // ======================================
 
   /**
-   * Execute a query with connection pooling and caching
+   * Execute a query with connection pooling, caching, deduplication, and quota management
    */
   async executeQuery<T>(
     queryFn: () => Promise<T>,
@@ -167,18 +249,58 @@ export class DatabaseConnectionPool {
     const startTime = performance.now();
     this.metrics.totalRequests++;
 
+    // Check quota limits first
+    if (!await this.checkQuotaLimits()) {
+      this.dataTransferTracker.requestsThrottled++;
+      throw new Error("Database quota limit exceeded - request throttled");
+    }
+
     // Check cache first if caching is enabled
     if (cacheKey && this.cache.enabled) {
       const cachedResult = this.getCachedResult<T>(cacheKey);
       if (cachedResult !== null) {
-        console.info(`💾 Cache hit for key: ${cacheKey}`);
+        this.logger.info(`💾 Cache hit for key: ${cacheKey}`);
         return cachedResult;
       }
     }
 
+    // Query deduplication - check if this query is already in progress
+    if (cacheKey && this.queryDeduplication.enabled) {
+      const existingQuery = this.queryDeduplication.pendingQueries.get(cacheKey);
+      if (existingQuery) {
+        this.queryDeduplication.dedupedCount++;
+        this.metrics.deduplicatedQueries++;
+        this.logger.info(`🔄 Query deduplicated for key: ${cacheKey}`);
+        return existingQuery as Promise<T>;
+      }
+    }
+
+    // Check if request batching is enabled and should be used
+    if (this.requestBatcher.enabled && this.shouldBatchRequest(queryFn)) {
+      return this.addToRequestBatch(queryFn, cacheKey);
+    }
+
     // Execute query with connection management
     try {
-      const result = await this.executeWithConnectionManagement(queryFn);
+      // Track query in deduplication map
+      let queryPromise: Promise<T>;
+      
+      if (cacheKey && this.queryDeduplication.enabled) {
+        queryPromise = this.executeWithConnectionManagement(queryFn);
+        this.queryDeduplication.pendingQueries.set(cacheKey, queryPromise);
+      } else {
+        queryPromise = this.executeWithConnectionManagement(queryFn);
+      }
+
+      const result = await queryPromise;
+
+      // Remove from deduplication map
+      if (cacheKey && this.queryDeduplication.enabled) {
+        this.queryDeduplication.pendingQueries.delete(cacheKey);
+      }
+
+      // Estimate and track data transfer
+      this.trackDataTransfer(result);
 
       // Cache the result if caching is enabled
       if (cacheKey && this.cache.enabled) {
@@ -190,6 +312,11 @@ export class DatabaseConnectionPool {
 
       return result;
     } catch (error) {
+      // Remove from deduplication map on error
+      if (cacheKey && this.queryDeduplication.enabled) {
+        this.queryDeduplication.pendingQueries.delete(cacheKey);
+      }
+
       const executionTime = performance.now() - startTime;
       this.updateConnectionMetrics(executionTime, false);
       throw error;
@@ -856,6 +983,188 @@ export class DatabaseConnectionPool {
     };
   }
 
+  // ======================================
+  // QUOTA MANAGEMENT & OPTIMIZATION
+  // ======================================
+
+  /**
+   * Check if current request can proceed without exceeding quota limits
+   */
+  private async checkQuotaLimits(): Promise<boolean> {
+    const now = Date.now();
+    
+    // Reset window if expired
+    if (now - this.dataTransferTracker.windowStartTime > this.dataTransferTracker.windowDurationMs) {
+      this.dataTransferTracker.currentWindowMB = 0;
+      this.dataTransferTracker.windowStartTime = now;
+    }
+
+    // Calculate quota utilization
+    this.metrics.quotaUtilization = 
+      (this.dataTransferTracker.currentWindowMB / this.dataTransferTracker.maxMB) * 100;
+
+    // Update quota monitor with current metrics
+    databaseQuotaMonitor.updateMetrics({
+      dataTransferMB: this.dataTransferTracker.totalTransferMB,
+      connectionCount: this.metrics.activeConnections,
+      queryCount: this.metrics.totalRequests,
+      avgQueryTime: this.metrics.averageConnectionTime,
+      quotaUtilization: this.metrics.quotaUtilization,
+    });
+
+    // Check if quota monitor is in emergency mode
+    if (databaseQuotaMonitor.isInEmergencyMode()) {
+      this.logger.error("🚨 EMERGENCY MODE: Request blocked by quota monitor");
+      this.dataTransferTracker.requestsThrottled++;
+      return false;
+    }
+
+    // Block requests if quota exceeded
+    if (this.dataTransferTracker.currentWindowMB >= this.dataTransferTracker.maxMB) {
+      this.logger.warn(
+        `🚨 QUOTA EXCEEDED: ${this.dataTransferTracker.currentWindowMB}MB/${this.dataTransferTracker.maxMB}MB in current window`
+      );
+      return false;
+    }
+
+    // Dynamic throttling based on quota usage
+    if (this.metrics.quotaUtilization > 90) {
+      // 90%+ usage: Block 50% of requests
+      if (Math.random() < 0.5) {
+        this.logger.warn("🛑 CRITICAL THROTTLING: Request blocked (90%+ quota usage)");
+        this.dataTransferTracker.requestsThrottled++;
+        return false;
+      }
+    } else if (this.metrics.quotaUtilization > 80) {
+      // 80%+ usage: Block 25% of requests
+      if (Math.random() < 0.25) {
+        this.logger.warn("⚠️ HIGH THROTTLING: Request blocked (80%+ quota usage)");
+        this.dataTransferTracker.requestsThrottled++;
+        return false;
+      }
+    }
+
+    // Warn when approaching quota limit
+    if (this.metrics.quotaUtilization > 80) {
+      this.logger.warn(
+        `⚠️ QUOTA WARNING: ${this.metrics.quotaUtilization.toFixed(1)}% quota utilized`
+      );
+    }
+
+    return true;
+  }
+
+  /**
+   * Track data transfer for quota monitoring
+   */
+  private trackDataTransfer(result: any): void {
+    try {
+      const transferSizeMB = this.estimateObjectSize(result) / (1024 * 1024);
+      this.dataTransferTracker.currentWindowMB += transferSizeMB;
+      this.dataTransferTracker.totalTransferMB += transferSizeMB;
+      this.metrics.dataTransferMB = this.dataTransferTracker.totalTransferMB;
+
+      if (transferSizeMB > 1) { // Log transfers > 1MB
+        this.logger.info(
+          `📊 Large data transfer: ${transferSizeMB.toFixed(2)}MB (Total: ${this.dataTransferTracker.totalTransferMB.toFixed(2)}MB)`
+        );
+      }
+    } catch (error) {
+      this.logger.warn("Failed to track data transfer size:", error);
+    }
+  }
+
+  /**
+   * Check if request should be batched
+   */
+  private shouldBatchRequest(queryFn: Function): boolean {
+    // Only batch SELECT operations and simple queries
+    const queryString = queryFn.toString();
+    const isSelectQuery = queryString.includes('select') || queryString.includes('SELECT');
+    const isSimpleQuery = !queryString.includes('transaction') && !queryString.includes('lock');
+    
+    return isSelectQuery && isSimpleQuery;
+  }
+
+  /**
+   * Add request to batch queue
+   */
+  private addToRequestBatch<T>(queryFn: () => Promise<T>, cacheKey?: string): Promise<T> {
+    return new Promise((resolve, reject) => {
+      this.requestBatcher.pendingRequests.push({
+        queryFn,
+        resolve,
+        reject,
+        timestamp: Date.now(),
+        cacheKey,
+      });
+
+      // Start batch timer if not already running
+      if (!this.requestBatcher.batchTimer) {
+        this.requestBatcher.batchTimer = setTimeout(() => {
+          this.processBatchedRequests();
+        }, this.requestBatcher.windowMs);
+      }
+
+      // Process immediately if batch is full
+      if (this.requestBatcher.pendingRequests.length >= this.requestBatcher.maxBatchSize) {
+        clearTimeout(this.requestBatcher.batchTimer);
+        this.requestBatcher.batchTimer = null;
+        this.processBatchedRequests();
+      }
+    });
+  }
+
+  /**
+   * Process batched requests efficiently
+   */
+  private async processBatchedRequests(): Promise<void> {
+    if (this.requestBatcher.pendingRequests.length === 0) return;
+
+    const batch = this.requestBatcher.pendingRequests.splice(0);
+    this.requestBatcher.batchTimer = null;
+    this.requestBatcher.totalBatched += batch.length;
+    this.metrics.batchedRequests += batch.length;
+
+    this.logger.info(`📦 Processing batched requests: ${batch.length} queries`);
+
+    // Execute all requests in the batch
+    const batchPromises = batch.map(async (request) => {
+      try {
+        const result = await this.executeWithConnectionManagement(request.queryFn);
+        this.trackDataTransfer(result);
+        request.resolve(result);
+      } catch (error) {
+        request.reject(error);
+      }
+    });
+
+    await Promise.allSettled(batchPromises);
+  }
+
+  /**
+   * Start data transfer monitoring
+   */
+  private startDataTransferMonitoring(): void {
+    setInterval(() => {
+      const now = Date.now();
+      
+      // Reset transfer window
+      if (now - this.dataTransferTracker.windowStartTime > this.dataTransferTracker.windowDurationMs) {
+        this.dataTransferTracker.currentWindowMB = 0;
+        this.dataTransferTracker.windowStartTime = now;
+        this.metrics.quotaUtilization = 0;
+      }
+
+      // Log quota status if significant usage
+      if (this.metrics.quotaUtilization > 50) {
+        this.logger.info(
+          `📊 Quota Status: ${this.metrics.quotaUtilization.toFixed(1)}% (${this.dataTransferTracker.currentWindowMB.toFixed(2)}MB/${this.dataTransferTracker.maxMB}MB)`
+        );
+      }
+    }, 60000); // Check every minute
+  }
+
   /**
    * Update configuration
    */
@@ -867,7 +1176,19 @@ export class DatabaseConnectionPool {
     this.cache.ttlMs = this.config.cacheTTLMs;
     this.cache.enabled = this.config.enableQueryResultCaching;
 
-    console.info("⚙️ Connection pool configuration updated");
+    // Update quota settings
+    this.dataTransferTracker.maxMB = this.config.maxDataTransferMB;
+    this.dataTransferTracker.windowDurationMs = this.config.dataTransferWindowMs;
+
+    // Update deduplication settings
+    this.queryDeduplication.enabled = this.config.enableQueryDeduplication;
+
+    // Update batching settings
+    this.requestBatcher.enabled = this.config.enableRequestBatching;
+    this.requestBatcher.maxBatchSize = this.config.maxBatchSize;
+    this.requestBatcher.windowMs = this.config.batchWindowMs;
+
+    this.logger.info("⚙️ Connection pool configuration updated with quota management");
   }
 
   /**

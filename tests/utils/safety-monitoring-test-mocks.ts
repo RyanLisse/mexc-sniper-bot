@@ -5,7 +5,7 @@
  * to eliminate service initialization issues and ensure predictable test behavior.
  */
 
-import { vi } from "vitest";
+import { vi, expect } from "vitest";
 
 /**
  * Create mock Core Trading Service

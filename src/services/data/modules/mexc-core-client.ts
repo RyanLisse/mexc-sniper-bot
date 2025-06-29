@@ -198,6 +198,18 @@ export class MexcCoreClient {
     return this.tradingClient.marketSell(symbol, quantity);
   }
 
+  /**
+   * Get user trade history
+   */
+  async getUserTrades(options: {
+    symbol?: string;
+    limit?: number;
+    startTime?: number;
+    endTime?: number;
+  }): Promise<MexcServiceResponse<any[]>> {
+    return this.tradingClient.getUserTrades(options);
+  }
+
   // ============================================================================
   // Utility Methods (delegated to underlying clients)
   // ============================================================================

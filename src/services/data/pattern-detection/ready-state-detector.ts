@@ -666,21 +666,22 @@ export class ReadyStateDetector extends EventEmitter {
 
       // Store pattern using PatternEmbeddingService
       await patternEmbeddingService.storePattern({
-        symbolName: typeof data === "object" ? data.symbol || data.cd : data,
-        vcoinId: typeof data === "object" ? data.vcoinId : undefined,
+        id: `pattern_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: patternType as any,
-        data:
-          typeof data === "object"
+        timestamp: Date.now(),
+        confidence: typeof data === "object" && data.confidence ? data.confidence : 0.8,
+        data: {
+          symbol: typeof data === "object" ? data.symbol || data.cd : data,
+          vcoinId: typeof data === "object" ? data.vcoinId : undefined,
+          ...(typeof data === "object"
             ? {
                 sts: data.sts,
                 st: data.st,
                 tt: data.tt,
-                confidence,
-                timestamp: Date.now(),
                 advanceNoticeHours: data.advanceNoticeHours || 0,
               }
-            : { confidence, timestamp: Date.now() },
-        confidence,
+            : {}),
+        },
       });
 
       this.logger.debug("Successful pattern stored", { patternType, confidence });

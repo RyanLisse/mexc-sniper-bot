@@ -647,12 +647,12 @@ Object.assign(ErrorLoggingService.prototype, {
 
       await batchDatabaseService.batchInsert("error_logs", dbEntries);
 
-      logger.info("Successfully stored log entries in database", {
+      console.info("[ErrorLoggingService] Successfully stored log entries in database", {
         operation: "storeInDatabase",
         entryCount: entries.length,
       });
     } catch (error) {
-      logger.error("Failed to store entries in database", {
+      console.error("[ErrorLoggingService] Failed to store entries in database", {
         operation: "storeInDatabase",
         error: error instanceof Error ? error.message : "Unknown error",
         entryCount: entries.length,
@@ -699,13 +699,13 @@ Object.assign(ErrorLoggingService.prototype, {
       // Write back to file
       await fs.writeFile(logFile, JSON.stringify(allEntries, null, 2));
 
-      logger.info("Successfully stored log entries in local file", {
+      console.info("[ErrorLoggingService] Successfully stored log entries in local file", {
         operation: "storeInLocalFile",
         entryCount: entries.length,
         filePath: logFile,
       });
     } catch (error) {
-      logger.error("Failed to store entries in local file", {
+      console.error("[ErrorLoggingService] Failed to store entries in local file", {
         operation: "storeInLocalFile",
         error: error instanceof Error ? error.message : "Unknown error",
         entryCount: entries.length,
@@ -718,7 +718,6 @@ Object.assign(ErrorLoggingService.prototype, {
    * Send log entries to monitoring service
    */
   async sendToMonitoringService(entries: ErrorLogEntry[]): Promise<void> {
-    const logger = this.getStructuredLogger();
 
     try {
       // Mock implementation - replace with actual monitoring service
@@ -747,13 +746,13 @@ Object.assign(ErrorLoggingService.prototype, {
         );
       }
 
-      logger.info("Successfully sent log entries to monitoring service", {
+      console.info("[ErrorLoggingService] Successfully sent log entries to monitoring service", {
         operation: "sendToMonitoringService",
         entryCount: entries.length,
         endpoint: monitoringEndpoint,
       });
     } catch (error) {
-      logger.error("Failed to send entries to monitoring service", {
+      console.error("[ErrorLoggingService] Failed to send entries to monitoring service", {
         operation: "sendToMonitoringService",
         error: error instanceof Error ? error.message : "Unknown error",
         entryCount: entries.length,
@@ -766,7 +765,6 @@ Object.assign(ErrorLoggingService.prototype, {
    * Send log entries to webhook as fallback
    */
   async sendToWebhook(entries: ErrorLogEntry[]): Promise<void> {
-    const logger = this.getStructuredLogger();
 
     try {
       const webhookUrl = process.env.ERROR_WEBHOOK_URL;
@@ -800,13 +798,13 @@ Object.assign(ErrorLoggingService.prototype, {
         throw new Error(`Webhook responded with ${response.status}: ${response.statusText}`);
       }
 
-      logger.info("Successfully sent log entries to webhook", {
+      console.info("[ErrorLoggingService] Successfully sent log entries to webhook", {
         operation: "sendToWebhook",
         entryCount: entries.length,
         webhookUrl: webhookUrl.substring(0, 50) + "...",
       });
     } catch (error) {
-      logger.error("Failed to send entries to webhook", {
+      console.error("[ErrorLoggingService] Failed to send entries to webhook", {
         operation: "sendToWebhook",
         error: error instanceof Error ? error.message : "Unknown error",
         entryCount: entries.length,
@@ -819,7 +817,6 @@ Object.assign(ErrorLoggingService.prototype, {
    * Log entries to console with structured formatting
    */
   async logToConsole(entries: ErrorLogEntry[]): Promise<void> {
-    const logger = this.getStructuredLogger();
 
     try {
       entries.forEach((entry) => {
@@ -846,7 +843,7 @@ Object.assign(ErrorLoggingService.prototype, {
         logMethod("[STRUCTURED-LOG]", JSON.stringify(logData, null, 2));
       });
 
-      logger.info("Successfully logged entries to console", {
+      console.info("[ErrorLoggingService] Successfully logged entries to console", {
         operation: "logToConsole",
         entryCount: entries.length,
       });
@@ -861,43 +858,46 @@ Object.assign(ErrorLoggingService.prototype, {
    * Start the flush interval for buffered logging
    */
   startFlushInterval(): void {
-    if (this.flushInterval) {
-      clearInterval(this.flushInterval);
+    // Note: This method is called on prototype, so 'this' refers to the service instance
+    const self = this as any; // Cast to access private properties
+    
+    if (self.flushInterval) {
+      clearInterval(self.flushInterval);
     }
 
-    this.flushInterval = setInterval(async () => {
+    self.flushInterval = setInterval(async () => {
       try {
-        await this.flush();
+        await self.flush();
       } catch (error) {
-        this.getStructuredLogger().error("Flush interval error", {
+        console.error("[ErrorLoggingService] Flush interval error", {
           operation: "startFlushInterval",
           error: error instanceof Error ? error.message : "Unknown error",
         });
       }
-    }, this.flushIntervalMs);
+    }, self.flushIntervalMs);
   },
 
   /**
    * Setup graceful shutdown to flush remaining logs
    */
   setupGracefulShutdown(): void {
+    const self = this as any; // Cast to access private properties
+    
     const gracefulShutdown = async () => {
-      const logger = this.getStructuredLogger();
-
       try {
-        logger.info("Graceful shutdown initiated, flushing remaining logs", {
+        console.info("[ErrorLoggingService] Graceful shutdown initiated, flushing remaining logs", {
           operation: "setupGracefulShutdown",
-          bufferSize: this.buffer.length,
-          fallbackBufferSize: this.fallbackBuffer.length,
+          bufferSize: self.buffer?.length || 0,
+          fallbackBufferSize: self.fallbackBuffer?.length || 0,
         });
 
-        if (this.flushInterval) {
-          clearInterval(this.flushInterval);
+        if (self.flushInterval) {
+          clearInterval(self.flushInterval);
         }
 
-        await this.flush();
+        await self.flush();
 
-        logger.info("Successfully flushed all logs during shutdown", {
+        console.info("[ErrorLoggingService] Successfully flushed all logs during shutdown", {
           operation: "setupGracefulShutdown",
         });
       } catch (error) {
@@ -912,13 +912,14 @@ Object.assign(ErrorLoggingService.prototype, {
 });
 
 // Update circuit breaker creation to use the new implementation
-ErrorLoggingService.prototype.getCircuitBreaker = function (
+(ErrorLoggingService.prototype as any).getCircuitBreaker = function (
   strategyName: string
 ): CircuitBreakerState {
-  if (!this.circuitBreakers.has(strategyName)) {
-    this.circuitBreakers.set(strategyName, new LoggingCircuitBreaker());
+  const self = this as any;
+  if (!self.circuitBreakers.has(strategyName)) {
+    self.circuitBreakers.set(strategyName, new LoggingCircuitBreaker());
   }
-  return this.circuitBreakers.get(strategyName)!;
+  return self.circuitBreakers.get(strategyName)!;
 };
 
 /**

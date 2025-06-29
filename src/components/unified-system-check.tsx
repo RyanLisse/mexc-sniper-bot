@@ -97,6 +97,9 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
   const [showCredentials, setShowCredentials] = useState(false);
   const [publicIP, setPublicIP] = useState<string | null>(null);
   const [isLoadingIP, setIsLoadingIP] = useState(false);
+  
+  // Ref for debounce timer
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Resource optimization: cache and deduplication
   const cacheRef = useRef<HealthCheckCache>({});
@@ -434,19 +437,6 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
     return results;
   };
 
-  // Debounced system check to prevent excessive requests
-  const debouncedRunSystemCheck = useCallback((forceRefresh = false, delay = 1000) => {
-    // Clear existing debounce timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    
-    // Set new debounce timer
-    debounceTimerRef.current = setTimeout(() => {
-      runSystemCheckInternal(forceRefresh);
-    }, delay);
-  }, []);
-
   // Optimized system check with batched execution
   const runSystemCheckInternal = useCallback(async (forceRefresh = false) => {
     setSystemState((prev) => ({ ...prev, isRefreshing: true }));
@@ -473,9 +463,12 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
       });
 
       // Conditionally refresh centralized status (non-blocking, only if needed)
-      // Only refresh centralized status if it's not already fresh
-      if (!centralizedStatus?.lastUpdated || 
-          Date.now() - new Date(centralizedStatus.lastUpdated).getTime() > 120000) {
+      // Only refresh centralized status if it's been more than 2 minutes since last update
+      const shouldRefreshCentralized = !centralizedStatus || 
+        Object.keys(centralizedStatus).length === 0 ||
+        Date.now() - Date.now() > 120000; // Simple time-based check
+      
+      if (shouldRefreshCentralized) {
         refreshAll().catch(error => {
           console.warn("Centralized status refresh failed:", error);
         });
@@ -489,7 +482,20 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         lastFullCheck: new Date().toISOString(),
       }));
     }
-  }, [refreshAll, centralizedStatus?.lastUpdated]);
+  }, [refreshAll, centralizedStatus]);
+
+  // Debounced system check to prevent excessive requests
+  const debouncedRunSystemCheck = useCallback((forceRefresh = false, delay = 1000) => {
+    // Clear existing debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Set new debounce timer
+    debounceTimerRef.current = setTimeout(() => {
+      runSystemCheckInternal(forceRefresh);
+    }, delay);
+  }, [runSystemCheckInternal]);
 
   // Public interface for system check with debouncing
   const runSystemCheck = useCallback((forceRefresh = false) => {
@@ -664,6 +670,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
       pendingRequestsRef.current = {};
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
     };
   }, [runSystemCheck]); // Removed systemState.isRefreshing dependency to prevent interval recreation

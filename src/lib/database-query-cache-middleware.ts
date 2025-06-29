@@ -5,7 +5,7 @@
  * database operations by 50-60% through intelligent response caching.
  */
 
-import type { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { globalAPIResponseCache } from "./api-response-cache";
 import { globalDatabaseCostProtector } from "./database-cost-protector";
 
@@ -189,11 +189,28 @@ class DatabaseQueryCacheMiddleware {
       const request = args[0] as NextRequest;
       const endpoint = new URL(request.url).pathname;
       
-      const cacheConfig = config || CACHEABLE_ENDPOINTS[endpoint];
-      if (!cacheConfig) {
+      const defaultCacheConfig = CACHEABLE_ENDPOINTS[endpoint];
+      if (!config && !defaultCacheConfig) {
         // No caching configured for this endpoint
         return handler(...args);
       }
+      
+      // Merge config with defaults and ensure required fields
+      const { endpoint: configEndpoint, ...configWithoutEndpoint } = config || {};
+      const defaultConfig = {
+        cacheTtlSeconds: 300,
+        enableCompression: true,
+        enableStaleWhileRevalidate: true,
+        dependsOn: [],
+        maxCacheSize: 1000,
+      };
+      
+      const cacheConfig: CacheableEndpointConfig = {
+        endpoint,
+        ...defaultConfig,
+        ...defaultCacheConfig,
+        ...configWithoutEndpoint,
+      };
       
       this.metrics.totalRequests++;
       
@@ -217,7 +234,7 @@ class DatabaseQueryCacheMiddleware {
         });
         
         // Return cached response
-        return this.createCachedResponse(cachedResponse.data) as T;
+        return this.createCachedResponse(cachedResponse.data) as any;
       }
       
       // Cache miss - execute original handler
@@ -565,7 +582,7 @@ export const globalQueryCacheMiddleware = DatabaseQueryCacheMiddleware.getInstan
 export function withDatabaseQueryCache<T extends (...args: any[]) => Promise<NextResponse>>(
   handler: T,
   config?: Partial<CacheableEndpointConfig>
-): T {
+): Promise<T> {
   return globalQueryCacheMiddleware.withQueryCache(handler, config);
 }
 

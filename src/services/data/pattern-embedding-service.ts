@@ -44,6 +44,28 @@ export class PatternEmbeddingService {
   private embeddingCache = new Map<string, EmbeddingVector>();
 
   /**
+   * Store a pattern with its embedding
+   */
+  async storePattern(pattern: PatternData): Promise<PatternEmbedding> {
+    const embedding = await this.generateEmbedding(pattern);
+    
+    const patternEmbedding: PatternEmbedding = {
+      patternId: pattern.id,
+      embedding,
+      metadata: {
+        type: pattern.type,
+        confidence: pattern.confidence,
+        timestamp: pattern.timestamp,
+        data: pattern.data,
+      },
+    };
+
+    // Here you could store to database or persistence layer
+    // For now, we'll just return the embedding
+    return patternEmbedding;
+  }
+
+  /**
    * Generate embedding for pattern data
    */
   async generateEmbedding(pattern: PatternData): Promise<EmbeddingVector> {
