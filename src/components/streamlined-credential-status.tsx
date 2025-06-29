@@ -47,7 +47,7 @@ interface StreamlinedCredentialStatusProps {
 export function StreamlinedCredentialStatus({
   variant = "card",
   showActions = true,
-  autoRefresh = true,
+  autoRefresh = false, // Disable auto-refresh by default to reduce requests
   className = "",
 }: StreamlinedCredentialStatusProps) {
   const queryClient = useQueryClient();
@@ -73,8 +73,8 @@ export function StreamlinedCredentialStatus({
       // Validate with Zod
       return UnifiedStatusSchema.parse(result.data);
     },
-    staleTime: 30000, // Increased to 30 seconds to reduce conflicts
-    refetchInterval: autoRefresh ? 60000 : false, // Reduced frequency to 60 seconds
+    staleTime: 300000, // 5 minutes to dramatically reduce requests
+    refetchInterval: autoRefresh ? 300000 : false, // 5 minutes instead of 60 seconds
     retry: (failureCount, _error) => failureCount < 2,
   });
 

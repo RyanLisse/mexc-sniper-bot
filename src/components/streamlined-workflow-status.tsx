@@ -55,7 +55,7 @@ interface StreamlinedWorkflowStatusProps {
 
 export function StreamlinedWorkflowStatus({
   className = "",
-  autoRefresh = true,
+  autoRefresh = false, // Disable auto-refresh by default to reduce requests
   variant = "card",
 }: StreamlinedWorkflowStatusProps) {
   const queryClient = useQueryClient();
@@ -90,8 +90,8 @@ export function StreamlinedWorkflowStatus({
         }
       );
     },
-    staleTime: 30000, // Increased to 30 seconds to reduce conflicts
-    refetchInterval: autoRefresh ? 45000 : false, // Reduced frequency to 45 seconds
+    staleTime: 300000, // 5 minutes to dramatically reduce requests
+    refetchInterval: autoRefresh ? 300000 : false, // 5 minutes instead of 45 seconds
     retry: 2,
   });
 

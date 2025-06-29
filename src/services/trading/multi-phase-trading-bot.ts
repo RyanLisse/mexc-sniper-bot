@@ -22,8 +22,17 @@ export interface BotStatus {
   visualization?: string;
 }
 
+export interface TradingAction {
+  type: "sell" | "stop_loss" | "trail_stop";
+  description: string;
+  phase?: number;
+  amount: number;
+  price: number;
+  isStopLoss?: boolean;
+}
+
 export interface PriceUpdateResult {
-  actions: string[];
+  actions: TradingAction[];
   status: BotStatus;
 }
 
@@ -51,7 +60,7 @@ export interface PriceMovement {
 }
 
 export interface SimulationResult {
-  actions: string[];
+  actions: TradingAction[];
   status: BotStatus;
   performance: PerformanceSummary;
 }
@@ -66,6 +75,15 @@ export interface BotState {
   };
 }
 
+export interface PositionInfo {
+  symbol: string;
+  entryPrice: number;
+  currentSize: number;
+  initialSize: number;
+  unrealizedPnL: number;
+  realizedPnL: number;
+}
+
 /**
  * Multi-Phase Trading Bot Implementation
  */
@@ -73,6 +91,9 @@ export class MultiPhaseTradingBot {
   protected completedPhases: Set<number> = new Set();
   protected lastPrice?: number;
   private maxDrawdown = 0;
+  private symbol = "";
+  private initialPosition = 0;
+  private totalRealizedPnL = 0;
 
   constructor(
     protected strategy: TradingStrategy,
@@ -81,6 +102,41 @@ export class MultiPhaseTradingBot {
   ) {
     if (entryPrice <= 0) throw new Error("Entry price must be positive");
     if (position <= 0) throw new Error("Position must be positive");
+    this.initialPosition = position;
+  }
+
+  /**
+   * Initialize a new position
+   */
+  initializePosition(symbol: string, entryPrice: number, positionSize: number): void {
+    if (entryPrice <= 0) throw new Error("Entry price must be positive");
+    if (positionSize <= 0) throw new Error("Position size must be positive");
+    
+    this.symbol = symbol;
+    this.entryPrice = entryPrice;
+    this.position = positionSize;
+    this.initialPosition = positionSize;
+    this.completedPhases.clear();
+    this.lastPrice = undefined;
+    this.maxDrawdown = 0;
+    this.totalRealizedPnL = 0;
+  }
+
+  /**
+   * Get current position information
+   */
+  getPositionInfo(): PositionInfo {
+    const currentPrice = this.lastPrice || this.entryPrice;
+    const unrealizedPnL = this.position * (currentPrice - this.entryPrice);
+    
+    return {
+      symbol: this.symbol,
+      entryPrice: this.entryPrice,
+      currentSize: this.position,
+      initialSize: this.initialPosition,
+      unrealizedPnL,
+      realizedPnL: this.totalRealizedPnL,
+    };
   }
 
   /**
@@ -88,10 +144,33 @@ export class MultiPhaseTradingBot {
    */
   onPriceUpdate(currentPrice: number): PriceUpdateResult {
     this.lastPrice = currentPrice;
-    const actions: string[] = [];
+    const actions: TradingAction[] = [];
 
     // Calculate price increase percentage
     const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+
+    // Check for stop-loss conditions (20% drawdown triggers emergency stop)
+    if (priceIncrease <= -20) {
+      const stopLossAmount = this.position;
+      if (stopLossAmount > 0) {
+        actions.push({
+          type: "stop_loss",
+          description: `STOP LOSS: Sell ${stopLossAmount} units at ${currentPrice.toFixed(2)} (-${Math.abs(priceIncrease).toFixed(2)}%)`,
+          amount: stopLossAmount,
+          price: currentPrice,
+          isStopLoss: true,
+        });
+        
+        // Calculate realized loss
+        this.totalRealizedPnL += stopLossAmount * (currentPrice - this.entryPrice);
+        this.position = 0; // Close entire position
+      }
+      
+      return {
+        actions,
+        status: this.buildStatus(currentPrice),
+      };
+    }
 
     // Check each phase target
     this.strategy.levels.forEach((level, index) => {
@@ -106,9 +185,20 @@ export class MultiPhaseTradingBot {
       if (priceIncrease >= level.percentage) {
         this.completedPhases.add(phaseNumber);
         const sellAmount = Math.floor((this.position * level.sellPercentage) / 100);
-        actions.push(
-          `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} (+${level.percentage}%)`
-        );
+        
+        if (sellAmount > 0) {
+          actions.push({
+            type: "sell",
+            description: `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} (+${level.percentage}%)`,
+            phase: phaseNumber,
+            amount: sellAmount,
+            price: currentPrice,
+          });
+          
+          // Calculate realized profit for this phase
+          this.totalRealizedPnL += sellAmount * (currentPrice - this.entryPrice);
+          this.position -= sellAmount; // Reduce remaining position
+        }
       }
     });
 

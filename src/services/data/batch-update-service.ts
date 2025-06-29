@@ -87,9 +87,9 @@ export class BatchUpdateService {
       const existingTargets = await db
         .select({ id: snipeTargets.id })
         .from(snipeTargets)
-        .where(inArray(snipeTargets.id, targetIds));
+        .where(inArray(snipeTargets.id, targetIds.map(id => Number(id))));
 
-      const existingIds = new Set(existingTargets.map(t => t.id));
+      const existingIds = new Set(existingTargets.map((t: any) => t.id));
       const validUpdates = updates.filter(u => existingIds.has(u.id));
       
       // Track not found targets
@@ -191,7 +191,7 @@ export class BatchUpdateService {
         .from(patternEmbeddings)
         .where(inArray(patternEmbeddings.patternId, patternIds));
 
-      const existingIds = new Set(existingPatterns.map(p => p.patternId));
+      const existingIds = new Set(existingPatterns.map((p: any) => p.patternId));
       const validUpdates = updates.filter(u => existingIds.has(u.patternId));
       
       // Track not found patterns
@@ -287,12 +287,11 @@ export class BatchUpdateService {
                 isActive, 
                 updatedAt: new Date() 
               })
-              .where(inArray(snipeTargets.id, chunk)),
-            3,
-            1000
+              .where(inArray(snipeTargets.id, chunk.map(id => Number(id)))),
+            `Update snipe targets chunk ${i + 1}`
           );
 
-          const updated = result.changes || 0;
+          const updated = (result as any)?.changes || 0;
           totalUpdated += updated;
           
           this.logger.debug(`Chunk ${i + 1} updated ${updated} targets`);
@@ -359,12 +358,11 @@ export class BatchUpdateService {
           () => db
             .update(snipeTargets)
             .set(updateData)
-            .where(eq(snipeTargets.id, update.id)),
-          3,
-          1000
+            .where(eq(snipeTargets.id, Number(update.id))),
+          `Update snipe target ${update.id}`
         );
 
-        if (result.changes && result.changes > 0) {
+        if ((result as any)?.changes && (result as any).changes > 0) {
           updated++;
         }
       } catch (error) {
@@ -407,11 +405,10 @@ export class BatchUpdateService {
             .update(patternEmbeddings)
             .set(updateData)
             .where(eq(patternEmbeddings.patternId, update.patternId)),
-          3,
-          1000
+          `Update pattern embedding ${update.patternId}`
         );
 
-        if (result.changes && result.changes > 0) {
+        if ((result as any)?.changes && (result as any).changes > 0) {
           updated++;
         }
       } catch (error) {

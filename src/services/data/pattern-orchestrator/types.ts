@@ -6,7 +6,7 @@
 
 import type { PatternAnalysisResult } from "@/src/core/pattern-detection";
 import type { AgentResponse } from "@/src/mexc-agents/base-agent";
-import type { CalendarEntry, SymbolEntry } from "../mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "../../api/mexc-unified-exports";
 
 export interface PatternWorkflowRequest {
   type: "discovery" | "monitoring" | "validation" | "strategy_creation";

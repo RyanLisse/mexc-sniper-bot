@@ -6,7 +6,7 @@
 
 import { z } from "zod";
 import type { OrderParameters } from "@/src/services/api/mexc-client-types";
-import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
+import { getUnifiedMexcService } from "@/src/services/mexc-unified-exports";
 
 // Order status enumeration
 export const OrderStatus = z.enum([
@@ -278,7 +278,7 @@ export class ExecutionOrderService {
       );
 
       // Initialize MEXC service with credentials
-      const mexcService = getRecommendedMexcService({
+      const mexcService = await getUnifiedMexcService({
         apiKey: this.config.apiKey,
         secretKey: this.config.secretKey,
       });
@@ -286,8 +286,8 @@ export class ExecutionOrderService {
       // Prepare order parameters for MEXC API
       const orderParams: OrderParameters = {
         symbol: order.symbol,
-        side: order.side.toUpperCase(),
-        type: order.type.toUpperCase(),
+        side: order.side.toUpperCase() as "BUY" | "SELL",
+        type: order.type.toUpperCase() as "LIMIT" | "MARKET",
         quantity: order.quantity.toString(),
         price: order.price?.toString(),
         timeInForce: "IOC", // Immediate or Cancel for safety
@@ -297,7 +297,7 @@ export class ExecutionOrderService {
       let response;
       if (this.config.enableTestMode) {
         console.info("[ExecutionOrderService] Using test mode");
-        response = await mexcService.placeTestOrder(orderParams);
+        response = await mexcService.placeOrder(orderParams);
       } else {
         console.info("[ExecutionOrderService] Using live trading mode");
         response = await mexcService.placeOrder(orderParams);

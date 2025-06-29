@@ -634,7 +634,22 @@ export class AdvancedRiskEngine extends EventEmitter {
     crossExchangeDeviation: number;
     coordinatedTrading: boolean;
   }): Promise<ManipulationDetection> {
-    return await this.stressTestingValidation.detectManipulation(activity);
+    const result = await this.stressTestingValidation.detectManipulation(activity);
+    
+    // Emit manipulation events based on detected patterns
+    if (result.indicators.includes("coordinated_pump") && activity.rapidPriceMovement > 50) {
+      this.emit("manipulation_detected", { type: "pump_detected", activity, result });
+    }
+    
+    if (result.indicators.includes("coordinated_pump") && activity.rapidPriceMovement < -30) {
+      this.emit("manipulation_detected", { type: "dump_detected", activity, result });
+    }
+    
+    if (result.riskLevel === "high" || result.riskLevel === "critical") {
+      this.emit("manipulation_detected", { type: "manipulation_alert", activity, result });
+    }
+    
+    return result;
   }
 
   /**

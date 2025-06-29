@@ -13,12 +13,22 @@
 
 import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from "vitest";
 import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
+import { setupSafetyMonitoringMocks } from "../utils/api-test-mocks";
 import { NextRequest } from "next/server";
 
 // Mock the safety service at module level first
 let mockSafetyService: any;
+let mockCoreTrading: any;
 
-// Create comprehensive mock safety service with consistent return values
+// Setup comprehensive mocks for all dependencies
+const setupMocks = () => {
+  const mocks = setupSafetyMonitoringMocks();
+  mockSafetyService = mocks.mockSafetyService;
+  mockCoreTrading = mocks.mockCoreTrading;
+  return mocks;
+};
+
+// Create comprehensive mock safety service with consistent return values - DEPRECATED: Use setupMocks instead
 const createMockSafetyService = () => ({
   // Core monitoring methods
   getMonitoringStatus: vi.fn().mockReturnValue(false),
@@ -158,38 +168,8 @@ describe("Safety Monitoring API Integration", () => {
   let POST: any;
 
   beforeAll(async () => {
-    // Use doMock which works in beforeAll hooks
-    vi.doMock("@/src/lib/api-auth", () => ({
-      apiAuthWrapper: vi.fn().mockImplementation((handler) => {
-        // Return a wrapper that directly calls the handler without auth checks
-        return async (request, ...args) => {
-          return await handler(request, ...args);
-        };
-      }),
-      requireApiAuth: vi.fn().mockResolvedValue({
-        id: "test-user-123",
-        email: "test@example.com",
-        name: "Test User",
-      }),
-    }));
-
-    // Mock logger to avoid logging noise during tests
-    vi.doMock("@/src/lib/structured-logger", () => ({
-      createSafeLogger: () => ({
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        debug: vi.fn(),
-        trading: vi.fn(),
-      }),
-    }));
-
-    // Mock the real-time safety monitoring modules to use our mock service
-    vi.doMock("@/src/services/risk/real-time-safety-monitoring-modules", () => ({
-      RealTimeSafetyMonitoringService: {
-        getInstance: vi.fn(() => mockSafetyService),
-      },
-    }));
+    // Setup comprehensive mocks for all dependencies
+    setupMocks();
 
     // Import after mocking
     const { GET: getHandler, POST: postHandler } = await import(

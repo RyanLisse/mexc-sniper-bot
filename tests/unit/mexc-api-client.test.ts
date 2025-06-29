@@ -92,6 +92,14 @@ describe('MexcApiClient', () => {
       hasCredentials: vi.fn(),
       createSignature: vi.fn(),
       validateCredentials: vi.fn(),
+      config: {} as any,
+      generateAuthContext: vi.fn(),
+      addAuthHeaders: vi.fn(),
+      addAuthParams: vi.fn(),
+      // rotateCredentials: vi.fn(), // Not part of interface
+      getCredentialStatus: vi.fn(),
+      resetCredentials: vi.fn(),
+      testCredentials: vi.fn(),
     };
 
     mockRequestService = {

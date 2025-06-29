@@ -152,7 +152,7 @@ export class BatchDatabaseService {
       const chunks = this.chunkArray(processedEmbeddings, chunkSize);
 
       // Use database transaction for better consistency and rollback capability
-      const result = await db.transaction(async (tx) => {
+      const result = await db.transaction(async (tx: any) => {
         let totalInserted = 0;
         
         for (let i = 0; i < chunks.length; i++) {
@@ -299,7 +299,7 @@ export class BatchDatabaseService {
       // Use database transaction for consistent updates
       return await databaseConnectionPool.executeWrite(
         async () => {
-          return await db.transaction(async (tx) => {
+          return await db.transaction(async (tx: any) => {
             let updatedCount = 0;
 
             if (updates.length === 1) {
@@ -787,7 +787,7 @@ export class BatchDatabaseService {
     try {
       return await databaseConnectionPool.executeWrite(
         async () => {
-          return await db.transaction(async (tx) => {
+          return await db.transaction(async (tx: any) => {
             let insertedCount = 0;
             const chunks = this.chunkArray(records, chunkSize);
 
@@ -881,7 +881,7 @@ export class BatchDatabaseService {
     try {
       return await databaseConnectionPool.executeWrite(
         async () => {
-          return await db.transaction(async (tx) => {
+          return await db.transaction(async (tx: any) => {
             let updatedCount = 0;
             const batches = this.chunkArray(updates, batchSize);
 
@@ -1035,7 +1035,7 @@ export class BatchDatabaseService {
     try {
       return await databaseConnectionPool.executeWrite(
         async () => {
-          return await db.transaction(async (tx) => {
+          return await db.transaction(async (tx: any) => {
             let deletedCount = 0;
             const batches = this.chunkArray(conditions, batchSize);
 

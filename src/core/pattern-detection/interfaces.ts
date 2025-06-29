@@ -27,6 +27,27 @@ export const MarketConditionsSchema = z.object({
 
 export type MarketConditions = z.infer<typeof MarketConditionsSchema>;
 
+// Additional missing types
+export type ConfidenceLevel = "low" | "medium" | "high" | "very_high";
+
+export interface PatternCorrelation {
+  patternId: string;
+  correlatedPatternId: string;
+  strength: number;
+  type: "positive" | "negative" | "neutral";
+}
+
+export type PatternSource = "calendar" | "market_data" | "historical" | "manual";
+
+export interface PatternStatistics {
+  totalDetected: number;
+  successRate: number;
+  averageConfidence: number;
+  lastDetected?: Date;
+}
+
+export type PatternType = "launch_sequence" | "ready_state" | "pre_ready" | "market_pattern";
+
 // Historical pattern type schema
 export const HistoricalPatternSchema = z.object({
   id: z.string(),

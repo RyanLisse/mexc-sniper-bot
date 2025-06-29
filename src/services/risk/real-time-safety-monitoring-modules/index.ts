@@ -178,6 +178,14 @@ export class RealTimeSafetyMonitoringService {
     this.patternMonitoring = PatternMonitoringService.getInstance();
     this.mexcService = new UnifiedMexcServiceV2();
 
+    // FIXED: Initialize the Core Trading Service
+    this.executionService.initialize().catch((error) => {
+      console.warn("Failed to initialize Core Trading Service during safety monitoring setup", {
+        operation: "safety_monitoring_initialization",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    });
+
     // Register this service with the emergency stop coordinator
     this.emergencyStopCoordinator.registerService("safety-monitoring", this);
 
@@ -408,6 +416,9 @@ export class RealTimeSafetyMonitoringService {
    * Get comprehensive safety monitoring report
    */
   public async getSafetyReport(): Promise<SafetyMonitoringReport> {
+    // FIXED: Ensure execution service is ready before generating report
+    await this.ensureExecutionServiceReady();
+    
     // Get data from all modules
     const [riskMetrics, systemRiskAssessment, alertStats, timerStats] = await Promise.all([
       this.coreSafetyMonitoring.updateRiskMetrics(),
@@ -449,10 +460,30 @@ export class RealTimeSafetyMonitoringService {
   }
 
   /**
+   * FIXED: Ensure Core Trading Service is initialized before use
+   */
+  private async ensureExecutionServiceReady(): Promise<void> {
+    try {
+      // Check if the service is already initialized by trying to get status
+      await this.executionService.getServiceStatus();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      if (errorMessage.includes("not initialized")) {
+        console.info("Initializing Core Trading Service for safety monitoring...");
+        await this.executionService.initialize();
+      } else {
+        // If it's a different error, re-throw it
+        throw error;
+      }
+    }
+  }
+
+  /**
    * FIXED: Trigger coordinated emergency safety response using EmergencyStopCoordinator
    * Addresses Agent 4/15 objectives: Emergency stop system synchronization
    */
   public async triggerEmergencyResponse(reason: string): Promise<SafetyAction[]> {
+    await this.ensureExecutionServiceReady();
     const activePositions = await this.executionService.getActivePositions();
     console.warn("🚨 Triggering coordinated emergency response", {
       operation: "emergency_response",
@@ -731,8 +762,17 @@ export class RealTimeSafetyMonitoringService {
    * Check if system is in safe state
    */
   public async isSystemSafe(): Promise<boolean> {
-    const report = await this.getSafetyReport();
-    return report.status === "safe" && report.overallRiskScore < 50;
+    try {
+      const report = await this.getSafetyReport();
+      return report.status === "safe" && report.overallRiskScore < 50;
+    } catch (error) {
+      console.warn("Failed to get safety report for system safety check", {
+        operation: "is_system_safe",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+      // Return false as a safety precaution if we can't determine safety
+      return false;
+    }
   }
 
   /**

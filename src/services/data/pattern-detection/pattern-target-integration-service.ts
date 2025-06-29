@@ -6,7 +6,7 @@
  * snipe targets in the database for auto-sniping execution.
  */
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { PatternMatch } from "@/src/core/pattern-detection/interfaces";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
@@ -266,7 +266,7 @@ export class PatternTargetIntegrationService {
         and(
           eq(snipeTargets.userId, userId),
           // Active statuses
-          snipeTargets.status.in(["pending", "ready", "executing"])
+          inArray(snipeTargets.status, ["pending", "ready", "executing"])
         )
       );
   }

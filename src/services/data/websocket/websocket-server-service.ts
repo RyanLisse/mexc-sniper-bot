@@ -413,7 +413,7 @@ export class WebSocketServerService extends EventEmitter {
   /**
    * Broadcast message to a specific channel
    */
-  broadcast<T extends WebSocketMessage>(channel: WebSocketChannel, message: T): void {
+  async broadcast<T extends WebSocketMessage>(channel: WebSocketChannel, message: T): Promise<void> {
     const subscribers = this.connectionManager.getChannelSubscribers(channel);
 
     if (subscribers.length === 0) {
@@ -428,9 +428,9 @@ export class WebSocketServerService extends EventEmitter {
     for (const connection of subscribers) {
       try {
         if (connection.ws.readyState === WebSocket.OPEN) {
-          instrumentWebSocketSend(
+          await instrumentWebSocketSend(
             message,
-            () => {
+            async () => {
               connection.ws.send(messageData);
             },
             {
@@ -574,8 +574,10 @@ export class WebSocketServerService extends EventEmitter {
       return;
     }
 
-    instrumentChannelOperation(
-      () => {
+    await instrumentChannelOperation(
+      "subscribe",
+      channel,
+      async () => {
         const success = this.connectionManager.subscribeToChannel(connectionId, channel);
 
         if (success) {
@@ -584,9 +586,8 @@ export class WebSocketServerService extends EventEmitter {
             channel,
           });
         }
-      },
-      channel,
-      "subscribe"
+        return success;
+      }
     );
   }
 
@@ -602,8 +603,10 @@ export class WebSocketServerService extends EventEmitter {
       return;
     }
 
-    instrumentChannelOperation(
-      () => {
+    await instrumentChannelOperation(
+      "unsubscribe",
+      channel,
+      async () => {
         const success = this.connectionManager.unsubscribeFromChannel(connectionId, channel);
 
         if (success) {
@@ -612,9 +615,8 @@ export class WebSocketServerService extends EventEmitter {
             channel,
           });
         }
-      },
-      channel,
-      "unsubscribe"
+        return success;
+      }
     );
   }
 
@@ -797,29 +799,58 @@ export class WebSocketServerService extends EventEmitter {
   /**
    * Broadcast agent status update
    */
-  broadcastAgentStatus(agentStatus: AgentStatusMessage): void {
-    this.broadcast("agent_status", agentStatus);
+  async broadcastAgentStatus(agentStatus: AgentStatusMessage): Promise<void> {
+    const message: WebSocketMessage = {
+      id: crypto.randomUUID(),
+      type: "agent:status",
+      channel: "agent_status",
+      data: agentStatus,
+      timestamp: Date.now(),
+    };
+    await this.broadcast("agent_status", message);
   }
 
   /**
    * Broadcast trading price update
    */
-  broadcastTradingPrice(priceUpdate: TradingPriceMessage): void {
-    this.broadcast("trading_prices", priceUpdate);
+  async broadcastTradingPrice(priceUpdate: TradingPriceMessage): Promise<void> {
+    const message: WebSocketMessage = {
+      id: crypto.randomUUID(),
+      type: "trading:price",
+      channel: "trading_prices",
+      data: priceUpdate,
+      timestamp: Date.now(),
+    };
+    await this.broadcast("trading_prices", message);
   }
 
   /**
    * Broadcast pattern discovery
    */
-  broadcastPatternDiscovery(patternData: PatternDiscoveryMessage): void {
-    this.broadcast("pattern_discovery", patternData);
+  async broadcastPatternDiscovery(patternData: PatternDiscoveryMessage): Promise<void> {
+    const message: WebSocketMessage = {
+      id: crypto.randomUUID(),
+      type: "pattern:discovery",
+      channel: "pattern_discovery",
+      data: patternData,
+      timestamp: Date.now(),
+    };
+    await this.broadcast("pattern_discovery", message);
   }
 
   /**
    * Send notification to user
    */
   sendNotification(userId: string, notification: NotificationMessage): void {
-    this.sendToUser(userId, notification);
+    const message: WebSocketMessage = {
+      id: crypto.randomUUID(),
+      type: "notification:info",
+      channel: "notifications:global",
+      data: notification,
+      timestamp: Date.now(),
+      userId,
+    };
+    this.sendToUser(userId, message);
   }
 }
 

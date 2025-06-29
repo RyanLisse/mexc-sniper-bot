@@ -11,7 +11,9 @@ import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
-} from "../../lib/websocket-types";
+} from "@/src/lib/websocket-types";
+import type { PatternAnalysisResult } from "@/src/core/pattern-detection/interfaces";
+import { randomUUID } from "node:crypto";
 
 // ======================
 // MEXC WebSocket Types
@@ -28,6 +30,21 @@ interface MexcTickerData {
   P: string; // price change percent
   p: string; // price change
   t: number; // timestamp
+}
+
+// Extended analysis request interface for single symbol analysis
+interface SingleSymbolAnalysisRequest {
+  symbol: string;
+  sts: number;
+  st: number;
+  tt: number;
+  ps?: number;
+  qs?: number;
+  ca?: number;
+  currentPrice?: number;
+  priceChange?: number;
+  volume?: number;
+  timestamp: number;
 }
 
 interface MexcDepthData {
@@ -76,7 +93,7 @@ export class MarketDataManager {
   // Pattern detection
   private patternDetection: PatternDetectionCore;
   private lastPatternCheck = new Map<string, number>();
-  private readonly patternCheckInterval = 5000; // 5 seconds
+  private readonly patternCheckInterval = 15000; // 15 seconds (reduced from 5s)
 
   // Event handlers
   private onPriceUpdate?: (price: TradingPriceMessage) => void;
@@ -117,21 +134,24 @@ export class MarketDataManager {
     const price: TradingPriceMessage = {
       symbol: ticker.s,
       price: parseFloat(ticker.c),
-      priceChange: parseFloat(ticker.p),
-      priceChangePercent: parseFloat(ticker.P),
+      change: parseFloat(ticker.p),
+      changePercent: parseFloat(ticker.P),
       volume: parseFloat(ticker.v),
-      quoteVolume: parseFloat(ticker.q),
-      high: parseFloat(ticker.h),
-      low: parseFloat(ticker.l),
-      open: parseFloat(ticker.o),
       timestamp: ticker.t || Date.now(),
+      source: "mexc_ws" as const,
+      metadata: {
+        high24h: parseFloat(ticker.h),
+        low24h: parseFloat(ticker.l),
+        volume24h: parseFloat(ticker.v),
+        lastUpdate: ticker.t || Date.now(),
+      },
     };
 
     // Cache the price update
     this.priceCache.set(ticker.s, price);
 
     // Trigger pattern analysis if enough time has passed
-    this.checkForPatternUpdates(ticker.s, price);
+    await this.checkForPatternUpdates(ticker.s, price);
 
     // Emit to handlers
     if (this.onPriceUpdate) {
@@ -141,7 +161,7 @@ export class MarketDataManager {
     this.logger.debug("Price updated", {
       symbol: ticker.s,
       price: price.price,
-      change: price.priceChangePercent,
+      change: price.changePercent,
     });
   }
 
@@ -193,7 +213,7 @@ export class MarketDataManager {
   /**
    * Check for pattern updates based on price changes
    */
-  private checkForPatternUpdates(symbol: string, price: TradingPriceMessage): void {
+  private async checkForPatternUpdates(symbol: string, price: TradingPriceMessage): Promise<void> {
     const lastCheck = this.lastPatternCheck.get(symbol) || 0;
     const now = Date.now();
 
@@ -204,14 +224,29 @@ export class MarketDataManager {
     this.lastPatternCheck.set(symbol, now);
 
     // Trigger pattern detection for significant price changes
-    if (Math.abs(price.priceChangePercent) > 5) {
+    if (Math.abs(price.changePercent) > 5) {
       this.logger.info("Significant price movement detected", {
         symbol,
-        change: price.priceChangePercent,
+        change: price.changePercent,
       });
 
-      // Notify WebSocket agent bridge
-      webSocketAgentBridge.handlePriceUpdate(price);
+      // Notify WebSocket agent bridge via broadcasting
+      if (webSocketAgentBridge.isRunning()) {
+        webSocketAgentBridge.broadcastTradingSignal({
+          symbol: price.symbol,
+          type: "monitor",
+          strength: Math.min(Math.abs(price.changePercent) * 10, 100),
+          confidence: 0.6,
+          source: "price_movement",
+          reasoning: `Significant price movement detected: ${price.changePercent.toFixed(2)}%`,
+          timeframe: "1h",
+          metadata: {
+            priceChange: price.change,
+            priceChangePercent: price.changePercent,
+            volume: price.volume,
+          },
+        });
+      }
     }
   }
 
@@ -229,30 +264,44 @@ export class MarketDataManager {
 
       // Create pattern notification
       const notification: NotificationMessage = {
-        type: "pattern_detected",
-        data: {
-          symbol: status.symbol,
-          patternType: "ready_state",
-          confidence: 85, // High confidence for exact match
-          timestamp: status.timestamp,
-          details: {
-            sts: status.sts,
-            st: status.st,
-            tt: status.tt,
-            ps: status.ps,
-            qs: status.qs,
-            ca: status.ca,
-          },
-        },
+        notificationId: randomUUID(),
+        type: "success",
+        title: "Ready State Pattern Detected",
+        message: `Ready state pattern detected for ${status.symbol} (sts:${status.sts}, st:${status.st}, tt:${status.tt})`,
+        priority: "high",
+        category: "pattern",
         timestamp: Date.now(),
+        actionable: true,
+        actions: [
+          {
+            label: "View Details",
+            action: "navigate",
+            params: { path: `/patterns/${status.symbol}` },
+          },
+          {
+            label: "Create Trade",
+            action: "execute_trade",
+            params: { symbol: status.symbol },
+          },
+        ],
+        metadata: {
+          symbol: status.symbol,
+          sts: status.sts,
+          st: status.st,
+          tt: status.tt,
+          confidence: 85,
+        },
       };
 
       // Get current price for additional context
       const priceData = this.priceCache.get(status.symbol);
-      if (priceData) {
-        (notification.data as any).price = priceData.price;
-        (notification.data as any).priceChange = priceData.priceChangePercent;
-        (notification.data as any).volume = priceData.volume;
+      if (priceData && notification.metadata) {
+        // Extend metadata with additional price data
+        Object.assign(notification.metadata, {
+          price: priceData.price,
+          priceChange: priceData.changePercent,
+          volume: priceData.volume,
+        });
       }
 
       // Emit notification
@@ -261,13 +310,15 @@ export class MarketDataManager {
       }
 
       // Create trading signal for auto-sniping
-      const tradingSignal: TradingSignalMessage = {
-        type: "buy_signal",
+      const tradingSignal = {
         symbol: status.symbol,
-        confidence: 85,
-        reason: "Ready state pattern detected (sts:2, st:2, tt:4)",
-        priceTarget: priceData?.price,
-        timestamp: Date.now(),
+        type: "buy" as const,
+        strength: 85,
+        confidence: 0.85,
+        source: "pattern_discovery" as const,
+        reasoning: "Ready state pattern detected (sts:2, st:2, tt:4)",
+        targetPrice: priceData?.price,
+        timeframe: "1h",
         metadata: {
           patternType: "ready_state",
           sts: status.sts,
@@ -277,8 +328,10 @@ export class MarketDataManager {
         },
       };
 
-      // Notify WebSocket agent bridge
-      webSocketAgentBridge.handleTradingSignal(tradingSignal);
+      // Notify WebSocket agent bridge via broadcasting
+      if (webSocketAgentBridge.isRunning()) {
+        webSocketAgentBridge.broadcastTradingSignal(tradingSignal);
+      }
 
       this.logger.info("Ready state pattern broadcasted", {
         symbol: status.symbol,
@@ -299,9 +352,9 @@ export class MarketDataManager {
     // Perform enhanced analysis for near-ready states or high activity
     return (
       (status.sts >= 1 && status.st >= 1 && status.tt >= 3) || // Near ready state
-      (status.ps && status.ps > 100) || // High price score
-      (status.qs && status.qs > 100) || // High quantity score
-      (status.ca && status.ca > 50) // High combined activity
+      (typeof status.ps === 'number' && status.ps > 100) || // High price score
+      (typeof status.qs === 'number' && status.qs > 100) || // High quantity score
+      (typeof status.ca === 'number' && status.ca > 50) // High combined activity
     );
   }
 
@@ -320,8 +373,8 @@ export class MarketDataManager {
       // Get current price context
       const priceData = this.priceCache.get(status.symbol);
 
-      // Analyze pattern with context
-      const analysisResult = await this.patternDetection.analyzePatterns({
+      // Create a proper analysis request
+      const analysisRequest: SingleSymbolAnalysisRequest = {
         symbol: status.symbol,
         sts: status.sts,
         st: status.st,
@@ -330,34 +383,59 @@ export class MarketDataManager {
         qs: status.qs,
         ca: status.ca,
         currentPrice: priceData?.price,
-        priceChange: priceData?.priceChangePercent,
+        priceChange: priceData?.changePercent,
         volume: priceData?.volume,
         timestamp: status.timestamp,
+      };
+
+      // Analyze pattern with the pattern detection core using mock symbol entry
+      const mockSymbolEntry = {
+        cd: status.symbol,
+        sts: status.sts,
+        st: status.st,
+        tt: status.tt,
+        ps: status.ps,
+        qs: status.qs,
+        ca: status.ca,
+      };
+
+      const analysisResult = await this.patternDetection.analyzePatterns({
+        symbols: [mockSymbolEntry],
+        analysisType: "monitoring" as const,
+        confidenceThreshold: 70,
       });
 
-      if (analysisResult && analysisResult.confidence > 70) {
-        // High confidence pattern found
-        const notification: NotificationMessage = {
-          type: "pattern_detected",
-          data: {
+      if (analysisResult && analysisResult.matches.length > 0) {
+        const bestMatch = analysisResult.matches[0];
+        if (bestMatch.confidence > 70) {
+          // High confidence pattern found
+          const notification: NotificationMessage = {
+            notificationId: randomUUID(),
+            type: "info",
+            title: "Enhanced Pattern Detected",
+            message: `Enhanced analysis found ${bestMatch.patternType} pattern for ${status.symbol}`,
+            priority: "medium",
+            category: "pattern",
+            timestamp: Date.now(),
+            metadata: {
+              symbol: status.symbol,
+              confidence: bestMatch.confidence,
+              sts: status.sts,
+              st: status.st,
+              tt: status.tt,
+            },
+          };
+
+          if (this.onNotification) {
+            this.onNotification(notification);
+          }
+
+          this.logger.info("Enhanced analysis pattern detected", {
             symbol: status.symbol,
-            patternType: analysisResult.patternType || "enhanced_analysis",
-            confidence: analysisResult.confidence,
-            timestamp: status.timestamp,
-            details: analysisResult,
-          },
-          timestamp: Date.now(),
-        };
-
-        if (this.onNotification) {
-          this.onNotification(notification);
+            confidence: bestMatch.confidence,
+            patternType: bestMatch.patternType,
+          });
         }
-
-        this.logger.info("Enhanced analysis pattern detected", {
-          symbol: status.symbol,
-          confidence: analysisResult.confidence,
-          patternType: analysisResult.patternType,
-        });
       }
     } catch (error) {
       this.logger.error("Enhanced analysis failed", {
@@ -392,7 +470,9 @@ export class MarketDataManager {
    * Get all cached symbols
    */
   getAllSymbols(): string[] {
-    return Array.from(new Set([...this.priceCache.keys(), ...this.statusCache.keys()]));
+    const priceSymbols = Array.from(this.priceCache.keys());
+    const statusSymbols = Array.from(this.statusCache.keys());
+    return Array.from(new Set([...priceSymbols, ...statusSymbols]));
   }
 
   /**

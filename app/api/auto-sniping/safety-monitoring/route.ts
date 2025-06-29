@@ -132,7 +132,24 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      // FIXED: Proper JSON parsing error handling
+      console.error('[SafetyMonitoringAPI] POST action failed:', { 
+        error: jsonError,
+        operation: 'json_parse'
+      });
+      return NextResponse.json(createErrorResponse(
+        'Invalid JSON in request body',
+        { 
+          code: 'INVALID_JSON', 
+          details: jsonError instanceof Error ? jsonError.message : 'JSON parsing failed' 
+        }
+      ), { status: 400 });
+    }
+    
     const { action, configuration, thresholds, alertId, reason } = body;
 
     if (!action) {
@@ -312,14 +329,6 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     }
   } catch (error: any) {
     console.error('[SafetyMonitoringAPI] POST action failed:', { error });
-    
-    // Handle JSON parsing errors
-    if (error.message?.includes('JSON')) {
-      return NextResponse.json(createErrorResponse(
-        'Invalid JSON in request body',
-        { code: 'INVALID_JSON', details: error.message }
-      ), { status: 400 });
-    }
     
     // Pass through specific error messages for test compatibility
     const errorMessage = error.message || 'Safety monitoring action failed';

@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
           running: allRuns.filter(run => run.status === 'running').length,
           completed: allRuns.filter(run => run.status === 'completed').length,
           failed: allRuns.filter(run => run.status === 'failed').length,
-          stopped: allRuns.filter(run => run.status === 'stopped').length
+          paused: allRuns.filter(run => run.status === 'paused').length
         },
         dateRange: {
           earliest: allRuns.reduce((earliest, run) => 
@@ -227,7 +227,8 @@ function generateOptimizationHistory() {
     const endTime = new Date(startTime.getTime() + durationHours * 60 * 60 * 1000);
     
     const status = Math.random() > 0.85 ? 
-      (Math.random() > 0.5 ? 'failed' : 'stopped') : 'completed';
+      (Math.random() > 0.5 ? 'failed' : 'paused') : 
+      (Math.random() > 0.1 ? 'completed' : 'running');
     
     const algorithm = algorithms[Math.floor(Math.random() * algorithms.length)];
     const objective = objectives[Math.floor(Math.random() * objectives.length)];
@@ -258,7 +259,7 @@ function generateOptimizationHistory() {
       id: `opt-run-${Date.now()}-${i}`,
       name: `${algorithm} - ${objective}`,
       algorithm,
-      status: status as 'running' | 'completed' | 'failed' | 'stopped',
+      status: status as 'running' | 'completed' | 'failed' | 'paused',
       startTime: startTime.toISOString(),
       endTime: status === 'running' ? undefined : endTime.toISOString(),
       progress: Math.round((currentIteration / maxIterations) * 100),
@@ -300,7 +301,7 @@ function generateOptimizationHistory() {
           lastValidIteration: Math.floor(currentIteration * 0.7)
         } : undefined,
         
-        stopReason: status === 'stopped' ? [
+        stopReason: status === 'paused' ? [
           'Manual Stop', 'Resource Limit', 'Time Limit', 'Emergency Stop'
         ][Math.floor(Math.random() * 4)] : undefined
       }

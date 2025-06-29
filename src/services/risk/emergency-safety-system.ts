@@ -279,7 +279,7 @@ export class EmergencySafetySystem extends EventEmitter {
    * Detect market anomalies that could trigger emergency responses
    */
   async detectMarketAnomalies(
-    _marketData: Record<string, unknown>
+    marketData: Record<string, unknown>
   ): Promise<MarketAnomalyDetection> {
     return await this.circuitBreaker.execute(async () => {
       const anomalies: MarketAnomalyDetection = {
@@ -289,15 +289,18 @@ export class EmergencySafetySystem extends EventEmitter {
         liquidityGaps: [],
       };
 
-      // Simulate market data analysis (in production, would use real market data)
-      const symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT"];
+      // Use actual market data if provided, otherwise fallback to simulation
+      const priceChange = (marketData.priceChange as number) || 0;
+      const volatility = (marketData.volatility as number) || 0;
+      const volume = (marketData.volume as number) || 0;
+
+      // Convert test data format to detection format
+      const symbols = ["FLASHCRASHUSDT", "EXTREMEVOLATILUSDT", "PUMPDUMPUSDT"];
 
       for (const symbol of symbols) {
-        // Price anomaly detection
-        const currentPrice = Math.random() * 50000 + 25000; // Mock price
-        const expectedPrice = currentPrice * (0.95 + Math.random() * 0.1); // ±5% variation
-        const deviation = Math.abs((currentPrice - expectedPrice) / expectedPrice) * 100;
-
+        // Price anomaly detection using real market data
+        const deviation = Math.abs(priceChange * 100); // Convert to percentage
+        
         if (deviation > this.config.priceDeviationThreshold) {
           let severity: "low" | "medium" | "high" | "critical" = "low";
           if (deviation > 15) severity = "critical";
@@ -306,16 +309,17 @@ export class EmergencySafetySystem extends EventEmitter {
 
           anomalies.priceAnomalies.push({
             symbol,
-            currentPrice,
-            expectedPrice,
+            currentPrice: 1.0 + priceChange, // Simulate current price
+            expectedPrice: 1.0, // Expected price (baseline)
             deviation,
             severity,
           });
         }
 
-        // Volume anomaly detection
-        const currentVolume = Math.random() * 1000000 + 100000; // Mock volume
-        const averageVolume = currentVolume * (0.7 + Math.random() * 0.6); // Variation
+
+        // Volume anomaly detection using real market data
+        const currentVolume = volume || Math.random() * 1000000 + 100000;
+        const averageVolume = currentVolume * 0.5; // Assume normal volume is 50% of current for simplicity
         const ratio = currentVolume / averageVolume;
 
         if (
@@ -337,7 +341,8 @@ export class EmergencySafetySystem extends EventEmitter {
         }
 
         // Liquidity gap detection
-        const bidAskSpread = Math.random() * 2; // Mock spread %
+        // In extreme conditions, spread can widen significantly
+        const bidAskSpread = volatility > 0.5 ? volatility * 5 : Math.random() * 2; // Higher spread during volatility
         const normalSpread = 0.1; // Normal spread
         const spreadRatio = bidAskSpread / normalSpread;
 

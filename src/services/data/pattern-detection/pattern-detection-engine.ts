@@ -52,13 +52,16 @@ export { PatternDetectionCore } from "../../../core/pattern-detection/pattern-de
 export { PatternStorage } from "../../../core/pattern-detection/pattern-storage";
 export { PatternValidator } from "../../../core/pattern-detection/pattern-validator";
 
+// Import for internal use
+import { PatternDetectionCore as Core } from "../../../core/pattern-detection/pattern-detection-core";
+
 // Convenience function for backward compatibility
 export function createPatternDetectionEngine(config?: any) {
-  return PatternDetectionCore.getInstance(config);
+  return Core.getInstance(config);
 }
 
 // Export default instance for legacy compatibility
-export const patternDetectionEngine = PatternDetectionCore.getInstance();
+export const patternDetectionEngine = Core.getInstance();
 
 /**
  * MIGRATION GUIDE:

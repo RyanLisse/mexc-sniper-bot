@@ -38,10 +38,12 @@ interface SnipeTargetBatch {
   id?: string;
   userId: string;
   symbolName: string;
-  targetPrice: number;
-  confidence: number;
-  patternType: string;
-  isActive: boolean;
+  vcoinId: string;
+  entryPrice?: number;
+  positionSizeUsdt: number;
+  confidenceScore: number;
+  status: string;
+  priority: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -258,8 +260,7 @@ export class BatchInsertService {
       if (options.onConflictStrategy === "ignore") {
         result = await executeWithRetry(
           () => db.insert(patternEmbeddings).values(insertData).onConflictDoNothing(),
-          3,
-          1000
+          "Insert pattern embeddings"
         );
       } else if (options.onConflictStrategy === "update") {
         result = await executeWithRetry(
@@ -272,18 +273,16 @@ export class BatchInsertService {
               updatedAt: sql`excluded.updated_at`,
             },
           }),
-          3,
-          1000
+          "Insert pattern embeddings with update"
         );
       } else {
         result = await executeWithRetry(
           () => db.insert(patternEmbeddings).values(insertData),
-          3,
-          1000
+          "Insert pattern embeddings"
         );
       }
 
-      const inserted = result.changes || chunk.length;
+      const inserted = (result as any)?.changes || chunk.length;
       const duplicates = chunk.length - inserted;
 
       return { inserted, duplicates, errors };
@@ -305,13 +304,14 @@ export class BatchInsertService {
     
     try {
       const insertData = chunk.map(target => ({
-        id: target.id || crypto.randomUUID(),
         userId: target.userId,
         symbolName: target.symbolName,
-        targetPrice: target.targetPrice,
-        confidence: target.confidence,
-        patternType: target.patternType,
-        isActive: target.isActive,
+        vcoinId: target.vcoinId,
+        entryPrice: target.entryPrice,
+        positionSizeUsdt: target.positionSizeUsdt,
+        confidenceScore: target.confidenceScore,
+        status: target.status,
+        priority: target.priority,
         createdAt: target.createdAt || new Date(),
         updatedAt: target.updatedAt || new Date(),
       }));
@@ -321,32 +321,30 @@ export class BatchInsertService {
       if (options.onConflictStrategy === "ignore") {
         result = await executeWithRetry(
           () => db.insert(snipeTargets).values(insertData).onConflictDoNothing(),
-          3,
-          1000
+          "Insert snipe targets"
         );
       } else if (options.onConflictStrategy === "update") {
         result = await executeWithRetry(
           () => db.insert(snipeTargets).values(insertData).onConflictDoUpdate({
             target: [snipeTargets.id],
             set: {
-              targetPrice: sql`excluded.target_price`,
-              confidence: sql`excluded.confidence`,
-              isActive: sql`excluded.is_active`,
+              entryPrice: sql`excluded.entry_price`,
+              positionSizeUsdt: sql`excluded.position_size_usdt`,
+              confidenceScore: sql`excluded.confidence_score`,
+              status: sql`excluded.status`,
               updatedAt: sql`excluded.updated_at`,
             },
           }),
-          3,
-          1000
+          "Insert snipe targets with update"
         );
       } else {
         result = await executeWithRetry(
           () => db.insert(snipeTargets).values(insertData),
-          3,
-          1000
+          "Insert snipe targets"
         );
       }
 
-      const inserted = result.changes || chunk.length;
+      const inserted = (result as any)?.changes || chunk.length;
       return { inserted, errors };
     } catch (error) {
       const safeError = toSafeError(error);
@@ -414,20 +412,24 @@ export class BatchInsertService {
         errors.push(`Item ${i}: Invalid symbolName`);
       }
       
-      if (typeof target.targetPrice !== "number" || target.targetPrice <= 0) {
-        errors.push(`Item ${i}: Invalid targetPrice (must be positive number)`);
+      if (!target.vcoinId || typeof target.vcoinId !== "string") {
+        errors.push(`Item ${i}: Invalid vcoinId`);
       }
       
-      if (typeof target.confidence !== "number" || target.confidence < 0 || target.confidence > 100) {
-        errors.push(`Item ${i}: Invalid confidence (must be 0-100)`);
+      if (typeof target.positionSizeUsdt !== "number" || target.positionSizeUsdt <= 0) {
+        errors.push(`Item ${i}: Invalid positionSizeUsdt (must be positive number)`);
       }
       
-      if (!target.patternType || typeof target.patternType !== "string") {
-        errors.push(`Item ${i}: Invalid patternType`);
+      if (typeof target.confidenceScore !== "number" || target.confidenceScore < 0 || target.confidenceScore > 100) {
+        errors.push(`Item ${i}: Invalid confidenceScore (must be 0-100)`);
       }
       
-      if (typeof target.isActive !== "boolean") {
-        errors.push(`Item ${i}: Invalid isActive (must be boolean)`);
+      if (!target.status || typeof target.status !== "string") {
+        errors.push(`Item ${i}: Invalid status`);
+      }
+      
+      if (typeof target.priority !== "number" || target.priority < 1 || target.priority > 5) {
+        errors.push(`Item ${i}: Invalid priority (must be 1-5)`);
       }
     }
 
@@ -438,7 +440,7 @@ export class BatchInsertService {
   }
 
   /**
-   * Deduplicate snipe targets based on userId, symbolName, and targetPrice
+   * Deduplicate snipe targets based on userId, symbolName, and vcoinId
    */
   private async deduplicateSnipeTargets(targets: SnipeTargetBatch[]): Promise<SnipeTargetBatch[]> {
     // Create a set of existing combinations
@@ -446,17 +448,17 @@ export class BatchInsertService {
       .select({
         userId: snipeTargets.userId,
         symbolName: snipeTargets.symbolName,
-        targetPrice: snipeTargets.targetPrice,
+        vcoinId: snipeTargets.vcoinId,
       })
       .from(snipeTargets);
 
     const existingSet = new Set(
-      existingTargets.map(t => `${t.userId}:${t.symbolName}:${t.targetPrice}`)
+      existingTargets.map((t: any) => `${t.userId}:${t.symbolName}:${t.vcoinId}`)
     );
 
     // Filter out duplicates
     return targets.filter(target => {
-      const key = `${target.userId}:${target.symbolName}:${target.targetPrice}`;
+      const key = `${target.userId}:${target.symbolName}:${target.vcoinId}`;
       return !existingSet.has(key);
     });
   }

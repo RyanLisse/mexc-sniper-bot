@@ -4,10 +4,12 @@ import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 import { db } from "@/src/db";
 import { workflowActivity, transactionLocks } from "@/src/db/schema";
 import { desc, gte } from "drizzle-orm";
+import { withSSEThrottling, connectionTracker } from "@/src/lib/middleware/throttling-middleware";
+import { requestThrottlingService } from "@/src/lib/request-throttling-service";
 
 // Server-Sent Events for real-time monitoring
 
-export async function GET(request: NextRequest) {
+async function handleRealTimeRequest(request: NextRequest) {
   // Build-safe logger - use console logger to avoid webpack bundling issues
   const logger = {
     info: (message: string, context?: any) => console.info('[real-time-route]', message, context || ''),
@@ -29,21 +31,45 @@ export async function GET(request: NextRequest) {
 
   const encoder = new TextEncoder();
   
+  // Generate unique connection ID
+  const connectionId = `realtime-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const clientId = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+  
+  // Register connection with tracking
+  const connectionRegistered = connectionTracker.registerConnection(connectionId, 'sse', clientId);
+  
+  if (!connectionRegistered) {
+    return NextResponse.json(
+      { error: 'Too many concurrent connections' },
+      { status: 429 }
+    );
+  }
+
+  // Get recommended intervals based on current system load
+  const recommendedIntervals = requestThrottlingService.getRecommendedIntervals();
+  const updateInterval = Math.max(10000, recommendedIntervals.realTimeMonitoring);
+
   const stream = new ReadableStream({
     start(controller) {
       const sendEvent = (eventType: string, data: any) => {
         const formatted = `event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`;
         controller.enqueue(encoder.encode(formatted));
+        
+        // Update connection activity
+        connectionTracker.updateActivity(connectionId);
       };
 
-      // Send initial connection event
+      // Send initial connection event with throttling info
       sendEvent('connected', { 
         timestamp: new Date().toISOString(),
         message: 'Real-time monitoring connected',
-        type 
+        type,
+        connectionId,
+        updateInterval,
+        throttlingStats: requestThrottlingService.getStats()
       });
 
-      // Set up interval for real-time updates
+      // Set up interval for real-time updates with adaptive timing
       const interval = setInterval(async () => {
         try {
           const realTimeData = await getRealTimeData(type);
@@ -54,13 +80,20 @@ export async function GET(request: NextRequest) {
             timestamp: new Date().toISOString()
           });
         }
-      }, 2000); // Update every 2 seconds
+      }, updateInterval);
 
       // Clean up on close
-      request.signal.addEventListener('abort', () => {
+      const cleanup = () => {
         clearInterval(interval);
+        connectionTracker.unregisterConnection(connectionId);
         controller.close();
-      });
+        logger.info('Real-time connection closed', { connectionId, type });
+      };
+
+      request.signal.addEventListener('abort', cleanup);
+      
+      // Auto-cleanup after 30 minutes to prevent resource leaks
+      setTimeout(cleanup, 30 * 60 * 1000);
     }
   });
 
@@ -485,3 +518,9 @@ async function updateAgentConfig(data: any) {
     );
   }
 }
+
+// Export throttled GET handler
+export const GET = withSSEThrottling(handleRealTimeRequest, {
+  maxConnections: 10,
+  heartbeatInterval: 15000,
+});

@@ -246,7 +246,7 @@ export class AutomatedAlertingService {
       // Get metric data
       const metrics = providedMetric
         ? [providedMetric]
-        : await this.getMetricData(rule.metricName, rule.aggregationWindow);
+        : await this.getMetricData(rule.metricName, rule.aggregationWindow || 3600);
 
       if (metrics.length === 0) {
         return; // No data to evaluate
@@ -684,7 +684,7 @@ export class AutomatedAlertingService {
       const historicalData = await db.execute(sql`
         SELECT timestamp, agent_metrics, workflow_metrics, system_metrics
         FROM performance_snapshots 
-        WHERE timestamp > ${cutoff.toISOString()}
+        WHERE timestamp > ${new Date(cutoff).toISOString()}
         ORDER BY timestamp ASC
       `);
 
@@ -700,13 +700,14 @@ export class AutomatedAlertingService {
 
           if (allMetrics[metricName]) {
             metrics.push({
-              timestamp: new Date(row.timestamp as string),
+              name: metricName,
+              timestamp: new Date(row.timestamp as string).getTime(),
               value:
                 typeof allMetrics[metricName] === "object"
                   ? allMetrics[metricName].value || allMetrics[metricName].average || 0
                   : allMetrics[metricName],
               source: "database",
-              metadata: {
+              additionalData: {
                 snapshotId: row.id,
                 metricCategory: Object.keys(agentMetrics).includes(metricName)
                   ? "agent"
@@ -728,7 +729,7 @@ export class AutomatedAlertingService {
       this.logger.warn(`Failed to retrieve historical metrics for ${metricName}:`, error);
     }
 
-    return metrics.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    return metrics.sort((a, b) => a.timestamp - b.timestamp);
   }
 
   private generateAlertMessage(

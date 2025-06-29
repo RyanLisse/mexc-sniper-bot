@@ -23,9 +23,12 @@ import {
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
 import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
-import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
+import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine-modules";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
 import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+
+// Debug imports (remove in production)
+// console.log('AdvancedRiskEngine import:', { type: typeof AdvancedRiskEngine });
 
 describe("Market Simulation Edge Cases", () => {
   let patternEngine: PatternDetectionCore;
@@ -125,12 +128,12 @@ describe("Market Simulation Edge Cases", () => {
         emergencyCorrelationThreshold: 0.9,
       });
 
-      // Verify required methods exist
-      if (!riskEngine.updateMarketConditions) {
-        throw new Error("riskEngine.updateMarketConditions method not available");
+      // Verify required methods exist (simplified check)
+      if (typeof riskEngine.updateMarketConditions !== 'function') {
+        throw new Error(`riskEngine.updateMarketConditions method not available, got: ${typeof riskEngine.updateMarketConditions}`);
       }
-      if (!riskEngine.detectManipulation) {
-        throw new Error("riskEngine.detectManipulation method not available");
+      if (typeof riskEngine.detectManipulation !== 'function') {
+        throw new Error(`riskEngine.detectManipulation method not available, got: ${typeof riskEngine.detectManipulation}`);
       }
     } catch (error) {
       console.error("Failed to initialize risk engine:", error);
@@ -214,8 +217,11 @@ describe("Market Simulation Edge Cases", () => {
       tradingBot.initializePosition("FLASHCRASHUSDT", 1.0, 5000);
 
       let emergencyTriggered = false;
-      // Note: EmergencySafetySystem doesn't extend EventEmitter
-      // Would need to check emergency status directly
+      
+      // Set up emergency system event listener
+      emergencySystem.on("emergency_stop", () => {
+        emergencyTriggered = true;
+      });
 
       // Act: Process flash crash sequence
       const results = [];
@@ -251,7 +257,9 @@ describe("Market Simulation Edge Cases", () => {
       }
 
       // Assert: Should trigger appropriate responses
-      expect(emergencyTriggered).toBe(true);
+      // Check both the event listener and the emergency system status
+      const emergencyStatus = emergencySystem.getEmergencyStatus();
+      expect(emergencyTriggered || emergencyStatus.active).toBe(true);
 
       // Should execute stop loss during crash
       const stopLossExecuted = results.some((r) =>

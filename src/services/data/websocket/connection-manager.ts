@@ -13,7 +13,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import WebSocket from "ws";
+import WebSocket, { type RawData } from "ws";
 
 export interface ConnectionManagerOptions {
   url: string;
@@ -45,6 +45,13 @@ interface CircuitBreakerState {
   nextAttemptTime: number;
 }
 
+interface QueuedMessage {
+  data: any;
+  priority: "high" | "normal" | "low";
+  timestamp: number;
+  retryCount: number;
+}
+
 export class MexcConnectionManager extends EventEmitter {
   private ws: WebSocket | null = null;
   private connectionId?: string;
@@ -56,9 +63,9 @@ export class MexcConnectionManager extends EventEmitter {
   private isConnected = false;
   private connectionStartTime = 0;
   private lastPingTime = 0;
-  private metrics: ConnectionMetrics;
-  private circuitBreaker: CircuitBreakerState;
-  private messageQueue: any[] = [];
+  private metrics!: ConnectionMetrics;
+  private circuitBreaker!: CircuitBreakerState;
+  private messageQueue: QueuedMessage[] = [];
   private isDestroyed = false;
 
   private readonly url: string;
@@ -125,12 +132,13 @@ export class MexcConnectionManager extends EventEmitter {
         attempt: this.reconnectAttempts + 1,
       });
 
+      // Create Node.js WebSocket instance (server-side only)
       this.ws = new WebSocket(this.url);
-
+      
       this.ws.on("open", () => this.handleOpen());
-      this.ws.on("message", (data) => this.handleMessage(data));
-      this.ws.on("close", (code, reason) => this.handleClose(code, reason));
-      this.ws.on("error", (error) => this.handleError(error));
+      this.ws.on("message", (data: RawData) => this.handleMessage(data));
+      this.ws.on("close", (code: number, reason: Buffer) => this.handleClose(code, reason));
+      this.ws.on("error", (error: Error) => this.handleError(error));
 
       // Wait for connection to be established with proper error handling
       await new Promise<void>((resolve, reject) => {
@@ -149,13 +157,13 @@ export class MexcConnectionManager extends EventEmitter {
           resolve();
         });
 
-        this.ws?.once("error", (error) => {
+        this.ws?.once("error", (error: Error) => {
           cleanup();
           this.cleanup();
           reject(error);
         });
 
-        this.ws?.once("close", (code, reason) => {
+        this.ws?.once("close", (code: number, reason: Buffer) => {
           cleanup();
           this.cleanup();
           reject(new Error(`Connection closed during establishment: ${code} - ${reason}`));
@@ -177,11 +185,19 @@ export class MexcConnectionManager extends EventEmitter {
    */
   private cleanup(): void {
     if (this.ws) {
-      this.ws.removeAllListeners();
-      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
-        this.ws.close();
+      try {
+        this.ws.removeAllListeners();
+        if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+          this.ws.close();
+        }
+      } catch (error) {
+        this.logger.error("Error during WebSocket cleanup", {
+          error: error instanceof Error ? error.message : String(error),
+          connectionId: this.connectionId,
+        });
+      } finally {
+        this.ws = null;
       }
-      this.ws = null;
     }
     this.isConnected = false;
     this.isConnecting = false;
@@ -214,11 +230,21 @@ export class MexcConnectionManager extends EventEmitter {
    * Send data through WebSocket
    */
   send(data: any): void {
-    if (!this.isConnected || !this.ws) {
-      throw new Error("WebSocket not connected");
+    if (!this.isConnected || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      throw new Error("WebSocket not connected or not ready");
     }
 
-    this.ws.send(JSON.stringify(data));
+    try {
+      this.ws.send(JSON.stringify(data));
+      this.metrics.messagesSent++;
+    } catch (error) {
+      this.metrics.errorCount++;
+      this.logger.error("Failed to send WebSocket message", {
+        error: error instanceof Error ? error.message : String(error),
+        connectionId: this.connectionId,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -258,16 +284,17 @@ export class MexcConnectionManager extends EventEmitter {
   /**
    * Handle WebSocket message
    */
-  private handleMessage(data: Buffer): void {
+  private handleMessage(data: RawData): void {
     try {
-      const message = JSON.parse(data.toString());
+      const dataString = Buffer.isBuffer(data) ? data.toString() : String(data);
+      const message = JSON.parse(dataString);
       this.metrics.messagesReceived++;
       this.onMessage(message);
     } catch (error) {
       this.metrics.errorCount++;
       this.logger.error("Failed to parse WebSocket message", {
         error: error instanceof Error ? error.message : String(error),
-        dataLength: data.length,
+        dataLength: Buffer.isBuffer(data) ? data.length : String(data).length,
       });
     }
   }
@@ -365,7 +392,7 @@ export class MexcConnectionManager extends EventEmitter {
    */
   private startHeartbeat(): void {
     this.heartbeatInterval = setInterval(() => {
-      if (this.isConnected && this.ws) {
+      if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
         try {
           this.lastPingTime = Date.now();
           this.ws.ping();
@@ -556,14 +583,14 @@ export class MexcConnectionManager extends EventEmitter {
    * Send message with queuing support during disconnection
    */
   sendWithQueue(data: any, priority: "high" | "normal" | "low" = "normal"): void {
-    const message = {
+    const message: QueuedMessage = {
       data,
       priority,
       timestamp: Date.now(),
       retryCount: 0,
     };
 
-    if (this.isConnected && this.ws) {
+    if (this.isConnected && this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
         this.ws.send(JSON.stringify(data));
         this.metrics.messagesSent++;
@@ -594,8 +621,8 @@ export class MexcConnectionManager extends EventEmitter {
 
     // Sort by priority and timestamp
     this.messageQueue.sort((a, b) => {
-      const priorityOrder = { high: 3, normal: 2, low: 1 };
-      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+      const priorityOrder: Record<string, number> = { high: 3, normal: 2, low: 1 };
+      const priorityDiff = (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
       return priorityDiff !== 0 ? priorityDiff : a.timestamp - b.timestamp;
     });
 
@@ -767,7 +794,7 @@ export class MexcConnectionManager extends EventEmitter {
   /**
    * Check if connection manager is destroyed
    */
-  isDestroyed(): boolean {
+  getIsDestroyed(): boolean {
     return this.isDestroyed;
   }
 }

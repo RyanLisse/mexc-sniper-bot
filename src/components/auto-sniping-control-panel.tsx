@@ -68,7 +68,7 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
 
       return SnipingStatusSchema.parse(result.data);
     },
-    staleTime: 10000, // 10 seconds
+    staleTime: 300000, // 5 minutes to reduce requests
     retry: 2,
   });
 

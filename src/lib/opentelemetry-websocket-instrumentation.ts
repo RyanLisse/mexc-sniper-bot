@@ -13,7 +13,7 @@ export interface WebSocketSpanOptions {
   connectionId?: string;
   channel?: string;
   messageType?: string;
-  clientType?: "dashboard" | "agent" | "trading";
+  clientType?: "dashboard" | "agent" | "admin" | "mobile" | "trading";
   includeMessageData?: boolean;
   sensitiveFields?: string[];
 }

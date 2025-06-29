@@ -182,8 +182,8 @@ export class CalendarPatternBridgeService {
 
       // Filter for high-priority candidates that need pattern analysis
       const patternCandidates = this.filterPatternCandidates(
-        workflowResult.readyTargets,
-        changedEntries
+        (workflowResult.readyTargets || []) as CalendarEntry[],
+        changedEntries || []
       );
 
       if (patternCandidates.length > 0) {

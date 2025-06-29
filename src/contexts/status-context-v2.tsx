@@ -143,8 +143,8 @@ interface StatusProviderProps {
 
 export function StatusProvider({
   children,
-  autoRefreshInterval = 30000,
-  enableRealTimeUpdates = true,
+  autoRefreshInterval = 300000, // 5 minutes default
+  enableRealTimeUpdates = false, // Disable by default to reduce requests
 }: StatusProviderProps) {
   const queryClient = useQueryClient();
 
@@ -167,8 +167,8 @@ export function StatusProvider({
 
       return result.data;
     },
-    staleTime: 15000, // 15 seconds
-    refetchInterval: enableRealTimeUpdates ? autoRefreshInterval : false,
+    staleTime: 300000, // 5 minutes
+    refetchInterval: enableRealTimeUpdates ? 300000 : false, // 5 minutes instead of 30 seconds
     refetchIntervalInBackground: false,
     retry: (failureCount, error) => {
       // More aggressive retry for network issues
@@ -195,8 +195,8 @@ export function StatusProvider({
       const result = await response.json();
       return result.success ? result.data : null;
     },
-    staleTime: 30000, // 30 seconds for system checks
-    refetchInterval: enableRealTimeUpdates ? autoRefreshInterval * 2 : false,
+    staleTime: 600000, // 10 minutes for system checks
+    refetchInterval: enableRealTimeUpdates ? 600000 : false, // 10 minutes instead of 60 seconds
     retry: 1,
   });
 
@@ -212,8 +212,8 @@ export function StatusProvider({
       const result = await response.json();
       return result.success ? result.data : null;
     },
-    staleTime: 20000, // 20 seconds for workflows
-    refetchInterval: enableRealTimeUpdates ? autoRefreshInterval : false,
+    staleTime: 300000, // 5 minutes for workflows
+    refetchInterval: enableRealTimeUpdates ? 300000 : false, // 5 minutes instead of 30 seconds
     retry: 1,
   });
 

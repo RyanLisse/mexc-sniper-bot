@@ -10,6 +10,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { apiResponse, handleApiError } from "@/src/lib/api-response";
 import { getUnifiedStatus } from "@/src/services/notification/unified-status-resolver";
 import { toSafeError } from "@/src/lib/error-type-utils";
+import { withRateLimit, RATE_LIMIT_CONFIGS } from "@/src/lib/api-rate-limiter";
 interface UnifiedStatusResponse {
   // Core Status
   connected: boolean;
@@ -41,7 +42,7 @@ interface UnifiedStatusResponse {
   nextSteps: string[];
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+async function getHandler(request: NextRequest): Promise<NextResponse> {
   const requestId = `unified_status_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const startTime = Date.now();
 
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 /**
  * POST endpoint for forcing status refresh
  */
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function postHandler(request: NextRequest): Promise<NextResponse> {
   const requestId = `unified_refresh_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const startTime = Date.now();
 
@@ -273,3 +274,7 @@ function generateNextSteps(status: any): string[] {
 
   return nextSteps;
 }
+
+// Export rate-limited handlers
+export const GET = withRateLimit(getHandler, RATE_LIMIT_CONFIGS.moderate);
+export const POST = withRateLimit(postHandler, RATE_LIMIT_CONFIGS.moderate);

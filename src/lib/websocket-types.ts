@@ -19,7 +19,7 @@
 export interface WebSocketConnection {
   id: string;
   userId?: string;
-  clientType: "dashboard" | "agent" | "admin" | "mobile";
+  clientType: "dashboard" | "agent" | "admin" | "mobile" | "trading";
   subscriptions: Set<string>;
   lastActivity: number;
   isAuthenticated: boolean;
@@ -27,17 +27,25 @@ export interface WebSocketConnection {
 }
 
 export interface WebSocketMessage<T = any> {
+  id?: string; // Generated when sending if not provided
   type: WebSocketMessageType;
   channel: string;
   data: T;
   timestamp: number;
-  messageId: string;
+  messageId?: string; // For backward compatibility
   userId?: string;
   acknowledgment?: boolean;
   error?: string;
 }
 
 export type WebSocketMessageType =
+  // Basic Messages
+  | "ping"
+  | "pong"
+  | "error"
+  | "subscribe"
+  | "unsubscribe"
+  
   // System Messages
   | "system:connect"
   | "system:disconnect"
@@ -440,6 +448,7 @@ export type WebSocketChannel =
   | "agents:performance"
   | "agents:workflows"
   | "agents:errors"
+  | "agent_status" // Legacy channel name
 
   // Specific Agent Channels
   | `agent:${string}:status`
@@ -452,6 +461,7 @@ export type WebSocketChannel =
   | "trading:executions"
   | "trading:balance"
   | "trading:portfolio"
+  | "trading_prices" // Legacy channel name
 
   // Symbol-specific Trading Channels
   | `trading:${string}:price`
@@ -463,6 +473,7 @@ export type WebSocketChannel =
   | "patterns:validation"
   | "patterns:ready_state"
   | "patterns:alerts"
+  | "pattern_discovery" // Legacy channel name
 
   // Symbol-specific Pattern Channels
   | `patterns:${string}:discovery`
@@ -612,3 +623,54 @@ export type WebSocketErrorCode =
   | "TIMEOUT"
   | "PAYLOAD_TOO_LARGE"
   | "UNSUPPORTED_OPERATION";
+
+// ======================
+// Additional Missing Interfaces
+// ======================
+
+export interface MarketDataConfig {
+  symbols: string[];
+  subscriptions: {
+    prices: boolean;
+    orderbook: boolean;
+    trades: boolean;
+    klines: boolean;
+  };
+  processing: {
+    enablePatternDetection: boolean;
+    enableSignalGeneration: boolean;
+    enableRealTimeAnalysis: boolean;
+  };
+  performance: {
+    batchSize: number;
+    flushInterval: number;
+    maxBufferSize: number;
+  };
+}
+
+export interface MarketDataSnapshot {
+  symbol: string;
+  timestamp: number;
+  price: number;
+  volume24h: number;
+  change24h: number;
+  high24h: number;
+  low24h: number;
+  trades: number;
+  lastUpdateId: number;
+}
+
+export interface ProcessingMetrics {
+  messagesProcessed: number;
+  processingErrors: number;
+  averageProcessingTime: number;
+  queueSize: number;
+  lastProcessedAt?: number;
+}
+
+export interface StreamData {
+  symbol: string;
+  timestamp: number;
+  data: any;
+  type: "price" | "volume" | "trade" | "orderbook";
+}

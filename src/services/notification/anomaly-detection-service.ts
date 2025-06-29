@@ -562,7 +562,7 @@ export class AnomalyDetectionService {
     };
 
     if (featureNames) {
-      return featureNames.map((name) => baseFeatures[name] || 0);
+      return featureNames.map((name) => (baseFeatures as any)[name] || 0);
     }
 
     return Object.values(baseFeatures);
@@ -812,7 +812,7 @@ export class AnomalyDetectionService {
       .from(anomalyModels)
       .where(eq(anomalyModels.isActive, true));
 
-    return allModels.map((model) => ({
+    return allModels.map((model: any) => ({
       metricName: model.metricName,
       modelType: model.modelType,
       sampleCount: model.sampleCount,

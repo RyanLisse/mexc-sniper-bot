@@ -110,9 +110,9 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
       // Map internal format to interface format
       const mappedSymbols = symbols.map((symbol: SymbolEntry) => ({
         symbol: symbol.symbol || "",
-        status: symbol.status || "UNKNOWN",
-        baseAsset: symbol.baseAsset || "",
-        quoteAsset: symbol.quoteAsset || "",
+        status: (symbol as any).status || symbol.sts === 1 ? "TRADING" : "UNKNOWN",
+        baseAsset: (symbol as any).baseAsset || "",
+        quoteAsset: (symbol as any).quoteAsset || "",
       }));
 
       return {
@@ -135,6 +135,7 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
     success: boolean;
     data?: Array<{
       symbol: string;
+      price: string;
       lastPrice: string;
       priceChangePercent: string;
       volume: string;
@@ -156,6 +157,7 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
       // Map internal format to interface format
       const mappedTickers = tickers.map((ticker: Ticker) => ({
         symbol: ticker.symbol || "",
+        price: ticker.lastPrice || "0",
         lastPrice: ticker.lastPrice || "0",
         priceChangePercent: ticker.priceChangePercent || "0",
         volume: ticker.volume || "0",
@@ -181,6 +183,7 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
     success: boolean;
     data?: {
       symbol: string;
+      price: string;
       lastPrice: string;
       priceChangePercent: string;
       volume: string;
@@ -206,9 +209,17 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
       }
       const ticker = tickerValidation.data;
 
+      if (!ticker) {
+        return {
+          success: false,
+          error: "No ticker data received",
+        };
+      }
+
       // Map internal format to interface format
       const mappedTicker = {
         symbol: ticker.symbol || "",
+        price: ticker.lastPrice || "0",
         lastPrice: ticker.lastPrice || "0",
         priceChangePercent: ticker.priceChangePercent || "0",
         volume: ticker.volume || "0",
@@ -269,25 +280,51 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
     error?: string;
   }> {
     try {
-      // TODO: Implement proper order book API call when client method is available
-      // For now, return mock data to prevent compilation errors
-      const mockOrderBook = {
-        bids: [
-          ["50000.00", "1.5"],
-          ["49999.00", "2.0"],
-        ] as [string, string][],
-        asks: [
-          ["50001.00", "1.2"],
-          ["50002.00", "1.8"],
-        ] as [string, string][],
-        lastUpdateId: Date.now(),
-      };
+      console.info(`[MexcMarketService] Fetching order book for ${symbol}, limit: ${limit}`);
+      
+      // Use the MEXC API endpoint directly via the base service
+      const orderBookData = await this.executeRequest<{
+        bids: [string, string][];
+        asks: [string, string][];
+        lastUpdateId?: number;
+      }>("/api/v3/depth", { symbol, limit }, "GET");
+
+      // Validate and format the order book data
+      if (!orderBookData || !orderBookData.bids || !orderBookData.asks) {
+        console.warn(`[MexcMarketService] Invalid order book data structure for ${symbol}`);
+        return {
+          success: false,
+          error: "Invalid order book data received from MEXC API",
+        };
+      }
+
+      // Ensure bids and asks are properly formatted as [price, quantity] tuples
+      const formattedBids: [string, string][] = (orderBookData.bids || [])
+        .slice(0, limit)
+        .map((bid: any) => [
+          String(Array.isArray(bid) ? bid[0] : bid.price || "0"),
+          String(Array.isArray(bid) ? bid[1] : bid.quantity || "0"),
+        ]);
+
+      const formattedAsks: [string, string][] = (orderBookData.asks || [])
+        .slice(0, limit)
+        .map((ask: any) => [
+          String(Array.isArray(ask) ? ask[0] : ask.price || "0"),
+          String(Array.isArray(ask) ? ask[1] : ask.quantity || "0"),
+        ]);
+
+      console.info(`[MexcMarketService] Order book retrieved for ${symbol}: ${formattedBids.length} bids, ${formattedAsks.length} asks`);
 
       return {
         success: true,
-        data: mockOrderBook,
+        data: {
+          bids: formattedBids,
+          asks: formattedAsks,
+          lastUpdateId: orderBookData.lastUpdateId || Date.now(),
+        },
       };
     } catch (error) {
+      console.error(`[MexcMarketService] Order book fetch error for ${symbol}:`, error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",

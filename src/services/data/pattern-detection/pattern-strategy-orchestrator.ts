@@ -24,7 +24,7 @@ import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 // ============================================================================

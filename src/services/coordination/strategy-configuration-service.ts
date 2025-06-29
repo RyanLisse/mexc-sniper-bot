@@ -92,7 +92,7 @@ export class StrategyConfigurationService extends EventEmitter {
 
   private constructor() {
     super();
-    this.coreTrading = getCoreTrading();
+    this.coreTrading = getCoreTrading() as any;
     // TODO: Fix EnhancedMexcOrchestrator instantiation - no getInstance method available
     // this.orchestrator = EnhancedMexcOrchestrator.getInstance();
     this.orchestrator = {} as EnhancedMexcOrchestrator;
@@ -108,7 +108,7 @@ export class StrategyConfigurationService extends EventEmitter {
       this.logger.info("Initializing Strategy Configuration Service...");
 
       // Ensure Core Trading Service is initialized
-      await this.coreTrading.initialize();
+      await (this.coreTrading as any).initialize();
 
       this.logger.info("Strategy Configuration Service initialized");
     } catch (error) {
@@ -271,8 +271,8 @@ export class StrategyConfigurationService extends EventEmitter {
   }> {
     try {
       const strategyContext = this.getStrategyContext(userId);
-      const coreStatus = await this.coreTrading.getStatus();
-      const performanceData = await this.coreTrading.getPerformanceMetrics();
+      const coreStatus = await (this.coreTrading as any).getStatus();
+      const performanceData = await (this.coreTrading as any).getPerformanceMetrics();
 
       return {
         currentStrategy: strategyContext?.strategyId || "unknown",
@@ -362,7 +362,7 @@ export class StrategyConfigurationService extends EventEmitter {
 
   private async syncCoreTrading(userId: string, context: StrategyContext): Promise<void> {
     try {
-      await this.coreTrading.updateConfig({
+      await (this.coreTrading as any).updateConfig({
         userId,
         tradingStrategy: context.strategyId,
         maxPositions: context.maxPositions,

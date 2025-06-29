@@ -226,6 +226,28 @@ export class MultiPhaseStrategyBuilder implements StrategyBuilder {
     return this;
   }
 
+  // Conservative strategy builder method (used by tests)
+  buildStrategy(sellAllocation = 60, maxTarget = 100): this {
+    this.levels = [
+      { percentage: 10, multiplier: 1.10, sellPercentage: sellAllocation * 0.3 },
+      { percentage: 20, multiplier: 1.20, sellPercentage: sellAllocation * 0.4 },
+      { percentage: 30, multiplier: 1.30, sellPercentage: sellAllocation * 0.3 },
+      { percentage: maxTarget, multiplier: 1 + (maxTarget / 100), sellPercentage: 100 - sellAllocation },
+    ];
+    return this;
+  }
+
+  // Aggressive strategy builder method (used by tests)
+  createAggressiveStrategy(): this {
+    this.levels = [
+      { percentage: 100, multiplier: 2.00, sellPercentage: 15 },
+      { percentage: 150, multiplier: 2.50, sellPercentage: 20 },
+      { percentage: 200, multiplier: 3.00, sellPercentage: 25 },
+      { percentage: 500, multiplier: 6.00, sellPercentage: 20 },
+    ];
+    return this;
+  }
+
   addCondition(condition: PatternCondition): StrategyBuilder {
     this.conditions.push(condition);
     return this;

@@ -7,8 +7,9 @@ import {
   HTTP_STATUS,
   createValidationErrorResponse
 } from "@/src/lib/api-response";
+import { withRateLimit, RATE_LIMIT_CONFIGS } from "@/src/lib/api-rate-limiter";
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId") || "default";
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, data, userId = "default" } = body;
@@ -153,3 +154,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export rate-limited handlers
+export const GET = withRateLimit(getHandler, RATE_LIMIT_CONFIGS.moderate);
+export const POST = withRateLimit(postHandler, RATE_LIMIT_CONFIGS.moderate);

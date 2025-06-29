@@ -12,7 +12,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 // Request validation schema
 const RealtimeQuerySchema = z.object({
-  interval: z.coerce.number().min(1000).max(60000).optional().default(5000), // 1s to 60s
+  interval: z.coerce.number().min(5000).max(60000).optional().default(15000), // 5s to 60s (increased default)
   operations: z.string().optional(), // Comma-separated list
   includeHealthScore: z.coerce.boolean().optional().default(true),
   includeEvents: z.coerce.boolean().optional().default(false),

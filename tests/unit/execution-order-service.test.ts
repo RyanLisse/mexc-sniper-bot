@@ -30,6 +30,7 @@ describe('ExecutionOrderService', () => {
         type: 'market' as const,
         quantity: 1.5,
         price: 50000,
+        commission: 0.001,
       };
 
       const order = await service.createOrder(orderData);
@@ -54,6 +55,7 @@ describe('ExecutionOrderService', () => {
         side: 'sell' as const,
         type: 'market' as const,
         quantity: 2.0,
+        commission: 0.001,
       };
 
       const order = await service.createOrder(orderData);
@@ -70,6 +72,7 @@ describe('ExecutionOrderService', () => {
         quantity: 100,
         price: 1.5,
         stopPrice: 1.4,
+        commission: 0.001,
       };
 
       const order = await service.createOrder(orderData);
@@ -87,6 +90,7 @@ describe('ExecutionOrderService', () => {
         type: 'market' as const,
         quantity: 1.0,
         price: 50000,
+        commission: 0.001,
       });
 
       const result = await service.executeOrder(order.id);
@@ -113,6 +117,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       // Mock Math.random to trigger rejection scenario
@@ -137,6 +142,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 2.0,
         price: 3000,
+        commission: 0.001,
       });
 
       const success = await service.updateOrderStatus(order.id, 'filled', 2.0, 2995);
@@ -162,6 +168,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 100,
         price: 1.5,
+        commission: 0.001,
       });
 
       await service.updateOrderStatus(order.id, 'partially_filled', 50, 1.48);
@@ -181,6 +188,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 1.0,
         price: 45000,
+        commission: 0.001,
       });
 
       const success = await service.cancelOrder(order.id);
@@ -197,6 +205,7 @@ describe('ExecutionOrderService', () => {
         side: 'sell' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       // First fill the order
@@ -221,6 +230,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       const retrievedOrder = service.getOrder(createdOrder.id);
@@ -241,6 +251,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 1.0,
         price: 50000,
+        commission: 0.001,
       });
 
       const filledOrder = await service.createOrder({
@@ -248,6 +259,7 @@ describe('ExecutionOrderService', () => {
         side: 'sell' as const,
         type: 'market' as const,
         quantity: 2.0,
+        commission: 0.001,
       });
 
       const cancelledOrder = await service.createOrder({
@@ -256,6 +268,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 100,
         price: 1.5,
+        commission: 0.001,
       });
 
       // Update statuses
@@ -276,6 +289,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       const btcOrder2 = await service.createOrder({
@@ -284,6 +298,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 0.5,
         price: 55000,
+        commission: 0.001,
       });
 
       const ethOrder = await service.createOrder({
@@ -291,6 +306,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 2.0,
+        commission: 0.001,
       });
 
       const btcOrders = service.getOrdersBySymbol('BTCUSDT');
@@ -310,6 +326,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       await service.updateOrderStatus(order.id, 'filled', 1.0, 50000);
@@ -329,6 +346,7 @@ describe('ExecutionOrderService', () => {
           side: 'buy' as const,
           type: 'market' as const,
           quantity: 1.0,
+          commission: 0.001,
         });
         await service.updateOrderStatus(order.id, 'filled', 1.0, 1000);
       }
@@ -344,6 +362,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       // Add small delay to ensure different timestamps
@@ -354,6 +373,7 @@ describe('ExecutionOrderService', () => {
         side: 'sell' as const,
         type: 'market' as const,
         quantity: 2.0,
+        commission: 0.001,
       });
 
       // Complete orders in reverse order
@@ -376,6 +396,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 1.0,
         price: 50000,
+        commission: 0.001,
       });
 
       const filledOrder = await service.createOrder({
@@ -383,6 +404,7 @@ describe('ExecutionOrderService', () => {
         side: 'sell' as const,
         type: 'market' as const,
         quantity: 2.0,
+        commission: 0.001,
       });
 
       const cancelledOrder = await service.createOrder({
@@ -391,6 +413,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 100,
         price: 1.5,
+        commission: 0.001,
       });
 
       // Complete some orders
@@ -445,6 +468,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 1.0,
+        commission: 0.001,
       });
 
       const retrievedOrder = executionOrderService.getOrder(order.id);
@@ -459,6 +483,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 0, // Invalid quantity
+        commission: 0.001,
       })).rejects.toThrow();
     });
 
@@ -469,6 +494,7 @@ describe('ExecutionOrderService', () => {
         type: 'limit' as const,
         quantity: 1.0,
         price: -100, // Invalid price
+        commission: 0.1,
       })).rejects.toThrow();
     });
 
@@ -478,6 +504,7 @@ describe('ExecutionOrderService', () => {
         side: 'buy' as const,
         type: 'market' as const,
         quantity: 999999999.99999999,
+        commission: 0.1,
       });
 
       expect(order.quantity).toBe(999999999.99999999);
@@ -490,6 +517,7 @@ describe('ExecutionOrderService', () => {
           side: 'buy' as const,
           type: 'market' as const,
           quantity: 1.0,
+          commission: 0.1,
         })
       );
 

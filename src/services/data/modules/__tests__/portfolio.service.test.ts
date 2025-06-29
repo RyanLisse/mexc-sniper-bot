@@ -275,7 +275,7 @@ describe("PortfolioService", () => {
     it("should call getPortfolio with includeMetrics false", async () => {
       const spy = vi.spyOn(service, "getPortfolio");
 
-      await service.getBalances({ excludeZeroBalances: true });
+      await service.getBalances({ includeMetrics: false, excludeZeroBalances: true });
 
       expect(spy).toHaveBeenCalledWith({
         excludeZeroBalances: true,

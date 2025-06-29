@@ -83,7 +83,7 @@ interface ABTestData {
   id: string;
   name: string;
   description: string;
-  status: "running" | "completed" | "failed" | "paused";
+  status: "running" | "completed" | "paused";
   startDate: string;
   endDate?: string;
   variants: any[];
@@ -99,14 +99,19 @@ interface SafetyConstraintData {
   id: string;
   name: string;
   description: string;
-  type: "threshold" | "range" | "boolean";
-  category: "risk" | "performance" | "system";
+  type: "threshold" | "range" | "boolean" | "enum";
+  category: "risk" | "performance" | "compliance" | "operational";
   severity: "low" | "medium" | "high" | "critical";
   enabled: boolean;
   locked: boolean;
-  value: number | boolean;
-  defaultValue: number | boolean;
-  validation: { min?: number; max?: number };
+  value: any;
+  defaultValue: any;
+  validation: {
+    min?: number;
+    max?: number;
+    options?: string[];
+    required?: boolean;
+  };
   currentStatus: "ok" | "warning" | "violation";
   lastChecked: string;
   violationCount: number;
@@ -116,7 +121,7 @@ interface OptimizationRunData {
   id: string;
   name: string;
   algorithm: string;
-  status: "running" | "completed" | "failed" | "stopped";
+  status: "running" | "completed" | "failed" | "paused";
   startTime: string;
   endTime?: string;
   progress: number;

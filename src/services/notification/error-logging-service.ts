@@ -462,13 +462,7 @@ export class ErrorLoggingService {
 
   private getCircuitBreaker(strategyName: string): CircuitBreakerState {
     if (!this.circuitBreakers.has(strategyName)) {
-      this.circuitBreakers.set(strategyName, {
-        state: "CLOSED",
-        failures: 0,
-        lastFailureTime: 0,
-        threshold: 5,
-        timeout: 60000,
-      });
+      this.circuitBreakers.set(strategyName, new LoggingCircuitBreaker());
     }
     return this.circuitBreakers.get(strategyName)!;
   }
@@ -503,6 +497,55 @@ export class ErrorLoggingService {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
     }
+  }
+
+  /**
+   * Start the flush interval for buffered logging
+   */
+  startFlushInterval(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+    }
+
+    this.flushInterval = setInterval(async () => {
+      try {
+        await this.flush();
+      } catch (error) {
+        this.getStructuredLogger().error("Flush interval error", {
+          operation: "startFlushInterval",
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }, this.flushIntervalMs);
+  }
+
+  /**
+   * Setup graceful shutdown handling
+   */
+  setupGracefulShutdown(): void {
+    const cleanup = async () => {
+      try {
+        const logger = this.getStructuredLogger();
+        logger.info("Graceful shutdown initiated", {
+          operation: "setupGracefulShutdown",
+          bufferSize: this.buffer.length,
+          fallbackBufferSize: this.fallbackBuffer.length,
+        });
+
+        if (this.flushInterval) {
+          clearInterval(this.flushInterval);
+        }
+
+        // Final flush of remaining entries
+        await this.flush();
+      } catch (error) {
+        console.error("Error during graceful shutdown:", error);
+      }
+    };
+
+    process.on("SIGINT", cleanup);
+    process.on("SIGTERM", cleanup);
+    process.on("beforeExit", cleanup);
   }
 
   // Rest of the logging strategy implementations would continue here...
@@ -576,11 +619,12 @@ Object.assign(ErrorLoggingService.prototype, {
    * Store log entries in database with error recovery
    */
   async storeInDatabase(entries: ErrorLogEntry[]): Promise<void> {
-    const logger = this.getStructuredLogger();
+    // Use internal structured logging
 
     try {
       // Import database service dynamically to avoid circular dependencies
-      const { batchDatabaseService } = await import("@/src/services/data/batch-database-service");
+      const { BatchDatabaseService } = await import("@/src/services/data/batch-database-service");
+      const batchDatabaseService = new BatchDatabaseService();
 
       const dbEntries = entries.map((entry) => ({
         id: entry.id || `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -621,7 +665,7 @@ Object.assign(ErrorLoggingService.prototype, {
    * Store log entries in local file as fallback
    */
   async storeInLocalFile(entries: ErrorLogEntry[]): Promise<void> {
-    const logger = this.getStructuredLogger();
+    // Use internal structured logging
 
     try {
       const fs = await import("fs/promises");

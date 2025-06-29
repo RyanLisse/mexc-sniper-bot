@@ -72,7 +72,7 @@ describe('MultiPhaseStrategyBuilder', () => {
 
   describe('Predefined Strategy Methods', () => {
     it('should create conservative strategy', () => {
-      const strategy = builder.createConservativeStrategy().build();
+      const strategy = builder.buildStrategy().build();
 
       expect(strategy.levels).toHaveLength(4);
       expect(strategy.levels[0].percentage).toBe(10);
@@ -88,7 +88,7 @@ describe('MultiPhaseStrategyBuilder', () => {
     });
 
     it('should create conservative strategy with custom targets', () => {
-      const strategy = builder.createConservativeStrategy(80, 150).build();
+      const strategy = builder.buildStrategy(80, 150).build();
 
       expect(strategy.levels[0].percentage).toBe(10);
       expect(strategy.levels[1].percentage).toBe(20);
@@ -200,7 +200,7 @@ describe('MultiPhaseStrategyBuilder', () => {
 
     it('should support mixed method chaining', () => {
       const strategy = builder
-        .createConservativeStrategy()
+        .buildStrategy()
         .withDescription('Conservative with custom description')
         .build();
 
@@ -324,7 +324,7 @@ describe('StrategyPatterns', () => {
       const builder = StrategyPatterns.riskAdjusted(15); // 15% position
       const strategy = builder.build();
 
-      expect(strategy.levels).toHaveLength(4); // createConservativeStrategy(70, 80)
+      expect(strategy.levels).toHaveLength(4); // buildStrategy(70, 80)
       // Large position requires more conservative targets
       expect(strategy.levels[0].percentage).toBeLessThanOrEqual(30);
     });
@@ -357,7 +357,7 @@ describe('StrategyPatterns', () => {
       const builder = StrategyPatterns.volatilityAdjusted(0.8); // High volatility
       const strategy = builder.build();
 
-      expect(strategy.levels).toHaveLength(4); // createConservativeStrategy(60, 50)
+      expect(strategy.levels).toHaveLength(4); // buildStrategy(60, 50)
       // High volatility requires lower, more conservative targets
       expect(strategy.levels[strategy.levels.length - 1].percentage).toBeLessThan(100);
     });
@@ -391,7 +391,7 @@ describe('StrategyPatterns', () => {
       const builder = StrategyPatterns.marketCondition('bearish');
       const strategy = builder.build();
 
-      expect(strategy.levels).toHaveLength(4); // createConservativeStrategy(80, 60)
+      expect(strategy.levels).toHaveLength(4); // buildStrategy(80, 60)
       // Bearish should have lower targets and larger initial sells
       expect(strategy.levels[0].sellPercentage).toBeGreaterThan(20);
       expect(strategy.levels[strategy.levels.length - 1].percentage).toBeLessThan(100);

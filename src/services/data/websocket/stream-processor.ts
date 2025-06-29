@@ -10,7 +10,7 @@ import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
-} from "../../lib/websocket-types";
+} from "@/src/lib/websocket-types";
 import { webSocketServer } from "../websocket-server";
 import { type ConnectionManagerOptions, MexcConnectionManager } from "./connection-manager";
 import { MarketDataManager } from "./market-data-manager";
@@ -24,6 +24,13 @@ interface StreamConfig {
   subscriptions?: string[];
   enableReconnection?: boolean;
   connectionOptions?: Partial<ConnectionManagerOptions>;
+}
+
+interface MessageStats {
+  received: number;
+  processed: number;
+  errors: number;
+  lastMessage: number;
 }
 
 // ======================
@@ -58,7 +65,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
   // State management
   private isInitialized = false;
   private activeSubscriptions = new Set<string>();
-  private messageStats = {
+  private messageStats: MessageStats = {
     received: 0,
     processed: 0,
     errors: 0,
@@ -296,9 +303,9 @@ export class MexcWebSocketStreamService extends EventEmitter {
    */
   private setupEventHandlers(): void {
     // Handle price updates
-    this.on("price_update", (price: TradingPriceMessage) => {
+    this.on("price_update", async (price: TradingPriceMessage) => {
       // Broadcast to WebSocket server
-      webSocketServer.broadcast({
+      await webSocketServer.broadcast({
         type: "trading:price",
         channel: "trading:prices",
         data: price,
@@ -306,9 +313,9 @@ export class MexcWebSocketStreamService extends EventEmitter {
     });
 
     // Handle trading signals
-    this.on("trading_signal", (signal: TradingSignalMessage) => {
+    this.on("trading_signal", async (signal: TradingSignalMessage) => {
       // Broadcast to WebSocket server
-      webSocketServer.broadcast({
+      await webSocketServer.broadcast({
         type: "trading:signal",
         channel: "trading:signals",
         data: signal,
@@ -316,9 +323,9 @@ export class MexcWebSocketStreamService extends EventEmitter {
     });
 
     // Handle notifications
-    this.on("notification", (notification: NotificationMessage) => {
+    this.on("notification", async (notification: NotificationMessage) => {
       // Broadcast to WebSocket server
-      webSocketServer.broadcast({
+      await webSocketServer.broadcast({
         type: "notification:info",
         channel: "notifications:global",
         data: notification,
@@ -385,7 +392,7 @@ export class MexcWebSocketStreamService extends EventEmitter {
     initialized: boolean;
     connected: boolean;
     subscriptions: string[];
-    messageStats: typeof this.messageStats;
+    messageStats: MessageStats;
     cacheStats: any;
   } {
     return {

@@ -241,9 +241,10 @@ export class PatternToDatabaseBridge {
       });
 
       // Batch insert into database
+      let insertedCount = 0;
       if (snipeTargetRecords.length > 0) {
         try {
-          const insertedCount = await this.insertSnipeTargets(snipeTargetRecords);
+          insertedCount = await this.insertSnipeTargets(snipeTargetRecords);
 
           console.log("🔍 PatternToDatabaseBridge: After insertion", {
             insertedCount,
@@ -296,7 +297,8 @@ export class PatternToDatabaseBridge {
       }
 
       // Check for duplicates (deduplication)
-      const patternKey = `${match.symbol}_${match.patternType}_${match.detectedAt.getTime()}`;
+      const timestamp = typeof match.detectedAt === 'number' ? match.detectedAt : match.detectedAt.getTime();
+      const patternKey = `${match.symbol}_${match.patternType}_${timestamp}`;
       if (this.processedPatterns.has(patternKey)) {
         return false;
       }

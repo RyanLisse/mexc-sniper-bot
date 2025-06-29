@@ -763,7 +763,51 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
   }
 
   // ============================================================================
-  // Lifecycle Management
+  // Lifecycle Management & Additional Methods
+  // ============================================================================
+
+  /**
+   * Ping the MEXC API to test connectivity
+   */
+  async ping(): Promise<MexcServiceResponse<{ serverTime: number; latency: number }>> {
+    return this.testConnectivity();
+  }
+
+  /**
+   * Get symbol price ticker (alias for getTicker for compatibility)
+   */
+  async getSymbolPriceTicker(symbol: string): Promise<{
+    success: boolean;
+    data?: {
+      symbol: string;
+      price: string;
+      lastPrice?: string;
+      priceChangePercent?: string;
+      volume?: string;
+    };
+    error?: string;
+  }> {
+    const result = await this.getTicker(symbol);
+    
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error || "Failed to get symbol price ticker",
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        symbol: result.data?.symbol || symbol,
+        price: result.data?.price || result.data?.lastPrice || "0",
+        lastPrice: result.data?.lastPrice || result.data?.price || "0",
+        priceChangePercent: result.data?.priceChangePercent || "0",
+        volume: result.data?.volume || "0",
+      },
+    };
+  }
+
   // Missing TradingService interface methods
   async getCurrentPrice(symbol: string): Promise<number> {
     try {

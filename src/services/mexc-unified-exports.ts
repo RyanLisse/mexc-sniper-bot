@@ -5,21 +5,21 @@
  */
 
 // API Client
-export { mexcApiClient } from "./api/mexc-api-client";
-// Core MEXC Service
-export { MexcApiService } from "./api/mexc-api-service";
+export { MexcApiClient } from "./api/mexc-api-client";
 // Types
 export type {
-  MexcApiClientConfig,
-  MexcApiResponse,
-  MexcBalanceResponse,
-  MexcOrderRequest,
+  UnifiedMexcConfig,
+  UnifiedMexcResponse,
+  OrderParameters,
+  MexcApiRequestOptions,
+  AccountInfo,
+  PortfolioBalance,
+  PortfolioData,
+  CalendarEntry,
+  SymbolEntry,
 } from "./api/mexc-client-types";
 // Service Factory
 export { getUnifiedMexcService } from "./api/unified-mexc-service-factory";
-
-// Circuit Breaker
-export { createCoordinatedCircuitBreaker } from "./coordinated-circuit-breaker";
 
 // Real-time Services
 export { RealTimeSafetyMonitoringService } from "./risk/real-time-safety-monitoring-modules";

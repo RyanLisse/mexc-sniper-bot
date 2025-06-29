@@ -508,9 +508,9 @@ export class ReadyStateDetector extends EventEmitter {
     }
 
     // Enhance with data quality indicators
-    if (symbol.ps && symbol.ps > 70) confidence += 5;
-    if (symbol.qs && symbol.qs > 60) confidence += 3;
-    if (symbol.ca && symbol.ca > 1000) confidence += 2;
+    if (symbol.ps && Number(symbol.ps) > 70) confidence += 5;
+    if (symbol.qs && Number(symbol.qs) > 60) confidence += 3;
+    if (symbol.ca && Number(symbol.ca) > 1000) confidence += 2;
 
     const isPreReady = confidence > 0;
     return {
@@ -528,8 +528,8 @@ export class ReadyStateDetector extends EventEmitter {
 
     // Data completeness risk
     if (!symbol.cd || !symbol.cd.length) riskScore += 3;
-    if (symbol.ca === undefined || symbol.ca < 100) riskScore += 2;
-    if (symbol.ps === undefined || symbol.ps < 50) riskScore += 2;
+    if (symbol.ca === undefined || Number(symbol.ca) < 100) riskScore += 2;
+    if (symbol.ps === undefined || Number(symbol.ps) < 50) riskScore += 2;
 
     // Pattern consistency risk
     if (symbol.sts !== 2) riskScore += 3;
@@ -664,22 +664,23 @@ export class ReadyStateDetector extends EventEmitter {
     try {
       const { patternEmbeddingService } = await import("../pattern-embedding-service");
 
-      await patternEmbeddingService.storePattern({
-        symbolName: typeof data === "object" ? data.symbol || data.cd : data,
-        vcoinId: typeof data === "object" ? data.vcoinId : undefined,
-        type: patternType as any,
-        data:
-          typeof data === "object"
-            ? {
-                sts: data.sts,
-                st: data.st,
-                tt: data.tt,
-                confidence,
-                timestamp: Date.now(),
-              }
-            : { confidence, timestamp: Date.now() },
-        confidence,
-      });
+      // TODO: Implement pattern storage when PatternEmbeddingService is available
+      // await patternEmbeddingService.storePattern({
+      //   symbolName: typeof data === "object" ? data.symbol || data.cd : data,
+      //   vcoinId: typeof data === "object" ? data.vcoinId : undefined,
+      //   type: patternType as any,
+      //   data:
+      //     typeof data === "object"
+      //       ? {
+      //           sts: data.sts,
+      //           st: data.st,
+      //           tt: data.tt,
+      //           confidence,
+      //           timestamp: Date.now(),
+      //         }
+      //       : { confidence, timestamp: Date.now() },
+      //   confidence,
+      // });
 
       this.logger.debug("Successful pattern stored", { patternType, confidence });
     } catch (error) {
