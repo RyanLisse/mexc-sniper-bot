@@ -32,19 +32,22 @@ export class DataFetcher {
       const result = await this.mexcApiAgent.callMexcApi("/calendar");
 
       if (result && typeof result === "object" && "success" in result) {
-        return result as {
-          success: boolean;
-          data: unknown[];
-          count: number;
-          timestamp: string;
-          source: string;
+        const enhancedResponse = result as any;
+        const dataArray = Array.isArray(enhancedResponse.data) ? enhancedResponse.data : [];
+        return {
+          success: enhancedResponse.success,
+          data: dataArray,
+          count: dataArray.length,
+          timestamp: enhancedResponse.timestamp || new Date().toISOString(),
+          source: "mexc-api",
         };
       }
 
+      const dataArray = Array.isArray(result) ? result : [];
       return {
         success: true,
-        data: Array.isArray(result) ? result : [],
-        count: Array.isArray(result) ? result.length : 0,
+        data: dataArray,
+        count: dataArray.length,
         timestamp: new Date().toISOString(),
         source: "mexc-api",
       };

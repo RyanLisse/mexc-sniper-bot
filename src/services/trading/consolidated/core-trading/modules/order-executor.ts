@@ -260,7 +260,7 @@ export class OrderExecutor {
 
         const orderData: TradingOrderData = {
           symbol: params.symbol,
-          side: params.side,
+          side: params.side.toUpperCase() as "BUY" | "SELL",
           type: (params.type === "MARKET" || params.type === "LIMIT") ? params.type : "MARKET",
           quantity: params.quantity?.toString() || "0",
           price: params.price?.toString(),
@@ -345,6 +345,7 @@ export class OrderExecutor {
       quantity: parseFloat(result.data?.executedQty || "0") || params.quantity || 0,
       entryPrice: parseFloat(result.data?.price || "0") || params.price || 0,
       currentPrice: parseFloat(result.data?.price || "0") || params.price || 0,
+      timestamp: new Date().toISOString(),
       unrealizedPnL: 0,
       realizedPnL: 0,
       stopLossPercent: params.stopLossPercent,

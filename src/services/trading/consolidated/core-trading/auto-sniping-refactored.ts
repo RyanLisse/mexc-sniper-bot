@@ -310,7 +310,7 @@ export class AutoSnipingModuleRefactored {
           throw new Error(`Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`);
         }
       } catch (error) {
-        this.context.logger.warn("Could not check safety coordinator status", error);
+        this.context.logger.warn("Could not check safety coordinator status", { error: error instanceof Error ? error.message : String(error) });
       }
     }
 
@@ -350,6 +350,7 @@ export class AutoSnipingModuleRefactored {
       currentPrice: entryPrice,
       stopLossPercent: params.stopLossPercent,
       takeProfitPercent: params.takeProfitPercent,
+      timestamp: new Date().toISOString(),
       status: "open",
       openTime: new Date(),
       strategy: params.strategy || "auto-snipe",
@@ -389,7 +390,7 @@ export class AutoSnipingModuleRefactored {
           position.entryPrice,
           position.currentPrice || position.entryPrice,
           position.quantity,
-          position.side
+          position.side.toUpperCase() as "BUY" | "SELL"
         );
 
         position.status = "closed";
@@ -439,7 +440,7 @@ export class AutoSnipingModuleRefactored {
 
       return null;
     } catch (error) {
-      this.context.logger.error(`Failed to get current price for ${symbol}`, error);
+      this.context.logger.error(`Failed to get current price for ${symbol}`, { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
@@ -529,7 +530,7 @@ export class AutoSnipingModuleRefactored {
         position.entryPrice,
         currentPrice,
         position.quantity,
-        position.side
+        position.side.toUpperCase() as "BUY" | "SELL"
       );
 
       position.status = "closed";

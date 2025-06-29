@@ -289,6 +289,53 @@ export function createSimpleMexcServiceMock() {
       timestamp: Date.now(),
     }),
 
+    // Order book methods
+    getOrderBook: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        symbol: 'TESTUSDT',
+        bids: [
+          ['0.9995', '1000.0'],
+          ['0.9990', '2000.0'],
+          ['0.9985', '1500.0'],
+        ],
+        asks: [
+          ['1.0005', '1200.0'],
+          ['1.0010', '1800.0'],
+          ['1.0015', '1300.0'],
+        ],
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+    }),
+
+    getOrderBookDepth: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        symbol: 'TESTUSDT',
+        bids: [
+          ['0.9995', '1000.0'],
+          ['0.9990', '2000.0'],
+          ['0.9985', '1500.0'],
+        ],
+        asks: [
+          ['1.0005', '1200.0'],
+          ['1.0010', '1800.0'],
+          ['1.0015', '1300.0'],
+        ],
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+    }),
+
+    // Credential validation methods
+    hasValidCredentials: vi.fn().mockReturnValue(true),
+    validateCredentials: vi.fn().mockResolvedValue({
+      success: true,
+      data: { valid: true, message: 'Credentials are valid' },
+      timestamp: Date.now(),
+    }),
+
     // Additional methods that might be called
     initialize: vi.fn().mockResolvedValue(undefined),
     shutdown: vi.fn().mockResolvedValue(undefined),
@@ -324,7 +371,7 @@ export function createSimpleMexcServiceMock() {
 // Master Initialization Function
 // ============================================================================
 
-export function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
+export async function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
   // Create global mock data store
   global.mockDataStore = createSimpleMockDataStore();
 
@@ -335,16 +382,16 @@ export function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
   if (!isIntegrationTest) {
     // Import and initialize enhanced database mocks
     try {
-      const { initializeEnhancedDatabaseMocks } = require('./database-mocks-enhanced');
+      const { initializeEnhancedDatabaseMocks } = await import('./enhanced-database-mocks');
       initializeEnhancedDatabaseMocks();
     } catch (error) {
       console.warn('Enhanced database mocks not available, using basic mocks:', error.message);
-      // Fallback to basic mocking
-      global.mockDataStore = {
-        reset: () => {},
-        addRecord: () => ({}),
-        findRecords: () => [],
-      };
+      // Fallback to basic mocking with database mock
+      const basicDb = createSimpleDatabaseMock(global.mockDataStore);
+      vi.mock('@/src/db', () => ({
+        db: basicDb,
+        getDb: vi.fn().mockReturnValue(basicDb),
+      }));
     }
   }
 

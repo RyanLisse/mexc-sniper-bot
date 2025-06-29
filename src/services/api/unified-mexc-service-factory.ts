@@ -570,8 +570,8 @@ export class UnifiedMexcServiceFactory {
       this.invalidateUserCredentials(userId);
     }
 
-    // TODO: Implement status synchronization callbacks
-    // This would trigger React Query cache invalidation
+    // Implement status synchronization callbacks
+    this.triggerStatusSynchronization(userId);
     console.info(`[UnifiedMexcServiceFactory] Credential operation success - invalidated caches`);
   }
 
@@ -616,6 +616,50 @@ export class UnifiedMexcServiceFactory {
         authentication: false,
         error: error instanceof Error ? error.message : "Unknown error",
       };
+    }
+  }
+
+  /**
+   * Trigger status synchronization callbacks for React Query and other state management
+   */
+  private triggerStatusSynchronization(userId?: string): void {
+    try {
+      // Emit events for React Query invalidation
+      if (typeof globalThis !== 'undefined') {
+        const event = new CustomEvent('mexc-credentials-updated', {
+          detail: { userId, timestamp: Date.now() }
+        });
+        
+        // Trigger custom event handlers
+        if ((globalThis as any).dispatchEvent) {
+          (globalThis as any).dispatchEvent(event);
+        }
+        
+        // Set global flag for React Query to detect
+        (globalThis as any).mexcCredentialsUpdated = {
+          userId,
+          timestamp: Date.now(),
+          cacheInvalidated: true
+        };
+      }
+
+      // If running in browser environment, trigger React Query invalidation
+      if (typeof window !== 'undefined' && (window as any).queryClient) {
+        const queryClient = (window as any).queryClient;
+        
+        // Invalidate specific queries related to MEXC status
+        queryClient.invalidateQueries({ queryKey: ['mexc-status'] });
+        queryClient.invalidateQueries({ queryKey: ['mexc-connectivity'] });
+        queryClient.invalidateQueries({ queryKey: ['user-credentials'] });
+        
+        if (userId) {
+          queryClient.invalidateQueries({ queryKey: ['user-credentials', userId] });
+        }
+      }
+
+      console.info('[UnifiedMexcServiceFactory] Status synchronization triggered', { userId });
+    } catch (error) {
+      console.warn('[UnifiedMexcServiceFactory] Failed to trigger status synchronization:', error);
     }
   }
 }
@@ -675,4 +719,12 @@ export function invalidateUserCredentialsCache(userId: string): void {
 export function clearMexcServiceCaches(): void {
   const factory = getGlobalMexcServiceFactory();
   factory.clearAllCaches();
+}
+
+/**
+ * Trigger status synchronization for credential operations
+ */
+export function triggerCredentialStatusUpdate(userId?: string): void {
+  const factory = getGlobalMexcServiceFactory();
+  factory.onCredentialOperationSuccess(userId);
 }

@@ -74,10 +74,9 @@ export function ExitStrategySelector({
         levels: [], // Empty array for now - strategy-specific levels can be added later
         isDefault: false,
         isCustom: true,
-        parameters: {
-          ...strategy,
-          ...customParams,
-        },
+        parameters: Object.fromEntries(
+          Object.entries({ ...strategy, ...customParams }).filter(([_, value]) => value !== undefined)
+        ) as Record<string, string | number | boolean>,
         enabled: true,
         createdAt: new Date(),
       };

@@ -3,12 +3,12 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   real,
   text,
   timestamp,
   uuid,
-  jsonb,
 } from "drizzle-orm/pg-core";
 
 // NOTE: Removed circular imports to prevent JSON parsing errors during testing

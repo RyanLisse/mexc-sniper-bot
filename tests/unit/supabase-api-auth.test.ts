@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Mock the auth modules
 vi.mock('@/src/lib/supabase-auth');

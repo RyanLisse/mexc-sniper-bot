@@ -353,6 +353,79 @@ export class MultiPhaseTradingBot {
   }
 
   /**
+   * Calculate optimal entry strategy based on market conditions
+   */
+  calculateOptimalEntry(
+    symbol: string, 
+    marketConditions: {
+      volatility: number;
+      volume: number;
+      momentum: number;
+      support: number;
+      resistance: number;
+    }
+  ): {
+    entryPrice: number;
+    confidence: number;
+    adjustments: string[];
+  } {
+    const adjustments: string[] = [];
+    let baseConfidence = 75; // Start with moderate confidence
+    
+    // Calculate optimal entry price based on support/resistance levels
+    const supportResistanceRange = marketConditions.resistance - marketConditions.support;
+    const optimalEntry = marketConditions.support + (supportResistanceRange * 0.3); // Enter closer to support
+    
+    // Adjust confidence based on market conditions
+    
+    // Volatility adjustment
+    if (marketConditions.volatility < 0.1) {
+      baseConfidence += 10;
+      adjustments.push("Low volatility increases confidence");
+    } else if (marketConditions.volatility > 0.4) {
+      baseConfidence -= 15;
+      adjustments.push("High volatility reduces confidence");
+    }
+    
+    // Volume adjustment
+    if (marketConditions.volume > 2.0) {
+      baseConfidence += 8;
+      adjustments.push("High volume supports entry confidence");
+    } else if (marketConditions.volume < 1.0) {
+      baseConfidence -= 10;
+      adjustments.push("Low volume reduces confidence");
+    }
+    
+    // Momentum adjustment
+    if (marketConditions.momentum > 0.8) {
+      baseConfidence += 12;
+      adjustments.push("Strong momentum increases confidence");
+    } else if (marketConditions.momentum < 0.4) {
+      baseConfidence -= 8;
+      adjustments.push("Weak momentum reduces confidence");
+    }
+    
+    // Risk/reward ratio check
+    const riskRewardRatio = (marketConditions.resistance - optimalEntry) / (optimalEntry - marketConditions.support);
+    if (riskRewardRatio > 2.0) {
+      baseConfidence += 5;
+      adjustments.push(`Favorable risk/reward ratio: ${riskRewardRatio.toFixed(2)}:1`);
+    } else if (riskRewardRatio < 1.0) {
+      baseConfidence -= 10;
+      adjustments.push(`Poor risk/reward ratio: ${riskRewardRatio.toFixed(2)}:1`);
+    }
+    
+    // Ensure confidence is within reasonable bounds
+    const finalConfidence = Math.max(20, Math.min(95, baseConfidence));
+    
+    return {
+      entryPrice: Number(optimalEntry.toFixed(6)),
+      confidence: finalConfidence,
+      adjustments
+    };
+  }
+
+  /**
    * Build status object
    */
   protected buildStatus(currentPrice?: number): BotStatus {

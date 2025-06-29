@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Mock all the required modules
 vi.mock('@supabase/ssr');
@@ -7,10 +7,10 @@ vi.mock('@/src/lib/supabase-auth');
 vi.mock('@/src/db');
 vi.mock('next/headers');
 
+import { hasSupabaseConfig } from '@/src/db';
+import { createSupabaseServerClient, getSession } from '@/src/lib/supabase-auth';
 // Import mocked functions
 import { updateSession } from '@/src/lib/supabase-middleware';
-import { createSupabaseServerClient, getSession } from '@/src/lib/supabase-auth';
-import { hasSupabaseConfig } from '@/src/db';
 
 // Mock implementations
 const mockSupabaseClient = {

@@ -1,8 +1,8 @@
+// Build-safe imports - avoid structured logger to prevent webpack bundling issues
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
-// Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { createClient } from '@supabase/supabase-js';
 import type { AgentBehaviorMetrics } from "@/src/mexc-agents/safety-monitor-agent";
 import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 

@@ -24,22 +24,33 @@ export interface CoreTradingConfig {
 
   // Trading Configuration
   enablePaperTrading: boolean;
+  paperTradingMode: boolean;
   defaultStrategy: string;
   maxConcurrentPositions: number;
   enableCircuitBreaker: boolean;
   circuitBreakerThreshold: number;
   circuitBreakerResetTime: number;
+  positionManagementEnabled: boolean;
 
   // Auto-Sniping Configuration
   autoSnipingEnabled: boolean;
   snipeCheckInterval: number;
   confidenceThreshold: number;
+  maxConcurrentSnipes: number;
 
   // Risk Management Configuration
   maxPositionSize?: number;
   globalStopLossPercent?: number;
   globalTakeProfitPercent?: number;
   maxDailyLoss?: number;
+  riskManagement: {
+    stopLossEnabled: boolean;
+    takeProfitEnabled: boolean;
+    priceCheckInterval: number;
+    maxDailyLossPercent?: number;
+    maxPositionRiskPercent?: number;
+    emergencyStopEnabled?: boolean;
+  };
 
   // Cache Configuration
   enableCaching: boolean;
@@ -58,6 +69,9 @@ export const CoreTradingConfigSchema = z.object({
   enableCircuitBreaker: z.boolean().default(true),
   circuitBreakerThreshold: z.number().positive().default(5),
   circuitBreakerResetTime: z.number().positive().default(300000), // 5 minutes
+  paperTradingMode: z.boolean().default(true),
+  positionManagementEnabled: z.boolean().default(true),
+  maxConcurrentSnipes: z.number().positive().default(10),
   autoSnipingEnabled: z.boolean().default(false),
   snipeCheckInterval: z.number().positive().default(30000), // 30 seconds
   confidenceThreshold: z.number().min(0).max(100).default(75),
@@ -65,6 +79,19 @@ export const CoreTradingConfigSchema = z.object({
   globalStopLossPercent: z.number().positive().optional(),
   globalTakeProfitPercent: z.number().positive().optional(),
   maxDailyLoss: z.number().positive().optional(),
+  riskManagement: z.object({
+    stopLossEnabled: z.boolean().default(true),
+    takeProfitEnabled: z.boolean().default(true),
+    priceCheckInterval: z.number().positive().default(5000),
+    maxDailyLossPercent: z.number().positive().optional(),
+    maxPositionRiskPercent: z.number().positive().optional(),
+    emergencyStopEnabled: z.boolean().default(true),
+  }).default({
+    stopLossEnabled: true,
+    takeProfitEnabled: true,
+    priceCheckInterval: 5000,
+    emergencyStopEnabled: true,
+  }),
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().positive().default(60000), // 1 minute
 });
@@ -75,12 +102,15 @@ export const CoreTradingConfigSchema = z.object({
 
 export interface TradeParameters {
   symbol: string;
-  side: "BUY" | "SELL";
+  side: "BUY" | "SELL" | "buy" | "sell";
   type: "MARKET" | "LIMIT" | "STOP_LIMIT";
   quantity?: number;
   quoteOrderQty?: number;
   price?: number;
+  targetPrice?: number;
   stopPrice?: number;
+  stopLoss?: number;
+  takeProfit?: number;
   timeInForce?: "GTC" | "IOC" | "FOK";
   newClientOrderId?: string;
 
@@ -144,7 +174,7 @@ export interface TradeResult {
 export interface Position {
   id: string;
   symbol: string;
-  side: "BUY" | "SELL";
+  side: "BUY" | "SELL" | "buy" | "sell";
   orderId: string;
   clientOrderId?: string;
   entryPrice: number;
@@ -154,6 +184,9 @@ export interface Position {
   takeProfitPercent?: number;
   stopLossPrice?: number;
   takeProfitPrice?: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  timestamp: string;
   status: "open" | "closed" | "partially_filled";
   openTime: Date;
   closeTime?: Date;
@@ -397,8 +430,29 @@ export const ServiceStatusSchema = z.object({
 // Auto-Sniping Types
 // ============================================================================
 
-// Use the database schema for AutoSnipeTarget to ensure consistency
-export type { SnipeTarget as AutoSnipeTarget } from '@/src/db/schemas/trading';
+// Use the database schema for AutoSnipeTarget with extended properties for processing
+import type { SnipeTarget } from '@/src/db/schemas/trading';
+
+export interface AutoSnipeTarget extends SnipeTarget {
+  // Mapped properties for trading processing
+  symbol: string;  // Maps to symbolName
+  side?: "BUY" | "SELL" | "buy" | "sell";  // Defaults to "buy"
+  orderType?: "MARKET" | "LIMIT" | "STOP_LIMIT";  // Maps to entryStrategy
+  quantity: number;  // Maps to positionSizeUsdt
+  targetPrice?: number;  // Maps to entryPrice
+  stopLoss?: number;  // Calculated from stopLossPercent
+  takeProfit?: number;  // Calculated from takeProfitLevel/takeProfitCustom
+  timeInForce?: "GTC" | "IOC" | "FOK";  // Default "GTC"
+  strategy?: {
+    name: string;
+    type: string;
+    parameters: Record<string, string | number | boolean>;
+    metadata?: Record<string, string | number>;
+  };  // Trading strategy object
+  confidence: number;  // Maps to confidenceScore
+  scheduledAt?: string | null;  // Maps to targetExecutionTime
+  executedAt?: string | null;  // Maps to actualExecutionTime
+}
 
 // ============================================================================
 // Service Response Types
@@ -439,13 +493,29 @@ export interface ModuleContext {
   mexcService: UnifiedMexcServiceV2;
   safetyCoordinator?: ComprehensiveSafetyCoordinator;
   manualTradingModule?: {
-    executeTrade: (params: any) => Promise<any>;
+    executeTrade: (params: TradeParameters) => Promise<TradeResult>;
+  };
+  tradingStrategy: {
+    closePosition: (positionId: string, reason: string) => Promise<ServiceResponse<any>>;
+  };
+  orderExecutor: {
+    executePaperSnipe: (params: TradeParameters) => Promise<TradeResult>;
+    executeRealSnipe: (params: TradeParameters) => Promise<TradeResult>;
+    createPositionEntry: (params: TradeParameters, result: TradeResult) => Promise<Position>;
+  };
+  positionManager: {
+    setupPositionMonitoring: (position: Position, result: TradeResult) => Promise<void>;
+    updatePositionStopLoss: (positionId: string, newStopLoss: number) => Promise<ServiceResponse<void>>;
+    updatePositionTakeProfit: (positionId: string, newTakeProfit: number) => Promise<ServiceResponse<void>>;
+  };
+  marketDataService: {
+    getCurrentPrice: (symbol: string) => Promise<{ price: number } | null>;
   };
   logger: {
-    info: (message: string, context?: any) => void;
-    warn: (message: string, context?: any) => void;
-    error: (message: string, context?: any) => void;
-    debug: (message: string, context?: any) => void;
+    info: (message: string, context?: Record<string, unknown>) => void;
+    warn: (message: string, context?: Record<string, unknown>) => void;
+    error: (message: string, context?: Record<string, unknown>) => void;
+    debug: (message: string, context?: Record<string, unknown>) => void;
   };
   eventEmitter: EventEmitter;
 }
@@ -455,7 +525,13 @@ export interface ModuleState {
   isHealthy: boolean;
   lastActivity: Date;
   metrics: Record<string, number> & {
-    strategyPerformance?: Record<string, any>;
+    strategyPerformance?: Record<string, {
+      trades: number;
+      successRate: number;
+      averagePnL: number;
+      maxDrawdown: number;
+      totalVolume: number;
+    }>;
     portfolioRiskMetrics?: {
       concentrationRisk: number;
       correlationRisk: number;

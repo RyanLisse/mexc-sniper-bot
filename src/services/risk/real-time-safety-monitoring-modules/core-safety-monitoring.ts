@@ -9,6 +9,7 @@
  */
 
 import { createTimer } from "@/src/lib/structured-logger";
+import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 import type {
   RiskMetrics,
   SafetyAlert,
@@ -20,7 +21,6 @@ import {
 } from "@/src/schemas/safety-monitoring-schemas";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import type { CoreTradingService } from "@/src/services/trading/consolidated/core-trading/base-service";
-import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;

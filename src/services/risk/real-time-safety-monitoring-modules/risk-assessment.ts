@@ -7,9 +7,9 @@
  * Part of the modular refactoring of real-time-safety-monitoring-service.ts
  */
 
+import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 import type { SafetyConfiguration, SystemHealth } from "@/src/schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "@/src/schemas/safety-monitoring-schemas";
-import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import type { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";

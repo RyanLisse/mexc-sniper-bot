@@ -1,7 +1,7 @@
+import { createClient } from '@supabase/supabase-js';
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { createClient } from '@supabase/supabase-js';
 
 // OpenTelemetry database instrumentation
 import {

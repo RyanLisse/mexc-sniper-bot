@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
-import { realtimeManager } from "@/src/lib/supabase-realtime";
 import type { PriceUpdate, SystemAlert } from "@/src/lib/supabase-realtime";
+import { realtimeManager } from "@/src/lib/supabase-realtime";
 
 /**
  * Real-time Broadcast API

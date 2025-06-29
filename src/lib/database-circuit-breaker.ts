@@ -139,7 +139,8 @@ export class DatabaseCircuitBreaker {
       
       // Send emergency alert for cost-related failures
       if (isCostError) {
-        this.sendEmergencyAlert(operationName, errorMessage);
+        // Don't await to avoid blocking execution
+        this.sendEmergencyAlert(operationName, errorMessage).catch(console.error);
       }
     }
     
@@ -169,7 +170,7 @@ export class DatabaseCircuitBreaker {
     );
   }
   
-  private sendEmergencyAlert(operationName: string, errorMessage: string): void {
+  private async sendEmergencyAlert(operationName: string, errorMessage: string): Promise<void> {
     console.error(`🚨🚨🚨 [EMERGENCY ALERT] Database cost-related failure detected!`, {
       operation: operationName,
       error: errorMessage,
@@ -180,8 +181,8 @@ export class DatabaseCircuitBreaker {
       action: 'IMMEDIATE_INTERVENTION_REQUIRED'
     });
     
-    // TODO: Integrate with alerting system (Slack, email, etc.)
-    // await sendSlackAlert(`🚨 Database Emergency: ${errorMessage}`);
+    // Integrate with alerting system
+    await this.sendExternalAlert(operationName, errorMessage);
   }
   
   /**
@@ -236,6 +237,61 @@ export class DatabaseCircuitBreaker {
         return `Circuit open - operations blocked for ${Math.max(0, waitTime)}s`;
       default:
         return 'Circuit state unknown';
+    }
+  }
+
+  private async sendExternalAlert(operationName: string, errorMessage: string): Promise<void> {
+    try {
+      const alertPayload = {
+        text: `🚨 CIRCUIT BREAKER EMERGENCY ALERT 🚨`,
+        attachments: [{
+          color: 'danger',
+          title: 'Database Circuit Breaker Triggered',
+          text: `Database cost-related failure detected. Circuit breaker opened.`,
+          fields: [
+            { title: "Operation", value: operationName, short: true },
+            { title: "Error", value: errorMessage, short: true },
+            { title: "Circuit State", value: this.state, short: true },
+            { title: "Failure Count", value: this.failureCount.toString(), short: true },
+            { title: "Total Failures", value: this.totalFailures.toString(), short: true },
+            { title: "Action Required", value: "IMMEDIATE_INTERVENTION_REQUIRED", short: false }
+          ],
+          ts: Math.floor(Date.now() / 1000)
+        }]
+      };
+
+      // Send to webhook if configured
+      const webhookUrl = process.env.CIRCUIT_BREAKER_WEBHOOK_URL || process.env.EMERGENCY_WEBHOOK_URL;
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(alertPayload)
+        });
+      }
+
+      // Send email if configured
+      const emailEndpoint = process.env.CIRCUIT_BREAKER_EMAIL_ENDPOINT;
+      if (emailEndpoint) {
+        await fetch(emailEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: process.env.CIRCUIT_BREAKER_EMAIL_TO,
+            subject: `EMERGENCY: Database Circuit Breaker Triggered - ${operationName}`,
+            body: JSON.stringify({
+              operation: operationName,
+              error: errorMessage,
+              circuitState: this.state,
+              failureCount: this.failureCount,
+              totalFailures: this.totalFailures,
+              stats: this.getStats()
+            }, null, 2)
+          })
+        });
+      }
+    } catch (error) {
+      console.error('[CIRCUIT BREAKER] Failed to send external alert:', error);
     }
   }
 }

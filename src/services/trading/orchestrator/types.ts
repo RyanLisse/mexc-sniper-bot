@@ -223,14 +223,14 @@ export interface TradeExecutionResult {
 export interface ModuleContext {
   config: AutoSnipingConfig;
   logger: {
-    info: (message: string, context?: any) => void;
-    warn: (message: string, context?: any) => void;
-    error: (message: string, context?: any) => void;
-    debug: (message: string, context?: any) => void;
+    info: (message: string, context?: Record<string, unknown>) => void;
+    warn: (message: string, context?: Record<string, unknown>) => void;
+    error: (message: string, context?: Record<string, unknown>) => void;
+    debug: (message: string, context?: Record<string, unknown>) => void;
   };
   eventEmitter: {
-    emit: (event: string, data: any) => void;
-    on: (event: string, listener: (...args: any[]) => void) => void;
+    emit: (event: string, data: unknown) => void;
+    on: (event: string, listener: (...args: unknown[]) => void) => void;
   };
 }
 
@@ -238,7 +238,7 @@ export interface ModuleState {
   isInitialized: boolean;
   isHealthy: boolean;
   lastActivity: Date;
-  metrics: Record<string, any>;
+  metrics: Record<string, number | string | boolean | Date>;
 }
 
 // ============================================================================
@@ -294,7 +294,7 @@ export interface PatternMatch {
   advanceNoticeHours: number;
   detectedAt: string;
   validUntil: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 export interface OpportunityAssessment {
@@ -345,7 +345,7 @@ export function validateStatus(status: unknown): AutoSnipingStatus {
 // Type Guards
 // ============================================================================
 
-export function isSnipeTarget(obj: any): obj is SnipeTarget {
+export function isSnipeTarget(obj: unknown): obj is SnipeTarget {
   return (
     obj &&
     typeof obj.id === "number" &&
@@ -355,7 +355,7 @@ export function isSnipeTarget(obj: any): obj is SnipeTarget {
   );
 }
 
-export function isTradingPosition(obj: any): obj is TradingPosition {
+export function isTradingPosition(obj: unknown): obj is TradingPosition {
   return (
     obj &&
     typeof obj.id === "string" &&
@@ -365,7 +365,7 @@ export function isTradingPosition(obj: any): obj is TradingPosition {
   );
 }
 
-export function isTradeExecutionResult(obj: any): obj is TradeExecutionResult {
+export function isTradeExecutionResult(obj: unknown): obj is TradeExecutionResult {
   return obj && typeof obj.success === "boolean";
 }
 

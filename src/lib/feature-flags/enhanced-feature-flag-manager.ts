@@ -385,7 +385,8 @@ export class EnhancedFeatureFlagManager {
 
     console.warn(`[Feature Flag] Emergency disabled: ${flagName}. Reason: ${reason}`);
 
-    // TODO: Send alert notification
+    // Send alert notification
+    this.sendEmergencyAlert(flagName, reason);
   }
 
   /**
@@ -648,6 +649,70 @@ export class EnhancedFeatureFlagManager {
         // Check error rates and rollback if threshold exceeded
         // Implementation would integrate with error monitoring
       }
+    }
+  }
+
+  private async sendEmergencyAlert(flagName: string, reason: string): Promise<void> {
+    try {
+      const config = this.flagConfigurations.get(flagName);
+      const alertPayload = {
+        text: `🚨 FEATURE FLAG EMERGENCY ALERT 🚨`,
+        attachments: [{
+          color: 'danger',
+          title: 'Feature Flag Emergency Disabled',
+          text: `Feature flag "${flagName}" has been emergency disabled.`,
+          fields: [
+            { title: "Flag Name", value: flagName, short: true },
+            { title: "Reason", value: reason, short: true },
+            { title: "Previous Strategy", value: config?.strategy || "unknown", short: true },
+            { title: "Action", value: "Kill switch activated", short: true },
+            { title: "Impact", value: "Feature immediately disabled for all users", short: false }
+          ],
+          ts: Math.floor(Date.now() / 1000)
+        }]
+      };
+
+      // Send to webhook if configured
+      const webhookUrl = process.env.FEATURE_FLAG_WEBHOOK_URL || process.env.EMERGENCY_WEBHOOK_URL;
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(alertPayload)
+        });
+      }
+
+      // Send email if configured
+      const emailEndpoint = process.env.FEATURE_FLAG_EMAIL_ENDPOINT;
+      if (emailEndpoint) {
+        await fetch(emailEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: process.env.FEATURE_FLAG_EMAIL_TO,
+            subject: `EMERGENCY: Feature Flag "${flagName}" Disabled`,
+            body: `Feature flag "${flagName}" was emergency disabled.\n\nReason: ${reason}\n\nTimestamp: ${new Date().toISOString()}\n\nThis requires immediate attention.`
+          })
+        });
+      }
+
+      // Emit internal event for monitoring systems
+      process.nextTick(() => {
+        const eventData = {
+          flagName,
+          reason,
+          timestamp: new Date().toISOString(),
+          config: config || null
+        };
+        
+        // Store in global for monitoring systems to pick up
+        if (typeof globalThis !== 'undefined') {
+          (globalThis as any).lastFeatureFlagEmergencyDisabled = eventData;
+        }
+      });
+
+    } catch (error) {
+      console.error('[Feature Flag Manager] Failed to send emergency alert:', error);
     }
   }
 }

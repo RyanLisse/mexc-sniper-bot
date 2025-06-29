@@ -104,14 +104,14 @@ export class TargetProcessor {
       });
 
       // Update target status to processing
-      await this.updateSnipeTargetStatus(target.id, "processing");
+      await this.updateSnipeTargetStatus(target.id.toString(), "processing");
 
       // Execute the snipe
       const result = await this.executeSnipeTarget(target);
 
       // Update target status based on result
       const newStatus = result.success ? "completed" : "failed";
-      await this.updateSnipeTargetStatus(target.id, newStatus, result.error);
+      await this.updateSnipeTargetStatus(target.id.toString(), newStatus, result.error);
 
       // Update statistics
       this.processedTargets++;
@@ -124,7 +124,7 @@ export class TargetProcessor {
       this.context.logger.info(`Snipe target processing completed`, {
         targetId: target.id,
         success: result.success,
-        orderId: result.orderId,
+        orderId: result.data?.orderId,
       });
 
       return {
@@ -141,7 +141,7 @@ export class TargetProcessor {
       });
 
       // Mark target as failed
-      await this.updateSnipeTargetStatus(target.id, "failed", safeError.message);
+      await this.updateSnipeTargetStatus(target.id.toString(), "failed", safeError.message);
 
       return {
         success: false,
@@ -156,15 +156,28 @@ export class TargetProcessor {
    */
   async executeSnipeTarget(target: AutoSnipeTarget): Promise<TradeResult> {
     try {
+      // Map database fields to trading parameters
+      const symbol = target.symbol || target.symbolName;
+      const side = (target.side || "buy").toUpperCase() as "BUY" | "SELL";
+      const orderType = target.orderType || (target.entryStrategy === "limit" ? "LIMIT" : "MARKET");
+      const quantity = target.quantity || target.positionSizeUsdt;
+      const price = target.targetPrice || target.entryPrice || undefined;
+      
+      // Calculate stop loss and take profit prices if needed
+      const stopLoss = target.stopLoss || (price && target.stopLossPercent ? 
+        price * (1 - target.stopLossPercent / 100) : undefined);
+      const takeProfit = target.takeProfit || (price && target.takeProfitCustom ? 
+        price * (1 + target.takeProfitCustom / 100) : undefined);
+      
       // Prepare trade parameters
       const tradeParams: TradeParameters = {
-        symbol: target.symbol,
-        side: target.side || "buy",
-        type: target.orderType || "MARKET",
-        quantity: target.quantity,
-        price: target.targetPrice,
-        stopLoss: target.stopLoss,
-        takeProfit: target.takeProfit,
+        symbol,
+        side,
+        type: orderType as "MARKET" | "LIMIT" | "STOP_LIMIT",
+        quantity,
+        price,
+        stopLoss,
+        takeProfit,
         timeInForce: target.timeInForce || "GTC",
       };
 
@@ -188,11 +201,14 @@ export class TargetProcessor {
 
         // Setup multi-phase monitoring if applicable
         if (target.strategy && this.isMultiPhaseStrategy(target.strategy)) {
-          await this.setupMultiPhaseMonitoring(
-            target.strategy as MultiPhaseStrategy,
-            position,
-            result
-          );
+          const multiPhaseStrategy = this.convertToMultiPhaseStrategy(target.strategy);
+          if (multiPhaseStrategy) {
+            await this.setupMultiPhaseMonitoring(
+              multiPhaseStrategy,
+              position,
+              result
+            );
+          }
         }
       }
 
@@ -307,7 +323,7 @@ export class TargetProcessor {
     try {
       const exitParams: TradeParameters = {
         symbol: position.symbol,
-        side: position.side === "buy" ? "sell" : "buy",
+        side: position.side === "BUY" ? "SELL" : "BUY",
         type: "MARKET",
         quantity,
       };
@@ -320,7 +336,7 @@ export class TargetProcessor {
         this.context.logger.info("Partial exit executed successfully", {
           positionId: position.id,
           exitQuantity: quantity,
-          orderId: result.orderId,
+          orderId: result.data?.orderId,
         });
       } else {
         this.context.logger.error("Partial exit failed", {
@@ -352,17 +368,17 @@ export class TargetProcessor {
         .where(
           and(
             eq(snipeTargets.status, "pending"),
-            isNull(snipeTargets.executedAt),
+            isNull(snipeTargets.actualExecutionTime),
             or(
-              isNull(snipeTargets.scheduledAt),
-              lt(snipeTargets.scheduledAt, currentTime.toISOString())
+              isNull(snipeTargets.targetExecutionTime),
+              lt(snipeTargets.targetExecutionTime, currentTime)
             )
           )
         )
         .limit(this.context.config.maxConcurrentSnipes || 10);
 
       // Filter by confidence threshold
-      return targets.filter(target => 
+      return targets.filter((target: any) => 
         (target.confidence || 0) >= maxConfidence
       ) as AutoSnipeTarget[];
     } catch (error) {
@@ -397,7 +413,7 @@ export class TargetProcessor {
       await db
         .update(snipeTargets)
         .set(updateData)
-        .where(eq(snipeTargets.id, targetId));
+        .where(eq(snipeTargets.id, parseInt(targetId, 10)));
 
       this.context.logger.debug("Updated snipe target status", {
         targetId,
@@ -418,8 +434,42 @@ export class TargetProcessor {
   /**
    * Check if strategy is multi-phase
    */
-  private isMultiPhaseStrategy(strategy: TradingStrategy): boolean {
-    return "levels" in strategy && Array.isArray((strategy as any).levels);
+  private isMultiPhaseStrategy(strategy: any): boolean {
+    return strategy && typeof strategy === 'object' && "levels" in strategy && Array.isArray(strategy.levels);
+  }
+
+  /**
+   * Convert strategy to multi-phase strategy
+   */
+  private convertToMultiPhaseStrategy(strategy: any): MultiPhaseStrategy | null {
+    if (!this.isMultiPhaseStrategy(strategy)) {
+      return null;
+    }
+
+    return {
+      id: strategy.id || strategy.name || 'unknown',
+      name: strategy.name || 'Multi-Phase Strategy',
+      description: strategy.description || 'Multi-phase trading strategy',
+      maxPositionSize: strategy.maxPositionSize || 1000,
+      positionSizingMethod: strategy.positionSizingMethod || 'fixed',
+      stopLossPercent: strategy.stopLossPercent || 5,
+      takeProfitPercent: strategy.takeProfitPercent || 10,
+      trailingStopPercent: strategy.trailingStopPercent || 0,
+      maxDrawdownPercent: strategy.maxDrawdownPercent || 15,
+      timeframe: strategy.timeframe || '1h',
+      indicators: strategy.indicators || {},
+      conditions: strategy.conditions || {},
+      entryRules: strategy.entryRules || [],
+      exitRules: strategy.exitRules || [],
+      riskManagement: strategy.riskManagement || {},
+      backtestResults: strategy.backtestResults || null,
+      isActive: strategy.isActive !== false,
+      createdAt: strategy.createdAt || new Date(),
+      updatedAt: strategy.updatedAt || new Date(),
+      parameters: strategy.parameters || {},
+      metadata: strategy.metadata || {},
+      levels: strategy.levels || []
+    };
   }
 
   /**

@@ -162,6 +162,7 @@ describe('Comprehensive Autosniping Workflow Integration Tests', () => {
           executionTimeMs: 100,
         }),
       );
+    }
 
     // Mock hasRecentActivity method
     if (mexcService && typeof mexcService.hasRecentActivity === 'function') {

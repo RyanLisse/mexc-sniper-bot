@@ -6,9 +6,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
 // import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service"; // File may not exist
 import type { SafetyConfiguration } from "../../../../schemas/safety-monitoring-schemas";
+import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
 import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";

@@ -41,7 +41,7 @@ describe('Centralized JSON Parser', () => {
 
       expect(result.success).toBe(false);
       expect(result.errorCode).toBe('INVALID_JSON');
-      expect(result.error).toContain('JSON syntax error');
+      expect(result.error).toContain('Invalid JSON property name');
       expect(result.details).toBeDefined();
     });
 

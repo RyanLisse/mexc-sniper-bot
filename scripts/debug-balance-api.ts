@@ -4,7 +4,7 @@
  * This script tests the balance API to identify why the UI shows 0 instead of real balance
  */
 
-import { getUnifiedMexcService } from "./src/services/api/unified-mexc-service-factory";
+import { getUnifiedMexcService } from "../src/services/api/unified-mexc-service-factory";
 
 async function debugBalanceAPI() {
   console.log("🔍 Starting Balance API Debug Test...");

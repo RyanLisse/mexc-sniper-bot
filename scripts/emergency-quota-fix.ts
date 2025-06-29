@@ -14,8 +14,8 @@
  * - Real-time quota monitoring activation
  */
 
-import { databaseConnectionPool } from "./src/lib/database-connection-pool";
-import { databaseQuotaMonitor } from "./src/lib/database-quota-monitor";
+import { databaseConnectionPool } from "../src/lib/database-connection-pool";
+import { databaseQuotaMonitor } from "../src/lib/database-quota-monitor";
 
 const logger = {
   info: (message: string) => console.log(`🔧 [EMERGENCY-FIX] ${message}`),

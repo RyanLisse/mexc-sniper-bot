@@ -6,7 +6,7 @@
  * Validates core trading system functionality and auto-sniping readiness
  */
 
-import { getCoreTrading, resetCoreTrading } from "./src/services/trading/consolidated/core-trading.service";
+import { getCoreTrading, resetCoreTrading } from "../src/services/trading/consolidated/core-trading.service";
 
 async function validateTradingSystem() {
   console.log("🚀 Trading System Validation\n");

@@ -266,11 +266,11 @@ export class DatabaseOperations {
 
       const stats = {
         total: allTargets.length,
-        pending: allTargets.filter(t => t.status === "pending").length,
-        ready: allTargets.filter(t => t.status === "ready").length,
-        executing: allTargets.filter(t => t.status === "executing").length,
-        completed: allTargets.filter(t => t.status === "completed").length,
-        failed: allTargets.filter(t => t.status === "failed").length,
+        pending: allTargets.filter((t: any) => t.status === "pending").length,
+        ready: allTargets.filter((t: any) => t.status === "ready").length,
+        executing: allTargets.filter((t: any) => t.status === "executing").length,
+        completed: allTargets.filter((t: any) => t.status === "completed").length,
+        failed: allTargets.filter((t: any) => t.status === "failed").length,
       };
 
       return stats;

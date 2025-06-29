@@ -1,4 +1,5 @@
 "use client";
+
 /**
  * Real-time Subscriptions Demo Component
  * 
@@ -6,34 +7,34 @@
  * for trading data in the MEXC Sniper Bot application.
  */
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Separator } from './ui/separator';
 import { 
   Activity,
-  TrendingUp,
-  TrendingDown,
+  AlertTriangle,
   Bell,
+  CheckCircle,
+  DollarSign,
+  Info,
+  RefreshCw,
+  Target,
+  TrendingDown,
+  TrendingUp,
   Wifi,
   WifiOff,
-  RefreshCw,
-  Zap,
-  DollarSign,
-  Target,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-  XCircle
+  XCircle, 
+  Zap
 } from 'lucide-react';
+import React, { useState } from 'react';
 import {
-  useRealtimeTradingData,
-  useRealtimePrices,
   useRealtimeBroadcast,
-  useRealtimeConnection
+  useRealtimeConnection, 
+  useRealtimePrices,
+  useRealtimeTradingData
 } from '@/src/hooks/use-supabase-realtime';
 import { useAuth } from '@/src/lib/supabase-auth-client';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Separator } from './ui/separator';
 
 interface RealtimeDemoProps {
   className?: string;

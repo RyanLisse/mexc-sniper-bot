@@ -548,6 +548,58 @@ export class EnhancedMexcOrchestrator {
   }
 
   /**
+   * Update agent configurations
+   */
+  async updateAgentConfigurations(configurations: any): Promise<void> {
+    try {
+      this.logger.info("Updating agent configurations", {
+        agentTypes: Object.keys(configurations),
+        timestamp: new Date().toISOString(),
+      });
+
+      // Store configurations in agent registry
+      for (const [agentType, config] of Object.entries(configurations)) {
+        const agents = this.agentRegistry.getAvailableAgentsByType(agentType);
+        for (const agent of agents) {
+          // Update agent configuration if it supports it
+          if (typeof (agent as any).updateConfiguration === 'function') {
+            await (agent as any).updateConfiguration(config);
+          }
+        }
+      }
+
+      this.logger.info("Agent configurations updated successfully");
+    } catch (error) {
+      this.logger.error("Failed to update agent configurations", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update workflow parameters
+   */
+  async updateWorkflowParameters(parameters: any): Promise<void> {
+    try {
+      this.logger.info("Updating workflow parameters", {
+        strategy: parameters.strategy,
+        confidenceThreshold: parameters.confidenceThreshold,
+        maxConcurrentSymbols: parameters.maxConcurrentSymbols,
+        timestamp: new Date().toISOString(),
+      });
+
+      // Update workflow engine parameters
+      if (this.workflowEngine && typeof (this.workflowEngine as any).updateGlobalParameters === 'function') {
+        await (this.workflowEngine as any).updateGlobalParameters(parameters);
+      }
+
+      this.logger.info("Workflow parameters updated successfully");
+    } catch (error) {
+      this.logger.error("Failed to update workflow parameters", error);
+      throw error;
+    }
+  }
+
+  /**
    * Shutdown coordination systems gracefully
    */
   async shutdown(): Promise<void> {

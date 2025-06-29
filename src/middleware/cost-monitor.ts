@@ -223,10 +223,13 @@ class CostMonitor {
       timestamp: alert.timestamp
     });
     
-    // TODO: Integrate with external alerting (Slack, email, etc.)
+    // Integrate with external alerting systems
+    await this.sendExternalAlert(alert);
+    
     if (alert.severity === 'CRITICAL') {
-      // For critical alerts, we might want to take immediate action
       console.error(`🚨🚨🚨 [CRITICAL COST ALERT] Immediate action required!`, alert);
+      // Trigger emergency procedures for critical alerts
+      await this.handleCriticalAlert(alert);
     }
   }
   
@@ -249,12 +252,11 @@ class CostMonitor {
       action: 'DISABLING_DATABASE_ENDPOINTS'
     });
     
-    // TODO: Implement actual endpoint disabling
-    // This could involve setting a global flag or updating a config service
-    // await this.disableEndpoints(['/api/execution-history', '/api/transactions']);
+    // Implement actual endpoint disabling
+    await this.disableEndpoints(['/api/execution-history', '/api/transactions', '/api/workflow-executions']);
     
-    // TODO: Send emergency alert
-    // await this.sendSlackAlert(`🚨 Database emergency shutdown: ${reason}`);
+    // Send emergency alert
+    await this.sendEmergencyAlert(`🚨 Database emergency shutdown: ${reason}`);
   }
   
   getCurrentUsage() {
@@ -301,6 +303,149 @@ class CostMonitor {
     }
     
     return aggregated;
+  }
+
+  private async sendExternalAlert(alert: CostAlert): Promise<void> {
+    try {
+      const alertPayload = {
+        text: `${alert.severity} Cost Alert: ${alert.endpoint}`,
+        attachments: [{
+          color: this.getAlertColor(alert.severity),
+          fields: [
+            { title: "Endpoint", value: alert.endpoint, short: true },
+            { title: "Threshold", value: alert.threshold, short: true },
+            { title: "Query Count", value: alert.queryCount.toString(), short: true },
+            { title: "Estimated Cost", value: `$${alert.estimatedCost.toFixed(4)}`, short: true },
+            { title: "Duration", value: `${alert.duration}ms`, short: true },
+            { title: "Data Transfer", value: `${(alert.dataTransfer / 1024).toFixed(2)}KB`, short: true }
+          ],
+          ts: Math.floor(new Date(alert.timestamp).getTime() / 1000)
+        }]
+      };
+
+      // Send to webhook if configured
+      const webhookUrl = process.env.COST_ALERT_WEBHOOK_URL;
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(alertPayload)
+        });
+      }
+
+      // Send email if configured
+      const emailEndpoint = process.env.COST_ALERT_EMAIL_ENDPOINT;
+      if (emailEndpoint) {
+        await fetch(emailEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: process.env.COST_ALERT_EMAIL_TO,
+            subject: `${alert.severity} Cost Alert - ${alert.endpoint}`,
+            body: JSON.stringify(alert, null, 2)
+          })
+        });
+      }
+    } catch (error) {
+      console.error('[COST MONITOR] Failed to send external alert:', error);
+    }
+  }
+
+  private async handleCriticalAlert(alert: CostAlert): Promise<void> {
+    try {
+      // For critical alerts, take immediate action
+      if (alert.severity === 'CRITICAL') {
+        // Disable the problematic endpoint temporarily
+        if (typeof globalThis !== 'undefined') {
+          (globalThis as any).disabledEndpoints = (globalThis as any).disabledEndpoints || new Set();
+          (globalThis as any).disabledEndpoints.add(alert.endpoint);
+        }
+
+        // Send high-priority notification
+        const criticalPayload = {
+          text: `🚨 CRITICAL DATABASE COST ALERT 🚨`,
+          attachments: [{
+            color: 'danger',
+            title: 'Immediate Action Required',
+            text: `Critical cost threshold exceeded on ${alert.endpoint}. Endpoint temporarily disabled.`,
+            fields: [
+              { title: "Cost", value: `$${alert.estimatedCost.toFixed(4)}`, short: true },
+              { title: "Queries", value: alert.queryCount.toString(), short: true }
+            ]
+          }]
+        };
+
+        // Send to all configured channels
+        const urgentWebhook = process.env.URGENT_ALERT_WEBHOOK_URL || process.env.COST_ALERT_WEBHOOK_URL;
+        if (urgentWebhook) {
+          await fetch(urgentWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(criticalPayload)
+          });
+        }
+      }
+    } catch (error) {
+      console.error('[COST MONITOR] Failed to handle critical alert:', error);
+    }
+  }
+
+  private async disableEndpoints(endpoints: string[]): Promise<void> {
+    try {
+      // Set global flag to disable endpoints
+      if (typeof globalThis !== 'undefined') {
+        (globalThis as any).disabledEndpoints = (globalThis as any).disabledEndpoints || new Set();
+        endpoints.forEach(endpoint => {
+          (globalThis as any).disabledEndpoints.add(endpoint);
+        });
+      }
+
+      // Store in environment variable as backup
+      process.env.DISABLED_ENDPOINTS = endpoints.join(',');
+
+      console.warn('[COST MONITOR] Disabled endpoints:', endpoints);
+    } catch (error) {
+      console.error('[COST MONITOR] Failed to disable endpoints:', error);
+    }
+  }
+
+  private async sendEmergencyAlert(message: string): Promise<void> {
+    try {
+      const emergencyPayload = {
+        text: message,
+        attachments: [{
+          color: 'danger',
+          title: '🚨 EMERGENCY DATABASE SHUTDOWN 🚨',
+          text: 'Database operations have been emergency stopped due to cost protection triggers.',
+          fields: [
+            { title: "Current Usage", value: JSON.stringify(this.getCurrentUsage()), short: false }
+          ],
+          ts: Math.floor(Date.now() / 1000)
+        }]
+      };
+
+      // Send to all available channels
+      const emergencyWebhook = process.env.EMERGENCY_WEBHOOK_URL || process.env.COST_ALERT_WEBHOOK_URL;
+      if (emergencyWebhook) {
+        await fetch(emergencyWebhook, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(emergencyPayload)
+        });
+      }
+    } catch (error) {
+      console.error('[COST MONITOR] Failed to send emergency alert:', error);
+    }
+  }
+
+  private getAlertColor(severity: CostAlert['severity']): string {
+    switch (severity) {
+      case 'CRITICAL': return 'danger';
+      case 'HIGH': return 'warning';
+      case 'MEDIUM': return 'warning';
+      case 'LOW': return 'good';
+      default: return 'warning';
+    }
   }
 }
 

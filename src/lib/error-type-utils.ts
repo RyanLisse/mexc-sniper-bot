@@ -16,6 +16,7 @@ export interface SafeError {
   message: string;
   stack?: string;
   cause?: unknown;
+  [key: string]: unknown;
 }
 
 /**

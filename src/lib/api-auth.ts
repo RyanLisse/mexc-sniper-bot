@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { createErrorResponse, HTTP_STATUS } from "./api-response";
 import { shouldBypassRateLimit } from "./bypass-rate-limit";
 import { AuthorizationError } from "./errors";
-import { getSession, requireAuth } from "./supabase-auth";
 import {
   checkRateLimit,
   createRateLimitResponse,
@@ -10,6 +9,7 @@ import {
   isIPSuspicious,
   logSecurityEvent,
 } from "./rate-limiter";
+import { getSession, requireAuth } from "./supabase-auth";
 /**
  * Alias for requireApiAuth to maintain compatibility
  */

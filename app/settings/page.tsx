@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 import {
   AlertCircle,
   CheckCircle,
@@ -17,6 +16,7 @@ import {
   Zap
 } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";

@@ -1,5 +1,5 @@
-import { beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import { config } from 'dotenv';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 
 // Load Supabase test environment
 config({ path: '.env.test.supabase', override: true });

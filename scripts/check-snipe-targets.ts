@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 // Import the snipeTargets table from schema
-import { snipeTargets } from './src/db/migrations/schema';
+import { snipeTargets } from '../src/db/schemas/trading';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 

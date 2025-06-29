@@ -165,7 +165,7 @@ export class OrderExecutionHelper {
    * Prepare MEXC order parameters
    */
   private prepareMexcOrderParams(params: TradeParameters, currentPrice: number): any {
-    const mexcParams = {
+    const mexcParams: any = {
       symbol: params.symbol,
       side: params.side,
       type: params.type,

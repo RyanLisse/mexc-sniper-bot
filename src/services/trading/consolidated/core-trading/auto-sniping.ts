@@ -1095,6 +1095,7 @@ export class AutoSnipingModule {
       currentPrice: entryPrice,
       stopLossPercent: params.stopLossPercent,
       takeProfitPercent: params.takeProfitPercent,
+      timestamp: new Date().toISOString(),
       status: "open",
       openTime: new Date(),
       strategy: params.strategy || "auto-snipe",

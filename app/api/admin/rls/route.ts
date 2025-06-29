@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
 import { 
-  checkRLSStatus, 
   applyRLSMigration, 
-  testRLSPolicies,
+  checkRLSStatus, 
   createRLSHelperFunctions,
+  testRLSPolicies,
   validateRLSSetup
 } from "@/src/lib/supabase-rls";
 

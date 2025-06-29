@@ -1,6 +1,6 @@
-import { describe, test, expect, beforeEach, vi, MockedFunction } from 'vitest';
-import { createSupabaseServerClient, getSession, syncUserWithDatabase, getUserFromDatabase, requireAuth } from '@/src/lib/supabase-auth';
+import { beforeEach, describe, expect, MockedFunction, test, vi } from 'vitest';
 import type { SupabaseUser } from '@/src/lib/supabase-auth';
+import { createSupabaseServerClient, getSession, getUserFromDatabase, requireAuth, syncUserWithDatabase } from '@/src/lib/supabase-auth';
 
 // Create mock objects that can be referenced
 const mockSupabaseClient = {

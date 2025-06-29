@@ -3,8 +3,8 @@
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useState } from "react";
-import { Badge } from "./ui/badge";
 import { useAuth } from "./auth/supabase-auth-provider";
+import { Badge } from "./ui/badge";
 
 interface UserMenuProps {
   user: {

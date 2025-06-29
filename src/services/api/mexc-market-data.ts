@@ -499,6 +499,70 @@ export class MexcMarketDataClient extends MexcClientCore {
     }
   }
 
+  /**
+   * Get order book depth for a symbol
+   */
+  async getOrderBook(
+    symbol: string,
+    limit: number = 100
+  ): Promise<UnifiedMexcResponse<{
+    bids: [string, string][];
+    asks: [string, string][];
+    lastUpdateId: number;
+  }>> {
+    try {
+      console.info(`[MexcMarketData] Fetching order book for ${symbol} with limit ${limit}`);
+
+      const endpoint = `/api/v3/depth?symbol=${symbol}&limit=${limit}`;
+      const response = await this.makeRequest<{
+        bids: [string, string][];
+        asks: [string, string][];
+        lastUpdateId: number;
+      }>(endpoint);
+
+      if (!response.success) {
+        return {
+          success: false,
+          data: { bids: [], asks: [], lastUpdateId: 0 },
+          error: response.error,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Validate response structure
+      if (!response.data || !Array.isArray(response.data.bids) || !Array.isArray(response.data.asks)) {
+        return {
+          success: false,
+          data: { bids: [], asks: [], lastUpdateId: 0 },
+          error: "Invalid order book response format",
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      console.info(`[MexcMarketData] Retrieved order book with ${response.data.bids.length} bids and ${response.data.asks.length} asks`);
+
+      return {
+        success: true,
+        data: {
+          bids: response.data.bids,
+          asks: response.data.asks,
+          lastUpdateId: response.data.lastUpdateId || Date.now(),
+        },
+        timestamp: new Date().toISOString(),
+        cached: response.cached,
+        requestId: response.requestId,
+      };
+    } catch (error) {
+      console.error(`[MexcMarketData] Order book fetch failed for ${symbol}:`, error);
+      return {
+        success: false,
+        data: { bids: [], asks: [], lastUpdateId: 0 },
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
   // ============================================================================
   // Connectivity and Health
   // ============================================================================

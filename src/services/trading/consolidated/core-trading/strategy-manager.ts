@@ -25,9 +25,9 @@ export class StrategyManager {
       lastActivity: new Date(),
       metrics: {
         totalStrategies: 0,
-        activeStrategy: 0, // Placeholder for activeStrategy as number
-        strategyPerformance: 0, // Placeholder for strategyPerformance as number
-      },
+        activeStrategy: {},
+        strategyPerformance: {},
+      } as any,
     };
   }
 
@@ -312,7 +312,9 @@ export class StrategyManager {
       const maxPositionByStrategy = accountBalance * strategy.maxPositionSize;
       return Math.min(positionSize, maxPositionByStrategy);
     } catch (error) {
-      this.context.logger.error("Kelly position sizing calculation failed", error);
+      this.context.logger.error("Kelly position sizing calculation failed", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       // Fallback to fixed percentage
       return accountBalance * strategy.maxPositionSize;
     }
@@ -345,7 +347,9 @@ export class StrategyManager {
 
       return Math.max(minSize, Math.min(baseSize, maxSize));
     } catch (error) {
-      this.context.logger.error("Dynamic position sizing calculation failed", error);
+      this.context.logger.error("Dynamic position sizing calculation failed", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       return accountBalance * strategy.maxPositionSize;
     }
   }
@@ -404,7 +408,9 @@ export class StrategyManager {
 
       return bestStrategy;
     } catch (error) {
-      this.context.logger.error("Strategy optimization failed", error);
+      this.context.logger.error("Strategy optimization failed", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       return null;
     }
   }
@@ -446,7 +452,9 @@ export class StrategyManager {
         maxDrawdown: this.calculateMaxDrawdown(returns),
       };
     } catch (error) {
-      this.context.logger.error("Backtesting failed", error);
+      this.context.logger.error("Backtesting failed", {
+        error: error instanceof Error ? error.message : String(error)
+      });
       return { sharpeRatio: -Infinity };
     }
   }

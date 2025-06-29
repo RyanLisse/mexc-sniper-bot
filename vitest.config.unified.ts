@@ -141,6 +141,9 @@ export default defineConfig({
       MEXC_SECRET_KEY: 'test-mexc-secret-vitest',
       MEXC_BASE_URL: 'https://api.mexc.com',
       
+      // Encryption key for secure services (base64 encoded test key)
+      ENCRYPTION_MASTER_KEY: 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcwo=',
+      
       // Database configuration
       DATABASE_URL: process.env.DATABASE_URL,
       FORCE_MOCK_DB: process.env.FORCE_MOCK_DB || 'false',

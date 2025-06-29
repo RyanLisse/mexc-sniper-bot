@@ -185,7 +185,7 @@ async function verifyAdvancedRiskEngine(): Promise<VerificationResult> {
   
   try {
     // Dynamic import with proper typing
-    const { AdvancedRiskEngine } = await import('./src/services/risk/advanced-risk-engine') as {
+    const { AdvancedRiskEngine } = await import('../src/services/risk/advanced-risk-engine') as {
       AdvancedRiskEngine: new (config: RiskEngineConfig) => {
         validatePositionSize(request: PositionValidationRequest): Promise<ValidationResult>;
         updatePortfolioRisk(riskLevel: number): void;
@@ -258,7 +258,7 @@ async function verifyComprehensiveSafetyCoordinator(): Promise<VerificationResul
   
   try {
     // Dynamic import with proper typing
-    const { ComprehensiveSafetyCoordinator } = await import('./src/services/risk/comprehensive-safety-coordinator') as {
+    const { ComprehensiveSafetyCoordinator } = await import('../src/services/risk/comprehensive-safety-coordinator') as {
       ComprehensiveSafetyCoordinator: new (config: SafetyCoordinatorConfig) => {
         assessSystemSafety(): Promise<SafetyAssessment>;
         assessTradingConditions(conditions: TradingConditions): Promise<ConditionAssessment>;

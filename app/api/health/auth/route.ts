@@ -1,5 +1,5 @@
-import { getSession } from "@/src/lib/supabase-auth";
 import { NextResponse } from "next/server";
+import { getSession } from "@/src/lib/supabase-auth";
 
 /**
  * Validates URL format and protocol

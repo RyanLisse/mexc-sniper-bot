@@ -455,8 +455,8 @@ class DatabaseCostProtector {
       // Keep essential endpoints active
     ];
     
-    // TODO: Send external alerts (Slack, email, etc.)
-    // await this.sendExternalAlert('EMERGENCY', 'Database emergency shutdown activated', reasons);
+    // Send external alerts
+    await this.sendExternalAlert('EMERGENCY', 'Database emergency shutdown activated', reasons);
   }
   
   private async sendCostAlert(severity: 'LOW' | 'MEDIUM' | 'HIGH', message: string, data: any): Promise<void> {
@@ -668,8 +668,15 @@ class DatabaseCostProtector {
   }
   
   private calculateCacheHitRate(): number {
-    // This would need to be tracked separately in a real implementation
-    return 0.75; // Placeholder
+    // Calculate actual cache hit rate based on cache operations
+    const cacheMetrics = (globalThis as any).cacheMetrics || { hits: 0, misses: 0 };
+    const totalRequests = cacheMetrics.hits + cacheMetrics.misses;
+    
+    if (totalRequests === 0) {
+      return 0;
+    }
+    
+    return cacheMetrics.hits / totalRequests;
   }
   
   /**
@@ -721,6 +728,80 @@ class DatabaseCostProtector {
     }
     
     return summary;
+  }
+
+  private async sendExternalAlert(
+    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY',
+    message: string,
+    data: any
+  ): Promise<void> {
+    try {
+      const alertPayload = {
+        text: `${severity} Database Alert: ${message}`,
+        attachments: [{
+          color: this.getAlertColor(severity),
+          title: 'Database Cost Protection Alert',
+          text: message,
+          fields: [
+            { title: "Severity", value: severity, short: true },
+            { title: "Timestamp", value: new Date().toISOString(), short: true },
+            { title: "Details", value: JSON.stringify(data, null, 2), short: false }
+          ],
+          ts: Math.floor(Date.now() / 1000)
+        }]
+      };
+
+      // Send to webhook if configured
+      const webhookUrl = process.env.DB_ALERT_WEBHOOK_URL || process.env.COST_ALERT_WEBHOOK_URL;
+      if (webhookUrl) {
+        await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(alertPayload)
+        });
+      }
+
+      // Send email if configured
+      const emailEndpoint = process.env.DB_ALERT_EMAIL_ENDPOINT;
+      if (emailEndpoint) {
+        await fetch(emailEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: process.env.DB_ALERT_EMAIL_TO,
+            subject: `${severity} Database Alert - ${message}`,
+            body: JSON.stringify({ message, data }, null, 2)
+          })
+        });
+      }
+
+      // For emergency alerts, try multiple channels
+      if (severity === 'EMERGENCY') {
+        const emergencyWebhook = process.env.EMERGENCY_WEBHOOK_URL;
+        if (emergencyWebhook && emergencyWebhook !== webhookUrl) {
+          await fetch(emergencyWebhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...alertPayload,
+              text: `🚨 EMERGENCY DATABASE ALERT 🚨: ${message}`
+            })
+          });
+        }
+      }
+    } catch (error) {
+      console.error('[DB COST PROTECTOR] Failed to send external alert:', error);
+    }
+  }
+
+  private getAlertColor(severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'EMERGENCY'): string {
+    switch (severity) {
+      case 'EMERGENCY': return 'danger';
+      case 'HIGH': return 'danger';
+      case 'MEDIUM': return 'warning';
+      case 'LOW': return 'good';
+      default: return 'warning';
+    }
   }
 }
 

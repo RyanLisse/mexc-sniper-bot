@@ -7,9 +7,9 @@
  * Addresses the client-side portion of the synchronization gaps.
  */
 
-import { useAuth } from "@/src/lib/supabase-auth-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 
 // ============================================================================
 // Types & Interfaces

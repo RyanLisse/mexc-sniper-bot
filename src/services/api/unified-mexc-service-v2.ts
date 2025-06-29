@@ -385,10 +385,15 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     }>;
     error?: string;
   }> {
-    // For now, delegate to single ticker and format as array
-    // TODO: Implement batch ticker functionality when available
     try {
-      if (symbols && symbols.length === 1) {
+      if (!symbols || symbols.length === 0) {
+        return {
+          success: true,
+          data: [],
+        };
+      }
+
+      if (symbols.length === 1) {
         const tickerResponse = await this.tradingModule.getTicker(symbols[0]);
         if (!tickerResponse.success) {
           return {
@@ -411,10 +416,44 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
         };
       }
 
-      // Return empty array for multiple symbols (not implemented yet)
+      // Implement batch ticker functionality for multiple symbols
+      const tickerPromises = symbols.map(async (symbol) => {
+        try {
+          const tickerResponse = await this.tradingModule.getTicker(symbol);
+          if (tickerResponse.success && tickerResponse.data) {
+            return {
+              symbol,
+              price: tickerResponse.data.price || tickerResponse.data.lastPrice || "0",
+              lastPrice: tickerResponse.data.lastPrice || tickerResponse.data.price || "0",
+              priceChangePercent: tickerResponse.data.priceChangePercent || "0",
+              volume: tickerResponse.data.volume || "0",
+            };
+          }
+          return null;
+        } catch (error) {
+          this.logger.warn(`Failed to get ticker for ${symbol}`, { error });
+          return null;
+        }
+      });
+
+      // Execute all ticker requests in parallel with rate limiting
+      const batchSize = 5; // Process 5 symbols at a time to avoid rate limits
+      const results: Array<any> = [];
+      
+      for (let i = 0; i < tickerPromises.length; i += batchSize) {
+        const batch = tickerPromises.slice(i, i + batchSize);
+        const batchResults = await Promise.all(batch);
+        results.push(...batchResults.filter(result => result !== null));
+        
+        // Small delay between batches to respect rate limits
+        if (i + batchSize < tickerPromises.length) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
       return {
         success: true,
-        data: [],
+        data: results,
       };
     } catch (error) {
       return {

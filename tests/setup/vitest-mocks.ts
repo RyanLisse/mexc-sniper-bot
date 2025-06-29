@@ -417,6 +417,51 @@ export function initializeMexcApiMocks(): void {
           },
           timestamp: Date.now(),
           executionTimeMs: 150
+        }),
+        getOrderBook: vi.fn().mockResolvedValue({
+          success: true,
+          data: {
+            symbol: 'BTCUSDT',
+            bids: [
+              ['45000.00', '1.5'],
+              ['44995.00', '2.0'],
+              ['44990.00', '0.8'],
+            ],
+            asks: [
+              ['45005.00', '1.2'],
+              ['45010.00', '3.0'],
+              ['45015.00', '0.5'],
+            ],
+            timestamp: Date.now(),
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 150
+        }),
+        getOrderBookDepth: vi.fn().mockResolvedValue({
+          success: true,
+          data: {
+            symbol: 'BTCUSDT',
+            bids: [
+              ['45000.00', '1.5'],
+              ['44995.00', '2.0'],
+              ['44990.00', '0.8'],
+            ],
+            asks: [
+              ['45005.00', '1.2'],
+              ['45010.00', '3.0'],
+              ['45015.00', '0.5'],
+            ],
+            timestamp: Date.now(),
+          },
+          timestamp: Date.now(),
+          executionTimeMs: 150
+        }),
+        hasValidCredentials: vi.fn().mockReturnValue(true),
+        validateCredentials: vi.fn().mockResolvedValue({
+          success: true,
+          data: { valid: true, message: 'Credentials are valid' },
+          timestamp: Date.now(),
+          executionTimeMs: 50
         })
       })),
     
@@ -441,6 +486,24 @@ export function initializeMexcApiMocks(): void {
       getAccountBalances: vi.fn().mockResolvedValue({
         success: true,
         data: []
+      }),
+      getOrderBook: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          symbol: 'BTCUSDT',
+          bids: [['45000.00', '1.0']],
+          asks: [['45005.00', '1.0']],
+          timestamp: Date.now(),
+        }
+      }),
+      getOrderBookDepth: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          symbol: 'BTCUSDT',
+          bids: [['45000.00', '1.0']],
+          asks: [['45005.00', '1.0']],
+          timestamp: Date.now(),
+        }
       }),
       testConnectivity: vi.fn().mockResolvedValue({
         success: true,
@@ -468,6 +531,24 @@ export function initializeMexcApiMocks(): void {
       getAccountBalances: vi.fn().mockResolvedValue({
         success: true,
         data: []
+      }),
+      getOrderBook: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          symbol: 'BTCUSDT',
+          bids: [['45000.00', '1.0']],
+          asks: [['45005.00', '1.0']],
+          timestamp: Date.now(),
+        }
+      }),
+      getOrderBookDepth: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          symbol: 'BTCUSDT',
+          bids: [['45000.00', '1.0']],
+          asks: [['45005.00', '1.0']],
+          timestamp: Date.now(),
+        }
       }),
       testConnectivity: vi.fn().mockResolvedValue({
         success: true,
@@ -516,6 +597,24 @@ export function initializeMexcApiMocks(): void {
       testConnectivity: vi.fn().mockResolvedValue({
         success: true,
         data: { status: 'OK', timestamp: Date.now() }
+      }),
+      getOrderBook: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          symbol: 'BTCUSDT',
+          bids: [['45000.00', '1.0']],
+          asks: [['45005.00', '1.0']],
+          timestamp: Date.now(),
+        }
+      }),
+      getOrderBookDepth: vi.fn().mockResolvedValue({
+        success: true,
+        data: {
+          symbol: 'BTCUSDT',
+          bids: [['45000.00', '1.0']],
+          asks: [['45005.00', '1.0']],
+          timestamp: Date.now(),
+        }
       }),
       clearCache: vi.fn().mockResolvedValue(undefined),
       destroy: vi.fn().mockImplementation(() => {})

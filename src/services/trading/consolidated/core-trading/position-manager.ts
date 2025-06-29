@@ -109,6 +109,7 @@ export class PositionManager {
         this.context.logger.error("Error in stop loss monitoring", {
           positionId: position.id,
           error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
         });
       }
     }, 5000); // Check every 5 seconds
@@ -140,6 +141,7 @@ export class PositionManager {
         this.context.logger.error("Error in take profit monitoring", {
           positionId: position.id,
           error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
         });
       }
     }, 5000); // Check every 5 seconds
@@ -184,6 +186,7 @@ export class PositionManager {
       this.context.logger.error("Failed to execute stop loss", {
         positionId: position.id,
         error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -208,6 +211,7 @@ export class PositionManager {
       this.context.logger.error("Failed to execute take profit", {
         positionId: position.id,
         error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
       });
     }
   }
@@ -259,6 +263,7 @@ export class PositionManager {
       this.context.logger.error("Failed to get current price", {
         symbol,
         error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
         errorStack: error instanceof Error ? error.stack : undefined,
       });
       return null;
@@ -277,11 +282,17 @@ export class PositionManager {
     // For now, return a mock successful result
     return {
       success: true,
-      orderId: `close_${position.id}_${Date.now()}`,
-      symbol: position.symbol,
-      side: position.side === "BUY" ? "SELL" : "BUY",
-      quantity: position.quantity,
-      price: currentPrice,
+      data: {
+        orderId: `close_${position.id}_${Date.now()}`,
+        symbol: position.symbol,
+        side: position.side === "BUY" ? "SELL" : "BUY",
+        type: "MARKET",
+        quantity: position.quantity.toString(),
+        price: currentPrice.toString(),
+        status: "FILLED",
+        executedQty: position.quantity.toString(),
+        timestamp: new Date().toISOString(),
+      },
       timestamp: new Date().toISOString(),
     };
   }
@@ -292,11 +303,11 @@ export class PositionManager {
   async updatePositionStopLoss(
     positionId: string,
     newStopLossPercent: number
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; timestamp: string }> {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
-        return { success: false, error: `Position ${positionId} not found` };
+        return { success: false, error: `Position ${positionId} not found`, timestamp: new Date().toISOString() };
       }
 
       // Clear existing stop-loss monitoring
@@ -327,11 +338,12 @@ export class PositionManager {
         newStopLossPrice: position.stopLossPrice,
       });
 
-      return { success: true };
+      return { success: true, timestamp: new Date().toISOString() };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -342,11 +354,11 @@ export class PositionManager {
   async updatePositionTakeProfit(
     positionId: string,
     newTakeProfitPercent: number
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; timestamp: string }> {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
-        return { success: false, error: `Position ${positionId} not found` };
+        return { success: false, error: `Position ${positionId} not found`, timestamp: new Date().toISOString() };
       }
 
       // Clear existing take-profit monitoring
@@ -377,11 +389,12 @@ export class PositionManager {
         newTakeProfitPrice: position.takeProfitPrice,
       });
 
-      return { success: true };
+      return { success: true, timestamp: new Date().toISOString() };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -410,9 +423,9 @@ export class PositionManager {
       id: position.id,
       symbol: position.symbol,
       side: position.side,
-      quantity: position.quantity,
+      quantity: position.quantity.toString(),
       entryPrice: position.entryPrice,
-      currentPnL: position.currentPnL,
+      currentPnL: position.unrealizedPnL,
       stopLossPrice: position.stopLossPrice,
       takeProfitPrice: position.takeProfitPrice,
       status: position.status || 'active',
@@ -434,7 +447,7 @@ export class PositionManager {
     try {
       this.context.logger.info('PositionManager initialized successfully');
     } catch (error) {
-      this.context.logger.error('Failed to initialize PositionManager', error);
+      this.context.logger.error('Failed to initialize PositionManager', { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -459,7 +472,7 @@ export class PositionManager {
       try {
         const currentPrice = await this.getCurrentPrice(position.symbol);
         if (currentPrice) {
-          await this.closePosition(position, currentPrice, reason);
+          await this.closePosition(position, currentPrice, "STOP_LOSS");
           closedCount++;
         }
       } catch (error) {
@@ -477,7 +490,7 @@ export class PositionManager {
   /**
    * Public method to close a position
    */
-  async closePositionPublic(positionId: string, reason: string = "Manual close"): Promise<{ success: boolean; error?: string }> {
+  async closePositionPublic(positionId: string, reason: string = "Manual close"): Promise<{ success: boolean; error?: string; timestamp?: string }> {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
@@ -491,17 +504,39 @@ export class PositionManager {
       if (!currentPrice) {
         return {
           success: false,
-          error: `Unable to get current price for ${position.symbol}`
+          error: `Unable to get current price for ${position.symbol}`,
+          timestamp: new Date().toISOString()
         };
       }
 
-      await this.closePosition(position, currentPrice, reason);
-      return { success: true };
+      await this.closePosition(position, currentPrice, "STOP_LOSS");
+      return { success: true, timestamp: new Date().toISOString() };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
       };
+    }
+  }
+
+  /**
+   * Setup position monitoring (wrapper for compatibility)
+   */
+  async setupPositionMonitoring(position: Position, result: any): Promise<void> {
+    try {
+      this.addPosition(position);
+      this.context.logger.info('Position monitoring setup completed', {
+        positionId: position.id,
+        symbol: position.symbol,
+        side: position.side
+      });
+    } catch (error) {
+      this.context.logger.error('Failed to setup position monitoring', {
+        positionId: position.id,
+        error: error instanceof Error ? error.message : String(error)
+      });
+      throw error;
     }
   }
 

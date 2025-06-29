@@ -1,7 +1,7 @@
-import { describe, test, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest';
-import { db, getDb, clearDbCache, hasSupabaseConfig } from '@/src/db';
+import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearDbCache, db, getDb, hasSupabaseConfig } from '@/src/db';
+import { userPreferences, users } from '@/src/db/schemas/supabase-auth';
 import { supabaseSchema } from '@/src/db/schemas/supabase-schema';
-import { users, userPreferences } from '@/src/db/schemas/supabase-auth';
 import { apiCredentials, executionHistory } from '@/src/db/schemas/supabase-trading';
 
 // Mock environment for Supabase testing

@@ -1,6 +1,6 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { type CookieOptions, createServerClient } from '@supabase/ssr';
 import { eq } from "drizzle-orm";
+import { cookies } from 'next/headers';
 import { db, hasSupabaseConfig } from "../db";
 import { user as originalUser } from "../db/schemas/auth";
 import { users as supabaseUsers } from "../db/schemas/supabase-auth";

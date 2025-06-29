@@ -175,7 +175,7 @@ export class UnifiedMexcTradingModule implements TradingService {
     const isTestEnvironment = 
       process.env.NODE_ENV === 'test' || 
       process.env.VITEST === 'true' ||
-      typeof global !== 'undefined' && global.__VITEST__;
+      typeof global !== 'undefined' && (global as any).__VITEST__;
 
     if (isTestEnvironment) {
       // Return mock data for tests to prevent API calls

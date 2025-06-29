@@ -1,8 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
 import { useAuth } from "../components/auth/supabase-auth-provider";
+import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
 import {
   Avatar,
   AvatarFallback,

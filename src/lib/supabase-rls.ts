@@ -6,9 +6,9 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { supabaseAdmin } from '@/src/db';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { supabaseAdmin } from '@/src/db';
 
 interface RLSPolicyCheck {
   tableName: string;

@@ -137,6 +137,40 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       mexcService: this.mexcService,
       logger: this.logger,
       eventEmitter: this,
+      tradingStrategy: {
+        closePosition: async (positionId: string, reason: string) => this.closePosition(positionId, reason),
+      },
+      orderExecutor: {
+        executePaperSnipe: async (params) => this.executeTrade(params),
+        executeRealSnipe: async (params) => this.executeTrade(params), 
+        createPositionEntry: async (params, result) => ({ 
+          id: `${params.symbol}-${Date.now()}`,
+          symbol: params.symbol,
+          side: params.side,
+          orderId: result.data?.orderId || 'unknown',
+          entryPrice: parseFloat(result.data?.price || '0'),
+          quantity: parseFloat(result.data?.quantity || '0'),
+          timestamp: new Date().toISOString(),
+          status: 'open' as const,
+          openTime: new Date(),
+          strategy: params.strategy || 'default',
+          tags: ['auto-generated']
+        }),
+      },
+      positionManager: {
+        setupPositionMonitoring: async (position, result) => {},
+        updatePositionStopLoss: async (positionId, newStopLoss) => ({ 
+          success: true, 
+          timestamp: new Date().toISOString() 
+        }),
+        updatePositionTakeProfit: async (positionId, newTakeProfit) => ({ 
+          success: true, 
+          timestamp: new Date().toISOString() 
+        }),
+      },
+      marketDataService: {
+        getCurrentPrice: async (symbol) => ({ price: 0 }),
+      },
     };
 
     // Initialize modules

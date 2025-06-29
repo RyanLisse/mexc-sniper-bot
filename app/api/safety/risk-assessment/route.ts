@@ -1,7 +1,7 @@
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
-import { createClient } from '@supabase/supabase-js';
 import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
 

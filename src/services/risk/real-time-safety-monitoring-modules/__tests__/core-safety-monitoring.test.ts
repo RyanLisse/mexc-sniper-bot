@@ -7,8 +7,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SafetyAlert, SafetyConfiguration } from "../../../../schemas/safety-monitoring-schemas";
-import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
 import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
+import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
 import {
   CoreSafetyMonitoring,
   type CoreSafetyMonitoringConfig,

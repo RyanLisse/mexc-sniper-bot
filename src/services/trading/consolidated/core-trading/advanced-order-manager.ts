@@ -471,7 +471,7 @@ export class AdvancedOrderManager {
       }
       return null;
     } catch (error) {
-      this.context.logger.error(`Failed to get current price for ${symbol}`, error);
+      this.context.logger.error(`Failed to get current price for ${symbol}`, { error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
@@ -502,7 +502,7 @@ export class AdvancedOrderManager {
       
       return 1000; // Fallback portfolio value
     } catch (error) {
-      this.context.logger.error("Failed to get portfolio value", error);
+      this.context.logger.error("Failed to get portfolio value", { error: error instanceof Error ? error.message : String(error) });
       return 1000; // Fallback
     }
   }

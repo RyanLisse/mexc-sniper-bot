@@ -209,6 +209,42 @@ export const createMockMexcService = () => ({
   }),
   isConnected: vi.fn().mockReturnValue(true),
   checkConnectivity: vi.fn().mockResolvedValue(true),
+  getOrderBook: vi.fn().mockResolvedValue({
+    success: true,
+    data: {
+      symbol: 'BTCUSDT',
+      bids: [
+        ['45000.00', '1.5'],
+        ['44995.00', '2.0'],
+        ['44990.00', '0.8'],
+      ],
+      asks: [
+        ['45005.00', '1.2'],
+        ['45010.00', '3.0'],
+        ['45015.00', '0.5'],
+      ],
+      timestamp: Date.now(),
+    },
+    timestamp: Date.now(),
+  }),
+  getOrderBookDepth: vi.fn().mockResolvedValue({
+    success: true,
+    data: {
+      symbol: 'BTCUSDT',
+      bids: [
+        ['45000.00', '1.5'],
+        ['44995.00', '2.0'],
+        ['44990.00', '0.8'],
+      ],
+      asks: [
+        ['45005.00', '1.2'],
+        ['45010.00', '3.0'],
+        ['45015.00', '0.5'],
+      ],
+      timestamp: Date.now(),
+    },
+    timestamp: Date.now(),
+  }),
 });
 
 /**

@@ -5,9 +5,9 @@
  * for the MEXC Sniper Bot infrastructure.
  */
 
-import { getSession } from "@/src/lib/supabase-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getSession } from "@/src/lib/supabase-auth";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 

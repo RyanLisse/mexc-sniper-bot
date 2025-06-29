@@ -7,7 +7,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 // Import the snipeTargets table from schema
-import { snipeTargets } from './src/db/migrations/schema';
+import { snipeTargets } from '../src/db/schemas/trading';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 
@@ -51,7 +51,7 @@ async function debugReadyTargets() {
 
     // Simulate the exact query from getReadySnipeTargets
     console.log('\n📋 Running exact getReadySnipeTargets query...');
-    const now = new Date().toISOString();
+    const now = new Date();
     const readyTargets = await db
       .select()
       .from(snipeTargets)

@@ -31,7 +31,7 @@ export class PositionManager {
     try {
       this.context.logger.info('PositionManager initialized successfully');
     } catch (error) {
-      this.context.logger.error('Failed to initialize PositionManager', error);
+      this.context.logger.error('Failed to initialize PositionManager', { error: error instanceof Error ? error.message : String(error) });
       throw error;
     }
   }
@@ -95,7 +95,7 @@ export class PositionManager {
         const currentPrice = await this.getCurrentMarketPrice(position.symbol);
         if (!currentPrice) return;
 
-        const shouldTrigger = position.side === "buy" 
+        const shouldTrigger = position.side === "BUY" 
           ? currentPrice <= position.stopLoss!
           : currentPrice >= position.stopLoss!;
 
@@ -127,7 +127,7 @@ export class PositionManager {
         const currentPrice = await this.getCurrentMarketPrice(position.symbol);
         if (!currentPrice) return;
 
-        const shouldTrigger = position.side === "buy" 
+        const shouldTrigger = position.side === "BUY" 
           ? currentPrice >= position.takeProfit!
           : currentPrice <= position.takeProfit!;
 

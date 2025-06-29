@@ -6,17 +6,232 @@
  * a unified, robust test suite.
  */
 
-import { NextRequest } from "next/server";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+
+// Mock all services at module level (required by Vitest)
+vi.mock("@/src/services/trading/consolidated/core-trading/base-service", () => ({
+  getCoreTrading: vi.fn(() => ({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getServiceStatus: vi.fn().mockResolvedValue({ 
+      initialized: true, 
+      status: "active",
+      lastCheck: new Date().toISOString()
+    }),
+    getActivePositions: vi.fn().mockResolvedValue([]),
+    stopExecution: vi.fn().mockResolvedValue(undefined),
+    emergencyCloseAll: vi.fn().mockResolvedValue(0),
+    isInitialized: vi.fn().mockReturnValue(true),
+  })),
+}));
+
+vi.mock("@/src/services/risk/emergency-safety-system", () => ({
+  EmergencySafetySystem: vi.fn().mockImplementation(() => ({
+    performSystemHealthCheck: vi.fn().mockResolvedValue({
+      status: "healthy",
+      checks: {
+        database: true,
+        api: true,
+        services: true,
+      },
+    }),
+    triggerEmergency: vi.fn().mockResolvedValue([]),
+  })),
+}));
+
+vi.mock("@/src/services/risk/emergency-stop-coordinator", () => ({
+  EmergencyStopCoordinator: {
+    getInstance: vi.fn(() => ({
+      registerService: vi.fn().mockReturnValue(undefined),
+      triggerEmergencyStop: vi.fn().mockResolvedValue({
+        success: true,
+        actionsExecuted: ["halt_trading", "close_positions"],
+        coordinatedServices: ["core-trading", "safety-monitoring"],
+        duration: 150,
+        errors: [],
+      }),
+    })),
+  },
+}));
+
+vi.mock("@/src/services/notification/pattern-monitoring-service", () => ({
+  PatternMonitoringService: {
+    getInstance: vi.fn(() => ({
+      getPatternStatus: vi.fn().mockReturnValue({ 
+        active: true, 
+        patterns: [],
+        lastUpdate: new Date().toISOString()
+      }),
+    })),
+  },
+}));
+
+vi.mock("@/src/services/api/unified-mexc-service-v2", () => ({
+  UnifiedMexcServiceV2: vi.fn().mockImplementation(() => ({
+    getAccountBalance: vi.fn().mockResolvedValue({ 
+      balance: 10000,
+      currency: "USDT",
+      available: 10000,
+    }),
+    testConnection: vi.fn().mockResolvedValue(true),
+  })),
+}));
+
+vi.mock("@/src/services/risk/real-time-safety-monitoring-modules/index", () => ({
+  RealTimeSafetyMonitoringService: {
+    getInstance: vi.fn(() => ({
+      getMonitoringStatus: vi.fn().mockReturnValue(false),
+      startMonitoring: vi.fn().mockResolvedValue(undefined),
+      stopMonitoring: vi.fn().mockReturnValue(undefined),
+      updateConfiguration: vi.fn().mockReturnValue(undefined),
+      getConfiguration: vi.fn().mockReturnValue({
+        enabled: true,
+        monitoringIntervalMs: 30000,
+        riskCheckIntervalMs: 60000,
+        autoActionEnabled: true,
+        emergencyMode: false,
+        alertRetentionHours: 24,
+        thresholds: {
+          maxDrawdownPercentage: 15,
+          maxDailyLossPercentage: 10,
+          maxPositionRiskPercentage: 5,
+          maxPortfolioConcentration: 25,
+          minSuccessRatePercentage: 70,
+          maxConsecutiveLosses: 3,
+          maxSlippagePercentage: 2,
+          maxApiLatencyMs: 1000,
+          minApiSuccessRate: 95,
+          maxMemoryUsagePercentage: 80,
+          minPatternConfidence: 75,
+          maxPatternDetectionFailures: 5,
+        },
+      }),
+      getRiskMetrics: vi.fn().mockReturnValue({
+        currentDrawdown: 2.5,
+        maxDrawdown: 5.0,
+        portfolioValue: 10000,
+        totalExposure: 1000,
+        concentrationRisk: 15,
+        successRate: 85,
+        consecutiveLosses: 0,
+        averageSlippage: 0.1,
+        apiLatency: 150,
+        apiSuccessRate: 98,
+        memoryUsage: 45,
+        patternAccuracy: 80,
+        detectionFailures: 0,
+        falsePositiveRate: 5,
+      }),
+      getSafetyReport: vi.fn().mockResolvedValue({
+        status: "safe",
+        overallRiskScore: 25,
+        riskMetrics: {
+          currentDrawdown: 2.5,
+          maxDrawdown: 5.0,
+          portfolioValue: 10000,
+          totalExposure: 1000,
+          concentrationRisk: 15,
+          successRate: 85,
+          consecutiveLosses: 0,
+          averageSlippage: 0.1,
+          apiLatency: 150,
+          apiSuccessRate: 98,
+          memoryUsage: 45,
+          patternAccuracy: 80,
+          detectionFailures: 0,
+          falsePositiveRate: 5,
+        },
+        thresholds: {
+          maxDrawdownPercentage: 15,
+          maxDailyLossPercentage: 10,
+          maxPositionRiskPercentage: 5,
+          maxPortfolioConcentration: 25,
+          minSuccessRatePercentage: 70,
+          maxConsecutiveLosses: 3,
+          maxSlippagePercentage: 2,
+          maxApiLatencyMs: 1000,
+          minApiSuccessRate: 95,
+          maxMemoryUsagePercentage: 80,
+          minPatternConfidence: 75,
+          maxPatternDetectionFailures: 5,
+        },
+        activeAlerts: [],
+        recentActions: [],
+        systemHealth: {
+          executionService: true,
+          patternMonitoring: true,
+          emergencySystem: true,
+          mexcConnectivity: true,
+          overallHealth: 95,
+        },
+        recommendations: [
+          "System operating within normal parameters",
+          "Continue monitoring for changes",
+        ],
+        monitoringStats: {
+          alertsGenerated: 0,
+          actionsExecuted: 0,
+          riskEventsDetected: 0,
+          systemUptime: 3600000,
+          lastRiskCheck: new Date().toISOString(),
+          monitoringFrequency: 30000,
+        },
+        lastUpdated: new Date().toISOString(),
+      }),
+      triggerEmergencyResponse: vi.fn().mockResolvedValue([
+        {
+          id: "emergency_123",
+          type: "halt_trading",
+          description: "Emergency trading halt",
+          executed: true,
+          executedAt: new Date().toISOString(),
+          result: "success",
+        },
+      ]),
+      acknowledgeAlert: vi.fn().mockReturnValue(true),
+      clearAcknowledgedAlerts: vi.fn().mockReturnValue(0),
+      isSystemSafe: vi.fn().mockResolvedValue(true),
+      calculateOverallRiskScore: vi.fn().mockReturnValue(25),
+      performRiskAssessment: vi.fn().mockResolvedValue({
+        overallRiskScore: 25,
+        systemRisk: "low",
+        portfolioRisk: "low",
+        performanceRisk: "low",
+        patternRisk: "low",
+        priorityRecommendations: [
+          "System operating within normal parameters",
+        ],
+      }),
+      getTimerStatus: vi.fn().mockReturnValue([
+        {
+          id: "monitoring_cycle",
+          name: "Safety Monitoring Cycle",
+          intervalMs: 30000,
+          lastExecuted: Date.now() - 10000,
+          isRunning: false,
+          nextExecution: Date.now() + 20000,
+        },
+      ]),
+    })),
+  },
+}));
+
+vi.mock("@/src/lib/api-auth", () => ({
+  apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+    return async (request: any, ...args: any[]) => {
+      return await handler(request, ...args);
+    };
+  }),
+}));
+
+// Import utilities after mocks are set up
 import {
   assertErrorResponse,
   assertSuccessResponse,
   createMockRequest,
-  setupSafetyMonitoringMocks,
 } from "../utils/safety-monitoring-test-mocks";
 
-// Setup all mocks before any imports
-setupSafetyMonitoringMocks();
+// Import NextRequest after mocks are set up
+import { NextRequest } from "next/server";
 
 describe("Safety Monitoring API - Comprehensive Tests", () => {
   let GET: any;

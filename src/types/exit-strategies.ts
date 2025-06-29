@@ -15,7 +15,7 @@ export interface ExitStrategy {
   isCustom: boolean;
   type?: string;
   riskLevel?: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, string | number | boolean>;
   enabled?: boolean;
   createdAt?: string | Date;
 }

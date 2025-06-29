@@ -63,6 +63,117 @@ beforeAll(async () => {
     process.env.SKIP_DB_CONNECTION = 'true';
   }
 
+  // Ensure encryption key is available for tests
+  if (!process.env.ENCRYPTION_MASTER_KEY) {
+    process.env.ENCRYPTION_MASTER_KEY = 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcwo=';
+  }
+
+  // Mock critical service dependencies that may fail initialization
+  vi.mock('@/src/services/api/secure-encryption-service', () => ({
+    getEncryptionService: vi.fn(() => ({
+      encrypt: vi.fn((data: string) => `encrypted_${data}`),
+      decrypt: vi.fn((data: string) => data.replace('encrypted_', '')),
+      isValidEncryptedFormat: vi.fn(() => true),
+    })),
+    SecureEncryptionService: vi.fn().mockImplementation(() => ({
+      encrypt: vi.fn((data: string) => `encrypted_${data}`),
+      decrypt: vi.fn((data: string) => data.replace('encrypted_', '')),
+      isValidEncryptedFormat: vi.fn(() => true),
+    })),
+  }));
+
+  // Mock database operations that may fail in test environment - STRONG MOCK
+  vi.mock('@/src/db', () => {
+    const mockQueryBuilder = {
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockReturnThis(), 
+      limit: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      execute: vi.fn().mockResolvedValue([]),
+      then: vi.fn().mockResolvedValue([]),
+    };
+    
+    return {
+      db: {
+        select: vi.fn().mockReturnValue(mockQueryBuilder),
+        insert: vi.fn().mockReturnValue(mockQueryBuilder), 
+        delete: vi.fn().mockReturnValue(mockQueryBuilder),
+        update: vi.fn().mockReturnValue(mockQueryBuilder),
+      },
+      user: {
+        id: vi.fn(),
+        email: vi.fn(),
+        name: vi.fn(),
+        createdAt: vi.fn(),
+        updatedAt: vi.fn(),
+      },
+      apiCredentials: {
+        id: vi.fn(),
+        userId: vi.fn(),
+        provider: vi.fn(),
+        encryptedApiKey: vi.fn(),
+        encryptedSecretKey: vi.fn(),
+        isActive: vi.fn(),
+        createdAt: vi.fn(),
+        updatedAt: vi.fn(),
+      },
+      clearDbCache: vi.fn(),
+      getDbClient: vi.fn().mockReturnValue({
+        query: vi.fn().mockResolvedValue({ rows: [] }),
+      }),
+      getDb: vi.fn().mockReturnValue({
+        query: vi.fn().mockResolvedValue({ rows: [] }),
+        select: vi.fn().mockReturnValue(mockQueryBuilder),
+        insert: vi.fn().mockReturnValue(mockQueryBuilder),
+        delete: vi.fn().mockReturnValue(mockQueryBuilder),
+        update: vi.fn().mockReturnValue(mockQueryBuilder),
+      }),
+      hasSupabaseConfig: vi.fn().mockReturnValue(true),
+      executeWithRetry: vi.fn().mockImplementation(async (fn) => await fn()),
+      withTransaction: vi.fn().mockImplementation(async (fn) => await fn(mockQueryBuilder)),
+    };
+  });
+
+  // Mock drizzle ORM to prevent real database connections
+  vi.mock('drizzle-orm/postgres-js', () => ({
+    drizzle: vi.fn(() => ({
+      select: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue([]),
+      }),
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue([]),
+      }),
+      update: vi.fn().mockReturnValue({
+        set: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue([]),
+      }),
+      delete: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnThis(),
+        execute: vi.fn().mockResolvedValue([]),
+      }),
+    })),
+  }));
+
+  // Mock postgres connection
+  vi.mock('postgres', () => {
+    return {
+      default: vi.fn(() => ({
+        query: vi.fn().mockResolvedValue({ rows: [] }),
+        end: vi.fn().mockResolvedValue(undefined),
+      })),
+    };
+  });
+
   // Initialize mocks and utilities
   initializeSimplifiedMocks(isIntegrationTest);
   initializeTestUtilities();

@@ -5,15 +5,15 @@
  * real-time trading data updates in components.
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/src/lib/supabase-auth-client';
 import {
-  realtimeManager,
-  TradingDataUpdate,
-  PriceUpdate,
   PortfolioUpdate,
+  PriceUpdate,
+  realtimeManager,
   SnipeTargetUpdate,
-  SystemAlert
+  SystemAlert, 
+  TradingDataUpdate
 } from '@/src/lib/supabase-realtime';
 
 /**

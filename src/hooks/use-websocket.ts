@@ -13,8 +13,8 @@
  * - Performance optimization
  */
 
-import { useAuth } from "@/src/lib/supabase-auth-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import type {
   ConnectionMetrics,
   MessageHandler,

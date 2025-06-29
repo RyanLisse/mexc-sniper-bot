@@ -297,7 +297,7 @@ export class EnhancedRiskManager {
       return shouldStop;
 
     } catch (error) {
-      this.context.logger.error("Emergency stop check failed", error);
+      this.context.logger.error("Emergency stop check failed", { error: error instanceof Error ? error.message : String(error) });
       return true; // Fail safe - trigger stop if can't determine risk
     }
   }
@@ -354,7 +354,7 @@ export class EnhancedRiskManager {
       };
 
     } catch (error) {
-      this.context.logger.error("Failed to calculate risk metrics", error);
+      this.context.logger.error("Failed to calculate risk metrics", { error: error instanceof Error ? error.message : String(error) });
       
       // Return safe default values
       return {
@@ -773,7 +773,7 @@ export class EnhancedRiskManager {
         correlationLevel: 0.5
       };
     } catch (error) {
-      this.context.logger.error("Failed to update market conditions", error);
+      this.context.logger.error("Failed to update market conditions", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

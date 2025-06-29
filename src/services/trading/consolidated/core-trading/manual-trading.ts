@@ -327,7 +327,7 @@ export class ManualTradingModule {
       // Prepare MEXC API parameters
       const mexcParams: TradingOrderData = {
         symbol: params.symbol,
-        side: params.side,
+        side: params.side.toUpperCase() as "BUY" | "SELL",
         type: mexcOrderType,
         quantity: params.quantity?.toString() || "",
         price: params.price?.toString(),
