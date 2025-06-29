@@ -18,14 +18,14 @@ beforeEach(async () => {
   // Mock the unified cache system
   const { UnifiedCacheSystem } = await import("@/src/lib/unified-cache-system");
   vi.spyOn(UnifiedCacheSystem.prototype, "get").mockResolvedValue(null);
-  vi.spyOn(UnifiedCacheSystem.prototype, "set").mockResolvedValue(undefined);
+  vi.spyOn(UnifiedCacheSystem.prototype, "set").mockResolvedValue(true);
   vi.spyOn(UnifiedCacheSystem.prototype, "destroy").mockResolvedValue(
     undefined,
   );
 
   // Mock the redis cache service
   const cacheModule = await import("@/src/lib/redis-cache-service");
-  if (cacheModule.getRedisCacheService) {
+  if (typeof cacheModule.getRedisCacheService === 'function') {
     vi.spyOn(cacheModule, "getRedisCacheService").mockReturnValue({
       get: vi.fn().mockResolvedValue(null),
       set: vi.fn().mockResolvedValue(true),

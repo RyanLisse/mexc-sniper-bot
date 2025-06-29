@@ -56,7 +56,7 @@ test.describe('Production Deployment Validation (Stagehand)', () => {
     const page = stagehand.page;
     console.log('🏗️ Testing infrastructure and availability');
 
-    const testResult = { test: 'infrastructure', status: 'pending', details: {} };
+    const testResult: { test: string; status: string; details: any } = { test: 'infrastructure', status: 'pending', details: {} };
 
     // Step 1: Basic connectivity and availability
     console.log('🌐 Step 1: Basic connectivity and availability check');
@@ -170,7 +170,7 @@ test.describe('Production Deployment Validation (Stagehand)', () => {
     const page = stagehand.page;
     console.log('🔒 Testing security and authentication systems');
 
-    const testResult = { test: 'security', status: 'pending', details: {} };
+    const testResult: { test: string; status: string; details: any } = { test: 'security', status: 'pending', details: {} };
 
     // Step 1: Authentication flow validation
     console.log('🔐 Step 1: Authentication flow validation');
@@ -276,7 +276,7 @@ test.describe('Production Deployment Validation (Stagehand)', () => {
     const page = stagehand.page;
     console.log('💼 Testing business functionality and workflows');
 
-    const testResult = { test: 'business_functionality', status: 'pending', details: {} };
+    const testResult: { test: string; status: string; details: any } = { test: 'business_functionality', status: 'pending', details: {} };
 
     // Step 1: Core business functions
     console.log('⚙️ Step 1: Core business functions validation');
@@ -391,7 +391,7 @@ test.describe('Production Deployment Validation (Stagehand)', () => {
     const page = stagehand.page;
     console.log('📈 Testing scalability and capacity');
 
-    const testResult = { test: 'scalability', status: 'pending', details: {} };
+    const testResult: { test: string; status: string; details: any } = { test: 'scalability', status: 'pending', details: {} };
 
     // Step 1: System capacity analysis
     console.log('📊 Step 1: System capacity analysis');
@@ -504,7 +504,7 @@ test.describe('Production Deployment Validation (Stagehand)', () => {
     const page = stagehand.page;
     console.log('📋 Testing compliance and governance');
 
-    const testResult = { test: 'compliance', status: 'pending', details: {} };
+    const testResult: { test: string; status: string; details: any } = { test: 'compliance', status: 'pending', details: {} };
 
     // Step 1: Data governance compliance
     console.log('📊 Step 1: Data governance compliance');

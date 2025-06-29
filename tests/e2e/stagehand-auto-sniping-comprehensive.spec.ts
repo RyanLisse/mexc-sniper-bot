@@ -108,7 +108,7 @@ test.describe('Comprehensive Auto-Sniping Workflow (Stagehand)', () => {
   test.beforeEach(async () => {
     // Reset performance metrics for each test
     const testStartMetrics = {
-      testName: expect.getState().currentTestName,
+      testName: (expect.getState() as any).currentTestName,
       startTime: Date.now(),
       initialMemory: process.memoryUsage().heapUsed / 1024 / 1024 // MB
     };
@@ -638,11 +638,11 @@ test.describe('Comprehensive Auto-Sniping Workflow (Stagehand)', () => {
       }
       
       // Store test results under testing/stagehand-automation path
-      if (!existingData.testing) {
-        existingData.testing = {};
+      if (!(existingData as any).testing) {
+        (existingData as any).testing = {};
       }
       
-      existingData.testing['stagehand-automation'] = testResults;
+      (existingData as any).testing['stagehand-automation'] = testResults;
       
       await fs.writeFile(memoryPath, JSON.stringify(existingData, null, 2));
       console.log(`💾 Test results stored in memory: ${memoryPath}`);

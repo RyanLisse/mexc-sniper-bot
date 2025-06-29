@@ -253,7 +253,7 @@ describe('WebSocket Connection and Real-Time Data Fixes', () => {
       let notificationReceived = false;
       marketDataManager.setEventHandlers({
         onNotification: (notification) => {
-          if (notification.type === 'pattern_detected') {
+          if (notification.type === 'info') {
             notificationReceived = true;
           }
         }

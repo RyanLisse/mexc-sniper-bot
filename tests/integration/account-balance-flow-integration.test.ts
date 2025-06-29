@@ -6,6 +6,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 // Remove module-level mocks - rely on global mocks from vitest-setup.ts
 // The global setup already includes comprehensive mocks for MEXC services and auth
@@ -190,7 +191,7 @@ describe("Account Balance Flow Integration Tests", () => {
       // Global mocks will handle getAccountBalances calls
 
       // Act: Call balance endpoint
-      const request = new Request(
+      const request = new NextRequest(
         `http://localhost/api/account/balance?userId=${testUserId}`,
       );
       const response = await accountBalanceEndpoint(request);
@@ -241,7 +242,7 @@ describe("Account Balance Flow Integration Tests", () => {
       // Global mocks will handle getAccountBalances calls
 
       // Act: Call balance endpoint without userId to trigger environment fallback
-      const request = new Request(`http://localhost/api/account/balance`);
+      const request = new NextRequest(`http://localhost/api/account/balance`);
       const response = await accountBalanceEndpoint(request);
       const data = await response.json();
 
@@ -279,7 +280,7 @@ describe("Account Balance Flow Integration Tests", () => {
       // Global mocks will handle getAccountBalances calls
 
       // Act
-      const request = new Request(
+      const request = new NextRequest(
         `http://localhost/api/account/balance?userId=${testUserId}`,
       );
       const response = await accountBalanceEndpoint(request);
@@ -325,7 +326,7 @@ describe("Account Balance Flow Integration Tests", () => {
         });
 
       // Act
-      const request = new Request(
+      const request = new NextRequest(
         `http://localhost/api/account/balance?userId=${testUserId}`,
       );
       const response = await accountBalanceEndpoint(request);
@@ -361,7 +362,7 @@ describe("Account Balance Flow Integration Tests", () => {
         });
 
       // Act
-      const request = new Request(
+      const request = new NextRequest(
         `http://localhost/api/account/balance?userId=${testUserId}`,
       );
       const response = await accountBalanceEndpoint(request);
@@ -611,7 +612,7 @@ describe("Account Balance Flow Integration Tests", () => {
       // Global mocks will handle getAccountBalances calls
 
       // Test balance endpoint
-      const balanceRequest = new Request(
+      const balanceRequest = new NextRequest(
         `http://localhost/api/account/balance?userId=${testUserId}`,
       );
       const balanceResponse = await accountBalanceEndpoint(balanceRequest);

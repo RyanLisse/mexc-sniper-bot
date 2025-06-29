@@ -307,7 +307,7 @@ export function setupSafetyMonitoringMocks() {
   // Mock API Authentication
   vi.mock("@/src/lib/api-auth", () => ({
     apiAuthWrapper: vi.fn().mockImplementation((handler) => {
-      return async (request, ...args) => {
+      return async (request: any, ...args: any[]) => {
         return await handler(request, ...args);
       };
     }),

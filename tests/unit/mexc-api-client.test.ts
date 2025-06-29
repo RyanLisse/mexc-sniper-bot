@@ -97,7 +97,6 @@ describe('MexcApiClient', () => {
       addAuthHeaders: vi.fn(),
       addAuthParams: vi.fn(),
       // rotateCredentials: vi.fn(), // Not part of interface
-      getCredentialStatus: vi.fn(),
       resetCredentials: vi.fn(),
       testCredentials: vi.fn(),
     };

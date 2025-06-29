@@ -94,7 +94,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
       // Mock successful API response using test utilities
       const mockFetch = vi.fn().mockResolvedValue(
-        global.testUtils.mockMexcApiResponse({
+        global.testUtils.mockApiResponse({
           permissions: ["spot"],
           accountType: "SPOT",
         }),
@@ -170,7 +170,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
       // Mock successful response using test utilities
       mockFetch.mockResolvedValue(
-        global.testUtils.mockMexcApiResponse({
+        global.testUtils.mockApiResponse({
           permissions: ["spot"],
           accountType: "SPOT",
         }),
@@ -195,7 +195,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
         return new Promise((resolve) => {
           setTimeout(() => {
             resolve(
-              global.testUtils.mockMexcApiResponse({}, 200, {
+              global.testUtils.mockApiResponse({}, 200, {
                 "content-length": "42",
               }),
             );
@@ -245,7 +245,7 @@ describe("Enhanced MEXC Credential Validation System", () => {
 
       // Mock successful API responses using test utilities
       const mockFetch = vi.fn().mockResolvedValue(
-        global.testUtils.mockMexcApiResponse(
+        global.testUtils.mockApiResponse(
           {
             permissions: ["spot"],
             accountType: "SPOT",

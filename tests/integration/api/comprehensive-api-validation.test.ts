@@ -93,7 +93,7 @@ describe('Comprehensive API Route Validation Tests', () => {
             expect(data.error).toMatch(/json|invalid|parse/i);
           }
         } catch (error) {
-          console.log(`Route ${route} validation test had initialization issue:`, error.message);
+          console.log(`Route ${route} validation test had initialization issue:`, (error as Error).message);
           // Continue testing other routes
         }
       }
@@ -144,7 +144,7 @@ describe('Comprehensive API Route Validation Tests', () => {
             expect(data.error).toBeDefined();
           }
         } catch (error) {
-          console.log(`Route ${test.route} required field test had initialization issue:`, error.message);
+          console.log(`Route ${test.route} required field test had initialization issue:`, (error as Error).message);
           // Continue testing other routes
         }
       }

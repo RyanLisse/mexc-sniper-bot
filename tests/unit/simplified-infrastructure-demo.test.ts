@@ -103,7 +103,7 @@ describe('Simplified Test Infrastructure Demo', () => {
       expect(mexcService.testConnectivity).toBeDefined();
 
       // Test mock behavior
-      mexcService.getAccountBalances().then(result => {
+      mexcService.getAccountBalances().then((result: any) => {
         expect(result.success).toBe(true);
         expect(result.data).toBeInstanceOf(Array);
         expect(result.timestamp).toBeDefined();
@@ -116,7 +116,7 @@ describe('Simplified Test Infrastructure Demo', () => {
       expect(riskEngine.assessRisk).toBeDefined();
       expect(riskEngine.validatePositionSize).toBeDefined();
 
-      riskEngine.assessRisk().then(result => {
+      riskEngine.assessRisk().then((result: any) => {
         expect(result.riskLevel).toBe('LOW');
         expect(result.approved).toBe(true);
       });
@@ -129,7 +129,7 @@ describe('Simplified Test Infrastructure Demo', () => {
       expect(safetyCoordinator.on).toBeDefined();
       expect(safetyCoordinator.emit).toBeDefined();
 
-      safetyCoordinator.assessSystemSafety().then(result => {
+      safetyCoordinator.assessSystemSafety().then((result: any) => {
         expect(result.overallSafety).toBe('SAFE');
         expect(result.alerts).toBeInstanceOf(Array);
       });
@@ -161,7 +161,7 @@ describe('Simplified Test Infrastructure Demo', () => {
       const mockFn = testUtils.mockFn('test-return-value');
       expect(mockFn).toBeDefined();
 
-      mockFn().then(result => {
+      mockFn().then((result: any) => {
         expect(result).toBe('test-return-value');
       });
 

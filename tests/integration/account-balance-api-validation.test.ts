@@ -6,6 +6,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 import { GET as accountBalanceEndpoint } from "../../app/api/account/balance/route";
 
 describe("Account Balance API Validation", () => {
@@ -13,14 +14,14 @@ describe("Account Balance API Validation", () => {
     vi.clearAllMocks();
     
     // Set up environment variables for testing
-    process.env.NODE_ENV = "test";
+    vi.stubEnv("NODE_ENV", "test");
     process.env.MEXC_API_KEY = "test-api-key";
     process.env.MEXC_SECRET_KEY = "test-secret-key";
   });
 
   it("should handle test environment with invalid credentials quickly", async () => {
     // Test environment with test credentials should return fast error
-    const request = new Request("http://localhost/api/account/balance?userId=test-user");
+    const request = new NextRequest("http://localhost/api/account/balance?userId=test-user");
     const startTime = Date.now();
     const response = await accountBalanceEndpoint(request);
     const executionTime = Date.now() - startTime;
@@ -41,7 +42,7 @@ describe("Account Balance API Validation", () => {
     delete process.env.MEXC_API_KEY;
     delete process.env.MEXC_SECRET_KEY;
 
-    const request = new Request("http://localhost/api/account/balance");
+    const request = new NextRequest("http://localhost/api/account/balance");
     const response = await accountBalanceEndpoint(request);
     const data = await response.json();
 
@@ -55,7 +56,7 @@ describe("Account Balance API Validation", () => {
   });
 
   it("should handle userId parameter correctly", async () => {
-    const request = new Request("http://localhost/api/account/balance?userId=test-user");
+    const request = new NextRequest("http://localhost/api/account/balance?userId=test-user");
     
     try {
       const response = await accountBalanceEndpoint(request);
@@ -77,7 +78,7 @@ describe("Account Balance API Validation", () => {
   });
 
   it("should handle missing userId parameter correctly", async () => {
-    const request = new Request("http://localhost/api/account/balance");
+    const request = new NextRequest("http://localhost/api/account/balance");
     
     try {
       const response = await accountBalanceEndpoint(request);
@@ -99,7 +100,7 @@ describe("Account Balance API Validation", () => {
   });
 
   it("should return proper fallback data structure on errors", async () => {
-    const request = new Request("http://localhost/api/account/balance?userId=invalid-user");
+    const request = new NextRequest("http://localhost/api/account/balance?userId=invalid-user");
     
     try {
       const response = await accountBalanceEndpoint(request);
@@ -121,7 +122,7 @@ describe("Account Balance API Validation", () => {
   });
 
   it("should validate required response schema fields", async () => {
-    const request = new Request("http://localhost/api/account/balance");
+    const request = new NextRequest("http://localhost/api/account/balance");
     
     try {
       const response = await accountBalanceEndpoint(request);

@@ -132,7 +132,7 @@ export const testUtils = {
   mockFn: <T>(returnValue?: T) => vi.fn().mockResolvedValue(returnValue),
 
   // Create spy on object method
-  spy: <T extends object, K extends keyof T>(object: T, method: K) => 
+  spy: (object: any, method: string) => 
     vi.spyOn(object, method),
 
   // Assert mock was called with specific arguments
