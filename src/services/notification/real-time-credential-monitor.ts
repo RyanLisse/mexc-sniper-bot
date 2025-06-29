@@ -460,7 +460,7 @@ export class RealTimeCredentialMonitor {
       previous.canAuthenticate !== current.canAuthenticate ||
       previous.connectionHealth !== current.connectionHealth ||
       previous.isTestCredentials !== current.isTestCredentials ||
-      (previous.error !== current.error && (previous.error || current.error))
+      (previous.error !== current.error && !!(previous.error || current.error))
     );
   }
 

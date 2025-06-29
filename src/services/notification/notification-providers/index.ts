@@ -413,7 +413,7 @@ export class NotificationService {
       );
 
     const notificationCount = recentNotifications[0]?.count || 0;
-    return notificationCount >= channel.rateLimitPerHour;
+    return notificationCount >= (channel.rateLimitPerHour || 100);
   }
 
   private updateRateLimit(channel: SelectNotificationChannel): void {

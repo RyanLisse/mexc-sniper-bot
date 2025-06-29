@@ -181,10 +181,10 @@ class DatabaseQueryCacheMiddleware {
   /**
    * Main middleware function for caching database-heavy API responses
    */
-  async withQueryCache<T extends (...args: any[]) => Promise<NextResponse>>(
+  withQueryCache<T extends (...args: any[]) => Promise<NextResponse>>(
     handler: T,
     config?: Partial<CacheableEndpointConfig>
-  ): Promise<T> {
+  ): T {
     return (async (...args: Parameters<T>) => {
       const request = args[0] as NextRequest;
       const endpoint = new URL(request.url).pathname;
@@ -206,10 +206,10 @@ class DatabaseQueryCacheMiddleware {
       };
       
       const cacheConfig: CacheableEndpointConfig = {
-        endpoint,
         ...defaultConfig,
         ...defaultCacheConfig,
         ...configWithoutEndpoint,
+        endpoint, // Override with current endpoint
       };
       
       this.metrics.totalRequests++;
@@ -582,7 +582,7 @@ export const globalQueryCacheMiddleware = DatabaseQueryCacheMiddleware.getInstan
 export function withDatabaseQueryCache<T extends (...args: any[]) => Promise<NextResponse>>(
   handler: T,
   config?: Partial<CacheableEndpointConfig>
-): Promise<T> {
+): T {
   return globalQueryCacheMiddleware.withQueryCache(handler, config);
 }
 

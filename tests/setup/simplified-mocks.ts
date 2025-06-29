@@ -229,20 +229,23 @@ export function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
   // Initialize essential API mocks
   initializeEssentialApiMocks();
 
-  // Mock database - create mock outside conditional for proper hoisting
-  const mockDb = !isIntegrationTest ? createSimpleDatabaseMock(global.mockDataStore) : null;
-  
+  // Mock database with proper hoisting support
   if (!isIntegrationTest) {
-    vi.mock('@/src/db', () => ({
-      db: mockDb,
-      // Export mock table references
-      snipeTargets: { _: { name: 'snipe_targets' } },
-      user: { _: { name: 'user' } },
-      apiCredentials: { _: { name: 'api_credentials' } },
-      userPreferences: { _: { name: 'user_preferences' } },
-      executionHistory: { _: { name: 'execution_history' } },
-      transactions: { _: { name: 'transactions' } },
-    }));
+    vi.mock('@/src/db', () => {
+      // Create mock database inside the mock factory to avoid hoisting issues
+      const mockDb = createSimpleDatabaseMock(global.mockDataStore);
+      
+      return {
+        db: mockDb,
+        // Export mock table references
+        snipeTargets: { _: { name: 'snipe_targets' } },
+        user: { _: { name: 'user' } },
+        apiCredentials: { _: { name: 'api_credentials' } },
+        userPreferences: { _: { name: 'user_preferences' } },
+        executionHistory: { _: { name: 'execution_history' } },
+        transactions: { _: { name: 'transactions' } },
+      };
+    });
   }
 
   // Mock MEXC service
