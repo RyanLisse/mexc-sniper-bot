@@ -181,20 +181,21 @@ export class CrossDomainWorkflowTests {
         );
 
         expect(orderResult.passed).toBe(true);
-        expect(orderResult.result.symbol).toBe(testSymbol);
-        expect(orderResult.result.side).toBe('buy');
+        const orderData = orderResult.result as any;
+        expect(orderData.symbol).toBe(testSymbol);
+        expect(orderData.side).toBe('buy');
 
         // Step 2: Verify OrderPlaced event was published
         const orderPlacedEvent = await context.eventFramework.waitForEvent('OrderPlaced', 'trading');
-        expect(orderPlacedEvent.data.orderId).toBe(orderResult.result.id);
+        expect(orderPlacedEvent.data.orderId).toBe(orderData.id);
 
         // Step 3: Portfolio Domain - Update Position (triggered by OrderFilled event)
         const positionUpdateResult = await PerformanceTestFramework.measureUseCasePerformance(
           () => context.positionRepository.createPosition({
             symbol: testSymbol,
-            quantity: orderResult.result.executedQuantity,
-            averagePrice: orderResult.result.executedPrice || orderResult.result.price,
-            currentValue: orderResult.result.executedQuantity * (orderResult.result.executedPrice || orderResult.result.price!),
+            quantity: orderData.executedQuantity,
+            averagePrice: orderData.executedPrice || orderData.price,
+            currentValue: orderData.executedQuantity * (orderData.executedPrice || orderData.price!),
             pnl: 0,
             pnlPercentage: 0,
             status: 'active' as const,
@@ -211,7 +212,8 @@ export class CrossDomainWorkflowTests {
         );
 
         expect(riskAssessmentResult.passed).toBe(true);
-        expect(riskAssessmentResult.result.portfolioId).toBe(testPortfolioId);
+        const riskData = riskAssessmentResult.result as any;
+        expect(riskData.portfolioId).toBe(testPortfolioId);
 
         // Step 5: Verify cross-domain events were published
         const events = context.eventFramework.getCollectedEvents();
@@ -256,14 +258,15 @@ export class CrossDomainWorkflowTests {
         );
 
         expect(sellOrderResult.passed).toBe(true);
+        const sellOrderData = sellOrderResult.result as any;
 
         // Step 2: Portfolio Domain - Update Position
         const updatedPosition = await context.positionRepository.updatePosition(
           existingPosition.id,
           {
-            quantity: existingPosition.quantity - sellOrderResult.result.executedQuantity,
-            currentValue: (existingPosition.quantity - sellOrderResult.result.executedQuantity) * 
-                          (sellOrderResult.result.executedPrice || sellOrderResult.result.price!),
+            quantity: existingPosition.quantity - sellOrderData.executedQuantity,
+            currentValue: (existingPosition.quantity - sellOrderData.executedQuantity) * 
+                          (sellOrderData.executedPrice || sellOrderData.price!),
           }
         );
 
@@ -279,10 +282,11 @@ export class CrossDomainWorkflowTests {
         expect(portfolioValueResult.passed).toBe(true);
 
         // Step 4: Safety Domain - Update Risk Metrics
+        const portfolioValue = portfolioValueResult.result as number;
         const riskUpdateResult = await PerformanceTestFramework.measureUseCasePerformance(
           () => context.riskMetricsRepository.saveMetrics({
-            portfolioValue: portfolioValueResult.result,
-            totalExposure: portfolioValueResult.result * 0.5,
+            portfolioValue: portfolioValue,
+            totalExposure: portfolioValue * 0.5,
             maxDrawdown: 5.0,
             currentDrawdown: 2.5,
             sharpeRatio: 1.2,
@@ -343,7 +347,8 @@ export class CrossDomainWorkflowTests {
         );
 
         expect(riskAssessmentResult.passed).toBe(true);
-        expect(riskAssessmentResult.result.overallRisk).toBeGreaterThan(70); // High risk
+        const riskData2 = riskAssessmentResult.result as any;
+        expect(riskData2.overallRisk).toBeGreaterThan(70); // High risk
 
         // Step 3: Safety Domain - Generate Alert
         const alertResult = await PerformanceTestFramework.measureUseCasePerformance(
@@ -354,7 +359,7 @@ export class CrossDomainWorkflowTests {
             acknowledged: false,
             metadata: {
               portfolioId: testPortfolioId,
-              riskScore: riskAssessmentResult.result.overallRisk,
+              riskScore: riskData2.overallRisk,
               triggeredBy: 'automated_risk_assessment',
             },
           }),
@@ -409,7 +414,8 @@ export class CrossDomainWorkflowTests {
         );
 
         expect(healthCheckResult.passed).toBe(true);
-        expect(healthCheckResult.result.overall).toBe('degraded');
+        const healthData = healthCheckResult.result as any;
+        expect(healthData.overall).toBe('degraded');
 
         // Step 3: Generate System Health Alert
         const healthAlertResult = await PerformanceTestFramework.measureUseCasePerformance(
