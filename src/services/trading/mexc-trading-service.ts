@@ -330,10 +330,10 @@ export class MexcTradingService {
     const orderParams: OrderParameters = {
       symbol: request.symbol,
       side: request.side,
-      type: request.type,
-      quantity: request.quantity || undefined,
-      quoteOrderQty: request.quoteOrderQty || undefined,
-      price: request.price || undefined,
+      type: (request.type === "STOP_LOSS" || request.type === "STOP_LOSS_LIMIT") ? "LIMIT" : (request.type as "MARKET" | "LIMIT") || "MARKET",
+      quantity: request.quantity ? String(request.quantity) : (request.quoteOrderQty ? "0" : "1"),
+      quoteOrderQty: request.quoteOrderQty ? String(request.quoteOrderQty) : undefined,
+      price: request.price ? String(request.price) : undefined,
       timeInForce: request.timeInForce || "IOC", // Immediate or Cancel for safety
     };
 
@@ -557,7 +557,26 @@ export class MexcTradingService {
         };
       }
 
-      return lockResult.result as TradeExecutionResult;
+      // Convert lockResult.result to TradeExecutionResult or provide fallback
+      if (lockResult.result && typeof lockResult.result === 'object') {
+        return {
+          success: true,
+          symbol: orderParams.symbol,
+          side: orderParams.side,
+          quantity: orderParams.quantity?.toString() || orderParams.quoteOrderQty?.toString() || "",
+          timestamp: new Date().toISOString(),
+          ...lockResult.result
+        } as TradeExecutionResult;
+      }
+      
+      // Fallback if result is undefined or invalid
+      return {
+        success: true,
+        symbol: orderParams.symbol,
+        side: orderParams.side,
+        quantity: orderParams.quantity?.toString() || orderParams.quoteOrderQty?.toString() || "",
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 

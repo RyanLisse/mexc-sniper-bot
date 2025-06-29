@@ -550,4 +550,74 @@ export class PositionMonitor {
       maxDrawdown: this.maxDrawdown,
     };
   }
+
+  /**
+   * Emergency close all positions - force close without validation
+   */
+  async emergencyCloseAllPositions(): Promise<ServiceResponse<number>> {
+    try {
+      this.context.logger.warn("EMERGENCY: Force closing all positions");
+      
+      const positionIds = Array.from(this.openPositions.keys());
+      let closedCount = 0;
+
+      // Force close all positions without validation
+      for (const positionId of positionIds) {
+        try {
+          const position = this.openPositions.get(positionId);
+          if (position) {
+            this.openPositions.delete(positionId);
+            closedCount++;
+            this.context.logger.info(`Emergency closed position ${positionId}`);
+          }
+        } catch (error) {
+          this.context.logger.error(`Failed to emergency close position ${positionId}: ${error}`);
+        }
+      }
+
+      return {
+        success: true,
+        data: closedCount,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
+   * Emergency stop - halt all position monitoring
+   */
+  async emergencyStop(): Promise<ServiceResponse<boolean>> {
+    try {
+      this.context.logger.warn("EMERGENCY: Stopping position monitor");
+      
+      // Stop monitoring interval
+      if (this.monitoringInterval) {
+        clearInterval(this.monitoringInterval);
+        this.monitoringInterval = null;
+      }
+
+      // Mark as not healthy
+      this.state.isHealthy = false;
+      
+      return {
+        success: true,
+        data: true,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
 }

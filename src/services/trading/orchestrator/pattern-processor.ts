@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "../../../lib/error-type-utils";
-import type { ModuleContext, ModuleState, OpportunityAssessment, PatternMatch } from "./types";
+import type { ModuleContext, ModuleState, OpportunityAssessment, PatternMatch, ServiceResponse } from "./types";
 
 export class PatternProcessor {
   private context: ModuleContext;
@@ -471,6 +471,36 @@ export class PatternProcessor {
       return "technical_breakout";
     } else {
       return "general_opportunity";
+    }
+  }
+
+  /**
+   * Emergency stop - halt all pattern processing
+   */
+  async emergencyStop(): Promise<ServiceResponse<boolean>> {
+    try {
+      this.context.logger.warn("EMERGENCY: Stopping pattern processor");
+      
+      // Mark as not healthy
+      this.state.isHealthy = false;
+      
+      // Clear any cached patterns
+      this.detectedPatterns.length = 0;
+      
+      this.context.logger.warn("Pattern processor emergency stopped");
+      
+      return {
+        success: true,
+        data: true,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
     }
   }
 }

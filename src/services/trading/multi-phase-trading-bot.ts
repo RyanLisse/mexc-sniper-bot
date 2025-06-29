@@ -620,13 +620,17 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
    */
   onAdvancedPriceUpdate(currentPrice: number, volume?: number): PriceUpdateResult {
     this.lastPrice = currentPrice;
-    const actions: string[] = [];
+    const actions: TradingAction[] = [];
 
     // Check trailing stop first
     if (this.checkTrailingStop(currentPrice)) {
-      actions.push(
-        `TRAILING STOP: Sell all ${this.position} units at ${currentPrice.toFixed(2)} (Trail: ${this.trailingStopLoss.trailPercent}%)`
-      );
+      actions.push({
+        type: "trail_stop",
+        description: `TRAILING STOP: Sell all ${this.position} units at ${currentPrice.toFixed(2)} (Trail: ${this.trailingStopLoss.trailPercent}%)`,
+        amount: this.position,
+        price: currentPrice,
+        isStopLoss: true
+      });
       this.reset(); // Close all positions
       return {
         actions,
@@ -657,10 +661,14 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
         this.completedPhases.add(phaseNumber);
         const sellAmount = Math.floor((this.position * level.sellPercentage) / 100);
 
-        actions.push(
-          `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} ` +
-            `(+${adjustedTarget.toFixed(2)}%, Vol: ${volumeMultiplier.toFixed(2)}x)`
-        );
+        actions.push({
+          type: "sell",
+          description: `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} ` +
+            `(+${adjustedTarget.toFixed(2)}%, Vol: ${volumeMultiplier.toFixed(2)}x)`,
+          phase: phaseNumber,
+          amount: sellAmount,
+          price: currentPrice,
+        });
 
         // Update remaining position
         this.position -= sellAmount;

@@ -51,7 +51,7 @@ export class SafetyManager {
       metrics: {
         safetyViolations: 0,
         emergencyStops: 0,
-        lastSafetyCheck: null,
+        lastSafetyCheck: "",
         currentRiskScore: 0,
         safetyChecksPerformed: 0,
       },
@@ -617,5 +617,39 @@ export class SafetyManager {
     if (score <= this.RISK_THRESHOLDS.medium) return "medium";
     if (score <= this.RISK_THRESHOLDS.high) return "high";
     return "critical";
+  }
+
+  /**
+   * Emergency stop - halt all safety operations
+   */
+  async emergencyStop(): Promise<ServiceResponse<boolean>> {
+    try {
+      this.context.logger.warn("EMERGENCY: Stopping safety manager");
+      
+      // Mark as not healthy
+      this.state.isHealthy = false;
+      
+      // Increment emergency stops counter
+      this.emergencyStops++;
+      this.state.metrics.emergencyStops = this.emergencyStops;
+      
+      // Clear last safety check
+      this.lastSafetyCheck = null;
+      
+      this.context.logger.warn("Safety manager emergency stopped");
+      
+      return {
+        success: true,
+        data: true,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
   }
 }
