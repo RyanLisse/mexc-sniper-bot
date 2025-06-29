@@ -462,20 +462,5 @@ export type ExtractKeys<T, K extends keyof T> = Pick<T, K>;
 // Helper type for omitting specific keys
 export type OmitKeys<T, K extends keyof T> = Omit<T, K>;
 
-export default {
-  // Export commonly used types for easy access
-  ApiResponse,
-  ApiErrorResponse,
-  ApiSuccessResponse,
-  ValidationResult,
-  PriceData,
-  OrderData,
-  BalanceData,
-  PatternMatch,
-  UserProfile,
-  CacheEntry,
-  PerformanceMetrics,
-  SystemHealth,
-  ErrorContext,
-  AgentResponse,
-};
+// All types are exported individually above
+// Note: Types cannot be exported as values, so no default export is provided

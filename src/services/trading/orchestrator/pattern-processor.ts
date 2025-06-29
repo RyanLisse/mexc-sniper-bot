@@ -124,7 +124,8 @@ export class PatternProcessor {
       this.state.lastActivity = new Date();
 
       // Update metrics
-      this.state.metrics.totalPatternsDetected += patterns.length;
+      const currentTotal = (this.state.metrics.totalPatternsDetected as number) || 0;
+      this.state.metrics.totalPatternsDetected = currentTotal + patterns.length;
       this.state.metrics.processingTime = Date.now() - startTime;
 
       if (patterns.length > 0) {
@@ -424,14 +425,12 @@ export class PatternProcessor {
         detectedAt: new Date().toISOString(),
         validUntil: new Date(Date.now() + advanceNoticeHours * 60 * 60 * 1000).toISOString(),
         metadata: {
-          factors,
-          marketData: {
-            price: marketData.price,
-            volumeChange: marketData.volumeChange24h,
-            priceChange: marketData.priceChange24h,
-            rsi: marketData.technicalIndicators.rsi,
-            volatility: marketData.technicalIndicators.volatility,
-          },
+          factors: factors.join(","), // Convert array to string
+          price: marketData.price,
+          volumeChange: marketData.volumeChange24h,
+          priceChange: marketData.priceChange24h,
+          rsi: marketData.technicalIndicators.rsi,
+          volatility: marketData.technicalIndicators.volatility,
         },
       };
 

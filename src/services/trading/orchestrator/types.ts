@@ -347,26 +347,32 @@ export function validateStatus(status: unknown): AutoSnipingStatus {
 
 export function isSnipeTarget(obj: unknown): obj is SnipeTarget {
   return (
-    obj &&
-    typeof obj.id === "number" &&
-    typeof obj.symbolName === "string" &&
-    typeof obj.confidenceScore === "number" &&
-    typeof obj.status === "string"
+    obj !== null &&
+    typeof obj === "object" &&
+    typeof (obj as any).id === "number" &&
+    typeof (obj as any).symbolName === "string" &&
+    typeof (obj as any).confidenceScore === "number" &&
+    typeof (obj as any).status === "string"
   );
 }
 
 export function isTradingPosition(obj: unknown): obj is TradingPosition {
   return (
-    obj &&
-    typeof obj.id === "string" &&
-    typeof obj.symbol === "string" &&
-    typeof obj.entryPrice === "number" &&
-    typeof obj.amount === "number"
+    obj !== null &&
+    typeof obj === "object" &&
+    typeof (obj as any).id === "string" &&
+    typeof (obj as any).symbol === "string" &&
+    typeof (obj as any).entryPrice === "number" &&
+    typeof (obj as any).amount === "number"
   );
 }
 
 export function isTradeExecutionResult(obj: unknown): obj is TradeExecutionResult {
-  return obj && typeof obj.success === "boolean";
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    typeof (obj as any).success === "boolean"
+  );
 }
 
 // ============================================================================

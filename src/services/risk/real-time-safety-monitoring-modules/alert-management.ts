@@ -374,16 +374,16 @@ export class AlertManagement {
           const positions = this.config.executionService.getActivePositions();
           try {
             const sorted = [...positions].sort(
-              (a, b) => Number.parseFloat(b.quantity) - Number.parseFloat(a.quantity)
+              (a, b) => Number.parseFloat(String(b.quantity)) - Number.parseFloat(String(a.quantity))
             );
             const count = Math.ceil(positions.length * 0.5);
             let reduced = 0;
 
             for (let i = 0; i < count; i++) {
               const pos = sorted[i];
-              const newSize = Math.floor(Number.parseFloat(pos.quantity) * 0.5);
+              const newSize = Math.floor(Number.parseFloat(String(pos.quantity)) * 0.5);
               if (newSize > 0 && this.config.executionService.updatePositionSize) {
-                await this.config.executionService.updatePositionSize(pos.symbol, newSize);
+                await this.config.executionService.updatePositionSize(String(pos.id || pos.symbol), newSize);
                 reduced++;
               }
             }
@@ -416,9 +416,9 @@ export class AlertManagement {
               const ratio = maxAllowed / exposure;
               let limited = 0;
               for (const pos of positions) {
-                const newSize = Math.floor(Number.parseFloat(pos.quantity) * ratio);
+                const newSize = Math.floor(Number.parseFloat(String(pos.quantity)) * ratio);
                 if (newSize > 0 && this.config.executionService.updatePositionSize) {
-                  await this.config.executionService.updatePositionSize(pos.symbol, newSize);
+                  await this.config.executionService.updatePositionSize(String(pos.id || pos.symbol), newSize);
                   limited++;
                 }
               }

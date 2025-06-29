@@ -23,7 +23,7 @@ import {
   safeValidateWithDefault,
   type TradingOrder,
   validateCriticalTradingData,
-  validateMexcResponse,
+  validateMexcResponse as validateExternalMexcResponse,
 } from "@/src/schemas/external-api-validation-schemas";
 import {
   type MexcServiceResponse,
@@ -181,23 +181,27 @@ export class ComprehensiveValidationService {
         }
       }
       
-      const validationResult = validateMexcResponse(schema, response, apiEndpoint);
+      const validationResult = validateExternalMexcResponse(schema, response, apiEndpoint);
       const validationTime = Date.now() - startTime;
       
       if (this.config.enableMetrics) {
-        ValidationHealthMonitor.recordValidation(validationResult.success, validationTime, validationResult.error);
+        ValidationHealthMonitor.recordValidation(
+          validationResult.success, 
+          validationTime, 
+          validationResult.success ? undefined : validationResult.error
+        );
       }
       
       const result: EnhancedValidationResult<T> = {
         success: validationResult.success,
-        data: validationResult.success ? validationResult.data : undefined,
-        error: validationResult.error,
+        data: validationResult.success ? validationResult.data as T : undefined,
+        error: validationResult.success ? undefined : validationResult.error,
         statusCode: validationResult.success ? 200 : 502,
         metrics: {
           validationTime,
           schemaSize: 0,
           errorCount: validationResult.success ? 0 : 1,
-          validatedFields: validationResult.success ? Object.keys(validationResult.data || {}) : [],
+          validatedFields: validationResult.success ? Object.keys((validationResult.data as any) || {}) : [],
         },
       };
       

@@ -129,7 +129,7 @@ export class TradeExecutor {
       // Connection check
       if (this.connectionStatus === "disconnected" || this.connectionStatus === "error") {
         await this.testConnection();
-        if (this.connectionStatus !== "connected") {
+        if (this.connectionStatus === "error" || this.connectionStatus === "disconnected") {
           throw new Error("No connection to trading API");
         }
       }

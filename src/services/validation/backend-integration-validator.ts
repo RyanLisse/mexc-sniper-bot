@@ -310,6 +310,7 @@ export class BackendIntegrationValidator {
         type: 'limit',
         quantity: 0.001,
         price: 45000,
+        commission: 0,
       });
 
       if (!testOrder) {
@@ -442,22 +443,22 @@ export class BackendIntegrationValidator {
 
       const mexcService = await getUnifiedMexcService();
       
-      // Test graceful handling of invalid requests
-      const invalidTickerResult = await mexcService.getTicker('INVALID_SYMBOL');
+      // Test graceful handling of invalid requests by testing account info with potentially invalid credentials
+      const invalidResult = await mexcService.getAccountInfo();
       
       // Error handling should return success: false, not throw
-      if (invalidTickerResult.success) {
+      if (invalidResult.success) {
         throw new Error('Error handling failed - invalid request should not succeed');
       }
 
-      if (!invalidTickerResult.error) {
+      if (!invalidResult.error) {
         throw new Error('Error handling failed - error message not provided');
       }
 
       return {
         component: 'Error Handling',
         success: true,
-        details: `Error handling functional - Invalid requests properly handled with error: "${invalidTickerResult.error}"`,
+        details: `Error handling functional - Invalid requests properly handled with error: "${invalidResult.error}"`,
         timestamp: new Date().toISOString(),
         duration: Date.now() - startTime,
       };

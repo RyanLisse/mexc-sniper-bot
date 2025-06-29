@@ -140,8 +140,8 @@ export class SafetyManager {
       this.lastSafetyCheck = new Date();
 
       // Update metrics
-      this.state.metrics.safetyChecksPerformed =
-        (this.state.metrics.safetyChecksPerformed || 0) + 1;
+      const currentChecks = (this.state.metrics.safetyChecksPerformed as number) || 0;
+      this.state.metrics.safetyChecksPerformed = currentChecks + 1;
       this.state.metrics.lastSafetyCheck = this.lastSafetyCheck.toISOString();
       this.state.metrics.currentRiskScore = this.currentRiskScore;
 

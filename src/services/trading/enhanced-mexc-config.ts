@@ -253,7 +253,7 @@ export class EnhancedMexcConfig {
         isValid: true,
         canTrade: accountInfo.canTrade,
         accountType: accountInfo.accountType,
-        permissions: accountInfo.permissions,
+        permissions: ['SPOT'], // Default permissions since not available in AccountInfo
         balanceUSDT,
         responseTime: Date.now() - startTime,
         timestamp: new Date(),
@@ -321,10 +321,11 @@ export class EnhancedMexcConfig {
         return null;
       }
 
-      // Extract filters
-      const lotSizeFilter = symbolInfo.filters?.find((f: any) => f.filterType === 'LOT_SIZE');
-      const minNotionalFilter = symbolInfo.filters?.find((f: any) => f.filterType === 'MIN_NOTIONAL');
-      const priceFilter = symbolInfo.filters?.find((f: any) => f.filterType === 'PRICE_FILTER');
+      // Extract filters (using fallback since filters may not be available)
+      const filters = (symbolInfo as any).filters || [];
+      const lotSizeFilter = filters.find((f: any) => f.filterType === 'LOT_SIZE');
+      const minNotionalFilter = filters.find((f: any) => f.filterType === 'MIN_NOTIONAL');
+      const priceFilter = filters.find((f: any) => f.filterType === 'PRICE_FILTER');
 
       const limits: TradingLimits = {
         minTradeAmount: minNotionalFilter ? parseFloat(minNotionalFilter.minNotional) : 10,

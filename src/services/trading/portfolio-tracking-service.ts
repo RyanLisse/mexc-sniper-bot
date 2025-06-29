@@ -97,11 +97,15 @@ export class PortfolioTrackingService extends EventEmitter {
         throw new Error(`Failed to get balances: ${balanceResult.error}`);
       }
 
+      if (!balanceResult.data) {
+        throw new Error("No balance data received");
+      }
+
       const { balances, totalUsdtValue } = balanceResult.data;
 
       // Filter out zero balances and USDT (since it's the base currency)
       const nonZeroBalances = balances.filter(
-        (balance) => balance.total > 0 && balance.asset !== "USDT"
+        (balance: any) => balance.total > 0 && balance.asset !== "USDT"
       );
 
       // Get current prices for all assets

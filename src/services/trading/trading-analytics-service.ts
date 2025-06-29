@@ -698,7 +698,12 @@ export class TradingAnalyticsService {
     severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
     detectedAt: string;
   }> {
-    const anomalies = [];
+    const anomalies: Array<{
+      type: string;
+      description: string;
+      severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+      detectedAt: string;
+    }> = [];
     const now = new Date().toISOString();
 
     // High error rate anomaly

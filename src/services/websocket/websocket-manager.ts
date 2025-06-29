@@ -256,6 +256,86 @@ export class WebSocketManager extends EventEmitter {
     this.stopHeartbeat();
     this.setState("disconnected");
   }
+
+  /**
+   * Start heartbeat to keep connection alive
+   */
+  private startHeartbeat(): void {
+    this.heartbeatInterval = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        try {
+          this.ws.send(JSON.stringify({ method: "PING" }));
+        } catch (error) {
+          console.error("Failed to send heartbeat:", error);
+        }
+      }
+    }, 30000); // 30 seconds
+  }
+
+  /**
+   * Stop heartbeat
+   */
+  private stopHeartbeat(): void {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+  }
+
+  /**
+   * Resubscribe to all active subscriptions
+   */
+  private resubscribeAll(): void {
+    for (const [id, subscription] of this.subscriptions) {
+      if (subscription.isActive && this.ws && this.ws.readyState === WebSocket.OPEN) {
+        try {
+          this.ws.send(JSON.stringify({
+            method: "SUBSCRIPTION",
+            params: [subscription.channel],
+            id: id
+          }));
+        } catch (error) {
+          console.error(`Failed to resubscribe to ${id}:`, error);
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle reconnection logic
+   */
+  private handleReconnect(): void {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+      
+      console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      
+      setTimeout(() => {
+        this.connect();
+      }, delay);
+    } else {
+      console.error("Max reconnection attempts reached");
+      this.setState("error");
+    }
+  }
+
+  /**
+   * Handle subscription response
+   */
+  private handleSubscriptionResponse(data: any): void {
+    if (data.id && this.subscriptions.has(data.id)) {
+      const subscription = this.subscriptions.get(data.id)!;
+      subscription.callback(data);
+    } else {
+      // Broadcast to all subscriptions if no specific ID
+      for (const subscription of this.subscriptions.values()) {
+        if (subscription.isActive) {
+          subscription.callback(data);
+        }
+      }
+    }
+  }
 }
 
 // Export singleton instance

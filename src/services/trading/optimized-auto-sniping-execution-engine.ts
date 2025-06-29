@@ -16,7 +16,7 @@ import type {
 export { AutoSnipingModule as OptimizedAutoSnipingExecutionEngine } from "./consolidated/core-trading/auto-sniping";
 
 // Export the interface that other modules expect
-export interface OptimizedAutoSnipingExecutionEngine {
+export interface IOptimizedAutoSnipingExecutionEngine {
   /**
    * Start auto-sniping monitoring
    */
@@ -78,7 +78,7 @@ export interface OptimizedAutoSnipingExecutionEngine {
   /**
    * Stop execution (emergency stop)
    */
-  stopExecution(): Promise<void>;
+  stopExecution(): Promise<ServiceResponse<void>>;
 
   /**
    * Emergency close all positions
@@ -88,12 +88,12 @@ export interface OptimizedAutoSnipingExecutionEngine {
   /**
    * Get active positions
    */
-  getActivePositions(): Array<{ symbol: string; size: number; [key: string]: any }>;
+  getActivePositions(): any[];
 
   /**
    * Update position size
    */
-  updatePositionSize(symbol: string, newSize: number): Promise<void>;
+  updatePositionSize(positionId: string, newSize: number): Promise<ServiceResponse<void>>;
 
   /**
    * Get execution report for monitoring

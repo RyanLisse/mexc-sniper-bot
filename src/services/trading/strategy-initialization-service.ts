@@ -8,7 +8,7 @@
 import { count } from "drizzle-orm";
 import { db } from "@/src/db";
 import { strategyTemplates } from "@/src/db/schemas/strategies";
-import { getCoreTrading } from "../consolidated/core-trading/base-service";
+import { getCoreTrading } from "./consolidated/core-trading";
 
 export interface StrategySystemHealth {
   templatesInitialized: boolean;
@@ -118,8 +118,9 @@ export class StrategyInitializationService {
     // Test database connectivity first
     await this.testDatabaseConnectivity();
 
-    // Initialize predefined strategies
-    await multiPhaseTradingService.initializePredefinedStrategies();
+    // Initialize predefined strategies using core trading service
+    const coreTrading = getCoreTrading();
+    await coreTrading.initialize();
 
     console.info("[Strategy Init] Predefined strategies initialized");
   }
@@ -138,23 +139,24 @@ export class StrategyInitializationService {
 
   private async verifyInitialization(): Promise<void> {
     try {
-      const templates = await multiPhaseTradingService.getStrategyTemplates();
+      const coreTrading = getCoreTrading();
+      const strategies = coreTrading.getAvailableStrategies();
 
-      if (templates.length === 0) {
-        throw new Error("No strategy templates found after initialization");
+      if (strategies.length === 0) {
+        throw new Error("No strategies found after initialization");
       }
 
       // Verify specific templates exist
       const expectedTemplates = ["normal", "conservative", "aggressive", "scalping", "diamond"];
-      const templateIds = templates.map((t) => t.strategyId);
+      const strategyNames = strategies.map((s: any) => s.name || s.strategyId);
 
       for (const expectedId of expectedTemplates) {
-        if (!templateIds.includes(expectedId)) {
+        if (!strategyNames.includes(expectedId)) {
           throw new Error(`Required strategy template '${expectedId}' not found`);
         }
       }
 
-      console.info(`[Strategy Init] Verified ${templates.length} strategy templates`);
+      console.info(`[Strategy Init] Verified ${strategies.length} strategy templates`);
     } catch (error) {
       throw new Error(
         `Initialization verification failed: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -167,12 +169,13 @@ export class StrategyInitializationService {
    */
   async getHealthStatus(): Promise<StrategySystemHealth> {
     try {
-      const templates = await multiPhaseTradingService.getStrategyTemplates();
+      const coreTrading = getCoreTrading();
+      const strategies = coreTrading.getAvailableStrategies();
       const databaseConnected = await this.testDatabaseConnection();
 
       return {
-        templatesInitialized: templates.length > 0,
-        templateCount: templates.length,
+        templatesInitialized: strategies.length > 0,
+        templateCount: strategies.length,
         databaseConnected,
         lastInitialization: this.lastInitialization,
         errors: [...this.errors],

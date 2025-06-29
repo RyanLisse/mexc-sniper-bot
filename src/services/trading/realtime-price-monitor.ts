@@ -251,7 +251,7 @@ export class RealtimePriceMonitor extends EventEmitter {
   /**
    * Get current price data
    */
-  getPriceData(symbol?: string): PriceData | Map<string, PriceData> {
+  getPriceData(symbol?: string): PriceData | Map<string, PriceData> | null {
     if (symbol) {
       return this.priceData.get(symbol.toUpperCase()) || null;
     }

@@ -1507,6 +1507,68 @@ export class AutoSnipingModule {
   }
 
   /**
+   * Stop execution (alias for stop method)
+   */
+  async stopExecution(): Promise<ServiceResponse<void>> {
+    return this.stop();
+  }
+
+  /**
+   * Emergency close all positions
+   */
+  async emergencyCloseAll(): Promise<number> {
+    const positions = this.getActivePositions();
+    let closedCount = 0;
+
+    for (const position of positions) {
+      try {
+        const result = await this.closePosition(position.id, "emergency_close");
+        if (result.success) {
+          closedCount++;
+        }
+      } catch (error) {
+        this.context.logger.error(`Failed to close position ${position.id}`, { error: (error as Error).message });
+      }
+    }
+
+    this.context.logger.warn(`Emergency closed ${closedCount}/${positions.length} positions`);
+    return closedCount;
+  }
+
+  /**
+   * Update position size
+   */
+  async updatePositionSize(positionId: string, newSize: number): Promise<ServiceResponse<void>> {
+    try {
+      const position = this.activePositions.get(positionId);
+      if (!position) {
+        return {
+          success: false,
+          error: `Position ${positionId} not found`,
+          timestamp: new Date().toISOString(),
+        };
+      }
+
+      // Update position size (this is a simulation for now)
+      position.quantity = newSize;
+      this.activePositions.set(positionId, position);
+
+      this.context.logger.info(`Updated position ${positionId} size to ${newSize}`);
+      return {
+        success: true,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      const safeError = toSafeError(error);
+      return {
+        success: false,
+        error: safeError.message,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  }
+
+  /**
    * Manually close a position
    */
   async closePosition(

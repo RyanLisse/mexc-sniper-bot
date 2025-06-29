@@ -5,7 +5,7 @@
  * all endpoints work correctly in a real environment.
  */
 
-import { RealTimeSafetyMonitoringService } from "../../services/real-time-safety-monitoring-modules";
+import { RealTimeSafetyMonitoringService } from "@/src/services/risk/real-time-safety-monitoring-service";
 
 interface TestResult {
   endpoint: string;
@@ -98,7 +98,7 @@ class SafetyMonitoringAPITester {
         status: result.success ? "PASS" : "FAIL",
         responseTime,
         statusCode: result.success ? 200 : 500,
-        details: result.data || result.error,
+        details: (result.data || result.error) as Record<string, unknown>,
       });
 
       console.info(`  ✅ ${description}: ${responseTime}ms`);
@@ -125,7 +125,7 @@ class SafetyMonitoringAPITester {
     try {
       switch (action) {
         case "status": {
-          const isActive = this.safetyService.isMonitoringActive;
+          const isActive = this.safetyService.getMonitoringStatus();
           const timerStatus = this.safetyService.getTimerStatus();
           return {
             success: true,
@@ -180,12 +180,12 @@ class SafetyMonitoringAPITester {
         }
 
         case "configuration": {
-          const config = this.safetyService.config;
+          const config = this.safetyService.getConfiguration();
           return {
             success: true,
             data: {
               configuration: config,
-              isActive: this.safetyService.isMonitoringActive,
+              isActive: this.safetyService.getMonitoringStatus(),
             },
           };
         }
@@ -196,7 +196,7 @@ class SafetyMonitoringAPITester {
             success: true,
             data: {
               timerOperations: timerStatus,
-              isMonitoringActive: this.safetyService.isMonitoringActive,
+              isMonitoringActive: this.safetyService.getMonitoringStatus(),
               currentTime: Date.now(),
             },
           };
@@ -318,7 +318,7 @@ class SafetyMonitoringAPITester {
         status: result.success ? "PASS" : "FAIL",
         responseTime,
         statusCode: result.success ? 200 : result.error?.includes("already") ? 409 : 500,
-        details: result.data || result.error,
+        details: (result.data || result.error) as Record<string, unknown>,
       });
 
       console.info(`  ✅ ${description}: ${responseTime}ms`);
@@ -347,7 +347,7 @@ class SafetyMonitoringAPITester {
 
       switch (action) {
         case "start_monitoring": {
-          if (this.safetyService.isMonitoringActive) {
+          if (this.safetyService.getMonitoringStatus()) {
             return { success: false, error: "Safety monitoring is already active" };
           }
 
@@ -363,7 +363,7 @@ class SafetyMonitoringAPITester {
         }
 
         case "stop_monitoring": {
-          if (!this.safetyService.isMonitoringActive) {
+          if (!this.safetyService.getMonitoringStatus()) {
             return { success: false, error: "Safety monitoring is not currently active" };
           }
 
@@ -380,33 +380,34 @@ class SafetyMonitoringAPITester {
 
         case "update_configuration": {
           const { configuration } = body;
-          this.safetyService.updateConfiguration(configuration);
+          this.safetyService.updateConfiguration(configuration as Partial<any>);
           return {
             success: true,
             data: {
               message: "Configuration updated successfully",
-              updatedFields: Object.keys(configuration),
+              updatedFields: Object.keys(configuration as Record<string, unknown>),
             },
           };
         }
 
         case "update_thresholds": {
           const { thresholds } = body;
+          const currentConfig = this.safetyService.getConfiguration();
           this.safetyService.updateConfiguration({
-            thresholds: { ...this.safetyService.config.thresholds, ...thresholds },
+            thresholds: { ...currentConfig.thresholds, ...(thresholds as any) },
           });
           return {
             success: true,
             data: {
               message: "Thresholds updated successfully",
-              updatedThresholds: Object.keys(thresholds),
+              updatedThresholds: Object.keys(thresholds as Record<string, unknown>),
             },
           };
         }
 
         case "emergency_response": {
           const { reason } = body;
-          const actions = await this.safetyService.triggerEmergencyResponse(reason);
+          const actions = await this.safetyService.triggerEmergencyResponse(reason as string);
           return {
             success: true,
             data: {
@@ -419,7 +420,7 @@ class SafetyMonitoringAPITester {
 
         case "acknowledge_alert": {
           const { alertId } = body;
-          const acknowledged = this.safetyService.acknowledgeAlert(alertId);
+          const acknowledged = this.safetyService.acknowledgeAlert(alertId as string);
           if (!acknowledged) {
             return { success: false, error: "Alert not found" };
           }

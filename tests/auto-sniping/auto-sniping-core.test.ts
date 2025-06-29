@@ -449,11 +449,16 @@ describe("Auto Sniping Core Functionality", () => {
         // Create alert for portfolio risk instead of using non-existent method
         if (Math.abs(update.change) >= 15) {
           await safetyCoordinator.createAlert({
-            type: "risk_breach",
+            type: "risk_threshold",
             severity: "critical",
+            category: "portfolio",
             title: "Portfolio Drawdown Exceeded",
             message: `Portfolio drawdown exceeded threshold: ${Math.abs(update.change)}%`,
             source: "portfolio-monitor",
+            acknowledged: false,
+            autoActions: [],
+            riskLevel: 95,
+            metadata: {},
           });
         }
       }
@@ -471,9 +476,14 @@ describe("Auto Sniping Core Functionality", () => {
           await safetyCoordinator.createAlert({
             type: "emergency_condition",
             severity: "critical",
+            category: "system",
             title: "Emergency Risk Threshold Exceeded",
             message: "Portfolio risk exceeded emergency threshold",
             source: "risk-monitor",
+            acknowledged: false,
+            autoActions: [],
+            riskLevel: 100,
+            metadata: {},
           });
         }
         emergencyTriggered = true;
@@ -721,30 +731,45 @@ describe("Auto Sniping Core Functionality", () => {
 
       // Act: Process risky scenario by creating alerts manually
       await safetyCoordinator.createAlert({
-        type: "risk_breach",
+        type: "risk_threshold",
         severity: "high",
+        category: "performance",
         title: "High Volatility Detected",
         message: `Market volatility at ${riskyScenario.highVolatility}`,
         source: "market-monitor",
+        acknowledged: false,
+        autoActions: [],
+        riskLevel: 80,
+        metadata: {},
       });
 
       if (riskyScenario.lowLiquidity) {
         await safetyCoordinator.createAlert({
-          type: "system_degradation",
+          type: "performance_degradation",
           severity: "medium",
+          category: "system",
           title: "Liquidity Warning",
           message: "Low liquidity conditions detected",
           source: "liquidity-monitor",
+          acknowledged: false,
+          autoActions: [],
+          riskLevel: 60,
+          metadata: {},
         });
       }
 
       if (riskyScenario.portfolioRisk > 8.0) {
         await safetyCoordinator.createAlert({
-          type: "risk_breach",
+          type: "risk_threshold",
           severity: "critical",
+          category: "portfolio",
           title: "Portfolio Risk Elevated",
           message: `Portfolio risk at ${riskyScenario.portfolioRisk}`,
           source: "portfolio-monitor",
+          acknowledged: false,
+          autoActions: [],
+          riskLevel: 90,
+          metadata: {},
         });
       }
 
