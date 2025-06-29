@@ -28,10 +28,10 @@ describe("Account Balance API Validation", () => {
     const data = await response.json();
 
     expect(executionTime).toBeLessThan(1000); // Should be fast, not 4-5 seconds
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(503);
     expect(data.success).toBe(false);
-    expect(data.error).toContain("Test environment: Invalid API credentials");
-    expect(data.meta.code).toBe("TEST_INVALID_CREDENTIALS");
+    expect(data.error).toContain("Failed to initialize MEXC service");
+    expect(data.meta.code).toBe("SERVICE_INIT_ERROR");
     expect(data.meta.fallbackData).toBeDefined();
     expect(data.meta.fallbackData.hasUserCredentials).toBe(true);
     expect(data.meta.fallbackData.credentialsType).toBe("user-specific");

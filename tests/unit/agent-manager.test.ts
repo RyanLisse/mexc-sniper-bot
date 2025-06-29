@@ -478,8 +478,6 @@ describe('AgentManager', () => {
       expect(mockSimulationAgent.toggleSimulation).toHaveBeenCalledWith(true);
       expect(mockRiskManagerAgent.updateSafetyConfig).toHaveBeenCalledWith({
         riskManagement: {
-          maxDailyLoss: 5000,
-          maxPositionSize: 500,
           maxDailyLoss: 10000,
           maxPositionSize: 1000,
         },

@@ -42,6 +42,9 @@ declare global {
 globalThis.__TEST_ENV__ = true;
 globalThis.__TEST_START_TIME__ = Date.now();
 
+// Fix EventEmitter memory leak warnings by increasing max listeners
+process.setMaxListeners(50);
+
 // ============================================================================
 // Simplified Test Setup and Teardown
 // ============================================================================
@@ -173,6 +176,54 @@ beforeAll(async () => {
       })),
     };
   });
+
+  // Mock Supabase to prevent multiple client instances
+  vi.mock('@supabase/supabase-js', () => ({
+    createClient: vi.fn(() => ({
+      auth: {
+        getSession: vi.fn().mockResolvedValue({ 
+          data: { session: null }, 
+          error: null 
+        }),
+        getUser: vi.fn().mockResolvedValue({ 
+          data: { user: null }, 
+          error: null 
+        }),
+        signInWithPassword: vi.fn().mockResolvedValue({
+          data: { user: null, session: null },
+          error: { message: 'Test environment - authentication disabled' }
+        }),
+        signOut: vi.fn().mockResolvedValue({ error: null }),
+        onAuthStateChange: vi.fn(() => ({ 
+          data: { subscription: { unsubscribe: vi.fn() } }
+        })),
+      },
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      })),
+      realtime: {
+        channel: vi.fn(() => ({
+          on: vi.fn().mockReturnThis(),
+          subscribe: vi.fn().mockReturnThis(),
+          unsubscribe: vi.fn(),
+        })),
+      },
+    })),
+  }));
+
+  // Mock Next.js cookies for Supabase
+  vi.mock('next/headers', () => ({
+    cookies: vi.fn(() => ({
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+    })),
+  }));
 
   // Initialize mocks and utilities
   initializeSimplifiedMocks(isIntegrationTest);
