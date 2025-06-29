@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { QueryProvider } from "../src/components/query-provider";
 import { KindeAuthProvider } from "../src/components/auth/kinde-auth-provider";
 import { StatusProviderWrapper } from "../src/components/providers/status-provider-wrapper";
+import { QueryProvider } from "../src/components/query-provider";
 import { Toaster } from "../src/components/ui/toaster";
 
 const geistSans = Geist({

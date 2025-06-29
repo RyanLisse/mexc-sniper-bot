@@ -5,16 +5,16 @@
  * A/B testing, and integration with trading domain.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { 
-  EnhancedFeatureFlagManager,
-  UserContext,
   EnhancedFeatureFlagConfig,
+  EnhancedFeatureFlagManager,
   evaluateFeatureFlag,
+  UserContext,
 } from "@/src/lib/feature-flags/enhanced-feature-flag-manager";
 import { 
-  TradingFeatureFlagService,
   TRADING_FEATURE_FLAGS,
+  TradingFeatureFlagService,
 } from "@/src/lib/feature-flags/trading-integration-example";
 
 describe("Enhanced Feature Flags Integration Tests", () => {

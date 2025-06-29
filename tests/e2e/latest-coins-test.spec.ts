@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('MEXC Sniper Bot - Latest Coins and Account Balance Verification', () => {
   test.beforeEach(async ({ page }) => {

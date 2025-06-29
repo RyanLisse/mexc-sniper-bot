@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET, OPTIONS } from '../../app/api/health/auth/route';
-import { authTestSetup, mockKindeSDK, envTestUtils } from '../setup/auth-test-utils';
+import { authTestSetup, envTestUtils, mockKindeSDK } from '../setup/auth-test-utils';
 
 // Note: Using direct API route imports instead of complex module mocking
 // to be compatible with the available Vitest version

@@ -1,10 +1,10 @@
+import { desc, gte, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-// Build-safe imports
-import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
-import { AgentManager } from "@/src/mexc-agents/agent-manager";
 import { db } from "@/src/db";
 import { executionHistory, patternEmbeddings, workflowActivity } from "@/src/db/schema";
-import { desc, gte, sql } from "drizzle-orm";
+import { AgentManager } from "@/src/mexc-agents/agent-manager";
+// Build-safe imports
+import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 
 // Simple console logger to avoid webpack bundling issues
 const logger = {

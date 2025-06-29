@@ -3,10 +3,10 @@
  * Automatically generates test cases based on code analysis and usage patterns
  */
 
-import { z } from 'zod'
+import { performance } from 'node:perf_hooks'
 import { readFileSync, writeFileSync } from 'fs'
 import { join } from 'path'
-import { performance } from 'node:perf_hooks'
+import { z } from 'zod'
 
 // ===================== AI TEST GENERATION TYPES =====================
 

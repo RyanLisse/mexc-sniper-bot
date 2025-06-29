@@ -10,12 +10,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
+import { apiResponse, createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { MexcConfigValidator } from '@/src/services/api/mexc-config-validator';
-import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { circuitBreakerRegistry } from '@/src/services/risk/circuit-breaker';
+import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 
 interface SystemFixReport {
   timestamp: string;

@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { z } from "zod";
 
 const alertConfigService = new AlertConfigurationService(db);
 

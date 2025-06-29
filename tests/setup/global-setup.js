@@ -8,9 +8,9 @@
  * - Performance monitoring initialization
  */
 
-import { performance } from "perf_hooks";
 import fs from "fs/promises";
 import path from "path";
+import { performance } from "perf_hooks";
 
 const SETUP_TIMEOUT = 30000; // 30 seconds
 

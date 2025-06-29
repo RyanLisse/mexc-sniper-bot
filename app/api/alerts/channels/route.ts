@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { db } from "@/src/db";
-import { NotificationService } from "@/src/services/notification/notification-providers";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { z } from "zod";
+import { NotificationService } from "@/src/services/notification/notification-providers";
 
 // ==========================================
 // GET /api/alerts/channels - List notification channels

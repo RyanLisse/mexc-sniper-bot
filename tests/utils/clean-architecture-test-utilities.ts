@@ -10,8 +10,8 @@
  * - Feature flag integration for testing
  */
 
-import { vi, expect } from "vitest";
 import type { EventEmitter } from "events";
+import { expect, vi } from "vitest";
 
 // ============================================================================
 // Domain Entity Types for Testing

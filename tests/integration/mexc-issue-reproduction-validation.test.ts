@@ -21,10 +21,11 @@
  * and demonstrate what proper service initialization and synchronization should achieve.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { db, apiCredentials } from "@/src/db";
 import { eq } from "drizzle-orm";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { apiCredentials, db } from "@/src/db";
 import { getEncryptionService } from "@/src/services/api/secure-encryption-service";
+
 // Instead of importing the complex route handlers, let's create simplified mock implementations
 // that demonstrate the issues without the complex dependency chains
 

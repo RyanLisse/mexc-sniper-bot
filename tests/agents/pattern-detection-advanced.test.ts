@@ -3,9 +3,9 @@
  * Comprehensive tests for the sts:2, st:2, tt:4 pattern detection system
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
-import { createTestFramework, type TestFrameworkConfig } from '../framework/testing-framework'
 import { performance } from 'node:perf_hooks'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createTestFramework, type TestFrameworkConfig } from '../framework/testing-framework'
 
 // ===================== PATTERN DETECTION TYPES =====================
 

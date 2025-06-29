@@ -7,10 +7,10 @@
  * Target: mexc-sniper-bot.vercel.app
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
 import React from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Create a test wrapper for React elements
 function createTestElement(component: any, props?: any, children?: any) {

@@ -3,11 +3,11 @@
  * Code quality validation through systematic mutation testing
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { join } from 'path'
 import { performance } from 'node:perf_hooks'
 import { spawn } from 'child_process'
 import { randomBytes } from 'crypto'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { join } from 'path'
 
 // ===================== MUTATION TESTING TYPES =====================
 

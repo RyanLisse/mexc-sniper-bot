@@ -5,16 +5,16 @@
  * from the monolithic unified-mexc-service.ts file
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  CalendarEntrySchema,
-  SymbolEntrySchema,
   BalanceEntrySchema,
-  TickerSchema,
+  CalendarEntrySchema,
+  MexcServiceResponseSchema,
   OrderBookSchema,
   OrderParametersSchema,
-  MexcServiceResponseSchema,
+  SymbolEntrySchema,
+  TickerSchema,
 } from "@/src/schemas/unified/mexc-api-schemas"
 
 describe('MEXC Schemas - TDD Extraction Tests', () => {

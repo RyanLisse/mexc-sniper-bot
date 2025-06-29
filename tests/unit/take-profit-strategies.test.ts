@@ -1,15 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  TakeProfitStrategy,
-  TakeProfitLevel,
-  TAKE_PROFIT_STRATEGIES,
-  DEFAULT_CUSTOM_CONFIG,
-  validateTakeProfitLevel,
-  validateTakeProfitStrategy,
-  getTakeProfitStrategyById,
-  createCustomTakeProfitLevel,
   calculatePotentialProfit,
-  convertLegacyToStrategy
+  convertLegacyToStrategy, 
+  createCustomTakeProfitLevel,
+  DEFAULT_CUSTOM_CONFIG,
+  getTakeProfitStrategyById,
+  TAKE_PROFIT_STRATEGIES,
+  TakeProfitLevel,
+  TakeProfitStrategy,
+  validateTakeProfitLevel,
+  validateTakeProfitStrategy
 } from '@/src/types/take-profit-strategies';
 
 describe('Take Profit Strategies', () => {

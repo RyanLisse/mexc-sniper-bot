@@ -76,104 +76,12 @@ export function OptimizedAgentsDashboard({
         throw new Error(result.error || "Failed to fetch agent status");
       }
 
-      // Validate with Zod or provide mock data for demo
+      // Validate with Zod schema
       try {
         return AgentListSchema.parse(result.data);
-      } catch {
-        // Mock data for development
-        return {
-          agents: [
-            {
-              id: "calendar-agent",
-              name: "Calendar Agent",
-              type: "calendar",
-              status: "active",
-              healthScore: 95,
-              lastActivity: new Date().toISOString(),
-              performance: {
-                uptime: 86400,
-                successRate: 98.5,
-                totalOperations: 1247,
-                avgResponseTime: 125,
-              },
-              currentTask: "Monitoring MEXC calendar for new listings",
-              capabilities: ["Calendar monitoring", "Listing detection", "Scheduling"],
-              errors: [],
-            },
-            {
-              id: "pattern-discovery-agent",
-              name: "Pattern Discovery",
-              type: "pattern-discovery",
-              status: "active",
-              healthScore: 92,
-              lastActivity: new Date().toISOString(),
-              performance: {
-                uptime: 86340,
-                successRate: 89.2,
-                totalOperations: 892,
-                avgResponseTime: 245,
-              },
-              currentTask: "Analyzing ready-state patterns (sts:2, st:2, tt:4)",
-              capabilities: ["Pattern detection", "ML analysis", "Advance warning"],
-              errors: [],
-            },
-            {
-              id: "symbol-analysis-agent",
-              name: "Symbol Analysis",
-              type: "symbol-analysis",
-              status: "active",
-              healthScore: 88,
-              lastActivity: new Date().toISOString(),
-              performance: {
-                uptime: 86220,
-                successRate: 94.1,
-                totalOperations: 2341,
-                avgResponseTime: 89,
-              },
-              currentTask: "Real-time symbol readiness assessment",
-              capabilities: ["Market analysis", "Risk evaluation", "Confidence scoring"],
-              errors: [],
-            },
-            {
-              id: "mexc-api-agent",
-              name: "MEXC API Agent",
-              type: "mexc-api",
-              status: "active",
-              healthScore: 96,
-              lastActivity: new Date().toISOString(),
-              performance: {
-                uptime: 86385,
-                successRate: 99.1,
-                totalOperations: 5678,
-                avgResponseTime: 67,
-              },
-              currentTask: "Handling API interactions and trade execution",
-              capabilities: ["API communication", "Trade execution", "Data extraction"],
-              errors: [],
-            },
-            {
-              id: "orchestrator-agent",
-              name: "Orchestrator",
-              type: "orchestrator",
-              status: "active",
-              healthScore: 97,
-              lastActivity: new Date().toISOString(),
-              performance: {
-                uptime: 86400,
-                successRate: 96.8,
-                totalOperations: 3456,
-                avgResponseTime: 34,
-              },
-              currentTask: "Coordinating multi-agent workflows",
-              capabilities: ["Workflow coordination", "Error recovery", "Result synthesis"],
-              errors: [],
-            },
-          ],
-          systemStatus: "healthy",
-          totalAgents: 5,
-          activeAgents: 5,
-          lastUpdate: new Date().toISOString(),
-        };
+      } catch (validationError) {
+        console.error("Agent data validation failed:", validationError);
+        throw new Error("Invalid agent data format received from API");
       }
     },
     staleTime: 15000,

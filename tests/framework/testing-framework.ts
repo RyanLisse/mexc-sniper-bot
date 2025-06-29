@@ -3,8 +3,8 @@
  * Enterprise-grade testing framework with AI-powered test generation
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { performance } from 'node:perf_hooks'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { z } from 'zod'
 
 // ===================== FRAMEWORK TYPES =====================

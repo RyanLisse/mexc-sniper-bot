@@ -10,8 +10,8 @@ import { toSafeError } from "@/src/lib/error-type-utils";
 import type { 
   AutoSnipeTarget, 
   Position, 
-  TradeResult, 
-  ServiceResponse 
+  ServiceResponse, 
+  TradeResult 
 } from "../consolidated/core-trading/types";
 
 export interface MonitoringConfig {
@@ -590,18 +590,119 @@ export class EnhancedMonitoringService extends EventEmitter {
   }
 
   private countActivePositions(): number {
-    // This would integrate with actual position tracking
-    return 0; // Placeholder
+    // Count active positions from system
+    try {
+      // Count positions from execution logs that are currently open
+      const openPositionLogs = this.executionLogs.filter(log => 
+        log.type === 'position_opened' && 
+        !this.executionLogs.some(closeLog => 
+          closeLog.type === 'position_closed' && 
+          closeLog.data?.positionId === log.data?.positionId
+        )
+      );
+      
+      // Also get positions from the position manager if available
+      const openPositions = this.getOpenPositions();
+      
+      // Return the maximum of both counts for accuracy
+      return Math.max(openPositionLogs.length, openPositions.length);
+    } catch (error) {
+      this.logger.debug('Unable to get accurate position count', { error: toSafeError(error).message });
+      return 0;
+    }
   }
 
   private calculateRealizedPnL(): number {
-    // This would calculate from closed positions
-    return 0; // Placeholder
+    // Calculate realized PnL from completed execution logs
+    let totalRealizedPnL = 0;
+    
+    try {
+      // Filter execution logs for completed position closes
+      const closedPositionLogs = this.executionLogs.filter(log => 
+        log.type === 'position_closed' && 
+        log.data && 
+        typeof log.data.realizedPnL === 'number'
+      );
+      
+      // Sum up all realized PnL from closed positions
+      for (const log of closedPositionLogs) {
+        const realizedPnL = parseFloat(log.data.realizedPnL.toString());
+        if (!isNaN(realizedPnL)) {
+          totalRealizedPnL += realizedPnL;
+        }
+      }
+      
+      // Also check for any direct trade results with PnL data
+      const tradeCompleteLogs = this.executionLogs.filter(log => 
+        log.type === 'execution_complete' && 
+        log.data && 
+        log.data.realizedPnL !== undefined
+      );
+      
+      for (const log of tradeCompleteLogs) {
+        const realizedPnL = parseFloat(log.data.realizedPnL?.toString() || '0');
+        if (!isNaN(realizedPnL)) {
+          totalRealizedPnL += realizedPnL;
+        }
+      }
+    } catch (error) {
+      this.logger.warn('Failed to calculate realized PnL', { error: toSafeError(error).message });
+    }
+    
+    return Number(totalRealizedPnL.toFixed(6));
   }
 
   private calculateUnrealizedPnL(): number {
-    // This would calculate from open positions
-    return 0; // Placeholder
+    // Calculate unrealized PnL from active positions
+    let totalUnrealizedPnL = 0;
+    
+    try {
+      // Get current open positions from the system
+      // In a real implementation, this would fetch from position manager
+      const openPositions = this.getOpenPositions();
+      
+      for (const position of openPositions) {
+        if (position.status === 'open' && position.entryPrice && position.currentPrice) {
+          const quantity = parseFloat(position.quantity.toString());
+          const entryPrice = parseFloat(position.entryPrice.toString());
+          const currentPrice = parseFloat(position.currentPrice.toString());
+          
+          // Calculate PnL based on position side
+          let positionPnL = 0;
+          if (position.side === 'BUY') {
+            positionPnL = (currentPrice - entryPrice) * quantity;
+          } else if (position.side === 'SELL') {
+            positionPnL = (entryPrice - currentPrice) * quantity;
+          }
+          
+          totalUnrealizedPnL += positionPnL;
+        }
+      }
+    } catch (error) {
+      this.logger.warn('Failed to calculate unrealized PnL', { error: toSafeError(error).message });
+    }
+    
+    return Number(totalUnrealizedPnL.toFixed(6));
+  }
+
+  /**
+   * Get open positions for PnL calculation
+   * This should integrate with the position manager when available
+   */
+  private getOpenPositions(): Position[] {
+    // In a real implementation, this would fetch from position tracking service
+    // For now, emit an event to request positions from the system
+    const positions: Position[] = [];
+    
+    try {
+      this.emit('request_open_positions');
+      // If positions are managed in memory elsewhere, this would access them
+      // Otherwise, return empty array safely
+    } catch (error) {
+      this.logger.debug('No position manager available for PnL calculation');
+    }
+    
+    return positions;
   }
 
   /**

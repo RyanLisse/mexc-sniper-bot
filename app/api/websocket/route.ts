@@ -12,14 +12,14 @@
  */
 
 import { NextRequest } from 'next/server';
-import { webSocketServer } from "@/src/services/data/websocket-server";
-import { mexcWebSocketStream } from "@/src/services/data/mexc-websocket-stream";
-import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 import { 
+  authenticatedHandler,
   createApiHandler,
   publicHandler,
-  authenticatedHandler,
 } from "@/src/lib/api-middleware";
+import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
+import { mexcWebSocketStream } from "@/src/services/data/mexc-websocket-stream";
+import { webSocketServer } from "@/src/services/data/websocket-server";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 
 // ======================

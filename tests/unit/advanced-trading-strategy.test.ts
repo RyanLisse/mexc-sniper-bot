@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AdvancedTradingStrategy } from "@/src/services/trading/advanced-trading-strategy";
 
 describe('AdvancedTradingStrategy', () => {

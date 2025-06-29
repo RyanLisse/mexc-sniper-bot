@@ -12,10 +12,10 @@
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { 
   ModuleContext, 
-  TradeParameters, 
-  TradeResult, 
+  Position, 
   ServiceResponse,
-  Position 
+  TradeParameters, 
+  TradeResult 
 } from "./types";
 
 // ============================================================================

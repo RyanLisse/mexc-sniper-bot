@@ -397,22 +397,8 @@ export const ServiceStatusSchema = z.object({
 // Auto-Sniping Types
 // ============================================================================
 
-export interface AutoSnipeTarget {
-  id: number;
-  symbolName: string;
-  vcoinId?: number;
-  positionSizeUsdt: number;
-  confidenceScore: number;
-  stopLossPercent: number;
-  takeProfitCustom?: number;
-  status: string;
-  priority: number;
-  strategy?: string;
-  createdAt: Date;
-  targetExecutionTime?: Date | null;
-  actualExecutionTime?: Date | null;
-  errorMessage?: string;
-}
+// Use the database schema for AutoSnipeTarget to ensure consistency
+export type { SnipeTarget as AutoSnipeTarget } from '@/src/db/schemas/trading';
 
 // ============================================================================
 // Service Response Types

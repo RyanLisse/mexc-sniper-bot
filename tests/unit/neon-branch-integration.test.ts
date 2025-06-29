@@ -5,16 +5,16 @@
  * This test demonstrates how to use branch-isolated databases in tests.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { sql } from "drizzle-orm";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { clearDbCache, getDb } from "@/src/db";
+import type { TestBranchContext } from "@/src/lib/test-branch-setup";
 import {
-  setupTestBranch,
+  checkTestBranchHealth,
   cleanupTestBranch,
   migrateTestBranch,
-  checkTestBranchHealth,
+  setupTestBranch,
 } from "@/src/lib/test-branch-setup";
-import type { TestBranchContext } from "@/src/lib/test-branch-setup";
-import { getDb, clearDbCache } from "@/src/db";
 
 describe("NeonDB Branch Integration", () => {
   let testBranchContext: TestBranchContext | null = null;

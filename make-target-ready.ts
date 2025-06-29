@@ -1,6 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "./src/db";
 import { snipeTargets } from "./src/db/schemas/trading";
-import { eq } from "drizzle-orm";
 
 async function makeTargetReady() {
   console.log("🎯 Making a target ready for sniping...");

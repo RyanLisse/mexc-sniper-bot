@@ -9,13 +9,13 @@
  * - State transitions and exposure management
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RiskProfile } from "@/src/domain/entities/safety/risk-profile.entity";
 import { DomainValidationError } from "@/src/domain/errors/trading-errors";
 import {
   RiskProfileCreated,
-  RiskThresholdViolated,
   RiskProfileUpdated,
+  RiskThresholdViolated,
 } from "@/src/domain/events/safety-events";
 import { CleanArchitectureAssertions } from "../../../../utils/clean-architecture-test-utilities";
 

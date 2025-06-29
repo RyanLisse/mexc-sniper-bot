@@ -13,32 +13,222 @@ import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
-// import type { SymbolEntry } from "./mexc-unified-exports"; // Module not found
-// import { MonitoringPlanCreator } from "./pattern-orchestrator/monitoring-plan-creator"; // Module not found
-// import { StrategicRecommendationGenerator } from "./pattern-orchestrator/recommendation-generator"; // Module not found
-// import type { PatternWorkflowRequest, PatternWorkflowResult } from "./pattern-orchestrator/types"; // Module not found
 
-type SymbolEntry = any; // Temporary type
-type PatternWorkflowRequest = any; // Temporary type
-type PatternWorkflowResult = any; // Temporary type
-class MonitoringPlanCreator { 
-  static create = () => ({});
-  static createMonitoringPlan = (patterns: any[]) => ({
-    patterns: patterns.length,
-    recommendations: [],
-    status: "active"
-  });
+import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+
+// Pattern workflow types
+interface PatternWorkflowRequest {
+  type: "discovery" | "monitoring" | "validation" | "strategy_creation";
+  input: {
+    calendarEntries?: any[];
+    symbolData?: SymbolEntry[];
+    vcoinId?: string;
+  };
+  options?: {
+    enableAgentAnalysis?: boolean;
+    confidenceThreshold?: number;
+  };
 }
 
-class StrategicRecommendationGenerator { 
-  static generate = () => ({});
-  static generateStrategicRecommendations = (patterns: any[], type: string) => ({
-    type,
-    patterns: patterns.length,
-    recommendations: [],
-    confidence: 75
-  });
+interface PatternWorkflowResult {
+  success: boolean;
+  type: string;
+  results: {
+    patternAnalysis?: any;
+    agentResponses?: Record<string, any>;
+    strategicRecommendations?: any;
+    monitoringPlan?: any;
+  };
+  performance: {
+    executionTime: number;
+    agentsUsed: string[];
+    patternsProcessed: number;
+  };
+  error?: string;
 }
+
+// Monitoring plan types and implementation
+interface MonitoringPlan {
+  patterns: number;
+  recommendations: MonitoringRecommendation[];
+  status: "active" | "paused" | "completed";
+  createdAt: Date;
+  priority: "low" | "medium" | "high";
+  estimatedDuration: number;
+}
+
+interface MonitoringRecommendation {
+  action: "monitor" | "alert" | "execute" | "ignore";
+  symbol: string;
+  priority: "low" | "medium" | "high";
+  reasoning: string;
+  confidence: number;
+  timeframe: number;
+}
+
+class MonitoringPlanCreator {
+  static createMonitoringPlan(patterns: PatternMatch[]): MonitoringPlan {
+    const recommendations: MonitoringRecommendation[] = [];
+    
+    for (const pattern of patterns) {
+      const recommendation: MonitoringRecommendation = {
+        action: pattern.confidence >= 85 ? "execute" : pattern.confidence >= 70 ? "monitor" : "ignore",
+        symbol: pattern.symbol,
+        priority: pattern.confidence >= 85 ? "high" : pattern.confidence >= 70 ? "medium" : "low",
+        reasoning: `Pattern ${pattern.patternType} detected with ${pattern.confidence}% confidence`,
+        confidence: pattern.confidence,
+        timeframe: pattern.advanceNoticeHours || 1
+      };
+      recommendations.push(recommendation);
+    }
+    
+    return {
+      patterns: patterns.length,
+      recommendations,
+      status: "active",
+      createdAt: new Date(),
+      priority: recommendations.some(r => r.priority === "high") ? "high" : "medium",
+      estimatedDuration: Math.max(...recommendations.map(r => r.timeframe), 1)
+    };
+  }
+}
+
+// Strategic recommendation types and implementation
+interface StrategicRecommendation {
+  type: string;
+  patterns: number;
+  recommendations: TradingRecommendation[];
+  confidence: number;
+  riskAssessment: "low" | "medium" | "high";
+  estimatedProfitability: number;
+}
+
+interface TradingRecommendation {
+  symbol: string;
+  action: "buy" | "sell" | "hold" | "monitor";
+  confidence: number;
+  positionSize: "small" | "medium" | "large";
+  reasoning: string;
+  riskLevel: "low" | "medium" | "high";
+  entryStrategy: string;
+  exitStrategy: string;
+}
+
+class StrategicRecommendationGenerator {
+  static generateStrategicRecommendations(patterns: PatternMatch[], type: string): StrategicRecommendation {
+    const recommendations: TradingRecommendation[] = [];
+    let totalConfidence = 0;
+    
+    for (const pattern of patterns) {
+      const recommendation: TradingRecommendation = {
+        symbol: pattern.symbol,
+        action: this.determineAction(pattern, type),
+        confidence: pattern.confidence,
+        positionSize: this.determinePositionSize(pattern.confidence, pattern.riskLevel),
+        reasoning: this.generateReasoning(pattern, type),
+        riskLevel: pattern.riskLevel || "medium",
+        entryStrategy: this.generateEntryStrategy(pattern),
+        exitStrategy: this.generateExitStrategy(pattern)
+      };
+      recommendations.push(recommendation);
+      totalConfidence += pattern.confidence;
+    }
+    
+    const avgConfidence = patterns.length > 0 ? totalConfidence / patterns.length : 0;
+    
+    return {
+      type,
+      patterns: patterns.length,
+      recommendations,
+      confidence: Math.round(avgConfidence),
+      riskAssessment: this.assessOverallRisk(patterns),
+      estimatedProfitability: this.estimateProfitability(patterns)
+    };
+  }
+  
+  private static determineAction(pattern: PatternMatch, type: string): "buy" | "sell" | "hold" | "monitor" {
+    if (pattern.patternType === "ready_state" && pattern.confidence >= 85) {
+      return "buy";
+    }
+    if (pattern.patternType === "launch_sequence" && pattern.confidence >= 80) {
+      return "monitor";
+    }
+    if (pattern.confidence >= 70) {
+      return "monitor";
+    }
+    return "hold";
+  }
+  
+  private static determinePositionSize(confidence: number, riskLevel: string): "small" | "medium" | "large" {
+    if (confidence >= 90 && riskLevel === "low") return "large";
+    if (confidence >= 80 && riskLevel !== "high") return "medium";
+    return "small";
+  }
+  
+  private static generateReasoning(pattern: PatternMatch, type: string): string {
+    return `${pattern.patternType} pattern detected with ${pattern.confidence}% confidence. ${pattern.recommendation || 'Monitor closely'}.`;
+  }
+  
+  private static generateEntryStrategy(pattern: PatternMatch): string {
+    if (pattern.patternType === "ready_state") {
+      return "Immediate market entry with tight stop-loss";
+    }
+    if (pattern.patternType === "launch_sequence") {
+      return `Prepare for entry in ${pattern.advanceNoticeHours} hours with staged approach`;
+    }
+    return "Monitor for confirmation signals before entry";
+  }
+  
+  private static generateExitStrategy(pattern: PatternMatch): string {
+    const baseStrategy = "Set stop-loss at -5%, take-profit targets at +15%, +30%";
+    if (pattern.riskLevel === "high") {
+      return `${baseStrategy}. Tighter risk management due to high risk level.`;
+    }
+    return baseStrategy;
+  }
+  
+  private static assessOverallRisk(patterns: PatternMatch[]): "low" | "medium" | "high" {
+    const riskScores = patterns.map(p => {
+      if (p.riskLevel === "high") return 3;
+      if (p.riskLevel === "medium") return 2;
+      return 1;
+    });
+    
+    const avgRisk = riskScores.reduce((sum, score) => sum + score, 0) / patterns.length;
+    
+    if (avgRisk >= 2.5) return "high";
+    if (avgRisk >= 1.5) return "medium";
+    return "low";
+  }
+  
+  private static estimateProfitability(patterns: PatternMatch[]): number {
+    // Estimate based on pattern confidence and historical performance
+    let profitabilityScore = 0;
+    
+    for (const pattern of patterns) {
+      let patternScore = pattern.confidence * 0.01; // Base score from confidence
+      
+      // Adjust based on pattern type
+      if (pattern.patternType === "ready_state") {
+        patternScore *= 1.2; // Ready state patterns are more profitable
+      } else if (pattern.patternType === "launch_sequence") {
+        patternScore *= 1.1; // Launch sequences have good potential
+      }
+      
+      // Adjust based on risk level
+      if (pattern.riskLevel === "low") {
+        patternScore *= 1.1;
+      } else if (pattern.riskLevel === "high") {
+        patternScore *= 0.8;
+      }
+      
+      profitabilityScore += patternScore;
+    }
+    
+    return Math.round((profitabilityScore / patterns.length) * 100);
+  }
+}
+
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 export class StreamlinedPatternOrchestrator {

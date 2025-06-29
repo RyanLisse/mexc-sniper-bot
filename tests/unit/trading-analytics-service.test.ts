@@ -5,8 +5,8 @@
  * performance tracking, and reporting accuracy.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { tradingAnalytics, TradingAnalyticsService } from '@/src/services/trading/trading-analytics-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TradingAnalyticsService, tradingAnalytics } from '@/src/services/trading/trading-analytics-service';
 
 describe('Trading Analytics Service', () => {
   let analyticsService: TradingAnalyticsService;

@@ -6,10 +6,10 @@
  * synchronization issues between test files.
  */
 
-import { vi, type MockedFunction } from 'vitest';
-import type { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
-import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
+import { type MockedFunction, vi } from 'vitest';
 import type { ActivityData } from '@/src/schemas/unified/mexc-api-schemas';
+import type { CalendarEntry, SymbolEntry } from '@/src/services/api/mexc-unified-exports';
+import type { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 
 // ============================================================================
 // Environment Configuration
@@ -217,21 +217,35 @@ export function createMockMexcService(): MockedMexcService {
 // ============================================================================
 
 /**
- * Wait for MEXC service operations to complete
+ * Wait for MEXC service operations to complete with improved timing
  */
 export async function waitForMexcOperation(timeoutMs: number = 2000): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, Math.min(timeoutMs, 100)));
+  // Use more predictable timing for test environments
+  const actualTimeout = process.env.NODE_ENV === 'test' 
+    ? Math.min(timeoutMs / 2, 100) // Faster in tests
+    : Math.min(timeoutMs, 2000);
+  
+  return new Promise(resolve => setTimeout(resolve, actualTimeout));
 }
 
 /**
- * Ensure all MEXC service mocks are properly reset
+ * Ensure all MEXC service mocks are properly reset with enhanced cleanup
  */
 export function resetMexcServiceMocks(mexcService: MockedMexcService): void {
-  Object.values(mexcService).forEach(method => {
-    if (typeof method === 'function' && 'mockClear' in method) {
-      (method as MockedFunction<any>).mockClear();
-    }
-  });
+  try {
+    Object.values(mexcService).forEach(method => {
+      if (typeof method === 'function' && 'mockClear' in method) {
+        const mockMethod = method as MockedFunction<any>;
+        mockMethod.mockClear();
+        // Also reset implementation to prevent stale mocks
+        if ('mockReset' in mockMethod) {
+          mockMethod.mockReset();
+        }
+      }
+    });
+  } catch (error) {
+    console.warn('Error resetting MEXC service mocks:', error);
+  }
 }
 
 // ============================================================================
@@ -292,37 +306,57 @@ export function simulateMexcNetworkTimeout(
 // ============================================================================
 
 /**
- * Complete setup for MEXC integration tests
+ * Complete setup for MEXC integration tests with enhanced synchronization
  */
 export function setupMexcIntegrationTest(): {
   mexcService: MockedMexcService;
   cleanup: () => void;
 } {
-  // Configure environment
+  // Configure environment first
   configureMexcTestEnvironment();
 
-  // Create mock service
+  // Clear any existing mocks to prevent interference
+  vi.clearAllMocks();
+
+  // Create mock service with fresh state
   const mexcService = createMockMexcService();
 
-  // Setup cleanup function
+  // Setup enhanced cleanup function
   const cleanup = () => {
-    resetMexcServiceMocks(mexcService);
-    cleanupMexcTestEnvironment();
-    vi.clearAllMocks();
+    try {
+      resetMexcServiceMocks(mexcService);
+      cleanupMexcTestEnvironment();
+      vi.clearAllMocks();
+      vi.clearAllTimers(); // Clear any pending timers
+    } catch (error) {
+      console.warn('Cleanup error in setupMexcIntegrationTest:', error);
+    }
   };
 
   return { mexcService, cleanup };
 }
 
 /**
- * Standardized teardown for MEXC integration tests
+ * Standardized teardown for MEXC integration tests with enhanced cleanup
  */
 export function teardownMexcIntegrationTest(mexcService?: MockedMexcService): void {
-  if (mexcService) {
-    resetMexcServiceMocks(mexcService);
+  try {
+    if (mexcService) {
+      resetMexcServiceMocks(mexcService);
+    }
+    
+    // Comprehensive cleanup
+    cleanupMexcTestEnvironment();
+    vi.clearAllMocks();
+    vi.clearAllTimers();
+    
+    // Allow time for async cleanup to complete
+    if (typeof globalThis.gc === 'function') {
+      globalThis.gc(); // Force garbage collection if available
+    }
+  } catch (error) {
+    console.warn('Teardown error in teardownMexcIntegrationTest:', error);
   }
-  cleanupMexcTestEnvironment();
-  vi.clearAllMocks();
 }
 
 // ============================================================================
@@ -330,19 +364,29 @@ export function teardownMexcIntegrationTest(mexcService?: MockedMexcService): vo
 // ============================================================================
 
 /**
- * Measure MEXC service operation performance
+ * Measure MEXC service operation performance with enhanced timing
  */
 export async function measureMexcPerformance<T>(
   operation: () => Promise<T>,
   label: string = 'MEXC Operation'
 ): Promise<{ result: T; executionTime: number }> {
   const startTime = performance.now();
-  const result = await operation();
-  const executionTime = performance.now() - startTime;
   
-  console.log(`${label} completed in ${executionTime.toFixed(2)}ms`);
-  
-  return { result, executionTime };
+  try {
+    const result = await operation();
+    const executionTime = performance.now() - startTime;
+    
+    // Only log in development/test environments
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`${label} completed in ${executionTime.toFixed(2)}ms`);
+    }
+    
+    return { result, executionTime };
+  } catch (error) {
+    const executionTime = performance.now() - startTime;
+    console.error(`${label} failed after ${executionTime.toFixed(2)}ms:`, error);
+    throw error;
+  }
 }
 
 /**

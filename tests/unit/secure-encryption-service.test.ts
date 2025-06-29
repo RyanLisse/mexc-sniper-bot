@@ -2,8 +2,8 @@
  * Unit tests for SecureEncryptionService
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { SecureEncryptionService, getEncryptionService } from "@/src/services/api/secure-encryption-service";
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { getEncryptionService, SecureEncryptionService } from "@/src/services/api/secure-encryption-service";
 
 describe('SecureEncryptionService', () => {
   let originalEnv: string | undefined;

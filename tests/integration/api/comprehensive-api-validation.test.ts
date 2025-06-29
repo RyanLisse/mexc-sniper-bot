@@ -9,10 +9,10 @@
  * 5. Input sanitization and security measures
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
 import { NextRequest } from 'next/server';
-import { setTestTimeout } from '../../utils/timeout-utilities';
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
 import { setupMexcIntegrationTest, teardownMexcIntegrationTest } from '../../utils/mexc-integration-utilities';
+import { setTestTimeout } from '../../utils/timeout-utilities';
 
 describe('Comprehensive API Route Validation Tests', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');

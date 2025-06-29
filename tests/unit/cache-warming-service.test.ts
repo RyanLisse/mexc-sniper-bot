@@ -6,7 +6,7 @@
  * Tests for proactive cache warming for frequently accessed data.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   CacheWarmingService,
   getCacheWarmingService,

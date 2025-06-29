@@ -1,15 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { AgentConfig, AgentResponse } from "@/src/mexc-agents/base-agent";
+import { BaseAgent } from "@/src/mexc-agents/base-agent";
 // Import everything before mocking
 import {
   AgentRegistry,
+  clearGlobalAgentRegistry,
   getGlobalAgentRegistry,
   initializeGlobalAgentRegistry,
-  clearGlobalAgentRegistry,
 } from "@/src/mexc-agents/coordination/agent-registry";
 import { AgentMonitoringService } from "@/src/services/notification/agent-monitoring-service";
-import { BaseAgent } from "@/src/mexc-agents/base-agent";
-import type { AgentConfig, AgentResponse } from "@/src/mexc-agents/base-agent";
 
 // Mock console output to reduce test noise
 vi.spyOn(console, "log").mockImplementation(() => {});

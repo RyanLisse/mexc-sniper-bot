@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
-import { enhancedApiValidationService } from "@/src/services/api/enhanced-api-validation-service";
+import { createJsonErrorResponse, parseJsonRequest, validateFieldTypes, validateRequiredFields } from "@/src/lib/api-json-parser";
 import {
-  createSuccessResponse,
-  createErrorResponse,
   apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
   HTTP_STATUS
 } from "@/src/lib/api-response";
-import { parseJsonRequest, validateRequiredFields, validateFieldTypes, createJsonErrorResponse } from "@/src/lib/api-json-parser";
 import { authenticatedRoute } from "@/src/lib/auth-decorators";
+import { enhancedApiValidationService } from "@/src/services/api/enhanced-api-validation-service";
+import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 
 // POST /api/mexc/test-credentials
 export const POST = authenticatedRoute(async (request: NextRequest, user: any) => {

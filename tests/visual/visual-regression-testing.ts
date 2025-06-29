@@ -3,11 +3,11 @@
  * UI consistency and accessibility testing across all interfaces
  */
 
-import { Page, Browser, chromium, firefox, webkit } from '@playwright/test'
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
-import { join, dirname } from 'path'
 import { performance } from 'node:perf_hooks'
+import { Browser, chromium, firefox, Page, webkit } from '@playwright/test'
 import { createHash } from 'crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { dirname, join } from 'path'
 
 // ===================== VISUAL TESTING TYPES =====================
 

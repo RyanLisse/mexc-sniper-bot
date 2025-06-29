@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("MobileSidebar Component", () => {
   it("should have basic test passing", () => {

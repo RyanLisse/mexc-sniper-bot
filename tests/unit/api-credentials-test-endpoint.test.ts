@@ -5,8 +5,8 @@
  * instead of hardcoded values like "accountType: spot" and "canTrade: Yes"
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import the API route directly
 import { POST } from "../../app/api/api-credentials/test/route";

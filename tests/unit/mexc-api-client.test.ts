@@ -5,23 +5,23 @@
  * that orchestrates authentication, requests, retry logic, and trading services
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
-import type { UnifiedMexcConfig } from '@/src/schemas/unified/mexc-api-schemas';
-import type { CircuitBreaker } from '@/src/services/risk/circuit-breaker';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import type { EnhancedUnifiedCacheSystem } from '@/src/lib/enhanced-unified-cache';
 import type { PerformanceMonitoringService } from '@/src/lib/performance-monitoring-service';
+import type { UnifiedMexcConfig } from '@/src/schemas/unified/mexc-api-schemas';
 import {
+  type AccountInfo,
+  type ApiClientStats,
   MexcApiClient,
   MexcAuthService,
   MexcRequestService,
   MexcRetryService,
   MexcTradingService,
-  type ApiClientStats,
-  type RequestContext,
   type OrderParams,
-  type AccountInfo,
+  type RequestContext,
 } from '@/src/services/api/mexc-api-client';
 import { MexcRequestCache } from '@/src/services/api/mexc-request-cache';
+import type { CircuitBreaker } from '@/src/services/risk/circuit-breaker';
 
 // Mock all service dependencies
 vi.mock('@/src/services/api/mexc-auth-service');

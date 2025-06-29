@@ -8,8 +8,8 @@
  */
 
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import fetch from 'node-fetch';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 

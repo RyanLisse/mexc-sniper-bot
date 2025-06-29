@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Ensure React is available globally for JSX
 globalThis.React = React;
+
 import { ApiCredentialsForm } from "@/src/components/api-credentials-form";
 import { ConsolidatedCredentialStatus } from "@/src/components/enhanced-credential-status-consolidated";
 

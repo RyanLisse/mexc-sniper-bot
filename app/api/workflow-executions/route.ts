@@ -1,7 +1,7 @@
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { workflowActivity } from "@/src/db/schema";
-import { eq, and, desc, gte, lte, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {

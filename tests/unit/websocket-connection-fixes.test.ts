@@ -7,13 +7,13 @@
  * Agent 7/15: WebSocket Connection and Real-Time Data Specialist
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { setTestTimeout } from '../utils/timeout-utilities';
-import { WebSocketServerService } from '@/src/services/data/websocket-server';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { MexcConnectionManager } from '@/src/services/data/websocket/connection-manager';
+import { MarketDataManager } from '@/src/services/data/websocket/market-data-manager';
 import { MexcWebSocketStreamService } from '@/src/services/data/websocket/stream-processor';
 import { WebSocketClientService } from '@/src/services/data/websocket-client';
-import { MarketDataManager } from '@/src/services/data/websocket/market-data-manager';
-import { MexcConnectionManager } from '@/src/services/data/websocket/connection-manager';
+import { WebSocketServerService } from '@/src/services/data/websocket-server';
+import { setTestTimeout } from '../utils/timeout-utilities';
 
 describe('WebSocket Connection and Real-Time Data Fixes', () => {
   const TEST_TIMEOUT = setTestTimeout('unit');

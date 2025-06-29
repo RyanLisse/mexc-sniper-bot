@@ -68,145 +68,40 @@ export function AgentDashboard() {
   const { data: agents, isLoading } = useQuery<AgentStatus[]>({
     queryKey: ["agent-status"],
     queryFn: async () => {
-      // In a real implementation, this would fetch from an API endpoint
-      // For now, we'll return mock data
-      return [
-        {
-          id: "mexc-api",
-          name: "MEXC API Agent",
-          type: "mexc-api",
-          status: "active",
-          lastActivity: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          tasksCompleted: 1248,
-          successRate: 98.5,
-          capabilities: [
-            "API Integration",
-            "Data Analysis",
-            "Pattern Detection",
-            "Data Quality Assessment",
-          ],
-          currentTask: "Analyzing BTCUSDT market data",
-          metrics: {
-            avgResponseTime: 245,
-            totalExecutions: 1265,
-            errorRate: 1.5,
-          },
-        },
-        {
-          id: "calendar",
-          name: "Calendar Agent",
-          type: "calendar",
-          status: "processing",
-          lastActivity: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-          tasksCompleted: 342,
-          successRate: 96.2,
-          capabilities: [
-            "Listing Discovery",
-            "Launch Analysis",
-            "Market Assessment",
-            "Monitoring Plans",
-          ],
-          currentTask: "Scanning MEXC calendar for new listings",
-          metrics: {
-            avgResponseTime: 1200,
-            totalExecutions: 355,
-            errorRate: 3.8,
-          },
-        },
-        {
-          id: "pattern",
-          name: "Pattern Discovery Agent",
-          type: "pattern",
-          status: "idle",
-          lastActivity: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-          tasksCompleted: 789,
-          successRate: 94.3,
-          capabilities: [
-            "Pattern Detection",
-            "Confidence Scoring",
-            "Launch Timing",
-            "Market Readiness",
-          ],
-          metrics: {
-            avgResponseTime: 3400,
-            totalExecutions: 836,
-            errorRate: 5.7,
-          },
-        },
-        {
-          id: "symbol",
-          name: "Symbol Analysis Agent",
-          type: "symbol",
-          status: "active",
-          lastActivity: new Date(Date.now() - 1 * 60 * 1000).toISOString(),
-          tasksCompleted: 2156,
-          successRate: 97.8,
-          capabilities: [
-            "Readiness Assessment",
-            "Market Analysis",
-            "Risk Evaluation",
-            "Monitoring Plans",
-          ],
-          currentTask: "Validating ETHUSDT ready state patterns",
-          metrics: {
-            avgResponseTime: 890,
-            totalExecutions: 2204,
-            errorRate: 2.2,
-          },
-        },
-        {
-          id: "strategy",
-          name: "Strategy Agent",
-          type: "strategy",
-          status: "idle",
-          lastActivity: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-          tasksCompleted: 156,
-          successRate: 92.1,
-          capabilities: [
-            "Strategy Generation",
-            "Risk Management",
-            "Portfolio Optimization",
-            "Trading Plans",
-          ],
-          metrics: {
-            avgResponseTime: 5600,
-            totalExecutions: 169,
-            errorRate: 7.9,
-          },
-        },
-        {
-          id: "orchestrator",
-          name: "Orchestrator",
-          type: "orchestrator",
-          status: "active",
-          lastActivity: new Date().toISOString(),
-          tasksCompleted: 4589,
-          successRate: 99.2,
-          capabilities: [
-            "Workflow Coordination",
-            "Error Handling",
-            "Performance Tracking",
-            "Agent Management",
-          ],
-          currentTask: "Coordinating multi-agent calendar discovery workflow",
-          metrics: {
-            avgResponseTime: 120,
-            totalExecutions: 4627,
-            errorRate: 0.8,
-          },
-        },
-      ];
+      try {
+        const response = await fetch("/api/agents/status");
+        if (!response.ok) {
+          throw new Error("Failed to fetch agent status");
+        }
+        const result = await response.json();
+        return result.success ? result.data : [];
+      } catch (error) {
+        console.error("Failed to fetch agent status:", error);
+        throw error;
+      }
     },
     refetchInterval: 5000, // Refresh every 5 seconds
+    retry: 2,
+    retryDelay: 1000,
   });
 
   // Execute agent action
   const executeAgentAction = useMutation({
     mutationFn: async ({ agentId, action }: { agentId: string; action: string }) => {
-      // In real implementation, this would call an API endpoint
-      console.info(`Executing ${action} on agent ${agentId}`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return { success: true };
+      const response = await fetch(`/api/agents/${agentId}/actions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to execute ${action} on agent ${agentId}`);
+      }
+      
+      const result = await response.json();
+      return result;
     },
     onSuccess: (_, { agentId, action }) => {
       toast({
@@ -469,29 +364,74 @@ export function AgentDashboard() {
 
               <TabsContent value="logs">
                 <ScrollArea className="h-64">
-                  <div className="space-y-2">
-                    {/* Mock activity logs */}
-                    {Array.from({ length: 10 }, (_, i) => {
-                      const timestamp = Date.now() - i * 5 * 60 * 1000;
-                      return (
-                        <div
-                          key={`activity-log-${timestamp}`}
-                          className="flex items-start gap-2 p-2 text-sm"
-                        >
-                          <span className="text-muted-foreground whitespace-nowrap">
-                            {new Date(timestamp).toLocaleTimeString()}
-                          </span>
-                          <span>Executed task: Analysis completed for symbol XYZ</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <AgentActivityLogs agentId={selectedAgent} />
                 </ScrollArea>
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+// Real-time agent activity logs component
+function AgentActivityLogs({ agentId }: { agentId: string | null }) {
+  const { data: logs, isLoading } = useQuery({
+    queryKey: ["agent-logs", agentId],
+    queryFn: async () => {
+      if (!agentId) return [];
+      
+      const response = await fetch(`/api/agents/${agentId}/logs?limit=20`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch agent logs");
+      }
+      
+      const result = await response.json();
+      return result.success ? result.data : [];
+    },
+    enabled: !!agentId,
+    refetchInterval: 2000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+        <span className="text-sm text-muted-foreground">Loading logs...</span>
+      </div>
+    );
+  }
+
+  if (!logs || logs.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <span className="text-sm text-muted-foreground">No activity logs available</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {logs.map((log: any, index: number) => (
+        <div
+          key={`activity-log-${log.id || index}`}
+          className="flex items-start gap-2 p-2 text-sm border-b border-border/50 last:border-0"
+        >
+          <span className="text-muted-foreground whitespace-nowrap text-xs">
+            {new Date(log.timestamp).toLocaleTimeString()}
+          </span>
+          <span className="text-foreground">{log.message || log.activity}</span>
+          {log.level && (
+            <Badge 
+              variant={log.level === 'error' ? 'destructive' : 'secondary'} 
+              className="ml-auto text-xs"
+            >
+              {log.level}
+            </Badge>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

@@ -10,17 +10,15 @@
  * Following TDD approach - tests first, then implementation
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
 import { sql } from 'drizzle-orm';
-import { db, clearDbCache } from '@/src/db';
-import { patternEmbeddings, snipeTargets, userPreferences } from '@/src/db/schema';
-
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+import { clearDbCache, db } from '@/src/db';
+import { patternEmbeddings, snipeTargets, user, userPreferences } from '@/src/db/schema';
+import { DatabaseQueryOptimizer } from '@/src/lib/database-query-optimizer';
+import { BatchDatabaseService } from '@/src/services/data/batch-database-service';
+import { EnhancedVectorService } from '@/src/services/data/enhanced-vector-service';
 // Import services to test
 import { OptimizedPatternService } from '@/src/services/data/pattern-detection/optimized-pattern-service';
-import { EnhancedVectorService } from '@/src/services/data/enhanced-vector-service';
-import { BatchDatabaseService } from '@/src/services/data/batch-database-service';
-import { DatabaseQueryOptimizer } from '@/src/lib/database-query-optimizer';
-import { user } from '@/src/db/schema';
 
 describe('Database Performance Optimization', () => {
   let optimizedPatternService: OptimizedPatternService;

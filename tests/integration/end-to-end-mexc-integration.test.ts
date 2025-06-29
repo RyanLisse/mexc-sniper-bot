@@ -5,10 +5,10 @@
  * and React Query cache management without complex component mocking
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { db, apiCredentials, user } from '@/src/db';
 import { eq } from 'drizzle-orm';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { apiCredentials, db, user } from '@/src/db';
 import { getEncryptionService } from '@/src/services/api/secure-encryption-service';
 
 // Mock status context with reactive updates

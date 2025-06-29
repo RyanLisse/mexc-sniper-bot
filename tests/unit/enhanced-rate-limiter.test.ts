@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import everything before mocking
 import {
   checkRateLimit,
-  logSecurityEvent,
-  getSecurityEvents,
-  getRateLimitStats,
-  isIPSuspicious,
-  getIPAnalysis,
   cleanupExpiredEntries,
   clearAllRateLimitData,
   clearSecurityEvents,
+  getIPAnalysis,
+  getRateLimitStats,
+  getSecurityEvents,
+  isIPSuspicious,
+  logSecurityEvent,
 } from "@/src/lib/rate-limiter";
 
 // Mock console output to reduce test noise

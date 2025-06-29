@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/src/lib/kinde-auth";
 import { db } from "@/src/db";
-import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
-import { AnomalyDetectionService } from "@/src/services/notification/anomaly-detection-service";
-import { AlertCorrelationEngine } from "@/src/services/notification/alert-correlation-engine";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
+import { getSession } from "@/src/lib/kinde-auth";
+import { AlertCorrelationEngine } from "@/src/services/notification/alert-correlation-engine";
+import { AnomalyDetectionService } from "@/src/services/notification/anomaly-detection-service";
+import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
 
 // ==========================================
 // GET /api/alerts/analytics - Get alerting analytics

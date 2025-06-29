@@ -4,15 +4,15 @@
  * Validates fallback mechanisms and feature toggling
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ExecuteTradeUseCase } from "@/src/application/use-cases/trading/execute-trade-use-case";
+import { StartSnipingUseCase } from "@/src/application/use-cases/trading/start-sniping-use-case";
 import { 
-  TradingDomainFeatureFlagManager, 
-  ROLLOUT_PHASES,
   DEFAULT_TRADING_DOMAIN_FLAGS,
+  ROLLOUT_PHASES,
+  TradingDomainFeatureFlagManager, 
   type TradingDomainFeatureFlags 
 } from "@/src/lib/feature-flags/trading-domain-flags";
-import { StartSnipingUseCase } from "@/src/application/use-cases/trading/start-sniping-use-case";
-import { ExecuteTradeUseCase } from "@/src/application/use-cases/trading/execute-trade-use-case";
 
 describe("Feature Flag Integration Tests", () => {
   let featureFlagManager: TradingDomainFeatureFlagManager;

@@ -3,9 +3,9 @@
  * Fault injection and resilience testing for the AI trading system
  */
 
-import { EventEmitter } from 'events'
 import { performance } from 'node:perf_hooks'
 import { randomBytes } from 'crypto'
+import { EventEmitter } from 'events'
 
 // ===================== CHAOS ENGINEERING TYPES =====================
 

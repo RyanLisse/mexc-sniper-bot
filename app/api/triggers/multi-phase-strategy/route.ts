@@ -1,15 +1,15 @@
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { inngest } from "@/src/inngest/client";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
-import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
-import { rateLimiter } from "@/src/lib/rate-limiter";
-import { apiResponse } from "@/src/lib/api-response";
-import { ensureStartupInitialization } from "@/src/lib/startup-initialization";
 import { getDb } from "@/src/db/index";
-import { tradingStrategies, strategyTemplates } from "@/src/db/schemas/strategies";
-import { eq, and } from "drizzle-orm";
+import { strategyTemplates, tradingStrategies } from "@/src/db/schemas/strategies";
+import { inngest } from "@/src/inngest/client";
+import { apiResponse } from "@/src/lib/api-response";
+import { rateLimiter } from "@/src/lib/rate-limiter";
+import { ensureStartupInitialization } from "@/src/lib/startup-initialization";
+import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
 // ===========================================
 // MULTI-PHASE STRATEGY CREATION TRIGGER

@@ -11,25 +11,25 @@
  * - Stress testing under extreme market conditions
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { 
-  setTestTimeout, 
-  withTimeout, 
-  timeoutPromise,
-  globalTimeoutMonitor 
-} from '../utils/timeout-utilities';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
-import { MultiPhaseTradingBot } from '@/src/services/trading/multi-phase-trading-bot';
+import type { SymbolEntry } from '@/src/services/api/mexc-unified-exports';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
-import { ComprehensiveSafetyCoordinator } from '@/src/services/risk/comprehensive-safety-coordinator';
 import { webSocketClient } from '@/src/services/data/websocket-client';
+import { ComprehensiveSafetyCoordinator } from '@/src/services/risk/comprehensive-safety-coordinator';
+import { MultiPhaseTradingBot } from '@/src/services/trading/multi-phase-trading-bot';
 import { 
+  ApiMockingUtils,
   MockDataGenerator, 
   PerformanceTestUtils, 
-  ApiMockingUtils,
   TestFixtures 
 } from '../utils/auto-sniping-test-utilities';
-import type { SymbolEntry } from '@/src/services/api/mexc-unified-exports';
+import { 
+  globalTimeoutMonitor, 
+  setTestTimeout, 
+  timeoutPromise,
+  withTimeout 
+} from '../utils/timeout-utilities';
 
 describe('High-Frequency Auto Sniping Performance', () => {
   // Set extended timeout for performance tests (60 seconds)

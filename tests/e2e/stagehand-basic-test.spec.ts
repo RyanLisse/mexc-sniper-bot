@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
 import { Stagehand } from "@browserbasehq/stagehand";
+import { expect, test } from "@playwright/test";
 import stagehandConfig from "../../stagehand.config.unified";
 
 test.describe("Basic Stagehand UI Tests", () => {

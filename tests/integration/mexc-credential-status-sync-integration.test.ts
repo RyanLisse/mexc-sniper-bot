@@ -5,12 +5,12 @@
  * and system status updates identified by the API Analysis Agent
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { db, apiCredentials, user } from '@/src/db';
 import { eq } from 'drizzle-orm';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { apiCredentials, db, user } from '@/src/db';
+import { apiCredentialsTestService } from '@/src/services/api/api-credentials-test-service';
 import { getEncryptionService } from '@/src/services/api/secure-encryption-service';
 import { UnifiedStatusResolver } from '@/src/services/notification/unified-status-resolver';
-import { apiCredentialsTestService } from '@/src/services/api/api-credentials-test-service';
 
 describe('MEXC Credential Status Synchronization Integration', () => {
   const testUserId = 'test-user-123';

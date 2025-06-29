@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { 
   AuthEnvironmentManager, 
-  authEnvironments, 
-  testUserTemplates,
-  authEnvManager,
   authEnvironmentSetup,
+  authEnvironments, 
+  authEnvManager,
   authScenarios,
-  environmentAwareUtils
+  environmentAwareUtils, 
+  testUserTemplates
 } from '../setup/auth-environment-manager';
 
 describe('Authentication Environment Management', () => {

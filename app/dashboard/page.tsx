@@ -1,47 +1,45 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
+import { AIEnhancedPatternDisplay } from "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
+import { AIServiceStatusPanel } from "@/src/components/dashboard/ai-intelligence/ai-service-status-panel";
+import { CacheWarmingControlPanel } from "@/src/components/dashboard/cache-warming/cache-warming-control-panel";
+import PerformanceMonitoringDashboard from "@/src/components/dashboard/performance-monitoring-dashboard";
+import { Phase3ConfigurationPanel } from "@/src/components/dashboard/phase3-config/phase3-configuration-panel";
+import { Phase3IntegrationSummary } from "@/src/components/dashboard/phase3-integration-summary";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import {
-  MetricCard,
-  TradingChart,
   CoinListingsBoard,
+  LazyCardWrapper,
+  LazyChartWrapper,
+  LazyDashboardWrapper,
+  LazyTableWrapper,
+  MetricCard,
+  OptimizedAccountBalance,
   OptimizedActivityFeed,
   OptimizedTradingTargets,
-  RecentTradesTable,
-  UpcomingCoinsSection,
-  OptimizedAccountBalance,
-  LazyDashboardWrapper,
-  LazyChartWrapper,
-  LazyCardWrapper,
-  LazyTableWrapper,
   preloadDashboardComponents,
+  RecentTradesTable,
+  TradingChart,
+  UpcomingCoinsSection,
 } from "@/src/components/dynamic-component-loader";
+import { ManualTradingPanel } from "@/src/components/manual-trading-panel";
+import { Button } from "@/src/components/ui/button";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/src/components/ui/tabs";
-import { Button } from "@/src/components/ui/button";
-import { Plus } from "lucide-react";
-import { ManualTradingPanel } from "@/src/components/manual-trading-panel";
-import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
-import { usePortfolio } from "@/src/hooks/use-portfolio";
-import { useAccountBalance } from "@/src/hooks/use-account-balance";
-import { useAuth } from "@/src/lib/kinde-auth-client";
-import { AIServiceStatusPanel } from "@/src/components/dashboard/ai-intelligence/ai-service-status-panel";
-import { AIEnhancedPatternDisplay } from "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
-import { CacheWarmingControlPanel } from "@/src/components/dashboard/cache-warming/cache-warming-control-panel";
-import { Phase3ConfigurationPanel } from "@/src/components/dashboard/phase3-config/phase3-configuration-panel";
-import PerformanceMonitoringDashboard from "@/src/components/dashboard/performance-monitoring-dashboard";
-import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
-import { Phase3IntegrationSummary } from "@/src/components/dashboard/phase3-integration-summary";
-import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
-import { useDeleteSnipeTarget } from "@/src/hooks/use-portfolio";
 import { useToast } from "@/src/components/ui/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useAccountBalance } from "@/src/hooks/use-account-balance";
+import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
+import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
+import { useDeleteSnipeTarget, usePortfolio } from "@/src/hooks/use-portfolio";
+import { useAuth } from "@/src/lib/kinde-auth-client";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -224,11 +222,85 @@ export default function DashboardPage() {
     placeholderData: 0,
   });
 
+  // Fetch historical calendar data for new listings change calculation
+  const { data: historicalCalendarData } = useQuery({
+    queryKey: ['historical-calendar-data'],
+    queryFn: async () => {
+      try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const response = await fetch(
+          `/api/mexc-calendar?fromDate=${sevenDaysAgo.toISOString()}`,
+          { credentials: 'include' }
+        );
+        
+        if (!response.ok) return [];
+        const data = await response.json();
+        return data.success ? data.data || [] : [];
+      } catch (error) {
+        console.error('Failed to fetch historical calendar data:', error);
+        return [];
+      }
+    },
+    staleTime: 10 * 60 * 1000, // 10 minute cache
+    placeholderData: [],
+  });
+
+  // Fetch historical ready launches for active targets change calculation
+  const { data: historicalReadyLaunches } = useQuery({
+    queryKey: ['historical-ready-launches'],
+    queryFn: async () => {
+      try {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        
+        const response = await fetch(
+          `/api/ready-launches?fromDate=${sevenDaysAgo.toISOString()}`,
+          { credentials: 'include' }
+        );
+        
+        if (!response.ok) return [];
+        const data = await response.json();
+        return data.success ? data.data || [] : [];
+      } catch (error) {
+        console.error('Failed to fetch historical ready launches:', error);
+        return [];
+      }
+    },
+    staleTime: 10 * 60 * 1000, // 10 minute cache
+    placeholderData: [],
+  });
+
   // Calculate metrics
   const totalBalance = accountBalance?.totalUsdtValue || 0;
   const balanceChange = totalBalance - (historicalBalance || totalBalance);
   const newListings = Array.isArray(calendarData) ? calendarData.length : 0;
   const activeTargets = Array.isArray(readyLaunches) ? readyLaunches.length : 0;
+  
+  // Calculate new listings change percentage
+  const newListingsChange = useMemo(() => {
+    if (!historicalCalendarData || historicalCalendarData.length === 0) return 0;
+    
+    const currentWeekListings = newListings;
+    const lastWeekListings = historicalCalendarData.length;
+    
+    if (lastWeekListings === 0) return currentWeekListings > 0 ? 100 : 0;
+    
+    return ((currentWeekListings - lastWeekListings) / lastWeekListings) * 100;
+  }, [newListings, historicalCalendarData]);
+
+  // Calculate active targets change percentage  
+  const activeTargetsChange = useMemo(() => {
+    if (!historicalReadyLaunches || historicalReadyLaunches.length === 0) return 0;
+    
+    const currentActiveTargets = activeTargets;
+    const lastWeekActiveTargets = historicalReadyLaunches.length;
+    
+    if (lastWeekActiveTargets === 0) return currentActiveTargets > 0 ? 100 : 0;
+    
+    return ((currentActiveTargets - lastWeekActiveTargets) / lastWeekActiveTargets) * 100;
+  }, [activeTargets, historicalReadyLaunches]);
   
   // Calculate win rate from execution history
   const winRate = useMemo(() => {
@@ -244,6 +316,16 @@ export default function DashboardPage() {
     totalBalance,
     balanceLoading,
     userId
+  });
+
+  console.debug("[Dashboard] Calculated metrics:", {
+    newListings,
+    newListingsChange,
+    historicalCalendarCount: historicalCalendarData?.length || 0,
+    activeTargets,
+    activeTargetsChange,
+    historicalReadyLaunchesCount: historicalReadyLaunches?.length || 0,
+    winRate
   });
 
   return (
@@ -264,18 +346,18 @@ export default function DashboardPage() {
           <MetricCard
             title="New Listings"
             value={newListings.toLocaleString()}
-            change={-20}
-            changeLabel="Down 20% this period"
-            description="Acquisition needs attention"
-            trend="down"
+            change={Math.round(newListingsChange * 10) / 10}
+            changeLabel={`${newListingsChange >= 0 ? 'Up' : 'Down'} ${Math.abs(Math.round(newListingsChange * 10) / 10)}% vs last week`}
+            description={newListingsChange >= 0 ? "Strong listing growth" : "Listing acquisition needs attention"}
+            trend={newListingsChange >= 0 ? "up" : "down"}
           />
           <MetricCard
             title="Active Targets"
             value={activeTargets.toLocaleString()}
-            change={12.5}
-            changeLabel="Strong target retention"
-            description="Engagement exceed targets"
-            trend="up"
+            change={Math.round(activeTargetsChange * 10) / 10}
+            changeLabel={`${activeTargetsChange >= 0 ? 'Up' : 'Down'} ${Math.abs(Math.round(activeTargetsChange * 10) / 10)}% vs last week`}
+            description={activeTargetsChange >= 0 ? "Strong target retention" : "Target retention needs attention"}
+            trend={activeTargetsChange >= 0 ? "up" : "down"}
           />
           <MetricCard
             title="Win Rate"

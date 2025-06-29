@@ -5,19 +5,19 @@
  * to prevent hanging tests and ensure CI/CD pipeline reliability.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { 
-  getTestTimeout,
-  withTimeout,
-  withDatabaseTimeout,
-  withApiTimeout,
-  withWebSocketTimeout,
   createTimeoutPromise,
-  TimeoutMonitor,
+  getTestTimeout,
   globalTimeoutMonitor,
   setTestTimeout,
+  TimeoutMonitor,
   timeoutPromise,
-  withRetryTimeout
+  withApiTimeout,
+  withDatabaseTimeout,
+  withRetryTimeout, 
+  withTimeout,
+  withWebSocketTimeout
 } from '../utils/timeout-utilities';
 
 describe('Timeout System Verification', () => {

@@ -1,18 +1,18 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+  type ActivityData,
   ActivityDataSchema,
-  ActivityResponseSchema,
+  type ActivityEnhancement, 
   ActivityEnhancementSchema,
   ActivityQueryOptions,
-  validateActivityData,
-  validateActivityResponse,
-  validateActivityEnhancement,
-  calculateActivityBoost,
-  hasHighPriorityActivity,
-  getUniqueActivityTypes,
-  type ActivityData,
   type ActivityResponse,
-  type ActivityEnhancement
+  ActivityResponseSchema,
+  calculateActivityBoost,
+  getUniqueActivityTypes,
+  hasHighPriorityActivity,
+  validateActivityData,
+  validateActivityEnhancement,
+  validateActivityResponse
 } from "@/src/schemas/unified/mexc-api-schemas"
 
 describe('Activity API Schemas and Utilities', () => {

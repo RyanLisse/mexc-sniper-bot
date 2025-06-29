@@ -893,7 +893,7 @@ async function main() {
 }
 
 // Run if called directly
-if (import.meta.main) {
+if (process.argv[1] === new URL(import.meta.url).pathname) {
   main();
 }
 

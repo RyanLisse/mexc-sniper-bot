@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { db, userPreferences, type NewUserPreferences } from "@/src/db";
 import { eq } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
+import { db, type NewUserPreferences, userPreferences } from "@/src/db";
 import {
-  createSuccessResponse,
-  createErrorResponse,
   apiResponse,
-  HTTP_STATUS,
-  createValidationErrorResponse
+  createErrorResponse,
+  createSuccessResponse,
+  createValidationErrorResponse, 
+  HTTP_STATUS
 } from "@/src/lib/api-response";
 import { 
-  withApiErrorHandling, 
-  withDatabaseErrorHandling, 
+  DatabaseConnectionError, 
   validateUserId,
-  DatabaseConnectionError
+  withApiErrorHandling, 
+  withDatabaseErrorHandling 
 } from "@/src/lib/central-api-error-handler";
 
 // GET /api/user-preferences?userId=xxx

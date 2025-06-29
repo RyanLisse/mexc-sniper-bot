@@ -6,8 +6,9 @@
  * and external monitoring services.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+
 interface MonitoringMetrics {
   timestamp: string;
   uptime: number;

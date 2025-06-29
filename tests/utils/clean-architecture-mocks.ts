@@ -9,17 +9,17 @@
  * - Performance-focused mocks (<100ms execution time)
  */
 
-import { vi } from "vitest";
 import type { EventEmitter } from "events";
+import { vi } from "vitest";
 import {
   CleanArchitectureMockGenerator,
   RepositoryMockFactory,
   ServiceMockFactory,
   type TestDomainEntity,
   type TestPortfolioPosition,
-  type TestTradingOrder,
-  type TestSafetyAlert,
   type TestRiskMetrics,
+  type TestSafetyAlert,
+  type TestTradingOrder,
 } from "./clean-architecture-test-utilities";
 
 // ============================================================================

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
-import { AgentManager } from "@/src/mexc-agents/agent-manager";
 import { checkDatabaseHealth, checkMexcApiHealth, checkOpenAiHealth } from "@/src/lib/health-checks";
+import { AgentManager } from "@/src/mexc-agents/agent-manager";
+import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 
 export async function GET(request: NextRequest) {
   // Build-safe logger - simple console implementation to avoid webpack issues

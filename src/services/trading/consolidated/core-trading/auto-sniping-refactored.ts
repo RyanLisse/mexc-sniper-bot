@@ -7,10 +7,6 @@
  */
 
 import { TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
-import { ServiceResponseUtils } from "./utils/service-response-utils";
-import { PositionMonitoringManager } from "./utils/position-monitoring-manager";
-import { OrderExecutionHelper } from "./utils/order-execution-helper";
-import { DatabaseOperations } from "./utils/database-operations";
 import type {
   AutoSnipeTarget,
   CoreTradingConfig,
@@ -22,6 +18,10 @@ import type {
   TradeResult,
   TradingStrategy,
 } from "./types";
+import { DatabaseOperations } from "./utils/database-operations";
+import { OrderExecutionHelper } from "./utils/order-execution-helper";
+import { PositionMonitoringManager } from "./utils/position-monitoring-manager";
+import { ServiceResponseUtils } from "./utils/service-response-utils";
 
 // Extended strategy interface for multi-phase strategies
 interface MultiPhaseStrategy extends TradingStrategy {

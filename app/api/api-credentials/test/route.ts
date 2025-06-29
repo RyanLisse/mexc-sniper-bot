@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  createSuccessResponse,
-  createErrorResponse,
   apiResponse,
-  HTTP_STATUS,
-  createValidationErrorResponse
+  createErrorResponse,
+  createSuccessResponse,
+  createValidationErrorResponse, 
+  HTTP_STATUS
 } from "@/src/lib/api-response";
 import { sensitiveDataRoute } from "@/src/lib/auth-decorators";
 import { 
+  type ApiCredentialsTestRequest, 
   ApiCredentialsTestRequestSchema,
-  validateMexcApiRequest,
-  type ApiCredentialsTestRequest
+  validateMexcApiRequest
 } from "@/src/schemas/mexc-api-validation-schemas";
 import { apiCredentialsTestService } from "@/src/services/api/api-credentials-test-service";
 

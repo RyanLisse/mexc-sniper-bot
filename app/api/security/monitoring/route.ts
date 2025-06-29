@@ -5,10 +5,10 @@
  * anomaly detection, and security recommendations.
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { securityMonitoring } from "@/src/services/risk/security-monitoring-service";
+import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
+import { securityMonitoring } from "@/src/services/risk/security-monitoring-service";
 
 // ============================================================================
 // GET /api/security/monitoring

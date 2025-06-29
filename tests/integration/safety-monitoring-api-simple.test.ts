@@ -1,11 +1,43 @@
 /**
  * Simple Safety Monitoring API Tests
  * 
- * Tests basic API endpoint functionality with minimal mocking
+ * Tests basic API endpoint functionality with proper service mocking
  */
 
-import { describe, it, expect } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+
+// Mock all dependencies to prevent initialization issues
+vi.mock("@/src/services/trading/consolidated/core-trading/base-service", () => ({
+  getCoreTrading: vi.fn(() => ({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getServiceStatus: vi.fn().mockResolvedValue({ initialized: true }),
+  })),
+}));
+
+vi.mock("@/src/services/risk/emergency-safety-system", () => ({
+  EmergencySafetySystem: vi.fn().mockImplementation(() => ({})),
+}));
+
+vi.mock("@/src/services/risk/emergency-stop-coordinator", () => ({
+  EmergencyStopCoordinator: {
+    getInstance: vi.fn(() => ({ registerService: vi.fn() })),
+  },
+}));
+
+vi.mock("@/src/services/notification/pattern-monitoring-service", () => ({
+  PatternMonitoringService: {
+    getInstance: vi.fn(() => ({})),
+  },
+}));
+
+vi.mock("@/src/services/api/unified-mexc-service-v2", () => ({
+  UnifiedMexcServiceV2: vi.fn().mockImplementation(() => ({})),
+}));
+
+vi.mock("@/src/lib/api-auth", () => ({
+  apiAuthWrapper: vi.fn().mockImplementation((handler) => handler),
+}));
 
 describe("Safety Monitoring API Route Structure", () => {
   it("should be able to import API route module", async () => {
@@ -85,7 +117,7 @@ describe("Safety Monitoring Schema Validation", () => {
     // Test with NaN values - should be sanitized to safe defaults
     const riskyData = {
       currentDrawdown: NaN,
-      maxDrawdown: Infinity,
+      maxDrawdown: Number.POSITIVE_INFINITY,
       successRate: -10,
       apiLatency: "invalid" as any,
       concentrationRisk: 150, // Over 100%

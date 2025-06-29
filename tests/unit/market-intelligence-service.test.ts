@@ -6,16 +6,16 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { 
-  MarketIntelligenceService, 
-  marketIntelligenceService,
-  MarketSentimentSchema,
-  MarketAnalysisSchema,
-  TradingSignalSchema,
-  MarketIntelligenceSchema,
-  type MarketSentiment,
   type MarketAnalysis,
+  MarketAnalysisSchema,
+  type MarketIntelligence, 
+  MarketIntelligenceSchema,
+  MarketIntelligenceService, 
+  type MarketSentiment,
+  MarketSentimentSchema,
+  marketIntelligenceService,
   type TradingSignal,
-  type MarketIntelligence
+  TradingSignalSchema
 } from '@/src/services/intelligence/market-intelligence-service';
 
 describe('MarketIntelligenceService', () => {

@@ -5,15 +5,15 @@
  * Extracted from mexc-websocket-stream.ts for modularity
  */
 
+import { randomUUID } from "node:crypto";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
+import type { PatternAnalysisResult } from "@/src/core/pattern-detection/interfaces";
 import type {
   NotificationMessage,
   TradingPriceMessage,
   TradingSignalMessage,
 } from "@/src/lib/websocket-types";
-import type { PatternAnalysisResult } from "@/src/core/pattern-detection/interfaces";
-import { randomUUID } from "node:crypto";
+import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 
 // ======================
 // MEXC WebSocket Types

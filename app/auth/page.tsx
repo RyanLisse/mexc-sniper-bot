@@ -1,8 +1,8 @@
 "use client";
 
-import { KindeAuthUI } from "@/src/components/auth/kinde-auth-ui";
-import { Zap, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Zap } from "lucide-react";
 import Link from "next/link";
+import { KindeAuthUI } from "@/src/components/auth/kinde-auth-ui";
 
 export default function AuthPage() {
   return (

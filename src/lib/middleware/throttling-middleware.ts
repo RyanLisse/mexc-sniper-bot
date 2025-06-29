@@ -21,10 +21,10 @@ export interface ThrottlingOptions {
  * Apply request throttling to API routes
  */
 export function withThrottling(
-  handler: (request: NextRequest) => Promise<NextResponse> | NextResponse,
+  handler: (request: NextRequest) => Promise<Response | NextResponse> | Response | NextResponse,
   options: ThrottlingOptions = {}
 ) {
-  return async (request: NextRequest): Promise<NextResponse> => {
+  return async (request: NextRequest): Promise<Response | NextResponse> => {
     // Skip throttling if disabled
     if (options.skipThrottling) {
       return handler(request);
@@ -92,7 +92,7 @@ export function withThrottling(
  * SSE-specific throttling middleware
  */
 export function withSSEThrottling(
-  handler: (request: NextRequest) => Promise<NextResponse> | NextResponse,
+  handler: (request: NextRequest) => Promise<Response | NextResponse> | Response | NextResponse,
   options: {
     maxConnections?: number;
     heartbeatInterval?: number;

@@ -6,7 +6,7 @@
  */
 
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { Position, TradeParameters, ModuleContext } from "../types";
+import type { ModuleContext, Position, TradeParameters } from "../types";
 
 interface MonitoringConfig {
   checkInterval: number;

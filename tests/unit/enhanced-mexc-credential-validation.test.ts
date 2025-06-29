@@ -5,10 +5,10 @@
  * that addresses the core API connection and credentials issues.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import type { MockedFunction } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { MexcApiClient } from "@/src/services/api/mexc-api-client";
 import type { MexcAuthenticationService } from "@/src/services/api/mexc-authentication-service";
-import type { MockedFunction } from "vitest";
 
 // Test implementation will be built incrementally following TDD
 describe("Enhanced MEXC Credential Validation System", () => {

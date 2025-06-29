@@ -9,8 +9,8 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, executeWithRetry, monitoredQuery } from "@/src/db";
 import { patternEmbeddings, snipeTargets } from "@/src/db/schema";
-import { toSafeError } from "@/src/lib/error-type-utils";
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import { toSafeError } from "@/src/lib/error-type-utils";
 
 // ============================================================================
 // Types and Schemas

@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
-import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
+import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
+import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
 
 // Lazy service getter to avoid build-time initialization
 function getPatternMonitoringService() {

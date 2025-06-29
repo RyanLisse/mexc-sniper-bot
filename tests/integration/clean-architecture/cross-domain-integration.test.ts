@@ -6,22 +6,21 @@
  * Phase 3 Production Readiness - Enhanced with Pattern Detection Integration
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { StartSnipingUseCase } from "@/src/application/use-cases/trading/start-sniping-use-case";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ExecuteTradeUseCase } from "@/src/application/use-cases/trading/execute-trade-use-case";
-import { SafetyRule } from "@/src/domain/value-objects/safety/safety-rule";
-import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
-import { Order, OrderStatus } from "@/src/domain/value-objects/trading/order";
-import { Money } from "@/src/domain/value-objects/trading/money";
-import { Price } from "@/src/domain/value-objects/trading/price";
-import { DomainEvent } from "@/src/domain/events/domain-event";
-import { TradingDomainFeatureFlagManager, ROLLOUT_PHASES } from "@/src/lib/feature-flags/trading-domain-flags";
-
+import { StartSnipingUseCase } from "@/src/application/use-cases/trading/start-sniping-use-case";
+import type { PatternAnalysisRequest, PatternMatch } from "@/src/core/pattern-detection/interfaces";
 // Pattern Detection Domain Integration
 import { PatternDetectionCore } from "@/src/core/pattern-detection/pattern-detection-core";
-import type { PatternMatch, PatternAnalysisRequest } from "@/src/core/pattern-detection/interfaces";
-import { tradingFeatureFlagService } from "@/src/lib/feature-flags/trading-integration-example";
+import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
+import { DomainEvent } from "@/src/domain/events/domain-event";
+import { SafetyRule } from "@/src/domain/value-objects/safety/safety-rule";
+import { Money } from "@/src/domain/value-objects/trading/money";
+import { Order, OrderStatus } from "@/src/domain/value-objects/trading/order";
+import { Price } from "@/src/domain/value-objects/trading/price";
 import type { UserContext } from "@/src/lib/feature-flags/enhanced-feature-flag-manager";
+import { ROLLOUT_PHASES, TradingDomainFeatureFlagManager } from "@/src/lib/feature-flags/trading-domain-flags";
+import { tradingFeatureFlagService } from "@/src/lib/feature-flags/trading-integration-example";
 
 describe("Cross-Domain Integration Tests", () => {
   let tradingUseCase: StartSnipingUseCase;

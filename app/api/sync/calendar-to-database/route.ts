@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { calendarSyncService } from "@/src/services/calendar-to-database-sync";
 import { 
-  createSuccessResponse, 
-  createErrorResponse, 
   apiResponse, 
+  createErrorResponse, 
+  createSuccessResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
+import { calendarSyncService } from "@/src/services/calendar-to-database-sync";
 
 export async function POST(request: NextRequest) {
   try {

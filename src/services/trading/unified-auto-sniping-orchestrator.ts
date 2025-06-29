@@ -12,10 +12,10 @@
 import { EventEmitter } from 'node:events';
 import { toSafeError } from '@/src/lib/error-type-utils';
 import { getCompleteAutoSnipingService, type SnipeConfiguration } from './complete-auto-sniping-service';
+import { getCoreTrading } from './consolidated/core-trading/base-service';
+import { getEnhancedMexcConfig, type MexcTradingConfig } from './enhanced-mexc-config';
 import { getPatternSnipeIntegration, type PatternSnipeConfig } from './pattern-snipe-integration';
 import { getRealtimePriceMonitor, type RealtimeMonitorConfig } from './realtime-price-monitor';
-import { getEnhancedMexcConfig, type MexcTradingConfig } from './enhanced-mexc-config';
-import { getCoreTrading } from './consolidated/core-trading/base-service';
 
 // Unified orchestrator interfaces
 export interface OrchestratorConfig {

@@ -11,21 +11,21 @@
  */
 
 import {
-  describe,
-  it,
-  expect,
-  beforeEach,
   afterEach,
-  vi,
   beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
 } from "vitest";
 
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
+import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine-modules";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
-import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 
 // Debug imports (remove in production)
 // console.log('AdvancedRiskEngine import:', { type: typeof AdvancedRiskEngine });

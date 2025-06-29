@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { inngest } from "@/src/inngest/client";
-import { TradingStrategyRequestSchema } from "@/src/schemas/comprehensive-api-validation-schemas";
 import { validateRequestBody } from "@/src/lib/api-validation-middleware";
+import { TradingStrategyRequestSchema } from "@/src/schemas/comprehensive-api-validation-schemas";
 
 export async function POST(request: NextRequest) {
   try {

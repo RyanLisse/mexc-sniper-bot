@@ -4,16 +4,16 @@
  * Comprehensive test suite for AI pattern recognition and embedding generation
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  type EmbeddingVector,
+  EmbeddingVectorSchema,
+  type PatternData,
+  PatternDataSchema,
+  type PatternEmbedding,
+  PatternEmbeddingSchema,
   PatternEmbeddingService,
   patternEmbeddingService,
-  PatternDataSchema,
-  EmbeddingVectorSchema,
-  PatternEmbeddingSchema,
-  type PatternData,
-  type EmbeddingVector,
-  type PatternEmbedding,
 } from '@/src/services/data/pattern-embedding-service';
 
 describe('PatternEmbeddingService', () => {

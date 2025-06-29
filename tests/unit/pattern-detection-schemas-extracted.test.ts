@@ -5,14 +5,14 @@
  * types and interfaces from pattern-detection-engine.ts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  ReadyStatePatternSchema,
-  PatternMatchSchema,
+  CorrelationAnalysisSchema,
   PatternAnalysisRequestSchema,
   PatternAnalysisResultSchema,
-  CorrelationAnalysisSchema,
+  PatternMatchSchema,
+  ReadyStatePatternSchema,
 } from '@/src/schemas/pattern-detection-schemas-extracted';
 
 describe('Pattern Detection Schemas - TDD Extraction Tests', () => {

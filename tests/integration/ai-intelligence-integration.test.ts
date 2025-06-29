@@ -9,10 +9,10 @@
  */
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { aiIntelligenceService } from "@/src/services/ai/ai-intelligence-service";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { patternEmbeddingService } from "@/src/services/data/pattern-embedding-service";
+import { aiIntelligenceService } from "@/src/services/ai/ai-intelligence-service";
 import type { PatternData } from "@/src/services/data/pattern-embedding-service";
+import { patternEmbeddingService } from "@/src/services/data/pattern-embedding-service";
 
 // Mock external dependencies
 vi.mock("@/src/db", () => ({

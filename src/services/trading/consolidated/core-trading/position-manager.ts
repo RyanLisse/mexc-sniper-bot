@@ -5,7 +5,7 @@
  * Extracted from auto-sniping.ts for better modularity.
  */
 
-import type { Position, TradeResult, ModuleContext } from "./types";
+import type { ModuleContext, Position, TradeResult } from "./types";
 
 export class PositionManager {
   private activePositions = new Map<string, Position>();
@@ -384,5 +384,46 @@ export class PositionManager {
         error: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  /**
+   * Get position statistics and metrics
+   */
+  getPositionStats(): {
+    totalPositions: number;
+    activePositions: number;
+    pendingStopLosses: number;
+    pendingTakeProfits: number;
+    positions: Array<{
+      id: string;
+      symbol: string;
+      side: string;
+      quantity: string;
+      entryPrice: number;
+      currentPnL?: number;
+      stopLossPrice?: number;
+      takeProfitPrice?: number;
+      status: string;
+    }>;
+  } {
+    const positions = Array.from(this.activePositions.values()).map(position => ({
+      id: position.id,
+      symbol: position.symbol,
+      side: position.side,
+      quantity: position.quantity,
+      entryPrice: position.entryPrice,
+      currentPnL: position.currentPnL,
+      stopLossPrice: position.stopLossPrice,
+      takeProfitPrice: position.takeProfitPrice,
+      status: position.status || 'active',
+    }));
+
+    return {
+      totalPositions: this.activePositions.size,
+      activePositions: this.activePositions.size,
+      pendingStopLosses: this.pendingStopLosses.size,
+      pendingTakeProfits: this.pendingTakeProfits.size,
+      positions,
+    };
   }
 }

@@ -8,26 +8,26 @@
 
 import { z } from "zod";
 import {
-  validateExternalApiResponse,
   CriticalDataValidator,
-  ValidationError,
   type EnhancedValidationResult,
+  ValidationError,
   ValidationHealthMonitor,
+  validateExternalApiResponse,
 } from "@/src/lib/enhanced-validation-middleware";
 import {
-  validateMexcResponse,
-  validateCriticalTradingData,
-  safeValidateWithDefault,
-  MEXC_API_SCHEMAS,
-  CRITICAL_DATA_SCHEMAS,
-  type MexcBaseResponse,
-  type TradingOrder,
   type AccountBalance,
+  CRITICAL_DATA_SCHEMAS,
+  MEXC_API_SCHEMAS,
+  type MexcBaseResponse,
   type PortfolioSummary,
+  safeValidateWithDefault,
+  type TradingOrder,
+  validateCriticalTradingData,
+  validateMexcResponse,
 } from "@/src/schemas/external-api-validation-schemas";
 import {
-  validateMexcData,
   type MexcServiceResponse,
+  validateMexcData,
 } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================

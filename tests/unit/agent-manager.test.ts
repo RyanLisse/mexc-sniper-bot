@@ -5,7 +5,7 @@
  * all trading and safety agents with health monitoring and emergency protocols
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 // Mock health check functions
 vi.mock('@/src/lib/health-checks', () => ({

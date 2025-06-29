@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActivityData, ActivityResponse } from "@/src/schemas/unified/mexc-api-schemas"
+import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 
 describe('UnifiedMexcService - Activity API Integration (Phase 1)', () => {
   let mexcService: UnifiedMexcServiceV2;

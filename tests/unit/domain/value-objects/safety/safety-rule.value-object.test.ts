@@ -10,16 +10,16 @@
  * - Edge cases and error handling
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DomainValidationError } from "@/src/domain/errors/trading-errors";
 import { 
   SafetyRule, 
-  type SafetyRuleEvaluationContext,
-  type SafetyRuleType,
-  type SafetyRulePriority,
   type SafetyRuleAction,
-  type SafetyRuleOperator 
+  type SafetyRuleEvaluationContext,
+  type SafetyRuleOperator, 
+  type SafetyRulePriority,
+  type SafetyRuleType
 } from "@/src/domain/value-objects/safety/safety-rule";
-import { DomainValidationError } from "@/src/domain/errors/trading-errors";
 
 describe("SafetyRule Value Object", () => {
   let validSafetyRuleProps: any;

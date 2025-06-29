@@ -13,9 +13,9 @@
  */
 
 import { toSafeError } from '@/src/lib/error-type-utils';
-import { getUnifiedMexcService } from '@/src/services/mexc-unified-exports';
-import { executionOrderService } from '@/src/services/execution/execution-order-service';
 import { getMexcMarketService } from '@/src/services/data/mexc-market-service';
+import { executionOrderService } from '@/src/services/execution/execution-order-service';
+import { getUnifiedMexcService } from '@/src/services/mexc-unified-exports';
 import { getCompleteAutoSnipingService } from '@/src/services/trading/complete-auto-sniping-service';
 import { getUnifiedAutoSnipingOrchestrator } from '@/src/services/trading/unified-auto-sniping-orchestrator';
 

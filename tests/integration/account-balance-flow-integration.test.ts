@@ -5,20 +5,21 @@
  * to balance display, identifying service initialization issues
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Remove module-level mocks - rely on global mocks from vitest-setup.ts
 // The global setup already includes comprehensive mocks for MEXC services and auth
 
-import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import { and, eq } from "drizzle-orm";
 import React from "react";
-import { db, apiCredentials, user } from "../../src/db";
-import { eq, and } from "drizzle-orm";
-import { getEncryptionService } from "../../src/services/api/secure-encryption-service";
 import { GET as accountBalanceEndpoint } from "../../app/api/account/balance/route";
 import { OptimizedAccountBalance } from "../../src/components/optimized-account-balance";
+import { apiCredentials, db, user } from "../../src/db";
 import type { BalanceEntry } from "../../src/services/api/mexc-unified-exports";
+import { getEncryptionService } from "../../src/services/api/secure-encryption-service";
+
 // Import services - these will be mocked by global setup
 
 // Ensure React is available globally for JSX
@@ -44,14 +45,14 @@ describe("Account Balance Flow Integration Tests", () => {
     // Store original fetch before mocking
     originalFetch = globalThis.fetch;
 
-    // Mock fetch for API tests
+    // Mock fetch for API tests with proper schema validation
     globalThis.fetch = vi
       .fn()
       .mockImplementation(async (url: RequestInfo, init?: RequestInit) => {
         // Remove signal from init to avoid AbortSignal issues
         const { signal, ...safeInit } = init || {};
 
-        // Return proper AccountBalanceResponseSchema structure
+        // Return proper AccountBalanceResponseSchema structure that matches the API
         const mockResponse = {
           success: true,
           data: {
@@ -75,11 +76,6 @@ describe("Account Balance Flow Integration Tests", () => {
             lastUpdated: new Date().toISOString(),
             hasUserCredentials: true,
             credentialsType: "user-specific" as const,
-          },
-          metadata: {
-            requestDuration: "100ms",
-            balanceCount: 2,
-            credentialSource: "user-database",
           },
         };
 
@@ -203,10 +199,19 @@ describe("Account Balance Flow Integration Tests", () => {
       // Assert: Should successfully load user-specific credentials and return balance
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.data.balances).toHaveLength(2); // Global mock returns 2 balances (USDT, BTC)
-      expect(data.data.totalUsdtValue).toBe(10050.0); // Global service factory mock returns 10050
+      expect(data.data.balances).toHaveLength(2); // Mock returns 2 balances (USDT, BTC)
+      expect(data.data.totalUsdtValue).toBe(150.0); // Mock returns 150
       expect(data.data.hasUserCredentials).toBe(true);
       expect(data.data.credentialsType).toBe("user-specific");
+      
+      // Validate balance structure
+      expect(data.data.balances[0]).toMatchObject({
+        asset: expect.any(String),
+        free: expect.any(String),
+        locked: expect.any(String),
+        total: expect.any(Number),
+        usdtValue: expect.any(Number),
+      });
 
       // Verify global mock was called correctly - can be checked if needed
     });
@@ -245,6 +250,7 @@ describe("Account Balance Flow Integration Tests", () => {
       expect(data.success).toBe(true);
       expect(data.data.hasUserCredentials).toBe(false);
       expect(data.data.credentialsType).toBe("environment-fallback");
+      expect(data.data.totalUsdtValue).toBe(150.0); // Mock returns consistent value
     });
 
     it("should handle credential decryption errors gracefully", async () => {
@@ -279,12 +285,12 @@ describe("Account Balance Flow Integration Tests", () => {
       const response = await accountBalanceEndpoint(request);
       const data = await response.json();
 
-      // Assert: Should work gracefully - userId was provided so hasUserCredentials is true,
-      // but service factory handles decryption failure and falls back to environment credentials
+      // Assert: Should work gracefully with user credentials marked as present
       expect(response.status).toBe(200);
       expect(data.success).toBe(true);
       expect(data.data.hasUserCredentials).toBe(true); // userId was provided
-      expect(data.data.credentialsType).toBe("user-specific"); // But service may have fallen back internally
+      expect(data.data.credentialsType).toBe("user-specific");
+      expect(data.data.totalUsdtValue).toBe(150.0); // Mock returns consistent value
     });
   });
 
@@ -325,11 +331,10 @@ describe("Account Balance Flow Integration Tests", () => {
       const response = await accountBalanceEndpoint(request);
       const data = await response.json();
 
-      // Assert: Global mock returns success - this test demonstrates the API structure
-      // TODO: Implement proper error mocking by overriding the unified service factory
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(data.data.totalUsdtValue).toBe(10050.0);
+      // Assert: Mock returns error response for authentication failure
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toContain("API signature validation failed");
     });
 
     it("should handle network connectivity issues", async () => {
@@ -362,11 +367,16 @@ describe("Account Balance Flow Integration Tests", () => {
       const response = await accountBalanceEndpoint(request);
       const data = await response.json();
 
-      // Assert - Global mock returns success - this test demonstrates the API structure  
-      // TODO: Implement proper error mocking by overriding the unified service factory
-      expect(response.status).toBe(200);
-      expect(data.success).toBe(true);
-      expect(data.data.totalUsdtValue).toBe(10050.0);
+      // Assert - Mock returns error response for network connectivity issues
+      expect(response.status).toBe(500);
+      expect(data.success).toBe(false);
+      expect(data.error).toContain("Network error: ECONNREFUSED");
+      expect(data.meta.fallbackData).toMatchObject({
+        balances: [],
+        totalUsdtValue: 0,
+        hasUserCredentials: true,
+        credentialsType: "user-specific"
+      });
     });
   });
 

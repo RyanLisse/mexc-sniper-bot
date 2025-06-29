@@ -455,7 +455,8 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async getActivePositions(): Promise<Position[]> {
     this.ensureInitialized();
-    return this.positionManager.getActivePositions();
+    const positionsMap = this.positionManager.getActivePositions();
+    return Array.from(positionsMap.values());
   }
 
   /**

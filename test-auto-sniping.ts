@@ -7,8 +7,8 @@
  * Tests the core components integration with proper typing
  */
 
-import type { AutoSnipingConfig } from './src/services/trading/auto-sniping/schemas';
 import type { PatternMatch } from './src/core/pattern-detection/interfaces';
+import type { AutoSnipingConfig } from './src/services/trading/auto-sniping/schemas';
 
 interface TestResult {
   success: boolean;

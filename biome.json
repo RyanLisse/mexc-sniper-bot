@@ -1,105 +1,80 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "complexity": {
-        "noForEach": "off",
-        "useOptionalChain": "warn",
-        "noExcessiveCognitiveComplexity": "warn"
-      },
-      "style": {
-        "useConst": "error",
-        "useTemplate": "warn",
-        "noUnusedTemplateLiteral": "off",
-        "useNamingConvention": "off",
-        "noParameterAssign": "warn",
-        "noNonNullAssertion": "warn"
+      "recommended": false,
+      "correctness": {
+        "noConstAssign": "error",
+        "noInvalidConstructorSuper": "error", 
+        "noUndeclaredVariables": "error",
+        "noUnreachable": "error"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
         "noDoubleEquals": "error",
-        "noArrayIndexKey": "warn"
+        "noDebugger": "error"
       },
-      "correctness": {
-        "noUnusedVariables": "warn",
-        "noUnusedImports": "error",
-        "useExhaustiveDependencies": "warn"
-      },
-      "performance": {
-        "noDelete": "warn"
-      },
-      "nursery": {
-        "useSortedClasses": "off"
+      "security": {
+        "noDangerouslySetInnerHtml": "error"
       }
     }
   },
   "formatter": {
-    "enabled": true,
-    "formatWithErrors": false,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100,
-    "lineEnding": "lf"
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "semicolons": "always",
-      "trailingCommas": "es5",
-      "arrowParentheses": "always"
-    },
-    "parser": {
-      "unsafeParameterDecoratorsEnabled": true
-    }
-  },
-  "json": {
-    "formatter": {
-      "enabled": true,
-      "indentStyle": "space",
-      "indentWidth": 2,
-      "lineWidth": 100
-    }
+    "enabled": false
   },
   "files": {
-    "includes": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "src/**/*.jsx", "**/*.json"],
+    "includes": [
+      "src/**/*.ts",
+      "src/**/*.tsx", 
+      "src/**/*.js",
+      "src/**/*.jsx",
+      "app/**/*.ts",
+      "app/**/*.tsx",
+      "app/**/*.js", 
+      "app/**/*.jsx",
+      "**/*.json",
+      "**/*.css",
+      "tests/**/*.ts",
+      "tests/**/*.tsx",
+      "tests/**/*.js",
+      "tests/**/*.jsx",
+      "*.ts",
+      "*.tsx",
+      "*.js",
+      "*.jsx"
+    ],
     "experimentalScannerIgnores": [
-      "**/node_modules",
-      "**/.next",
-      "**/dist",
-      "**/build",
-      "**/.turbo",
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/.turbo/**",
       "**/*.min.js",
-      "**/coverage",
-      "**/.venv",
-      "**/__pycache__",
+      "**/coverage/**",
+      "**/.venv/**",
+      "**/__pycache__/**",
       "**/test-results.json",
       "**/test-results/**",
       "**/test-screenshots/**",
       "**/.claude/**",
-      "**/docs/*.md",
-      "**/tests/**",
-      "**/*.test.ts",
-      "**/*.test.tsx",
-      "**/*.test.js",
-      "**/*.test.jsx",
-      "**/*.spec.ts",
-      "**/*.spec.tsx",
-      "**/*.spec.js",
-      "**/*.spec.jsx",
-      "**/vitest.config.*",
-      "**/stagehand.config.*",
-      "**/playwright.config.*",
-      "**/test-utils/**",
-      "**/test-setup/**",
-      "**/__tests__/**",
-      "**/__mocks__/**"
+      "**/playwright-report/**",
+      "**/blob-report/**",
+      "**/.playwright/**",
+      "**/*.d.ts",
+      "**/migrations/**",
+      "**/drizzle/**",
+      "**/.env*",
+      "**/public/**",
+      "**/next.config.*",
+      "**/tailwind.config.*",
+      "**/postcss.config.*",
+      "**/drizzle.config.*"
     ]
   },
   "vcs": {
     "enabled": true,
     "clientKind": "git",
-    "useIgnoreFile": true
+    "useIgnoreFile": true,
+    "defaultBranch": "main"
   }
 }

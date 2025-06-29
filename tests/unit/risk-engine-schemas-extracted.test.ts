@@ -5,14 +5,14 @@
  * types and interfaces from advanced-risk-engine.ts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
   MarketConditionsSchema,
-  PositionRiskProfileSchema,
   PortfolioRiskMetricsSchema,
-  RiskEngineConfigSchema,
+  PositionRiskProfileSchema,
   RiskAlertSchema,
+  RiskEngineConfigSchema,
   StressTestScenarioSchema,
 } from '@/src/schemas/risk-engine-schemas-extracted';
 

@@ -4,12 +4,12 @@
  * API endpoints for retrieving system performance metrics and optimization results
  */
 
+import { and, desc, eq, gte } from "drizzle-orm";
 import { NextRequest, NextResponse } from 'next/server';
-import { ParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
-import { logger } from "@/src/lib/utils";
 import { db } from "@/src/db";
-import { systemPerformanceSnapshots, performanceBaselines, agentPerformanceMetrics } from "@/src/db/schema";
-import { desc, and, gte, eq } from "drizzle-orm";
+import { agentPerformanceMetrics, performanceBaselines, systemPerformanceSnapshots } from "@/src/db/schema";
+import { logger } from "@/src/lib/utils";
+import { ParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
 
 // Initialize optimization engine
 const optimizationEngine = new ParameterOptimizationEngine();
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
         .orderBy(desc(systemPerformanceSnapshots.timestamp))
         .limit(100);
         
-      response.history = historicalSnapshots.map(snapshot => ({
+      response.history = historicalSnapshots.map((snapshot: any) => ({
         timestamp: snapshot.timestamp,
         systemLatency: snapshot.averageResponseTime,
         errorRate: snapshot.errorRate,

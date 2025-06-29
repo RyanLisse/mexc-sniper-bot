@@ -6,9 +6,9 @@
 import type { TradingService } from "@/src/application/interfaces/trading-repository";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import type { TradingOrderData } from "@/src/services/api/unified-mexc-trading";
 import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 import type { LoggerContext } from "@/src/types/logger-types";
-import type { TradingOrderData } from "@/src/services/api/unified-mexc-trading";
 
 export class MexcTradingServiceAdapter implements TradingService {
   constructor(

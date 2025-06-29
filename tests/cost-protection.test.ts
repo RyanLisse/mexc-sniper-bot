@@ -5,9 +5,9 @@
  * and prevent financial damage from runaway queries or quota overages.
  */
 
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { DatabaseRateLimiter } from '../src/lib/database-rate-limiter';
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { DatabaseCircuitBreaker } from '../src/lib/database-circuit-breaker';
+import { DatabaseRateLimiter } from '../src/lib/database-rate-limiter';
 import { globalCostMonitor, recordCostMetrics } from '../src/middleware/cost-monitor';
 
 describe('Database Cost Protection Systems', () => {

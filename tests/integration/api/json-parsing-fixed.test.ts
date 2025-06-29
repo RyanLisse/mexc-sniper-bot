@@ -5,9 +5,9 @@
  * This test focuses specifically on the JSON parsing error handling that was failing.
  */
 
-import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { NextRequest } from 'next/server';
-import { parseJsonRequest, createJsonErrorResponse } from '@/src/lib/api-json-parser';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { createJsonErrorResponse, parseJsonRequest } from '@/src/lib/api-json-parser';
 
 describe('Fixed JSON Parsing API Integration Tests', () => {
   

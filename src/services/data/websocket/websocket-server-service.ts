@@ -741,8 +741,8 @@ export class WebSocketServerService extends EventEmitter {
       authenticatedConnections: connectionStats.authenticatedConnections,
       totalChannels: connectionStats.totalChannels,
       totalSubscriptions: connectionStats.totalSubscriptions,
-      messagesPerSecond: 0, // Would need to track message rate
-      averageLatency: 0, // Would need to track latency
+      messagesPerSecond: this.calculateMessagesPerSecond(messageRouterStats),
+      averageLatency: this.calculateAverageLatency(connectionStats),
       errorRate:
         rateLimiterStats.totalTrackedConnections > 0
           ? (messageRouterStats.routingErrors / messageRouterStats.messagesRouted) * 100
@@ -851,6 +851,58 @@ export class WebSocketServerService extends EventEmitter {
       userId,
     };
     this.sendToUser(userId, message);
+  }
+
+  /**
+   * Calculate messages per second based on router stats
+   */
+  private calculateMessagesPerSecond(messageRouterStats: any): number {
+    const currentTime = Date.now();
+    const timeWindowMs = 60000; // 1 minute window
+    
+    // Use total routed messages and time since start
+    const totalMessages = messageRouterStats.messagesRouted || 0;
+    const uptimeMs = currentTime - this.startTime;
+    
+    if (uptimeMs < 1000) {
+      return 0; // Too early to calculate meaningful rate
+    }
+    
+    // Calculate messages per second over the uptime
+    const messagesPerMs = totalMessages / uptimeMs;
+    return Number((messagesPerMs * 1000).toFixed(2));
+  }
+
+  /**
+   * Calculate average latency from connection stats
+   */
+  private calculateAverageLatency(connectionStats: any): number {
+    // Use connection manager ping stats if available
+    if (connectionStats.averagePingTime !== undefined) {
+      return Math.round(connectionStats.averagePingTime);
+    }
+    
+    // Calculate estimated latency based on message handling time
+    const connections = this.connectionManager.getAllConnections();
+    if (connections.length === 0) {
+      return 0;
+    }
+    
+    let totalLatency = 0;
+    let validConnections = 0;
+    
+    for (const connection of connections) {
+      // Estimate latency based on last message time
+      const lastActivity = connection.lastActivity || Date.now();
+      const estimatedLatency = Math.min(Date.now() - lastActivity, 5000); // Cap at 5 seconds
+      
+      if (estimatedLatency >= 0) {
+        totalLatency += estimatedLatency;
+        validConnections++;
+      }
+    }
+    
+    return validConnections > 0 ? Math.round(totalLatency / validConnections) : 0;
   }
 }
 

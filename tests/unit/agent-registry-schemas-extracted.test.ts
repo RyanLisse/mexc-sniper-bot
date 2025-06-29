@@ -5,18 +5,18 @@
  * types and interfaces from agent-registry.ts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  AgentStatusSchema,
-  HealthThresholdsSchema,
   AgentHealthSchema,
-  RegisteredAgentSchema,
-  HealthCheckResultSchema,
-  AgentRegistryStatsSchema,
-  AgentRegistryOptionsSchema,
-  SystemAlertSchema,
   AgentRecoveryResultSchema,
+  AgentRegistryOptionsSchema,
+  AgentRegistryStatsSchema,
+  AgentStatusSchema,
+  HealthCheckResultSchema,
+  HealthThresholdsSchema,
+  RegisteredAgentSchema,
+  SystemAlertSchema,
 } from '@/src/schemas/agent-registry-schemas-extracted';
 
 describe('Agent Registry Schemas - TDD Extraction Tests', () => {

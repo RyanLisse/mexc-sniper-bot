@@ -1,10 +1,10 @@
-import { test, expect } from '@playwright/test';
 import { Stagehand } from "@browserbasehq/stagehand";
-import StagehandConfig from "../../stagehand.config.unified";
+import { expect, test } from '@playwright/test';
+import { eq } from 'drizzle-orm';
 import { z } from "zod";
 import { db } from '@/src/db';
 import { apiCredentials, user, userPreferences } from '@/src/db/schema';
-import { eq } from 'drizzle-orm';
+import StagehandConfig from "../../stagehand.config.unified";
 
 // Enhanced authentication flow testing with AI-powered interactions
 test.describe('Complete Authentication Flow (Stagehand Enhanced)', () => {

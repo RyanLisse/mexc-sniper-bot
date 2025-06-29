@@ -82,132 +82,20 @@ export function WorkflowManager() {
   const { data: workflows, isLoading: workflowsLoading } = useQuery<WorkflowStatus[]>({
     queryKey: ["workflow-status"],
     queryFn: async () => {
-      // In real implementation, fetch from API
-      return [
-        {
-          id: "poll-mexc-calendar",
-          name: "Calendar Discovery",
-          type: "event",
-          status: "running",
-          lastRun: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-          executionCount: 248,
-          successCount: 245,
-          errorCount: 3,
-          avgDuration: 12500,
-          description: "Multi-agent calendar discovery for new coin listings",
-          trigger: "mexc/calendar.poll",
-        },
-        {
-          id: "watch-mexc-symbol",
-          name: "Symbol Watcher",
-          type: "event",
-          status: "running",
-          lastRun: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          executionCount: 1523,
-          successCount: 1498,
-          errorCount: 25,
-          avgDuration: 8900,
-          description: "Monitors specific symbols for trading readiness",
-          trigger: "mexc/symbol.watch",
-        },
-        {
-          id: "analyze-mexc-patterns",
-          name: "Pattern Analysis",
-          type: "event",
-          status: "running",
-          lastRun: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-          executionCount: 856,
-          successCount: 823,
-          errorCount: 33,
-          avgDuration: 15600,
-          description: "Pattern discovery and validation on symbols",
-          trigger: "mexc/patterns.analyze",
-        },
-        {
-          id: "create-mexc-trading-strategy",
-          name: "Strategy Creator",
-          type: "event",
-          status: "running",
-          lastRun: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-          executionCount: 156,
-          successCount: 148,
-          errorCount: 8,
-          avgDuration: 23400,
-          description: "AI-powered trading strategy generation",
-          trigger: "mexc/strategy.create",
-        },
-        {
-          id: "scheduled-calendar-monitoring",
-          name: "Calendar Monitor",
-          type: "scheduled",
-          status: "running",
-          lastRun: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
-          nextRun: new Date(Date.now() + 18 * 60 * 1000).toISOString(),
-          schedule: "*/30 * * * *",
-          executionCount: 336,
-          successCount: 334,
-          errorCount: 2,
-          avgDuration: 14200,
-          description: "Automated calendar polling every 30 minutes",
-        },
-        {
-          id: "scheduled-pattern-analysis",
-          name: "Pattern Scanner",
-          type: "scheduled",
-          status: "running",
-          lastRun: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
-          nextRun: new Date(Date.now() + 12 * 60 * 1000).toISOString(),
-          schedule: "*/15 * * * *",
-          executionCount: 672,
-          successCount: 668,
-          errorCount: 4,
-          avgDuration: 18900,
-          description: "Regular pattern analysis every 15 minutes",
-        },
-        {
-          id: "scheduled-health-check",
-          name: "Health Check",
-          type: "scheduled",
-          status: "running",
-          lastRun: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-          nextRun: new Date(Date.now() + 3 * 60 * 1000).toISOString(),
-          schedule: "*/5 * * * *",
-          executionCount: 2016,
-          successCount: 2012,
-          errorCount: 4,
-          avgDuration: 450,
-          description: "System health monitoring every 5 minutes",
-        },
-        {
-          id: "scheduled-daily-report",
-          name: "Daily Report",
-          type: "scheduled",
-          status: "running",
-          lastRun: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-          nextRun: new Date(Date.now() + 16 * 60 * 60 * 1000).toISOString(),
-          schedule: "0 9 * * *",
-          executionCount: 42,
-          successCount: 42,
-          errorCount: 0,
-          avgDuration: 34500,
-          description: "Daily performance report at 9 AM UTC",
-        },
-        {
-          id: "emergency-response-handler",
-          name: "Emergency Handler",
-          type: "event",
-          status: "running",
-          lastRun: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-          executionCount: 12,
-          successCount: 12,
-          errorCount: 0,
-          avgDuration: 5600,
-          description: "Handles system emergencies and recovery",
-          trigger: "mexc/emergency.detected",
-        },
-      ];
+      try {
+        const response = await fetch("/api/workflow-status?format=workflows&includeMetrics=true");
+        if (!response.ok) {
+          throw new Error("Failed to fetch workflow status");
+        }
+        const result = await response.json();
+        return result.success ? result.data : [];
+      } catch (error) {
+        console.error("Failed to fetch workflow status:", error);
+        throw error;
+      }
     },
-    refetchInterval: 10000,
+    refetchInterval: 10000, // Refresh every 10 seconds
+    retry: 2,
   });
 
   // Fetch workflow executions
@@ -311,16 +199,29 @@ export function WorkflowManager() {
   // Control scheduled workflows
   const controlScheduledWorkflows = useMutation({
     mutationFn: async (action: "start" | "stop") => {
-      const response = await fetch("/api/schedule/control", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: `${action}_monitoring` }),
-      });
+      // Update all scheduled workflows status
+      const scheduledWorkflows = workflows?.filter(w => w.type === "scheduled") || [];
+      const promises = scheduledWorkflows.map(workflow => 
+        fetch("/api/workflow-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            action,
+            workflowId: workflow.id 
+          }),
+        })
+      );
 
-      if (!response.ok) throw new Error(`Failed to ${action} monitoring`);
-      return response.json();
+      const responses = await Promise.all(promises);
+      const failedResponses = responses.filter(r => !r.ok);
+      
+      if (failedResponses.length > 0) {
+        throw new Error(`Failed to ${action} ${failedResponses.length} workflow(s)`);
+      }
+
+      return { action, updatedWorkflows: scheduledWorkflows.length };
     },
-    onSuccess: (_, action) => {
+    onSuccess: (result, action) => {
       toast({
         title: `Monitoring ${action === "start" ? "Started" : "Stopped"}`,
         description: `All scheduled workflows have been ${action === "start" ? "started" : "stopped"}`,

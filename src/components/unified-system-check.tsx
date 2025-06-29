@@ -25,7 +25,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStatus } from "../contexts/status-context-v2";
 import { useAuth } from "../lib/kinde-auth-client";
 import { ApiCredentialsForm } from "./api-credentials-form";
@@ -50,6 +50,21 @@ interface SystemStatus {
   message?: string;
   details?: any;
   lastChecked?: string;
+  fromCache?: boolean;
+}
+
+interface HealthCheckCache {
+  [key: string]: {
+    result: SystemStatus;
+    timestamp: number;
+    retryCount: number;
+    circuitOpen: boolean;
+    lastFailure?: number;
+  };
+}
+
+interface PendingRequest {
+  [key: string]: Promise<SystemStatus>;
 }
 
 interface UnifiedSystemCheckProps {
@@ -74,9 +89,145 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
   const [publicIP, setPublicIP] = useState<string | null>(null);
   const [isLoadingIP, setIsLoadingIP] = useState(false);
 
-  // System health checks
-  const checkDatabaseHealth = async (): Promise<SystemStatus> => {
+  // Resource optimization: cache and deduplication
+  const cacheRef = useRef<HealthCheckCache>({});
+  const pendingRequestsRef = useRef<PendingRequest>({});
+  
+  // Cache configuration
+  const CACHE_DURATION = 60000; // 60 seconds
+  const CIRCUIT_BREAKER_THRESHOLD = 3;
+  const CIRCUIT_BREAKER_RESET_TIME = 300000; // 5 minutes
+  const MAX_RETRY_ATTEMPTS = 2;
+
+  // Utility: Check if result is cached and valid
+  const isCacheValid = (cacheKey: string): boolean => {
+    const cached = cacheRef.current[cacheKey];
+    if (!cached) return false;
+    
+    const now = Date.now();
+    const isExpired = now - cached.timestamp > CACHE_DURATION;
+    
+    // Circuit breaker logic
+    if (cached.circuitOpen && cached.lastFailure) {
+      const shouldReset = now - cached.lastFailure > CIRCUIT_BREAKER_RESET_TIME;
+      if (shouldReset) {
+        cached.circuitOpen = false;
+        cached.retryCount = 0;
+      } else {
+        return true; // Keep using cached result while circuit is open
+      }
+    }
+    
+    return !isExpired;
+  };
+
+  // Utility: Exponential backoff delay
+  const getRetryDelay = (retryCount: number): number => {
+    return Math.min(1000 * Math.pow(2, retryCount), 10000); // Max 10 seconds
+  };
+
+  // Utility: Update cache and circuit breaker state
+  const updateCache = (cacheKey: string, result: SystemStatus, isError = false): void => {
+    const now = Date.now();
+    const existing = cacheRef.current[cacheKey] || { retryCount: 0, circuitOpen: false };
+    
+    if (isError) {
+      existing.retryCount++;
+      if (existing.retryCount >= CIRCUIT_BREAKER_THRESHOLD) {
+        existing.circuitOpen = true;
+        existing.lastFailure = now;
+      }
+    } else {
+      existing.retryCount = 0;
+      existing.circuitOpen = false;
+      delete existing.lastFailure;
+    }
+    
+    cacheRef.current[cacheKey] = {
+      result: { ...result, fromCache: false },
+      timestamp: now,
+      retryCount: existing.retryCount,
+      circuitOpen: existing.circuitOpen,
+      lastFailure: existing.lastFailure,
+    };
+  };
+
+  // Generic health check with optimizations
+  const performHealthCheck = async (
+    cacheKey: string,
+    checkFn: () => Promise<SystemStatus>,
+    priority: 'high' | 'medium' | 'low' = 'medium'
+  ): Promise<SystemStatus> => {
+    // Check cache first
+    if (isCacheValid(cacheKey)) {
+      const cached = cacheRef.current[cacheKey];
+      return { ...cached.result, fromCache: true };
+    }
+
+    // Check if request is already pending (deduplication)
+    const existingRequest = pendingRequestsRef.current[cacheKey];
+    if (existingRequest) {
+      return existingRequest;
+    }
+
+    // Circuit breaker check
+    const cached = cacheRef.current[cacheKey];
+    if (cached?.circuitOpen) {
+      return {
+        status: "error",
+        message: "Service temporarily unavailable (circuit breaker open)",
+        lastChecked: new Date().toISOString(),
+        fromCache: true,
+      };
+    }
+
+    // Create new request with retry logic
+    const requestPromise = (async (): Promise<SystemStatus> => {
+      let lastError: Error | null = null;
+      let retryCount = 0;
+
+      while (retryCount <= MAX_RETRY_ATTEMPTS) {
+        try {
+          const result = await checkFn();
+          updateCache(cacheKey, result, result.status === "error" || result.status === "unhealthy");
+          return result;
+        } catch (error) {
+          lastError = error as Error;
+          retryCount++;
+          
+          if (retryCount <= MAX_RETRY_ATTEMPTS) {
+            const delay = getRetryDelay(retryCount - 1);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      }
+
+      // All retries failed
+      const errorResult: SystemStatus = {
+        status: "error",
+        message: `Health check failed after ${MAX_RETRY_ATTEMPTS} retries: ${lastError?.message || "Unknown error"}`,
+        lastChecked: new Date().toISOString(),
+      };
+      
+      updateCache(cacheKey, errorResult, true);
+      return errorResult;
+    })();
+
+    // Store pending request for deduplication
+    pendingRequestsRef.current[cacheKey] = requestPromise;
+    
     try {
+      const result = await requestPromise;
+      return result;
+    } finally {
+      // Clean up pending request
+      delete pendingRequestsRef.current[cacheKey];
+    }
+  };
+
+  // Optimized health check functions
+  const checkDatabaseHealth = async (): Promise<SystemStatus> => {
+    return performHealthCheck('database', async () => {
       const response = await fetch("/api/health/db");
       const data = await response.json();
 
@@ -95,17 +246,11 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           lastChecked: new Date().toISOString(),
         };
       }
-    } catch (error) {
-      return {
-        status: "error",
-        message: `Database check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        lastChecked: new Date().toISOString(),
-      };
-    }
+    }, 'high');
   };
 
   const checkOpenAiApi = async (): Promise<SystemStatus> => {
-    try {
+    return performHealthCheck('openai', async () => {
       const response = await fetch("/api/health/openai");
       const data = await response.json();
 
@@ -124,17 +269,11 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           lastChecked: new Date().toISOString(),
         };
       }
-    } catch (error) {
-      return {
-        status: "error",
-        message: `OpenAI API check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        lastChecked: new Date().toISOString(),
-      };
-    }
+    }, 'medium');
   };
 
   const checkKindeAuth = async (): Promise<SystemStatus> => {
-    try {
+    return performHealthCheck('auth', async () => {
       const response = await fetch("/api/auth/session");
 
       if (response.ok) {
@@ -151,17 +290,11 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           lastChecked: new Date().toISOString(),
         };
       }
-    } catch (error) {
-      return {
-        status: "error",
-        message: `Authentication check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        lastChecked: new Date().toISOString(),
-      };
-    }
+    }, 'medium');
   };
 
   const checkInngestWorkflows = async (): Promise<SystemStatus> => {
-    try {
+    return performHealthCheck('workflows', async () => {
       const response = await fetch("/api/workflow-status");
       const data = await response.json();
 
@@ -179,17 +312,11 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           lastChecked: new Date().toISOString(),
         };
       }
-    } catch (error) {
-      return {
-        status: "error",
-        message: `Workflow check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        lastChecked: new Date().toISOString(),
-      };
-    }
+    }, 'low');
   };
 
   const checkEnvironment = async (): Promise<SystemStatus> => {
-    try {
+    return performHealthCheck('environment', async () => {
       const response = await fetch("/api/health/environment");
       const data = await response.json();
 
@@ -208,40 +335,122 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
           lastChecked: new Date().toISOString(),
         };
       }
-    } catch (error) {
-      return {
-        status: "error",
-        message: `Environment check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        lastChecked: new Date().toISOString(),
-      };
-    }
+    }, 'low');
   };
 
-  // Run comprehensive system check
-  const runSystemCheck = async () => {
+  // Optimized system check with sequential execution and priority batching
+  const runSystemCheck = useCallback(async (forceRefresh = false) => {
     setSystemState((prev) => ({ ...prev, isRefreshing: true }));
 
     try {
-      const [database, openaiApi, kindeAuth, inngestWorkflows, environment] = await Promise.all([
-        checkDatabaseHealth(),
-        checkOpenAiApi(),
-        checkKindeAuth(),
-        checkInngestWorkflows(),
-        checkEnvironment(),
-      ]);
+      // Clear cache if force refresh is requested
+      if (forceRefresh) {
+        cacheRef.current = {};
+        pendingRequestsRef.current = {};
+      }
 
-      // Also refresh centralized status
-      await refreshAll();
+      // Execute checks in priority order with controlled concurrency
+      // High priority checks first (critical for core functionality)
+      const highPriorityChecks = [
+        { key: 'database', fn: checkDatabaseHealth },
+      ];
 
+      // Medium priority checks (important but not blocking)
+      const mediumPriorityChecks = [
+        { key: 'openaiApi', fn: checkOpenAiApi },
+        { key: 'kindeAuth', fn: checkKindeAuth },
+      ];
+
+      // Low priority checks (nice to have, can be deferred)
+      const lowPriorityChecks = [
+        { key: 'inngestWorkflows', fn: checkInngestWorkflows },
+        { key: 'environment', fn: checkEnvironment },
+      ];
+
+      // Sequential execution with controlled batching
+      const results: Record<string, SystemStatus> = {};
+
+      // Step 1: Execute high priority checks sequentially
+      for (const check of highPriorityChecks) {
+        try {
+          results[check.key] = await check.fn();
+          // Update UI immediately for critical checks
+          setSystemState(prev => ({
+            ...prev,
+            [check.key]: results[check.key]
+          }));
+        } catch (error) {
+          console.error(`High priority check ${check.key} failed:`, error);
+          results[check.key] = {
+            status: "error",
+            message: `${check.key} check failed`,
+            lastChecked: new Date().toISOString(),
+          };
+        }
+      }
+
+      // Step 2: Execute medium priority checks with limited concurrency (max 2)
+      const mediumBatch1 = mediumPriorityChecks.slice(0, 2);
+      const mediumResults = await Promise.allSettled(
+        mediumBatch1.map(check => check.fn())
+      );
+      
+      mediumBatch1.forEach((check, index) => {
+        const result = mediumResults[index];
+        if (result.status === 'fulfilled') {
+          results[check.key] = result.value;
+        } else {
+          results[check.key] = {
+            status: "error",
+            message: `${check.key} check failed: ${result.reason?.message || 'Unknown error'}`,
+            lastChecked: new Date().toISOString(),
+          };
+        }
+      });
+
+      // Update UI with medium priority results
+      setSystemState(prev => ({
+        ...prev,
+        openaiApi: results.openaiApi,
+        kindeAuth: results.kindeAuth,
+      }));
+
+      // Step 3: Execute low priority checks with delay to reduce resource contention
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+      
+      const lowResults = await Promise.allSettled(
+        lowPriorityChecks.map(check => check.fn())
+      );
+      
+      lowPriorityChecks.forEach((check, index) => {
+        const result = lowResults[index];
+        if (result.status === 'fulfilled') {
+          results[check.key] = result.value;
+        } else {
+          results[check.key] = {
+            status: "error",
+            message: `${check.key} check failed: ${result.reason?.message || 'Unknown error'}`,
+            lastChecked: new Date().toISOString(),
+          };
+        }
+      });
+
+      // Step 4: Refresh centralized status (non-blocking)
+      refreshAll().catch(error => {
+        console.warn("Centralized status refresh failed:", error);
+      });
+
+      // Final state update
       setSystemState({
-        database,
-        openaiApi,
-        kindeAuth,
-        inngestWorkflows,
-        environment,
+        database: results.database,
+        openaiApi: results.openaiApi,
+        kindeAuth: results.kindeAuth,
+        inngestWorkflows: results.inngestWorkflows,
+        environment: results.environment,
         isRefreshing: false,
         lastFullCheck: new Date().toISOString(),
       });
+
     } catch (error) {
       console.error("System check failed:", error);
       setSystemState((prev) => ({
@@ -250,7 +459,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
         lastFullCheck: new Date().toISOString(),
       }));
     }
-  };
+  }, [refreshAll, user]); // Add dependencies for useCallback
 
   // Calculate overall system health
   const getOverallHealth = () => {
@@ -375,10 +584,30 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
     return userId;
   };
 
-  // Run initial system check
+  // Run initial system check and set up automatic refresh for non-critical checks
   useEffect(() => {
     runSystemCheck();
-  }, [runSystemCheck]);
+    
+    // Set up automatic refresh for low-priority checks every 5 minutes
+    const lowPriorityRefreshInterval = setInterval(() => {
+      // Only refresh if not currently refreshing and user is active
+      if (!systemState.isRefreshing && document.visibilityState === 'visible') {
+        // Silently refresh low-priority checks in background
+        Promise.allSettled([
+          checkInngestWorkflows(),
+          checkEnvironment(),
+        ]).catch(error => {
+          console.warn("Background refresh failed:", error);
+        });
+      }
+    }, 300000); // 5 minutes
+    
+    return () => {
+      clearInterval(lowPriorityRefreshInterval);
+      // Clear any pending requests on unmount
+      pendingRequestsRef.current = {};
+    };
+  }, [runSystemCheck, systemState.isRefreshing]);
 
   const {
     icon: OverallIcon,
@@ -414,13 +643,21 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
             <Progress value={overallHealth.score} className="w-full h-2" />
 
             <div className="flex items-center justify-between">
-              {systemState.lastFullCheck && (
-                <Badge variant="outline" className="text-xs">
-                  Last check: {new Date(systemState.lastFullCheck).toLocaleTimeString()}
-                </Badge>
-              )}
+              <div className="flex items-center space-x-2">
+                {systemState.lastFullCheck && (
+                  <Badge variant="outline" className="text-xs">
+                    Last check: {new Date(systemState.lastFullCheck).toLocaleTimeString()}
+                  </Badge>
+                )}
+                {/* Show cache status indicator */}
+                {Object.values(systemState).some(status => typeof status === 'object' && status?.fromCache) && (
+                  <Badge variant="secondary" className="text-xs">
+                    Cached results
+                  </Badge>
+                )}
+              </div>
               <Button
-                onClick={runSystemCheck}
+                onClick={() => runSystemCheck(true)} // Force refresh to clear cache
                 disabled={systemState.isRefreshing}
                 variant="outline"
                 size="sm"

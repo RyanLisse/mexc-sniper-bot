@@ -6,11 +6,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { apiAuthWrapper } from '@/src/lib/api-auth';
+import { apiResponse, createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
+import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
 // Using simple console logger to avoid webpack bundling issues
 import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
-import { apiAuthWrapper } from '@/src/lib/api-auth';
-import { apiResponse, createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { instrumentedTradingRoute } from '@/src/lib/opentelemetry-api-middleware';
 
 function getExecutionService() {
   return getCoreTrading();
@@ -335,10 +335,11 @@ export const DELETE = instrumentedTradingRoute(
       console.info('[API] Emergency shutdown requested');
       
       // Stop execution
-      getExecutionService().stopExecution();
+      await getExecutionService().stopAutoSniping();
       
       // Close all positions
-      const closedCount = await getExecutionService().emergencyCloseAll();
+      const emergencyResult = await getExecutionService().emergencyCloseAll();
+      const closedCount = emergencyResult.data?.closedCount || 0;
       
       return NextResponse.json(createSuccessResponse(
         { closedPositions: closedCount },

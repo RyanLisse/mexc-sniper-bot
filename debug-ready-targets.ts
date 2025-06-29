@@ -2,9 +2,9 @@
  * Debug script to check why ready targets aren't being processed
  */
 
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { and, eq, lt, isNull, or } from 'drizzle-orm';
 
 // Import the snipeTargets table from schema
 import { snipeTargets } from './src/db/migrations/schema';

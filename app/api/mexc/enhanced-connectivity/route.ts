@@ -6,14 +6,15 @@
  * credential and connection status information.
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 import { apiResponse, handleApiError } from "@/src/lib/api-response";
+import { toSafeError } from "@/src/lib/error-type-utils";
 import { getGlobalCredentialValidator } from "@/src/services/api/enhanced-mexc-credential-validator";
+import { getUserCredentials } from "@/src/services/api/user-credentials-service";
 import { getGlobalHealthMonitor } from "@/src/services/data/connection-health-monitor";
 import { getGlobalRealTimeMonitor } from "@/src/services/notification/real-time-credential-monitor";
-import { getUserCredentials } from "@/src/services/api/user-credentials-service";
-import { toSafeError } from "@/src/lib/error-type-utils";
+
 interface EnhancedConnectivityResponse {
   // Core Status
   connected: boolean;

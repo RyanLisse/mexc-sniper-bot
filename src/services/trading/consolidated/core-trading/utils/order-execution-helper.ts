@@ -6,8 +6,8 @@
  */
 
 import { toSafeError } from "@/src/lib/error-type-utils";
+import type { ServiceResponse, TradeParameters, TradeResult } from "../types";
 import { ServiceResponseUtils } from "./service-response-utils";
-import type { TradeParameters, TradeResult, ServiceResponse } from "../types";
 
 interface OrderExecutionConfig {
   mexcService: any;

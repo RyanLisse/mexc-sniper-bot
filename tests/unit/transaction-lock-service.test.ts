@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { TransactionLockService } from "@/src/services/data/transaction-lock-service";
+import crypto from "node:crypto";
+import { eq, sql } from "drizzle-orm";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
-import { eq, sql } from "drizzle-orm";
-import crypto from "node:crypto";
+import { TransactionLockService } from "@/src/services/data/transaction-lock-service";
 
 // Mock database operations with simplified approach
 const mockLocks = new Map<string, any>();

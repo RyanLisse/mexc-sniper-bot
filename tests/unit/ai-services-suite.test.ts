@@ -7,25 +7,25 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  EmbeddingResult,
+  EmbeddingResultSchema,
   EmbeddingsService,
   embeddingsService,
-  EmbeddingResult,
   PatternEmbedding,
-  EmbeddingResultSchema,
   PatternEmbeddingSchema,
 } from '@/src/services/ai/embeddings-service';
 import {
-  ResearchService,
-  researchService,
-  ResearchResult,
-  ResearchResultSchema,
-} from '@/src/services/ai/research-service';
-import {
-  IntelligenceOrchestrator,
-  intelligenceOrchestrator,
   EnhancedPattern,
   EnhancedPatternSchema,
+  IntelligenceOrchestrator,
+  intelligenceOrchestrator,
 } from '@/src/services/ai/intelligence-orchestrator';
+import {
+  ResearchResult,
+  ResearchResultSchema,
+  ResearchService,
+  researchService,
+} from '@/src/services/ai/research-service';
 
 describe('AI Services Suite', () => {
   beforeEach(() => {

@@ -5,11 +5,11 @@
  * This verifies that "THE MISSING BRIDGE" is now working automatically.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnhancedPatternDetectionCore } from '@/src/core/pattern-detection/pattern-detection-core-enhanced';
+import type { CalendarEntry, SymbolEntry } from '@/src/services/api/mexc-unified-exports';
 import { PatternTargetBridgeService } from '@/src/services/data/pattern-detection/pattern-target-bridge-service';
 import { PatternTargetIntegrationService } from '@/src/services/data/pattern-detection/pattern-target-integration-service';
-import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
 
 describe('Pattern-Target Integration Bridge', () => {
   let patternEngine: EnhancedPatternDetectionCore;

@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+  type CalendarEntry,
   CalendarEntrySchema,
-  SymbolV2EntrySchema,
-  ReadyStatePatternSchema,
-  validateCalendarEntry,
-  validateSymbolV2Entry,
-  matchesReadyPattern,
   hasCompleteData,
   isValidForSnipe,
+  matchesReadyPattern,
   READY_STATE_PATTERN,
-  type CalendarEntry,
-  type SymbolV2Entry
+  ReadyStatePatternSchema,
+  type SymbolV2Entry, 
+  SymbolV2EntrySchema,
+  validateCalendarEntry,
+  validateSymbolV2Entry
 } from "@/src/schemas/unified/mexc-api-schemas"
 
 describe('MEXC Schemas', () => {

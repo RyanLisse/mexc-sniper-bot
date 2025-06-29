@@ -7,8 +7,8 @@
  * 5-second TTL for API responses, and performance monitoring.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
-import { RedisCacheService, getRedisCacheService, resetRedisCacheService } from '@/src/lib/redis-cache-service';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getRedisCacheService, RedisCacheService, resetRedisCacheService } from '@/src/lib/redis-cache-service';
 
 // Mock Redis to test graceful degradation
 const mockRedis = {

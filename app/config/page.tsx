@@ -3,11 +3,11 @@
 // Force dynamic rendering for this page since it shows real-time system status
 export const dynamic = 'force-dynamic';
 
+import { RefreshCw } from "lucide-react";
 import { Suspense } from "react";
-import { useAuth } from "@/src/lib/kinde-auth-client";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { UnifiedSystemCheck } from "@/src/components/unified-system-check";
-import { RefreshCw } from "lucide-react";
+import { useAuth } from "@/src/lib/kinde-auth-client";
 
 export default function SystemCheckPage() {
   const { isLoading: authLoading } = useAuth();

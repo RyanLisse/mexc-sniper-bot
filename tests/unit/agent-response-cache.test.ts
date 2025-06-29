@@ -6,12 +6,12 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { AgentResponseCache } from '@/src/lib/cache/agent-response-cache';
 import type { 
   AgentCacheConfig,
   CachedAgentResponse,
   CacheInvalidationCriteria 
 } from '@/src/lib/cache/agent-cache-types';
+import { AgentResponseCache } from '@/src/lib/cache/agent-response-cache';
 import type { AgentResponse } from '@/src/types/common-interfaces';
 
 describe('AgentResponseCache', () => {

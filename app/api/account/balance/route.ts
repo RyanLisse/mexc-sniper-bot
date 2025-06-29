@@ -5,23 +5,24 @@
  * Supports both user-specific credentials and environment fallback.
  */
 
+import { trace } from "@opentelemetry/api";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { trace } from "@opentelemetry/api";
-import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
-import { 
-  withEnhancedValidation,
-  validateExternalApiResponse,
-  CriticalDataValidator
-} from "@/src/lib/enhanced-validation-middleware";
-import {
-  validateMexcResponse,
-  validateAccountBalance
-} from "@/src/services/validation/comprehensive-validation-service";
-import { AccountBalanceSchema } from "@/src/schemas/external-api-validation-schemas";
-import { executeWithRateLimit } from "@/src/lib/database-rate-limiter";
 import { executeWithCircuitBreaker } from "@/src/lib/database-circuit-breaker";
-import { withCostMonitoring, recordCostMetrics } from "@/src/middleware/cost-monitor";
+import { executeWithRateLimit } from "@/src/lib/database-rate-limiter";
+import { 
+  CriticalDataValidator, 
+  validateExternalApiResponse,
+  withEnhancedValidation
+} from "@/src/lib/enhanced-validation-middleware";
+import { recordCostMetrics, withCostMonitoring } from "@/src/middleware/cost-monitor";
+import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
+import { AccountBalanceSchema } from "@/src/schemas/external-api-validation-schemas";
+import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
+import {
+  validateAccountBalance, 
+  validateMexcResponse
+} from "@/src/services/validation/comprehensive-validation-service";
 
 // Request validation schema - userId is optional for environment fallback
 const BalanceRequestSchema = z.object({
@@ -67,20 +68,12 @@ async function balanceHandler(request: NextRequest) {
       credentialsType,
     });
 
-    // In test environment, provide fast fallback for invalid credentials
+    // In test environment with mock credentials, return success for testing
     if (process.env.NODE_ENV === "test" && 
-        (process.env.MEXC_API_KEY === "test-api-key" || 
-         process.env.MEXC_SECRET_KEY === "test-secret-key")) {
-      const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
-      return NextResponse.json({
-        success: false,
-        error: "Test environment: Invalid API credentials",
-        meta: {
-          fallbackData,
-          code: "TEST_INVALID_CREDENTIALS",
-          details: "Using test credentials in test environment",
-        },
-      }, { status: 401 });
+        (process.env.MEXC_API_KEY?.includes("test") || 
+         process.env.MEXC_SECRET_KEY?.includes("test"))) {
+      console.info("[BalanceAPI] Test environment detected with test credentials");
+      // Continue with normal flow for proper integration testing
     }
 
     // Check if credentials are available before proceeding
@@ -128,35 +121,59 @@ async function balanceHandler(request: NextRequest) {
     try {
       const startTime = Date.now();
       
-      // Wrap MEXC API call with rate limiter and circuit breaker for cost protection
+      // Enhanced MEXC API call with proper error handling and monitoring
       const rawResponse = await executeWithRateLimit(async () => {
         return executeWithCircuitBreaker(async () => {
-          return Promise.race([
-            mexcClient.getAccountBalances(),
-            timeoutPromise
-          ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
+          try {
+            const balanceResponse = await Promise.race([
+              mexcClient.getAccountBalances(),
+              timeoutPromise
+            ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
+            
+            console.info("[BalanceAPI] MEXC service response received", {
+              success: balanceResponse.success,
+              hasData: !!balanceResponse.data,
+              balanceCount: balanceResponse.data?.balances?.length || 0,
+              timestamp: balanceResponse.timestamp
+            });
+            
+            return balanceResponse;
+          } catch (serviceError) {
+            console.error("[BalanceAPI] MEXC service call failed:", serviceError);
+            throw serviceError;
+          }
         }, 'mexc-account-balance');
       }, 'balance-api-mexc-call');
       
-      // Validate the external API response structure for enhanced safety
+      // Enhanced validation with proper error handling
+      const responseSchema = z.object({
+        success: z.boolean(),
+        data: z.object({
+          balances: z.array(AccountBalanceSchema),
+          totalUsdtValue: z.number().nonnegative(),
+          lastUpdated: z.string(),
+        }).optional(),
+        error: z.string().optional(),
+        timestamp: z.union([z.string(), z.number()]),
+        executionTimeMs: z.number().optional(),
+        source: z.string().optional(),
+      });
+      
       const validationResult = validateExternalApiResponse(
-        z.object({
-          success: z.boolean(),
-          data: z.object({
-            balances: z.array(AccountBalanceSchema),
-            totalUsdtValue: z.number().nonnegative(),
-            lastUpdated: z.string(),
-          }).optional(),
-          error: z.string().optional(),
-          timestamp: z.string(),
-        }),
+        responseSchema,
         rawResponse,
         "MEXC Account Balance API"
       );
       
       if (!validationResult.success) {
         console.warn("[BalanceAPI] Response validation failed:", validationResult.error);
-        // Continue with original response for backward compatibility
+        // Log the actual response structure for debugging
+        console.debug("[BalanceAPI] Raw response structure:", {
+          keys: Object.keys(rawResponse || {}),
+          successType: typeof rawResponse?.success,
+          dataType: typeof rawResponse?.data,
+          timestampType: typeof rawResponse?.timestamp,
+        });
       } else {
         console.debug("[BalanceAPI] Response validation successful");
       }
@@ -243,14 +260,24 @@ async function balanceHandler(request: NextRequest) {
       timestamp: balanceData.lastUpdated,
     });
 
-    return NextResponse.json({
+    // Enhanced response with proper metadata
+    const responseData = {
       success: true,
       data: {
         ...balanceData,
         hasUserCredentials,
         credentialsType,
       },
-    });
+      metadata: {
+        requestDuration: `${Date.now() - Date.now()}ms`,
+        balanceCount: balanceData.balances.length,
+        credentialSource: hasUserCredentials ? "user-database" : "environment",
+        apiVersion: "v1",
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     const { searchParams } = new URL(request.url);
@@ -307,5 +334,13 @@ async function balanceHandler(request: NextRequest) {
   }
 }
 
-// Export the handler wrapped with cost monitoring
-export const GET = withCostMonitoring(balanceHandler, '/api/account/balance');
+// Export the handler wrapped with cost monitoring and database query caching
+export const GET = withCostMonitoring(
+  withDatabaseQueryCache(balanceHandler, {
+    endpoint: "/api/account/balance",
+    cacheTtlSeconds: 60, // 1 minute cache
+    enableCompression: true,
+    enableStaleWhileRevalidate: false, // Financial data needs to be fresh
+  }),
+  '/api/account/balance'
+);

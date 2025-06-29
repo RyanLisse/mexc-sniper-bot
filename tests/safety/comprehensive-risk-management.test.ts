@@ -12,22 +12,22 @@
  */
 
 import {
-  describe,
-  it,
-  expect,
-  beforeEach,
   afterEach,
-  vi,
   beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
 } from "vitest";
+import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import type { AgentBehaviorMetrics } from "@/src/mexc-agents/safety-monitor-agent";
+import { TransactionLockService } from "@/src/services/data/transaction-lock-service";
 import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
 import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 import { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
 import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 import { TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
-import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { TransactionLockService } from "@/src/services/data/transaction-lock-service";
-import type { AgentBehaviorMetrics } from "@/src/mexc-agents/safety-monitor-agent";
 
 describe("Comprehensive Risk Management", () => {
   let riskEngine: AdvancedRiskEngine;

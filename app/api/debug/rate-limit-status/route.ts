@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   getClientIP, 
-  getRateLimitStats, 
   getIPAnalysis, 
-  isIPSuspicious,
-  getSecurityEvents 
+  getRateLimitStats, 
+  getSecurityEvents, 
+  isIPSuspicious
 } from "@/src/lib/rate-limiter";
 
 export async function GET(request: NextRequest) {

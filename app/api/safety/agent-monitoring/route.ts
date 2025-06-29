@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiResponse } from "@/src/lib/api-response";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { requireAuth } from "@/src/lib/kinde-auth";
-import { apiResponse } from "@/src/lib/api-response";
-import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 import type { AgentBehaviorMetrics } from "@/src/mexc-agents/safety-monitor-agent";
+import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 
 /**
  * Agent Monitoring API

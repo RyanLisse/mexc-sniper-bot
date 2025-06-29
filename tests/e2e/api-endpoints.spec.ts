@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('API Endpoints', () => {
   test('GET /api/workflow-status should return valid JSON', async ({ request }) => {

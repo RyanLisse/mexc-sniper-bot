@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createApiResponse } from "@/src/lib/api-response";
 import { apiAuthWrapper } from "@/src/lib/api-auth";
+import { createApiResponse } from "@/src/lib/api-response";
+import { validateRequestBody } from "@/src/lib/api-validation-middleware";
 import { 
   Phase3ConfigurationRequestSchema, 
   Phase3ConfigurationSchema 
 } from "@/src/schemas/comprehensive-api-validation-schemas";
-import { validateRequestBody } from "@/src/lib/api-validation-middleware";
 
 // ======================
 // Types

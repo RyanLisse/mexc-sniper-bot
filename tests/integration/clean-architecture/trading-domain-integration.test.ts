@@ -3,14 +3,14 @@
  * Tests the integration between Clean Architecture layers
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { StartSnipingUseCase } from "@/src/application/use-cases/trading/start-sniping-use-case";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ExecuteTradeUseCase } from "@/src/application/use-cases/trading/execute-trade-use-case";
-import { DrizzleTradingRepository } from "@/src/infrastructure/repositories/drizzle-trading-repository";
-import { MexcTradingServiceAdapter } from "@/src/infrastructure/adapters/trading/mexc-trading-service-adapter";
-import { TradingNotificationServiceAdapter } from "@/src/infrastructure/adapters/notifications/trading-notification-service-adapter";
+import { StartSnipingUseCase } from "@/src/application/use-cases/trading/start-sniping-use-case";
 import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
 import { Order, OrderStatus } from "@/src/domain/value-objects/trading/order";
+import { TradingNotificationServiceAdapter } from "@/src/infrastructure/adapters/notifications/trading-notification-service-adapter";
+import { MexcTradingServiceAdapter } from "@/src/infrastructure/adapters/trading/mexc-trading-service-adapter";
+import { DrizzleTradingRepository } from "@/src/infrastructure/repositories/drizzle-trading-repository";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 describe("Trading Domain Integration", () => {

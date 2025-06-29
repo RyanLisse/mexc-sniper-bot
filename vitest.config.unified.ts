@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config';
-import path from 'path';
 import { config } from 'dotenv';
+import path from 'path';
 import { fileURLToPath } from 'url';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
 
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url)
@@ -68,17 +68,10 @@ export default defineConfig({
     
     // Test execution configuration - removed duplicate, see poolOptions below
     
-    // Optimized timeout configuration for balanced performance and reliability
-    testTimeout: 15000, // 15 seconds default (reasonable for unit tests)
-    hookTimeout: 10000, // 10 seconds for hooks (adequate for setup/teardown)  
-    teardownTimeout: 8000, // 8 seconds for teardown (adequate for cleanup)
-    
-    // Balanced timeout strategy:
-    // - Unit tests: 15s (default above)
-    // - Integration tests: 45s (use per-test timeout overrides)
-    // - Auto-sniping tests: 30s (use per-test timeout overrides)
-    // - Performance tests: 60s (use per-test timeout overrides)
-    // - Safety tests: 45s (use per-test timeout overrides)
+    // Simplified timeout configuration
+    testTimeout: 10000, // 10 seconds default
+    hookTimeout: 5000, // 5 seconds for hooks
+    teardownTimeout: 5000, // 5 seconds for teardown
     
     // Retry configuration
     retry: process.env.CI ? 2 : 0,
@@ -136,7 +129,7 @@ export default defineConfig({
       }
     },
     
-    // Environment variables for testing
+    // Simplified environment variables for testing
     env: {
       // Test environment indicators
       NODE_ENV: 'test',
@@ -148,53 +141,18 @@ export default defineConfig({
       MEXC_SECRET_KEY: 'test-mexc-secret-vitest',
       MEXC_BASE_URL: 'https://api.mexc.com',
       
-      // NeonDB branch configuration for isolated testing
+      // Database configuration
       DATABASE_URL: process.env.DATABASE_URL,
-      NEON_API_KEY: process.env.NEON_API_KEY || 'test-neon-api-key-for-mocking',
-      NEON_PROJECT_ID: process.env.NEON_PROJECT_ID || 'silent-firefly-a1l3mkrm',
-      USE_TEST_BRANCHES: 'true',
-      SKIP_NEON_INTEGRATION: 'false',
-      FORCE_SQLITE: 'false',
-      TURSO_DATABASE_URL: undefined,
-      TURSO_AUTH_TOKEN: undefined,
-      
-      // Encryption keys for testing
-      ENCRYPTION_MASTER_KEY: 'dGVzdC1lbmNyeXB0aW9uLWtleS0zMi1ieXRlcy1sb25n',
-      
-      // Inngest configuration
-      INNGEST_SIGNING_KEY: 'test-inngest-signing-key',
-      INNGEST_EVENT_KEY: 'test-inngest-event-key',
+      FORCE_MOCK_DB: process.env.FORCE_MOCK_DB || 'false',
       
       // Feature flags for testing
-      ENABLE_DEBUG_LOGGING: 'false',
-      ENABLE_PERFORMANCE_MONITORING: 'true',
       SKIP_AUTH_IN_TESTS: 'true',
-      
-      // Database test settings - conditional based on test type
-      FORCE_MOCK_DB: process.env.FORCE_MOCK_DB || 'false', // Allow real database connections by default
-      TEST_DB_TIMEOUT: '20000', // 20 second timeout for database operations
-      
-      // Test timeout configuration - environment variables for runtime timeout control
-      TEST_TIMEOUT_UNIT: '10000', // 10s for unit tests
-      TEST_TIMEOUT_INTEGRATION: '45000', // 45s for integration tests
-      TEST_TIMEOUT_AUTO_SNIPING: '30000', // 30s for auto-sniping tests
-      TEST_TIMEOUT_PERFORMANCE: '60000', // 60s for performance tests
-      TEST_TIMEOUT_SAFETY: '45000', // 45s for safety tests
-      TEST_TIMEOUT_AGENTS: '30000', // 30s for agent tests
-      TEST_TIMEOUT_E2E: '120000', // 2 minutes for E2E tests
-      
-      // Timeout monitoring and error handling
-      ENABLE_TIMEOUT_MONITORING: 'true',
-      TIMEOUT_WARNING_THRESHOLD: '0.8', // Warn when test reaches 80% of timeout
-      TIMEOUT_ERROR_REPORTING: 'true', // Report timeout errors to console
+      ENABLE_DEBUG_LOGGING: 'false',
     },
     
     // Setup files
-    // Test setup files
+    // Simplified setup files
     setupFiles: ['./tests/setup/vitest-setup.ts'],
-    
-    // Globals configuration
-    globalSetup: './tests/setup/global-setup.js',
     
     // Reporter configuration - optimized for performance
     reporters: process.env.CI 
@@ -210,18 +168,17 @@ export default defineConfig({
     // Watch configuration
     watch: !process.env.CI,
     
-    // Performance monitoring - optimized for development efficiency
-    logHeapUsage: process.env.LOG_HEAP_USAGE === 'true', // Enable via env var when needed
-    isolate: process.env.TEST_ISOLATION === 'true', // Enable isolation only when debugging
+    // Simplified performance settings
+    logHeapUsage: false,
+    isolate: false,
     
-    // Pool management - optimized for performance
+    // Simple pool management
     pool: 'threads',
     poolOptions: {
       threads: {
-        isolate: false, // Reduce isolation overhead for better performance
-        useAtomics: true,
-        maxThreads: process.env.CI ? 4 : Math.max(2, Math.min(8, require('os').cpus().length - 1)), // Optimize thread count, reserve 1 CPU
-        minThreads: 2, // Ensure minimum parallelism
+        isolate: false,
+        maxThreads: process.env.CI ? 2 : 4,
+        minThreads: 1,
       }
     }
   },

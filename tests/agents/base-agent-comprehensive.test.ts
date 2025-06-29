@@ -3,9 +3,9 @@
  * Advanced testing for the foundation of all AI agents
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
-import { createTestFramework, type TestFrameworkConfig } from '../framework/testing-framework'
 import { performance } from 'node:perf_hooks'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { createTestFramework, type TestFrameworkConfig } from '../framework/testing-framework'
 
 // ===================== TEST CONFIGURATION =====================
 

@@ -1,7 +1,7 @@
-import { getCoreTrading } from "./src/services/trading/consolidated/core-trading/base-service";
+import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "./src/db";
 import { snipeTargets } from "./src/db/schemas/trading";
-import { eq, and, lt, or, isNull } from "drizzle-orm";
+import { getCoreTrading } from "./src/services/trading/consolidated/core-trading/base-service";
 
 async function testAutoSnipingWorkflow() {
   console.log("🔍 Testing Auto-Sniping Workflow");

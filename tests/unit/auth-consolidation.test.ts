@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  publicRoute,
-  authenticatedRoute,
-  userQueryRoute,
-  userBodyRoute,
   adminRoute,
-  secureRoute,
-  tradingRoute,
-  sensitiveDataRoute,
-  validateRequiredFields,
-  getPaginationParams,
+  authenticatedRoute,
   getFilterParams,
+  getPaginationParams,
+  publicRoute,
+  secureRoute,
+  sensitiveDataRoute,
+  tradingRoute,
+  userBodyRoute,
+  userQueryRoute,
+  validateRequiredFields,
 } from "@/src/lib/auth-decorators";
 
 // Mock the auth utilities

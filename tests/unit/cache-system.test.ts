@@ -9,11 +9,11 @@
  * - Integration with existing systems
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { CacheManager, generateCacheKey, globalCacheManager } from "@/src/lib/cache-manager";
-import { EnhancedAgentCache, globalEnhancedAgentCache } from "@/src/lib/enhanced-agent-cache";
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { APIResponseCache, globalAPIResponseCache } from "@/src/lib/api-response-cache";
+import { CacheManager, generateCacheKey, globalCacheManager } from "@/src/lib/cache-manager";
 import { CacheMonitoringSystem } from "@/src/lib/cache-monitoring";
+import { EnhancedAgentCache, globalEnhancedAgentCache } from "@/src/lib/enhanced-agent-cache";
 
 describe('Cache Manager', () => {
   let cacheManager: CacheManager;

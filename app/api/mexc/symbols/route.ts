@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { 
-  createSuccessResponse, 
-  createErrorResponse, 
   apiResponse, 
+  createErrorResponse, 
+  createSuccessResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
+import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 
 export async function GET(request: NextRequest) {
   try {

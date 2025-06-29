@@ -4,11 +4,11 @@
  * Provides access to trading analytics, performance metrics, and structured logging data.
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
-import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
-import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
+import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 
 // ============================================================================
 // Request Validation Schemas

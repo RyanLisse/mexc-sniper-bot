@@ -7,11 +7,11 @@
 
 import { vi } from 'vitest';
 import { 
-  createMockMexcService, 
   configureMexcTestEnvironment, 
-  createMockSymbolEntry,
+  createMockActivityData, 
   createMockCalendarEntry,
-  createMockActivityData 
+  createMockMexcService, 
+  createMockSymbolEntry
 } from '../utils/mexc-integration-utilities';
 
 // ============================================================================

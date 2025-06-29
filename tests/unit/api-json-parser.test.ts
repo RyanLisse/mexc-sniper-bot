@@ -5,13 +5,13 @@
  * the "Expected property name or '}' in JSON at position 2" error.
  */
 
-import { describe, test, expect, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { 
+  createJsonErrorResponse, 
   parseJsonRequest,
-  validateRequiredFields,
   validateFieldTypes,
-  createJsonErrorResponse
+  validateRequiredFields
 } from '@/src/lib/api-json-parser';
 
 describe('Centralized JSON Parser', () => {

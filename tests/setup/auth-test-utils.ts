@@ -5,7 +5,7 @@
  * across unit, integration, and E2E tests.
  */
 
-import { beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 
 // Mock user fixtures for different test scenarios
 export const mockUsers = {

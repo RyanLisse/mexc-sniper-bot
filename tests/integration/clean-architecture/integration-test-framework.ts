@@ -10,15 +10,15 @@
  * - Cross-domain data consistency validation
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import DomainMockFactory from "../../utils/clean-architecture-mocks";
 import {
+  CleanArchitectureAssertions,
   CleanArchitectureMockGenerator,
   EventTestingFramework,
-  PerformanceTestFramework,
   FeatureFlagTestHelper,
-  CleanArchitectureAssertions,
+  PerformanceTestFramework,
 } from "../../utils/clean-architecture-test-utilities";
-import DomainMockFactory from "../../utils/clean-architecture-mocks";
 
 // ============================================================================
 // Integration Test Context

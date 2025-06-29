@@ -1,16 +1,16 @@
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { 
-  transactions, 
-  snipeTargets, 
+  executionHistory, 
   patternEmbeddings, 
   positionSnapshots,
-  executionHistory 
+  snipeTargets, 
+  transactions 
 } from "@/src/db/schema";
-import { desc, gte, sql, eq, and } from "drizzle-orm";
 import {
-  TradingAnalyticsResponseSchema,
   createValidatedApiResponse,
+  TradingAnalyticsResponseSchema,
 } from "@/src/schemas/api-validation-schemas";
 
 export async function GET(request: NextRequest) {

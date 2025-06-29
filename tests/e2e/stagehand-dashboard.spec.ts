@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
 import { Stagehand } from "@browserbasehq/stagehand";
-import StagehandConfig from "../../stagehand.config.unified";
+import { expect, test } from '@playwright/test';
 import { z } from "zod";
+import StagehandConfig from "../../stagehand.config.unified";
 
 test.describe('Stagehand Enhanced Dashboard Tests', () => {
   let stagehand: Stagehand;

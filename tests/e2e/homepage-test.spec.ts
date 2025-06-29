@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('MEXC Sniper Bot - Homepage', () => {
   test('should display homepage with MEXC Sniper Bot title', async ({ page }) => {

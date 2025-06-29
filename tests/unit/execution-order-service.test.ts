@@ -6,13 +6,13 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 import { 
+  type ExecutionOrder,
   ExecutionOrderService, 
   executionOrderService,
-  type ExecutionOrder,
-  type OrderStatusType,
+  OrderSide, 
   OrderStatus,
-  OrderType,
-  OrderSide
+  type OrderStatusType,
+  OrderType
 } from '@/src/services/execution/execution-order-service';
 
 describe('ExecutionOrderService', () => {

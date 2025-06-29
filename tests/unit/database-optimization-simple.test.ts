@@ -4,7 +4,7 @@
  * Tests database optimization functionality without complex external dependencies
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 describe("Database Optimization (Simple)", () => {
   it("should validate optimization configuration structure", () => {

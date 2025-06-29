@@ -10,11 +10,11 @@
  * 4. Real-time Performance Feedback Loop
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EnhancedMexcOrchestrator } from '@/src/mexc-agents/coordination/enhanced-orchestrator';
-import { UserPreferencesService } from '@/src/services/user/user-preferences-service';
 import type { UserPreferences } from '@/src/schemas/user-preferences-schema';
+import { getCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
+import { UserPreferencesService } from '@/src/services/user/user-preferences-service';
 
 describe('Strategy-Agent Integration (TDD)', () => {
   let coreTrading: any;

@@ -5,13 +5,13 @@
  * to ensure 40% performance improvement while maintaining accuracy.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  RiskCalculationEngine,
   MarketAdjustmentEngine, 
   PortfolioMetricsEngine,
   PositionValidationEngine,
   RiskAssessmentUtils,
+  RiskCalculationEngine,
 } from '@/src/lib/risk-calculation-modules';
 
 import type { 

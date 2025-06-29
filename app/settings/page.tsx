@@ -1,38 +1,36 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import {
+  AlertCircle,
+  CheckCircle,
+  ExternalLink,
+  RefreshCw,
+  Save,
+  Settings,
+  Shield,
+  Target,
+  TrendingUp,
+  Wifi,
+  WifiOff, 
+  XCircle,
+  Zap
+} from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { useToast } from "@/src/components/ui/use-toast";
-import {
-  Save,
-  Shield,
-  TrendingUp,
-  Target,
-  Settings,
-  AlertCircle,
-  RefreshCw,
-  ExternalLink,
-  Zap,
-  CheckCircle,
-  XCircle,
-  Wifi,
-  WifiOff
-} from "lucide-react";
-import { useUserPreferences, useUpdateUserPreferences } from "@/src/hooks/use-user-preferences";
-
-import { UnifiedRiskManagement } from "@/src/components/unified-risk-management";
 import { UnifiedAutomationSettings } from "@/src/components/unified-automation-settings";
+import { UnifiedRiskManagement } from "@/src/components/unified-risk-management";
 import { UnifiedTakeProfitSettings } from "@/src/components/unified-take-profit-settings";
-import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit } from "@/src/hooks/use-user-preferences";
-import { TakeProfitStrategy, TAKE_PROFIT_STRATEGIES, getTakeProfitStrategyById } from "@/src/types/take-profit-strategies";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { useTradingSettingsSync, formatSyncStatus, calculateSyncHealthScore } from "@/src/hooks/use-trading-settings-sync";
+import { calculateSyncHealthScore, formatSyncStatus, useTradingSettingsSync } from "@/src/hooks/use-trading-settings-sync";
+import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit, useUpdateUserPreferences, useUserPreferences } from "@/src/hooks/use-user-preferences";
+import { getTakeProfitStrategyById, TAKE_PROFIT_STRATEGIES, TakeProfitStrategy } from "@/src/types/take-profit-strategies";
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, isLoading: userLoading } = useKindeBrowserClient();

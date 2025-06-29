@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest'
-import { readFileSync, existsSync } from 'fs'
+import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
+import { describe, expect, it } from 'vitest'
 
 describe('Project Verification Tests', () => {
   const projectRoot = join(__dirname, '../..')

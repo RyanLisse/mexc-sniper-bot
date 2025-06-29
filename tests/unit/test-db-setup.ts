@@ -7,9 +7,9 @@
  * Uses NeonDB PostgreSQL for consistent testing environment.
  */
 
+import { eq, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import { eq, sql } from 'drizzle-orm';
 import postgres from 'postgres';
 import * as schema from '@/src/db/schema';
 

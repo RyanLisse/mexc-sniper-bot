@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { TradingStrategyManager, TRADING_STRATEGIES } from "@/src/services/trading/trading-strategy-manager";
+import { beforeEach, describe, expect, it } from 'vitest';
+import { TRADING_STRATEGIES, TradingStrategyManager } from "@/src/services/trading/trading-strategy-manager";
 
 describe('TradingStrategyManager', () => {
   let manager: TradingStrategyManager;

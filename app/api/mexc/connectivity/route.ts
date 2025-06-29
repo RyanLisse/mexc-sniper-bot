@@ -1,17 +1,17 @@
 import { NextRequest } from 'next/server';
-import { mexcConnectivityService } from "@/src/services/api/mexc-connectivity-service";
 import { 
-  createSuccessResponse,
-  createErrorResponse,
   apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
   HTTP_STATUS
 } from "@/src/lib/api-response";
-import { 
-  ConnectivityTestRequestSchema,
-  validateMexcApiRequest,
-  type ConnectivityTestRequest
-} from "@/src/schemas/mexc-api-validation-schemas";
 import { publicRoute } from "@/src/lib/auth-decorators";
+import { 
+  type ConnectivityTestRequest, 
+  ConnectivityTestRequestSchema,
+  validateMexcApiRequest
+} from "@/src/schemas/mexc-api-validation-schemas";
+import { mexcConnectivityService } from "@/src/services/api/mexc-connectivity-service";
 
 export const GET = publicRoute(async (request: NextRequest) => {
   const startTime = Date.now();

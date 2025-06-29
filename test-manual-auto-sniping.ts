@@ -2,10 +2,10 @@
  * Test manual auto-sniping execution to see what happens when processing targets
  */
 
-import { getCoreTrading } from "./src/services/trading/consolidated/core-trading/base-service";
+import { eq } from "drizzle-orm";
 import { db } from "./src/db";
 import { snipeTargets } from "./src/db/schemas/trading";
-import { eq } from "drizzle-orm";
+import { getCoreTrading } from "./src/services/trading/consolidated/core-trading/base-service";
 
 async function testManualAutoSniping() {
   console.log('🔬 Testing Manual Auto-Sniping Execution');

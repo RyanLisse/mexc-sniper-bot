@@ -4,8 +4,8 @@
  */
 
 import { performance } from 'node:perf_hooks'
-import { Worker, isMainThread, parentPort, workerData } from 'worker_threads'
 import { EventEmitter } from 'events'
+import { isMainThread, parentPort, Worker, workerData } from 'worker_threads'
 
 // ===================== LOAD TESTING TYPES =====================
 

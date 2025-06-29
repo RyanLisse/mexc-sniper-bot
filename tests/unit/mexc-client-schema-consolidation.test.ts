@@ -5,7 +5,7 @@
  * between unified exports and core schemas
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Dynamic imports for better test isolation
 let schemas: any;

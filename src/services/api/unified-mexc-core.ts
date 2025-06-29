@@ -10,6 +10,7 @@ import type {
   ActivityData,
   ActivityQueryOptionsType,
 } from "@/src/schemas/unified/mexc-api-schemas";
+import type { LoggerContext } from "@/src/types/logger-types";
 import type {
   CalendarEntry,
   MexcServiceResponse,
@@ -17,7 +18,6 @@ import type {
 } from "../data/modules/mexc-api-types";
 import type { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
 import type { MexcCoreClient } from "../data/modules/mexc-core-client";
-import type { LoggerContext } from "@/src/types/logger-types";
 
 // ============================================================================
 // Activity API Input Validation Schemas
@@ -76,14 +76,28 @@ export class UnifiedMexcCoreModule {
   // ============================================================================
 
   /**
-   * Get calendar listings with intelligent caching
+   * Get calendar listings with intelligent caching and enhanced error handling
    */
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
-    return this.cacheLayer.getOrSet(
-      "calendar:listings",
-      () => this.coreClient.getCalendarListings(),
-      "semiStatic" // 5 minute cache for calendar data
-    );
+    try {
+      return await this.cacheLayer.getOrSet(
+        "calendar:listings",
+        () => this.coreClient.getCalendarListings(),
+        "semiStatic" // 5 minute cache for calendar data
+      );
+    } catch (error) {
+      this.logger.error("Calendar listings fetch error:", {
+        error: error instanceof Error ? error.message : String(error),
+        operationType: "calendar-fetch",
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Calendar listings fetch failed",
+        timestamp: Date.now(),
+        source: "unified-mexc-core",
+      };
+    }
   }
 
   // ============================================================================
@@ -113,14 +127,41 @@ export class UnifiedMexcCoreModule {
   }
 
   /**
-   * Get server time
+   * Get server time with enhanced synchronization
    */
   async getServerTime(): Promise<MexcServiceResponse<number>> {
-    return this.cacheLayer.getOrSet(
-      "server:time",
-      () => this.coreClient.getServerTime(),
-      "realTime" // 15 second cache for server time
-    );
+    try {
+      const result = await this.cacheLayer.getOrSet(
+        "server:time",
+        async () => {
+          const response = await this.coreClient.getServerTime();
+          // Add local timestamp for synchronization debugging
+          if (response.success && response.data) {
+            this.logger.debug("Server time fetched", {
+              serverTime: response.data,
+              localTime: Date.now(),
+              timeDiff: Math.abs(response.data - Date.now()),
+            });
+          }
+          return response;
+        },
+        "realTime" // 15 second cache for server time
+      );
+      
+      return result;
+    } catch (error) {
+      this.logger.error("Server time fetch error:", {
+        error: error instanceof Error ? error.message : String(error),
+        operationType: "server-time-fetch",
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Server time fetch failed",
+        timestamp: Date.now(),
+        source: "unified-mexc-core",
+      };
+    }
   }
 
   /**
@@ -311,22 +352,36 @@ export class UnifiedMexcCoreModule {
         `Processing bulk activity data for ${normalizedCurrencies.length} currencies`
       );
 
-      // For large arrays (>50), use direct processing without rate limiting for tests
+      // Enhanced processing for large batches with better error handling
       if (normalizedCurrencies.length > 50) {
         this.logger.debug(
-          `Large batch detected (${normalizedCurrencies.length}), using fast processing`
+          `Large batch detected (${normalizedCurrencies.length}), using optimized processing`
         );
 
-        const promises = normalizedCurrencies.map((currency) =>
-          this.getActivityData(currency).catch((error) => ({
-            success: false,
-            error: error.message || "Bulk processing error",
-            timestamp: Date.now(),
-            source: "unified-mexc-core",
-          }))
-        );
+        // Use controlled concurrency to prevent overwhelming the system
+        const concurrencyLimit = 10;
+        const allResponses: MexcServiceResponse<ActivityData[]>[] = [];
+        
+        for (let i = 0; i < normalizedCurrencies.length; i += concurrencyLimit) {
+          const batch = normalizedCurrencies.slice(i, i + concurrencyLimit);
+          const batchPromises = batch.map((currency) =>
+            this.getActivityData(currency).catch((error) => ({
+              success: false,
+              error: error instanceof Error ? error.message : "Bulk processing error",
+              timestamp: Date.now(),
+              source: "unified-mexc-core",
+            }))
+          );
 
-        const allResponses = await Promise.all(promises);
+          const batchResponses = await Promise.all(batchPromises);
+          allResponses.push(...batchResponses);
+          
+          // Add small delay between batches to prevent rate limiting
+          if (i + concurrencyLimit < normalizedCurrencies.length) {
+            await this.delay(50);
+          }
+        }
+        
         const successCount = allResponses.filter((r) => r.success).length;
 
         return {
@@ -339,9 +394,9 @@ export class UnifiedMexcCoreModule {
             totalRequests: allResponses.length,
             successCount,
             failureCount: allResponses.length - successCount,
-            batchCount: 1,
-            batchSize: normalizedCurrencies.length,
-            fastProcessing: true,
+            batchCount: Math.ceil(normalizedCurrencies.length / concurrencyLimit),
+            batchSize: concurrencyLimit,
+            optimizedProcessing: true,
           },
         };
       }
@@ -460,24 +515,45 @@ export class UnifiedMexcCoreModule {
   // ============================================================================
 
   /**
-   * Test API connectivity
+   * Test API connectivity with enhanced error handling and timeout
    */
   async testConnectivity(): Promise<MexcServiceResponse<{ serverTime: number; latency: number }>> {
     const startTime = Date.now();
+    const maxLatency = 30000; // 30 second timeout
 
     try {
-      const serverTimeResponse = await this.getServerTime();
+      // Add timeout to prevent hanging tests
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Connectivity test timeout")), maxLatency);
+      });
+      
+      const serverTimeResponse = await Promise.race([
+        this.getServerTime(),
+        timeoutPromise
+      ]);
 
       if (!serverTimeResponse.success) {
+        this.logger.warn("Connectivity test failed - server time unavailable", {
+          error: serverTimeResponse.error,
+          operationType: "connectivity-test",
+        });
+        
         return {
           success: false,
-          error: "Failed to connect to MEXC API",
+          error: "Failed to connect to MEXC API - " + (serverTimeResponse.error || "Unknown error"),
           timestamp: Date.now(),
           source: "unified-mexc-core",
+          executionTimeMs: Date.now() - startTime,
         };
       }
 
       const latency = Date.now() - startTime;
+      
+      this.logger.info("Connectivity test successful", {
+        latency,
+        serverTime: serverTimeResponse.data,
+        operationType: "connectivity-test",
+      });
 
       return {
         success: true,
@@ -487,13 +563,22 @@ export class UnifiedMexcCoreModule {
         },
         timestamp: Date.now(),
         source: "unified-mexc-core",
+        executionTimeMs: latency,
       };
     } catch (error) {
+      const latency = Date.now() - startTime;
+      this.logger.error("Connectivity test error:", {
+        error: error instanceof Error ? error.message : String(error),
+        latency,
+        operationType: "connectivity-test",
+      });
+      
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown connectivity error",
         timestamp: Date.now(),
         source: "unified-mexc-core",
+        executionTimeMs: latency,
       };
     }
   }

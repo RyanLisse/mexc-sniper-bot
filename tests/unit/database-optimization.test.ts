@@ -10,7 +10,7 @@
  * Validates 50%+ performance improvement target
  */
 
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 // Mock database optimization manager
 const mockOptimizationManager = {
@@ -228,15 +228,15 @@ vi.mock("@/src/services/data/query-performance-monitor", () => ({
   queryPerformanceMonitor: mockQueryPerformanceMonitor,
 }));
 
+import { sql } from "drizzle-orm";
+import { db, executeOptimizedWrite, executionHistory, monitoredQuery, patternEmbeddings, snipeTargets } from "@/src/db";
+import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import { databaseIndexOptimizer } from "@/src/lib/database-index-optimizer";
 // Import after mocking
 import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
 import { databasePerformanceAnalyzer } from "@/src/lib/database-performance-analyzer";
-import { databaseIndexOptimizer } from "@/src/lib/database-index-optimizer";
 import { databaseQueryOptimizer } from "@/src/lib/database-query-optimizer";
-import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 import { queryPerformanceMonitor } from "@/src/services/data/query-performance-monitor";
-import { sql } from "drizzle-orm";
-import { db, snipeTargets, executionHistory, patternEmbeddings, executeOptimizedWrite, monitoredQuery } from "@/src/db";
 
 describe("Database Optimization", () => {
   let baselineMetrics: any;

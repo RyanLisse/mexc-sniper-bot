@@ -5,13 +5,13 @@
  * types and interfaces from comprehensive-safety-coordinator.ts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  SafetyCoordinatorConfigSchema,
   ComprehensiveSafetyStatusSchema,
-  SafetyAlertSchema,
   SafetyActionSchema,
+  SafetyAlertSchema,
+  SafetyCoordinatorConfigSchema,
   SafetyMetricsSchema,
 } from '@/src/schemas/safety-schemas-extracted';
 

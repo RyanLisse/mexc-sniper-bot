@@ -8,15 +8,15 @@
 export { MexcApiClient } from "./api/mexc-api-client";
 // Types
 export type {
-  UnifiedMexcConfig,
-  UnifiedMexcResponse,
-  OrderParameters,
-  MexcApiRequestOptions,
   AccountInfo,
+  CalendarEntry,
+  MexcApiRequestOptions,
+  OrderParameters,
   PortfolioBalance,
   PortfolioData,
-  CalendarEntry,
   SymbolEntry,
+  UnifiedMexcConfig,
+  UnifiedMexcResponse,
 } from "./api/mexc-client-types";
 // Service Factory
 export { getUnifiedMexcService } from "./api/unified-mexc-service-factory";

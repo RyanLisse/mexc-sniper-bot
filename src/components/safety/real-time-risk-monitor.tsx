@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Activity, AlertTriangle, Percent, Shield, TrendingDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -75,208 +76,102 @@ interface StressTestResult {
  * - Dynamic risk thresholds
  */
 export function RealTimeRiskMonitor() {
-  const [currentRisk, setCurrentRisk] = useState({
-    riskScore: 23.5,
-    portfolioValue: 87500,
-    totalExposure: 62800,
-    var95: 4200,
-    expectedShortfall: 5600,
-    maxDrawdown: -2.8,
-    sharpeRatio: 1.42,
-    volatilityIndex: 34,
+  // Fetch current risk metrics from API
+  const { data: currentRisk, isLoading: riskLoading } = useQuery({
+    queryKey: ["risk-metrics", "current"],
+    queryFn: async () => {
+      const response = await fetch("/api/risk/current-metrics");
+      if (!response.ok) throw new Error("Failed to fetch risk metrics");
+      const result = await response.json();
+      return result.success ? result.data : null;
+    },
+    refetchInterval: 5000, // Update every 5 seconds
+    retry: 2,
   });
 
-  const [riskHistory, setRiskHistory] = useState<RealTimeRiskData[]>([
-    {
-      timestamp: "09:00",
-      riskScore: 18,
-      portfolioValue: 87000,
-      exposure: 61000,
-      volatility: 30,
-      var95: 3800,
-      drawdown: -1.2,
+  // Fetch risk history for trends
+  const { data: riskHistory } = useQuery({
+    queryKey: ["risk-metrics", "history"],
+    queryFn: async () => {
+      const response = await fetch("/api/risk/history?period=1h&interval=15m");
+      if (!response.ok) throw new Error("Failed to fetch risk history");
+      const result = await response.json();
+      return result.success ? result.data : [];
     },
-    {
-      timestamp: "09:15",
-      riskScore: 21,
-      portfolioValue: 87200,
-      exposure: 61500,
-      volatility: 32,
-      var95: 4000,
-      drawdown: -1.8,
-    },
-    {
-      timestamp: "09:30",
-      riskScore: 19,
-      portfolioValue: 87300,
-      exposure: 62000,
-      volatility: 29,
-      var95: 3900,
-      drawdown: -1.5,
-    },
-    {
-      timestamp: "09:45",
-      riskScore: 25,
-      portfolioValue: 87400,
-      exposure: 62500,
-      volatility: 36,
-      var95: 4300,
-      drawdown: -2.1,
-    },
-    {
-      timestamp: "10:00",
-      riskScore: 23.5,
-      portfolioValue: 87500,
-      exposure: 62800,
-      volatility: 34,
-      var95: 4200,
-      drawdown: -2.8,
-    },
-  ]);
+    refetchInterval: 30000, // Update every 30 seconds
+    retry: 2,
+  });
 
-  const [positionRisks, _setPositionRisks] = useState<PositionRisk[]>([
-    {
-      symbol: "BTCUSDT",
-      size: 25000,
-      riskContribution: 35.2,
-      var95: 1500,
-      correlation: 0.8,
-      timeHeld: 4.5,
-      pnl: 850,
+  // Fetch position risks
+  const { data: positionRisks } = useQuery({
+    queryKey: ["risk-metrics", "positions"],
+    queryFn: async () => {
+      const response = await fetch("/api/risk/position-analysis");
+      if (!response.ok) throw new Error("Failed to fetch position risks");
+      const result = await response.json();
+      return result.success ? result.data : [];
     },
-    {
-      symbol: "ETHUSDT",
-      size: 18000,
-      riskContribution: 28.6,
-      var95: 1200,
-      correlation: 0.7,
-      timeHeld: 2.1,
-      pnl: 320,
-    },
-    {
-      symbol: "ADAUSDT",
-      size: 12000,
-      riskContribution: 18.5,
-      var95: 800,
-      correlation: 0.6,
-      timeHeld: 1.8,
-      pnl: -150,
-    },
-    {
-      symbol: "DOTUSDT",
-      size: 7800,
-      riskContribution: 12.1,
-      var95: 500,
-      correlation: 0.5,
-      timeHeld: 0.9,
-      pnl: 95,
-    },
-    {
-      symbol: "LINKUSDT",
-      size: 5000,
-      riskContribution: 5.6,
-      var95: 300,
-      correlation: 0.4,
-      timeHeld: 0.3,
-      pnl: 45,
-    },
-  ]);
+    refetchInterval: 10000, // Update every 10 seconds
+    retry: 2,
+  });
 
-  const [activeAlerts, _setActiveAlerts] = useState<RiskAlert[]>([
-    {
-      id: "alert-1",
-      type: "volatility_spike",
-      severity: "medium",
-      message: "Market volatility increased by 15% in the last hour",
-      value: 34,
-      threshold: 30,
-      timestamp: "10:00",
-      acknowledged: false,
+  // Fetch active risk alerts
+  const { data: activeAlerts } = useQuery({
+    queryKey: ["risk-alerts", "active"],
+    queryFn: async () => {
+      const response = await fetch("/api/risk/alerts?status=active&limit=10");
+      if (!response.ok) throw new Error("Failed to fetch risk alerts");
+      const result = await response.json();
+      return result.success ? result.data : [];
     },
-    {
-      id: "alert-2",
-      type: "risk_threshold",
-      severity: "low",
-      message: "Portfolio risk score approaching medium threshold",
-      value: 23.5,
-      threshold: 25,
-      timestamp: "09:55",
-      acknowledged: false,
-    },
-  ]);
+    refetchInterval: 15000, // Update every 15 seconds
+    retry: 2,
+  });
 
-  const [stressTestResults, _setStressTestResults] = useState<StressTestResult[]>([
-    {
-      scenario: "Market Crash (-20%)",
-      portfolioLoss: 17500,
-      lossPercentage: 20,
-      recoveryTime: 48,
-      riskScore: 95,
+  // Fetch stress test results
+  const { data: stressTestResults } = useQuery({
+    queryKey: ["risk-metrics", "stress-tests"],
+    queryFn: async () => {
+      const response = await fetch("/api/risk/stress-test-results");
+      if (!response.ok) throw new Error("Failed to fetch stress test results");
+      const result = await response.json();
+      return result.success ? result.data : [];
     },
-    {
-      scenario: "Flash Crash (-10%)",
-      portfolioLoss: 8750,
-      lossPercentage: 10,
-      recoveryTime: 12,
-      riskScore: 75,
-    },
-    {
-      scenario: "High Volatility",
-      portfolioLoss: 4375,
-      lossPercentage: 5,
-      recoveryTime: 24,
-      riskScore: 60,
-    },
-    {
-      scenario: "Liquidity Crisis",
-      portfolioLoss: 6125,
-      lossPercentage: 7,
-      recoveryTime: 18,
-      riskScore: 70,
-    },
-  ]);
+    refetchInterval: 60000, // Update every minute
+    retry: 2,
+  });
 
-  // Real-time data simulation
+  // Initialize local history with API data
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate real-time risk updates
-      const newRiskScore = Math.max(
-        0,
-        Math.min(100, currentRisk.riskScore + (Math.random() - 0.5) * 3)
-      );
-      const newVolatility = Math.max(
-        0,
-        Math.min(100, currentRisk.volatilityIndex + (Math.random() - 0.5) * 5)
-      );
+    if (riskHistory && riskHistory.length > 0) {
+      setLocalRiskHistory(riskHistory);
+    }
+  }, [riskHistory]);
 
-      setCurrentRisk((prev) => ({
-        ...prev,
-        riskScore: newRiskScore,
-        volatilityIndex: newVolatility,
-        var95: Math.round(prev.var95 * (1 + (Math.random() - 0.5) * 0.1)),
-      }));
-
-      // Add new data point to history
-      const now = new Date();
-      const timeString = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
-
-      setRiskHistory((prev) => {
-        const newPoint: RealTimeRiskData = {
-          timestamp: timeString,
-          riskScore: newRiskScore,
-          portfolioValue: currentRisk.portfolioValue,
-          exposure: currentRisk.totalExposure,
-          volatility: newVolatility,
-          var95: currentRisk.var95,
-          drawdown: currentRisk.maxDrawdown,
-        };
-
-        return [...prev.slice(-19), newPoint]; // Keep last 20 points
-      });
-    }, 5000); // Update every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [currentRisk]);
+  // Show loading state if critical data is not available
+  if (riskLoading || !currentRisk) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="space-y-2">
+                <div className="h-4 bg-muted animate-pulse rounded" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted animate-pulse rounded mb-2" />
+                <div className="h-2 bg-muted animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading real-time risk data...</p>
+        </div>
+      </div>
+    );
+  }
 
   const getRiskColor = (score: number) => {
     if (score < 25) return "text-green-600";
@@ -305,7 +200,7 @@ export function RealTimeRiskMonitor() {
   return (
     <div className="space-y-6">
       {/* Real-Time Alerts */}
-      {activeAlerts.length > 0 && (
+      {activeAlerts && activeAlerts.length > 0 && (
         <div className="space-y-2">
           {activeAlerts.map((alert) => (
             <Alert
@@ -420,21 +315,30 @@ export function RealTimeRiskMonitor() {
             <CardDescription>Real-time risk score over the last hour</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={riskHistory}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="riskScore"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  dot={{ fill: "#ef4444", r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {localRiskHistory && localRiskHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={localRiskHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="riskScore"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    dot={{ fill: "#ef4444", r: 3 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                <div className="text-center">
+                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Loading risk trend data...</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -445,30 +349,39 @@ export function RealTimeRiskMonitor() {
             <CardDescription>Risk contribution by position</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <PieChart>
-                <Pie
-                  data={positionRisks}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="riskContribution"
-                  label={({ symbol, riskContribution }) =>
-                    `${symbol}: ${riskContribution.toFixed(1)}%`
-                  }
-                >
-                  {positionRisks.map((risk, index) => (
-                    <Cell
-                      key={generateChartCellKey(index, risk.symbol)}
-                      fill={pieColors[index % pieColors.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {positionRisks && positionRisks.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={positionRisks}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="riskContribution"
+                    label={({ symbol, riskContribution }) =>
+                      `${symbol}: ${riskContribution.toFixed(1)}%`
+                    }
+                  >
+                    {positionRisks.map((risk, index) => (
+                      <Cell
+                        key={generateChartCellKey(index, risk.symbol)}
+                        fill={pieColors[index % pieColors.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                <div className="text-center">
+                  <Shield className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>No position risk data available</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -482,21 +395,30 @@ export function RealTimeRiskMonitor() {
             <CardDescription>95% VaR over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={riskHistory}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis />
-                <Tooltip formatter={(value) => [`$${value?.toLocaleString()}`, "VaR 95%"]} />
-                <Area
-                  type="monotone"
-                  dataKey="var95"
-                  stroke="#f59e0b"
-                  fill="#f59e0b"
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {localRiskHistory && localRiskHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={localRiskHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [`$${value?.toLocaleString()}`, "VaR 95%"]} />
+                  <Area
+                    type="monotone"
+                    dataKey="var95"
+                    stroke="#f59e0b"
+                    fill="#f59e0b"
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                <div className="text-center">
+                  <TrendingDown className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Loading VaR trend data...</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -507,21 +429,30 @@ export function RealTimeRiskMonitor() {
             <CardDescription>Market volatility over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={riskHistory}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" />
-                <YAxis domain={[0, 100]} />
-                <Tooltip formatter={(value) => [`${value}%`, "Volatility"]} />
-                <Area
-                  type="monotone"
-                  dataKey="volatility"
-                  stroke="#8b5cf6"
-                  fill="#8b5cf6"
-                  fillOpacity={0.3}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            {localRiskHistory && localRiskHistory.length > 0 ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={localRiskHistory}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="timestamp" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip formatter={(value) => [`${value}%`, "Volatility"]} />
+                  <Area
+                    type="monotone"
+                    dataKey="volatility"
+                    stroke="#8b5cf6"
+                    fill="#8b5cf6"
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                <div className="text-center">
+                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Loading volatility trend data...</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -533,52 +464,61 @@ export function RealTimeRiskMonitor() {
           <CardDescription>Detailed risk metrics for each position</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Symbol</th>
-                  <th className="text-right p-2">Size</th>
-                  <th className="text-right p-2">Risk %</th>
-                  <th className="text-right p-2">VaR 95%</th>
-                  <th className="text-right p-2">P&L</th>
-                  <th className="text-right p-2">Time Held</th>
-                  <th className="text-right p-2">Correlation</th>
-                </tr>
-              </thead>
-              <tbody>
-                {positionRisks.map((position) => (
-                  <tr key={position.symbol} className="border-b hover:bg-muted/50">
-                    <td className="p-2 font-medium">{position.symbol}</td>
-                    <td className="p-2 text-right">${position.size.toLocaleString()}</td>
-                    <td className="p-2 text-right">
-                      <span
-                        className={
-                          position.riskContribution > 30
-                            ? "text-red-600"
-                            : position.riskContribution > 20
-                              ? "text-yellow-600"
-                              : "text-green-600"
-                        }
-                      >
-                        {position.riskContribution.toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className="p-2 text-right">${position.var95.toLocaleString()}</td>
-                    <td className="p-2 text-right">
-                      <span className={position.pnl >= 0 ? "text-green-600" : "text-red-600"}>
-                        {position.pnl >= 0 ? "+" : ""}${position.pnl}
-                      </span>
-                    </td>
-                    <td className="p-2 text-right">{position.timeHeld.toFixed(1)}h</td>
-                    <td className="p-2 text-right">
-                      <Progress value={position.correlation * 100} className="w-16" />
-                    </td>
+          {positionRisks && positionRisks.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Symbol</th>
+                    <th className="text-right p-2">Size</th>
+                    <th className="text-right p-2">Risk %</th>
+                    <th className="text-right p-2">VaR 95%</th>
+                    <th className="text-right p-2">P&L</th>
+                    <th className="text-right p-2">Time Held</th>
+                    <th className="text-right p-2">Correlation</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {positionRisks.map((position) => (
+                    <tr key={position.symbol} className="border-b hover:bg-muted/50">
+                      <td className="p-2 font-medium">{position.symbol}</td>
+                      <td className="p-2 text-right">${position.size.toLocaleString()}</td>
+                      <td className="p-2 text-right">
+                        <span
+                          className={
+                            position.riskContribution > 30
+                              ? "text-red-600"
+                              : position.riskContribution > 20
+                                ? "text-yellow-600"
+                                : "text-green-600"
+                          }
+                        >
+                          {position.riskContribution.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="p-2 text-right">${position.var95.toLocaleString()}</td>
+                      <td className="p-2 text-right">
+                        <span className={position.pnl >= 0 ? "text-green-600" : "text-red-600"}>
+                          {position.pnl >= 0 ? "+" : ""}${position.pnl}
+                        </span>
+                      </td>
+                      <td className="p-2 text-right">{position.timeHeld.toFixed(1)}h</td>
+                      <td className="p-2 text-right">
+                        <Progress value={position.correlation * 100} className="w-16" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <div className="text-center">
+                <Shield className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No position data available</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -589,20 +529,29 @@ export function RealTimeRiskMonitor() {
           <CardDescription>Portfolio impact under various stress scenarios</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={stressTestResults}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="scenario" />
-              <YAxis />
-              <Tooltip
-                formatter={(value, name) => [
-                  name === "portfolioLoss" ? `$${value?.toLocaleString()}` : `${value}%`,
-                  name === "portfolioLoss" ? "Portfolio Loss" : "Loss %",
-                ]}
-              />
-              <Bar dataKey="portfolioLoss" fill="#ef4444" name="Portfolio Loss" />
-            </BarChart>
-          </ResponsiveContainer>
+          {stressTestResults && stressTestResults.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={stressTestResults}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="scenario" />
+                <YAxis />
+                <Tooltip
+                  formatter={(value, name) => [
+                    name === "portfolioLoss" ? `$${value?.toLocaleString()}` : `${value}%`,
+                    name === "portfolioLoss" ? "Portfolio Loss" : "Loss %",
+                  ]}
+                />
+                <Bar dataKey="portfolioLoss" fill="#ef4444" name="Portfolio Loss" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+              <div className="text-center">
+                <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No stress test results available</p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

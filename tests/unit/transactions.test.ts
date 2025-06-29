@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
-import { transactions, type NewTransaction, type Transaction } from "@/src/db/schema";
-import { eq, desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type NewTransaction, type Transaction, transactions } from "@/src/db/schema";
 import { createTestDatabase, createTestUser, type TestDbSetup } from './test-db-setup';
 
 // Unmock better-sqlite3 for this test file only

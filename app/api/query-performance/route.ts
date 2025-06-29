@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
+import { apiResponse, createOperationResponse, handleApiError } from "@/src/lib/api-response";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
-import { apiResponse, createOperationResponse, handleApiError } from "@/src/lib/api-response";
 
 export async function GET(request: NextRequest) {
   // Simple console logger to avoid webpack bundling issues

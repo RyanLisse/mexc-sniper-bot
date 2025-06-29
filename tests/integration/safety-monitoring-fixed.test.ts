@@ -4,9 +4,9 @@
  * Tests the complete vertical slice of safety monitoring functionality with proper mocking.
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from "vitest";
-import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
 import { NextRequest } from "next/server";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
 
 // Mock all dependencies at module level
 vi.mock("@/src/lib/api-auth", () => ({

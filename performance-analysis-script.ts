@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * MEXC Sniper Bot - Performance Analysis Script
  * 
@@ -7,9 +8,9 @@
  * and system scalability metrics.
  */
 
-import { performance } from "perf_hooks";
 import fs from "fs/promises";
 import path from "path";
+import { performance } from "perf_hooks";
 
 interface PerformanceMetrics {
   timestamp: number;

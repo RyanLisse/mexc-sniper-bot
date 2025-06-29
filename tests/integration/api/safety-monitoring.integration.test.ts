@@ -5,14 +5,14 @@
  * and minimal mocking for external dependencies.
  */
 
-import { describe, test, expect, beforeEach, afterEach, beforeAll, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { setTestTimeout } from "../../utils/timeout-utilities";
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { 
   setupMexcIntegrationTest,
   teardownMexcIntegrationTest,
   waitForMexcOperation
 } from "../../utils/mexc-integration-utilities";
+import { setTestTimeout } from "../../utils/timeout-utilities";
 
 // Global mock setup for integration tests - moved to beforeAll hook
 describe("Safety Monitoring API Integration Tests", () => {

@@ -1,11 +1,11 @@
+import { desc, gte } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/src/db";
+import { transactionLocks, workflowActivity } from "@/src/db/schema";
+import { connectionTracker, withSSEThrottling } from "@/src/lib/middleware/throttling-middleware";
+import { requestThrottlingService } from "@/src/lib/request-throttling-service";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
-import { db } from "@/src/db";
-import { workflowActivity, transactionLocks } from "@/src/db/schema";
-import { desc, gte } from "drizzle-orm";
-import { withSSEThrottling, connectionTracker } from "@/src/lib/middleware/throttling-middleware";
-import { requestThrottlingService } from "@/src/lib/request-throttling-service";
 
 // Server-Sent Events for real-time monitoring
 

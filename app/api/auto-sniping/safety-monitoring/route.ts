@@ -7,13 +7,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
-import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
-import { parseJsonRequest, validateRequiredFields, createJsonErrorResponse } from '@/src/lib/api-json-parser';
+import { createJsonErrorResponse, parseJsonRequest, validateRequiredFields } from '@/src/lib/api-json-parser';
+import { createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
 import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/risk/real-time-safety-monitoring-modules/index';
 
-// Lazy service getter to avoid build-time initialization
+// Lazy service getter with initialization handling
 function getSafetyMonitoringService() {
-  return RealTimeSafetyMonitoringService.getInstance();
+  try {
+    const service = RealTimeSafetyMonitoringService.getInstance();
+    // Ensure service is properly initialized in test environments
+    if (typeof service.getMonitoringStatus !== 'function') {
+      throw new Error('Safety monitoring service not properly initialized');
+    }
+    return service;
+  } catch (error) {
+    console.error('[SafetyMonitoringAPI] Service initialization error:', error);
+    throw new Error('Safety monitoring service unavailable');
+  }
 }
 
 /**
@@ -21,11 +31,12 @@ function getSafetyMonitoringService() {
  * Get safety monitoring data based on action parameter
  */
 export const GET = apiAuthWrapper(async (request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get('action');
+  const severity = searchParams.get('severity');
+  const limit = parseInt(searchParams.get('limit') || '10');
+  
   try {
-    const { searchParams } = new URL(request.url);
-    const action = searchParams.get('action');
-    const severity = searchParams.get('severity');
-    const limit = parseInt(searchParams.get('limit') || '10');
 
     console.info(`[SafetyMonitoringAPI] Processing GET action: ${action}`);
 
@@ -117,7 +128,20 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error: any) {
-    console.error('[SafetyMonitoringAPI] GET action failed:', { error });
+    console.error('[SafetyMonitoringAPI] GET action failed:', { 
+      error: error.message || 'Unknown error',
+      action: action || 'unknown',
+      url: request.url
+    });
+    
+    // Handle service initialization errors specifically
+    if (error.message?.includes('service unavailable') || error.message?.includes('not properly initialized')) {
+      return NextResponse.json(createErrorResponse(
+        'Safety monitoring service is not available',
+        { code: 'SERVICE_UNAVAILABLE', details: 'Service initialization failed' }
+      ), { status: 503 });
+    }
+    
     // Pass through specific error messages for test compatibility
     const errorMessage = error.message || 'Safety monitoring GET action failed';
     return NextResponse.json(createErrorResponse(
@@ -132,6 +156,8 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Handle safety monitoring actions
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
+  let body: any;
+  
   try {
     // Use centralized JSON parsing with consistent error handling
     const parseResult = await parseJsonRequest(request);
@@ -145,8 +171,12 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       return NextResponse.json(createJsonErrorResponse(parseResult), { status: 400 });
     }
     
-    const body = parseResult.data;
-    const { action, configuration, thresholds, alertId, reason } = body;
+    body = parseResult.data;
+    const action = body?.action;
+    const configuration = body?.configuration;
+    const thresholds = body?.thresholds;
+    const alertId = body?.alertId;
+    const reason = body?.reason;
 
     // Validate required action field
     const fieldValidation = validateRequiredFields(body, ['action']);
@@ -326,7 +356,19 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
         ), { status: 400 });
     }
   } catch (error: any) {
-    console.error('[SafetyMonitoringAPI] POST action failed:', { error });
+    console.error('[SafetyMonitoringAPI] POST action failed:', { 
+      error: error.message || 'Unknown error',
+      action: typeof body === 'object' && body ? body.action || 'unknown' : 'unknown',
+      url: request.url
+    });
+    
+    // Handle service initialization errors specifically
+    if (error.message?.includes('service unavailable') || error.message?.includes('not properly initialized')) {
+      return NextResponse.json(createErrorResponse(
+        'Safety monitoring service is not available',
+        { code: 'SERVICE_UNAVAILABLE', details: 'Service initialization failed' }
+      ), { status: 503 });
+    }
     
     // Pass through specific error messages for test compatibility
     const errorMessage = error.message || 'Safety monitoring action failed';

@@ -2,9 +2,9 @@
  * Quick script to check snipe targets in the NeonDB database
  */
 
+import { desc, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { eq, desc } from 'drizzle-orm';
 
 // Import the snipeTargets table from schema
 import { snipeTargets } from './src/db/migrations/schema';

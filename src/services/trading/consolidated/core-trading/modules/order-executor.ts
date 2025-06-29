@@ -8,9 +8,9 @@
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type {
   ModuleContext,
+  Position,
   TradeParameters,
   TradeResult,
-  Position,
 } from "../types";
 
 export class OrderExecutor {

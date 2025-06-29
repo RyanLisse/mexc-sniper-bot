@@ -1,17 +1,17 @@
+import { and, desc, eq, gte, or } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
-import { eq, and, gte, or, desc } from "drizzle-orm";
 import {
-  TransactionLockQuerySchema,
-  ReleaseLockRequestSchema,
   CheckLockRequestSchema,
-  TransactionLocksResponseSchema,
-  validateApiQuery,
-  validateApiBody,
   createValidatedApiResponse,
+  ReleaseLockRequestSchema,
+  TransactionLockQuerySchema,
+  TransactionLocksResponseSchema,
+  validateApiBody,
+  validateApiQuery,
 } from "@/src/schemas/api-validation-schemas";
+import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 
 export async function GET(request: NextRequest) {
   try {

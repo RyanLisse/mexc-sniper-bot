@@ -12,6 +12,7 @@ import {
   createSuccessResponse,
 } from "@/src/lib/api-response";
 import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
+
 // Function defined at bottom of file
 
 // Configuration validation function

@@ -5,8 +5,20 @@
  * Focuses on JSON parsing, error handling, and basic API structure.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
 import { NextRequest, NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+// Mock service dependencies to prevent build-time initialization issues
+vi.mock("@/src/services/trading/consolidated/core-trading/base-service", () => ({
+  getCoreTrading: vi.fn(() => ({
+    initialize: vi.fn().mockResolvedValue(undefined),
+    getServiceStatus: vi.fn().mockResolvedValue({ initialized: true }),
+  })),
+}));
+
+vi.mock("@/src/lib/api-auth", () => ({
+  apiAuthWrapper: vi.fn().mockImplementation((handler) => handler),
+}));
 
 describe("Simplified Safety Monitoring API Tests", () => {
   

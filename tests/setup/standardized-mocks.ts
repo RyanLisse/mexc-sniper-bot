@@ -7,7 +7,7 @@
 
 import { vi } from 'vitest';
 import type { ActivityData } from '@/src/schemas/unified/mexc-api-schemas';
-import type { SymbolEntry, CalendarEntry } from '@/src/services/mexc-unified-exports';
+import type { CalendarEntry, SymbolEntry } from '@/src/services/mexc-unified-exports';
 
 // ============================================================================
 // Standard Mock Data

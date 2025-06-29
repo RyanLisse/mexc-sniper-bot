@@ -1,19 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
   BREAKPOINTS,
-  MOBILE_BREAKPOINT,
-  isBreakpoint,
+  createResponsiveClasses,
   getDeviceCategory,
+  getOrientation,
+  isBreakpoint,
   isMobileDevice,
   isTouchDevice,
-  getOrientation,
-  ResponsiveClassNames,
-  RESPONSIVE_CONFIG,
   MEDIA_QUERIES,
-  validateResponsiveConfig,
-  createResponsiveClasses,
+  MOBILE_BREAKPOINT,
   parseBreakpointValue,
+  RESPONSIVE_CONFIG,
+  ResponsiveClassNames,
+  validateResponsiveConfig,
 } from "@/src/lib/responsive-utils-clean";
 
 // Ensure window object is available for tests

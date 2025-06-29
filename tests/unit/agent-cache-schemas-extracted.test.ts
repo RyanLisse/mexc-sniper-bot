@@ -5,15 +5,15 @@
  * types and interfaces from enhanced-agent-cache.ts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
+  AgentCacheAnalyticsSchema,
   AgentCacheConfigSchema,
   AgentCacheMetricsSchema,
+  AgentHealthCacheSchema,
   CachedAgentResponseSchema,
   WorkflowCacheEntrySchema,
-  AgentHealthCacheSchema,
-  AgentCacheAnalyticsSchema,
 } from '@/src/schemas/agent-cache-schemas-extracted';
 
 describe('Agent Cache Schemas - TDD Extraction Tests', () => {

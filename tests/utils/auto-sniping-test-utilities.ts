@@ -10,13 +10,13 @@
  * - WebSocket simulation helpers
  */
 
-import { vi, expect } from "vitest";
+import { expect, vi } from "vitest";
+import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 import type {
-  SymbolEntry,
   CalendarEntry,
   ServiceResponse,
+  SymbolEntry,
 } from "@/src/services/api/mexc-unified-exports";
-import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Mock Data Generators

@@ -11,10 +11,10 @@
  * - Error code handling and recovery
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, beforeAll, afterAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ActivityData, ActivityQueryOptions } from "@/src/schemas/unified/mexc-api-schemas"
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { AdaptiveRateLimiterService } from '@/src/services/rate-limiter/adaptive-rate-limiter-service';
-import type { ActivityData, ActivityQueryOptions } from "@/src/schemas/unified/mexc-api-schemas"
 
 // Note: Some classes may not exist or may be named differently - using type-safe mocks instead
 

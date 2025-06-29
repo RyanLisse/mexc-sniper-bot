@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/src/lib/kinde-auth";
 import { apiResponse } from "@/src/lib/api-response";
-import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
+import { requireAuth } from "@/src/lib/kinde-auth";
 import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
+import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
 
 /**
  * Risk Assessment API

@@ -1,35 +1,35 @@
+import { eq } from "drizzle-orm";
 import {
-  describe,
-  it,
-  expect,
-  beforeAll,
   afterAll,
-  beforeEach,
   afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
   vi,
 } from "vitest";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { db } from "@/src/db";
 import { coinActivities } from "@/src/db/schemas/patterns";
-import { eq } from "drizzle-orm";
-import type {
-  SymbolEntry,
-  CalendarEntry,
-} from "@/src/services/api/mexc-unified-exports";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import * as activityIntegration from "@/src/services/data/pattern-detection/activity-integration";
 import {
   setupServiceMocks,
-  standardTestCleanup,
   standardMockData,
+  standardTestCleanup,
 } from "../setup/standardized-mocks";
 import {
+  createMockActivityData,
+  createMockCalendarEntry,
+  createMockSymbolEntry,
   setupMexcIntegrationTest,
   teardownMexcIntegrationTest,
-  createMockSymbolEntry,
-  createMockCalendarEntry,
-  createMockActivityData,
   waitForMexcOperation
 } from "../utils/mexc-integration-utilities";
 

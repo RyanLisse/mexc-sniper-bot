@@ -5,19 +5,19 @@
  * types and interfaces from cache-manager.ts
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
-  CacheEntrySchema,
-  CacheConfigSchema,
-  CacheMetricsSchema,
   CacheAnalyticsSchema,
-  CacheDataTypeSchema,
-  CacheInvalidationStrategySchema,
-  TTLConfigSchema,
-  CacheSizeBreakdownSchema,
   CacheCleanupResultSchema,
+  CacheConfigSchema,
+  CacheDataTypeSchema,
+  CacheEntrySchema,
+  CacheInvalidationStrategySchema,
+  CacheMetricsSchema,
   CacheOptimizationResultSchema,
+  CacheSizeBreakdownSchema,
+  TTLConfigSchema,
 } from '@/src/schemas/cache-manager-schemas-extracted';
 
 describe('Cache Manager Schemas - TDD Extraction Tests', () => {

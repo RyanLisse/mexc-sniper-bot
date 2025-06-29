@@ -5,17 +5,17 @@
  * Part of Phase 3 Production Readiness testing.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { eventStore, eventStoreManager } from "@/src/lib/event-sourcing/event-store";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { commandBus, queryBus } from "@/src/lib/cqrs/command-bus";
 import { readModelStore } from "@/src/lib/cqrs/query-bus";
 import {
   initializeTradingCQRS,
+  type TradeReadModel,
   TradingCommandFactory,
   TradingQueryFactory,
-  type TradeReadModel,
   type TradingStatsReadModel,
 } from "@/src/lib/cqrs/trading-commands";
+import { eventStore, eventStoreManager } from "@/src/lib/event-sourcing/event-store";
 
 describe("Event Sourcing and CQRS Integration Tests", () => {
   beforeEach(async () => {

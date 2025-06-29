@@ -6,10 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { CircuitBreakerSafetyService } from '@/src/services/risk/circuit-breaker-safety-service'
+import { z } from 'zod'
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2'
 import { circuitBreakerRegistry, mexcApiBreaker } from '@/src/services/risk/circuit-breaker'
-import { z } from 'zod'
+import { CircuitBreakerSafetyService } from '@/src/services/risk/circuit-breaker-safety-service'
 
 // ============================================================================
 // Request/Response Schemas

@@ -7,10 +7,10 @@
  * Checks safety system emergency mode and risk scores
  */
 
+import { and, desc, eq, gte } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './src/db/schema';
-import { eq, desc, and, gte } from 'drizzle-orm';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 

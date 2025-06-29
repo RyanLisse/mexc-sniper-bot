@@ -12,31 +12,31 @@
  */
 
 import {
-  describe,
-  it,
-  expect,
-  beforeEach,
   afterEach,
-  vi,
   beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
 } from "vitest";
-import {
-  setTestTimeout,
-  withTimeout,
-  withDatabaseTimeout,
-  withApiTimeout,
-  globalTimeoutMonitor,
-} from "../utils/timeout-utilities";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
-import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
-import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
-import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
-import type {
-  SymbolEntry,
-  CalendarEntry,
-} from "@/src/services/data/modules/mexc-api-types";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
+import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/data/modules/mexc-api-types";
+import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
+import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
+import { MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
+import {
+  globalTimeoutMonitor,
+  setTestTimeout,
+  withApiTimeout,
+  withDatabaseTimeout,
+  withTimeout,
+} from "../utils/timeout-utilities";
 
 describe("Auto Sniping Core Functionality", () => {
   // Set appropriate timeout for auto-sniping tests (30 seconds)

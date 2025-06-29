@@ -6,7 +6,7 @@
  * different Kinde applications (test, staging, production).
  */
 
-import { beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, vi } from 'vitest';
 
 /**
  * Environment-specific configurations for different testing contexts

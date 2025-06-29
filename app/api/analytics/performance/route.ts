@@ -5,10 +5,10 @@
  * Integrates with the trading analytics service to deliver real-time performance data.
  */
 
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 // Request validation schemas
 const PerformanceQuerySchema = z.object({

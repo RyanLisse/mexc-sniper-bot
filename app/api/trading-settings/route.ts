@@ -1,15 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
-import { getUserPreferences, db } from "@/src/db";
-import { userPreferences } from "@/src/db/schemas/auth";
 import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { db, getUserPreferences } from "@/src/db";
+import { userPreferences } from "@/src/db/schemas/auth";
 import { 
-  createSuccessResponse, 
-  createErrorResponse, 
   apiResponse, 
+  createErrorResponse, 
+  createSuccessResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
 import { handleApiError } from "@/src/lib/error-handler";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
 const coreTrading = getCoreTrading();
 

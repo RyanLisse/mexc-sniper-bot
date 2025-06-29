@@ -8,13 +8,13 @@
 import { EventEmitter } from "events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { createCoordinatedApiBreaker } from "@/src/services/data/coordinated-circuit-breaker";
+import type { PatternMatch } from "@/src/services/data/pattern-detection/pattern-types";
 import type { 
   AutoSnipeTarget, 
+  Position, 
   ServiceResponse, 
-  TradeResult, 
-  Position 
+  TradeResult 
 } from "../consolidated/core-trading/types";
-import type { PatternMatch } from "@/src/services/data/pattern-detection/pattern-types";
 
 export interface RealTimeTriggerConfig {
   enableRealTimeTriggers: boolean;

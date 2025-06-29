@@ -5,12 +5,14 @@
  * information and eliminates contradictory reports.
  */
 
-import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import { RATE_LIMIT_CONFIGS, withRateLimit } from "@/src/lib/api-rate-limiter";
 import { apiResponse, handleApiError } from "@/src/lib/api-response";
-import { getUnifiedStatus } from "@/src/services/notification/unified-status-resolver";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import { withRateLimit, RATE_LIMIT_CONFIGS } from "@/src/lib/api-rate-limiter";
+import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
+import { getUnifiedStatus } from "@/src/services/notification/unified-status-resolver";
+
 interface UnifiedStatusResponse {
   // Core Status
   connected: boolean;
@@ -275,6 +277,23 @@ function generateNextSteps(status: any): string[] {
   return nextSteps;
 }
 
-// Export rate-limited handlers
-export const GET = withRateLimit(getHandler, RATE_LIMIT_CONFIGS.moderate);
-export const POST = withRateLimit(postHandler, RATE_LIMIT_CONFIGS.moderate);
+// Export rate-limited and cached handlers
+export const GET = withRateLimit(
+  withDatabaseQueryCache(getHandler, {
+    endpoint: "/api/mexc/unified-status",
+    cacheTtlSeconds: 120, // 2 minutes cache
+    enableCompression: true,
+    enableStaleWhileRevalidate: true,
+  }),
+  RATE_LIMIT_CONFIGS.moderate
+);
+
+export const POST = withRateLimit(
+  withDatabaseQueryCache(postHandler, {
+    endpoint: "/api/mexc/unified-status",
+    cacheTtlSeconds: 60, // 1 minute cache for POST (force refresh)
+    enableCompression: true,
+    enableStaleWhileRevalidate: false,
+  }),
+  RATE_LIMIT_CONFIGS.moderate
+);

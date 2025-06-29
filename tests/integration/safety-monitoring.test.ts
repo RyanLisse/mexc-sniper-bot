@@ -11,10 +11,10 @@
  * This ensures the safety monitoring API works end-to-end with proper error handling.
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll, vi } from "vitest";
-import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
-import { setupSafetyMonitoringMocks } from "../utils/api-test-mocks";
 import { NextRequest } from "next/server";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { setupSafetyMonitoringMocks } from "../utils/api-test-mocks";
+import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
 
 // Mock the safety service at module level first
 let mockSafetyService: any;

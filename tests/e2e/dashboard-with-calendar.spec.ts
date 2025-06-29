@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('Dashboard with Calendar Data', () => {
   test('should display dashboard and handle calendar data correctly', async ({ page }) => {

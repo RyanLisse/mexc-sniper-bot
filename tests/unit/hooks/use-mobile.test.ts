@@ -1,6 +1,6 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { useIsMobile, useViewportHeight, useTouchGestures } from "@/src/hooks/use-mobile-clean";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { useIsMobile, useTouchGestures, useViewportHeight } from "@/src/hooks/use-mobile-clean";
 
 // Ensure window and document objects are available for tests
 if (typeof global.window === 'undefined') {

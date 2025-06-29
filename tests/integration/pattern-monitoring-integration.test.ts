@@ -9,11 +9,11 @@
  * This ensures the real-time pattern monitoring system works end-to-end.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
-import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PatternDetectionCore } from '@/src/core/pattern-detection';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
+import { PatternMonitoringService } from '@/src/services/notification/pattern-monitoring-service';
+import { setTestTimeout, withApiTimeout } from '../utils/timeout-utilities';
 
 describe('Pattern Monitoring Integration', () => {
   const TEST_TIMEOUT = setTestTimeout('integration');

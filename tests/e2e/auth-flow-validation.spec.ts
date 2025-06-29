@@ -5,8 +5,8 @@
  * These tests run against live deployments to validate authentication works correctly.
  */
 
-import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 // Test configuration
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3008';

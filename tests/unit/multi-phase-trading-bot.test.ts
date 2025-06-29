@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { MultiPhaseTradingBot, AdvancedMultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
+import { beforeEach, describe, expect, it } from 'vitest';
+import { AdvancedMultiPhaseTradingBot, MultiPhaseTradingBot } from "@/src/services/trading/multi-phase-trading-bot";
 import { TRADING_STRATEGIES } from "@/src/services/trading/trading-strategy-manager";
 
 describe('MultiPhaseTradingBot', () => {

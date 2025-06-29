@@ -5,10 +5,10 @@
  * Uses Server-Sent Events (SSE) for live data streaming.
  */
 
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 
 // Request validation schema
 const RealtimeQuerySchema = z.object({

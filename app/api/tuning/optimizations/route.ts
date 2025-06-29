@@ -4,13 +4,13 @@
  * API endpoints for managing parameter optimization processes
  */
 
+import { and, desc, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
-import { logger } from "@/src/lib/utils";
 import { db } from "@/src/db";
 import { strategyPerformanceMetrics, tradingStrategies } from "@/src/db/schema";
-import { desc, eq, and } from "drizzle-orm";
+import { logger } from "@/src/lib/utils";
+import { getParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
 
 // Validation schemas
 const OptimizationRequestSchema = z.object({

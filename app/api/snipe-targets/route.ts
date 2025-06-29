@@ -1,20 +1,20 @@
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schema";
-import { eq, and } from "drizzle-orm";
 import { 
-  createSuccessResponse, 
-  createErrorResponse, 
   apiResponse, 
-  HTTP_STATUS,
-  createValidationErrorResponse
+  createErrorResponse, 
+  createSuccessResponse, 
+  createValidationErrorResponse, 
+  HTTP_STATUS
 } from "@/src/lib/api-response";
+import { validateQueryParams, validateRequestBody } from "@/src/lib/api-validation-middleware";
 import { handleApiError } from "@/src/lib/error-handler";
 import { 
   CreateSnipeTargetRequestSchema, 
   SnipeTargetQuerySchema 
 } from "@/src/schemas/comprehensive-api-validation-schemas";
-import { validateRequestBody, validateQueryParams } from "@/src/lib/api-validation-middleware";
 
 export async function POST(request: NextRequest) {
   try {

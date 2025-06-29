@@ -9,17 +9,16 @@
  * - Cache monitoring for agent operations
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
-
-// Import everything before mocking
-import {
-  BaseAgent,
-  type AgentConfig,
-  type AgentResponse,
-} from "@/src/mexc-agents/base-agent";
-import { globalEnhancedAgentCache } from "@/src/lib/enhanced-agent-cache";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { globalCacheManager } from "@/src/lib/cache-manager";
 import { globalCacheMonitoring } from "@/src/lib/cache-monitoring";
+import { globalEnhancedAgentCache } from "@/src/lib/enhanced-agent-cache";
+// Import everything before mocking
+import {
+  type AgentConfig,
+  type AgentResponse,
+  BaseAgent,
+} from "@/src/mexc-agents/base-agent";
 
 // Mock console output to reduce test noise
 vi.spyOn(console, "log").mockImplementation(() => {});

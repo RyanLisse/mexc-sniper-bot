@@ -12,7 +12,7 @@
  * 5. Async/await patterns in service tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("Service Integration Test Fixes", () => {
   beforeEach(() => {

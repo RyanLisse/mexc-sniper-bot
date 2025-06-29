@@ -1,53 +1,53 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { lazy, useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { 
+  AlertCenter,
+  LazyAlertWrapper,
+  LazyChartWrapper,
+  LazyDashboardWrapper,
+  LazySafetyWrapper,
+  LazyTradingWrapper,
+  preloadMonitoringComponents, 
+  RealTimePerformance,
+  RealTimeSafetyDashboard,
+  SystemArchitectureOverview,
+  TradingAnalyticsDashboard
+} from "@/components/dynamic-component-loader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { DashboardLayout } from "@/components/dashboard-layout";
-import { 
-  SystemArchitectureOverview,
-  RealTimePerformance,
-  TradingAnalyticsDashboard,
-  AlertCenter,
-  RealTimeSafetyDashboard,
-  LazyDashboardWrapper,
-  LazyTradingWrapper,
-  LazyAlertWrapper,
-  LazySafetyWrapper,
-  LazyChartWrapper,
-  preloadMonitoringComponents
-} from "@/components/dynamic-component-loader";
-import { lazy } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PatternMonitoringDashboard = lazy(() => 
   import("@/src/components/auto-sniping/pattern-monitoring-dashboard").then((module) => ({
     default: module.PatternMonitoringDashboard || module.default
   }))
 );
+
 import { 
   Activity, 
-  BarChart3, 
-  Shield, 
-  Bell, 
-  TrendingUp, 
-  Settings,
-  Monitor,
-  Cpu,
-  Network,
-  Database,
-  Zap,
   AlertTriangle,
+  BarChart3, 
+  Bell, 
   CheckCircle,
   Clock,
+  Cpu,
+  Database,
   DollarSign,
-  Target,
   Eye,
-  RefreshCw
+  Monitor,
+  Network,
+  RefreshCw, 
+  Settings,
+  Shield, 
+  Target,
+  TrendingUp, 
+  Zap
 } from "lucide-react";
 
 interface QuickMetrics {

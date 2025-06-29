@@ -1,7 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { eq } from 'drizzle-orm';
 import { db } from '@/src/db';
 import { apiCredentials, user, userPreferences } from '@/src/db/schema';
-import { eq } from 'drizzle-orm';
 
 // Test configuration
 const TEST_EMAIL = `fulltest-${Date.now()}@example.com`;

@@ -55,77 +55,54 @@ interface PerformanceMonitoringProps {
 export default function PerformanceMonitoringDashboard({
   refreshInterval = 5000,
 }: PerformanceMonitoringProps) {
-  const [cacheMetrics, setCacheMetrics] = useState<CacheMetrics>({
-    hitRatio: 85.2,
-    missRatio: 14.8,
-    totalRequests: 12450,
-    avgResponseTime: 2.3,
-    redisConnected: true,
-    valkeyConnected: true,
-    cacheSize: 1024,
-    evictions: 23,
-  });
-
-  const [systemHealth, setSystemHealth] = useState<SystemHealth>({
-    apiResponseTime: 145,
-    databaseResponseTime: 89,
-    memoryUsage: 67.5,
-    cpuUsage: 34.2,
-    activeConnections: 156,
-    errorRate: 0.02,
-    uptime: 86400000, // 24 hours in ms
-  });
-
-  const [alerts, _setAlerts] = useState<PerformanceAlert[]>([
-    {
-      id: "1",
-      type: "warning",
-      message: "Cache hit ratio below 90% threshold",
-      timestamp: Date.now() - 300000,
-      resolved: false,
-    },
-    {
-      id: "2",
-      type: "info",
-      message: "Cache warming completed successfully",
-      timestamp: Date.now() - 600000,
-      resolved: true,
-    },
-  ]);
+  const [cacheMetrics, setCacheMetrics] = useState<CacheMetrics | null>(null);
+  const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
+  const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const fetchPerformanceData = async () => {
       setIsLoading(true);
       try {
-        // Simulate fetching real metrics
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Fetch cache metrics
+        const cacheResponse = await fetch("/api/monitoring/cache");
+        if (cacheResponse.ok) {
+          const cacheResult = await cacheResponse.json();
+          if (cacheResult.success) {
+            setCacheMetrics(cacheResult.data);
+          }
+        }
 
-        // Update metrics with slight variations
-        setCacheMetrics((prev) => ({
-          ...prev,
-          hitRatio: Math.max(80, Math.min(95, prev.hitRatio + (Math.random() - 0.5) * 2)),
-          totalRequests: prev.totalRequests + Math.floor(Math.random() * 50),
-          avgResponseTime: Math.max(
-            1,
-            Math.min(10, prev.avgResponseTime + (Math.random() - 0.5) * 0.5)
-          ),
-        }));
+        // Fetch system health
+        const healthResponse = await fetch("/api/monitoring/system-health");
+        if (healthResponse.ok) {
+          const healthResult = await healthResponse.json();
+          if (healthResult.success) {
+            setSystemHealth(healthResult.data);
+          }
+        }
 
-        setSystemHealth((prev) => ({
-          ...prev,
-          apiResponseTime: Math.max(
-            50,
-            Math.min(500, prev.apiResponseTime + (Math.random() - 0.5) * 20)
-          ),
-          memoryUsage: Math.max(30, Math.min(90, prev.memoryUsage + (Math.random() - 0.5) * 5)),
-          cpuUsage: Math.max(10, Math.min(80, prev.cpuUsage + (Math.random() - 0.5) * 10)),
-        }));
+        // Fetch performance alerts
+        const alertsResponse = await fetch("/api/monitoring/alerts?limit=10&resolved=false");
+        if (alertsResponse.ok) {
+          const alertsResult = await alertsResponse.json();
+          if (alertsResult.success) {
+            setAlerts(alertsResult.data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch performance data:", error);
       } finally {
         setIsLoading(false);
       }
-    }, refreshInterval);
+    };
+
+    // Initial fetch
+    fetchPerformanceData();
+
+    // Set up interval for refreshing
+    const interval = setInterval(fetchPerformanceData, refreshInterval);
 
     return () => clearInterval(interval);
   }, [refreshInterval]);
@@ -141,6 +118,20 @@ export default function PerformanceMonitoringDashboard({
     if (value >= thresholds.warning) return "warning";
     return "healthy";
   };
+
+  // Show loading state if no data is available yet
+  if (!cacheMetrics || !systemHealth) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
+            <p className="text-muted-foreground">Loading performance data...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

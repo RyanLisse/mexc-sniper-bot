@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 import { 
-  createSuccessResponse, 
-  createErrorResponse, 
   apiResponse, 
+  createErrorResponse, 
+  createSuccessResponse, 
   HTTP_STATUS 
 } from "@/src/lib/api-response";
+import { validateRequestBody } from "@/src/lib/api-validation-middleware";
 import { handleApiError } from "@/src/lib/error-handler";
 import { 
   AutoSnipingActionRequestSchema, 
   AutoSnipingConfigSchema,
   validateApiRequest 
 } from "@/src/schemas/comprehensive-api-validation-schemas";
-import { validateRequestBody } from "@/src/lib/api-validation-middleware";
+import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
 const coreTrading = getCoreTrading();
 

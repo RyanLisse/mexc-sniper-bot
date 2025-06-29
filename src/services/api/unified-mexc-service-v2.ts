@@ -248,16 +248,47 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     error?: string;
   }> {
     try {
-      // Implement using available core client methods
-      // For now, return empty result as getTradeHistory may not be implemented
+      // Implement real trade history retrieval using core client
+      const result = await this.coreClient.getUserTrades({
+        symbol: symbol || undefined,
+        limit: limit || 100,
+        startTime: Date.now() - (7 * 24 * 60 * 60 * 1000), // Last 7 days
+      });
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error || "Failed to fetch trade history",
+        };
+      }
+
+      // Transform the data to match expected format
+      const transformedData = (result.data || []).map((trade: any) => ({
+        id: String(trade.id || trade.tradeId || `${Date.now()}-${Math.random()}`),
+        orderId: String(trade.orderId || ""),
+        symbol: trade.symbol || symbol || "",
+        side: (trade.side as "BUY" | "SELL") || "BUY",
+        quantity: String(trade.qty || trade.quantity || "0"),
+        price: String(trade.price || "0"),
+        commission: String(trade.commission || trade.fee || "0"),
+        commissionAsset: trade.commissionAsset || trade.feeAsset || "USDT",
+        timestamp: trade.time || trade.timestamp || Date.now(),
+      }));
+
       return {
         success: true,
-        data: [],
+        data: transformedData,
       };
     } catch (error) {
+      this.logger.error("Trade history retrieval failed", { 
+        symbol, 
+        limit, 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+      
       return {
         success: false,
-        error: String(error),
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }

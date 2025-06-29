@@ -10,14 +10,14 @@
  * - Recovery and completion workflows
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EmergencyStop } from "@/src/domain/entities/safety/emergency-stop.entity";
 import { DomainValidationError } from "@/src/domain/errors/trading-errors";
 import {
-  EmergencyStopCreated,
-  EmergencyStopTriggered,
   EmergencyStopCompleted,
+  EmergencyStopCreated,
   EmergencyStopFailed,
+  EmergencyStopTriggered,
 } from "@/src/domain/events/safety-events";
 import { CleanArchitectureAssertions } from "../../../../utils/clean-architecture-test-utilities";
 

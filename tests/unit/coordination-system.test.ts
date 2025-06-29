@@ -1,17 +1,17 @@
-import { describe, test, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import {
-  AgentRegistry,
-  WorkflowEngine,
-  PerformanceCollector,
-  EnhancedMexcOrchestrator,
-  createCoordinationSystem,
-  checkCoordinationSystemHealth,
-} from "@/src/mexc-agents/coordination";
-import {
-  BaseAgent,
   type AgentConfig,
   type AgentResponse,
+  BaseAgent,
 } from "@/src/mexc-agents/base-agent";
+import {
+  AgentRegistry,
+  checkCoordinationSystemHealth,
+  createCoordinationSystem,
+  EnhancedMexcOrchestrator,
+  PerformanceCollector,
+  WorkflowEngine,
+} from "@/src/mexc-agents/coordination";
 
 // Mock agent for testing
 class MockAgent extends BaseAgent {
