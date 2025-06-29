@@ -7,20 +7,20 @@
  * This file now serves as a backward-compatibility layer.
  */
 
-// Re-export everything from the new modular structure
-export { 
-  PerformanceCollector,
-  AgentMetricsCollector,
-  SystemMetricsCollector, 
-  WorkflowMetricsCollector,
-  PerformanceReportGenerator
-} from "./performance";
 
 export type {
   AgentPerformanceMetrics,
-  WorkflowPerformanceMetrics,
-  SystemPerformanceSnapshot,
-  PerformanceReport,
-  PerformanceCollectorOptions,
   MetricsStorage,
+  PerformanceCollectorOptions,
+  PerformanceReport,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetrics,
+} from "./performance";
+// Re-export everything from the new modular structure
+export { 
+  AgentMetricsCollector,
+  PerformanceCollector,
+  PerformanceReportGenerator, 
+  SystemMetricsCollector, 
+  WorkflowMetricsCollector
 } from "./performance";

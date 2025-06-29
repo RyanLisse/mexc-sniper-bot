@@ -11,19 +11,19 @@ import {
   type ServiceResponse,
 } from "@/src/services/api/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "../base-agent";
-import { SymbolAnalyzer } from "./analyzers/symbol-analyzer";
 import { CalendarAnalyzer } from "./analyzers/calendar-analyzer";
 import { DataQualityAnalyzer } from "./analyzers/data-quality-analyzer";
-import { ResponseValidator } from "./validators/response-validator";
+import { SymbolAnalyzer } from "./analyzers/symbol-analyzer";
 import { ResponseEnhancer } from "./enhancers/response-enhancer";
 import type { 
+  EnhancedApiResponse, 
   MexcApiParams, 
   MexcApiRequest, 
-  MexcSymbolData, 
-  MexcCalendarEntry, 
   MexcApiResponseData,
-  EnhancedApiResponse
+  MexcCalendarEntry, 
+  MexcSymbolData 
 } from "./types";
+import { ResponseValidator } from "./validators/response-validator";
 
 // Simple logger for testing and development
 const logger = {

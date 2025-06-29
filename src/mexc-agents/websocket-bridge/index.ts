@@ -12,24 +12,23 @@
  * - Error and alert distribution
  */
 
-// Main bridge class
-export { WebSocketAgentBridge } from "./websocket-agent-bridge";
+export { PatternDiscoveryStreamer } from "./streamers/pattern-discovery-streamer";
 
 // Streamers
 export { RealTimeDataStreamer } from "./streamers/real-time-data-streamer";
-export { PatternDiscoveryStreamer } from "./streamers/pattern-discovery-streamer";
 export { TradingSignalStreamer } from "./streamers/trading-signal-streamer";
-
 // Types
 export type {
   AgentStatusTracker,
-  WorkflowTracker,
+  BridgeStatus,
   PatternDiscoveryData,
   ReadyStateData,
   TradingSignalData,
   WorkflowExecutionRequest,
-  BridgeStatus,
+  WorkflowTracker,
 } from "./types";
+// Main bridge class
+export { WebSocketAgentBridge } from "./websocket-agent-bridge";
 
 // Singleton instance for backward compatibility
 import { WebSocketAgentBridge } from "./websocket-agent-bridge";

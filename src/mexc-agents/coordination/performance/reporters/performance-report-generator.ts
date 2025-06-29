@@ -6,9 +6,9 @@
 
 import type { 
   AgentPerformanceMetrics, 
-  WorkflowPerformanceMetrics, 
+  PerformanceReport, 
   SystemPerformanceSnapshot, 
-  PerformanceReport 
+  WorkflowPerformanceMetrics 
 } from "../types";
 
 export class PerformanceReportGenerator {

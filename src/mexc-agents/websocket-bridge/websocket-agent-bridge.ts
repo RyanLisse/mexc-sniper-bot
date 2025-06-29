@@ -16,15 +16,15 @@ import type { EnhancedMexcOrchestrator } from "../coordination/enhanced-orchestr
 import type { PerformanceCollector } from "../coordination/performance-collector";
 import type { WorkflowEngine } from "../coordination/workflow-engine";
 import type { MexcWorkflowResult } from "../orchestrator-types";
-import { RealTimeDataStreamer } from "./streamers/real-time-data-streamer";
 import { PatternDiscoveryStreamer } from "./streamers/pattern-discovery-streamer";
+import { RealTimeDataStreamer } from "./streamers/real-time-data-streamer";
 import { TradingSignalStreamer } from "./streamers/trading-signal-streamer";
 import type { 
   BridgeStatus, 
-  WorkflowExecutionRequest,
   PatternDiscoveryData,
   ReadyStateData,
-  TradingSignalData
+  TradingSignalData, 
+  WorkflowExecutionRequest
 } from "./types";
 
 export class WebSocketAgentBridge extends EventEmitter {

@@ -5,8 +5,8 @@
  * to balance display, identifying service initialization issues
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Remove module-level mocks - rely on global mocks from vitest-setup.ts
 // The global setup already includes comprehensive mocks for MEXC services and auth

@@ -3,9 +3,9 @@
  */
 
 import { eq } from "drizzle-orm";
+import { getCoreTrading } from "../src/services/trading/consolidated/core-trading/base-service";
 import { db } from "./src/db";
 import { snipeTargets } from "./src/db/schemas/trading";
-import { getCoreTrading } from "../src/services/trading/consolidated/core-trading/base-service";
 
 async function testManualAutoSniping() {
   console.log('🔬 Testing Manual Auto-Sniping Execution');

@@ -4,14 +4,14 @@
  * Enhances API responses with AI analysis and additional metadata
  */
 
-import type { AgentResponse } from "../../base-agent";
-import type { CalendarEntry } from "@/src/services/api/mexc-client-types";
 import type { SymbolEntry } from "@/src/schemas/unified/mexc-api-schemas";
+import type { CalendarEntry } from "@/src/services/api/mexc-client-types";
 import type { ServiceResponse } from "@/src/services/api/mexc-unified-exports";
-import type { MexcApiResponseData, MexcCalendarEntry, MexcSymbolData, EnhancedApiResponse } from "../types";
-import { SymbolAnalyzer } from "../analyzers/symbol-analyzer";
+import type { AgentResponse } from "../../base-agent";
 import { CalendarAnalyzer } from "../analyzers/calendar-analyzer";
 import { DataQualityAnalyzer } from "../analyzers/data-quality-analyzer";
+import { SymbolAnalyzer } from "../analyzers/symbol-analyzer";
+import type { EnhancedApiResponse, MexcApiResponseData, MexcCalendarEntry, MexcSymbolData } from "../types";
 
 export class ResponseEnhancer {
   private symbolAnalyzer: SymbolAnalyzer;

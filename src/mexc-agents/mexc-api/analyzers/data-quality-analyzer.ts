@@ -4,9 +4,9 @@
  * Handles assessment of API response data quality and reliability
  */
 
+import type { ServiceResponse } from "@/src/services/api/mexc-unified-exports";
 import type { AgentResponse } from "../../base-agent";
 import type { MexcApiResponseData } from "../types";
-import type { ServiceResponse } from "@/src/services/api/mexc-unified-exports";
 
 export class DataQualityAnalyzer {
   /**

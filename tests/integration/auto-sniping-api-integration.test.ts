@@ -53,7 +53,8 @@ describe('Auto-Sniping API Integration Tests', () => {
 
   describe('GET /api/auto-sniping/execution', () => {
     it('should return execution report successfully', async () => {
-      const { GET } = await import('@/app/api/auto-sniping/execution/route');
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      const GET = routeModule.GET;
       const request = new NextRequest('http://localhost:3000/api/auto-sniping/execution', {
         method: 'GET'
       });
@@ -69,7 +70,8 @@ describe('Auto-Sniping API Integration Tests', () => {
     });
 
     it('should handle query parameters correctly', async () => {
-      const { GET } = await import('@/app/api/auto-sniping/execution/route');
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      const GET = routeModule.GET;
       const request = new NextRequest(
         'http://localhost:3000/api/auto-sniping/execution?include_positions=true&include_history=true',
         { method: 'GET' }
@@ -86,8 +88,15 @@ describe('Auto-Sniping API Integration Tests', () => {
   });
 
   describe('POST /api/auto-sniping/execution', () => {
+    let POST: any;
+    
+    beforeEach(async () => {
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      POST = routeModule.POST;
+    });
     it('should start execution successfully', async () => {
-      const { POST } = await import('@/app/api/auto-sniping/execution/route');
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      const POST = routeModule.POST;
       const request = new NextRequest('http://localhost:3000/api/auto-sniping/execution', {
         method: 'POST',
         body: JSON.stringify({ action: 'start_execution' }),
@@ -258,6 +267,12 @@ describe('Auto-Sniping API Integration Tests', () => {
   });
 
   describe('PUT /api/auto-sniping/execution', () => {
+    let PUT: any;
+    
+    beforeEach(async () => {
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      PUT = routeModule.PUT;
+    });
     it('should update configuration successfully', async () => {
       const config = {
         maxPositions: 10,
@@ -317,6 +332,12 @@ describe('Auto-Sniping API Integration Tests', () => {
   });
 
   describe('DELETE /api/auto-sniping/execution', () => {
+    let DELETE: any;
+    
+    beforeEach(async () => {
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      DELETE = routeModule.DELETE;
+    });
     it('should perform emergency shutdown successfully', async () => {
       // Start execution first
       await coreTrading.startAutoSniping();
@@ -336,6 +357,13 @@ describe('Auto-Sniping API Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
+    let POST: any;
+    
+    beforeEach(async () => {
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      POST = routeModule.POST;
+    });
+    
     it('should handle malformed JSON', async () => {
       const request = new NextRequest('http://localhost:3000/api/auto-sniping/execution', {
         method: 'POST',
@@ -367,6 +395,13 @@ describe('Auto-Sniping API Integration Tests', () => {
   });
 
   describe('Service Integration', () => {
+    let POST: any;
+    
+    beforeEach(async () => {
+      const routeModule = await import('../../app/api/auto-sniping/execution/route') as any;
+      POST = routeModule.POST;
+    });
+    
     it('should integrate with core trading service', async () => {
       // Test that API calls actually affect the core trading service
       const statusBefore = await coreTrading.getServiceStatus();

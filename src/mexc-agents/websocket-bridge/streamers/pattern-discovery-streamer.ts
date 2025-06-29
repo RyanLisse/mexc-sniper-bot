@@ -5,9 +5,9 @@
  */
 
 import type {
+  NotificationMessage,
   PatternDiscoveryMessage,
   PatternReadyStateMessage,
-  NotificationMessage,
 } from "@/src/lib/websocket-types";
 import { webSocketServer } from "@/src/services/data/websocket-server";
 import type { PatternDiscoveryData, ReadyStateData } from "../types";

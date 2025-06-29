@@ -7,23 +7,23 @@
  * This file now serves as a backward-compatibility layer.
  */
 
-// Re-export everything from the new modular structure
-export { 
-  MexcApiAgent,
-  SymbolAnalyzer,
-  CalendarAnalyzer,
-  DataQualityAnalyzer,
-  ResponseValidator,
-  ResponseEnhancer
-} from "./mexc-api";
 
 export type {
+  AnalysisResult,
+  EnhancedApiResponse,
   MexcApiParams,
   MexcApiRequest,
   MexcApiResponseData,
+  MexcCalendarEntry,
   MexcSymbolData,
   MexcSymbolFilterData,
-  MexcCalendarEntry,
-  EnhancedApiResponse,
-  AnalysisResult,
+} from "./mexc-api";
+// Re-export everything from the new modular structure
+export { 
+  CalendarAnalyzer,
+  DataQualityAnalyzer,
+  MexcApiAgent,
+  ResponseEnhancer, 
+  ResponseValidator,
+  SymbolAnalyzer
 } from "./mexc-api";

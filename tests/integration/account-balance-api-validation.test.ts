@@ -5,8 +5,8 @@
  * without complex mock setup issues
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as accountBalanceEndpoint } from "../../app/api/account/balance/route";
 
 describe("Account Balance API Validation", () => {

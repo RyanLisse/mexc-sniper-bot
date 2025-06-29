@@ -5,7 +5,7 @@
  * Tests the PositionManager class extracted from auto-sniping.ts
  */
 
-import { describe, expect, test, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PositionManager } from '@/src/services/trading/consolidated/core-trading/position-manager';
 import type { ModuleContext, Position, TradeResult } from '@/src/services/trading/consolidated/core-trading/types';
 

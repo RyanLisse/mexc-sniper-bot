@@ -468,7 +468,7 @@ export class CrossDomainWorkflowTests {
 
         // Step 6: Acknowledge Alert and Resume Normal Operations
         const acknowledgeResult = await PerformanceTestFramework.measureUseCasePerformance(
-          () => context.alertRepository.acknowledgeAlert(healthAlertResult.result.id),
+          () => context.alertRepository.acknowledgeAlert((healthAlertResult.result as any).id),
           "AcknowledgeAlert"
         );
 
@@ -732,10 +732,4 @@ export class PerformanceIntegrationTests {
   }
 }
 
-// Export test framework
-export {
-  IntegrationTestSetup,
-  CrossDomainWorkflowTests,
-  FeatureFlagIntegrationTests,
-  PerformanceIntegrationTests,
-};
+// Classes are already exported individually above

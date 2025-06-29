@@ -10,13 +10,13 @@
  * - Performance reporting and analysis
  */
 
-// Main collector
-export { PerformanceCollector } from "./performance-collector";
 
 // Individual collectors
 export { AgentMetricsCollector } from "./collectors/agent-metrics-collector";
 export { SystemMetricsCollector } from "./collectors/system-metrics-collector";
 export { WorkflowMetricsCollector } from "./collectors/workflow-metrics-collector";
+// Main collector
+export { PerformanceCollector } from "./performance-collector";
 
 // Report generator
 export { PerformanceReportGenerator } from "./reporters/performance-report-generator";
@@ -24,9 +24,9 @@ export { PerformanceReportGenerator } from "./reporters/performance-report-gener
 // Types
 export type {
   AgentPerformanceMetrics,
-  WorkflowPerformanceMetrics,
-  SystemPerformanceSnapshot,
-  PerformanceReport,
-  PerformanceCollectorOptions,
   MetricsStorage,
+  PerformanceCollectorOptions,
+  PerformanceReport,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetrics,
 } from "./types";

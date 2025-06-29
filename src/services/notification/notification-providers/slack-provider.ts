@@ -100,22 +100,29 @@ export class SlackProvider implements NotificationProvider {
 
       const payload = this.buildSlackPayload(config, alert, message);
 
-      // For production, you would make an actual HTTP request to Slack
-      // For now, we'll simulate the Slack API call
-
       console.info("Sending Slack notification:", payload);
 
-      // In production, you would:
-      // const response = await fetch(config.webhookUrl, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(payload)
-      // });
+      // Make actual HTTP request to Slack
+      const response = await fetch(config.webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
+      if (!response.ok) {
+        throw new Error(`Slack API error: ${response.status} ${response.statusText}`);
+      }
+
+      const responseData = await response.text();
+      
       return {
         success: true,
         messageId: `slack_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        response: { simulated: true },
+        response: { 
+          status: response.status,
+          statusText: response.statusText,
+          data: responseData
+        },
       };
     } catch (error) {
       console.error("Slack notification failed:", error);

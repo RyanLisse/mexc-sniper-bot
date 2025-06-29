@@ -16,30 +16,30 @@
  * - Safety systems coordinate effectively ✅
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest';
-import { 
-  setTestTimeout, 
-  withTimeout, 
-  withDatabaseTimeout,
-  withApiTimeout,
-  globalTimeoutMonitor 
-} from '../utils/timeout-utilities';
-import { 
-  setupMexcIntegrationTest,
-  teardownMexcIntegrationTest,
-  createMockSymbolEntry,
-  createMockCalendarEntry,
-  createMockActivityData,
-  waitForMexcOperation
-} from '../utils/mexc-integration-utilities';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PatternDetectionCore } from '@/src/core/pattern-detection/pattern-detection-core';
-import { MultiPhaseTradingBot } from '@/src/services/trading/multi-phase-trading-bot';
-import { ComprehensiveSafetyCoordinator } from '@/src/services/risk/comprehensive-safety-coordinator';
+import type { ActivityData } from '@/src/schemas/unified/mexc-api-schemas';
+import type { CalendarEntry, SymbolEntry } from '@/src/services/api/mexc-unified-exports';
 import { UnifiedMexcServiceV2 } from '@/src/services/api/unified-mexc-service-v2';
 import { AdvancedRiskEngine } from '@/src/services/risk/advanced-risk-engine';
+import { ComprehensiveSafetyCoordinator } from '@/src/services/risk/comprehensive-safety-coordinator';
 import { MultiPhaseExecutor } from '@/src/services/trading/multi-phase-executor';
-import type { SymbolEntry, CalendarEntry } from '@/src/services/api/mexc-unified-exports';
-import type { ActivityData } from '@/src/schemas/unified/mexc-api-schemas';
+import { MultiPhaseTradingBot } from '@/src/services/trading/multi-phase-trading-bot';
+import { 
+  createMockActivityData,
+  createMockCalendarEntry,
+  createMockSymbolEntry,
+  setupMexcIntegrationTest,
+  teardownMexcIntegrationTest,
+  waitForMexcOperation
+} from '../utils/mexc-integration-utilities';
+import { 
+  globalTimeoutMonitor, 
+  setTestTimeout, 
+  withApiTimeout,
+  withDatabaseTimeout,
+  withTimeout 
+} from '../utils/timeout-utilities';
 
 describe('Comprehensive Autosniping Workflow Integration Tests', () => {
   // Set extended timeout for integration tests (45 seconds)

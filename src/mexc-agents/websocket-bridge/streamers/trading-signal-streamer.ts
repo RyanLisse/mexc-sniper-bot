@@ -5,8 +5,8 @@
  */
 
 import type {
-  TradingSignalMessage,
   NotificationMessage,
+  TradingSignalMessage,
 } from "@/src/lib/websocket-types";
 import { webSocketServer } from "@/src/services/data/websocket-server";
 import type { TradingSignalData } from "../types";

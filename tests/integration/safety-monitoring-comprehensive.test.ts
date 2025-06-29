@@ -223,15 +223,15 @@ vi.mock("@/src/lib/api-auth", () => ({
   }),
 }));
 
+
+// Import NextRequest after mocks are set up
+import { NextRequest } from "next/server";
 // Import utilities after mocks are set up
 import {
   assertErrorResponse,
   assertSuccessResponse,
   createMockRequest,
 } from "../utils/safety-monitoring-test-mocks";
-
-// Import NextRequest after mocks are set up
-import { NextRequest } from "next/server";
 
 describe("Safety Monitoring API - Comprehensive Tests", () => {
   let GET: any;

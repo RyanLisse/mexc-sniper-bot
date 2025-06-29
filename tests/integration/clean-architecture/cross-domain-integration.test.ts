@@ -16,7 +16,7 @@ import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
 import { DomainEvent } from "@/src/domain/events/domain-event";
 import { SafetyRule } from "@/src/domain/value-objects/safety/safety-rule";
 import { Money } from "@/src/domain/value-objects/trading/money";
-import { Order, OrderStatus } from "@/src/domain/value-objects/trading/order";
+import { Order, OrderSide, OrderStatus, OrderType, TimeInForce } from "@/src/domain/value-objects/trading/order";
 import { Price } from "@/src/domain/value-objects/trading/price";
 import type { UserContext } from "@/src/lib/feature-flags/enhanced-feature-flag-manager";
 import { ROLLOUT_PHASES, TradingDomainFeatureFlagManager } from "@/src/lib/feature-flags/trading-domain-flags";
@@ -126,8 +126,8 @@ describe("Cross-Domain Integration Tests", () => {
       getPortfolioById: vi.fn(async (portfolioId) => ({
         id: portfolioId,
         userId: "user123",
-        totalValue: Money.fromUSDT(10000),
-        availableBalance: Money.fromUSDT(8000),
+        totalValue: Money.create(10000, 'USDT'),
+        availableBalance: Money.create(8000, 'USDT'),
         positions: [],
       })),
       addPosition: vi.fn(),
@@ -187,7 +187,6 @@ describe("Cross-Domain Integration Tests", () => {
         symbol: "BTCUSDT",
         isAutoSnipe: true,
         confidenceScore: 95, // High confidence
-        positionSizeUsdt: 5000, // Large position - should trigger safety rules
         paperTrade: false,
       });
 
@@ -207,7 +206,7 @@ describe("Cross-Domain Integration Tests", () => {
       // Step 2: Portfolio impact assessment
       const portfolioUpdate = await mockPortfolioService.updatePortfolioValue(
         "portfolio_123",
-        Money.fromUSDT(9500) // After 5% loss simulation
+        Money.create(9500, 'USDT') // After 5% loss simulation
       );
 
       expect(portfolioUpdate.portfolioId).toBe("portfolio_123");
@@ -259,9 +258,9 @@ describe("Cross-Domain Integration Tests", () => {
 
       // Verify cross-domain interaction
       expect(publishedEvents).toHaveLength(3);
-      expect(publishedEvents[0].eventType).toBe("trade.execution.started");
-      expect(publishedEvents[1].eventType).toBe("safety.rules.evaluated");
-      expect(publishedEvents[2].eventType).toBe("portfolio.value.updated");
+      expect(publishedEvents[0].type).toBe("trade.execution.started");
+      expect(publishedEvents[1].type).toBe("safety.rules.evaluated");
+      expect(publishedEvents[2].type).toBe("portfolio.value.updated");
 
       // Verify services were called with correct data
       expect(mockSafetyService.evaluateRules).toHaveBeenCalledWith(
@@ -323,20 +322,23 @@ describe("Cross-Domain Integration Tests", () => {
         userId: "user123",
         symbol: "BTCUSDT",
         isAutoSnipe: true,
-        positionSizeUsdt: 1000, // Moderate position
+        paperTrade: false,
       });
 
       // Simulate successful trade execution
       const order = Order.create({
         symbol: "BTCUSDT",
-        side: "BUY",
-        type: "MARKET",
+        side: OrderSide.BUY,
+        type: OrderType.MARKET,
+        status: OrderStatus.PENDING,
         quantity: 0.02,
-        price: Price.fromString("50000"),
-        timeInForce: "IOC",
+        price: 50000,
+        timeInForce: TimeInForce.IOC,
+        isAutoSnipe: true,
+        paperTrade: false,
       });
 
-      const filledOrder = order.markAsFilled(0.02, Price.fromString("50000"));
+      const filledOrder = order.markAsFilled(0.02, 50000);
       const updatedTrade = trade.addOrder(filledOrder);
 
       // Update portfolio to reflect trade
@@ -393,7 +395,7 @@ describe("Cross-Domain Integration Tests", () => {
 
       // Verify event was published and safety evaluation triggered
       expect(publishedEvents).toHaveLength(1);
-      expect(publishedEvents[0].eventType).toBe("trade.order.filled");
+      expect(publishedEvents[0].type).toBe("trade.order.filled");
       expect(safetyRuleEvaluations).toHaveLength(1);
       expect(safetyRuleEvaluations[0].symbol).toBe("BTCUSDT");
     });
@@ -460,13 +462,13 @@ describe("Cross-Domain Integration Tests", () => {
 
       // Verify events are in correct chronological order
       expect(publishedEvents).toHaveLength(3);
-      expect(publishedEvents[0].timestamp.getTime()).toBeLessThan(publishedEvents[1].timestamp.getTime());
-      expect(publishedEvents[1].timestamp.getTime()).toBeLessThan(publishedEvents[2].timestamp.getTime());
+      expect(publishedEvents[0].occurredAt.getTime()).toBeLessThan(publishedEvents[1].occurredAt.getTime());
+      expect(publishedEvents[1].occurredAt.getTime()).toBeLessThan(publishedEvents[2].occurredAt.getTime());
 
       // Verify event sequence makes logical sense
-      expect(publishedEvents[0].eventType).toBe("trade.execution.started");
-      expect(publishedEvents[1].eventType).toBe("trade.order.placed");
-      expect(publishedEvents[2].eventType).toBe("trade.order.filled");
+      expect(publishedEvents[0].type).toBe("trade.execution.started");
+      expect(publishedEvents[1].type).toBe("trade.order.placed");
+      expect(publishedEvents[2].type).toBe("trade.order.filled");
     });
   });
 
@@ -483,7 +485,7 @@ describe("Cross-Domain Integration Tests", () => {
       await mockTradingRepository.saveTrade(trade);
 
       // Portfolio updates should go through portfolio service
-      await mockPortfolioService.updatePortfolioValue("portfolio_123", Money.fromUSDT(9500));
+      await mockPortfolioService.updatePortfolioValue("portfolio_123", Money.create(9500, 'USDT'));
 
       // Safety evaluations should go through safety service  
       await mockSafetyService.evaluateRules({
@@ -589,7 +591,6 @@ describe("Cross-Domain Integration Tests", () => {
           symbol: readyMatch.symbol,
           isAutoSnipe: true,
           confidenceScore: readyMatch.confidence,
-          positionSizeUsdt: 1000,
           paperTrade: false,
         });
 
@@ -749,7 +750,7 @@ describe("Cross-Domain Integration Tests", () => {
           
           // Verify trading events were published
           const tradingEvents = publishedEvents.filter(
-            e => e.eventType === "trade.pattern.triggered"
+            e => e.type === "trade.pattern.triggered"
           );
           expect(tradingEvents.length).toBeGreaterThan(0);
         }

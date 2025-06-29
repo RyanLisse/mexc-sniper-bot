@@ -12,12 +12,12 @@ import { SystemMetricsCollector } from "./collectors/system-metrics-collector";
 import { WorkflowMetricsCollector } from "./collectors/workflow-metrics-collector";
 import { PerformanceReportGenerator } from "./reporters/performance-report-generator";
 import type { 
+  AgentPerformanceMetrics,
+  MetricsStorage,
   PerformanceCollectorOptions, 
   PerformanceReport, 
-  MetricsStorage,
-  AgentPerformanceMetrics,
-  WorkflowPerformanceMetrics,
-  SystemPerformanceSnapshot
+  SystemPerformanceSnapshot, 
+  WorkflowPerformanceMetrics
 } from "./types";
 
 export class PerformanceCollector {
@@ -272,8 +272,8 @@ export class PerformanceCollector {
 // Re-export types for convenience
 export type {
   AgentPerformanceMetrics,
-  WorkflowPerformanceMetrics,
-  SystemPerformanceSnapshot,
-  PerformanceReport,
   PerformanceCollectorOptions,
+  PerformanceReport,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetrics,
 } from "./types";

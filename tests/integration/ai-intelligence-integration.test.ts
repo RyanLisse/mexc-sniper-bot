@@ -157,9 +157,21 @@ describe("AI Intelligence Integration", () => {
       vector: [0.2, 0.4, 0.6],
       dimensions: 3,
     });
-    vi.spyOn(patternEmbeddingService, "storePattern").mockResolvedValue(
-      "test-pattern-id",
-    );
+    vi.spyOn(patternEmbeddingService, "storePattern").mockResolvedValue({
+      patternId: 'test-pattern-id',
+      embedding: {
+        timestamp: Date.now(),
+        vector: [0.1, 0.2, 0.3],
+        dimensions: 3,
+        model: 'cohere-embed-english-v3.0',
+      },
+      metadata: {
+        type: 'market',
+        confidence: 0.95,
+        timestamp: Date.now(),
+        data: {},
+      },
+    });
     vi.spyOn(patternEmbeddingService, "findSimilarPatterns").mockResolvedValue(
       [
         {

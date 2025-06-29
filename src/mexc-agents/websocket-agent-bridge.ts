@@ -7,21 +7,21 @@
  * This file now serves as a backward-compatibility layer.
  */
 
-// Re-export everything from the new modular structure
-export { 
-  WebSocketAgentBridge, 
-  webSocketAgentBridge,
-  RealTimeDataStreamer,
-  PatternDiscoveryStreamer,
-  TradingSignalStreamer
-} from "./websocket-bridge";
 
 export type {
   AgentStatusTracker,
-  WorkflowTracker,
+  BridgeStatus,
   PatternDiscoveryData,
   ReadyStateData,
   TradingSignalData,
   WorkflowExecutionRequest,
-  BridgeStatus,
+  WorkflowTracker,
+} from "./websocket-bridge";
+// Re-export everything from the new modular structure
+export { 
+  PatternDiscoveryStreamer,
+  RealTimeDataStreamer,
+  TradingSignalStreamer, 
+  WebSocketAgentBridge, 
+  webSocketAgentBridge
 } from "./websocket-bridge";
