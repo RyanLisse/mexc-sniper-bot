@@ -141,7 +141,23 @@ export class WorkflowStatusService {
       }
     }
 
-    return status;
+    // Ensure we never return null by providing a final fallback
+    return status || {
+      id: 0,
+      userId: this.userId,
+      systemStatus: "error" as const,
+      lastUpdate: new Date(),
+      activeWorkflows: "[]",
+      readyTokens: 0,
+      totalDetections: 0,
+      successfulSnipes: 0,
+      totalProfit: 0,
+      successRate: 0,
+      averageROI: 0,
+      bestTrade: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
   }
 
   /**

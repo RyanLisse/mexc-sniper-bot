@@ -276,7 +276,7 @@ export class RealTimeTriggerEngine extends EventEmitter {
       this.logger.error(`Market data processing failed`, {
         symbol,
         price,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }

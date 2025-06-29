@@ -334,7 +334,7 @@ export class NotificationService {
       .where(eq(notificationChannels.isEnabled, true));
 
     const matchResults = await Promise.all(
-      channels.map(async (channel) => ({
+      channels.map(async (channel: SelectNotificationChannel) => ({
         channel,
         matches: await this.channelMatchesAlert(channel, alert),
       }))

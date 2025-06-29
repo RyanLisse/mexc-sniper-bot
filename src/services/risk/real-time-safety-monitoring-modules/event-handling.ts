@@ -108,7 +108,7 @@ export class EventHandling {
     };
 
     // Validate the operation structure
-    const { handler, executionCount, totalExecutionTime, lastError, ...validationData } =
+    const { handler, executionCount, totalExecutionTime, ...validationData } =
       scheduledOp;
     validateScheduledOperation(validationData);
 

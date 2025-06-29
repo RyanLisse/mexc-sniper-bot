@@ -81,20 +81,26 @@ export const PortfolioRiskMetricsSchema = z.object({
   // Portfolio value metrics
   totalValue: z.number().min(0),
   totalExposure: z.number().min(0),
+  totalPositions: z.number().min(0).int(),
 
   // Risk scores (0-100 scale)
   diversificationScore: z.number().min(0).max(100),
   concentrationRisk: z.number().min(0).max(100),
 
-  // Correlation matrix (2D array of numbers between -1 and 1)
-  correlationMatrix: z.array(z.array(z.number().min(-1).max(1))),
-
   // Risk calculations
   valueAtRisk95: z.number().min(0),
   expectedShortfall: z.number().min(0),
   sharpeRatio: z.number(), // can be negative
+  beta: z.number(), // can be negative
+  averageCorrelation: z.number().min(-1).max(1),
+  totalUnrealizedPnL: z.number(), // can be negative
+  maxSinglePositionPercent: z.number().min(0).max(100),
+  currentDrawdown: z.number().min(0),
   maxDrawdownRisk: z.number().min(0),
   liquidityRisk: z.number().min(0),
+
+  // Timestamp for data validity
+  timestamp: z.string(),
 });
 
 // ============================================================================

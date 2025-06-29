@@ -180,14 +180,20 @@ export class MarketConditionsManager {
     return {
       totalValue,
       totalExposure,
-      diversificationScore,
+      totalPositions: positions.length,
       concentrationRisk,
-      correlationMatrix: [], // Simplified for now - would be calculated from position correlations
+      diversificationScore,
       valueAtRisk95: portfolioVar,
       expectedShortfall: portfolioVar * 1.3,
       sharpeRatio: 0, // Would need return data to calculate
+      beta: 1.0, // Placeholder beta value
+      averageCorrelation: positions.length > 0 ? positions.reduce((sum, pos) => sum + pos.correlationScore, 0) / positions.length : 0,
+      totalUnrealizedPnL: positions.reduce((sum, pos) => sum + pos.unrealizedPnL, 0),
+      maxSinglePositionPercent: positions.length > 0 ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100 : 0,
+      currentDrawdown: positions.reduce((max, pos) => Math.max(max, pos.maxDrawdown), 0),
       maxDrawdownRisk: positions.reduce((max, pos) => Math.max(max, pos.maxDrawdown), 0),
       liquidityRisk: Math.max(0, 100 - this.marketConditions.liquidityIndex),
+      timestamp: new Date().toISOString(),
     };
   }
 

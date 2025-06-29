@@ -601,7 +601,13 @@ export class AdvancedEmergencyCoordinator extends EventEmitter {
     isInitialized: boolean;
     activeEmergencies: number;
     totalEmergencies: number;
-    metrics: typeof this.coordinatorMetrics;
+    metrics: {
+      totalEmergencies: number;
+      successfulResolutions: number;
+      averageResolutionTime: number;
+      autoRecoveries: number;
+      manualInterventions: number;
+    };
     lastTestDate: string;
     protocolsLoaded: number;
     recoveryPlansLoaded: number;
@@ -629,6 +635,29 @@ export class AdvancedEmergencyCoordinator extends EventEmitter {
    */
   getEmergencyHistory(limit = 50): EmergencySession[] {
     return this.sessionHistory.slice(-limit);
+  }
+
+  /**
+   * Start emergency system (alias for initialize)
+   */
+  async startEmergencySystem(): Promise<void> {
+    return await this.initialize();
+  }
+
+  /**
+   * Stop emergency system
+   */
+  async stopEmergencySystem(): Promise<void> {
+    this.isInitialized = false;
+    this.logger.info("Emergency system stopped");
+    this.emit("coordinator_stopped");
+  }
+
+  /**
+   * Get count of active protocols
+   */
+  getActiveProtocolsCount(): number {
+    return this.activeSessions.size;
   }
 
   // Private methods
@@ -888,7 +917,7 @@ export class AdvancedEmergencyCoordinator extends EventEmitter {
     });
 
     // Setup event listeners for safety coordinator
-    this.safetyCoordinator.on?.("emergency-triggered", async (procedure) => {
+    this.safetyCoordinator.on?.("emergency-triggered", async (procedure: any) => {
       this.logger.info("Safety coordinator emergency detected", {
         procedure: procedure.type,
       });
@@ -937,10 +966,17 @@ export class AdvancedEmergencyCoordinator extends EventEmitter {
     const sortedActions = level.autoActions.sort((a, b) => a.priority - b.priority);
 
     for (const action of sortedActions) {
-      const actionExecution = {
+      const actionExecution: {
+        actionId: string;
+        startTime: string;
+        endTime?: string;
+        status: "pending" | "executing" | "completed" | "failed";
+        result?: any;
+        error?: string;
+      } = {
         actionId: action.id,
         startTime: new Date().toISOString(),
-        status: "executing" as const,
+        status: "executing",
       };
 
       session.executedActions.push(actionExecution);

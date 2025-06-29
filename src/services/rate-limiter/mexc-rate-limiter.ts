@@ -151,8 +151,8 @@ export class MexcRateLimiter {
         ? Object.keys(headers).find((key) => key.toLowerCase() === "retry-after")
         : undefined;
 
-      const retryAfterSeconds = retryAfterHeader
-        ? Number.parseInt(headers?.[retryAfterHeader], 10)
+      const retryAfterSeconds = retryAfterHeader && headers?.[retryAfterHeader]
+        ? Number.parseInt(headers[retryAfterHeader], 10)
         : 60;
 
       // Significantly reduce rate limit temporarily

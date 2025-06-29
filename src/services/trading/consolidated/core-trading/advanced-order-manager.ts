@@ -122,7 +122,7 @@ export class AdvancedOrderManager {
         // Cancel the limit order if stop order fails
         await this.context.mexcService.cancelOrder(
           params.symbol, 
-          parseInt(limitOrderResult.data.orderId)
+          limitOrderResult.data.orderId
         );
         throw new Error(`Failed to place stop order: ${stopOrderResult.error}`);
       }
@@ -284,7 +284,7 @@ export class AdvancedOrderManager {
       if (!takeProfitResult.success) {
         // Cancel entry order if it exists
         if (entryOrderId) {
-          await this.context.mexcService.cancelOrder(params.symbol, parseInt(entryOrderId));
+          await this.context.mexcService.cancelOrder(params.symbol, entryOrderId);
         }
         throw new Error(`Failed to place take profit order: ${takeProfitResult.error}`);
       }
@@ -302,11 +302,11 @@ export class AdvancedOrderManager {
       if (!stopLossResult.success) {
         // Cancel previous orders
         if (entryOrderId) {
-          await this.context.mexcService.cancelOrder(params.symbol, parseInt(entryOrderId));
+          await this.context.mexcService.cancelOrder(params.symbol, entryOrderId);
         }
         await this.context.mexcService.cancelOrder(
           params.symbol, 
-          parseInt(takeProfitResult.data.orderId)
+          takeProfitResult.data.orderId
         );
         throw new Error(`Failed to place stop loss order: ${stopLossResult.error}`);
       }
@@ -550,27 +550,25 @@ export class AdvancedOrderManager {
       try {
         // Check status of both orders
         const limitStatus = await this.context.mexcService.getOrderStatus(
-          orderIds.symbol, 
-          parseInt(orderIds.limitOrderId)
+          orderIds.limitOrderId
         );
         
         const stopStatus = await this.context.mexcService.getOrderStatus(
-          orderIds.symbol, 
-          parseInt(orderIds.stopOrderId)
+          orderIds.stopOrderId
         );
         
         // If one order is filled, cancel the other
         if (limitStatus.success && limitStatus.data?.status === "FILLED") {
           await this.context.mexcService.cancelOrder(
             orderIds.symbol, 
-            parseInt(orderIds.stopOrderId)
+            orderIds.stopOrderId
           );
           clearInterval(monitor);
           this.activeOCOOrders.delete(ocoId);
         } else if (stopStatus.success && stopStatus.data?.status === "FILLED") {
           await this.context.mexcService.cancelOrder(
             orderIds.symbol, 
-            parseInt(orderIds.limitOrderId)
+            orderIds.limitOrderId
           );
           clearInterval(monitor);
           this.activeOCOOrders.delete(ocoId);
@@ -769,26 +767,24 @@ class BracketOrderMonitor {
     try {
       // Check if take profit or stop loss orders are filled
       const tpStatus = await this.context.mexcService.getOrderStatus(
-        this.orderIds.symbol,
-        parseInt(this.orderIds.takeProfitOrderId)
+        this.orderIds.takeProfitOrderId
       );
 
       const slStatus = await this.context.mexcService.getOrderStatus(
-        this.orderIds.symbol,
-        parseInt(this.orderIds.stopLossOrderId)
+        this.orderIds.stopLossOrderId
       );
 
       // If either is filled, cancel the other
       if (tpStatus.success && tpStatus.data?.status === "FILLED") {
         await this.context.mexcService.cancelOrder(
           this.orderIds.symbol,
-          parseInt(this.orderIds.stopLossOrderId)
+          this.orderIds.stopLossOrderId
         );
         this.stop();
       } else if (slStatus.success && slStatus.data?.status === "FILLED") {
         await this.context.mexcService.cancelOrder(
           this.orderIds.symbol,
-          parseInt(this.orderIds.takeProfitOrderId)
+          this.orderIds.takeProfitOrderId
         );
         this.stop();
       }

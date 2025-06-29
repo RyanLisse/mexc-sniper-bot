@@ -513,7 +513,7 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
       return;
     }
 
-    return EmergencyOperationUtils.executeWithFullHandling(
+    await EmergencyOperationUtils.executeWithFullHandling(
       "emergency_coordinator_initialization",
       async () => {
         // Validate all protocols
@@ -736,6 +736,7 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
     return EmergencyOperationUtils.executeWithFullHandling(
       "emergency_drill",
       async () => {
+        const startTime = Date.now();
         const testResults = await EmergencyProtocolUtils.executeDrillTests(
           protocolId,
           scope,
@@ -749,8 +750,12 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
         );
 
         this.lastTestDate = Date.now();
+        const duration = Date.now() - startTime;
 
-        return testResults;
+        return {
+          ...testResults,
+          duration,
+        };
       },
       {
         protocolId,
@@ -875,7 +880,7 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
       }
     });
 
-    this.safetyCoordinator.on?.("emergency-triggered", async (procedure) => {
+    this.safetyCoordinator.on?.("emergency-triggered", async (procedure: any) => {
       this.logger.info("Safety coordinator emergency detected", {
         procedure: procedure.type,
       });

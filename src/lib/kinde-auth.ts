@@ -1,7 +1,7 @@
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "../db";
-import { user } from "../db/schema";
+import { user } from "../db/schemas/auth";
 export interface KindeUser {
   id: string;
   email: string;

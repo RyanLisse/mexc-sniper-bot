@@ -1,13 +1,46 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { createClient } from '@supabase/supabase-js';
+
 // OpenTelemetry database instrumentation
 import {
   instrumentConnectionHealth,
   instrumentDatabase,
   instrumentDatabaseQuery,
 } from "@/src/lib/opentelemetry-database-instrumentation";
-import * as schema from "./schema";
+import * as originalSchema from "./schemas";
+import { supabaseSchema } from "./schemas/supabase-schema";
+
+// Supabase client configuration
+export const supabase = createClient(
+  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_ANON_KEY || 'placeholder_key',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 10
+      }
+    }
+  }
+);
+
+// Admin client for server-side operations
+export const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_service_role_key',
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 // Retry configuration
 const RETRY_DELAYS = [100, 500, 1000, 2000, 5000]; // Exponential backoff
@@ -72,12 +105,17 @@ async function withRetry<T>(
 }
 
 // Check if we have NeonDB/PostgreSQL configuration
-const hasNeonConfig = () => !!process.env.DATABASE_URL?.startsWith("postgresql://");
+const hasNeonConfig = () => !!process.env.DATABASE_URL?.startsWith("postgresql://") && 
+  !process.env.DATABASE_URL?.includes('supabase.com');
+
+// Check if we have Supabase configuration
+const hasSupabaseConfig = () => !!process.env.DATABASE_URL?.includes('supabase.com') && 
+  !!process.env.SUPABASE_URL;
 
 // Create PostgreSQL client with connection pooling
 function createPostgresClient() {
   if (!process.env.DATABASE_URL?.startsWith("postgresql://")) {
-    throw new Error("NeonDB configuration missing: need DATABASE_URL with postgresql:// protocol");
+    throw new Error("Database configuration missing: need DATABASE_URL with postgresql:// protocol");
   }
 
   // Return cached client if available
@@ -87,33 +125,33 @@ function createPostgresClient() {
 
   const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
+  const isSupabase = hasSupabaseConfig();
 
-  // PostgreSQL connection configuration - QUOTA CRISIS OPTIMIZATION
+  // PostgreSQL connection configuration
   const connectionConfig = {
-    // QUOTA OPTIMIZATION: Severely reduced connection pool settings
-    max: isProduction ? 6 : 4, // CRITICAL REDUCTION: From 20/10 to 6/4 for quota management
-    idle_timeout: 15, // Reduced from 20 to 15 seconds for faster connection recycling
-    connect_timeout: 8, // Reduced from 10 to 8 seconds for faster failures
+    // Connection pool settings - optimized for Supabase or NeonDB
+    max: isProduction ? (isSupabase ? 10 : 6) : (isSupabase ? 8 : 4),
+    idle_timeout: isSupabase ? 20 : 15, // Supabase can handle longer timeouts
+    connect_timeout: 10,
 
-    // Keep alive settings optimized for quota efficiency
-    keep_alive: 90, // Increased to 90 seconds for better connection reuse
+    // Keep alive settings
+    keep_alive: isSupabase ? 120 : 90, // Supabase benefits from longer keepalive
 
-    // SSL/TLS settings for NeonDB
+    // SSL/TLS settings
     ssl: isProduction ? "require" : ("prefer" as any),
 
     // Performance optimizations
-    prepare: !isTest, // Prepared statements (disabled in tests for compatibility)
+    prepare: !isTest && !isSupabase, // Disable prepared statements for Supabase initially
 
-    // Connection handling - QUOTA OPTIMIZED
+    // Connection handling
     connection: {
-      application_name: "mexc-sniper-bot-quota-optimized",
-      statement_timeout: 12000, // REDUCED: From 15s to 12s for faster responses
-      idle_in_transaction_session_timeout: 10000, // REDUCED: From 15s to 10s
-      lock_timeout: 8000, // REDUCED: From 10s to 8s for lock timeouts
-      // Additional quota optimization settings
-      tcp_keepalives_idle: 600, // 10 minutes - longer keepalive for connection reuse
-      tcp_keepalives_interval: 30, // 30 seconds between keepalive probes
-      tcp_keepalives_count: 3, // 3 failed probes before connection considered dead
+      application_name: isSupabase ? "mexc-sniper-bot-supabase" : "mexc-sniper-bot-quota-optimized",
+      statement_timeout: isSupabase ? 15000 : 12000,
+      idle_in_transaction_session_timeout: isSupabase ? 15000 : 10000,
+      lock_timeout: isSupabase ? 12000 : 8000,
+      tcp_keepalives_idle: 600,
+      tcp_keepalives_interval: 30,
+      tcp_keepalives_count: 3,
     },
 
     // Transform for compatibility
@@ -124,14 +162,15 @@ function createPostgresClient() {
     // Debug settings (only in development)
     debug: process.env.NODE_ENV === "development" && process.env.DATABASE_DEBUG === "true",
 
-    // QUOTA PROTECTION: Additional connection-level optimizations
-    fetch_types: false, // Disable automatic type fetching to reduce overhead
-    publications: "none", // Disable publication fetching for quota savings
+    // Connection-level optimizations
+    fetch_types: false,
+    publications: "none",
   };
 
   try {
     postgresClient = postgres(process.env.DATABASE_URL, connectionConfig);
-    getLogger().info(`[Database] PostgreSQL connection established with NeonDB`);
+    const dbType = isSupabase ? "Supabase" : "NeonDB";
+    getLogger().info(`[Database] PostgreSQL connection established with ${dbType}`);
     return postgresClient;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -206,19 +245,23 @@ function createDatabase() {
     return createMockDatabase();
   }
 
-  if (!hasNeonConfig()) {
+  if (!hasNeonConfig() && !hasSupabaseConfig()) {
     throw new Error(
-      "NeonDB configuration required: DATABASE_URL must be set with postgresql:// protocol"
+      "Database configuration required: DATABASE_URL must be set with postgresql:// protocol (NeonDB or Supabase)"
     );
   }
 
+  const isSupabase = hasSupabaseConfig();
+  
   // Debug logging (remove in production)
   if (process.env.NODE_ENV !== "production") {
-    getLogger().info("[Database] Using NeonDB PostgreSQL database");
+    getLogger().info(`[Database] Using ${isSupabase ? 'Supabase' : 'NeonDB'} PostgreSQL database`);
   }
 
   try {
     const client = createPostgresClient();
+    // Use Supabase schema if Supabase is detected, otherwise use original schema
+    const schema = isSupabase ? supabaseSchema : originalSchema;
     const baseDb = drizzle(client, { schema });
 
     // Wrap database with OpenTelemetry instrumentation
@@ -235,9 +278,9 @@ function createDatabase() {
         try {
           // Test basic connectivity
           await db.execute(sql`SELECT 1 as test`);
-          getLogger().info("[Database] NeonDB connection verified successfully");
+          getLogger().info(`[Database] ${isSupabase ? 'Supabase' : 'NeonDB'} connection verified successfully`);
         } catch (error) {
-          getLogger().error("[Database] NeonDB connection test failed:", error);
+          getLogger().error(`[Database] ${isSupabase ? 'Supabase' : 'NeonDB'} connection test failed:`, error);
         }
       }, 1000);
     }
@@ -248,7 +291,7 @@ function createDatabase() {
 
     // Enhanced error handling for production
     if (isProduction || isRailway) {
-      getLogger().error("[Database] NeonDB failed in production environment");
+      getLogger().error(`[Database] ${isSupabase ? 'Supabase' : 'NeonDB'} failed in production environment`);
       getLogger().error("[Database] Error details:", {
         message: error instanceof Error ? error.message : String(error),
         code: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
@@ -257,14 +300,16 @@ function createDatabase() {
           urlProtocol: process.env.DATABASE_URL?.split("://")[0],
           isVercel: !!process.env.VERCEL,
           nodeEnv: process.env.NODE_ENV,
+          isSupabase,
         },
       });
     }
 
     // In production, we need to fail gracefully
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const dbType = isSupabase ? 'Supabase' : 'NeonDB';
     throw new Error(
-      `NeonDB connection failed: ${errorMessage}. Check DATABASE_URL and connection settings.`
+      `${dbType} connection failed: ${errorMessage}. Check DATABASE_URL and connection settings.`
     );
   }
 }
@@ -293,27 +338,31 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
   },
 });
 
-// Export schema for use in other files
-export * from "./schema";
+// Export schemas for use in other files
+export * from "./schemas";
+export { supabaseSchema } from "./schemas/supabase-schema";
 
 import { eq } from "drizzle-orm";
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 // Import optimization tools
 import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
-// Import necessary schema elements for user preferences
-import { userPreferences } from "./schemas/auth";
+// Import necessary schema elements for user preferences (conditional based on database type)
+import { userPreferences as originalUserPreferences } from "./schemas/auth";
+import { userPreferences as supabaseUserPreferences } from "./schemas/supabase-auth";
 
 // Database utilities with retry logic
 export async function initializeDatabase() {
   return withRetry(
     async () => {
-      getLogger().info("[Database] Initializing NeonDB database...");
+      const isSupabase = hasSupabaseConfig();
+      const dbType = isSupabase ? 'Supabase' : 'NeonDB';
+      getLogger().info(`[Database] Initializing ${dbType} database...`);
 
       // Test connection with a simple query
       const result = await db.execute(sql`SELECT 1`);
       if (result) {
-        getLogger().info("[Database] NeonDB connection successful");
+        getLogger().info(`[Database] ${dbType} connection successful`);
       }
 
       // Check available PostgreSQL extensions
@@ -367,21 +416,23 @@ async function _internalHealthCheck() {
     const startTime = Date.now();
     await db.execute(sql`SELECT 1`);
     const responseTime = Date.now() - startTime;
-
-    const isHealthy = responseTime < 2000; // Less than 2 seconds is healthy for NeonDB
+    
+    const isSupabase = hasSupabaseConfig();
+    const isHealthy = responseTime < 2000; // Less than 2 seconds is healthy
     const status = isHealthy ? "healthy" : responseTime < 5000 ? "degraded" : "critical";
 
     return {
       status,
       responseTime,
-      database: "neondb",
+      database: isSupabase ? "supabase" : "neondb",
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
+    const isSupabase = hasSupabaseConfig();
     return {
       status: "offline",
       error: error instanceof Error ? error.message : "Unknown error",
-      database: "neondb",
+      database: isSupabase ? "supabase" : "neondb",
       timestamp: new Date().toISOString(),
     };
   }
@@ -437,9 +488,13 @@ export async function monitoredQuery<T>(
 // User Preferences Database Operations
 export async function getUserPreferences(userId: string): Promise<any | null> {
   try {
+    // Use appropriate userPreferences table based on database type
+    const isSupabase = hasSupabaseConfig();
+    const userPreferencesTable = isSupabase ? supabaseUserPreferences : originalUserPreferences;
+    
     const result = (await executeWithRetry(
       async () =>
-        db.select().from(userPreferences).where(eq(userPreferences.userId, userId)).limit(1),
+        db.select().from(userPreferencesTable).where(eq(userPreferencesTable.userId, userId)).limit(1),
       "getUserPreferences"
     )) as any[];
 
@@ -524,7 +579,8 @@ export async function closeDatabase() {
               }, 2000) // Reduced timeout for tests
           ),
         ]);
-        getLogger().info("[Database] NeonDB PostgreSQL connection closed");
+        const dbType = hasSupabaseConfig() ? 'Supabase' : 'NeonDB';
+        getLogger().info(`[Database] ${dbType} PostgreSQL connection closed`);
       } catch (error) {
         getLogger().warn("[Database] Error closing PostgreSQL connection:", error);
       }

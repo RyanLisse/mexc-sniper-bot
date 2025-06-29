@@ -167,7 +167,7 @@ export class EnhancedMonitoringService extends EventEmitter {
       targetId: target.id,
       confidence: target.confidenceScore,
       positionSize: target.positionSizeUsdt,
-      strategy: target.strategy,
+      strategy: 'auto-snipe',
     }, ['auto-snipe', 'execution', 'start']);
 
     this.logger.info(`Auto-sniping execution started: ${target.symbolName}`, {

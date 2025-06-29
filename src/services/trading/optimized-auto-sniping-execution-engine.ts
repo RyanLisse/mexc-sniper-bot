@@ -74,6 +74,26 @@ export interface OptimizedAutoSnipingExecutionEngine {
    * Shutdown the engine
    */
   shutdown(): Promise<void>;
+
+  /**
+   * Stop execution (emergency stop)
+   */
+  stopExecution(): Promise<void>;
+
+  /**
+   * Emergency close all positions
+   */
+  emergencyCloseAll(): Promise<number>;
+
+  /**
+   * Get active positions
+   */
+  getActivePositions(): Array<{ symbol: string; size: number; [key: string]: any }>;
+
+  /**
+   * Update position size
+   */
+  updatePositionSize(symbol: string, newSize: number): Promise<void>;
 }
 
 // Export types for external use

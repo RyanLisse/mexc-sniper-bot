@@ -9,6 +9,7 @@
 
 import type { SafetyConfiguration, SystemHealth } from "@/src/schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "@/src/schemas/safety-monitoring-schemas";
+import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import type { EmergencySafetySystem } from "@/src/services/risk/emergency-safety-system";
@@ -159,12 +160,12 @@ export class RiskAssessment {
    */
   public async assessPortfolioRisk(): Promise<PortfolioRiskAssessment> {
     try {
-      const positions = this.config.executionService.getActivePositions();
-      const _config = this.config.executionService.getConfig();
+      const positions = this.config.executionService.getActivePositions() as any as ExecutionPosition[];
+      const _config = (this.config.executionService as any).getConfig?.() || {};
 
       const totalValue = this.calculatePortfolioValue(positions);
       const totalExposure = positions.reduce(
-        (sum, pos) => sum + Number.parseFloat(pos.quantity),
+        (sum, pos) => sum + Number.parseFloat((pos.quantity || 0).toString()),
         0
       );
       const concentrationRisk = this.calculateConcentrationRisk(positions);
@@ -217,7 +218,7 @@ export class RiskAssessment {
   public async assessPerformanceRisk(): Promise<PerformanceRiskAssessment> {
     try {
       const _positions = this.config.executionService.getActivePositions();
-      const _config = this.config.executionService.getConfig();
+      const _config = (this.config.executionService as any).getConfig?.() || {};
 
       // Mock execution stats since getExecutionReport doesn't exist
       const mockStats = {
@@ -445,7 +446,7 @@ export class RiskAssessment {
 
   private calculatePortfolioValue(positions: ExecutionPosition[]): number {
     return positions.reduce((total, pos) => {
-      return total + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice);
+      return total + Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString());
     }, 0);
   }
 
@@ -456,7 +457,7 @@ export class RiskAssessment {
     let totalValue = 0;
 
     positions.forEach((pos) => {
-      const value = Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice);
+      const value = Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString());
       symbolMap.set(pos.symbol, (symbolMap.get(pos.symbol) || 0) + value);
       totalValue += value;
     });
@@ -478,7 +479,7 @@ export class RiskAssessment {
 
     const totalValue = this.calculatePortfolioValue(positions);
     const positionValues = positions.map(
-      (pos) => Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice)
+      (pos) => Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString())
     );
     const largestPosition = Math.max(...positionValues);
     const largestPositionRatio = (largestPosition / totalValue) * 100;
@@ -496,7 +497,7 @@ export class RiskAssessment {
 
     for (let i = recentExecutions.length - 1; i >= 0; i--) {
       const execution = recentExecutions[i];
-      if (Number.parseFloat(execution.unrealizedPnl) < 0) {
+      if (Number.parseFloat((execution.unrealizedPnl || 0).toString()) < 0) {
         consecutiveLosses++;
       } else {
         break;

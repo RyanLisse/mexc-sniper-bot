@@ -1,24 +1,57 @@
 # Claude Code Configuration
 
-## Build Commands
-- `bun run build`: Build the project
-- `bun run test`: Run the full test suite
-- `bun run lint`: Run ESLint and format checks
-- `bun run type-check`: Run TypeScript type checking
-- `./claude-flow --help`: Show all available commands
+## Package Manager & Build Commands
 
-- **Always run vercel build before git push**
-  - Keep files under 500 lines of code
-    - Remove redundant code
-    - Use TypeScript everywhere
-    - Type-safe priority
-    - Zod validation
-    - Clear minimal code
-    - Ensure all tests pass and project compiles without errors
-    - Create files in TDD flow (test first, fail, implement, pass)
-    - Write conventional commits
+**Primary Package Manager: Bun** - Use `bun` for all package management and script execution.
 
-try to use the make commands to run, test and build the project
+### Make Commands (Preferred)
+Use `make` commands for all development tasks. Run `make help` to see all available commands:
+
+**Essential Development Commands:**
+- `make install` - Install all dependencies with bun
+- `make dev` - Start development servers (Next.js + Inngest)
+- `make build` - Build production bundles
+- `make test` - Run all tests with performance optimizations
+- `make lint` - Run all linters and formatters
+- `make type-check` - Run TypeScript type checking
+
+**Quick Aliases:**
+- `make i` - Install dependencies
+- `make d` - Start development  
+- `make b` - Build project
+- `make t` - Run tests
+- `make l` - Lint code
+
+**Testing Commands:**
+- `make test-unit` - Run unit tests
+- `make test-integration` - Run integration tests  
+- `make test-e2e` - Run E2E tests
+- `make test-all` - Run complete test suite
+- `make test-quick` - Fast parallel test execution
+
+**Alternative Bun Commands (if make unavailable):**
+- `bun run build` - Build the project
+- `bun run test` - Run the full test suite
+- `bun run lint` - Run ESLint and format checks
+- `bun run type-check` - Run TypeScript type checking
+
+### Development Workflow
+1. **Setup**: `make install && make setup`
+2. **Development**: `make dev` (starts all required servers)
+3. **Testing**: `make test` (performance optimized)
+4. **Pre-commit**: `make pre-commit` (lint + type-check)
+5. **Build**: `make build`
+
+**Always run `vercel build` before git push**
+- Keep files under 500 lines of code
+  - Remove redundant code
+  - Use TypeScript everywhere
+  - Type-safe priority
+  - Zod validation
+  - Clear minimal code
+  - Ensure all tests pass and project compiles without errors
+  - Create files in TDD flow (test first, fail, implement, pass)
+  - Write conventional commits
 ## Claude-Flow Complete Command Reference
 
 Claude-Flow Complete Command Reference
@@ -213,3 +246,6 @@ All swarm operations include automatic batch tool coordination
 Monitor progress with TodoRead during long-running operations
 Enable parallel execution with --parallel flags for maximum efficiency
 This configuration ensures optimal use of Claude Code's batch tools for swarm orchestration and parallel task execution with full Claude-Flow capabilities.
+
+## Test Accounts
+- Test account for ryan@ryanlisse.com (password: Testing2025!)

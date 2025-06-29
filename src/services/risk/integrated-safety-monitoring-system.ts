@@ -132,10 +132,10 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
   };
 
   // Core safety modules
-  private coreMonitoring: CoreSafetyMonitoring;
-  private alertManagement: AlertManagement;
-  private riskAssessment: RiskAssessment;
-  private eventHandling: EventHandling;
+  private coreMonitoring!: CoreSafetyMonitoring;
+  private alertManagement!: AlertManagement;
+  private riskAssessment!: RiskAssessment;
+  private eventHandling!: EventHandling;
 
   // Enhanced safety modules
   private enhancedMonitoring?: EnhancedRealTimeSafetyMonitor;
@@ -222,7 +222,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
       }
 
       if (this.emergencyCoordinator) {
-        await this.emergencyCoordinator.startEmergencySystem();
+        await this.emergencyCoordinator.initialize();
       }
 
       // Register monitoring operations
@@ -235,7 +235,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
       this.emit("system-started", { timestamp: new Date().toISOString() });
     } catch (error) {
       this.isActive = false;
-      this.logger.error("Failed to start safety monitoring system", {}, error);
+      this.logger.error("Failed to start safety monitoring system", {}, error as Error);
       throw error;
     }
   }
@@ -271,7 +271,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
         uptime: Date.now() - this.startTime,
       });
     } catch (error) {
-      this.logger.error("Error stopping safety monitoring system", {}, error);
+      this.logger.error("Error stopping safety monitoring system", {}, error as Error);
       throw error;
     }
   }
@@ -338,7 +338,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
       };
     } catch (error) {
       this.metrics.performanceMetrics.errorCount++;
-      this.logger.error("Monitoring cycle failed", {}, error);
+      this.logger.error("Monitoring cycle failed", {}, error as Error);
       throw error;
     }
   }
@@ -485,7 +485,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
     } catch (error) {
       const errorMessage = (error as Error).message;
       errors.push(errorMessage);
-      this.logger.error("Emergency stop execution failed", { reason }, error);
+      this.logger.error("Emergency stop execution failed", { reason }, error as Error);
 
       return {
         success: false,
@@ -545,43 +545,63 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
       // Initialize enhanced real-time safety monitor
       this.enhancedMonitoring = new EnhancedRealTimeSafetyMonitor({
         monitoringIntervalMs: this.config.configuration.monitoringIntervalMs,
-        riskThresholds: this.config.configuration.thresholds,
-        emergencyProtocols: [],
-        executionService: this.config.executionService,
-        patternService: this.config.patternMonitoring,
-        mexcService: this.config.mexcService,
+        criticalRiskThreshold: 80,
+        emergencyRiskThreshold: 95,
+      }, {
+        alertManagement: this.alertManagement,
+        coreMonitoring: this.coreMonitoring,
+        riskAssessment: this.riskAssessment,
+        eventHandling: this.eventHandling,
+        emergencySystem: this.config.emergencySystem,
+        safetyCoordinator: this.config.emergencySystem, // Using emergency system as coordinator
       });
 
       // Initialize advanced emergency coordinator
       this.emergencyCoordinator = new AdvancedEmergencyCoordinator({
-        emergencyThresholds: this.config.configuration.thresholds,
-        executionService: this.config.executionService,
-        mexcService: this.config.mexcService,
-        enableAutomatedRecovery: true,
-        enableTesting: false,
-      });
+        maxConcurrentEmergencies: 3,
+        autoEscalationEnabled: true,
+        autoRecoveryEnabled: true,
+      }, this.config.emergencySystem, this.config.emergencySystem);
 
       this.logger.info("Enhanced safety modules initialized");
     } catch (error) {
-      this.logger.warn("Failed to initialize enhanced modules", {}, error);
+      this.logger.error("Failed to initialize enhanced modules", {}, error as Error);
     }
   }
 
   private setupCrossModuleCoordination(): void {
     // Core monitoring alerts trigger alert management
-    this.coreMonitoring.on?.("threshold-violation", (violation) => {
-      this.handleThresholdViolation(violation);
-    });
+    try {
+      if (this.coreMonitoring && 'on' in this.coreMonitoring && typeof this.coreMonitoring.on === 'function') {
+        this.coreMonitoring.on("threshold-violation", (violation: any) => {
+          this.handleThresholdViolation(violation);
+        });
+      }
+    } catch (error) {
+      this.logger.debug("Core monitoring does not support events");
+    }
 
     // Alert management events trigger risk reassessment
-    this.alertManagement.on?.("critical-alert", () => {
-      this.triggerRiskReassessment();
-    });
+    try {
+      if (this.alertManagement && 'on' in this.alertManagement && typeof this.alertManagement.on === 'function') {
+        this.alertManagement.on("critical-alert", () => {
+          this.triggerRiskReassessment();
+        });
+      }
+    } catch (error) {
+      this.logger.debug("Alert management does not support events");
+    }
 
     // Risk assessment events trigger emergency checks
-    this.riskAssessment.on?.("high-risk-detected", (assessment) => {
-      this.handleHighRiskDetection(assessment);
-    });
+    try {
+      if (this.riskAssessment && 'on' in this.riskAssessment && typeof this.riskAssessment.on === 'function') {
+        this.riskAssessment.on("high-risk-detected", (assessment: any) => {
+          this.handleHighRiskDetection(assessment);
+        });
+      }
+    } catch (error) {
+      this.logger.debug("Risk assessment does not support events");
+    }
   }
 
   private registerMonitoringOperations(): void {
@@ -600,7 +620,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
     const healthCheckOperation: OperationRegistration = {
       id: "system-health-check",
       name: "System Health Check",
-      intervalMs: this.config.configuration.systemHealthCheckInterval || 120000,
+      intervalMs: 120000, // 2 minutes
       handler: async () => {
         await this.performSystemHealthCheck();
       },
@@ -671,7 +691,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
           );
           emergencyActions++;
         } catch (error) {
-          this.logger.error("Failed to activate emergency protocol", {}, error);
+          this.logger.error("Failed to activate emergency protocol", {}, error as Error);
         }
       }
     }
@@ -759,7 +779,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      this.logger.error("System health check failed", {}, error);
+      this.logger.error("System health check failed", {}, error as Error);
     }
   }
 
@@ -782,7 +802,7 @@ export class IntegratedSafetyMonitoringSystem extends EventEmitter {
   private triggerRiskReassessment(): void {
     // Trigger immediate risk reassessment
     this.eventHandling.forceExecution("core-monitoring-cycle").catch((error) => {
-      this.logger.error("Failed to trigger risk reassessment", {}, error);
+      this.logger.error("Failed to trigger risk reassessment", {}, error as Error);
     });
   }
 

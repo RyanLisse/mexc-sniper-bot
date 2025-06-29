@@ -266,6 +266,48 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
   }
 
   /**
+   * Start monitoring (alias for start)
+   */
+  async startMonitoring(): Promise<void> {
+    return await this.start();
+  }
+
+  /**
+   * Stop monitoring (alias for stop)
+   */
+  async stopMonitoring(): Promise<void> {
+    return await this.stop();
+  }
+
+  /**
+   * Perform comprehensive monitoring cycle
+   */
+  async performComprehensiveMonitoring(): Promise<any> {
+    if (!this.isActive) {
+      throw new Error("Enhanced monitoring is not active");
+    }
+
+    await this.performMonitoringCycle();
+    await this.performRiskAssessmentCycle();
+
+    return {
+      realTimeMetrics: this.realTimeMetrics,
+      anomalies: this.anomalyHistory.slice(-5),
+      emergencyStatus: {
+        active: this.realTimeMetrics.emergencyLevel !== "none",
+        level: this.realTimeMetrics.emergencyLevel,
+      },
+    };
+  }
+
+  /**
+   * Get anomaly count
+   */
+  getAnomalyCount(): number {
+    return this.anomalyHistory.length;
+  }
+
+  /**
    * Execute emergency stop with enhanced coordination
    */
   async executeEnhancedEmergencyStop(
@@ -868,7 +910,7 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
       poor: 90,
     };
 
-    return ratingToRisk[performanceAssessment.performanceRating] || 50;
+    return ratingToRisk[performanceAssessment.performanceRating as keyof typeof ratingToRisk] || 50;
   }
 
   private identifyDegradedServices(coordinatorStatus: any): string[] {
@@ -915,18 +957,36 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
   }
 
   private setupEventForwarding(): void {
-    // Forward events from core components
-    this.alertManagement.on?.("alert-created", (alert) => {
-      this.emit("alert-created", alert);
-    });
+    // Forward events from core components if they support event emission
+    try {
+      if (this.alertManagement && 'on' in this.alertManagement && typeof this.alertManagement.on === 'function') {
+        this.alertManagement.on("alert-created", (alert: any) => {
+          this.emit("alert-created", alert);
+        });
+      }
+    } catch (error) {
+      this.logger.debug("Alert management does not support events");
+    }
 
-    this.emergencySystem.on?.("emergency-triggered", (emergency) => {
-      this.emit("emergency-triggered", emergency);
-    });
+    try {
+      if (this.emergencySystem && 'on' in this.emergencySystem && typeof this.emergencySystem.on === 'function') {
+        this.emergencySystem.on("emergency-triggered", (emergency: any) => {
+          this.emit("emergency-triggered", emergency);
+        });
+      }
+    } catch (error) {
+      this.logger.debug("Emergency system does not support events");
+    }
 
-    this.safetyCoordinator.on?.("emergency-triggered", (procedure) => {
-      this.emit("emergency-triggered", procedure);
-    });
+    try {
+      if (this.safetyCoordinator && 'on' in this.safetyCoordinator && typeof this.safetyCoordinator.on === 'function') {
+        this.safetyCoordinator.on("emergency-triggered", (procedure: any) => {
+          this.emit("emergency-triggered", procedure);
+        });
+      }
+    } catch (error) {
+      this.logger.debug("Safety coordinator does not support events");
+    }
   }
 }
 

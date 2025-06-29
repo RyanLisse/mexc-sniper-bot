@@ -580,9 +580,9 @@ export class SecurityMonitoringService {
         expiredCredentials: 2,
         rotationDue: 3,
         lastRotated: {
-          user1: new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          user2: new Date(now - 45 * 24 * 60 * 60 * 1000).toISOString(),
-        },
+          "user1": new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          "user2": new Date(now - 45 * 24 * 60 * 60 * 1000).toISOString(),
+        } as Record<string, string>,
       };
     } catch (error) {
       console.error("[SecurityMonitoring] Failed to get credential health metrics:", error);
@@ -591,7 +591,7 @@ export class SecurityMonitoringService {
         healthyCredentials: 0,
         expiredCredentials: 0,
         rotationDue: 0,
-        lastRotated: {},
+        lastRotated: {} as Record<string, string>,
       };
     }
   }

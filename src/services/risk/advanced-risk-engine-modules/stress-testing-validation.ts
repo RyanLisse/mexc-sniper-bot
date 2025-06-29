@@ -130,9 +130,11 @@ export class StressTestingValidation {
 
       // Calculate impact on each position
       for (const position of this.config.positions.values()) {
-        const positionLoss = position.size * (scenario.marketShock.priceChange / 100);
-        const volatilityImpact =
-          position.valueAtRisk * (scenario.marketShock.volatilityIncrease - 1);
+        const priceChange = scenario.marketShock?.priceChange || 0;
+        const volatilityIncrease = scenario.marketShock?.volatilityIncrease || 1;
+        
+        const positionLoss = position.size * (priceChange / 100);
+        const volatilityImpact = position.valueAtRisk * (volatilityIncrease - 1);
         totalLoss += Math.abs(positionLoss) + volatilityImpact;
       }
 
@@ -143,7 +145,7 @@ export class StressTestingValidation {
         scenario: scenario.name,
         estimatedLoss: totalLoss,
         portfolioImpact,
-        recoveryTime: scenario.recoveryTime,
+        recoveryTime: scenario.recoveryTime || 0,
         riskScore,
       });
     }

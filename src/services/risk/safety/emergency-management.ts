@@ -93,7 +93,8 @@ export class EmergencyManager extends EventEmitter {
   isEmergencyActive(): boolean {
     return (
       this.emergencyState.level === "critical" ||
-      this.emergencyState.level === "warning" ||
+      this.emergencyState.level === "high" ||
+      this.emergencyState.level === "medium" ||
       this.emergencyState.tradingHalted ||
       this.emergencyState.activeIncidents > 0
     );
@@ -281,12 +282,13 @@ export class EmergencyManager extends EventEmitter {
       // Check if consensus is required
       if (procedure.requiredApprovals.length > 0) {
         const consensusRequest: AgentConsensusRequest = {
-          id: `emergency-${procedureId}-${Date.now()}`,
+          requestId: `emergency-${procedureId}-${Date.now()}`,
           type: "emergency_response",
           priority: "critical",
-          requester: "emergency_manager",
           data: { procedure, executedBy },
-          timeoutMs: 30000, // 30 seconds for emergency decisions
+          requiredAgents: [],
+          consensusThreshold: 70,
+          timeout: 30000,
         };
 
         const consensus = await this.requestConsensus(consensusRequest);

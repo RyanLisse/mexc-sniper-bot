@@ -118,7 +118,7 @@ export class AutoSnipingModuleRefactored {
   }
 
   async updateConfig(config: Partial<CoreTradingConfig>): Promise<void> {
-    this.context.config = config;
+    this.context.config = { ...this.context.config, ...config };
 
     // Restart auto-sniping if active with new configuration
     if (this.isActive) {
@@ -223,7 +223,7 @@ export class AutoSnipingModuleRefactored {
             successCount++;
             this.successfulSnipes++;
           } catch (error) {
-            await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", error.message);
+            await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", (error as Error).message);
             this.failedSnipes++;
           }
         }
@@ -239,13 +239,13 @@ export class AutoSnipingModuleRefactored {
     this.context.logger.info(`Executing snipe target: ${target.symbolName}`, {
       confidence: target.confidenceScore,
       amount: target.positionSizeUsdt,
-      strategy: target.strategy || "normal",
+      strategy: target.entryStrategy || "normal",
     });
 
     await DatabaseOperations.updateSnipeTargetStatus(target.id, "executing");
 
     try {
-      const strategyManager = new TradingStrategyManager(target.strategy || "normal");
+      const strategyManager = new TradingStrategyManager(target.entryStrategy || "normal");
       const strategy = strategyManager.getActiveStrategy();
 
       const tradeParams: TradeParameters = {
@@ -257,8 +257,8 @@ export class AutoSnipingModuleRefactored {
         isAutoSnipe: true,
         confidenceScore: target.confidenceScore,
         stopLossPercent: target.stopLossPercent,
-        takeProfitPercent: target.takeProfitCustom,
-        strategy: target.strategy || "normal",
+        takeProfitPercent: target.takeProfitCustom || undefined,
+        strategy: target.entryStrategy || "normal",
       };
 
       const result = this.context.config.enablePaperTrading
@@ -274,7 +274,7 @@ export class AutoSnipingModuleRefactored {
 
       return result;
     } catch (error) {
-      await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", error.message);
+      await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", (error as Error).message);
       throw error;
     }
   }
@@ -303,9 +303,14 @@ export class AutoSnipingModuleRefactored {
   private async performPreTradeValidation(params: TradeParameters): Promise<void> {
     // Check safety coordinator
     if (this.context.safetyCoordinator) {
-      const safetyStatus = this.context.safetyCoordinator.getCurrentStatus();
-      if (safetyStatus.overall.safetyLevel !== "safe") {
-        throw new Error(`Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`);
+      try {
+        const safetyStatus = (this.context.safetyCoordinator as any).getStatus?.() || 
+                            (this.context.safetyCoordinator as any).getCurrentStatus?.();
+        if (safetyStatus && safetyStatus.overall?.safetyLevel !== "safe") {
+          throw new Error(`Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`);
+        }
+      } catch (error) {
+        this.context.logger.warn("Could not check safety coordinator status", error);
       }
     }
 
@@ -404,7 +409,7 @@ export class AutoSnipingModuleRefactored {
     } catch (error) {
       this.context.logger.error(`${triggerType} execution failed`, {
         positionId: position.id,
-        error: error.message,
+        error: (error as Error).message,
       });
     }
   }

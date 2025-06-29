@@ -299,23 +299,29 @@ export class CompleteAutoSnipingService extends EventEmitter {
       const snipeTarget: AutoSnipeTarget = {
         id: Date.now(),
         symbolName: trigger.symbol,
-        vcoinId: trigger.metadata.vcoinId || trigger.symbol.replace('USDT', ''),
+        vcoinId: trigger.metadata.vcoinId || trigger.symbol.replace('USDT', '').replace(/\D/g, '') || '0',
         userId: 'system', // Would get from context
-        entryStrategy: 'market',
         positionSizeUsdt: this.config.defaultPositionSize,
-        takeProfitLevel: 2,
         takeProfitCustom: this.config.takeProfitPercent,
         stopLossPercent: this.config.stopLossPercent,
         status: 'ready',
-        priority: 1,
-        maxRetries: 3,
-        currentRetries: 0,
+        priority: 3, // medium priority (1=highest, 5=lowest)
         confidenceScore: trigger.confidence,
-        riskLevel: 'medium',
         targetExecutionTime: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
-        strategy: trigger.pattern,
+        actualExecutionTime: null,
+        errorMessage: null,
+        // Add missing required properties from database schema
+        entryStrategy: 'market',
+        entryPrice: null,
+        takeProfitLevel: 2,
+        maxRetries: 3,
+        currentRetries: 0,
+        executionPrice: null,
+        actualPositionSize: null,
+        executionStatus: null,
+        riskLevel: 'medium',
       };
 
       // Add to active snipes tracking
@@ -810,7 +816,7 @@ export class CompleteAutoSnipingService extends EventEmitter {
         .orderBy(snipeTargets.priority, snipeTargets.createdAt)
         .limit(10);
 
-      return targets.map(target => ({
+      return targets.map((target: any) => ({
         ...target,
         strategy: target.entryStrategy,
       }));

@@ -20,6 +20,7 @@ import {
 } from "@/src/schemas/safety-monitoring-schemas";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
 import type { CoreTradingService } from "@/src/services/trading/consolidated/core-trading/base-service";
+import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 
 export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;
@@ -508,7 +509,7 @@ export class CoreSafetyMonitoring {
     let totalValue = 0;
 
     positions.forEach((pos) => {
-      const value = Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice);
+      const value = Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString());
       symbolMap.set(pos.symbol, (symbolMap.get(pos.symbol) || 0) + value);
       totalValue += value;
     });
@@ -527,7 +528,7 @@ export class CoreSafetyMonitoring {
 
     for (let i = recentExecutions.length - 1; i >= 0; i--) {
       const execution = recentExecutions[i];
-      if (Number.parseFloat(execution.unrealizedPnl) < 0) {
+      if (Number.parseFloat((execution.unrealizedPnl || 0).toString()) < 0) {
         consecutiveLosses++;
       } else {
         break;

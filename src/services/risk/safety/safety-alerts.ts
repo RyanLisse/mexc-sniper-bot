@@ -6,7 +6,7 @@
  */
 
 import { EventEmitter } from "node:events";
-import type { WebSocketServerService } from "../websocket-server";
+import type { WebSocketServerService } from "../../data/websocket/websocket-server-service";
 import type { SafetyAction, SafetyAlert, SafetyCoordinatorConfig } from "./safety-types";
 
 export class SafetyAlertsManager extends EventEmitter {
@@ -310,13 +310,16 @@ export class SafetyAlertsManager extends EventEmitter {
     if (!this.websocketService) return;
 
     try {
-      await this.websocketService.broadcast({
-        type: "safety_update",
+      await this.websocketService.broadcast("system", {
+        type: "notification:info" as const,
+        channel: "system",
         data: {
           updateType: type,
           timestamp: new Date().toISOString(),
+          category: "safety_update",
           ...data,
         },
+        timestamp: Date.now(),
       });
     } catch (error) {
       console.error("[SafetyAlertsManager] Failed to broadcast safety update:", error);

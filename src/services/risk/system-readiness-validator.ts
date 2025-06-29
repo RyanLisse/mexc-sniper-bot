@@ -161,7 +161,7 @@ export class SystemReadinessValidator {
             : healthSummary.status === "warning"
               ? "warning"
               : "fail",
-        message: `Environment health score: ${healthSummary.score}/100`,
+        message: `Environment health: ${Math.round((healthSummary.configured / healthSummary.total) * 100)}% configured`,
         details: `${validation.summary.configured}/${validation.summary.total} variables configured, ${validation.summary.missing} missing`,
         required: true,
         fixable: true,

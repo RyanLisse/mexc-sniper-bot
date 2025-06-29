@@ -229,7 +229,7 @@ export class RealTimeSafetyMonitoringService {
     // Initialize alert management
     this.alertManagement = createAlertManagement({
       configuration: config,
-      executionService: this.executionService,
+      executionService: this.executionService as any,
       onStatsUpdate: (stats) => this.logger.debug("Alert stats updated", stats),
     });
 
@@ -244,7 +244,7 @@ export class RealTimeSafetyMonitoringService {
     // Initialize risk assessment
     this.riskAssessment = createRiskAssessment({
       configuration: config,
-      executionService: this.executionService,
+      executionService: this.executionService as any,
       patternMonitoring: this.patternMonitoring,
       emergencySystem: this.emergencySystem,
       mexcService: this.mexcService,
@@ -265,7 +265,7 @@ export class RealTimeSafetyMonitoringService {
     // Update alert management configuration
     this.alertManagement = createAlertManagement({
       configuration: newConfig,
-      executionService: this.executionService,
+      executionService: this.executionService as any,
       onStatsUpdate: (stats) => this.logger.debug("Alert stats updated", stats),
     });
 
@@ -280,7 +280,7 @@ export class RealTimeSafetyMonitoringService {
     // Update risk assessment configuration
     this.riskAssessment = createRiskAssessment({
       configuration: newConfig,
-      executionService: this.executionService,
+      executionService: this.executionService as any,
       patternMonitoring: this.patternMonitoring,
       emergencySystem: this.emergencySystem,
       mexcService: this.mexcService,
@@ -570,7 +570,13 @@ export class RealTimeSafetyMonitoringService {
       };
 
       try {
-        const closedCount = await this.executionService.emergencyCloseAll();
+        const emergencyResult = await this.executionService.emergencyCloseAll();
+        const closedCount = typeof emergencyResult === 'object' && emergencyResult !== null && 'data' in emergencyResult 
+          ? (emergencyResult as any).data?.closedCount || 0 
+          : typeof emergencyResult === 'number' 
+          ? emergencyResult 
+          : 0;
+          
         closeAction.executed = true;
         closeAction.executedAt = new Date().toISOString();
         closeAction.result =

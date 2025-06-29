@@ -13,7 +13,7 @@ import { BaseService } from "@/src/lib/logger-injection";
 import type { ILogger } from "@/src/lib/structured-logger";
 import { getUnifiedMexcClient } from "@/src/services/api/mexc-client-factory";
 import { ErrorLoggingService } from "@/src/services/notification/error-logging-service";
-import type { OrderParameters } from "./api/mexc-client-types";
+import type { OrderParameters } from "../api/mexc-client-types";
 
 export interface RiskProfile {
   userId: string;

@@ -14,7 +14,7 @@
 import { z } from "zod";
 import type { PatternMatch } from "@/src/core/pattern-detection";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { ExecutionPosition } from "./optimized-auto-sniping-core";
+import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
 
 // ============================================================================
 // Risk Management Schemas
@@ -271,9 +271,9 @@ export class OptimizedRiskManager {
     reasoning: string[];
   }> {
     try {
-      const unrealizedPnlPercent = position.unrealizedPnlPercentage;
-      const currentPrice = Number.parseFloat(position.currentPrice);
-      const entryPrice = Number.parseFloat(position.entryPrice);
+      const unrealizedPnlPercent = position.pnlPercentage || 0;
+      const currentPrice = position.currentPrice;
+      const entryPrice = position.entryPrice;
 
       const reasoning: string[] = [];
       let riskLevel: RiskLevel = "low";
@@ -293,7 +293,7 @@ export class OptimizedRiskManager {
 
       // Check for trailing stop adjustments
       if (this.stopLossConfig.type === "trailing" && position.stopLossPrice) {
-        const currentStopLoss = Number.parseFloat(position.stopLossPrice);
+        const currentStopLoss = position.stopLossPrice;
         const trailingStop = this.calculateTrailingStopLoss(
           currentPrice,
           entryPrice,
@@ -478,7 +478,7 @@ export class OptimizedRiskManager {
   ): number {
     const totalValue =
       activePositions.reduce((sum, pos) => {
-        return sum + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice);
+        return sum + pos.quantity * pos.currentPrice;
       }, 0) + newPositionSize;
 
     const maxPortfolioValue = this.riskLimits.maxPositionSize * this.riskLimits.maxPositions;
@@ -488,7 +488,7 @@ export class OptimizedRiskManager {
 
   private calculateDrawdownRisk(activePositions: ExecutionPosition[]): number {
     const totalUnrealizedPnl = activePositions.reduce((sum, pos) => {
-      return sum + Number.parseFloat(pos.unrealizedPnl);
+      return sum + (pos.unrealizedPnl || 0);
     }, 0);
 
     const drawdownPercent =
@@ -507,12 +507,12 @@ export class OptimizedRiskManager {
     const symbolPositions = activePositions.filter((pos) => pos.symbol === symbol);
     const symbolValue =
       symbolPositions.reduce((sum, pos) => {
-        return sum + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice);
+        return sum + pos.quantity * pos.currentPrice;
       }, 0) + newPositionSize;
 
     const totalValue =
       activePositions.reduce((sum, pos) => {
-        return sum + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice);
+        return sum + pos.quantity * pos.currentPrice;
       }, 0) + newPositionSize;
 
     const concentration = totalValue > 0 ? (symbolValue / totalValue) * 100 : 0;
@@ -521,7 +521,7 @@ export class OptimizedRiskManager {
   }
 
   private calculateVolatilityRisk(pattern: PatternMatch): number {
-    const volatility = pattern.volatility || 10; // Default 10% if not provided
+    const volatility = pattern.indicators.marketConditions?.volatility || 10; // Default 10% if not provided
     return Math.min(100, volatility * 2); // Scale volatility to risk score
   }
 

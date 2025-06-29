@@ -277,7 +277,7 @@ export class AdvancedRiskEngine extends EventEmitter {
         warnings: result.warnings,
         maxAllowedSize: result.maxAllowedSize,
         estimatedImpact: result.estimatedImpact,
-        advancedMetrics: result.advancedMetrics as Record<string, number>,
+        advancedMetrics: result.advancedMetrics as unknown as Record<string, number>,
       };
     });
   }

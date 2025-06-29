@@ -29,7 +29,10 @@ export interface AlertGenerationData {
   message: string;
   riskLevel: number;
   source: string;
-  autoActions?: Omit<SafetyAction, "id" | "executed" | "executedAt" | "result" | "details">[];
+  autoActions?: {
+    type: SafetyAction["type"];
+    description: string;
+  }[];
   metadata?: Record<string, any>;
 }
 
@@ -76,11 +79,15 @@ export class AlertManagement {
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
       acknowledged: false,
-      autoActions: (alertData.autoActions || []).map((action) => ({
-        id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-        executed: false,
-        ...action,
-      })),
+      autoActions: (alertData.autoActions || []).map((action) => {
+        return {
+          id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+          type: action.type,
+          description: action.description,
+          executed: false,
+          metadata: {},
+        } as SafetyAction;
+      }),
       metadata: alertData.metadata || {},
       ...alertData,
     };
@@ -396,7 +403,7 @@ export class AlertManagement {
         case "limit_exposure": {
           const positions = this.config.executionService.getActivePositions();
           const exposure = positions.reduce(
-            (sum, pos) =>
+            (sum: number, pos: any) =>
               sum + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice),
             0
           );
@@ -446,8 +453,8 @@ export class AlertManagement {
               message: action.description,
             };
             console.error("[ADMIN_ALERT]", JSON.stringify(data));
-            if (global.adminNotificationService) {
-              await global.adminNotificationService.sendCriticalAlert(data);
+            if ((global as any).adminNotificationService) {
+              await (global as any).adminNotificationService.sendCriticalAlert(data);
             }
             this.setActionResult(
               action,
@@ -466,8 +473,8 @@ export class AlertManagement {
 
         case "circuit_breaker": {
           try {
-            if (this.config.executionService.setTradingPaused) {
-              await this.config.executionService.setTradingPaused(
+            if ((this.config.executionService as any).setTradingPaused) {
+              await (this.config.executionService as any).setTradingPaused(
                 true,
                 "circuit_breaker_activated"
               );
@@ -481,8 +488,8 @@ export class AlertManagement {
               reason: action.description,
             });
 
-            if (global.circuitBreakerState) {
-              global.circuitBreakerState = {
+            if ((global as any).circuitBreakerState) {
+              (global as any).circuitBreakerState = {
                 active: true,
                 activatedAt: new Date().toISOString(),
                 reason: action.description,
@@ -560,7 +567,7 @@ export class AlertManagement {
   /**
    * Helper method to set action result and reduce code duplication
    */
-  private setActionResult(action: SafetyAction, result: string, details: string): void {
+  private setActionResult(action: SafetyAction, result: "success" | "failed" | "partial", details: string): void {
     action.executed = true;
     action.result = result;
     action.details = details;

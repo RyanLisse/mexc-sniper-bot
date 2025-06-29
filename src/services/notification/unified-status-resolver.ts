@@ -125,19 +125,21 @@ export class UnifiedStatusResolver {
       const connectivityTest = await mexcService.testConnectivity();
 
       // Create status from direct service result
+      const isConnected = connectivityTest.success;
+      
       const credentials: UnifiedCredentialStatus = {
         hasCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
-        isValid: connectivityTest,
+        isValid: isConnected,
         source: "environment" as const,
         hasUserCredentials: false, // Would need database check for this
         hasEnvironmentCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
         lastValidated: new Date().toISOString(),
-        canAuthenticate: connectivityTest,
-        connectionHealth: connectivityTest ? "good" : "poor",
+        canAuthenticate: isConnected,
+        connectionHealth: isConnected ? "good" : "poor",
       };
 
       const network: UnifiedNetworkStatus = {
-        connected: connectivityTest,
+        connected: isConnected,
         lastChecked: new Date().toISOString(),
       };
 
@@ -145,11 +147,11 @@ export class UnifiedStatusResolver {
         credentials,
         network,
         overall: {
-          status: connectivityTest ? "healthy" : "error",
-          message: connectivityTest
+          status: isConnected ? "healthy" : "error",
+          message: isConnected
             ? "Direct service connectivity successful"
             : "Direct service connectivity failed",
-          canTrade: connectivityTest && credentials.hasCredentials,
+          canTrade: isConnected && credentials.hasCredentials,
         },
         source: "enhanced" as const,
         timestamp: new Date().toISOString(),
