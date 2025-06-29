@@ -5,7 +5,7 @@
  * and prevent financial damage from runaway queries or quota overages.
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { DatabaseCircuitBreaker } from '../src/lib/database-circuit-breaker';
 import { DatabaseRateLimiter } from '../src/lib/database-rate-limiter';
 import { globalCostMonitor, recordCostMetrics } from '../src/middleware/cost-monitor';
@@ -23,7 +23,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should allow queries within rate limit', async () => {
-      const mockQuery = jest.fn().mockResolvedValue('success');
+      const mockQuery = vi.fn().mockResolvedValue('success');
       
       // Execute queries within limit
       for (let i = 0; i < 4; i++) {
@@ -37,7 +37,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should block queries when rate limit exceeded', async () => {
-      const mockQuery = jest.fn().mockResolvedValue('success');
+      const mockQuery = vi.fn().mockResolvedValue('success');
       
       // Execute queries to reach limit
       for (let i = 0; i < 5; i++) {
@@ -53,8 +53,8 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should warn when approaching rate limit', async () => {
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-      const mockQuery = jest.fn().mockResolvedValue('success');
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const mockQuery = vi.fn().mockResolvedValue('success');
       
       // Execute 4 queries (80% of 5-query limit)
       for (let i = 0; i < 4; i++) {
@@ -70,7 +70,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should timeout long-running queries', async () => {
-      const longRunningQuery = () => new Promise(resolve => setTimeout(resolve, 2000));
+      const longRunningQuery = vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 2000)));
       
       await expect(
         rateLimiter.executeQuery(longRunningQuery, 'timeout-test')
@@ -78,7 +78,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should log slow queries for cost analysis', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const slowQuery = () => new Promise(resolve => setTimeout(resolve, 6000));
       
       // This will timeout before completing, but we can test the slow query detection
@@ -92,7 +92,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should reset counter after minute passes', async () => {
-      const mockQuery = jest.fn().mockResolvedValue('success');
+      const mockQuery = vi.fn().mockResolvedValue('success');
       
       // Fill the rate limit
       for (let i = 0; i < 5; i++) {
@@ -123,7 +123,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should allow operations when circuit is closed', async () => {
-      const mockOperation = jest.fn().mockResolvedValue('success');
+      const mockOperation = vi.fn().mockResolvedValue('success');
       
       const result = await circuitBreaker.execute(mockOperation, 'test-op');
       
@@ -133,7 +133,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should open circuit after failure threshold', async () => {
-      const mockOperation = jest.fn().mockRejectedValue(new Error('Database error'));
+      const mockOperation = vi.fn().mockRejectedValue(new Error('Database error'));
       
       // Trigger failures to reach threshold
       for (let i = 0; i < 3; i++) {
@@ -156,7 +156,7 @@ describe('Database Cost Protection Systems', () => {
     
     test('should immediately open circuit for cost-related errors', async () => {
       const costError = new Error('Database quota exceeded - billing limit reached');
-      const mockOperation = jest.fn().mockRejectedValue(costError);
+      const mockOperation = vi.fn().mockRejectedValue(costError);
       
       // Single cost-related error should open circuit
       try {
@@ -170,7 +170,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should transition to half-open after recovery timeout', async () => {
-      const mockOperation = jest.fn().mockRejectedValue(new Error('Error'));
+      const mockOperation = vi.fn().mockRejectedValue(new Error('Error'));
       
       // Open the circuit
       for (let i = 0; i < 3; i++) {
@@ -195,7 +195,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should close circuit after successful operations in half-open state', async () => {
-      const mockOperation = jest.fn();
+      const mockOperation = vi.fn();
       
       // Open circuit first
       mockOperation.mockRejectedValue(new Error('Error'));
@@ -224,7 +224,7 @@ describe('Database Cost Protection Systems', () => {
       expect(circuitBreaker.getStatusMessage()).toContain('Circuit healthy');
       
       // Open the circuit
-      const mockOperation = jest.fn().mockRejectedValue(new Error('Error'));
+      const mockOperation = vi.fn().mockRejectedValue(new Error('Error'));
       for (let i = 0; i < 3; i++) {
         try {
           circuitBreaker.execute(mockOperation, 'failing-op');
@@ -240,11 +240,11 @@ describe('Database Cost Protection Systems', () => {
   describe('Cost Monitoring', () => {
     beforeEach(() => {
       // Reset cost monitor state if needed
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
     
     test('should record operation metrics correctly', async () => {
-      const consoleSpy = jest.spyOn(console, 'debug').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
       
       await recordCostMetrics('/api/test', 5, 2000, 1024);
       
@@ -265,7 +265,7 @@ describe('Database Cost Protection Systems', () => {
     });
     
     test('should trigger alerts for high-cost operations', async () => {
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       
       // Record operation that exceeds thresholds
       await recordCostMetrics('/api/expensive', 100, 20000, 1073741824); // 1GB transfer
@@ -299,7 +299,7 @@ describe('Database Cost Protection Systems', () => {
       const allMetrics = globalCostMonitor.getEndpointMetrics();
       
       expect(endpoint1Metrics).toHaveLength(2);
-      expect(allMetrics.size).toBeGreaterThanOrEqual(2);
+      expect(Array.isArray(allMetrics) ? allMetrics.length : allMetrics.size).toBeGreaterThanOrEqual(2);
     });
   });
   
@@ -332,7 +332,7 @@ describe('Database Cost Protection Systems', () => {
           return circuitBreaker.execute(mockDatabaseOperation, 'integration-test');
         }, 'rate-limited-circuit-breaker-test');
       } catch (error) {
-        expect(error.message).toContain('quota exceeded');
+        expect((error as Error).message).toContain('quota exceeded');
       }
       
       // Fourth operation should be blocked by circuit breaker
@@ -341,7 +341,7 @@ describe('Database Cost Protection Systems', () => {
           return circuitBreaker.execute(mockDatabaseOperation, 'integration-test');
         }, 'rate-limited-circuit-breaker-test');
       } catch (error) {
-        expect(error.message).toContain('Circuit breaker OPEN');
+        expect((error as Error).message).toContain('Circuit breaker OPEN');
       }
       
       expect(circuitBreaker.getStats().state).toBe('OPEN');
@@ -386,7 +386,7 @@ describe('Database Cost Protection Systems', () => {
             );
             
           } catch (error) {
-            console.log(`Request ${i} failed: ${error.message}`);
+            console.log(`Request ${i} failed: ${(error as Error).message}`);
           }
         }
         

@@ -28,7 +28,7 @@ test.describe('Production Deployment Validation (Stagehand)', () => {
       ...StagehandConfig,
       verbose: 2,
       domSettleTimeoutMs: 10000,
-      defaultTimeout: DEPLOYMENT_CONFIG.availabilityCheck,
+      // Note: defaultTimeout removed as it's not part of ConstructorParams
     });
     await stagehand.init();
     deploymentId = `deploy-${Date.now()}`;

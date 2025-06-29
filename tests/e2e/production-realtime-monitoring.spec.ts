@@ -28,7 +28,7 @@ test.describe('Production Real-time Monitoring (Stagehand)', () => {
       ...StagehandConfig,
       verbose: 2,
       domSettleTimeoutMs: 15000, // Extended for real-time operations
-      defaultTimeout: MONITORING_CONFIG.websocketTimeout,
+      // Note: defaultTimeout removed as it's not part of ConstructorParams
     });
     await stagehand.init();
     testSession = `realtime-test-${Date.now()}`;

@@ -422,7 +422,7 @@ describe("Market Simulation Edge Cases - Fixed", () => {
       tradingBot.initializePosition("PUMPDUMPUSDT", 0.01, 100000); // Large position
 
       const pumpDumpAlerts: string[] = [];
-      riskEngine.on("manipulation_detected", (alert) => {
+      riskEngine.on("manipulation_detected", (alert: any) => {
         pumpDumpAlerts.push(alert.type);
       });
 
@@ -581,6 +581,7 @@ describe("Market Simulation Edge Cases - Fixed", () => {
             await mexcService.placeOrder({
               symbol: "LATENCYUSDT",
               side: "SELL",
+              type: "LIMIT",
               quantity: "100",
               price: targetPrice.toString(),
             });

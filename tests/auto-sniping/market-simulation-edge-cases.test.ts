@@ -498,7 +498,7 @@ describe("Market Simulation Edge Cases", () => {
         quantityStepSize: 0.0001,
       };
 
-      vi.spyOn(mexcService, "getSymbolInfo").mockResolvedValue({
+      vi.spyOn(mexcService, "getSymbolInfoBasic").mockResolvedValue({
         success: true,
         data: {
           symbol: "SMALLORDERUSDT",
@@ -536,9 +536,8 @@ describe("Market Simulation Edge Cases", () => {
       let currentStatusIndex = 0;
       vi.spyOn(mexcService, "getSymbolStatus").mockImplementation(async () => {
         return {
-          success: true,
-          data: statusChanges[currentStatusIndex],
-          timestamp: new Date().toISOString(),
+          status: statusChanges[currentStatusIndex].status,
+          trading: statusChanges[currentStatusIndex].status === "TRADING",
         };
       });
 
@@ -584,21 +583,19 @@ describe("Market Simulation Edge Cases", () => {
         data: {
           bids: [], // No buyers
           asks: [], // No sellers
+          lastUpdateId: 12345,
         },
-        timestamp: new Date().toISOString(),
       });
 
-      vi.spyOn(mexcService, "get24hrTicker").mockResolvedValue({
+      vi.spyOn(mexcService, "getTicker").mockResolvedValue({
         success: true,
         data: {
           symbol: "ZEROLIQUIDITYUSDT",
-          volume: "0",
-          count: 0,
-          high: "1.0",
-          low: "1.0",
+          price: "1.0",
           lastPrice: "1.0",
+          priceChangePercent: "0",
+          volume: "0",
         },
-        timestamp: new Date().toISOString(),
       });
 
       tradingBot.initializePosition("ZEROLIQUIDITYUSDT", 1.0, 1000);
@@ -618,18 +615,8 @@ describe("Market Simulation Edge Cases", () => {
 
       tradingBot.initializePosition("PRICEGAPUSDT", entryPrice, 1000);
 
-      // Mock gap detection
-      vi.spyOn(mexcService, "detectPriceGap").mockResolvedValue({
-        success: true,
-        data: {
-          hasGap: true,
-          gapPercentage: 1800,
-          previousPrice: entryPrice,
-          currentPrice: gapPrice,
-          gapType: "up",
-        },
-        timestamp: new Date().toISOString(),
-      });
+      // Note: detectPriceGap method doesn't exist on service, so we simulate gap detection in test logic
+      // const gapDetected = Math.abs((gapPrice - entryPrice) / entryPrice) > 0.1;
 
       // Act: Process extreme price gap
       const result = tradingBot.onPriceUpdate(gapPrice);
@@ -652,13 +639,13 @@ describe("Market Simulation Edge Cases", () => {
         success: true,
         data: {
           bids: [
-            [0.8, 100], // 20% below mid
+            ["0.8", "100"], // 20% below mid
           ],
           asks: [
-            [1.2, 100], // 20% above mid
+            ["1.2", "100"], // 20% above mid
           ],
+          lastUpdateId: 12346,
         },
-        timestamp: new Date().toISOString(),
       });
 
       const marketConditions = {

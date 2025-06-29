@@ -88,7 +88,7 @@ test.describe('Comprehensive Auto-Sniping Workflow (Stagehand)', () => {
       ...StagehandConfig,
       verbose: 2, // Enhanced logging for comprehensive testing
       domSettleTimeoutMs: COMPREHENSIVE_TEST_CONFIG.waitForStability,
-      defaultTimeout: COMPREHENSIVE_TEST_CONFIG.timeout,
+      // Note: defaultTimeout removed as it's not part of ConstructorParams
     });
     
     await stagehand.init();

@@ -27,7 +27,7 @@ test.describe('Production Auto-Sniping Workflow (Stagehand)', () => {
       ...StagehandConfig,
       verbose: 2, // Enhanced logging for production testing
       domSettleTimeoutMs: 10000, // Longer settling for production
-      defaultTimeout: PRODUCTION_CONFIG.timeout,
+      // Note: defaultTimeout removed as it's not part of ConstructorParams
     });
     await stagehand.init();
     testSession = `prod-test-${Date.now()}`;

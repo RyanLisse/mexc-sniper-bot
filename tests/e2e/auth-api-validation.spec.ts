@@ -246,7 +246,7 @@ test.describe('API Authentication Validation', () => {
 
     test('should be consistent across multiple rapid requests', async ({ request }) => {
       // Make 10 rapid sequential requests
-      const responses = [];
+      const responses: any[] = [];
       
       for (let i = 0; i < 10; i++) {
         const response = await request.get('/api/health/auth');
