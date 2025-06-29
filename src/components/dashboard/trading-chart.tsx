@@ -342,7 +342,7 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
                               Volume
                             </span>
                             <span className="font-bold">
-                              {data.volume.toLocaleString()}
+                              {(data.volume ?? 0).toLocaleString()}
                             </span>
                           </div>
                           <div className="flex flex-col">
@@ -350,7 +350,7 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
                               Trades
                             </span>
                             <span className="font-bold">
-                              {data.trades.toLocaleString()}
+                              {(data.trades ?? 0).toLocaleString()}
                             </span>
                           </div>
                           {data.price && (
@@ -359,7 +359,7 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
                                 Price
                               </span>
                               <span className="font-bold">
-                                ${data.price.toLocaleString()}
+                                ${(data.price ?? 0).toLocaleString()}
                               </span>
                             </div>
                           )}

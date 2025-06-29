@@ -7,6 +7,7 @@ import {
   apiResponse,
   HTTP_STATUS
 } from "@/src/lib/api-response";
+import { parseJsonRequest, validateRequiredFields, validateFieldTypes, createJsonErrorResponse } from "@/src/lib/api-json-parser";
 import { authenticatedRoute } from "@/src/lib/auth-decorators";
 
 // POST /api/mexc/test-credentials
@@ -14,39 +15,46 @@ export const POST = authenticatedRoute(async (request: NextRequest, user: any) =
   try {
     console.info('[DEBUG] Test credentials endpoint called by user:', user?.id);
 
-    let body;
-    try {
-      body = await request.json();
-    } catch (jsonError) {
-      console.error('[DEBUG] JSON parsing failed:', { error: jsonError instanceof Error ? jsonError.message : String(jsonError) });
-      return apiResponse(
-        createErrorResponse('Invalid request body', {
-          message: 'Request body must be valid JSON',
-          code: 'INVALID_JSON'
-        }),
-        HTTP_STATUS.BAD_REQUEST
-      );
+    // Use centralized JSON parsing with consistent error handling
+    const parseResult = await parseJsonRequest(request);
+    
+    if (!parseResult.success) {
+      console.error('[DEBUG] JSON parsing failed:', { 
+        error: parseResult.error,
+        code: parseResult.errorCode,
+        details: parseResult.details
+      });
+      return apiResponse(createJsonErrorResponse(parseResult), HTTP_STATUS.BAD_REQUEST);
     }
-
+    
+    const body = parseResult.data;
     const { apiKey, secretKey, passphrase } = body;
 
-    // Validate required fields
-    if (!apiKey || !secretKey) {
+    // Validate required fields using centralized validator
+    const fieldValidation = validateRequiredFields(body, ['apiKey', 'secretKey']);
+    if (!fieldValidation.success) {
       return apiResponse(
-        createErrorResponse('Missing credentials', {
+        createErrorResponse(fieldValidation.error || 'Missing credentials', {
           message: 'Both apiKey and secretKey are required',
-          code: 'MISSING_CREDENTIALS'
+          code: 'MISSING_CREDENTIALS',
+          missingField: fieldValidation.missingField
         }),
         HTTP_STATUS.BAD_REQUEST
       );
     }
 
-    // Validate credential format
-    if (typeof apiKey !== 'string' || typeof secretKey !== 'string') {
+    // Validate field types using centralized validator
+    const typeValidation = validateFieldTypes(body, {
+      apiKey: 'string',
+      secretKey: 'string',
+      passphrase: 'string'
+    });
+    if (!typeValidation.success) {
       return apiResponse(
-        createErrorResponse('Invalid credential format', {
+        createErrorResponse(typeValidation.error || 'Invalid credential format', {
           message: 'Credentials must be strings',
-          code: 'INVALID_FORMAT'
+          code: 'INVALID_FORMAT',
+          invalidField: typeValidation.invalidField
         }),
         HTTP_STATUS.BAD_REQUEST
       );

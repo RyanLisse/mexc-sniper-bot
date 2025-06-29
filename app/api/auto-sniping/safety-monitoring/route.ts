@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiAuthWrapper } from '@/src/lib/api-auth';
 import { createSuccessResponse, createErrorResponse } from '@/src/lib/api-response';
+import { parseJsonRequest, validateRequiredFields, createJsonErrorResponse } from '@/src/lib/api-json-parser';
 import { RealTimeSafetyMonitoringService, type SafetyConfiguration } from '@/src/services/risk/real-time-safety-monitoring-modules/index';
 
 // Lazy service getter to avoid build-time initialization
@@ -132,30 +133,27 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
   try {
-    let body: any;
-    try {
-      body = await request.json();
-    } catch (jsonError) {
-      // FIXED: Proper JSON parsing error handling
-      console.error('[SafetyMonitoringAPI] POST action failed:', { 
-        error: jsonError,
-        operation: 'json_parse'
+    // Use centralized JSON parsing with consistent error handling
+    const parseResult = await parseJsonRequest(request);
+    
+    if (!parseResult.success) {
+      console.error('[SafetyMonitoringAPI] POST JSON parsing failed:', { 
+        error: parseResult.error,
+        code: parseResult.errorCode,
+        details: parseResult.details
       });
-      return NextResponse.json(createErrorResponse(
-        'Invalid JSON in request body',
-        { 
-          code: 'INVALID_JSON', 
-          details: jsonError instanceof Error ? jsonError.message : 'JSON parsing failed' 
-        }
-      ), { status: 400 });
+      return NextResponse.json(createJsonErrorResponse(parseResult), { status: 400 });
     }
     
+    const body = parseResult.data;
     const { action, configuration, thresholds, alertId, reason } = body;
 
-    if (!action) {
+    // Validate required action field
+    const fieldValidation = validateRequiredFields(body, ['action']);
+    if (!fieldValidation.success) {
       return NextResponse.json(createErrorResponse(
-        'Action is required',
-        { code: 'MISSING_ACTION' }
+        fieldValidation.error || 'Action is required',
+        { code: 'MISSING_ACTION', missingField: fieldValidation.missingField }
       ), { status: 400 });
     }
 

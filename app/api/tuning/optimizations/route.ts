@@ -8,6 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
 import { logger } from "@/src/lib/utils";
+import { db } from "@/src/db";
+import { strategyPerformanceMetrics, tradingStrategies } from "@/src/db/schema";
+import { desc, eq, and } from "drizzle-orm";
 
 // Validation schemas
 const OptimizationRequestSchema = z.object({
@@ -48,37 +51,56 @@ const OptimizationRequestSchema = z.object({
  */
 export async function GET() {
   try {
-    // Get active optimizations from engine
-    const activeOptimizations = [];
-    
-    // Mock data for demonstration
-    const mockOptimizations = [
-      {
-        id: 'opt_1234567890',
-        status: 'running',
-        algorithm: 'Simple Optimization',
-        progress: 65,
-        currentIteration: 65,
-        maxIterations: 100,
-        bestScore: 0.847,
-        startTime: new Date(Date.now() - 3600000),
-        estimatedCompletion: new Date(Date.now() + 1800000),
-        parametersOptimized: 12
-      },
-      {
-        id: 'opt_0987654321',
-        status: 'completed',
-        algorithm: 'Random Search',
-        progress: 100,
-        currentIteration: 50,
-        maxIterations: 50,
-        bestScore: 0.923,
-        startTime: new Date(Date.now() - 7200000),
-        parametersOptimized: 8
-      }
-    ];
+    // Get real active optimizations from database
+    const activeOptimizations = await db
+      .select({
+        id: strategyPerformanceMetrics.id,
+        status: tradingStrategies.status,
+        algorithm: 'Parameter Optimization',
+        progress: strategyPerformanceMetrics.phasesExecuted,
+        currentIteration: strategyPerformanceMetrics.phasesExecuted,
+        maxIterations: tradingStrategies.totalPhases,
+        bestScore: strategyPerformanceMetrics.sharpeRatio,
+        startTime: strategyPerformanceMetrics.createdAt,
+        estimatedCompletion: strategyPerformanceMetrics.calculatedAt,
+        parametersOptimized: tradingStrategies.totalPhases,
+        symbol: tradingStrategies.symbol,
+        returnPercent: strategyPerformanceMetrics.pnlPercent
+      })
+      .from(strategyPerformanceMetrics)
+      .leftJoin(tradingStrategies, eq(strategyPerformanceMetrics.strategyId, tradingStrategies.id))
+      .where(and(
+        eq(tradingStrategies.status, 'active')
+      ))
+      .orderBy(desc(strategyPerformanceMetrics.createdAt))
+      .limit(20);
 
-    return NextResponse.json(mockOptimizations);
+    // Also get recently completed optimizations
+    const recentOptimizations = await db
+      .select({
+        id: strategyPerformanceMetrics.id,
+        status: tradingStrategies.status,
+        algorithm: 'Parameter Optimization',
+        progress: 100,
+        currentIteration: strategyPerformanceMetrics.phasesExecuted,
+        maxIterations: tradingStrategies.totalPhases,
+        bestScore: strategyPerformanceMetrics.sharpeRatio,
+        startTime: strategyPerformanceMetrics.createdAt,
+        parametersOptimized: tradingStrategies.totalPhases,
+        symbol: tradingStrategies.symbol,
+        returnPercent: strategyPerformanceMetrics.pnlPercent
+      })
+      .from(strategyPerformanceMetrics)
+      .leftJoin(tradingStrategies, eq(strategyPerformanceMetrics.strategyId, tradingStrategies.id))
+      .where(and(
+        eq(tradingStrategies.status, 'completed')
+      ))
+      .orderBy(desc(strategyPerformanceMetrics.calculatedAt))
+      .limit(10);
+
+    const allOptimizations = [...activeOptimizations, ...recentOptimizations];
+
+    return NextResponse.json(allOptimizations);
 
   } catch (error) {
     logger.error('Failed to get optimizations:', { error });
@@ -230,13 +252,21 @@ export async function PUT(request: NextRequest) {
 
     switch (action) {
       case 'pause':
-        // Pause optimization (not implemented in engine yet)
-        logger.info('Optimization pause requested', { optimizationId });
+        // Update optimization status in database
+        await db.update(tradingStrategies)
+          .set({ status: 'paused', updatedAt: new Date() })
+          .where(eq(tradingStrategies.id, parseInt(optimizationId)));
+        
+        logger.info('Optimization paused', { optimizationId });
         return NextResponse.json({ message: 'Optimization paused' });
 
       case 'resume':
-        // Resume optimization (not implemented in engine yet)
-        logger.info('Optimization resume requested', { optimizationId });
+        // Update optimization status in database
+        await db.update(tradingStrategies)
+          .set({ status: 'active', updatedAt: new Date() })
+          .where(eq(tradingStrategies.id, parseInt(optimizationId)));
+        
+        logger.info('Optimization resumed', { optimizationId });
         return NextResponse.json({ message: 'Optimization resumed' });
 
       default:

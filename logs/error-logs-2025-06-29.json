@@ -16242,5 +16242,685 @@
     "operation": "info",
     "service": "mexc-sniper-bot",
     "environment": "development"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.211Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.211Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:389:14)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/service-integration-fixes.test.ts:91:22\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.317Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.317Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:575:29\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.317Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:618:29\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.317Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:666:29\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.317Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:666:29\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.317Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:737:29\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.318Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at async Promise.all (index 0)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:772:23\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.495Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at async Promise.all (index 1)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:772:23\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.595Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at async Promise.all (index 2)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:772:23\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.598Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.analyzePatterns (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:157:30)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/clean-architecture/cross-domain-integration.test.ts:808:29\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.404Z",
+    "level": "info",
+    "message": "Initializing Core Trading Service...",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.404Z",
+    "level": "error",
+    "message": "Failed to initialize Core Trading Service",
+    "errorName": "Error",
+    "stack": "Error: Failed to initialize Core Trading Service\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "error",
+      "name": "TypeError",
+      "message": "this.safetyCoordinator.start is not a function",
+      "stack": "TypeError: this.safetyCoordinator.start is not a function\n    at CoreTradingService.initialize (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:188:38)\n    at new RealTimeSafetyMonitoringService (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:182:27)\n    at RealTimeSafetyMonitoringService.getInstance (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:204:50)\n    at getSafetyMonitoringService (/Users/neo/Developer/mexc-sniper-bot/app/api/auto-sniping/safety-monitoring/route.ts:15:42)\n    at /Users/neo/Developer/mexc-sniper-bot/app/api/auto-sniping/safety-monitoring/route.ts:31:21\n    at /Users/neo/Developer/mexc-sniper-bot/src/lib/api-auth.ts:525:20\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/comprehensive-api-validation.test.ts:191:26\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "error",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.350Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:45.350Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getPerformanceMetrics (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:333:10)\n    at ConfidenceCalculator.getHistoricalSuccessBoost (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:515:52)\n    at ConfidenceCalculator.calculateReadyStateConfidence (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator.ts:99:31)\n    at PatternAnalyzer.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-analyzer.ts:93:30)\n    at PatternDetectionCore.detectReadyStatePattern (/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/pattern-detection-core.ts:389:14)\n    at /Users/neo/Developer/mexc-sniper-bot/tests/auto-sniping/market-simulation-edge-cases.test.ts:296:9\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Initializing Core Trading Service...",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Initializing Strategy Manager Module",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Default trading strategies initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "strategies": [
+        "conservative",
+        "balanced",
+        "aggressive"
+      ]
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Strategy Manager Module initialized successfully",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "strategies": [
+        "conservative",
+        "balanced",
+        "aggressive"
+      ],
+      "activeStrategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "error",
+    "message": "Failed to initialize Core Trading Service",
+    "errorName": "Error",
+    "stack": "Error: Failed to initialize Core Trading Service\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "error",
+      "name": "TypeError",
+      "message": "this.positionManager.initialize is not a function",
+      "stack": "TypeError: this.positionManager.initialize is not a function\n    at CoreTradingService.initialize (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:194:34)",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "error",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getServiceStatus (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:341:10)\n    at RealTimeSafetyMonitoringService.ensureExecutionServiceReady (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:468:35)\n    at RealTimeSafetyMonitoringService.triggerEmergencyResponse (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:486:16)\n    at /Users/neo/Developer/mexc-sniper-bot/app/api/auto-sniping/safety-monitoring/route.ts:262:48\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/safety-monitoring.integration.test.ts:26:18\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/safety-monitoring.integration.test.ts:629:26\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Initializing Core Trading Service...",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Initializing Strategy Manager Module",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Default trading strategies initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "strategies": [
+        "conservative",
+        "balanced",
+        "aggressive"
+      ]
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "info",
+    "message": "Strategy Manager Module initialized successfully",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "strategies": [
+        "conservative",
+        "balanced",
+        "aggressive"
+      ],
+      "activeStrategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "test"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.548Z",
+    "level": "error",
+    "message": "Failed to initialize Core Trading Service",
+    "errorName": "Error",
+    "stack": "Error: Failed to initialize Core Trading Service\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "error",
+      "name": "TypeError",
+      "message": "this.positionManager.initialize is not a function",
+      "stack": "TypeError: this.positionManager.initialize is not a function\n    at CoreTradingService.initialize (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:194:34)\n    at RealTimeSafetyMonitoringService.ensureExecutionServiceReady (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:473:9)\n    at RealTimeSafetyMonitoringService.triggerEmergencyResponse (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:486:5)\n    at /Users/neo/Developer/mexc-sniper-bot/app/api/auto-sniping/safety-monitoring/route.ts:262:34\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/safety-monitoring.integration.test.ts:26:18\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/safety-monitoring.integration.test.ts:629:26\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "error",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
+  },
+  {
+    "timestamp": "2025-06-29T09:11:46.549Z",
+    "level": "error",
+    "message": "Service not initialized",
+    "errorName": "Error",
+    "stack": "Error: Service not initialized\n    at /Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:68:23",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "ensureInitialized",
+      "isInitialized": false,
+      "context": {
+        "stack": "Error: \n    at CoreTradingService.ensureInitialized (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:598:27)\n    at CoreTradingService.getActivePositions (/Users/neo/Developer/mexc-sniper-bot/src/services/trading/consolidated/core-trading/base-service.ts:309:10)\n    at RealTimeSafetyMonitoringService.triggerEmergencyResponse (/Users/neo/Developer/mexc-sniper-bot/src/services/risk/real-time-safety-monitoring-modules/index.ts:487:57)\n    at /Users/neo/Developer/mexc-sniper-bot/app/api/auto-sniping/safety-monitoring/route.ts:262:34\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/safety-monitoring.integration.test.ts:26:18\n    at /Users/neo/Developer/mexc-sniper-bot/tests/integration/api/safety-monitoring.integration.test.ts:629:26\n    at file:///Users/neo/Developer/mexc-sniper-bot/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+      },
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "screen": {
+        "width": 0,
+        "height": 0
+      },
+      "timezone": "Europe/Amsterdam"
+    },
+    "component": "CoreTradingService",
+    "operation": "ensureInitialized",
+    "service": "mexc-sniper-bot",
+    "environment": "test",
+    "url": "http://localhost:3000/",
+    "userAgent": "Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/26.1.0"
   }
 ]

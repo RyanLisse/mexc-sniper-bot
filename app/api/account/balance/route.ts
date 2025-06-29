@@ -19,6 +19,9 @@ import {
   validateAccountBalance
 } from "@/src/services/validation/comprehensive-validation-service";
 import { AccountBalanceSchema } from "@/src/schemas/external-api-validation-schemas";
+import { executeWithRateLimit } from "@/src/lib/database-rate-limiter";
+import { executeWithCircuitBreaker } from "@/src/lib/database-circuit-breaker";
+import { withCostMonitoring, recordCostMetrics } from "@/src/middleware/cost-monitor";
 
 // Request validation schema - userId is optional for environment fallback
 const BalanceRequestSchema = z.object({
@@ -34,7 +37,7 @@ const createFallbackData = (hasUserCredentials: boolean, credentialsType: string
   credentialsType,
 });
 
-export async function GET(request: NextRequest) {
+async function balanceHandler(request: NextRequest) {
   try {
     // Extract userId from query parameters (optional)
     const { searchParams } = new URL(request.url);
@@ -123,10 +126,17 @@ export async function GET(request: NextRequest) {
     
     let balanceResponse;
     try {
-      const rawResponse = await Promise.race([
-        mexcClient.getAccountBalances(),
-        timeoutPromise
-      ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
+      const startTime = Date.now();
+      
+      // Wrap MEXC API call with rate limiter and circuit breaker for cost protection
+      const rawResponse = await executeWithRateLimit(async () => {
+        return executeWithCircuitBreaker(async () => {
+          return Promise.race([
+            mexcClient.getAccountBalances(),
+            timeoutPromise
+          ]) as Awaited<ReturnType<typeof mexcClient.getAccountBalances>>;
+        }, 'mexc-account-balance');
+      }, 'balance-api-mexc-call');
       
       // Validate the external API response structure for enhanced safety
       const validationResult = validateExternalApiResponse(
@@ -152,6 +162,15 @@ export async function GET(request: NextRequest) {
       }
       
       balanceResponse = rawResponse;
+      
+      // Record cost metrics for monitoring
+      const operationDuration = Date.now() - startTime;
+      await recordCostMetrics(
+        '/api/account/balance',
+        1, // Assuming 1 query for balance check
+        operationDuration,
+        JSON.stringify(rawResponse).length
+      );
     } catch (mexcError) {
       console.error("[BalanceAPI] MEXC API call failed:", mexcError);
       const fallbackData = createFallbackData(hasUserCredentials, credentialsType);
@@ -287,3 +306,6 @@ export async function GET(request: NextRequest) {
     }, { status: statusCode });
   }
 }
+
+// Export the handler wrapped with cost monitoring
+export const GET = withCostMonitoring(balanceHandler, '/api/account/balance');
