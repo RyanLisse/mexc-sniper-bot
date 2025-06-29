@@ -22,7 +22,7 @@ describe("Safety Monitoring API Integration Tests", () => {
     // Setup mocks at test suite level to prevent hoisting issues
     vi.mock("@/src/lib/api-auth", () => ({
       apiAuthWrapper: vi.fn().mockImplementation((handler) => {
-        return async (request, ...args) => {
+        return async (request: any, ...args: any[]) => {
           return await handler(request, ...args);
         };
       }),
@@ -182,7 +182,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Invalid action parameter");
       } catch (error) {
         // If service initialization fails, log it but don't fail the test
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -212,7 +212,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Invalid JSON");
       } catch (error) {
         // If service initialization fails, log it but don't fail the test
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -242,7 +242,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Action is required");
       } catch (error) {
         // If service initialization fails, log it but don't fail the test
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -400,7 +400,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Invalid action parameter");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -428,7 +428,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Invalid action");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -456,7 +456,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Invalid JSON");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -486,7 +486,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Configuration is required");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -514,7 +514,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Thresholds are required");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -542,7 +542,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Emergency reason is required");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -570,7 +570,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         expect(data.error).toContain("Alert ID is required");
       } catch (error) {
         // Service initialization issues are expected in integration tests
-        console.log("Service initialization issue:", error.message);
+        console.log("Service initialization issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -605,7 +605,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         console.log("✅ EmergencyStopCoordinator integration verified");
       } catch (error) {
         // Log error but don't fail test if services can't be instantiated in test environment
-        console.log("EmergencyStopCoordinator integration test issue:", error.message);
+        console.log("EmergencyStopCoordinator integration test issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -643,7 +643,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         }
       } catch (error) {
         // Expected in test environment without full service stack
-        console.log("Emergency response API integration issue:", error.message);
+        console.log("Emergency response API integration issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -670,7 +670,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         console.log("✅ Emergency coordination race condition prevention verified");
       } catch (error) {
         // Expected in test environment
-        console.log("Race condition prevention test issue:", error.message);
+        console.log("Race condition prevention test issue:", (error as Error).message);
         expect(error).toBeDefined();
       }
     });

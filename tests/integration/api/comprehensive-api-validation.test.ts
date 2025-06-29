@@ -19,14 +19,15 @@ describe('Comprehensive API Route Validation Tests', () => {
   
   beforeAll(() => {
     // Global mock setup for API route testing
-    vi.mock('@/src/lib/kinde-auth', () => ({
-      requireAuth: vi.fn().mockResolvedValue({
+    vi.mock('@/src/lib/api-auth', () => ({
+      requireApiAuth: vi.fn().mockResolvedValue({
         id: 'test-user-api-validation',
         email: 'api-test@example.com',
       }),
-      getUser: vi.fn().mockResolvedValue({
-        id: 'test-user-api-validation',
-        email: 'api-test@example.com',
+      apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+        return async (request: any, ...args: any[]) => {
+          return await handler(request, ...args);
+        };
       }),
     }));
 
@@ -173,7 +174,7 @@ describe('Comprehensive API Route Validation Tests', () => {
         expect(data.success).toBe(false);
         expect(data.error).toMatch(/format|type|string/i);
       } catch (error) {
-        console.log('Type validation test had initialization issue:', error.message);
+        console.log('Type validation test had initialization issue:', (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -200,7 +201,7 @@ describe('Comprehensive API Route Validation Tests', () => {
         // Check for proper HTTP status code
         expect(response.status).toBe(400);
       } catch (error) {
-        console.log('Error response consistency test had initialization issue:', error.message);
+        console.log('Error response consistency test had initialization issue:', (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -215,7 +216,7 @@ describe('Comprehensive API Route Validation Tests', () => {
   describe('Authentication and Authorization', () => {
     test('should require authentication for protected routes', async () => {
       // Mock failed authentication
-      vi.mocked(await import('@/src/lib/kinde-auth')).requireAuth.mockRejectedValueOnce(
+      vi.mocked(await import('@/src/lib/api-auth')).requireApiAuth.mockRejectedValueOnce(
         new Error('Authentication required')
       );
 
@@ -231,7 +232,7 @@ describe('Comprehensive API Route Validation Tests', () => {
         // Should return 401 or redirect to authentication
         expect([401, 403, 302]).toContain(response.status);
       } catch (error) {
-        console.log('Authentication test had initialization issue:', error.message);
+        console.log('Authentication test had initialization issue:', (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -255,7 +256,7 @@ describe('Comprehensive API Route Validation Tests', () => {
           expect(data.error).toMatch(/access|denied|forbidden/i);
         }
       } catch (error) {
-        console.log('User access validation test had initialization issue:', error.message);
+        console.log('User access validation test had initialization issue:', (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -285,7 +286,7 @@ describe('Comprehensive API Route Validation Tests', () => {
         expect(data.success).toBe(false);
         expect(data.error).toMatch(/length|character/i);
       } catch (error) {
-        console.log('Credential validation test had initialization issue:', error.message);
+        console.log('Credential validation test had initialization issue:', (error as Error).message);
         expect(error).toBeDefined();
       }
     });
@@ -316,7 +317,7 @@ describe('Comprehensive API Route Validation Tests', () => {
           expect(data.error).toMatch(/space|character|invalid/i);
         }
       } catch (error) {
-        console.log('Invalid characters test had initialization issue:', error.message);
+        console.log('Invalid characters test had initialization issue:', (error as Error).message);
         expect(error).toBeDefined();
       }
     });

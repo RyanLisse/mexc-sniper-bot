@@ -587,28 +587,30 @@ Long-term: Strategic hold`,
         id: "test-pattern-id",
         timestamp: Date.now(),
         originalPattern: { id: "AVAXUSDT", type: "market", data: { sts: 2, st: 2, tt: 4 }, confidence: 85 },
-        aiEnhancements: { confidence: 85, description: "AI enhanced pattern" },
-        // cohereEmbedding property not available in return type
-        perplexityInsights: {
-          summary: "Limited analysis due to service unavailability",
-          keyFindings: ["Partial data available"],
-          marketContext: {
-            sentiment: "neutral",
-            volatility: "medium",
-            volume: "medium",
-            technicalOutlook: "neutral",
-          },
-          riskAssessment: {
-            level: "medium",
-            factors: ["market uncertainty"],
-            mitigation: ["conservative position sizing"],
-          },
-          opportunities: { shortTerm: [], mediumTerm: [], longTerm: [] },
-          citations: [],
-          researchTimestamp: Date.now(),
-          confidence: 0.6,
+        aiEnhancements: { 
+          confidence: 85, 
+          description: "AI enhanced pattern",
+          embedding: [0.1, 0.2, 0.3, 0.4, 0.5],
+          research: {
+            summary: "Limited analysis due to service unavailability",
+            keyFindings: ["Partial data available"],
+            marketContext: {
+              sentiment: "neutral",
+              volatility: "medium",
+              volume: "medium",
+              technicalOutlook: "neutral",
+            },
+            riskAssessment: {
+              level: "medium",
+              factors: ["market uncertainty"],
+              mitigation: ["conservative position sizing"],
+            },
+            opportunities: { shortTerm: [], mediumTerm: [], longTerm: [] },
+            citations: [],
+            researchTimestamp: Date.now(),
+            confidence: 0.6,
+          }
         },
-        // aiContext property not available in return type
       });
 
       const testPattern: PatternData = {

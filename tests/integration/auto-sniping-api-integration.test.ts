@@ -6,7 +6,8 @@
 
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DELETE, GET, POST, PUT } from '@/app/api/auto-sniping/execution/route';
+// Import route handlers directly from the execution route
+// Note: These are Next.js API route handlers
 import { getCoreTrading, resetCoreTrading } from '@/src/services/trading/consolidated/core-trading/base-service';
 
 // Mock environment variables
@@ -52,6 +53,7 @@ describe('Auto-Sniping API Integration Tests', () => {
 
   describe('GET /api/auto-sniping/execution', () => {
     it('should return execution report successfully', async () => {
+      const { GET } = await import('@/app/api/auto-sniping/execution/route');
       const request = new NextRequest('http://localhost:3000/api/auto-sniping/execution', {
         method: 'GET'
       });
@@ -67,6 +69,7 @@ describe('Auto-Sniping API Integration Tests', () => {
     });
 
     it('should handle query parameters correctly', async () => {
+      const { GET } = await import('@/app/api/auto-sniping/execution/route');
       const request = new NextRequest(
         'http://localhost:3000/api/auto-sniping/execution?include_positions=true&include_history=true',
         { method: 'GET' }
@@ -84,6 +87,7 @@ describe('Auto-Sniping API Integration Tests', () => {
 
   describe('POST /api/auto-sniping/execution', () => {
     it('should start execution successfully', async () => {
+      const { POST } = await import('@/app/api/auto-sniping/execution/route');
       const request = new NextRequest('http://localhost:3000/api/auto-sniping/execution', {
         method: 'POST',
         body: JSON.stringify({ action: 'start_execution' }),
