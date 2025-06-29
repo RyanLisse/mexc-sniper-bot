@@ -99,8 +99,10 @@ export const PortfolioRiskMetricsSchema = z.object({
   maxDrawdownRisk: z.number().min(0),
   liquidityRisk: z.number().min(0),
 
-  // Timestamp for data validity
-  timestamp: z.string(),
+  // Timestamp for data validity (accept both string and number)
+  timestamp: z.union([z.string(), z.number()]).transform((val) => {
+    return typeof val === 'number' ? val.toString() : val;
+  }),
 });
 
 // ============================================================================

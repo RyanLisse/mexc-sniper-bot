@@ -94,6 +94,55 @@ export interface OptimizedAutoSnipingExecutionEngine {
    * Update position size
    */
   updatePositionSize(symbol: string, newSize: number): Promise<void>;
+
+  /**
+   * Get execution report for monitoring
+   */
+  getExecutionReport(): Promise<{
+    stats: {
+      currentDrawdown: number;
+      maxDrawdown: number;
+      successRate: number;
+      averageSlippage: number;
+      totalPnl: string;
+    };
+    activePositions: Array<{
+      symbol: string;
+      quantity: string;
+      currentPrice: string;
+      unrealizedPnl: string;
+    }>;
+    recentExecutions: Array<{
+      symbol: string;
+      quantity: string;
+      currentPrice: string;
+      unrealizedPnl: string;
+    }>;
+    systemHealth: {
+      apiConnection: boolean;
+    };
+  }>;
+
+  /**
+   * Get service configuration
+   */
+  getConfig(): {
+    thresholds: {
+      maxDrawdownPercentage: number;
+      maxPortfolioConcentration: number;
+      minSuccessRatePercentage: number;
+      maxConsecutiveLosses: number;
+      maxSlippagePercentage: number;
+      minPatternConfidence: number;
+      maxPatternDetectionFailures: number;
+      maxApiLatencyMs: number;
+      minApiSuccessRate: number;
+      maxMemoryUsagePercentage: number;
+    };
+    enabled: boolean;
+    autoActionEnabled: boolean;
+    emergencyMode: boolean;
+  };
 }
 
 // Export types for external use

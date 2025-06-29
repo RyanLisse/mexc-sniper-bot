@@ -6,6 +6,7 @@
  */
 
 import { toSafeError } from "@/src/lib/error-type-utils";
+import type { TradingOrderData } from "@/src/services/api/unified-mexc-trading";
 import type {
   ModuleContext,
   ModuleState,
@@ -94,7 +95,7 @@ export class ManualTradingModule {
 
       // Check safety coordinator
       if (this.context.safetyCoordinator) {
-        const safetyStatus = this.context.safetyCoordinator.getCurrentStatus();
+        const safetyStatus = this.context.safetyCoordinator.getStatus();
         if (safetyStatus.overall.safetyLevel !== "safe") {
           return {
             success: false,
@@ -172,9 +173,15 @@ export class ManualTradingModule {
           strategy: config.strategy,
         };
 
-        const phase = {
+        const phase: {
+          phaseId: number;
+          status: "executing" | "completed" | "failed";
+          allocation: number;
+          result?: TradeResult;
+          executionTime: Date;
+        } = {
           phaseId: i + 1,
-          status: "executing" as "executing" | "completed" | "failed",
+          status: "executing",
           allocation: allocations[i],
           executionTime: new Date(),
         };
@@ -307,17 +314,24 @@ export class ManualTradingModule {
     const startTime = Date.now();
 
     try {
+      // Convert unsupported order types to supported ones
+      let mexcOrderType: "MARKET" | "LIMIT";
+      if (params.type === "STOP_LIMIT") {
+        mexcOrderType = "LIMIT";
+      } else if (params.type === "LIMIT") {
+        mexcOrderType = "LIMIT";
+      } else {
+        mexcOrderType = "MARKET";
+      }
+
       // Prepare MEXC API parameters
-      const mexcParams = {
+      const mexcParams: TradingOrderData = {
         symbol: params.symbol,
         side: params.side,
-        type: params.type,
-        quantity: params.quantity,
-        quoteOrderQty: params.quoteOrderQty,
-        price: params.price,
-        stopPrice: params.stopPrice,
+        type: mexcOrderType,
+        quantity: params.quantity?.toString() || "",
+        price: params.price?.toString(),
         timeInForce: params.timeInForce,
-        newClientOrderId: params.newClientOrderId,
       };
 
       // Execute through MEXC service
@@ -369,7 +383,7 @@ export class ManualTradingModule {
   private async getSimulatedPrice(symbol: string): Promise<number> {
     try {
       // Try to get real market price for simulation
-      const ticker = await this.context.mexcService.getTickerPrice(symbol);
+      const ticker = await this.context.mexcService.getTicker(symbol);
       if (ticker.success && ticker.data?.price) {
         return parseFloat(ticker.data.price);
       }

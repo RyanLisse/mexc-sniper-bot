@@ -1020,7 +1020,7 @@ export async function initializeDatabaseMocks(isIntegrationTest: boolean): Promi
   }
 
   // Use enhanced database mocking system
-  const { initializeEnhancedDatabaseMocks } = await import('./enhanced-database-mocks');
+  const { initializeEnhancedDatabaseMocks } = await import('./database-mocks-enhanced');
   initializeEnhancedDatabaseMocks();
 }
 

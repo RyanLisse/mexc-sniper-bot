@@ -1,0 +1,191 @@
+{
+  "timestamp": "2025-06-29T16:01:05.062Z",
+  "agentMetrics": [
+    {
+      "agentId": "mexc-api",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 1,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.01,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 1,
+      "p95ResponseTime": 1,
+      "p99ResponseTime": 1,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "api",
+        "agentName": "MEXC API Agent",
+        "registeredAt": "2025-06-29T16:01:05.040Z",
+        "dependencies": []
+      }
+    },
+    {
+      "agentId": "calendar",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 0,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 0,
+      "p95ResponseTime": 0,
+      "p99ResponseTime": 0,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "analysis",
+        "agentName": "Calendar Agent",
+        "registeredAt": "2025-06-29T16:01:05.040Z",
+        "dependencies": []
+      }
+    },
+    {
+      "agentId": "pattern-discovery",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 2,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.02,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 2,
+      "p95ResponseTime": 2,
+      "p99ResponseTime": 2,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "analysis",
+        "agentName": "Pattern Discovery Agent",
+        "registeredAt": "2025-06-29T16:01:05.040Z",
+        "dependencies": []
+      }
+    },
+    {
+      "agentId": "symbol-analysis",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 1,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.01,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 1,
+      "p95ResponseTime": 1,
+      "p99ResponseTime": 1,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "analysis",
+        "agentName": "Symbol Analysis Agent",
+        "registeredAt": "2025-06-29T16:01:05.040Z",
+        "dependencies": []
+      }
+    },
+    {
+      "agentId": "strategy",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 1,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.01,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 1,
+      "p95ResponseTime": 1,
+      "p99ResponseTime": 1,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "strategy",
+        "agentName": "Strategy Agent",
+        "registeredAt": "2025-06-29T16:01:05.040Z",
+        "dependencies": []
+      }
+    },
+    {
+      "agentId": "risk-manager",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 1,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.01,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 1,
+      "p95ResponseTime": 1,
+      "p99ResponseTime": 1,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "risk",
+        "agentName": "Risk Manager Agent",
+        "registeredAt": "2025-06-29T16:01:05.041Z",
+        "dependencies": []
+      }
+    },
+    {
+      "agentId": "simulation",
+      "timestamp": "2025-06-29T16:01:05.049Z",
+      "responseTime": 1,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.01,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 1,
+      "p95ResponseTime": 1,
+      "p99ResponseTime": 1,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "safety",
+        "agentName": "Simulation Agent",
+        "registeredAt": "2025-06-29T16:01:05.041Z",
+        "dependencies": []
+      }
+    }
+  ],
+  "workflowMetrics": [],
+  "systemMetrics": {
+    "timestamp": "2025-06-29T16:01:05.049Z",
+    "totalAgents": 7,
+    "healthyAgents": 7,
+    "degradedAgents": 0,
+    "unhealthyAgents": 0,
+    "totalWorkflows": 0,
+    "runningWorkflows": 0,
+    "completedWorkflows": 0,
+    "failedWorkflows": 0,
+    "systemMemoryUsage": 171.64622497558594,
+    "systemCpuUsage": 10.19193569839622,
+    "databaseConnections": 1,
+    "averageResponseTime": 1,
+    "throughput": 7,
+    "errorRate": 0,
+    "uptime": 38865.953833,
+    "metadata": {
+      "nodeVersion": "v24.1.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    }
+  },
+  "collectionInterval": 60000
+}

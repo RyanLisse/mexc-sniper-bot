@@ -7,8 +7,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SafetyAlert, SafetyConfiguration } from "../../../../schemas/safety-monitoring-schemas";
-import type { OptimizedAutoSnipingExecutionEngine } from "../../../trading/optimized-auto-sniping-execution-engine";
-// import type { PatternMonitoringService } from "../../pattern-monitoring-service"; // File doesn't exist
+import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
+import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
 import {
   CoreSafetyMonitoring,
   type CoreSafetyMonitoringConfig,
@@ -16,12 +16,12 @@ import {
 } from "../core-safety-monitoring";
 
 // Mock dependencies
-vi.mock("../../auto-sniping-execution-service");
-vi.mock("../../pattern-monitoring-service");
+vi.mock("../../../trading/consolidated/core-trading/base-service");
+vi.mock("../../../notification/pattern-monitoring-service");
 
 describe("CoreSafetyMonitoring", () => {
   let coreMonitoring: CoreSafetyMonitoring;
-  let mockExecutionService: vi.Mocked<OptimizedAutoSnipingExecutionEngine>;
+  let mockExecutionService: vi.Mocked<CoreTradingService>;
   let mockPatternMonitoring: vi.Mocked<PatternMonitoringService>;
   let mockConfig: CoreSafetyMonitoringConfig;
   let alertsReceived: Array<Omit<SafetyAlert, "id" | "timestamp" | "acknowledged">>;

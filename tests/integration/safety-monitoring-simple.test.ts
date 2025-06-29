@@ -1,301 +1,375 @@
 /**
- * Simplified Safety Monitoring API Integration Tests
+ * Simple Safety Monitoring API Tests
  * 
- * Tests the key API functionality without complex mocking dependencies.
- * Focuses on JSON parsing, error handling, and basic API structure.
+ * Focused tests for API endpoint functionality without complex mocking
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { describe, expect, it } from "vitest";
+import { NextRequest } from "next/server";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import { setTestTimeout, withApiTimeout } from "../utils/timeout-utilities";
 
-describe("Simplified Safety Monitoring API Tests", () => {
-  
-  describe("JSON Parsing and Error Handling", () => {
-    it("should handle malformed JSON in POST requests", async () => {
-      // Test JSON parsing error handling directly
-      const request = new NextRequest(
-        "http://localhost:3000/api/auto-sniping/safety-monitoring",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: "{ invalid json",
-        },
-      );
+describe("Safety Monitoring API Simple Tests", () => {
+  const TEST_TIMEOUT = setTestTimeout("integration");
 
-      try {
-        const body = await request.json();
-        // Should not reach here due to malformed JSON
-        expect(false).toBe(true);
-      } catch (error) {
-        // This is expected - malformed JSON should throw an error
-        expect(error).toBeDefined();
-        expect(error instanceof Error).toBe(true);
-        expect(error.message).toContain("JSON");
-      }
-    });
+  let GET: any;
+  let POST: any;
 
-    it("should handle valid JSON in POST requests", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/auto-sniping/safety-monitoring",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "start_monitoring" }),
-        },
-      );
+  beforeAll(async () => {
+    // Mock the safety monitoring service before import
+    vi.doMock("@/src/services/risk/real-time-safety-monitoring-modules", () => ({
+      RealTimeSafetyMonitoringService: {
+        getInstance: vi.fn(() => ({
+          getMonitoringStatus: vi.fn().mockReturnValue(false),
+          getTimerStatus: vi.fn().mockReturnValue([
+            {
+              id: "monitoring_cycle",
+              name: "Safety Monitoring Cycle", 
+              intervalMs: 30000,
+              lastExecuted: Date.now() - 10000,
+              isRunning: false,
+              nextExecution: Date.now() + 20000,
+            },
+          ]),
+          startMonitoring: vi.fn().mockResolvedValue(undefined),
+          stopMonitoring: vi.fn().mockReturnValue(undefined),
+          getConfiguration: vi.fn().mockReturnValue({
+            enabled: true,
+            monitoringIntervalMs: 30000,
+            riskCheckIntervalMs: 60000,
+            autoActionEnabled: false,
+            emergencyMode: false,
+            alertRetentionHours: 24,
+            thresholds: {
+              maxDrawdownPercentage: 15,
+              maxDailyLossPercentage: 5,
+              maxPositionRiskPercentage: 10,
+              maxPortfolioConcentration: 25,
+              minSuccessRatePercentage: 60,
+              maxConsecutiveLosses: 5,
+              maxSlippagePercentage: 2,
+              maxApiLatencyMs: 1000,
+              minApiSuccessRate: 95,
+              maxMemoryUsagePercentage: 80,
+              minPatternConfidence: 75,
+              maxPatternDetectionFailures: 3,
+            },
+          }),
+          updateConfiguration: vi.fn().mockReturnValue(undefined),
+          getRiskMetrics: vi.fn().mockReturnValue({
+            currentDrawdown: 2.5,
+            maxDrawdown: 5.0,
+            portfolioValue: 10000,
+            totalExposure: 500,
+            concentrationRisk: 15,
+            successRate: 85,
+            consecutiveLosses: 1,
+            averageSlippage: 0.5,
+            apiLatency: 150,
+            apiSuccessRate: 98,
+            memoryUsage: 45,
+            patternAccuracy: 78,
+            detectionFailures: 0,
+            falsePositiveRate: 5,
+          }),
+          calculateOverallRiskScore: vi.fn().mockReturnValue(25),
+          performRiskAssessment: vi.fn().mockResolvedValue(undefined),
+          isSystemSafe: vi.fn().mockResolvedValue(true),
+          getSafetyReport: vi.fn().mockResolvedValue({
+            status: "safe",
+            overallRiskScore: 25,
+            riskMetrics: {
+              currentDrawdown: 2.5,
+              maxDrawdown: 5.0,
+              portfolioValue: 10000,
+              totalExposure: 500,
+              concentrationRisk: 15,
+              successRate: 85,
+              consecutiveLosses: 1,
+              averageSlippage: 0.5,
+              apiLatency: 150,
+              apiSuccessRate: 98,
+              memoryUsage: 45,
+              patternAccuracy: 78,
+              detectionFailures: 0,
+              falsePositiveRate: 5,
+            },
+            thresholds: {
+              maxDrawdownPercentage: 15,
+              maxDailyLossPercentage: 5,
+              maxPositionRiskPercentage: 10,
+              maxPortfolioConcentration: 25,
+              minSuccessRatePercentage: 60,
+              maxConsecutiveLosses: 5,
+              maxSlippagePercentage: 2,
+              maxApiLatencyMs: 1000,
+              minApiSuccessRate: 95,
+              maxMemoryUsagePercentage: 80,
+              minPatternConfidence: 75,
+              maxPatternDetectionFailures: 3,
+            },
+            activeAlerts: [],
+            recentActions: [],
+            systemHealth: {
+              executionService: true,
+              patternMonitoring: true,
+              emergencySystem: true,
+              mexcConnectivity: true,
+              overallHealth: 95,
+            },
+            recommendations: ["System operating within safe parameters"],
+            monitoringStats: {
+              alertsGenerated: 0,
+              actionsExecuted: 0,
+              riskEventsDetected: 0,
+              systemUptime: 3600000,
+              lastRiskCheck: new Date().toISOString(),
+              monitoringFrequency: 30000,
+            },
+            lastUpdated: new Date().toISOString(),
+          }),
+          triggerEmergencyResponse: vi.fn().mockResolvedValue([
+            {
+              id: "halt_123",
+              type: "halt_trading",
+              description: "Emergency trading halt",
+              executed: true,
+              executedAt: new Date().toISOString(),
+              result: "success",
+            },
+          ]),
+          acknowledgeAlert: vi.fn().mockReturnValue(true),
+          clearAcknowledgedAlerts: vi.fn().mockReturnValue(5),
+        })),
+      },
+    }));
 
-      const body = await request.json();
-      expect(body).toBeDefined();
-      expect(body.action).toBe("start_monitoring");
-    });
-
-    it("should handle missing action in POST body", async () => {
-      const request = new NextRequest(
-        "http://localhost:3000/api/auto-sniping/safety-monitoring",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ someOtherField: "value" }),
-        },
-      );
-
-      const body = await request.json();
-      expect(body).toBeDefined();
-      expect(body.action).toBeUndefined();
-      expect(body.someOtherField).toBe("value");
-    });
-  });
-
-  describe("API Response Structure", () => {
-    it("should create proper error responses", async () => {
-      // Mock the createErrorResponse function behavior
-      const createErrorResponse = (message: string, details?: any) => ({
-        success: false,
-        error: message,
-        details,
-        timestamp: new Date().toISOString(),
-      });
-
-      const errorResponse = createErrorResponse(
-        "Invalid JSON in request body",
-        { code: "INVALID_JSON", details: "JSON parsing failed" }
-      );
-
-      expect(errorResponse.success).toBe(false);
-      expect(errorResponse.error).toBe("Invalid JSON in request body");
-      expect(errorResponse.details.code).toBe("INVALID_JSON");
-      expect(errorResponse.timestamp).toBeDefined();
-    });
-
-    it("should create proper success responses", async () => {
-      // Mock the createSuccessResponse function behavior
-      const createSuccessResponse = (data: any) => ({
-        success: true,
-        data,
-        timestamp: new Date().toISOString(),
-      });
-
-      const successResponse = createSuccessResponse({
-        message: "Operation completed successfully",
-        status: "safe",
-      });
-
-      expect(successResponse.success).toBe(true);
-      expect(successResponse.data.message).toBe("Operation completed successfully");
-      expect(successResponse.data.status).toBe("safe");
-      expect(successResponse.timestamp).toBeDefined();
-    });
-  });
-
-  describe("NextRequest URL Parameter Parsing", () => {
-    it("should parse GET request URL parameters correctly", () => {
-      const url = new URL(
-        "http://localhost:3000/api/auto-sniping/safety-monitoring?action=status&severity=high&limit=5"
-      );
-      const request = new NextRequest(url.toString());
-
-      const { searchParams } = new URL(request.url);
-      const action = searchParams.get('action');
-      const severity = searchParams.get('severity');
-      const limit = parseInt(searchParams.get('limit') || '10');
-
-      expect(action).toBe('status');
-      expect(severity).toBe('high');
-      expect(limit).toBe(5);
-    });
-
-    it("should handle missing URL parameters gracefully", () => {
-      const url = new URL(
-        "http://localhost:3000/api/auto-sniping/safety-monitoring"
-      );
-      const request = new NextRequest(url.toString());
-
-      const { searchParams } = new URL(request.url);
-      const action = searchParams.get('action');
-      const severity = searchParams.get('severity');
-      const limit = parseInt(searchParams.get('limit') || '10');
-
-      expect(action).toBeNull();
-      expect(severity).toBeNull();
-      expect(limit).toBe(10); // Default value
-    });
-  });
-
-  describe("HTTP Status Code Logic", () => {
-    it("should determine correct status codes for different error scenarios", () => {
-      // Test status code logic that would be used in API handlers
-
-      // Bad Request scenarios
-      const badRequestScenarios = [
-        { error: "Invalid JSON", expectedStatus: 400 },
-        { error: "Action is required", expectedStatus: 400 },
-        { error: "Invalid action parameter", expectedStatus: 400 },
-      ];
-
-      badRequestScenarios.forEach(({ error, expectedStatus }) => {
-        const getStatusCode = (errorMessage: string) => {
-          if (errorMessage.includes("Invalid JSON") || 
-              errorMessage.includes("required") || 
-              errorMessage.includes("Invalid action")) {
-            return 400;
-          }
-          return 500;
+    // Mock api-auth
+    vi.doMock("@/src/lib/api-auth", () => ({
+      apiAuthWrapper: vi.fn().mockImplementation((handler) => {
+        return async (request, ...args) => {
+          return await handler(request, ...args);
         };
+      }),
+      requireApiAuth: vi.fn().mockResolvedValue({
+        id: "test-user-123",
+        email: "test@example.com",
+        name: "Test User",
+      }),
+    }));
 
-        expect(getStatusCode(error)).toBe(expectedStatus);
-      });
+    // Mock structured logger
+    vi.doMock("@/src/lib/structured-logger", () => ({
+      createSafeLogger: () => ({
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        trading: vi.fn(),
+      }),
+    }));
 
-      // Conflict scenarios
-      const conflictScenarios = [
-        { error: "already active", expectedStatus: 409 },
-        { error: "not currently active", expectedStatus: 409 },
-      ];
-
-      conflictScenarios.forEach(({ error, expectedStatus }) => {
-        const getStatusCode = (errorMessage: string) => {
-          if (errorMessage.includes("already active") || 
-              errorMessage.includes("not currently active")) {
-            return 409;
-          }
-          return 500;
-        };
-
-        expect(getStatusCode(error)).toBe(expectedStatus);
-      });
-
-      // Not Found scenarios
-      const notFoundScenarios = [
-        { error: "Alert not found", expectedStatus: 404 },
-      ];
-
-      notFoundScenarios.forEach(({ error, expectedStatus }) => {
-        const getStatusCode = (errorMessage: string) => {
-          if (errorMessage.includes("not found")) {
-            return 404;
-          }
-          return 500;
-        };
-
-        expect(getStatusCode(error)).toBe(expectedStatus);
-      });
-    });
+    // Import after mocking
+    const { GET: getHandler, POST: postHandler } = await import(
+      "../../app/api/auto-sniping/safety-monitoring/route"
+    );
+    GET = getHandler;
+    POST = postHandler;
   });
 
-  describe("Data Validation Logic", () => {
-    it("should validate POST request actions", () => {
-      const validActions = [
-        'start_monitoring',
-        'stop_monitoring', 
-        'update_configuration',
-        'update_thresholds',
-        'emergency_response',
-        'acknowledge_alert',
-        'clear_acknowledged_alerts',
-        'force_risk_assessment'
-      ];
+  describe("GET Endpoints", () => {
+    it(
+      "should handle GET /status requests successfully",
+      async () => {
+        const url = new URL(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring?action=status",
+        );
+        const request = new NextRequest(url.toString());
 
-      const validateAction = (action: string) => {
-        return validActions.includes(action);
-      };
+        const response = await withApiTimeout(
+          () => GET(request),
+          5000
+        );
 
-      // Valid actions
-      validActions.forEach(action => {
-        expect(validateAction(action)).toBe(true);
-      });
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.data).toHaveProperty("isActive");
+        expect(data.data).toHaveProperty("timerOperations");
+        expect(data.data).toHaveProperty("lastChecked");
+      },
+      TEST_TIMEOUT,
+    );
 
-      // Invalid actions
-      const invalidActions = ['invalid_action', '', 'unknown', 'test'];
-      invalidActions.forEach(action => {
-        expect(validateAction(action)).toBe(false);
-      });
-    });
+    it(
+      "should handle GET /report requests with proper response structure",
+      async () => {
+        const url = new URL(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring?action=report",
+        );
+        const request = new NextRequest(url.toString());
 
-    it("should validate GET request actions", () => {
-      const validGetActions = [
-        'status',
-        'report',
-        'risk-metrics', 
-        'alerts',
-        'system-health',
-        'configuration',
-        'check-safety'
-      ];
+        const response = await withApiTimeout(
+          () => GET(request),
+          5000
+        );
 
-      const validateGetAction = (action: string) => {
-        return validGetActions.includes(action);
-      };
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.data).toHaveProperty("status");
+        expect(data.data).toHaveProperty("overallRiskScore");
+        expect(data.data).toHaveProperty("riskMetrics");
+        expect(data.data).toHaveProperty("systemHealth");
+        expect(data.data).toHaveProperty("activeAlerts");
+        expect(data.data).toHaveProperty("recommendations");
+      },
+      TEST_TIMEOUT,
+    );
 
-      // Valid actions
-      validGetActions.forEach(action => {
-        expect(validateGetAction(action)).toBe(true);
-      });
+    it(
+      "should handle GET /risk-metrics requests",
+      async () => {
+        const url = new URL(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring?action=risk-metrics",
+        );
+        const request = new NextRequest(url.toString());
 
-      // Invalid actions
-      const invalidActions = ['invalid_action', '', 'unknown', 'start_monitoring'];
-      invalidActions.forEach(action => {
-        expect(validateGetAction(action)).toBe(false);
-      });
-    });
+        const response = await withApiTimeout(
+          () => GET(request),
+          5000
+        );
+
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.data).toHaveProperty("riskMetrics");
+        expect(data.data).toHaveProperty("timestamp");
+        expect(data.data.riskMetrics).toHaveProperty("currentDrawdown");
+        expect(data.data.riskMetrics).toHaveProperty("successRate");
+      },
+      TEST_TIMEOUT,
+    );
+
+    it(
+      "should handle GET /system-health requests",
+      async () => {
+        const url = new URL(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring?action=system-health",
+        );
+        const request = new NextRequest(url.toString());
+
+        const response = await withApiTimeout(
+          () => GET(request),
+          5000,
+        );
+
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.data).toHaveProperty("systemHealth");
+        expect(data.data).toHaveProperty("overallRiskScore");
+        expect(data.data.systemHealth).toHaveProperty("executionService");
+        expect(data.data.systemHealth).toHaveProperty("overallHealth");
+      },
+      TEST_TIMEOUT,
+    );
+
+    it(
+      "should return 400 for invalid GET action",
+      async () => {
+        const url = new URL(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring?action=invalid_action",
+        );
+        const request = new NextRequest(url.toString());
+
+        const response = await withApiTimeout(
+          () => GET(request),
+          5000,
+        );
+
+        expect(response.status).toBe(400);
+        const data = await response.json();
+        expect(data.success).toBe(false);
+        expect(data.error).toContain("Invalid action parameter");
+      },
+      TEST_TIMEOUT,
+    );
   });
 
-  describe("Core Trading Service Initialization Check", () => {
-    it("should detect initialization error pattern", () => {
-      const testError = new Error("Core Trading Service is not initialized. Call initialize() first.");
-      
-      const isInitializationError = (error: Error) => {
-        return error.message.includes("not initialized") && 
-               error.message.includes("initialize()");
-      };
+  describe("POST Endpoints", () => {
+    it(
+      "should start monitoring successfully via API",
+      async () => {
+        const request = new NextRequest(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "start_monitoring" }),
+          },
+        );
 
-      expect(isInitializationError(testError)).toBe(true);
-      
-      // Other errors should not match
-      const otherError = new Error("Network connection failed");
-      expect(isInitializationError(otherError)).toBe(false);
-    });
+        const response = await withApiTimeout(
+          () => POST(request),
+          5000,
+        );
 
-    it("should provide proper initialization error handling", () => {
-      const handleServiceError = (error: Error) => {
-        if (error.message.includes("not initialized")) {
-          return {
-            needsInitialization: true,
-            errorType: "service_not_initialized",
-            suggestion: "Call service.initialize() before using service methods"
-          };
-        }
-        return {
-          needsInitialization: false,
-          errorType: "general_error",
-          suggestion: "Check service configuration and connectivity"
-        };
-      };
+        expect(response.status).toBe(200);
+        const data = await response.json();
+        expect(data.success).toBe(true);
+        expect(data.data.message).toContain("started successfully");
+      },
+      TEST_TIMEOUT,
+    );
 
-      const initError = new Error("Core Trading Service is not initialized. Call initialize() first.");
-      const result = handleServiceError(initError);
-      
-      expect(result.needsInitialization).toBe(true);
-      expect(result.errorType).toBe("service_not_initialized");
-      expect(result.suggestion).toContain("initialize()");
-    });
+    it(
+      "should return 400 for missing POST action",
+      async () => {
+        const request = new NextRequest(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ someField: "value" }),
+          },
+        );
+
+        const response = await withApiTimeout(
+          () => POST(request),
+          5000,
+        );
+
+        expect(response.status).toBe(400);
+        const data = await response.json();
+        expect(data.success).toBe(false);
+        expect(data.error).toContain("Action is required");
+      },
+      TEST_TIMEOUT,
+    );
+
+    it(
+      "should return 400 for invalid JSON in POST request",
+      async () => {
+        const request = new NextRequest(
+          "http://localhost:3000/api/auto-sniping/safety-monitoring",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{ invalid json",
+          },
+        );
+
+        const response = await withApiTimeout(
+          () => POST(request),
+          5000,
+        );
+
+        expect(response.status).toBe(400);
+        const data = await response.json();
+        expect(data.success).toBe(false);
+        expect(data.error).toContain("Invalid JSON");
+      },
+      TEST_TIMEOUT,
+    );
   });
 });

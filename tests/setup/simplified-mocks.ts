@@ -57,16 +57,23 @@ export function createSimpleMockDataStore() {
 // ============================================================================
 
 export function createSimpleDatabaseMock(store: any) {
+  // Create a chainable query builder that resolves to empty arrays for tests
+  const createQueryBuilder = () => {
+    const builder = {
+      where: vi.fn().mockImplementation(() => builder),
+      limit: vi.fn().mockImplementation(() => builder),
+      execute: vi.fn().mockResolvedValue([]),
+      then: vi.fn().mockImplementation((resolve: any) => resolve([])), // Make it thenable for await
+    };
+    // Make it a promise-like object
+    Object.setPrototypeOf(builder, Promise.prototype);
+    return builder;
+  };
+
   return {
     // Core database operations
     select: vi.fn().mockImplementation((columns?: any) => ({
-      from: vi.fn().mockImplementation((table: any) => ({
-        where: vi.fn().mockResolvedValue([]),
-        limit: vi.fn().mockImplementation(() => ({
-          where: vi.fn().mockResolvedValue([]),
-        })),
-        execute: vi.fn().mockResolvedValue([]),
-      })),
+      from: vi.fn().mockImplementation((table: any) => createQueryBuilder()),
     })),
 
     insert: vi.fn().mockImplementation((table: any) => ({
@@ -179,7 +186,7 @@ export function initializeEssentialApiMocks() {
 // ============================================================================
 
 export function createSimpleMexcServiceMock() {
-  return {
+  const mock = {
     getAccountBalances: vi.fn().mockResolvedValue({
       success: true,
       data: [
@@ -215,7 +222,102 @@ export function createSimpleMexcServiceMock() {
       data: Date.now(),
       timestamp: Date.now(),
     }),
+
+    // Trading methods
+    placeOrder: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        orderId: 12345,
+        clientOrderId: 'test-order-123',
+        symbol: 'TESTUSDT',
+        side: 'BUY',
+        type: 'MARKET',
+        origQty: '100.0',
+        price: '1.0',
+        status: 'FILLED',
+        executedQty: '100.0',
+        cummulativeQuoteQty: '100.0',
+        transactTime: Date.now(),
+      },
+      timestamp: Date.now(),
+    }),
+
+    getTickerPrice: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        symbol: 'TESTUSDT',
+        price: '1.0',
+        lastPrice: '1.0',
+      },
+      timestamp: Date.now(),
+    }),
+
+    getTicker: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        symbol: 'TESTUSDT',
+        price: '1.0',
+        lastPrice: '1.0',
+        priceChange: '0.05',
+        priceChangePercent: '5.0',
+        volume: '1000.0',
+        quoteVolume: '1000.0',
+        openPrice: '0.95',
+        highPrice: '1.05',
+        lowPrice: '0.90',
+        prevClosePrice: '0.95',
+        count: 100,
+      },
+      timestamp: Date.now(),
+    }),
+
+    getRecentActivity: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        activities: [
+          {
+            timestamp: Date.now() - 60000,
+            activityType: 'large_trade',
+            volume: 1000,
+            price: 1.0,
+            significance: 0.8,
+          },
+        ],
+        totalActivities: 1,
+        activityScore: 0.8,
+      },
+      timestamp: Date.now(),
+    }),
+
+    // Additional methods that might be called
+    initialize: vi.fn().mockResolvedValue(undefined),
+    shutdown: vi.fn().mockResolvedValue(undefined),
+    updateConfig: vi.fn().mockResolvedValue(undefined),
+    executeTrade: vi.fn().mockResolvedValue({
+      success: true,
+      data: {
+        orderId: 'mock-order-123',
+        symbol: 'TESTUSDT',
+        side: 'BUY',
+        type: 'MARKET',
+        quantity: '100.0',
+        price: '1.0',
+        status: 'FILLED',
+        executedQty: '100.0',
+        timestamp: new Date().toISOString(),
+      },
+    }),
+    getCurrentPrice: vi.fn().mockResolvedValue(1.0),
+    canTrade: vi.fn().mockResolvedValue(true),
   };
+
+  // Set the constructor name for proper instanceof checks
+  Object.defineProperty(mock, 'constructor', {
+    value: { name: 'UnifiedMexcServiceV2' },
+    writable: false,
+  });
+
+  return mock;
 }
 
 // ============================================================================
@@ -229,34 +331,47 @@ export function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
   // Initialize essential API mocks
   initializeEssentialApiMocks();
 
-  // Mock database with proper hoisting support
+  // Use enhanced database mocks for better Drizzle ORM support
   if (!isIntegrationTest) {
-    vi.mock('@/src/db', () => {
-      // Create mock database inside the mock factory to avoid hoisting issues
-      const mockDb = createSimpleDatabaseMock(global.mockDataStore);
-      
-      return {
-        db: mockDb,
-        // Export mock table references
-        snipeTargets: { _: { name: 'snipe_targets' } },
-        user: { _: { name: 'user' } },
-        apiCredentials: { _: { name: 'api_credentials' } },
-        userPreferences: { _: { name: 'user_preferences' } },
-        executionHistory: { _: { name: 'execution_history' } },
-        transactions: { _: { name: 'transactions' } },
+    // Import and initialize enhanced database mocks
+    try {
+      const { initializeEnhancedDatabaseMocks } = require('./database-mocks-enhanced');
+      initializeEnhancedDatabaseMocks();
+    } catch (error) {
+      console.warn('Enhanced database mocks not available, using basic mocks:', error.message);
+      // Fallback to basic mocking
+      global.mockDataStore = {
+        reset: () => {},
+        addRecord: () => ({}),
+        findRecords: () => [],
       };
-    });
+    }
   }
 
-  // Mock MEXC service
-  const mexcServiceMock = createSimpleMexcServiceMock();
-  
+  // Mock the patterns schema with coinActivities
+  vi.mock('@/src/db/schemas/patterns', () => ({
+    coinActivities: { _: { name: 'coin_activities' } },
+    monitoredListings: { _: { name: 'monitored_listings' } },
+    patternEmbeddings: { _: { name: 'pattern_embeddings' } },
+    patternSimilarityCache: { _: { name: 'pattern_similarity_cache' } },
+  }));
+
+  // Mock drizzle-orm functions
+  vi.mock('drizzle-orm', () => ({
+    and: vi.fn().mockImplementation((...conditions: any[]) => ({ _type: 'and', conditions })),
+    or: vi.fn().mockImplementation((...conditions: any[]) => ({ _type: 'or', conditions })),
+    eq: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'eq', column, value })),
+    sql: vi.fn(),
+  }));
+
+  // Mock MEXC service with factory function to avoid hoisting issues
   vi.mock('@/src/services/api/unified-mexc-service-v2', () => ({
-    UnifiedMexcServiceV2: vi.fn().mockImplementation(() => mexcServiceMock),
+    UnifiedMexcServiceV2: vi.fn().mockImplementation(() => createSimpleMexcServiceMock()),
+    unifiedMexcService: createSimpleMexcServiceMock(),
   }));
 
   vi.mock('@/src/services/mexc-unified-exports', () => ({
-    getRecommendedMexcService: vi.fn().mockImplementation(() => mexcServiceMock),
+    getRecommendedMexcService: vi.fn().mockImplementation(() => createSimpleMexcServiceMock()),
   }));
 
   // Mock risk management services with simple implementations
@@ -264,6 +379,11 @@ export function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
     ComprehensiveSafetyCoordinator: vi.fn().mockImplementation(() => ({
       assessSystemSafety: vi.fn().mockResolvedValue({
         overallSafety: 'SAFE',
+        riskScore: 20,
+        alerts: [],
+      }),
+      getStatus: vi.fn().mockReturnValue({
+        overall: { safetyLevel: 'safe' },
         riskScore: 20,
         alerts: [],
       }),
@@ -283,6 +403,19 @@ export function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
         approved: true,
         adjustedPositionSize: 1000,
       }),
+      updatePortfolioMetrics: vi.fn().mockResolvedValue({
+        success: true,
+        metrics: {
+          totalValue: 10000,
+          totalExposure: 5000,
+          diversificationScore: 80,
+          concentrationRisk: 20,
+        },
+      }),
+      isEmergencyStopActive: vi.fn().mockReturnValue(false),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      shutdown: vi.fn().mockResolvedValue(undefined),
+      updateConfig: vi.fn().mockResolvedValue(undefined),
     })),
   }));
 

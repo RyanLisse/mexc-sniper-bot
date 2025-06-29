@@ -107,6 +107,20 @@ agent-state.json
 .agentic-context/
 .remote-agent-state/
 
+# Additional agentic coding tool patterns  
+.cursor/
+.continue/
+.github-copilot-chat/
+.claude-dev/
+.codeium/
+agent-workspace/
+.agent-memory/
+.context-files/
+session-*.json
+agent-conversation-*.json
+.ai-assistant-cache/
+.remote-coding-session/
+
 # Database files
 *.db
 mexc_sniper.db

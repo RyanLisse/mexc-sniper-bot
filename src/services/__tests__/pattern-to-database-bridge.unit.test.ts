@@ -6,10 +6,8 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PatternMatch } from "../../core/pattern-detection/interfaces";
-import { PatternToDatabaseBridge } from "../data/pattern-detection/pattern-to-database-bridge";
 
-// Mock dependencies
+// Mock dependencies BEFORE importing the module under test
 vi.mock("../../lib/database-connection-pool", () => ({
   db: {
     select: vi.fn(),
@@ -27,6 +25,44 @@ vi.mock("../../core/pattern-detection/pattern-detection-core-enhanced", () => ({
     })),
   },
 }));
+
+// Mock the database module to prevent initialization issues
+vi.mock("../../db", () => ({
+  db: {
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+    }),
+    insert: vi.fn().mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([]),
+      }),
+    }),
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue([]),
+      }),
+    }),
+    delete: vi.fn().mockReturnValue({
+      where: vi.fn().mockResolvedValue({ rowCount: 0 }),
+    }),
+  },
+}));
+
+// Mock Drizzle ORM functions
+vi.mock("drizzle-orm", () => ({
+  eq: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'eq', column, value })),
+  and: vi.fn().mockImplementation((...conditions: any[]) => ({ _type: 'and', conditions })),
+  or: vi.fn().mockImplementation((...conditions: any[]) => ({ _type: 'or', conditions })),
+  sql: vi.fn(),
+}));
+
+// Now import the module under test
+import type { PatternMatch } from "../../core/pattern-detection/interfaces";
+import { PatternToDatabaseBridge } from "../data/pattern-detection/pattern-to-database-bridge";
 
 describe("PatternToDatabaseBridge Unit Tests", () => {
   let bridge: PatternToDatabaseBridge;

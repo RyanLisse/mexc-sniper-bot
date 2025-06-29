@@ -438,6 +438,9 @@ export interface ModuleContext {
   config: CoreTradingConfig;
   mexcService: UnifiedMexcServiceV2;
   safetyCoordinator?: ComprehensiveSafetyCoordinator;
+  manualTradingModule?: {
+    executeTrade: (params: any) => Promise<any>;
+  };
   logger: {
     info: (message: string, context?: any) => void;
     warn: (message: string, context?: any) => void;
