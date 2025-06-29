@@ -38,7 +38,7 @@ import { Separator } from "./ui/separator";
 interface SystemCheckState {
   database: SystemStatus;
   openaiApi: SystemStatus;
-  kindeAuth: SystemStatus;
+  supabaseAuth: SystemStatus;
   inngestWorkflows: SystemStatus;
   environment: SystemStatus;
   isRefreshing: boolean;
@@ -87,7 +87,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
   const [systemState, setSystemState] = useState<SystemCheckState>({
     database: { status: "loading" },
     openaiApi: { status: "loading" },
-    kindeAuth: { status: "loading" },
+    supabaseAuth: { status: "loading" },
     inngestWorkflows: { status: "loading" },
     environment: { status: "loading" },
     isRefreshing: false,
@@ -287,21 +287,21 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
     }, 'medium');
   };
 
-  const checkKindeAuth = async (): Promise<SystemStatus> => {
+  const checkSupabaseAuth = async (): Promise<SystemStatus> => {
     return performHealthCheck('auth', async () => {
-      const response = await fetch("/api/auth/session");
+      const response = await fetch("/api/auth/supabase-session");
 
       if (response.ok) {
         return {
           status: "healthy",
-          message: "Authentication system working",
+          message: "Supabase authentication system working",
           details: { authenticated: !!user },
           lastChecked: new Date().toISOString(),
         };
       } else {
         return {
           status: "warning",
-          message: "Authentication may have issues",
+          message: "Supabase authentication may have issues",
           lastChecked: new Date().toISOString(),
         };
       }
@@ -395,7 +395,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
       
       const [openaiResult, authResult] = await Promise.allSettled([
         checkOpenAiApi(),
-        checkKindeAuth()
+        checkSupabaseAuth()
       ]);
       
       results.openai = openaiResult.status === 'fulfilled' ? openaiResult.value : {
@@ -455,7 +455,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
       setSystemState({
         database: results.database || { status: "loading" },
         openaiApi: results.openai || results.openaiApi || { status: "loading" },
-        kindeAuth: results.auth || results.kindeAuth || { status: "loading" },
+        supabaseAuth: results.auth || results.supabaseAuth || { status: "loading" },
         inngestWorkflows: results.workflows || results.inngestWorkflows || { status: "loading" },
         environment: results.environment || { status: "loading" },
         isRefreshing: false,
@@ -512,7 +512,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
     const components = [
       systemState.database.status,
       systemState.openaiApi.status,
-      systemState.kindeAuth.status,
+      systemState.supabaseAuth.status,
       systemState.inngestWorkflows.status,
       systemState.environment.status,
       // Include MEXC API status from centralized status
@@ -868,7 +868,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
                   className={`p-2 rounded-lg ${
                     getStatusDisplay(
                       systemState.openaiApi.status === "healthy" &&
-                        systemState.kindeAuth.status === "healthy"
+                        systemState.supabaseAuth.status === "healthy"
                         ? "healthy"
                         : "warning"
                     ).bg
@@ -878,7 +878,7 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
                     className={`h-5 w-5 ${
                       getStatusDisplay(
                         systemState.openaiApi.status === "healthy" &&
-                          systemState.kindeAuth.status === "healthy"
+                          systemState.supabaseAuth.status === "healthy"
                           ? "healthy"
                           : "warning"
                       ).color
@@ -887,19 +887,19 @@ export function UnifiedSystemCheck({ className = "" }: UnifiedSystemCheckProps) 
                 </div>
                 <div>
                   <h4 className="font-medium">Core Services</h4>
-                  <p className="text-sm text-muted-foreground">OpenAI, Auth, Workflows</p>
+                  <p className="text-sm text-muted-foreground">OpenAI, Supabase Auth, Workflows</p>
                 </div>
               </div>
               <Badge
                 variant={
                   systemState.openaiApi.status === "healthy" &&
-                  systemState.kindeAuth.status === "healthy"
+                  systemState.supabaseAuth.status === "healthy"
                     ? "default"
                     : "secondary"
                 }
               >
                 {systemState.openaiApi.status === "healthy" &&
-                systemState.kindeAuth.status === "healthy"
+                systemState.supabaseAuth.status === "healthy"
                   ? "Ready"
                   : "Partial"}
               </Badge>

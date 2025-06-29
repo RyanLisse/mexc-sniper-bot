@@ -9,7 +9,7 @@ vi.mock('next/headers');
 import { getSession as getSupabaseSession } from '@/src/lib/supabase-auth';
 
 // Mock implementations
-const mockGetSupabaseSession = getSupabaseSession as any;
+const mockGetSupabaseSession = vi.mocked(getSupabaseSession);
 
 // Mock Next.js headers
 vi.mock('next/headers', () => ({
@@ -100,80 +100,16 @@ describe('Authentication API Endpoints', () => {
     });
   });
 
-  describe('Kinde Session API (Legacy)', () => {
-    test('should return user data for authenticated Kinde session', async () => {
-      // Mock authenticated Kinde session
-      mockGetKindeSession.mockResolvedValue({
-        user: {
-          id: 'kinde-user-id',
-          email: 'test@example.com',
-          given_name: 'Test',
-          family_name: 'User',
-          picture: 'https://example.com/avatar.jpg',
-          username: 'testuser'
-        },
-        isAuthenticated: true
-      });
 
-      const { GET } = await import('../../app/api/auth/session/route');
-      
-      const request = new NextRequest('http://localhost:3000/api/auth/session');
-      const response = await GET(request);
-      
-      expect(response.status).toBe(200);
-      
-      const data = await response.json();
-      expect(data.user).toEqual({
-        id: 'kinde-user-id',
-        email: 'test@example.com',
-        name: 'Test User',
-        username: 'testuser',
-        image: 'https://example.com/avatar.jpg'
-      });
-    });
-
-    test('should return 401 for unauthenticated Kinde session', async () => {
-      // Mock unauthenticated session
-      mockGetKindeSession.mockResolvedValue({
-        user: null,
-        isAuthenticated: false
-      });
-
-      const { GET } = await import('../../app/api/auth/session/route');
-      
-      const request = new NextRequest('http://localhost:3000/api/auth/session');
-      const response = await GET(request);
-      
-      expect(response.status).toBe(401);
-      
-      const data = await response.json();
-      expect(data).toEqual({ user: null });
-    });
-  });
-
-  describe('Authentication Comparison', () => {
-    test('should handle different user ID formats', () => {
-      const kindeUserId = 'kp_1234567890abcdef';
+  describe('Supabase Authentication Validation', () => {
+    test('should handle UUID user ID format', () => {
       const supabaseUserId = '123e4567-e89b-12d3-a456-426614174000';
-      
-      // Kinde IDs start with 'kp_'
-      expect(kindeUserId).toMatch(/^kp_/);
       
       // Supabase IDs are UUIDs
       expect(supabaseUserId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
     });
 
-    test('should handle different session structures', () => {
-      const kindeSession = {
-        user: {
-          id: 'kp_1234567890abcdef',
-          email: 'test@example.com',
-          given_name: 'Test',
-          family_name: 'User'
-        },
-        isAuthenticated: true
-      };
-
+    test('should handle Supabase session structure', () => {
       const supabaseSession = {
         user: {
           id: '123e4567-e89b-12d3-a456-426614174000',
@@ -185,10 +121,9 @@ describe('Authentication API Endpoints', () => {
         accessToken: 'access-token'
       };
 
-      expect(kindeSession.user.id).toMatch(/^kp_/);
       expect(supabaseSession.user.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
       expect(supabaseSession.accessToken).toBeDefined();
-      expect(kindeSession).not.toHaveProperty('accessToken');
+      expect(supabaseSession.user.emailVerified).toBeDefined();
     });
   });
 
@@ -207,11 +142,11 @@ describe('Authentication API Endpoints', () => {
 
     test('should handle network errors gracefully', async () => {
       // Mock network error
-      mockGetKindeSession.mockRejectedValue(new Error('Network error'));
+      mockGetSupabaseSession.mockRejectedValue(new Error('Network error'));
 
-      const { GET } = await import('../../app/api/auth/session/route');
+      const { GET } = await import('../../app/api/auth/supabase-session/route');
       
-      const request = new NextRequest('http://localhost:3000/api/auth/session');
+      const request = new NextRequest('http://localhost:3000/api/auth/supabase-session');
       const response = await GET(request);
       
       expect(response.status).toBe(401);
@@ -246,31 +181,5 @@ describe('Authentication API Endpoints', () => {
       expect(data.session).toHaveProperty('accessToken');
     });
 
-    test('should return consistent response format for Kinde', async () => {
-      mockGetKindeSession.mockResolvedValue({
-        user: {
-          id: 'test-id',
-          email: 'test@example.com',
-          given_name: 'Test',
-          family_name: 'User'
-        },
-        isAuthenticated: true
-      });
-
-      const { GET } = await import('../../app/api/auth/session/route');
-      
-      const request = new NextRequest('http://localhost:3000/api/auth/session');
-      const response = await GET(request);
-      
-      const data = await response.json();
-      
-      // Validate response structure
-      expect(data).toHaveProperty('user');
-      expect(data).toHaveProperty('session');
-      expect(data.user).toHaveProperty('id');
-      expect(data.user).toHaveProperty('email');
-      expect(data.user).toHaveProperty('name');
-      expect(data.session).toHaveProperty('userId');
-    });
   });
 });

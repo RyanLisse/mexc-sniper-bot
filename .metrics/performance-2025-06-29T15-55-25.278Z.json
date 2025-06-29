@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-06-29T15:55:25.278Z",
+  "agentMetrics": [
+    {
+      "agentId": "symbol-analysis",
+      "timestamp": "2025-06-29T15:55:25.268Z",
+      "responseTime": 1,
+      "successRate": 1,
+      "errorRate": 0,
+      "throughput": 1,
+      "memoryUsage": 10,
+      "cpuUsage": 0.01,
+      "cacheHitRate": 0,
+      "totalRequests": 1,
+      "totalErrors": 0,
+      "averageResponseTime": 1,
+      "p95ResponseTime": 1,
+      "p99ResponseTime": 1,
+      "uptime": 100,
+      "metadata": {
+        "agentType": "analysis",
+        "agentName": "Symbol Analysis Agent",
+        "registeredAt": "2025-06-29T15:55:25.255Z",
+        "dependencies": []
+      }
+    }
+  ],
+  "workflowMetrics": [],
+  "systemMetrics": {
+    "timestamp": "2025-06-29T15:55:25.268Z",
+    "totalAgents": 0,
+    "healthyAgents": 0,
+    "degradedAgents": 0,
+    "unhealthyAgents": 0,
+    "totalWorkflows": 0,
+    "runningWorkflows": 0,
+    "completedWorkflows": 0,
+    "failedWorkflows": 0,
+    "systemMemoryUsage": 77.42842864990234,
+    "systemCpuUsage": 28.62610394687513,
+    "databaseConnections": 1,
+    "averageResponseTime": 1,
+    "throughput": 1,
+    "errorRate": 0,
+    "uptime": 36079.584459000005,
+    "metadata": {
+      "nodeVersion": "v24.1.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    }
+  },
+  "collectionInterval": 120000
+}

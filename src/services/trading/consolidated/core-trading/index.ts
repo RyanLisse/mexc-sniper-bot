@@ -5,18 +5,42 @@
  * Resolves: "Core Trading Service is not initialized" errors across test suite
  */
 
+// Import all factory functions for the default export
+import { 
+  CoreTradingService, 
+  createCoreTrading,
+  createInitializedCoreTrading,
+  getCoreTrading,
+  getInitializedCoreTrading,
+  resetCoreTrading
+} from './base-service';
+import {
+  getInitializedCoreService,
+  getSafeInitializedCoreService,
+  isCoreServiceReady,
+  resetCoreServices,
+} from './service-initialization-manager';
+import {
+  areCoreServicesReady,
+  getCurrentCoreService,
+  startCoreServices,
+  stopCoreServices,
+} from './service-lifecycle-coordinator';
 
 // Individual trading modules
 export { AutoSnipingModule } from './auto-sniping';
 // Main service class and types
 // FIXED: Enhanced factory functions with initialization guarantees
 // FIXED: Backward compatibility exports for existing imports
-export { CoreTradingService, CoreTradingService as CoreTradingServiceV2, 
+export { 
+  CoreTradingService, 
+  CoreTradingService as CoreTradingServiceV2, 
   createCoreTrading,
   createInitializedCoreTrading,
   getCoreTrading,
   getInitializedCoreTrading,
-  resetCoreTrading} from './base-service';
+  resetCoreTrading
+} from './base-service';
 export { ManualTradingModule } from './manual-trading';
 // Module utilities
 export * from './modules';
