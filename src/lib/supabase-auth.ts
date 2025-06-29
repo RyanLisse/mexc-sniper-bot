@@ -43,8 +43,8 @@ function getLogger() {
 /**
  * Create Supabase server client with cookie handling
  */
-export function createSupabaseServerClient() {
-  const cookieStore = cookies();
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
@@ -82,7 +82,7 @@ export function createSupabaseServerClient() {
  */
 export async function getSession(): Promise<SupabaseSession> {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data: { session }, error } = await supabase.auth.getSession();
 
     if (error) {

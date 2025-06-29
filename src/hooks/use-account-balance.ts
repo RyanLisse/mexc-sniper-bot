@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import type { BalanceEntry } from "@/src/services/api/mexc-unified-exports";
 
 interface UseAccountBalanceOptions {

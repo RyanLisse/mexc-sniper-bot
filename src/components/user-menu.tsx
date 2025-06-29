@@ -1,10 +1,10 @@
 "use client";
 
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { memo, useCallback, useState } from "react";
 import { Badge } from "./ui/badge";
+import { useAuth } from "./auth/supabase-auth-provider";
 
 interface UserMenuProps {
   user: {
@@ -19,11 +19,13 @@ export const UserMenu = memo(function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const router = useRouter();
+  const { signOut } = useAuth();
 
-  const handleSignOut = useCallback(() => {
+  const handleSignOut = useCallback(async () => {
     setIsSigningOut(true);
     setIsOpen(false);
-  }, []);
+    await signOut();
+  }, [signOut]);
 
   const handleToggleOpen = useCallback(() => {
     setIsOpen(!isOpen);
@@ -113,13 +115,15 @@ export const UserMenu = memo(function UserMenu({ user }: UserMenuProps) {
               <div className="border-t border-slate-700 my-2" />
 
               {/* Sign Out */}
-              <LogoutLink
+              <button
+                type="button"
                 className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 transition-colors"
                 onClick={handleSignOut}
+                disabled={isSigningOut}
               >
                 <LogOut className="h-4 w-4 mr-3" />
                 {isSigningOut ? "Signing out..." : "Sign out"}
-              </LogoutLink>
+              </button>
             </div>
           </div>
         </>

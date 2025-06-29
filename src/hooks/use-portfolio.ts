@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import type { snipeTargets } from "../db/schema";
 
 export interface PortfolioPosition {

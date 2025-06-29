@@ -1,4 +1,4 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { getSession } from "@/src/lib/supabase-auth";
 import { NextResponse } from "next/server";
 
 /**
@@ -18,25 +18,23 @@ function validateUrlFormat(url: string | undefined, allowedProtocols: string[]):
 }
 
 /**
- * Health check endpoint for Kinde Auth configuration and functionality
+ * Health check endpoint for Supabase Auth configuration and functionality
  * 
  * This endpoint validates:
  * - Environment variables are properly configured
- * - Kinde SDK is functioning correctly
+ * - Supabase SDK is functioning correctly
  * - Authentication service connectivity
  * 
  * Used by CI/CD pipelines and monitoring systems
  */
 export async function GET() {
   try {
-    // Required environment variables for Kinde Auth
+    // Required environment variables for Supabase Auth
     const requiredEnvs = [
-      'KINDE_CLIENT_ID',
-      'KINDE_CLIENT_SECRET', 
-      'KINDE_ISSUER_URL',
-      'KINDE_SITE_URL',
-      'KINDE_POST_LOGOUT_REDIRECT_URL',
-      'KINDE_POST_LOGIN_REDIRECT_URL'
+      'DATABASE_URL',
+      'SUPABASE_URL',
+      'SUPABASE_ANON_KEY',
+      'SUPABASE_SERVICE_ROLE_KEY'
     ];
 
     // Check for missing environment variables (undefined/null, not empty strings)
@@ -54,25 +52,23 @@ export async function GET() {
       );
     }
 
-    // Test Kinde SDK functionality
-    let kindeStatus = 'unknown';
+    // Test Supabase SDK functionality
+    let supabaseStatus = 'unknown';
     let authTestResult = null;
     
     try {
-      const { isAuthenticated, getUser } = getKindeServerSession();
-      
       // This tests the SDK initialization without requiring a user session
-      // We check if we can call the functions without errors
-      const authResult = await isAuthenticated();
-      kindeStatus = 'initialized';
+      const session = await getSession();
+      supabaseStatus = 'initialized';
       authTestResult = {
         sdk_accessible: true,
         session_check_working: true,
-        auth_status: authResult || false
+        auth_status: session.isAuthenticated || false,
+        user_present: Boolean(session.user)
       };
     } catch (sdkError) {
-      console.error('[Auth Health Check] Kinde SDK Error:', { error: sdkError instanceof Error ? sdkError.message : String(sdkError) });
-      kindeStatus = 'error';
+      console.error('[Auth Health Check] Supabase SDK Error:', { error: sdkError instanceof Error ? sdkError.message : String(sdkError) });
+      supabaseStatus = 'error';
       authTestResult = {
         sdk_accessible: false,
         error: sdkError instanceof Error ? sdkError.message : 'Unknown SDK error'
@@ -81,13 +77,10 @@ export async function GET() {
 
     // Validate configuration values with proper URL validation
     const configValidation = {
-      issuer_url_format: validateUrlFormat(process.env.KINDE_ISSUER_URL, ['https']),
-      site_url_format: validateUrlFormat(process.env.KINDE_SITE_URL, ['http', 'https']),
-      client_id_format: Boolean(process.env.KINDE_CLIENT_ID && process.env.KINDE_CLIENT_ID.length > 0),
-      redirect_urls_configured: Boolean(
-        process.env.KINDE_POST_LOGIN_REDIRECT_URL && 
-        process.env.KINDE_POST_LOGOUT_REDIRECT_URL
-      )
+      supabase_url_format: validateUrlFormat(process.env.SUPABASE_URL, ['https']),
+      database_url_format: validateUrlFormat(process.env.DATABASE_URL, ['postgresql']),
+      anon_key_format: Boolean(process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_ANON_KEY.length > 0),
+      service_role_key_format: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY.length > 0)
     };
 
     const allConfigValid = Object.values(configValidation).every(Boolean);
@@ -96,10 +89,10 @@ export async function GET() {
     let overallStatus: 'healthy' | 'warning' | 'unhealthy';
     let message: string;
 
-    if (kindeStatus === 'error' || !allConfigValid) {
+    if (supabaseStatus === 'error' || !allConfigValid) {
       overallStatus = 'unhealthy';
       message = 'Authentication system has critical issues';
-    } else if (kindeStatus === 'unknown') {
+    } else if (supabaseStatus === 'unknown') {
       overallStatus = 'warning';
       message = 'Authentication system partially functional';
     } else {
@@ -108,12 +101,12 @@ export async function GET() {
     }
 
     // Additional deployment environment info
-    let kindeIssuerDomain = null;
-    if (process.env.KINDE_ISSUER_URL) {
+    let supabaseDomain = null;
+    if (process.env.SUPABASE_URL) {
       try {
-        kindeIssuerDomain = new URL(process.env.KINDE_ISSUER_URL).hostname;
+        supabaseDomain = new URL(process.env.SUPABASE_URL).hostname;
       } catch {
-        kindeIssuerDomain = 'invalid-url';
+        supabaseDomain = 'invalid-url';
       }
     }
     
@@ -121,14 +114,15 @@ export async function GET() {
       environment: process.env.NODE_ENV || 'development',
       is_vercel: Boolean(process.env.VERCEL),
       is_production: process.env.NODE_ENV === 'production',
-      kinde_issuer_domain: kindeIssuerDomain
+      supabase_domain: supabaseDomain,
+      database_provider: 'supabase'
     };
 
     return NextResponse.json({
       status: overallStatus,
       message,
       auth_configured: allConfigValid,
-      kinde_sdk_status: kindeStatus,
+      supabase_sdk_status: supabaseStatus,
       configuration_validation: configValidation,
       auth_test_result: authTestResult,
       deployment_info: deploymentInfo,
@@ -138,7 +132,7 @@ export async function GET() {
         missing_count: missing.length
       },
       timestamp: new Date().toISOString(),
-      version: '1.0.0'
+      version: '2.0.0-supabase'
     });
 
   } catch (error) {

@@ -39,7 +39,7 @@ import { useAccountBalance } from "@/src/hooks/use-account-balance";
 import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
 import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
 import { useDeleteSnipeTarget, usePortfolio } from "@/src/hooks/use-portfolio";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();

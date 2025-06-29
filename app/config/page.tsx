@@ -7,7 +7,7 @@ import { RefreshCw } from "lucide-react";
 import { Suspense } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { UnifiedSystemCheck } from "@/src/components/unified-system-check";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 
 export default function SystemCheckPage() {
   const { isLoading: authLoading } = useAuth();

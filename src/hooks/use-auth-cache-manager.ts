@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 
 /**
  * Hook to manage cache clearing when authentication state changes

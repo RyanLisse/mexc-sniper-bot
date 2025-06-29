@@ -109,7 +109,7 @@ const hasNeonConfig = () => !!process.env.DATABASE_URL?.startsWith("postgresql:/
   !process.env.DATABASE_URL?.includes('supabase.com');
 
 // Check if we have Supabase configuration
-const hasSupabaseConfig = () => !!process.env.DATABASE_URL?.includes('supabase.com') && 
+export const hasSupabaseConfig = () => !!process.env.DATABASE_URL?.includes('supabase.com') && 
   !!process.env.SUPABASE_URL;
 
 // Create PostgreSQL client with connection pooling

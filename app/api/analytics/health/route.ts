@@ -5,7 +5,7 @@
  * for the MEXC Sniper Bot infrastructure.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { getSession } from "@/src/lib/supabase-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
@@ -24,9 +24,8 @@ export async function GET(request: NextRequest) {
     // Get user context for user-specific health checks
     let userId: string | undefined;
     try {
-      const { getUser } = getKindeServerSession();
-      const user = await getUser();
-      userId = user?.id;
+      const session = await getSession();
+      userId = session.user?.id;
     } catch {
       // Health check can work without user context (falls back to environment credentials)
       userId = undefined;
@@ -96,15 +95,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication for POST operations
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
+    const session = await getSession();
 
-    if (!user) {
+    if (!session.isAuthenticated || !session.user) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
       );
     }
+
+    const user = session.user;
 
     const body = await request.json();
 
@@ -546,8 +546,8 @@ async function checkDatabaseHealth(): Promise<any> {
 
 async function checkAuthHealth(): Promise<any> {
   try {
-    // Basic auth health check
-    const isConfigured = !!(process.env.KINDE_CLIENT_ID && process.env.KINDE_CLIENT_SECRET);
+    // Basic auth health check for Supabase
+    const isConfigured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     const score = isConfigured ? 100 : 0;
     const status = isConfigured ? 'healthy' : 'critical';
@@ -555,9 +555,9 @@ async function checkAuthHealth(): Promise<any> {
     return {
       status,
       score,
-      provider: 'Kinde',
+      provider: 'Supabase',
       configured: isConfigured,
-      recommendations: !isConfigured ? ['Configure Kinde authentication credentials'] : [],
+      recommendations: !isConfigured ? ['Configure Supabase authentication credentials'] : [],
     };
   } catch (error) {
     return {

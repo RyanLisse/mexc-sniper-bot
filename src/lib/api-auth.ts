@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { createErrorResponse, HTTP_STATUS } from "./api-response";
 import { shouldBypassRateLimit } from "./bypass-rate-limit";
 import { AuthorizationError } from "./errors";
-import { getSession, requireAuth } from "./kinde-auth";
+import { getSession, requireAuth } from "./supabase-auth";
 import {
   checkRateLimit,
   createRateLimitResponse,
@@ -110,7 +110,7 @@ export async function requireApiAuth(
       userId: user.id,
       metadata: {
         success: true,
-        method: "kinde_session",
+        method: "supabase_session",
       },
     });
 
@@ -125,7 +125,7 @@ export async function requireApiAuth(
       metadata: {
         success: false,
         error: error instanceof Error ? error.message : "unknown_error",
-        method: "kinde_session",
+        method: "supabase_session",
       },
     });
 

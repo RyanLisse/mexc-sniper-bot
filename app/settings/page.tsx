@@ -1,6 +1,6 @@
 "use client";
 
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 import {
   AlertCircle,
   CheckCircle,
@@ -33,7 +33,7 @@ import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit, useUpdateUserPr
 import { getTakeProfitStrategyById, TAKE_PROFIT_STRATEGIES, TakeProfitStrategy } from "@/src/types/take-profit-strategies";
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { user, isLoading: userLoading } = useKindeBrowserClient();
+  const { user, isLoading: userLoading } = useAuth();
 
   // Use authenticated user ID
   const userId = user?.id;

@@ -352,26 +352,28 @@ describe("AdvancedRiskEngine - Modular Integration", () => {
       expect(emergencyState).toBe(true);
     });
 
-    it("should emit risk events", (done) => {
-      let eventReceived = false;
+    it("should emit risk events", async () => {
+      return new Promise<void>((resolve, reject) => {
+        let eventReceived = false;
 
-      riskEngine.on("emergency_stop", (data) => {
-        expect(data).toHaveProperty("type");
-        expect(data).toHaveProperty("severity");
-        expect(data).toHaveProperty("riskLevel");
-        eventReceived = true;
-        done();
+        riskEngine.on("emergency_stop", (data) => {
+          expect(data).toHaveProperty("type");
+          expect(data).toHaveProperty("severity");
+          expect(data).toHaveProperty("riskLevel");
+          eventReceived = true;
+          resolve();
+        });
+
+        // Trigger emergency condition
+        riskEngine.updatePortfolioRisk(25);
+
+        // Ensure event is received within reasonable time
+        setTimeout(() => {
+          if (!eventReceived) {
+            reject(new Error("Emergency event not received"));
+          }
+        }, 1000);
       });
-
-      // Trigger emergency condition
-      riskEngine.updatePortfolioRisk(25);
-
-      // Ensure event is received within reasonable time
-      setTimeout(() => {
-        if (!eventReceived) {
-          done(new Error("Emergency event not received"));
-        }
-      }, 1000);
     });
   });
 

@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Zap } from "lucide-react";
 import Link from "next/link";
-import { KindeAuthUI } from "@/src/components/auth/kinde-auth-ui";
+import { SupabaseAuthUI } from "@/src/components/auth/supabase-auth-ui";
 
 export default function AuthPage() {
   return (
@@ -23,7 +23,7 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <KindeAuthUI />
+        <SupabaseAuthUI />
 
         <div className="mt-8 text-center">
           <Link

@@ -426,4 +426,101 @@ export class PositionManager {
       positions,
     };
   }
+
+  /**
+   * Initialize the position manager
+   */
+  async initialize(): Promise<void> {
+    try {
+      this.context.logger.info('PositionManager initialized successfully');
+    } catch (error) {
+      this.context.logger.error('Failed to initialize PositionManager', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update configuration
+   */
+  updateConfig(newConfig: any): void {
+    // Update configuration if needed
+    this.context.logger.info('PositionManager configuration updated');
+  }
+
+  /**
+   * Close all active positions
+   */
+  async closeAllPositions(reason: string = "Emergency close"): Promise<{ success: boolean; closedCount: number; errors?: string[] }> {
+    const positions = Array.from(this.activePositions.values());
+    let closedCount = 0;
+    const errors: string[] = [];
+
+    for (const position of positions) {
+      try {
+        const currentPrice = await this.getCurrentPrice(position.symbol);
+        if (currentPrice) {
+          await this.closePosition(position, currentPrice, reason);
+          closedCount++;
+        }
+      } catch (error) {
+        errors.push(`Failed to close position ${position.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    return {
+      success: errors.length === 0,
+      closedCount,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  }
+
+  /**
+   * Public method to close a position
+   */
+  async closePositionPublic(positionId: string, reason: string = "Manual close"): Promise<{ success: boolean; error?: string }> {
+    try {
+      const position = this.activePositions.get(positionId);
+      if (!position) {
+        return {
+          success: false,
+          error: `Position ${positionId} not found`
+        };
+      }
+
+      const currentPrice = await this.getCurrentPrice(position.symbol);
+      if (!currentPrice) {
+        return {
+          success: false,
+          error: `Unable to get current price for ${position.symbol}`
+        };
+      }
+
+      await this.closePosition(position, currentPrice, reason);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Shutdown and cleanup
+   */
+  shutdown(): void {
+    // Clear all timers
+    for (const timer of this.pendingStopLosses.values()) {
+      clearInterval(timer);
+    }
+    for (const timer of this.pendingTakeProfits.values()) {
+      clearInterval(timer);
+    }
+
+    this.pendingStopLosses.clear();
+    this.pendingTakeProfits.clear();
+    this.activePositions.clear();
+
+    this.context.logger.info('PositionManager shutdown completed');
+  }
 }

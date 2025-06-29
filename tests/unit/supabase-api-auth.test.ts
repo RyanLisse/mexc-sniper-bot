@@ -3,16 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Mock the auth modules
 vi.mock('@/src/lib/supabase-auth');
-vi.mock('@/src/lib/kinde-auth');
 vi.mock('next/headers');
 
 // Import the mocked modules
 import { getSession as getSupabaseSession } from '@/src/lib/supabase-auth';
-import { getSession as getKindeSession } from '@/src/lib/kinde-auth';
 
 // Mock implementations
 const mockGetSupabaseSession = getSupabaseSession as any;
-const mockGetKindeSession = getKindeSession as any;
 
 // Mock Next.js headers
 vi.mock('next/headers', () => ({
@@ -44,7 +41,7 @@ describe('Authentication API Endpoints', () => {
       });
 
       // Import and test the API route
-      const { GET } = await import('@/app/api/auth/supabase-session/route');
+      const { GET } = await import('../../app/api/auth/supabase-session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/supabase-session');
       const response = await GET(request);
@@ -76,7 +73,7 @@ describe('Authentication API Endpoints', () => {
         isAuthenticated: false
       });
 
-      const { GET } = await import('@/app/api/auth/supabase-session/route');
+      const { GET } = await import('../../app/api/auth/supabase-session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/supabase-session');
       const response = await GET(request);
@@ -91,7 +88,7 @@ describe('Authentication API Endpoints', () => {
       // Mock session error
       mockGetSupabaseSession.mockRejectedValue(new Error('Session error'));
 
-      const { GET } = await import('@/app/api/auth/supabase-session/route');
+      const { GET } = await import('../../app/api/auth/supabase-session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/supabase-session');
       const response = await GET(request);
@@ -118,7 +115,7 @@ describe('Authentication API Endpoints', () => {
         isAuthenticated: true
       });
 
-      const { GET } = await import('@/app/api/auth/session/route');
+      const { GET } = await import('../../app/api/auth/session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/session');
       const response = await GET(request);
@@ -142,7 +139,7 @@ describe('Authentication API Endpoints', () => {
         isAuthenticated: false
       });
 
-      const { GET } = await import('@/app/api/auth/session/route');
+      const { GET } = await import('../../app/api/auth/session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/session');
       const response = await GET(request);
@@ -200,7 +197,7 @@ describe('Authentication API Endpoints', () => {
       // Mock session throwing an error
       mockGetSupabaseSession.mockRejectedValue(new Error('Invalid request'));
 
-      const { GET } = await import('@/app/api/auth/supabase-session/route');
+      const { GET } = await import('../../app/api/auth/supabase-session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/supabase-session');
       const response = await GET(request);
@@ -212,7 +209,7 @@ describe('Authentication API Endpoints', () => {
       // Mock network error
       mockGetKindeSession.mockRejectedValue(new Error('Network error'));
 
-      const { GET } = await import('@/app/api/auth/session/route');
+      const { GET } = await import('../../app/api/auth/session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/session');
       const response = await GET(request);
@@ -233,7 +230,7 @@ describe('Authentication API Endpoints', () => {
         accessToken: 'token'
       });
 
-      const { GET } = await import('@/app/api/auth/supabase-session/route');
+      const { GET } = await import('../../app/api/auth/supabase-session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/supabase-session');
       const response = await GET(request);
@@ -260,7 +257,7 @@ describe('Authentication API Endpoints', () => {
         isAuthenticated: true
       });
 
-      const { GET } = await import('@/app/api/auth/session/route');
+      const { GET } = await import('../../app/api/auth/session/route');
       
       const request = new NextRequest('http://localhost:3000/api/auth/session');
       const response = await GET(request);

@@ -7,7 +7,7 @@
  * Addresses the client-side portion of the synchronization gaps.
  */
 
-import { useKindeAuth } from "@kinde-oss/kinde-auth-nextjs";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
@@ -36,7 +36,7 @@ export interface StatusSyncOptions {
 
 export function useStatusSync() {
   const queryClient = useQueryClient();
-  const { user } = useKindeAuth();
+  const { user } = useAuth();
   const userId = user?.id;
 
   /**

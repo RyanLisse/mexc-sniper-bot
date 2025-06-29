@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStatus } from "../contexts/status-context-v2";
-import { useAuth } from "../lib/kinde-auth-client";
+import { useAuth } from "../lib/supabase-auth-client";
 import { ApiCredentialsForm } from "./api-credentials-form";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";

@@ -8,7 +8,7 @@ import { ErrorBoundary } from "../src/components/error-boundary";
 import { Badge } from "../src/components/ui/badge";
 import { Button } from "../src/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../src/components/ui/card";
-import { useAuth } from "../src/lib/kinde-auth-client";
+import { useAuth } from "../src/lib/supabase-auth-client";
 
 function AuthenticatedRedirect() {
   const { user, isLoading, isAuthenticated } = useAuth();

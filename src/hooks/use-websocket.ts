@@ -13,7 +13,7 @@
  * - Performance optimization
  */
 
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   ConnectionMetrics,
@@ -103,7 +103,7 @@ export function useWebSocket(config: UseWebSocketConfig = {}): UseWebSocketResul
   const handlersRef = useRef(new Map<string, () => void>());
 
   // Authentication
-  const { isAuthenticated, getToken } = useKindeBrowserClient();
+  const { isAuthenticated, getToken } = useAuth();
 
   // Get auth token
   const authToken = useMemo(async () => {

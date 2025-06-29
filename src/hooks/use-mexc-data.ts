@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "@/src/lib/api-response";
-import { useAuth } from "@/src/lib/kinde-auth-client";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import { queryKeys } from "@/src/lib/query-client";
 import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 

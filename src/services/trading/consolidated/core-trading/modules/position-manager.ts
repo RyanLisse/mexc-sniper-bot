@@ -25,6 +25,26 @@ export class PositionManager {
   }
 
   /**
+   * Initialize the position manager
+   */
+  async initialize(): Promise<void> {
+    try {
+      this.context.logger.info('PositionManager initialized successfully');
+    } catch (error) {
+      this.context.logger.error('Failed to initialize PositionManager', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update configuration
+   */
+  updateConfig(newConfig: Partial<CoreTradingConfig>): void {
+    this.context.config = { ...this.context.config, ...newConfig };
+    this.context.logger.info('PositionManager configuration updated');
+  }
+
+  /**
    * Setup monitoring for a new position
    */
   async setupPositionMonitoring(
@@ -425,6 +445,32 @@ export class PositionManager {
       });
       return null;
     }
+  }
+
+  /**
+   * Get position statistics
+   */
+  async getPositionStats() {
+    const activePositions = Array.from(this.activePositions.values());
+    return {
+      totalPositions: activePositions.length,
+      activePositions: activePositions.length,
+      activeCount: activePositions.length,
+      pendingStopLosses: this.pendingStopLosses.size,
+      pendingTakeProfits: this.pendingTakeProfits.size,
+      positions: activePositions.map(position => ({
+        id: position.id,
+        symbol: position.symbol,
+        side: position.side,
+        quantity: position.quantity,
+        entryPrice: position.entryPrice,
+        currentPnL: position.unrealizedPnL,
+        stopLossPrice: position.stopLoss,
+        takeProfitPrice: position.takeProfit,
+        status: position.status,
+        openTime: position.timestamp
+      }))
+    };
   }
 
   /**

@@ -472,7 +472,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async closeAllPositions(reason: string): Promise<ServiceResponse<{ closedCount: number }>> {
     this.ensureInitialized();
-    return this.positionManager.closeAllPositions(reason);
+    const result = await this.positionManager.closeAllPositions(reason);
+    
+    return {
+      success: result.success,
+      data: { closedCount: result.closedCount },
+      error: result.errors?.join('; '),
+      timestamp: new Date().toISOString()
+    };
   }
 
   /**
@@ -506,10 +513,10 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       paperTradingMode: this.config.enablePaperTrading,
 
       // Position Status
-      activePositions: positionStats.activeCount,
+      activePositions: positionStats.activePositions,
       maxPositions: this.config.maxConcurrentPositions,
       availableCapacity:
-        (this.config.maxConcurrentPositions - positionStats.activeCount) /
+        (this.config.maxConcurrentPositions - positionStats.activePositions) /
         this.config.maxConcurrentPositions,
 
       // Circuit Breaker Status
@@ -695,7 +702,13 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async closePosition(positionId: string, reason?: string): Promise<ServiceResponse<void>> {
     this.ensureInitialized();
-    return this.positionManager.closePosition(positionId, reason || "Manual close");
+    const result = await this.positionManager.closePositionPublic(positionId, reason || "Manual close");
+    
+    return {
+      success: result.success,
+      error: result.error,
+      timestamp: new Date().toISOString()
+    };
   }
 
   /**
@@ -703,7 +716,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async emergencyCloseAll(): Promise<ServiceResponse<{ closedCount: number }>> {
     this.ensureInitialized();
-    return this.positionManager.closeAllPositions("Emergency stop");
+    const result = await this.positionManager.closeAllPositions("Emergency stop");
+    
+    return {
+      success: result.success,
+      data: { closedCount: result.closedCount },
+      error: result.errors?.join('; '),
+      timestamp: new Date().toISOString()
+    };
   }
 
   /**

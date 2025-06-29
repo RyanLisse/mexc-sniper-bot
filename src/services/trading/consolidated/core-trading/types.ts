@@ -420,14 +420,14 @@ export interface ServiceResponse<T = unknown> {
 // ============================================================================
 
 export interface CoreTradingEvents {
-  trade_executed: (result: TradeResult) => void;
-  position_opened: (position: Position) => void;
-  position_closed: (position: Position) => void;
-  auto_snipe_executed: (data: { target: AutoSnipeTarget; result: TradeResult }) => void;
-  circuit_breaker_triggered: (data: { reason: string; timestamp: Date }) => void;
-  strategy_changed: (data: { oldStrategy: string; newStrategy: string }) => void;
-  performance_updated: (metrics: PerformanceMetrics) => void;
-  error_occurred: (error: Error) => void;
+  trade_executed: [result: TradeResult];
+  position_opened: [position: Position];
+  position_closed: [position: Position];
+  auto_snipe_executed: [data: { target: AutoSnipeTarget; result: TradeResult }];
+  circuit_breaker_triggered: [data: { reason: string; timestamp: Date }];
+  strategy_changed: [data: { oldStrategy: string; newStrategy: string }];
+  performance_updated: [metrics: PerformanceMetrics];
+  error_occurred: [error: Error];
 }
 
 // ============================================================================

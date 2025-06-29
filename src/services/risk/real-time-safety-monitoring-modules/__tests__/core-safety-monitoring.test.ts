@@ -6,9 +6,9 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { SafetyAlert, SafetyConfiguration } from "../../../schemas/safety-monitoring-schemas";
+import type { SafetyAlert, SafetyConfiguration } from "../../../../schemas/safety-monitoring-schemas";
 import type { OptimizedAutoSnipingExecutionEngine } from "../../../trading/optimized-auto-sniping-execution-engine";
-import type { PatternMonitoringService } from "../../pattern-monitoring-service";
+// import type { PatternMonitoringService } from "../../pattern-monitoring-service"; // File doesn't exist
 import {
   CoreSafetyMonitoring,
   type CoreSafetyMonitoringConfig,

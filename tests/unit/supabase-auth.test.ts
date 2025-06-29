@@ -2,14 +2,28 @@ import { describe, test, expect, beforeEach, vi, MockedFunction } from 'vitest';
 import { createSupabaseServerClient, getSession, syncUserWithDatabase, getUserFromDatabase, requireAuth } from '@/src/lib/supabase-auth';
 import type { SupabaseUser } from '@/src/lib/supabase-auth';
 
+// Create mock objects that can be referenced
+const mockSupabaseClient = {
+  auth: {
+    getSession: vi.fn(),
+    getUser: vi.fn(),
+  }
+};
+
+const mockDb = {
+  select: vi.fn().mockReturnThis(),
+  from: vi.fn().mockReturnThis(),
+  where: vi.fn().mockReturnThis(),
+  limit: vi.fn(),
+  insert: vi.fn().mockReturnThis(),
+  values: vi.fn().mockReturnValue(Promise.resolve()),
+  update: vi.fn().mockReturnThis(),
+  set: vi.fn().mockReturnThis(),
+};
+
 // Mock imports
 vi.mock('@supabase/ssr', () => ({
-  createServerClient: vi.fn(() => ({
-    auth: {
-      getSession: vi.fn(),
-      getUser: vi.fn(),
-    }
-  }))
+  createServerClient: vi.fn(() => mockSupabaseClient)
 }));
 
 vi.mock('next/headers', () => ({
@@ -20,16 +34,7 @@ vi.mock('next/headers', () => ({
 }));
 
 vi.mock('@/src/db', () => ({
-  db: {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnValue([]),
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnValue(Promise.resolve()),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-  },
+  db: mockDb,
   hasSupabaseConfig: vi.fn(() => true)
 }));
 

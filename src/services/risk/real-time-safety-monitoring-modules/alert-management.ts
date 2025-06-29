@@ -75,21 +75,23 @@ export class AlertManagement {
    * Generate a new safety alert
    */
   public addAlert(alertData: AlertGenerationData): SafetyAlert {
+    const processedAutoActions = (alertData.autoActions || []).map((action) => {
+      return {
+        id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        type: action.type,
+        description: action.description,
+        executed: false,
+        metadata: {},
+      } as SafetyAction;
+    });
+
     const alert: SafetyAlert = {
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
       acknowledged: false,
-      autoActions: (alertData.autoActions || []).map((action) => {
-        return {
-          id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-          type: action.type,
-          description: action.description,
-          executed: false,
-          metadata: {},
-        } as SafetyAction;
-      }),
       metadata: alertData.metadata || {},
       ...alertData,
+      autoActions: processedAutoActions,
     };
 
     // Validate the alert structure

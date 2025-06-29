@@ -6,7 +6,7 @@
  * and external monitoring services.
  */
 
-import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 interface MonitoringMetrics {
@@ -46,7 +46,7 @@ interface AuthMonitoringData {
     failedLogins: number;
     blockedIPs: string[];
   };
-  kinde: {
+  supabase: {
     sdkStatus: 'operational' | 'degraded' | 'down';
     apiHealth: 'healthy' | 'unhealthy';
     lastSync: string;
@@ -113,7 +113,7 @@ function generateMockMetrics(): AuthMonitoringData {
       failedLogins: Math.floor(Math.random() * 20),
       blockedIPs: ['192.168.1.100', '10.0.0.50'].slice(0, Math.floor(Math.random() * 3))
     },
-    kinde: {
+    supabase: {
       sdkStatus: isHealthy ? 'operational' : 'degraded',
       apiHealth: isHealthy ? 'healthy' : 'unhealthy',
       lastSync: new Date(now.getTime() - Math.random() * 600000).toISOString(),
@@ -134,19 +134,21 @@ function generateMockMetrics(): AuthMonitoringData {
 
 async function validateAuthenticationState() {
   try {
-    const { getUser, isAuthenticated } = getKindeServerSession();
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
     
     const startTime = Date.now();
-    const user = await getUser();
-    const authenticated = await isAuthenticated();
+    const { data: { users }, error } = await supabase.auth.admin.listUsers();
     const responseTime = Date.now() - startTime;
     
     return {
-      isValid: true,
+      isValid: !error,
       responseTime,
-      hasUser: !!user,
-      isAuthenticated: authenticated,
-      error: null
+      hasUser: (users?.length || 0) > 0,
+      isAuthenticated: !error,
+      error: error?.message || null
     };
   } catch (error) {
     return {
@@ -175,8 +177,8 @@ export async function GET(request: NextRequest) {
     // Add real authentication validation results
     if (!authValidation.isValid) {
       monitoringData.status = 'critical';
-      monitoringData.kinde.sdkStatus = 'down';
-      monitoringData.kinde.apiHealth = 'unhealthy';
+      monitoringData.supabase.sdkStatus = 'down';
+      monitoringData.supabase.apiHealth = 'unhealthy';
       
       // Add critical alert
       alerts.unshift({

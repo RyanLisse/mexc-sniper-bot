@@ -1,9 +1,8 @@
 "use client";
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
-import { useAuth } from "../lib/kinde-auth-client";
+import { useAuth } from "../components/auth/supabase-auth-provider";
 import {
   Avatar,
   AvatarFallback,
@@ -49,10 +48,14 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Manage authentication cache clearing
   useAuthCacheManager();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
 
   const mainNavItems = [
     {
@@ -155,11 +158,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start h-auto p-2">
                   <Avatar className="h-8 w-8 mr-2">
-                    <AvatarImage src={user?.picture} />
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
                     <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-sm">
-                    <span className="font-medium">{user?.name || "User"}</span>
+                    <span className="font-medium">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User"}</span>
                     <span className="text-xs text-muted-foreground">
                       {user?.email || "user@example.com"}
                     </span>
@@ -181,11 +184,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <LogoutLink className="flex w-full cursor-default select-none items-center">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </LogoutLink>
+                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

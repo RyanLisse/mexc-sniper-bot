@@ -7,8 +7,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { UnifiedMexcServiceV2 } from "../../../api/unified-mexc-service-v2";
-import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service";
-import type { SafetyConfiguration } from "../../../schemas/safety-monitoring-schemas";
+// import type { PatternMonitoringService } from "../../../notification/pattern-monitoring-service"; // File may not exist
+import type { SafetyConfiguration } from "../../../../schemas/safety-monitoring-schemas";
 import type { CoreTradingService } from "../../../trading/consolidated/core-trading/base-service";
 import type { EmergencySafetySystem } from "../../emergency-safety-system";
 import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService } from "../index";
@@ -16,7 +16,7 @@ import { createRealTimeSafetyMonitoringService, RealTimeSafetyMonitoringService 
 describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
   let safetyService: RealTimeSafetyMonitoringService;
   let mockCoreTrading: Partial<CoreTradingService>;
-  let mockPatternMonitoring: Partial<PatternMonitoringService>;
+  let mockPatternMonitoring: any; // Using any type since PatternMonitoringService doesn't exist
   let mockEmergencySystem: Partial<EmergencySafetySystem>;
   let mockMexcService: Partial<UnifiedMexcServiceV2>;
 
@@ -76,7 +76,7 @@ describe("RealTimeSafetyMonitoringService - Modular Integration", () => {
     // Inject mocked dependencies
     safetyService.injectDependencies({
       executionService: mockCoreTrading as CoreTradingService,
-      patternMonitoring: mockPatternMonitoring as PatternMonitoringService,
+      patternMonitoring: mockPatternMonitoring,
       emergencySystem: mockEmergencySystem as EmergencySafetySystem,
       mexcService: mockMexcService as UnifiedMexcServiceV2,
     });

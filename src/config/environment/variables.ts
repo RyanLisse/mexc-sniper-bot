@@ -136,25 +136,25 @@ export const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
 
   // Authentication
   {
-    key: "KINDE_CLIENT_ID",
-    description: "Kinde authentication client ID",
+    key: "NEXT_PUBLIC_SUPABASE_URL",
+    description: "Supabase project URL",
     required: true,
     category: "security",
-    example: "your-kinde-client-id",
+    example: "https://your-project.supabase.co",
   },
   {
-    key: "KINDE_CLIENT_SECRET",
-    description: "Kinde authentication client secret",
+    key: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    description: "Supabase anonymous public key",
     required: true,
     category: "security",
-    example: "your-kinde-client-secret",
+    example: "your-anon-key",
   },
   {
-    key: "KINDE_ISSUER_URL",
-    description: "Kinde issuer URL",
+    key: "SUPABASE_SERVICE_ROLE_KEY",
+    description: "Supabase service role key for server-side operations",
     required: true,
     category: "security",
-    example: "https://your-domain.kinde.com",
+    example: "your-service-role-key",
   },
 
   // Monitoring & Observability

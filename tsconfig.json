@@ -21,6 +21,7 @@
     "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "types": ["vitest/globals", "@vitest/ui", "node"],
     "plugins": [
       {
         "name": "next"

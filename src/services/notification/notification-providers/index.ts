@@ -243,7 +243,7 @@ export class NotificationService {
       return;
     }
 
-    const steps: EscalationStep[] = JSON.parse(escalationPolicy.steps);
+    const steps: EscalationStep[] = escalationPolicy.steps ? JSON.parse(escalationPolicy.steps) : [];
 
     // Schedule first escalation step
     if (steps.length > 0) {
@@ -348,45 +348,60 @@ export class NotificationService {
   ): Promise<boolean> {
     // Check severity filter
     if (channel.severityFilter) {
-      const severities = JSON.parse(channel.severityFilter);
-      if (!severities.includes(alert.severity)) {
+      try {
+        const severities = JSON.parse(channel.severityFilter);
+        if (!severities.includes(alert.severity)) {
+          return false;
+        }
+      } catch (error) {
+        this.logger.warn("Invalid severityFilter JSON", { channelId: channel.id, error });
         return false;
       }
     }
 
     // Check category filter
     if (channel.categoryFilter) {
-      const categories = JSON.parse(channel.categoryFilter);
-      // Get rule to check category by joining with alert rules
       try {
-        const { alertRules } = await import("@/src/db/schemas/alerts");
-        const alertRule = await this.db
-          .select()
-          .from(alertRules)
-          .where(eq(alertRules.id, alert.ruleId))
-          .limit(1);
+        const categories = JSON.parse(channel.categoryFilter);
+        // Get rule to check category by joining with alert rules
+        try {
+          const { alertRules } = await import("@/src/db/schemas/alerts");
+          const alertRule = await this.db
+            .select()
+            .from(alertRules)
+            .where(eq(alertRules.id, alert.ruleId))
+            .limit(1);
 
-        if (alertRule.length > 0 && alertRule[0].category) {
-          if (!categories.includes(alertRule[0].category)) {
-            return false;
+          if (alertRule.length > 0 && alertRule[0].category) {
+            if (!categories.includes(alertRule[0].category)) {
+              return false;
+            }
           }
+        } catch (error) {
+          this.logger.warn("Failed to check category filter", { error });
+          // Continue without category filtering if query fails
         }
       } catch (error) {
-        this.logger.warn("Failed to check category filter", { error });
-        // Continue without category filtering if query fails
+        this.logger.warn("Invalid categoryFilter JSON", { channelId: channel.id, error });
+        return false;
       }
     }
 
     // Check tag filter
     if (channel.tagFilter && alert.labels) {
-      const tagFilter = JSON.parse(channel.tagFilter);
-      const alertLabels = JSON.parse(alert.labels);
+      try {
+        const tagFilter = JSON.parse(channel.tagFilter);
+        const alertLabels = JSON.parse(alert.labels);
 
-      const hasMatchingTag = tagFilter.some((tag: string) =>
-        Object.values(alertLabels).includes(tag)
-      );
+        const hasMatchingTag = tagFilter.some((tag: string) =>
+          Object.values(alertLabels).includes(tag)
+        );
 
-      if (!hasMatchingTag) {
+        if (!hasMatchingTag) {
+          return false;
+        }
+      } catch (error) {
+        this.logger.warn("Invalid tagFilter or alert labels JSON", { channelId: channel.id, error });
         return false;
       }
     }

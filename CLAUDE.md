@@ -247,5 +247,25 @@ Monitor progress with TodoRead during long-running operations
 Enable parallel execution with --parallel flags for maximum efficiency
 This configuration ensures optimal use of Claude Code's batch tools for swarm orchestration and parallel task execution with full Claude-Flow capabilities.
 
+## Memory Bank Integration
+
+**Single Source of Truth**
+- The `memory-bank/` directory stores project knowledge in markdown files (`projectbrief.md`, `productContext.md`, `activeContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`).
+- Every agent and developer **MUST** read all memory-bank files at the start of each task/session.
+
+**Update Policy**
+1. After implementing any significant code or documentation change.
+2. When decisions, patterns, or tech choices evolve.
+3. When new issues arise or milestones are completed.
+4. Whenever the user explicitly requests a **Memory Bank update**.
+
+Updates should focus especially on `activeContext.md` (current focus/next steps) and `progress.md` (status/known issues).
+
+Automate where possible:
+- Add a Taskmaster pre-task hook to load Memory Bank into context.
+- Add a commit hook that reminds contributors to update relevant Memory Bank files.
+
+---
+
 ## Test Accounts
 - Test account for ryan@ryanlisse.com (password: Testing2025!)

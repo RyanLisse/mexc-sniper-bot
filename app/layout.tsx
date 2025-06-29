@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { KindeAuthProvider } from "../src/components/auth/kinde-auth-provider";
+import { SupabaseAuthProvider } from "../src/components/auth/supabase-auth-provider";
 import { StatusProviderWrapper } from "../src/components/providers/status-provider-wrapper";
 import { QueryProvider } from "../src/components/query-provider";
 import { Toaster } from "../src/components/ui/toaster";
@@ -35,14 +35,14 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <KindeAuthProvider>
+        <SupabaseAuthProvider>
           <QueryProvider>
             <StatusProviderWrapper>
               {children}
               <Toaster />
             </StatusProviderWrapper>
           </QueryProvider>
-        </KindeAuthProvider>
+        </SupabaseAuthProvider>
       </body>
     </html>
   );

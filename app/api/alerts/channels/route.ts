@@ -29,15 +29,18 @@ export async function GET(request: NextRequest) {
     });
 
     // Format channels for client consumption (hide sensitive config data)
-    const formattedChannels = channels.map(channel => ({
-      ...channel,
-      config: JSON.parse(channel.config),
-      severityFilter: channel.severityFilter ? JSON.parse(channel.severityFilter) : null,
-      categoryFilter: channel.categoryFilter ? JSON.parse(channel.categoryFilter) : null,
-      tagFilter: channel.tagFilter ? JSON.parse(channel.tagFilter) : null,
-      // Hide sensitive configuration details
-      configSummary: getConfigSummary(channel.type, JSON.parse(channel.config)),
-    }));
+    const formattedChannels = channels.map(channel => {
+      const parsedConfig = channel.config ? JSON.parse(channel.config) : {};
+      return {
+        ...channel,
+        config: parsedConfig,
+        severityFilter: channel.severityFilter ? JSON.parse(channel.severityFilter) : null,
+        categoryFilter: channel.categoryFilter ? JSON.parse(channel.categoryFilter) : null,
+        tagFilter: channel.tagFilter ? JSON.parse(channel.tagFilter) : null,
+        // Hide sensitive configuration details
+        configSummary: getConfigSummary(channel.type, parsedConfig),
+      };
+    });
 
     return NextResponse.json({
       success: true,
