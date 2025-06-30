@@ -444,7 +444,7 @@ describe("EnhancedUnifiedCacheSystem", () => {
       await expect(cacheSystem.get("test-key")).resolves.toBeNull();
       await expect(
         cacheSystem.set("test-key", "value"),
-      ).resolves.toBeUndefined();
+      ).resolves.toBe(true);
     });
 
     it("should handle batch operation errors gracefully", async () => {
@@ -489,7 +489,7 @@ describe("EnhancedUnifiedCacheSystem", () => {
       for (const dataType of dataTypes) {
         await expect(
           cacheSystem.set(`key-${dataType}`, { data: dataType }, dataType),
-        ).resolves.toBeUndefined();
+        ).resolves.toBe(true);
       }
     });
   });

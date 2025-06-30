@@ -21,7 +21,7 @@ import {
 } from '../utils/timeout-utilities';
 
 describe('Timeout System Verification', () => {
-  // Set standard timeout for unit tests (10 seconds)
+  // Set standard timeout for unit tests (3 seconds)
   const TEST_TIMEOUT = setTestTimeout('unit');
   
   let testMonitor: TimeoutMonitor;
@@ -41,13 +41,13 @@ describe('Timeout System Verification', () => {
 
   describe('Timeout Configuration', () => {
     it('should return correct timeouts for different test types', () => {
-      expect(getTestTimeout('unit')).toBe(5000);      // Optimized for faster tests
-      expect(getTestTimeout('integration')).toBe(20000);  // Optimized for faster tests
-      expect(getTestTimeout('auto-sniping')).toBe(15000); // Optimized for faster tests
-      expect(getTestTimeout('performance')).toBe(30000);  // Optimized for faster tests
-      expect(getTestTimeout('safety')).toBe(20000);       // Optimized for faster tests
-      expect(getTestTimeout('agents')).toBe(15000);       // Optimized for faster tests
-      expect(getTestTimeout('e2e')).toBe(60000);          // Optimized for faster tests
+      expect(getTestTimeout('unit')).toBe(3000);      // Further optimized for faster tests
+      expect(getTestTimeout('integration')).toBe(10000);  // Further optimized for faster tests
+      expect(getTestTimeout('auto-sniping')).toBe(8000); // Further optimized for faster tests
+      expect(getTestTimeout('performance')).toBe(15000);  // Further optimized for faster tests
+      expect(getTestTimeout('safety')).toBe(10000);       // Further optimized for faster tests
+      expect(getTestTimeout('agents')).toBe(8000);       // Further optimized for faster tests
+      expect(getTestTimeout('e2e')).toBe(30000);          // Further optimized for faster tests
     });
 
     it('should respect environment variable overrides', () => {
@@ -57,7 +57,7 @@ describe('Timeout System Verification', () => {
 
     it('should use fallback values for invalid environment variables', () => {
       process.env.TEST_TIMEOUT_UNIT = 'invalid';
-      expect(getTestTimeout('unit')).toBe(5000); // Should fallback to optimized default
+      expect(getTestTimeout('unit')).toBe(3000); // Should fallback to optimized default
     });
   });
 
@@ -76,20 +76,20 @@ describe('Timeout System Verification', () => {
 
     it('should timeout slow operations', async () => {
       await expect(withTimeout(async () => {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return 'should not reach here';
-      }, { testType: 'unit', timeout: 500 })).rejects.toThrow('timed out after 500ms');
+      }, { testType: 'unit', timeout: 200 })).rejects.toThrow('timed out after 200ms');
     });
 
     it('should provide warnings for operations approaching timeout', async () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       const result = await withTimeout(async () => {
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise(resolve => setTimeout(resolve, 350));
         return 'completed';
       }, { 
         testType: 'unit', 
-        timeout: 1000,
+        timeout: 400,
         warningThreshold: 0.7,
         enableMonitoring: true 
       });
@@ -114,11 +114,11 @@ describe('Timeout System Verification', () => {
 
     it('should timeout slow database operations', async () => {
       const slowDbOperation = async () => {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return { rows: [] };
       };
 
-      await expect(withDatabaseTimeout(slowDbOperation, 1000))
+      await expect(withDatabaseTimeout(slowDbOperation, 200))
         .rejects.toThrow('database operation');
     });
   });
@@ -136,11 +136,11 @@ describe('Timeout System Verification', () => {
 
     it('should timeout slow API operations', async () => {
       const slowApiCall = async () => {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return { data: 'should not reach here' };
       };
 
-      await expect(withApiTimeout(slowApiCall, 1000))
+      await expect(withApiTimeout(slowApiCall, 200))
         .rejects.toThrow('API operation');
     });
   });
@@ -158,11 +158,11 @@ describe('Timeout System Verification', () => {
 
     it('should timeout slow WebSocket operations', async () => {
       const slowWsOperation = async () => {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
         return { connected: false };
       };
 
-      await expect(withWebSocketTimeout(slowWsOperation, 1000))
+      await expect(withWebSocketTimeout(slowWsOperation, 200))
         .rejects.toThrow('WebSocket operation');
     });
   });
@@ -290,10 +290,10 @@ describe('Timeout System Verification', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       const slowPromise = new Promise<string>(resolve => {
-        setTimeout(() => resolve('slow result'), 800);
+        setTimeout(() => resolve('slow result'), 350);
       });
 
-      const result = await timeoutPromise(slowPromise, 1000, 'Slow operation');
+      const result = await timeoutPromise(slowPromise, 400, 'Slow operation');
       expect(result).toBe('slow result');
       
       // Should warn since operation took >70% of timeout
@@ -306,11 +306,11 @@ describe('Timeout System Verification', () => {
 
     it('should timeout extremely slow operations', async () => {
       const verySlowPromise = new Promise<string>(resolve => {
-        setTimeout(() => resolve('should not complete'), 2000);
+        setTimeout(() => resolve('should not complete'), 1000);
       });
 
-      await expect(timeoutPromise(verySlowPromise, 500, 'Very slow operation'))
-        .rejects.toThrow('Very slow operation timed out after 500ms');
+      await expect(timeoutPromise(verySlowPromise, 200, 'Very slow operation'))
+        .rejects.toThrow('Very slow operation timed out after 200ms');
     });
   });
 
@@ -345,7 +345,7 @@ describe('Timeout System Verification', () => {
 
     it('should handle invalid timeout configurations gracefully', () => {
       process.env.TEST_TIMEOUT_UNIT = '-1000';
-      expect(getTestTimeout('unit')).toBe(5000); // Should use optimized fallback
+      expect(getTestTimeout('unit')).toBe(3000); // Should use optimized fallback
     });
 
     it('should work with monitoring disabled', async () => {

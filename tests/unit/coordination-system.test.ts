@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   type AgentConfig,
   type AgentResponse,
@@ -11,7 +11,14 @@ import {
   EnhancedMexcOrchestrator,
   PerformanceCollector,
   WorkflowEngine,
+  clearGlobalAgentRegistry,
 } from "@/src/mexc-agents/coordination";
+
+// Create a unique test ID counter to prevent collisions
+let testIdCounter = 0;
+function getUniqueTestId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${++testIdCounter}-${Math.random().toString(36).substring(2, 9)}`;
+}
 
 // Mock agent for testing
 class MockAgent extends BaseAgent {
@@ -45,75 +52,119 @@ describe("Agent Coordination System", () => {
   let mockAgent2: MockAgent;
 
   beforeEach(() => {
+    // Clear any existing global registry
+    try {
+      clearGlobalAgentRegistry();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+    
+    // Create fresh instances for each test
     registry = new AgentRegistry();
     mockAgent1 = new MockAgent("test-agent-1");
     mockAgent2 = new MockAgent("test-agent-2");
   });
 
   afterEach(() => {
-    registry.destroy();
-    mockAgent1.destroy();
-    mockAgent2.destroy();
+    // Clean up in proper order
+    try {
+      registry.destroy();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+    
+    try {
+      mockAgent1.destroy();
+      mockAgent2.destroy();
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+    
+    // Clear global registry
+    clearGlobalAgentRegistry();
+    
+    // Clear all mocks to reset state
+    vi.clearAllMocks();
   });
 
   describe("AgentRegistry", () => {
     test("should register and retrieve agents", () => {
-      registry.registerAgent("agent1", mockAgent1, {
+      const uniqueId = getUniqueTestId("agent-register-test");
+      
+      registry.registerAgent(uniqueId, mockAgent1, {
         name: "Test Agent 1",
         type: "test",
         capabilities: ["testing"],
       });
 
-      const registeredAgent = registry.getAgent("agent1");
+      const registeredAgent = registry.getAgent(uniqueId);
       expect(registeredAgent).toBeDefined();
       expect(registeredAgent?.name).toBe("Test Agent 1");
       expect(registeredAgent?.type).toBe("test");
     });
 
     test("should check agent availability", () => {
-      registry.registerAgent("agent1", mockAgent1, {
+      const uniqueId = getUniqueTestId("agent-availability-test");
+      
+      registry.registerAgent(uniqueId, mockAgent1, {
         name: "Test Agent 1",
         type: "test",
       });
 
       // Initially, agent status should be unknown, so not available
-      expect(registry.isAgentAvailable("agent1")).toBe(false);
+      expect(registry.isAgentAvailable(uniqueId)).toBe(false);
       expect(registry.isAgentAvailable("nonexistent")).toBe(false);
     });
 
     test("should get agents by type", () => {
-      registry.registerAgent("agent1", mockAgent1, {
+      const uniqueId1 = getUniqueTestId("agent-type-test-1");
+      const uniqueId2 = getUniqueTestId("agent-type-test-2");
+      
+      registry.registerAgent(uniqueId1, mockAgent1, {
         name: "Test Agent 1",
         type: "analysis",
       });
-      registry.registerAgent("agent2", mockAgent2, {
+      registry.registerAgent(uniqueId2, mockAgent2, {
         name: "Test Agent 2",
         type: "analysis",
       });
 
       const analysisAgents = registry.getAgentsByType("analysis");
       expect(analysisAgents).toHaveLength(2);
-      expect(analysisAgents.map((a) => a.id)).toEqual(["agent1", "agent2"]);
+      expect(analysisAgents.map((a) => a.id)).toEqual([uniqueId1, uniqueId2]);
     });
 
     test("should get registry statistics", () => {
-      registry.registerAgent("agent1", mockAgent1, {
+      // Create a completely fresh registry for this test to ensure isolation
+      const freshRegistry = new AgentRegistry();
+      const uniqueId = getUniqueTestId("agent-stats-test");
+      
+      freshRegistry.registerAgent(uniqueId, mockAgent1, {
         name: "Test Agent 1",
         type: "test",
       });
 
-      const stats = registry.getStats();
+      const stats = freshRegistry.getStats();
       expect(stats.totalAgents).toBe(1);
       expect(stats.unknownAgents).toBe(1); // Initially unknown status
+      
+      // Clean up
+      try {
+        freshRegistry.destroy();
+      } catch (error) {
+        // Ignore cleanup errors
+      }
     });
 
     test("should perform health checks", async () => {
-      registry.registerAgent("agent1", mockAgent1, {
+      const uniqueId = getUniqueTestId("agent-health-test");
+      
+      registry.registerAgent(uniqueId, mockAgent1, {
         name: "Test Agent 1",
         type: "test",
       });
 
-      const result = await registry.checkAgentHealth("agent1");
+      const result = await registry.checkAgentHealth(uniqueId);
       expect(result).toBeDefined();
       expect(result.success).toBe(true);
       // Allow responseTime to be 0 for very fast mock operations
@@ -123,16 +174,21 @@ describe("Agent Coordination System", () => {
 
   describe("WorkflowEngine", () => {
     let workflowEngine: WorkflowEngine;
+    let workflowAgentId1: string;
+    let workflowAgentId2: string;
 
     beforeEach(() => {
       workflowEngine = new WorkflowEngine(registry);
 
-      // Register test agents
-      registry.registerAgent("agent1", mockAgent1, {
+      // Register test agents with unique IDs
+      workflowAgentId1 = getUniqueTestId("workflow-agent-1");
+      workflowAgentId2 = getUniqueTestId("workflow-agent-2");
+      
+      registry.registerAgent(workflowAgentId1, mockAgent1, {
         name: "Test Agent 1",
         type: "test",
       });
-      registry.registerAgent("agent2", mockAgent2, {
+      registry.registerAgent(workflowAgentId2, mockAgent2, {
         name: "Test Agent 2",
         type: "test",
       });
@@ -148,7 +204,7 @@ describe("Agent Coordination System", () => {
           {
             id: "step1",
             name: "Test Step",
-            agentId: "agent1",
+            agentId: workflowAgentId1,
             input: { test: "data" },
           },
         ],
@@ -190,16 +246,24 @@ describe("Agent Coordination System", () => {
     });
 
     afterEach(() => {
-      performanceCollector.destroy();
+      if (performanceCollector) {
+        try {
+          performanceCollector.destroy();
+        } catch (error) {
+          // Ignore cleanup errors
+        }
+      }
     });
 
     test("should get current performance summary", () => {
       const summary = performanceCollector.getCurrentSummary();
 
       expect(summary).toBeDefined();
-      expect(summary.agents).toBeDefined();
-      expect(summary.workflows).toBeDefined();
-      expect(summary.system).toBeDefined();
+      expect(summary).toHaveProperty('agentCount');
+      expect(summary).toHaveProperty('workflowCount');
+      expect(summary).toHaveProperty('systemSnapshots');
+      expect(summary).toHaveProperty('isCollecting');
+      expect(summary).toHaveProperty('lastUpdated');
     });
 
     test("should generate performance reports", () => {

@@ -239,7 +239,7 @@ describe("Safety Monitoring API Integration Tests", () => {
         // Should return error for missing action
         expect(response.status).toBe(400);
         expect(data.success).toBe(false);
-        expect(data.error).toContain("Action is required");
+        expect(data.error).toContain("action is required");
       } catch (error) {
         // If service initialization fails, log it but don't fail the test
         console.log("Service initialization issue:", (error as Error).message);

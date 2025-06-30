@@ -19,6 +19,7 @@ export {
   AgentRegistry,
   getGlobalAgentRegistry,
   initializeGlobalAgentRegistry,
+  clearGlobalAgentRegistry,
 } from "./agent-registry";
 export { EnhancedMexcOrchestrator } from "./enhanced-orchestrator";
 export type {

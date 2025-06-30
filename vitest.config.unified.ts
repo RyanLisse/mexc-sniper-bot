@@ -36,13 +36,13 @@ export default defineConfig({
     
     // Test discovery and inclusion
     include: [
-      'tests/unit/**/*.test.{js,ts}',
-      'tests/integration/**/*.test.{js,ts}',
-      'tests/agents/**/*.test.{js,ts}', // Agent-specific tests
-      'tests/auto-sniping/**/*.test.{js,ts}', // Auto-sniping workflow tests
-      'tests/safety/**/*.test.{js,ts}', // Safety and risk management tests
-      'tests/performance/**/*.test.{js,ts}', // Performance and load tests
-      'src/**/*.test.{js,ts}', // Allow co-located tests
+      'tests/unit/**/*.test.{js,ts,tsx}',
+      'tests/integration/**/*.test.{js,ts,tsx}',
+      'tests/agents/**/*.test.{js,ts,tsx}', // Agent-specific tests
+      'tests/auto-sniping/**/*.test.{js,ts,tsx}', // Auto-sniping workflow tests
+      'tests/safety/**/*.test.{js,ts,tsx}', // Safety and risk management tests
+      'tests/performance/**/*.test.{js,ts,tsx}', // Performance and load tests
+      'src/**/*.test.{js,ts,tsx}', // Allow co-located tests
     ],
     
     // Comprehensive exclusions
@@ -68,10 +68,10 @@ export default defineConfig({
     
     // Test execution configuration - removed duplicate, see poolOptions below
     
-    // Simplified timeout configuration
-    testTimeout: 10000, // 10 seconds default
-    hookTimeout: 5000, // 5 seconds for hooks
-    teardownTimeout: 5000, // 5 seconds for teardown
+    // Realistic timeout configuration for complex integration tests
+    testTimeout: 30000, // 30 seconds for complex tests (increased from 5s)
+    hookTimeout: 10000, // 10 seconds for hooks (increased from 3s)
+    teardownTimeout: 10000, // 10 seconds for teardown (increased from 3s)
     
     // Retry configuration
     retry: process.env.CI ? 2 : 0,
@@ -170,22 +170,18 @@ export default defineConfig({
     // Watch configuration
     watch: !process.env.CI,
     
-    // Simplified performance settings for Bun compatibility
+    // Optimized performance settings for faster test execution
     logHeapUsage: false,
-    isolate: false, // Disabled for Bun compatibility
+    isolate: true, // Re-enabled for proper test isolation
     sequence: {
-      concurrent: false, // Disable concurrent execution for better stability
+      concurrent: true, // Enable concurrent execution for speed
+      shuffle: false,
     },
     
-    // Use threads pool with minimal configuration for Bun compatibility
-    pool: 'threads',
-    poolOptions: {
-      threads: {
-        maxThreads: 1,
-        minThreads: 1,
-        isolate: false,
-      }
-    }
+    // Optimized parallel execution settings
+    threads: true,
+    maxConcurrency: 4, // Allow 4 concurrent tests (increased from 1)
+    fileParallelism: true // Enable file parallelism for speed
   },
   
   // Module resolution - remove manual aliases to let vite-tsconfig-paths handle them

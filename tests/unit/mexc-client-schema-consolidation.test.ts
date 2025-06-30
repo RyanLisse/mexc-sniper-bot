@@ -31,7 +31,7 @@ describe("MEXC Client Schema Consolidation - TDD Tests", () => {
 
   afterEach(() => {
     // Clean up any side effects
-    vi.resetModules();
+    // Note: vi.resetModules is not available in current vitest version
   });
 
   describe("Schema Imports and Compatibility", () => {
@@ -152,10 +152,10 @@ describe("MEXC Client Schema Consolidation - TDD Tests", () => {
       };
 
       expect(() =>
-        schemas.ExchangeSymbolSchema.parse(validSymbol),
+        schemas.SymbolInfoSchema.parse(validSymbol),
       ).not.toThrow();
 
-      const result = schemas.ExchangeSymbolSchema.parse(validSymbol);
+      const result = schemas.SymbolInfoSchema.parse(validSymbol);
       expect(result).toMatchObject({
         symbol: "BTCUSDT",
         status: "TRADING",
@@ -378,7 +378,7 @@ describe("MEXC Client Schema Consolidation - TDD Tests", () => {
         "BalanceEntrySchema",
         "TickerSchema",
         "OrderResultSchema",
-        "ExchangeSymbolSchema",
+        "SymbolInfoSchema",
       ];
 
       for (const schemaName of expectedSchemas) {

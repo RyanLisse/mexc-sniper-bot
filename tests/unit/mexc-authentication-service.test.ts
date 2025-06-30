@@ -16,12 +16,7 @@ import {
 } from '@/src/services/api/mexc-authentication-service';
 import type { MexcApiClient } from '@/src/services/api/mexc-api-client';
 
-// Mock crypto module
-vi.mock('node:crypto', () => ({
-  createCipher: vi.fn(),
-  createDecipher: vi.fn(),
-  randomBytes: vi.fn(),
-}));
+// Crypto module is already mocked globally in vitest-setup.ts
 
 describe('MexcAuthenticationService', () => {
   let authService: MexcAuthenticationService;
@@ -32,7 +27,7 @@ describe('MexcAuthenticationService', () => {
     secretKey: 'test-secret-key-67890',
     passphrase: 'test-passphrase',
     enableEncryption: true,
-    encryptionKey: 'test-encryption-key-32-bytes-long!',
+    encryptionKey: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', // 64 char hex key
     testIntervalMs: 60000,
     maxAuthFailures: 3,
     authFailureResetMs: 300000,
@@ -51,27 +46,27 @@ describe('MexcAuthenticationService', () => {
   };
 
   beforeEach(() => {
-    // Mock API client
+    // Clear environment variables that might interfere with tests
+    delete process.env.MEXC_API_KEY;
+    delete process.env.MEXC_SECRET_KEY;
+    delete process.env.MEXC_PASSPHRASE;
+    delete process.env.MEXC_ENCRYPTION_KEY;
+
+    // Mock API client with correct method names
     mockApiClient = {
       getAccountInfo: vi.fn().mockResolvedValue(mockSuccessfulApiResponse),
       testConnection: vi.fn().mockResolvedValue(mockSuccessfulApiResponse),
+      testCredentials: vi.fn().mockResolvedValue({
+        isValid: true,
+        hasConnection: true,
+        error: undefined
+      }),
       setCredentials: vi.fn(),
       hasValidCredentials: vi.fn().mockReturnValue(true),
     } as any;
 
-    // Mock crypto functions
-    const mockCipher = {
-      update: vi.fn().mockReturnValue('encrypted-part'),
-      final: vi.fn().mockReturnValue('-final'),
-    };
-    const mockDecipher = {
-      update: vi.fn().mockReturnValue('decrypted-part'),
-      final: vi.fn().mockReturnValue('-final'),
-    };
-
-    (crypto.createCipher as any).mockReturnValue(mockCipher);
-    (crypto.createDecipher as any).mockReturnValue(mockDecipher);
-    (crypto.randomBytes as any).mockReturnValue(Buffer.from('random-bytes'));
+    // Crypto functions are already mocked globally
+    // The global mocks will automatically handle encryption/decryption
 
     authService = new MexcAuthenticationService(validConfig);
     authService.setApiClient(mockApiClient);
@@ -80,7 +75,7 @@ describe('MexcAuthenticationService', () => {
   afterEach(() => {
     authService.destroy();
     vi.clearAllMocks();
-    vi.clearAllTimers();
+    // vi.clearAllTimers() doesn't exist in this version of Vitest
   });
 
   describe('Initialization and Configuration', () => {
@@ -157,7 +152,7 @@ describe('MexcAuthenticationService', () => {
       expect(mockApiClient.setCredentials).toHaveBeenCalledWith(
         newCredentials.apiKey,
         newCredentials.secretKey,
-        undefined
+        validConfig.passphrase // The original passphrase is preserved
       );
     });
 
@@ -187,11 +182,15 @@ describe('MexcAuthenticationService', () => {
       expect(result.hasConnection).toBe(true);
       expect(result.responseTime).toBeGreaterThan(0);
       expect(result.error).toBeUndefined();
-      expect(mockApiClient.getAccountInfo).toHaveBeenCalled();
+      expect(mockApiClient.testCredentials).toHaveBeenCalled();
     });
 
     it('should handle credential test failure', async () => {
-      mockApiClient.getAccountInfo.mockResolvedValueOnce(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValueOnce({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       
       const result = await authService.testCredentials();
       
@@ -201,7 +200,11 @@ describe('MexcAuthenticationService', () => {
 
     it('should not test credentials when blocked', async () => {
       // Force block the service by failing multiple times
-      mockApiClient.getAccountInfo.mockResolvedValue(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       
       // Fail 3 times to trigger block
       await authService.testCredentials();
@@ -214,18 +217,26 @@ describe('MexcAuthenticationService', () => {
       // Should not test when blocked
       const result = await authService.testCredentials();
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('blocked');
+      expect(result.error).toContain('Authentication blocked');
     });
 
     it('should force test credentials even when blocked', async () => {
       // Block the service
-      mockApiClient.getAccountInfo.mockResolvedValue(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       await authService.testCredentials();
       await authService.testCredentials();
       await authService.testCredentials();
       
       // Reset mock to return success
-      mockApiClient.getAccountInfo.mockResolvedValue(mockSuccessfulApiResponse);
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: true,
+        hasConnection: true,
+        error: undefined
+      });
       
       const result = await authService.testCredentials(true);
       expect(result.isValid).toBe(true);
@@ -237,7 +248,7 @@ describe('MexcAuthenticationService', () => {
       const result = await serviceWithoutCredentials.testCredentials();
       
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('credentials');
+      expect(result.error).toBe('No API credentials configured');
     });
 
     it('should handle missing API client gracefully', async () => {
@@ -246,7 +257,7 @@ describe('MexcAuthenticationService', () => {
       const result = await serviceWithoutClient.testCredentials();
       
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('API client');
+      expect(result.error).toBe('API client not initialized');
     });
 
     it('should measure response time during testing', async () => {
@@ -267,7 +278,11 @@ describe('MexcAuthenticationService', () => {
     });
 
     it('should update status after failed test', async () => {
-      mockApiClient.getAccountInfo.mockResolvedValueOnce(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValueOnce({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       
       await authService.testCredentials();
       
@@ -281,7 +296,11 @@ describe('MexcAuthenticationService', () => {
 
   describe('Circuit Breaker and Error Handling', () => {
     it('should implement circuit breaker after max failures', async () => {
-      mockApiClient.getAccountInfo.mockResolvedValue(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       
       // Fail exactly maxAuthFailures times
       for (let i = 0; i < validConfig.maxAuthFailures!; i++) {
@@ -294,27 +313,42 @@ describe('MexcAuthenticationService', () => {
     });
 
     it('should reset circuit breaker after timeout', async () => {
+      // Create a service with a very short timeout for this test
+      const testService = new MexcAuthenticationService({
+        ...validConfig,
+        authFailureResetMs: 100 // 100ms timeout for fast test
+      });
+      testService.setApiClient(mockApiClient);
+      
       // Block the service
-      mockApiClient.getAccountInfo.mockResolvedValue(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       for (let i = 0; i < validConfig.maxAuthFailures!; i++) {
-        await authService.testCredentials();
+        await testService.testCredentials();
       }
       
-      expect(authService.getStatus().isBlocked).toBe(true);
+      expect(testService.getStatus().isBlocked).toBe(true);
       
-      // Fast-forward time beyond reset timeout
-      vi.advanceTimersByTime(validConfig.authFailureResetMs! + 1000);
+      // Wait for timeout to pass
+      await new Promise(resolve => setTimeout(resolve, 150)); // Wait for 150ms (longer than 100ms timeout)
       
       // Reset mock to return success
-      mockApiClient.getAccountInfo.mockResolvedValue(mockSuccessfulApiResponse);
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: true,
+        hasConnection: true,
+        error: undefined
+      });
       
-      const result = await authService.testCredentials();
+      const result = await testService.testCredentials();
       expect(result.isValid).toBe(true);
-      expect(authService.getStatus().isBlocked).toBe(false);
+      expect(testService.getStatus().isBlocked).toBe(false);
     });
 
     it('should handle network errors gracefully', async () => {
-      mockApiClient.getAccountInfo.mockRejectedValueOnce(new Error('Network error'));
+      mockApiClient.testCredentials.mockRejectedValueOnce(new Error('Network error'));
       
       const result = await authService.testCredentials();
       
@@ -323,7 +357,7 @@ describe('MexcAuthenticationService', () => {
     });
 
     it('should handle API timeout errors', async () => {
-      mockApiClient.getAccountInfo.mockRejectedValueOnce(new Error('Request timeout'));
+      mockApiClient.testCredentials.mockRejectedValueOnce(new Error('Request timeout'));
       
       const result = await authService.testCredentials();
       
@@ -339,7 +373,11 @@ describe('MexcAuthenticationService', () => {
       await authService.testCredentials();
       
       // Perform a failed test
-      mockApiClient.getAccountInfo.mockResolvedValueOnce(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValueOnce({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       await authService.testCredentials();
       
       const metrics = authService.getMetrics();
@@ -355,7 +393,11 @@ describe('MexcAuthenticationService', () => {
       await authService.testCredentials();
       await authService.testCredentials();
       
-      mockApiClient.getAccountInfo.mockResolvedValueOnce(mockFailedApiResponse);
+      mockApiClient.testCredentials.mockResolvedValueOnce({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
       await authService.testCredentials();
       
       const metrics = authService.getMetrics();
@@ -366,7 +408,7 @@ describe('MexcAuthenticationService', () => {
       await authService.testCredentials();
       
       // Wait a bit and check uptime
-      vi.advanceTimersByTime(1000);
+      await new Promise(resolve => setTimeout(resolve, 10));
       
       const metrics = authService.getMetrics();
       expect(metrics.uptimeMs).toBeGreaterThan(0);
@@ -378,9 +420,15 @@ describe('MexcAuthenticationService', () => {
       const encryptedCreds = authService.getEncryptedCredentials();
       
       expect(encryptedCreds).not.toBeNull();
-      expect(encryptedCreds!.apiKey).toBe('encrypted-part-final');
-      expect(encryptedCreds!.secretKey).toBe('encrypted-part-final');
-      expect(crypto.createCipher).toHaveBeenCalled();
+      // Check that the encrypted values are not the original values and contain encrypted markers
+      expect(encryptedCreds!.apiKey).not.toBe(validConfig.apiKey);
+      expect(encryptedCreds!.secretKey).not.toBe(validConfig.secretKey);
+      // Check that the encrypted format contains a colon (IV:encrypted_data)
+      expect(encryptedCreds!.apiKey).toContain(':');
+      expect(encryptedCreds!.secretKey).toContain(':');
+      // Check that they are hex strings
+      expect(encryptedCreds!.apiKey).toMatch(/^[a-f0-9]+:[a-f0-9]+$/);
+      expect(encryptedCreds!.secretKey).toMatch(/^[a-f0-9]+:[a-f0-9]+$/);
     });
 
     it('should return null when encryption disabled', () => {
@@ -430,16 +478,38 @@ describe('MexcAuthenticationService', () => {
     });
 
     it('should not start periodic testing when blocked', async () => {
-      // Block the service
-      mockApiClient.getAccountInfo.mockResolvedValue(mockFailedApiResponse);
-      for (let i = 0; i < validConfig.maxAuthFailures!; i++) {
-        await authService.testCredentials();
+      // Create a service with specific failure threshold and no periodic testing initially
+      const testService = new MexcAuthenticationService({ 
+        enableEncryption: false,
+        maxAuthFailures: 3, // Set explicit failure threshold
+        testIntervalMs: 0 // Disable periodic testing initially
+      });
+      testService.setApiClient(mockApiClient);
+      
+      // Add credentials manually without triggering periodic testing
+      testService['config'].apiKey = 'test-key';
+      testService['config'].secretKey = 'test-secret';
+      testService['status'].hasCredentials = true;
+      
+      // Block the service by failing multiple times
+      mockApiClient.testCredentials.mockResolvedValue({
+        isValid: false,
+        hasConnection: false,
+        error: 'Invalid API key'
+      });
+      
+      for (let i = 0; i < 3; i++) { // Fail exactly 3 times to trigger block
+        await testService.testCredentials();
       }
       
+      expect(testService.getStatus().isBlocked).toBe(true);
+      
+      // Clear all previous mocks and set up a fresh spy
+      vi.clearAllMocks();
       const setIntervalSpy = vi.spyOn(global, 'setInterval');
       
-      // Try to trigger periodic testing - should not start when blocked
-      await authService.testCredentials();
+      // Try to start periodic testing manually - should not start when blocked
+      (testService as any).startPeriodicTesting();
       
       expect(setIntervalSpy).not.toHaveBeenCalled();
     });
@@ -447,23 +517,28 @@ describe('MexcAuthenticationService', () => {
 
   describe('Edge Cases and Error Scenarios', () => {
     it('should handle extremely long response times', async () => {
-      // Mock a very slow response
-      mockApiClient.getAccountInfo.mockImplementation(
-        () => new Promise(resolve => setTimeout(() => resolve(mockSuccessfulApiResponse), 5000))
-      );
+      // Mock a slow response using realistic timing
+      mockApiClient.testCredentials.mockImplementation(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+        return {
+          isValid: true,
+          hasConnection: true,
+          error: undefined
+        };
+      });
       
       const result = await authService.testCredentials();
       
-      expect(result.responseTime).toBeGreaterThan(4000);
+      expect(result.responseTime).toBeGreaterThan(90); // Expect at least 90ms
     });
 
     it('should handle malformed API responses', async () => {
-      mockApiClient.getAccountInfo.mockResolvedValueOnce(null as any);
+      mockApiClient.testCredentials.mockResolvedValueOnce(null as any);
       
       const result = await authService.testCredentials();
       
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Invalid response');
+      expect(result.error).toContain('Invalid API response format');
     });
 
     it('should handle concurrent credential tests', async () => {

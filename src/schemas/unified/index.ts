@@ -24,85 +24,68 @@
 
 export type {
   AccountInfo,
-  // Activity Type
-  ActivityData,
-  ActivityEnhancement,
-  ActivityResponse,
-  BalanceEntry,
-  // Core Data Types
+  AccountBalance,
+  // Core API Types
   CalendarEntry,
-  ExchangeInfo,
-  ExchangeSymbol,
-  // Market Data Types
-  Kline,
+  SymbolEntry,
+  BalanceEntry,
+  OrderResult,
+  MexcServiceResponse,
   // Configuration Types
   MexcApiConfig,
   MexcCacheConfig,
   MexcReliabilityConfig,
-  // Response Type
-  MexcServiceResponse,
-  OrderBook,
-  OrderParameters,
-  OrderResult,
-  OrderStatus,
-  ReadyStatePattern,
-  SnipeTarget,
-  SymbolEntry,
-  // Legacy aliases
-  SymbolV2Entry,
+  UnifiedMexcConfig,
+  // Symbol Types
+  SymbolInfo,
+  ExchangeSymbol,
+  // Trading Types
   Ticker,
-  TradingFilter,
+  OrderSide,
+  OrderType,
+  OrderStatus,
+  OrderRequest,
+  OrderResponse,
+  // Error Types
+  ApiError,
+  RateLimitInfo,
+  // Activity Types
+  ActivityType,
+  ActivityData,
+  ActivityResponse,
 } from "./mexc-api-schemas";
 export {
   AccountInfoSchema,
-  // Activity Schema
-  ActivityDataSchema,
-  ActivityEnhancementSchema,
-  ActivityResponseSchema,
-  BalanceEntrySchema,
-  // Core Data Schemas
+  // Core API Schemas
   CalendarEntrySchema,
-  ExchangeInfoSchema,
-  ExchangeSymbolSchema,
-  // Ready state helpers
-  hasCompleteData,
-  isValidForSnipe,
-  // Market Data Schemas
-  KlineSchema,
-  // Schema Collection
-  MEXC_API_SCHEMAS,
+  SymbolEntrySchema,
+  BalanceEntrySchema,
+  OrderResultSchema,
+  MexcServiceResponseSchema,
   // Configuration Schemas
   MexcApiConfigSchema,
   MexcCacheConfigSchema,
   MexcReliabilityConfigSchema,
-  // Response Schema
-  MexcServiceResponseSchema,
-  matchesReadyPattern,
-  OrderBookSchema,
-  OrderParametersSchema,
-  OrderResultSchema,
-  OrderStatusSchema,
-  // Constants
-  READY_STATE_PATTERN,
-  ReadyStatePatternSchema,
-  SnipeTargetSchema,
-  SymbolEntrySchema,
-  // Legacy aliases
-  SymbolV2EntrySchema,
+  UnifiedMexcConfigSchema,
+  // Account/Balance Schema
+  AccountBalanceSchema,
+  // Symbol Schema
+  SymbolInfoSchema,
+  ExchangeSymbolSchema,
+  // Trading Schemas
   TickerSchema,
-  TradingFilterSchema,
-  // Validation helpers
-  validateActivityData,
-  validateActivityEnhancement,
-  validateActivityResponse,
-  validateCalendarEntry,
-  // Utilities
-  validateMexcData,
-  validateServiceResponse,
-  validateSnipeTarget,
-  validateSymbolEntry,
-  validateSymbolV2Entry,
-  validateTickerData,
+  OrderSideSchema,
+  OrderTypeSchema,
+  OrderStatusSchema,
+  OrderRequestSchema,
+  OrderResponseSchema,
+  // Error Schema
+  ApiErrorSchema,
+  RateLimitInfoSchema,
+  // Activity Schemas
+  ActivityTypeSchema,
+  ActivityDataSchema,
+  ActivityResponseSchema,
 } from "./mexc-api-schemas";
 
 // ============================================================================

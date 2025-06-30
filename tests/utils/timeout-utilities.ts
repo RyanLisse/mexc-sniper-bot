@@ -26,13 +26,13 @@ export interface TimeoutResult<T> {
  */
 export function getTestTimeout(testType: TimeoutConfig['testType']): number {
   const defaults = {
-    unit: 5000,      // Reduced from 10s to 5s for faster unit tests
-    integration: 20000,  // Reduced from 45s to 20s for faster integration tests
-    'auto-sniping': 15000, // Reduced from 30s to 15s
-    performance: 30000,    // Reduced from 60s to 30s
-    safety: 20000,     // Reduced from 45s to 20s
-    agents: 15000,     // Reduced from 30s to 15s
-    e2e: 60000         // Reduced from 120s to 60s
+    unit: 3000,      // Further reduced from 5s to 3s for faster unit tests
+    integration: 10000,  // Further reduced from 20s to 10s for faster integration tests
+    'auto-sniping': 8000, // Further reduced from 15s to 8s
+    performance: 15000,    // Further reduced from 30s to 15s
+    safety: 10000,     // Further reduced from 20s to 10s
+    agents: 8000,     // Further reduced from 15s to 8s
+    e2e: 30000         // Further reduced from 60s to 30s
   };
 
   const envVariables = {
@@ -138,7 +138,7 @@ export async function withDatabaseTimeout<T>(
   operation: () => Promise<T>,
   customTimeout?: number
 ): Promise<T> {
-  const timeout = customTimeout || parseInt(process.env.TEST_DB_TIMEOUT || '20000', 10);
+  const timeout = customTimeout || parseInt(process.env.TEST_DB_TIMEOUT || '8000', 10);
   
   return Promise.race([
     operation(),
@@ -153,7 +153,7 @@ export async function withApiTimeout<T>(
   operation: () => Promise<T>,
   customTimeout?: number
 ): Promise<T> {
-  const timeout = customTimeout || 15000; // 15 seconds default for API calls
+  const timeout = customTimeout || 6000; // 6 seconds default for API calls
   
   return Promise.race([
     operation(),
@@ -168,7 +168,7 @@ export async function withWebSocketTimeout<T>(
   operation: () => Promise<T>,
   customTimeout?: number
 ): Promise<T> {
-  const timeout = customTimeout || 10000; // 10 seconds default for WebSocket operations
+  const timeout = customTimeout || 5000; // 5 seconds default for WebSocket operations
   
   return Promise.race([
     operation(),

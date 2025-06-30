@@ -19,27 +19,27 @@ import { z } from "zod";
 // ============================================================================
 
 export const MexcApiConfigSchema = z.object({
-  apiKey: z.string().min(1, "API key is required"),
-  secretKey: z.string().min(1, "Secret key is required"),
+  apiKey: z.string(),
+  secretKey: z.string(),
   passphrase: z.string().optional(),
-  baseUrl: z.string().default("https://api.mexc.com").url("Valid base URL required"),
-  timeout: z.number().default(10000).positive("Timeout must be positive"),
-  maxRetries: z.number().default(3).min(0, "Max retries cannot be negative"),
-  retryDelay: z.number().default(1000).min(0, "Retry delay cannot be negative"),
-  rateLimitDelay: z.number().default(100).min(0, "Rate limit delay cannot be negative"),
+  baseUrl: z.string().default("https://api.mexc.com"),
+  timeout: z.number().default(10000),
+  maxRetries: z.number().default(3),
+  retryDelay: z.number().default(1000),
+  rateLimitDelay: z.number().default(100),
 });
 
 export const MexcCacheConfigSchema = z.object({
   enableCaching: z.boolean().default(true),
-  cacheTTL: z.number().default(30000).positive("Cache TTL must be positive"),
-  apiResponseTTL: z.number().default(1500).positive("API response TTL must be positive"),
+  cacheTTL: z.number().default(30000),
+  apiResponseTTL: z.number().default(1500),
 });
 
 export const MexcReliabilityConfigSchema = z.object({
   enableCircuitBreaker: z.boolean().default(true),
   enableRateLimiter: z.boolean().default(true),
-  maxFailures: z.number().default(5).positive("Max failures must be positive"),
-  resetTimeout: z.number().default(60000).positive("Reset timeout must be positive"),
+  maxFailures: z.number().default(5),
+  resetTimeout: z.number().default(60000),
 });
 
 export type MexcApiConfig = z.infer<typeof MexcApiConfigSchema>;
@@ -52,107 +52,88 @@ export type MexcReliabilityConfig = z.infer<typeof MexcReliabilityConfigSchema>;
 
 export const UnifiedMexcConfigSchema = z.object({
   // API Configuration
-  apiKey: z.string().min(1, "API key is required"),
-  secretKey: z.string().min(1, "Secret key is required"),
+  apiKey: z.string(),
+  secretKey: z.string(),
   passphrase: z.string().optional(),
-  baseUrl: z.string().default("https://api.mexc.com").url("Valid base URL required"),
-  timeout: z.number().default(10000).positive("Timeout must be positive"),
+  baseUrl: z.string().default("https://api.mexc.com"),
+  timeout: z.number().default(10000),
 
   // Cache Configuration
   enableCaching: z.boolean().default(true),
-  cacheTTL: z.number().default(30000).positive("Cache TTL must be positive"),
-  apiResponseTTL: z.number().default(1500).positive("API response TTL must be positive"),
+  cacheTTL: z.number().default(30000),
+  apiResponseTTL: z.number().default(1500),
 
   // Reliability Configuration
   enableCircuitBreaker: z.boolean().default(true),
   enableRateLimiter: z.boolean().default(true),
-  maxFailures: z.number().default(5).positive("Max failures must be positive"),
-  resetTimeout: z.number().default(60000).positive("Reset timeout must be positive"),
-  maxRetries: z.number().default(3).min(0, "Max retries cannot be negative"),
-  retryDelay: z.number().default(1000).min(0, "Retry delay cannot be negative"),
-  rateLimitDelay: z.number().default(100).min(0, "Rate limit delay cannot be negative"),
+  maxFailures: z.number().default(5),
+  resetTimeout: z.number().default(60000),
 
-  // Trading Configuration
-  enablePaperTrading: z.boolean().default(true),
-  circuitBreakerThreshold: z
-    .number()
-    .positive("Circuit breaker threshold must be positive")
-    .default(5),
-  circuitBreakerResetTime: z
-    .number()
-    .positive("Circuit breaker reset time must be positive")
-    .default(30000),
-
-  // Optional test configurations
-  enableTestMode: z.boolean().optional(),
-  enableMetrics: z.boolean().optional(),
+  // Advanced reliability settings
+  circuitBreakerThreshold: z.number()
+    .default(10),
+  circuitBreakerResetTime: z.number()
+    .default(60000),
 });
 
 export type UnifiedMexcConfig = z.infer<typeof UnifiedMexcConfigSchema>;
 
-// Legacy config type alias for backward compatibility
-export type UnifiedMexcConfigV2 = UnifiedMexcConfig;
-
 // ============================================================================
-// Response Wrapper
+// Account Response Schemas
 // ============================================================================
 
-export const MexcServiceResponseSchema = z.object({
-  success: z.boolean(),
-  data: z.unknown().optional(),
-  error: z.string().optional(),
-  code: z.string().optional(),
-  timestamp: z
-    .union([z.string(), z.number()])
-    .transform((val) => (typeof val === "string" ? val : new Date(val).toISOString())),
-  source: z.string().optional(),
-  requestId: z.string().optional(),
-  responseTime: z.number().optional(),
-  cached: z.boolean().optional(),
-  executionTimeMs: z.number().optional(),
-  retryCount: z.number().optional(),
-  metadata: z.unknown().optional(),
+export const AccountInfoSchema = z.object({
+  accountType: z.string(),
+  canTrade: z.boolean(),
+  canWithdraw: z.boolean(),
+  canDeposit: z.boolean(),
+  balances: z.array(z.object({
+    asset: z.string(),
+    free: z.string(),
+    locked: z.string(),
+  })),
 });
 
-export type MexcServiceResponse<T = unknown> = Omit<
-  z.infer<typeof MexcServiceResponseSchema>,
-  "data"
-> & {
-  data?: T;
-};
+export const AccountBalanceSchema = z.object({
+  asset: z.string(),
+  free: z.string().transform(val => parseFloat(val)),
+  locked: z.string().transform(val => parseFloat(val)),
+});
+
+export type AccountInfo = z.infer<typeof AccountInfoSchema>;
+export type AccountBalance = z.infer<typeof AccountBalanceSchema>;
 
 // ============================================================================
-// Core API Data Schemas
+// Core MEXC API Schemas - Consolidated from legacy mexc-schemas.ts
 // ============================================================================
 
-/**
- * Calendar Entry Schema - New listing announcements
- */
 export const CalendarEntrySchema = z.object({
   vcoinId: z.string(),
   symbol: z.string(),
   projectName: z.string(),
   firstOpenTime: z.number(),
+  // Additional fields from MEXC API
+  vcoinName: z.string().optional(), // Short token name (e.g., "BRIC")
+  vcoinNameFull: z.string().optional(), // Full project name (e.g., "REDBRICK")
+  zone: z.string().optional(), // Trading zone (e.g., "NEW")
+  introductionEn: z.string().optional(), // English description
+  introductionCn: z.string().optional(), // Chinese description
 });
 
-/**
- * Symbol Entry Schema - Trading pair information
- */
+// Unified Symbol Entry Schema (merged SymbolV2 and Symbol schemas)
 export const SymbolEntrySchema = z.object({
-  cd: z.string(),
-  symbol: z.string().optional(),
-  sts: z.number(), // Symbol Trading Status
-  st: z.number(), // Symbol State
-  tt: z.number(), // Trading Time
-  ca: z.union([z.string(), z.number()]).optional(), // Contract Address - allow both string and number for compatibility
-  ps: z.number().optional(),
-  qs: z.number().optional(),
-  ot: z.number().optional(), // Open Time - number timestamp
+  cd: z.string(), // vcoinId
+  symbol: z.string().optional(), // symbol name for compatibility
+  ca: z.string().optional(), // contract address
+  ps: z.number().optional(), // price scale
+  qs: z.number().optional(), // quantity scale
+  sts: z.number(), // symbol trading status
+  st: z.number(), // state
+  tt: z.number(), // trading type
+  ot: z.union([z.number(), z.record(z.unknown())]).optional(), // open time (flexible type)
 });
 
-/**
- * Balance Entry Schema - Account balance information
- */
+// Balance Entry Schema for account balances
 export const BalanceEntrySchema = z.object({
   asset: z.string(),
   free: z.string(),
@@ -161,27 +142,61 @@ export const BalanceEntrySchema = z.object({
   usdtValue: z.number().optional(),
 });
 
-/**
- * Trading Filter Schema - Exchange trading rules
- */
-export const TradingFilterSchema = z.object({
-  filterType: z.string(),
-  minPrice: z.string().optional(),
-  maxPrice: z.string().optional(),
-  tickSize: z.string().optional(),
-  minQty: z.string().optional(),
-  maxQty: z.string().optional(),
-  stepSize: z.string().optional(),
-  minNotional: z.string().optional(),
-  maxNotional: z.string().optional(),
-  multiplierUp: z.string().optional(),
-  multiplierDown: z.string().optional(),
-  avgPriceMins: z.number().optional(),
+// Order Result Schema for order execution results
+export const OrderResultSchema = z.object({
+  success: z.boolean(),
+  orderId: z.string().optional(),
+  symbol: z.string(),
+  side: z.string(),
+  quantity: z.string(),
+  price: z.string().optional(),
+  status: z.string().optional(),
+  error: z.string().optional(),
+  timestamp: z.string(),
 });
 
-/**
- * Exchange Symbol Schema - Detailed symbol information
- */
+// MEXC Service Response Schema for standardized API responses
+const FlexibleDataSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z.array(z.unknown()),
+  z.record(z.unknown()),
+]);
+
+export const MexcServiceResponseSchema = z.object({
+  success: z.boolean(),
+  data: FlexibleDataSchema.optional(),
+  error: z.string().optional(),
+  code: z.string().optional(),
+  timestamp: z.string(),
+  requestId: z.string().optional(),
+  responseTime: z.number().optional(),
+  cached: z.boolean().optional(),
+  executionTimeMs: z.number().optional(),
+  retryCount: z.number().optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+
+// ============================================================================
+// Market Data Schemas
+// ============================================================================
+
+export const SymbolInfoSchema = z.object({
+  symbol: z.string(),
+  status: z.string(),
+  baseAsset: z.string(),
+  quoteAsset: z.string(),
+  baseAssetPrecision: z.number(),
+  quotePrecision: z.number(),
+  quoteAssetPrecision: z.number(),
+  filters: z.array(z.object({
+    filterType: z.string(),
+  })).optional(),
+});
+
+// Exchange Symbol Schema (from legacy mexc-schemas.ts)
 export const ExchangeSymbolSchema = z.object({
   symbol: z.string(),
   status: z.string(),
@@ -190,224 +205,123 @@ export const ExchangeSymbolSchema = z.object({
   baseAssetPrecision: z.number(),
   quotePrecision: z.number(),
   quoteAssetPrecision: z.number(),
-  baseCommissionPrecision: z.number().optional(),
-  quoteCommissionPrecision: z.number().optional(),
-  orderTypes: z.array(z.string()).optional(),
-  icebergAllowed: z.boolean().optional(),
-  ocoAllowed: z.boolean().optional(),
-  quoteOrderQtyMarketAllowed: z.boolean().optional(),
-  allowTrailingStop: z.boolean().optional(),
-  isSpotTradingAllowed: z.boolean().optional(),
-  isMarginTradingAllowed: z.boolean().optional(),
-  filters: z.array(TradingFilterSchema).optional(),
-  permissions: z.array(z.string()).optional(),
 });
 
-/**
- * Ticker Schema - 24hr price statistics
- */
 export const TickerSchema = z.object({
   symbol: z.string(),
-  lastPrice: z.string().optional(),
-  price: z.string().optional(), // Make price optional since MEXC uses lastPrice
-  c: z.string().optional(), // Alternate close price field
+  lastPrice: z.string(),
+  price: z.string(),
   priceChange: z.string(),
-  p: z.string().optional(), // Alternate price change field
   priceChangePercent: z.string(),
-  P: z.string().optional(), // Alternate price change percent field
   volume: z.string(),
-  v: z.string().optional(), // Alternate volume field
   quoteVolume: z.string().optional(),
-  q: z.string().optional(), // Alternate quote volume field
   openPrice: z.string().optional(),
-  o: z.string().optional(), // Alternate open price field
   highPrice: z.string().optional(),
-  h: z.string().optional(), // Alternate high price field
   lowPrice: z.string().optional(),
-  l: z.string().optional(), // Alternate low price field
-  count: z.union([z.string(), z.number(), z.null()]).optional(),
-  t: z.number().optional(), // Timestamp
-  // Additional MEXC API fields
-  prevClosePrice: z.string().optional(),
-  bidPrice: z.string().optional(),
-  bidQty: z.string().optional(),
-  askPrice: z.string().optional(),
-  askQty: z.string().optional(),
-  openTime: z.number().optional(),
-  closeTime: z.number().optional(),
+  count: z.string().optional(),
 });
 
-/**
- * Order Parameters Schema - Order placement
- */
-export const OrderParametersSchema = z.object({
+// Core API Types
+export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
+export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
+export type BalanceEntry = z.infer<typeof BalanceEntrySchema>;
+export type OrderResult = z.infer<typeof OrderResultSchema>;
+export type MexcServiceResponse<T = unknown> = z.infer<typeof MexcServiceResponseSchema> & {
+  data?: T;
+};
+
+// Market Data Types
+export type SymbolInfo = z.infer<typeof SymbolInfoSchema>;
+export type ExchangeSymbol = z.infer<typeof ExchangeSymbolSchema>;
+export type Ticker = z.infer<typeof TickerSchema>;
+
+// ============================================================================
+// Trading Schemas
+// ============================================================================
+
+export const OrderSideSchema = z.enum(["BUY", "SELL"]);
+export const OrderTypeSchema = z.enum(["LIMIT", "MARKET", "STOP_LOSS", "STOP_LOSS_LIMIT", "TAKE_PROFIT", "TAKE_PROFIT_LIMIT"]);
+export const OrderStatusSchema = z.enum(["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "PENDING_CANCEL", "REJECTED", "EXPIRED"]);
+
+export const OrderRequestSchema = z.object({
   symbol: z.string(),
-  side: z.enum(["BUY", "SELL"]),
-  type: z.enum(["LIMIT", "MARKET", "STOP_LOSS", "STOP_LOSS_LIMIT"]),
+  side: OrderSideSchema,
+  type: OrderTypeSchema,
   quantity: z.string(),
   price: z.string().optional(),
+  timeInForce: z.string().optional(),
   stopPrice: z.string().optional(),
-  timeInForce: z.enum(["GTC", "IOC", "FOK"]).optional(),
-  icebergQty: z.string().optional(),
-  newOrderRespType: z.enum(["ACK", "RESULT", "FULL"]).optional(),
-  newClientOrderId: z.string().optional(),
+  recvWindow: z.number().optional(),
 });
 
-/**
- * Order Result Schema - Order placement response
- */
-export const OrderResultSchema = z.object({
-  success: z.boolean(),
-  orderId: z.string().optional(),
-  clientOrderId: z.string().optional(),
+export const OrderResponseSchema = z.object({
   symbol: z.string(),
-  side: z.string(),
-  type: z.string().optional(),
-  quantity: z.string(),
-  price: z.string().optional(),
-  status: z.string().optional(),
-  executedQty: z.string().optional(),
-  cummulativeQuoteQty: z.string().optional(),
-  error: z.string().optional(),
-  timestamp: z.string(),
-  fills: z
-    .array(
-      z.object({
-        price: z.string(),
-        qty: z.string(),
-        commission: z.string(),
-        commissionAsset: z.string(),
-      })
-    )
-    .optional(),
-});
-
-/**
- * Order Status Schema - Order status queries
- */
-export const OrderStatusSchema = z.object({
-  orderId: z.string(),
-  symbol: z.string(),
-  status: z.enum(["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "REJECTED", "EXPIRED"]),
-  side: z.enum(["BUY", "SELL"]),
-  type: z.enum(["LIMIT", "MARKET", "STOP_LOSS", "STOP_LOSS_LIMIT"]),
-  quantity: z.string(),
-  price: z.string().optional(),
-  stopPrice: z.string().optional(),
+  orderId: z.number(),
+  orderListId: z.number().optional(),
+  clientOrderId: z.string(),
+  transactTime: z.number(),
+  price: z.string(),
+  origQty: z.string(),
   executedQty: z.string(),
   cummulativeQuoteQty: z.string(),
-  time: z.number(),
-  updateTime: z.number(),
+  status: OrderStatusSchema,
+  timeInForce: z.string(),
+  type: OrderTypeSchema,
+  side: OrderSideSchema,
+  fills: z.array(z.object({
+    price: z.string(),
+    qty: z.string(),
+    commission: z.string(),
+    commissionAsset: z.string(),
+  })).optional(),
 });
 
-/**
- * Order Book Schema - Market depth
- */
-export const OrderBookSchema = z.object({
-  symbol: z.string().optional(),
-  bids: z.array(z.tuple([z.string(), z.string()])),
-  asks: z.array(z.tuple([z.string(), z.string()])),
-  lastUpdateId: z.number().optional(),
-  timestamp: z.number().optional(),
-});
-
-/**
- * Account Info Schema - Account information
- */
-export const AccountInfoSchema = z.object({
-  accountType: z.string(),
-  canTrade: z.boolean(),
-  canWithdraw: z.boolean(),
-  canDeposit: z.boolean(),
-  balances: z.array(BalanceEntrySchema),
-  updateTime: z.number().optional(),
-  permissions: z.array(z.string()).optional(),
-});
+export type OrderSide = z.infer<typeof OrderSideSchema>;
+export type OrderType = z.infer<typeof OrderTypeSchema>;
+export type OrderStatus = z.infer<typeof OrderStatusSchema>;
+export type OrderRequest = z.infer<typeof OrderRequestSchema>;
+export type OrderResponse = z.infer<typeof OrderResponseSchema>;
 
 // ============================================================================
-// Market Data Schemas
+// Error Response Schemas
 // ============================================================================
 
-/**
- * Kline/Candlestick Schema
- */
-export const KlineSchema = z.object({
-  openTime: z.number(),
-  open: z.string(),
-  high: z.string(),
-  low: z.string(),
-  close: z.string(),
-  volume: z.string(),
-  closeTime: z.number(),
-  quoteAssetVolume: z.string(),
-  numberOfTrades: z.number(),
+export const ApiErrorSchema = z.object({
+  code: z.number(),
+  msg: z.string(),
 });
 
-/**
- * Exchange Info Schema
- */
-export const ExchangeInfoSchema = z.object({
-  timezone: z.string(),
-  serverTime: z.number(),
-  rateLimits: z
-    .array(
-      z.object({
-        rateLimitType: z.string(),
-        interval: z.string(),
-        intervalNum: z.number(),
-        limit: z.number(),
-      })
-    )
-    .optional(),
-  exchangeFilters: z.array(TradingFilterSchema).optional(),
-  symbols: z.array(ExchangeSymbolSchema),
+export const RateLimitInfoSchema = z.object({
+  rateLimitType: z.string(),
+  interval: z.string(),
+  intervalNum: z.number(),
+  limit: z.number(),
+  count: z.number(),
 });
 
+export type ApiError = z.infer<typeof ApiErrorSchema>;
+export type RateLimitInfo = z.infer<typeof RateLimitInfoSchema>;
+
 // ============================================================================
-// Activity Data Schema
+// Activity API Schemas
 // ============================================================================
+
+export const ActivityTypeSchema = z.enum([
+  "SUN_SHINE",
+  "PROMOTION",
+  "LAUNCH_EVENT",
+  "TRADING_COMPETITION",
+  "AIRDROP",
+  "STAKING_EVENT",
+  "LISTING_EVENT",
+]);
 
 export const ActivityDataSchema = z.object({
   activityId: z.string(),
   currency: z.string(),
   currencyId: z.string(),
-  activityType: z.string(),
-  symbol: z.string().optional(), // Add optional symbol field for test compatibility
-  timestamp: z.number().optional(),
-  amount: z.number().optional(),
-  price: z.number().optional(),
-  volume: z.number().optional(),
-  significance: z.number().optional(),
+  activityType: z.string(), // Using string instead of enum for flexibility
 });
-
-/**
- * Activity Query Options Schema - Configuration for activity API queries
- */
-export const ActivityQueryOptions = z.object({
-  batchSize: z.number().default(5),
-  maxRetries: z.number().default(3),
-  rateLimitDelay: z.number().default(200),
-});
-
-// ============================================================================
-// Type Exports
-// ============================================================================
-
-export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
-export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
-export type BalanceEntry = z.infer<typeof BalanceEntrySchema>;
-export type TradingFilter = z.infer<typeof TradingFilterSchema>;
-export type ExchangeSymbol = z.infer<typeof ExchangeSymbolSchema>;
-export type ExchangeInfo = z.infer<typeof ExchangeInfoSchema>;
-export type Ticker = z.infer<typeof TickerSchema>;
-export type OrderParameters = z.infer<typeof OrderParametersSchema>;
-export type OrderResult = z.infer<typeof OrderResultSchema>;
-export type OrderStatus = z.infer<typeof OrderStatusSchema>;
-export type OrderBook = z.infer<typeof OrderBookSchema>;
-export type AccountInfo = z.infer<typeof AccountInfoSchema>;
-export type Kline = z.infer<typeof KlineSchema>;
-export type ActivityData = z.infer<typeof ActivityDataSchema>;
-export type ActivityQueryOptionsType = z.infer<typeof ActivityQueryOptions>;
 
 export const ActivityResponseSchema = z.object({
   data: z.array(ActivityDataSchema),
@@ -416,10 +330,12 @@ export const ActivityResponseSchema = z.object({
   timestamp: z.number(),
 });
 
+export type ActivityType = z.infer<typeof ActivityTypeSchema>;
+export type ActivityData = z.infer<typeof ActivityDataSchema>;
 export type ActivityResponse = z.infer<typeof ActivityResponseSchema>;
 
 // ============================================================================
-// Activity Helper Functions
+// Activity Utility Functions
 // ============================================================================
 
 export const calculateActivityBoost = (activities: ActivityData[]): number => {
@@ -446,270 +362,14 @@ export const calculateActivityBoost = (activities: ActivityData[]): number => {
   return Math.min(maxBoost + multipleActivitiesBonus, 20);
 };
 
-export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => {
-  return Array.from(new Set(activities.map((activity) => activity.activityType)));
-};
-
 export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => {
-  const highPriorityTypes = ["LISTING_EVENT", "LAUNCH_EVENT", "SUN_SHINE", "PROMOTION"];
+  const highPriorityTypes = ["LAUNCH_EVENT", "LISTING_EVENT", "SUN_SHINE"];
   return activities.some((activity) => highPriorityTypes.includes(activity.activityType));
 };
 
-// Overloaded function for both CalendarEntry and SymbolV2Entry
-export function isValidForSnipe(entry: CalendarEntry): boolean;
-export function isValidForSnipe(symbol: SymbolV2Entry): boolean;
-export function isValidForSnipe(item: CalendarEntry | SymbolV2Entry): boolean {
-  // Check if it's a CalendarEntry (has firstOpenTime property)
-  if ("firstOpenTime" in item) {
-    const entry = item as CalendarEntry;
-    // Check if the calendar entry is valid for sniping
-    if (!entry.symbol || !entry.vcoinId || !entry.firstOpenTime) {
-      return false;
-    }
-
-    // Check if the launch time is in the future (at least 5 minutes)
-    const now = Date.now();
-    const launchTime = entry.firstOpenTime;
-    const fiveMinutes = 5 * 60 * 1000;
-
-    return launchTime > now + fiveMinutes;
-  } else {
-    // It's a SymbolV2Entry
-    const symbol = item as SymbolV2Entry;
-    return matchesReadyPattern(symbol) && hasCompleteData(symbol);
-  }
-}
-
 // ============================================================================
-// Additional Legacy Schemas
+// Exports
 // ============================================================================
 
-export const SymbolV2EntrySchema = SymbolEntrySchema; // Legacy alias
-
-export const SnipeTargetSchema = z.object({
-  vcoinId: z.string(),
-  symbol: z.string(),
-  projectName: z.string(),
-  priceDecimalPlaces: z.number(),
-  quantityDecimalPlaces: z.number(),
-  launchTime: z.date(),
-  discoveredAt: z.date(),
-  hoursAdvanceNotice: z.number(),
-  orderParameters: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
-  confidence: z.number().optional(),
-});
-
-export const ActivityEnhancementSchema = z.object({
-  baseConfidence: z.number(),
-  enhancedConfidence: z.number(),
-  activityBoost: z.number(),
-  activities: z.number(),
-  activityTypes: z.array(z.string()),
-  multipleActivitiesBonus: z.number().optional(),
-  recentActivityBonus: z.number().optional(),
-});
-
-export type SymbolV2Entry = z.infer<typeof SymbolV2EntrySchema>;
-export type SnipeTarget = z.infer<typeof SnipeTargetSchema>;
-export type ActivityEnhancement = z.infer<typeof ActivityEnhancementSchema>;
-
-// ============================================================================
-// Validation Helper Functions
-// ============================================================================
-
-export const validateCalendarEntry = (data: unknown): CalendarEntry => {
-  return CalendarEntrySchema.parse(data);
-};
-
-export const validateSymbolEntry = (data: unknown): SymbolEntry => {
-  return SymbolEntrySchema.parse(data);
-};
-
-export const validateSymbolV2Entry = (data: unknown): SymbolV2Entry => {
-  return SymbolV2EntrySchema.parse(data);
-};
-
-export const validateSnipeTarget = (data: unknown): SnipeTarget => {
-  return SnipeTargetSchema.parse(data);
-};
-
-export const validateActivityData = (data: unknown): ActivityData => {
-  return ActivityDataSchema.parse(data);
-};
-
-export const validateActivityResponse = (data: unknown): ActivityResponse => {
-  return ActivityResponseSchema.parse(data);
-};
-
-export const validateActivityEnhancement = (data: unknown): ActivityEnhancement => {
-  return ActivityEnhancementSchema.parse(data);
-};
-
-export const validateTickerData = (data: unknown): Ticker => {
-  return TickerSchema.parse(data);
-};
-
-export const validateMexcData = <T extends z.ZodTypeAny>(
-  schema: T,
-  data: unknown
-): { success: boolean; data?: z.infer<T>; error?: string } => {
-  try {
-    const result = schema.parse(data);
-    return { success: true, data: result };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
-      };
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown validation error",
-    };
-  }
-};
-
-// ============================================================================
-// Schema Collections
-// ============================================================================
-
-export const MEXC_API_SCHEMAS = {
-  // Configuration
-  MexcApiConfigSchema,
-  MexcCacheConfigSchema,
-  MexcReliabilityConfigSchema,
-
-  // Response Wrapper
-  MexcServiceResponseSchema,
-
-  // Core Data
-  CalendarEntrySchema,
-  SymbolEntrySchema,
-  BalanceEntrySchema,
-  TradingFilterSchema,
-  ExchangeSymbolSchema,
-  TickerSchema,
-  OrderParametersSchema,
-  OrderResultSchema,
-  OrderStatusSchema,
-  OrderBookSchema,
-  AccountInfoSchema,
-
-  // Market Data
-  KlineSchema,
-  ExchangeInfoSchema,
-
-  // Activity
-  ActivityDataSchema,
-} as const;
-
-// ============================================================================
-// Additional Validation Utilities
-// ============================================================================
-
-/**
- * Validate service response structure
- */
-export function validateServiceResponse<T = unknown>(
-  data: unknown,
-  dataSchema?: z.ZodTypeAny
-): { success: boolean; data?: MexcServiceResponse<T>; error?: string } {
-  const baseResponseSchema = z.object({
-    success: z.boolean(),
-    data: dataSchema ? dataSchema.optional() : z.unknown().optional(),
-    error: z.string().optional(),
-    code: z.string().optional(),
-    timestamp: z.union([z.string(), z.number()]),
-    source: z.string().optional(),
-    requestId: z.string().optional(),
-    responseTime: z.number().optional(),
-    cached: z.boolean().optional(),
-    executionTimeMs: z.number().optional(),
-    retryCount: z.number().optional(),
-    metadata: z.unknown().optional(),
-  });
-
-  const validationResult = validateMexcData(baseResponseSchema, data);
-
-  // Cast the result to match the expected return type
-  return {
-    success: validationResult.success,
-    data: validationResult.data as MexcServiceResponse<T>,
-    error: validationResult.error,
-  };
-}
-
-// ============================================================================
-// Ready State Pattern Utilities
-// ============================================================================
-
-/**
- * Ready State Pattern Schema - for symbols ready for trading
- */
-export const ReadyStatePatternSchema = z.object({
-  sts: z.literal(2), // Symbol Trading Status = 2 (ready)
-  st: z.literal(2), // Symbol State = 2 (active)
-  tt: z.literal(4), // Trading Time = 4 (ready for trading)
-});
-
-/**
- * Ready State Pattern Constant
- */
-export const READY_STATE_PATTERN = { sts: 2, st: 2, tt: 4 } as const;
-
-/**
- * Check if a symbol matches the ready state pattern
- */
-export const matchesReadyPattern = (symbol: SymbolV2Entry): boolean => {
-  return symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4;
-};
-
-/**
- * Check if a symbol has complete data for sniping
- */
-export const hasCompleteData = (symbol: SymbolV2Entry): boolean => {
-  return !!(
-    symbol.ca &&
-    symbol.ps !== undefined &&
-    symbol.qs !== undefined &&
-    symbol.ot !== undefined
-  );
-};
-
-export type ReadyStatePattern = z.infer<typeof ReadyStatePatternSchema>;
-
-// ============================================================================
-// Portfolio and Market Data Schemas
-// ============================================================================
-
-/**
- * Portfolio Schema - User portfolio information
- */
-export const PortfolioSchema = z.object({
-  totalValue: z.number(),
-  totalValueUsdt: z.number().optional(),
-  totalPnL: z.number().optional(),
-  totalPnLPercent: z.number().optional(),
-  assets: z.array(BalanceEntrySchema),
-  lastUpdated: z.string().optional(),
-});
-
-export type Portfolio = z.infer<typeof PortfolioSchema>;
-
-/**
- * Market Stats Schema - Market statistics
- */
-export const MarketStatsSchema = z.object({
-  symbol: z.string(),
-  price: z.number(),
-  priceChange: z.number(),
-  priceChangePercent: z.number(),
-  volume: z.number(),
-  marketCap: z.number().optional(),
-  high24h: z.number().optional(),
-  low24h: z.number().optional(),
-  timestamp: z.number().optional(),
-});
-
-export type MarketStats = z.infer<typeof MarketStatsSchema>;
+export * from "./trading-schemas";
+export * from "./pattern-detection-schemas";

@@ -49,6 +49,7 @@ describe("Enhanced Rate Limiter", () => {
   beforeEach(() => {
     // Clear all rate limiter state before each test
     clearAllRateLimitData();
+    clearSecurityEvents(); // Explicitly clear security events
   });
 
   describe("Security Event Logging", () => {

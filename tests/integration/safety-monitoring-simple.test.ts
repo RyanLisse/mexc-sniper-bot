@@ -342,7 +342,7 @@ describe("Safety Monitoring API Simple Tests", () => {
         expect(response.status).toBe(400);
         const data = await response.json();
         expect(data.success).toBe(false);
-        expect(data.error).toContain("Action is required");
+        expect(data.error).toContain("action is required");
       },
       TEST_TIMEOUT,
     );

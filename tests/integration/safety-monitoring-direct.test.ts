@@ -115,7 +115,7 @@ describe("Safety Monitoring API Direct Tests", () => {
       );
 
       // Check that proper error handling is configured
-      expect(routeContent).toContain("Action is required");
+      expect(routeContent).toContain("action is required");
       expect(routeContent).toContain("Invalid JSON");
       expect(routeContent).toContain("createErrorResponse");
       expect(routeContent).toContain("catch (error");

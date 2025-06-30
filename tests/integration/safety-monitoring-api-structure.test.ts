@@ -217,7 +217,7 @@ describe("Safety Monitoring API Structure Tests", () => {
           const data = await response.json();
           expect(data.success).toBe(false);
           expect(data).toHaveProperty("error");
-          expect(data.error).toContain("Action is required");
+          expect(data.error).toContain("action is required");
           
           console.log('✅ POST with missing action returned proper 400 error');
         } catch (error) {

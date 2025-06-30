@@ -74,7 +74,7 @@ export class AgentResponseCache {
           cached: true,
         },
         // Additional fields for backward compatibility
-        content: (cached.data as string) || "",
+        content: (cached as any).content || (cached.data as string) || "",
         cacheMetadata: {
           cacheKey,
           cacheLevel: "L1", // Will be determined by cache manager

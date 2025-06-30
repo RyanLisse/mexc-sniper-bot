@@ -17,21 +17,17 @@
  * ```
  */
 
-// Import types from schemas module
-// Import MexcServiceResponse from schemas
+// Import types from unified schemas
 import type {
   BalanceEntry,
   CalendarEntry,
   ExchangeSymbol,
-  Kline,
   MexcServiceResponse,
-  OrderBook,
-  OrderParameters,
+  OrderRequest,
   OrderResult,
-  OrderStatus,
   SymbolEntry,
   Ticker,
-} from "../../schemas/unified/mexc-api-schemas";
+} from "../../schemas/unified";
 // Import logger
 // Import the production-ready unified client (modular)
 import {
@@ -67,10 +63,6 @@ export type {
   ExchangeSymbol,
   Ticker,
   OrderResult,
-  OrderParameters,
-  OrderStatus,
-  OrderBook,
-  Kline,
 };
 
 // Advanced analytics and trading types (removed non-existent types)
@@ -147,8 +139,8 @@ export function getUnifiedMexcClient(config?: {
 /** @deprecated Use UnifiedMexcConfigV2 instead */
 export type UnifiedMexcResponse<T> = MexcServiceResponse<T>;
 
-/** @deprecated Use OrderParameters instead */
-export type AdvancedOrderParameters = OrderParameters;
+/** @deprecated Use OrderRequest instead */
+export type AdvancedOrderParameters = OrderRequest;
 
 // ============================================================================
 // Default Export

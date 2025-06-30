@@ -61,6 +61,7 @@ export interface AuthenticationMetrics {
   successRate: number;
   lastTestTime?: Date;
   uptime: number;
+  uptimeMs: number;
 }
 
 // ============================================================================
@@ -92,9 +93,9 @@ export class MexcAuthenticationService {
 
   constructor(config: Partial<AuthenticationConfig> = {}) {
     this.config = {
-      apiKey: config.apiKey || process.env.MEXC_API_KEY || "",
-      secretKey: config.secretKey || process.env.MEXC_SECRET_KEY || "",
-      passphrase: config.passphrase || process.env.MEXC_PASSPHRASE || "",
+      apiKey: config.apiKey !== undefined ? config.apiKey : (process.env.MEXC_API_KEY || ""),
+      secretKey: config.secretKey !== undefined ? config.secretKey : (process.env.MEXC_SECRET_KEY || ""),
+      passphrase: config.passphrase !== undefined ? config.passphrase : (process.env.MEXC_PASSPHRASE || ""),
       enableEncryption: config.enableEncryption ?? false,
       encryptionKey: config.encryptionKey || process.env.MEXC_ENCRYPTION_KEY,
       testIntervalMs: config.testIntervalMs || 300000, // 5 minutes
@@ -117,6 +118,7 @@ export class MexcAuthenticationService {
       averageResponseTime: 0,
       successRate: 0,
       uptime: 0,
+      uptimeMs: 0,
     };
 
     // Start periodic credential testing if credentials exist
@@ -147,6 +149,8 @@ export class MexcAuthenticationService {
    * Get current authentication status
    */
   getStatus(): AuthenticationStatus {
+    // Update hasCredentials in case it changed
+    this.status.hasCredentials = this.hasCredentials();
     return {
       ...this.status,
     };
@@ -156,10 +160,12 @@ export class MexcAuthenticationService {
    * Get authentication metrics
    */
   getMetrics(): AuthenticationMetrics {
-    const uptime = Date.now() - this.startTime.getTime();
+    const now = Date.now();
+    const uptime = this.status.lastValidAt ? now - this.status.lastValidAt.getTime() : 0;
     return {
       ...this.metrics,
       uptime,
+      uptimeMs: uptime,
     };
   }
 
@@ -176,11 +182,11 @@ export class MexcAuthenticationService {
         isValid: false,
         hasConnection: false,
         responseTime: 0,
-        error: this.status.blockReason || "Authentication is blocked",
+        error: "Authentication blocked due to repeated failures",
         timestamp: now,
       };
 
-      this.updateStatus(result);
+      // Don't update status as it's already blocked
       return result;
     }
 
@@ -212,8 +218,27 @@ export class MexcAuthenticationService {
 
     try {
       const startTime = Date.now();
-      const testResult = await this.apiClient.testCredentials();
-      const responseTime = Date.now() - startTime;
+      
+      // Check if API client has testCredentials method, otherwise use getAccountInfo
+      let testResult;
+      if (this.apiClient.testCredentials && typeof this.apiClient.testCredentials === 'function') {
+        testResult = await this.apiClient.testCredentials();
+      } else {
+        // Fallback to getAccountInfo for compatibility
+        const accountInfo = await this.apiClient.getAccountInfo();
+        testResult = {
+          isValid: accountInfo.success,
+          hasConnection: accountInfo.success,
+          error: accountInfo.success ? undefined : accountInfo.error || 'Unknown error'
+        };
+      }
+      
+      // Handle null/malformed responses
+      if (!testResult || typeof testResult !== 'object') {
+        throw new Error('Invalid API response format');
+      }
+      
+      const responseTime = Math.max(Date.now() - startTime, 1); // Ensure at least 1ms
 
       const result: CredentialTestResult = {
         isValid: testResult.isValid,
@@ -254,6 +279,15 @@ export class MexcAuthenticationService {
     this.status.failureCount = 0;
     this.status.isBlocked = false;
     this.status.blockReason = undefined;
+
+    // Update API client if available
+    if (this.apiClient && this.apiClient.setCredentials) {
+      this.apiClient.setCredentials(
+        this.config.apiKey,
+        this.config.secretKey,
+        this.config.passphrase
+      );
+    }
 
     // Test new credentials immediately
     if (this.status.hasCredentials) {
@@ -306,7 +340,7 @@ export class MexcAuthenticationService {
         secretKey: encryptedSecretKey,
       };
     } catch (error) {
-      console.error("[MexcAuthenticationService] Failed to encrypt credentials:", error);
+      this.logger.error("Failed to encrypt credentials:", undefined, error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -347,7 +381,7 @@ export class MexcAuthenticationService {
       await this.updateCredentials({ apiKey, secretKey });
       return true;
     } catch (error) {
-      console.error("[MexcAuthenticationService] Failed to decrypt credentials:", error);
+      this.logger.error("Failed to decrypt credentials:", undefined, error instanceof Error ? error : new Error(String(error)));
       return false;
     }
   }
@@ -424,6 +458,7 @@ export class MexcAuthenticationService {
       averageResponseTime: 0,
       successRate: 0,
       uptime: Date.now() - this.startTime.getTime(),
+      uptimeMs: Date.now() - this.startTime.getTime(),
     };
   }
 
@@ -470,6 +505,7 @@ export class MexcAuthenticationService {
       if (this.status.failureCount >= this.config.maxAuthFailures!) {
         this.status.isBlocked = true;
         this.status.blockReason = `Too many authentication failures (${this.status.failureCount})`;
+        this.stopPeriodicTesting(); // Stop periodic testing when blocked
 
         // Schedule automatic unblock
         setTimeout(() => {
@@ -484,7 +520,7 @@ export class MexcAuthenticationService {
 
     // Update metrics
     if (this.metrics.totalTests > 0) {
-      this.metrics.successRate = this.metrics.successfulTests / this.metrics.totalTests;
+      this.metrics.successRate = (this.metrics.successfulTests / this.metrics.totalTests) * 100;
     }
 
     if (result.responseTime > 0) {
@@ -500,8 +536,9 @@ export class MexcAuthenticationService {
    * Start periodic credential testing
    */
   private startPeriodicTesting(): void {
-    if (this.testTimer) {
-      clearInterval(this.testTimer);
+    // Don't start if blocked or already running
+    if (this.testTimer || this.status.isBlocked) {
+      return;
     }
 
     this.testTimer = setInterval(async () => {
@@ -526,6 +563,20 @@ export class MexcAuthenticationService {
    */
   destroy(): void {
     this.stopPeriodicTesting();
+    
+    // Clear credentials
+    this.config.apiKey = "";
+    this.config.secretKey = "";
+    this.config.passphrase = "";
+    
+    // Reset status
+    this.status.hasCredentials = false;
+    this.status.isValid = false;
+    this.status.isConnected = false;
+    this.status.failureCount = 0;
+    this.status.isBlocked = false;
+    this.status.blockReason = undefined;
+    this.status.error = undefined;
   }
 }
 
