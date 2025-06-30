@@ -15,12 +15,22 @@ import React from 'react';
 // Make React globally available for JSX
 global.React = React;
 
-// Mock React hooks for testing
+// Mock React hooks for testing with proper useState implementation
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
     ...actual,
-    useState: vi.fn((initial) => [initial, vi.fn()]),
+    useState: vi.fn((initial) => {
+      const state = { current: initial };
+      const setState = vi.fn((newValue) => {
+        if (typeof newValue === 'function') {
+          state.current = newValue(state.current);
+        } else {
+          state.current = newValue;
+        }
+      });
+      return [state.current, setState];
+    }),
     useEffect: vi.fn((fn, deps) => fn()),
     useCallback: vi.fn((fn) => fn),
     useMemo: vi.fn((fn) => fn()),
@@ -49,7 +59,7 @@ declare global {
     createTestApiCredentials: (overrides?: Record<string, any>) => any;
     waitFor: (ms: number) => Promise<void>;
     generateTestId: () => string;
-    mockApiResponse: (data: any, status?: number) => any;
+    mockApiResponse: (data: any, status?: number, customHeaders?: Record<string, string>) => any;
   };
 }
 
@@ -58,7 +68,44 @@ globalThis.__TEST_ENV__ = true;
 globalThis.__TEST_START_TIME__ = Date.now();
 
 // Fix EventEmitter memory leak warnings by increasing max listeners
-process.setMaxListeners(50);
+if (process.setMaxListeners) {
+  process.setMaxListeners(50);
+}
+
+// Fix potential worker thread issues
+if (global.Worker) {
+  // Mock Worker to avoid worker thread errors
+  global.Worker = vi.fn().mockImplementation(() => ({
+    postMessage: vi.fn(),
+    terminate: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    onerror: null,
+    onmessage: null,
+    onmessageerror: null,
+  })) as any;
+}
+
+// Mock MessagePort to fix port.addListener errors
+if (global.MessagePort) {
+  global.MessagePort = vi.fn().mockImplementation(() => ({
+    postMessage: vi.fn(),
+    start: vi.fn(),
+    close: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+    onmessage: null,
+    onmessageerror: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
+    once: vi.fn(),
+    emit: vi.fn(),
+  })) as any;
+}
 
 // ============================================================================
 // Simplified Test Setup and Teardown
@@ -157,60 +204,10 @@ beforeAll(async () => {
     };
   });
 
-  // Mock Zod for schema validation
-  vi.mock('zod', () => ({
-    z: {
-      object: vi.fn(() => ({
-        parse: vi.fn((data) => data),
-        safeParse: vi.fn((data) => ({ success: true, data })),
-        extend: vi.fn().mockReturnThis(),
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-      })),
-      string: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-        min: vi.fn().mockReturnThis(),
-        max: vi.fn().mockReturnThis(),
-        email: vi.fn().mockReturnThis(),
-        url: vi.fn().mockReturnThis(),
-      })),
-      number: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-        min: vi.fn().mockReturnThis(),
-        max: vi.fn().mockReturnThis(),
-        int: vi.fn().mockReturnThis(),
-        positive: vi.fn().mockReturnThis(),
-      })),
-      boolean: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-      })),
-      array: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-        min: vi.fn().mockReturnThis(),
-        max: vi.fn().mockReturnThis(),
-      })),
-      enum: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-      })),
-      union: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-      })),
-      literal: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-      })),
-      date: vi.fn(() => ({
-        optional: vi.fn().mockReturnThis(),
-        nullable: vi.fn().mockReturnThis(),
-      })),
-    },
-  }));
+  // DISABLED: Problematic Zod mock causing schema validation failures
+  // The mock was breaking z.string().default() chains, causing test failures
+  // Real Zod library works correctly for validation tests
+  // vi.mock('zod', () => { ... });
 
   // Mock drizzle ORM to prevent real database connections
   vi.mock('drizzle-orm/postgres-js', () => ({
@@ -219,31 +216,87 @@ beforeAll(async () => {
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        groupBy: vi.fn().mockReturnThis(),
+        having: vi.fn().mockReturnThis(),
+        offset: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue([]),
+        then: vi.fn().mockImplementation((resolve) => Promise.resolve([]).then(resolve)),
       }),
       insert: vi.fn().mockReturnValue({
+        into: vi.fn().mockReturnThis(),
         values: vi.fn().mockReturnThis(),
+        onConflictDoNothing: vi.fn().mockReturnThis(),
+        onConflictDoUpdate: vi.fn().mockReturnThis(),
+        returning: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue([]),
       }),
       update: vi.fn().mockReturnValue({
+        table: vi.fn().mockReturnThis(),
         set: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        returning: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue([]),
       }),
       delete: vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        returning: vi.fn().mockReturnThis(),
         execute: vi.fn().mockResolvedValue([]),
+      }),
+      transaction: vi.fn().mockImplementation(async (cb) => {
+        const tx = {
+          select: vi.fn().mockReturnValue({
+            from: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            execute: vi.fn().mockResolvedValue([]),
+          }),
+          insert: vi.fn().mockReturnValue({
+            values: vi.fn().mockReturnThis(),
+            execute: vi.fn().mockResolvedValue([]),
+          }),
+          update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            execute: vi.fn().mockResolvedValue([]),
+          }),
+          delete: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnThis(),
+            execute: vi.fn().mockResolvedValue([]),
+          }),
+        };
+        return await cb(tx);
       }),
     })),
   }));
 
   // Mock postgres connection
   vi.mock('postgres', () => {
+    const mockConnection = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+      end: vi.fn().mockResolvedValue(undefined),
+      begin: vi.fn().mockImplementation(async (cb) => {
+        const tx = {
+          query: vi.fn().mockResolvedValue({ rows: [] }),
+          savepoint: vi.fn().mockResolvedValue(undefined),
+          release: vi.fn().mockResolvedValue(undefined),
+          rollback: vi.fn().mockResolvedValue(undefined),
+        };
+        if (cb) {
+          return await cb(tx);
+        }
+        return tx;
+      }),
+      listen: vi.fn(),
+      notify: vi.fn(),
+      unlisten: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    };
+    
     return {
-      default: vi.fn(() => ({
-        query: vi.fn().mockResolvedValue({ rows: [] }),
-        end: vi.fn().mockResolvedValue(undefined),
-      })),
+      default: vi.fn(() => mockConnection),
+      postgres: vi.fn(() => mockConnection),
     };
   });
 
@@ -296,8 +349,12 @@ beforeAll(async () => {
   }));
 
   // Initialize mocks and utilities
-  initializeSimplifiedMocks(isIntegrationTest);
-  initializeTestUtilities();
+  try {
+    await initializeSimplifiedMocks(isIntegrationTest);
+    initializeTestUtilities();
+  } catch (error) {
+    console.warn('Warning: Failed to initialize some mocks:', error.message);
+  }
 
   if (process.env.VERBOSE_TESTS === 'true') {
     console.log('✅ Simplified test setup completed');

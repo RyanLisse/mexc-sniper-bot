@@ -153,8 +153,7 @@ export default defineConfig({
       ENABLE_DEBUG_LOGGING: 'false',
     },
     
-    // Setup files
-    // Simplified setup files
+    // Setup files - re-enabled after fixing initialization issues
     setupFiles: ['./tests/setup/vitest-setup.ts'],
     
     // Reporter configuration - optimized for performance
@@ -171,17 +170,20 @@ export default defineConfig({
     // Watch configuration
     watch: !process.env.CI,
     
-    // Simplified performance settings
+    // Simplified performance settings for Bun compatibility
     logHeapUsage: false,
-    isolate: false,
+    isolate: false, // Disabled for Bun compatibility
+    sequence: {
+      concurrent: false, // Disable concurrent execution for better stability
+    },
     
-    // Use forks instead of threads for better compatibility
-    pool: 'forks',
+    // Use threads pool with minimal configuration for Bun compatibility
+    pool: 'threads',
     poolOptions: {
-      forks: {
+      threads: {
+        maxThreads: 1,
+        minThreads: 1,
         isolate: false,
-        maxForks: process.env.CI ? 1 : 2,
-        minForks: 1,
       }
     }
   },

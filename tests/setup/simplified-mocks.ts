@@ -371,7 +371,7 @@ export function createSimpleMexcServiceMock() {
 // Master Initialization Function
 // ============================================================================
 
-export async function initializeSimplifiedMocks(isIntegrationTest: boolean = false) {
+export async function initializeSimplifiedMocks(isIntegrationTest: boolean = false): Promise<void> {
   // Create global mock data store
   global.mockDataStore = createSimpleMockDataStore();
 
@@ -385,12 +385,19 @@ export async function initializeSimplifiedMocks(isIntegrationTest: boolean = fal
       const { initializeEnhancedDatabaseMocks } = await import('./enhanced-database-mocks');
       initializeEnhancedDatabaseMocks();
     } catch (error) {
-      console.warn('Enhanced database mocks not available, using basic mocks:', error.message);
+      console.warn('Enhanced database mocks not available, using basic mocks:', error?.message || 'Unknown error');
       // Fallback to basic mocking with database mock
       const basicDb = createSimpleDatabaseMock(global.mockDataStore);
       vi.mock('@/src/db', () => ({
         db: basicDb,
         getDb: vi.fn().mockReturnValue(basicDb),
+        clearDbCache: vi.fn(),
+        getDbClient: vi.fn().mockReturnValue({
+          query: vi.fn().mockResolvedValue({ rows: [] }),
+        }),
+        hasSupabaseConfig: vi.fn().mockReturnValue(true),
+        executeWithRetry: vi.fn().mockImplementation(async (fn) => await fn()),
+        withTransaction: vi.fn().mockImplementation(async (fn) => await fn(basicDb)),
       }));
     }
   }
@@ -402,13 +409,52 @@ export async function initializeSimplifiedMocks(isIntegrationTest: boolean = fal
     patternEmbeddings: { _: { name: 'pattern_embeddings' } },
     patternSimilarityCache: { _: { name: 'pattern_similarity_cache' } },
   }));
+  
+  // Mock the performance schema
+  vi.mock('@/src/db/schemas/performance', () => ({
+    agentPerformanceMetrics: { _: { name: 'agent_performance_metrics' } },
+    workflowPerformanceMetrics: { _: { name: 'workflow_performance_metrics' } },
+    systemPerformanceSnapshots: { _: { name: 'system_performance_snapshots' } },
+    performanceAlerts: { _: { name: 'performance_alerts' } },
+    performanceBaselines: { _: { name: 'performance_baselines' } },
+    insertAgentPerformanceMetricsSchema: vi.fn(),
+    insertWorkflowPerformanceMetricsSchema: vi.fn(),
+    insertSystemPerformanceSnapshotSchema: vi.fn(),
+  }));
 
-  // Mock drizzle-orm functions
+  // Mock drizzle-orm functions with comprehensive support
   vi.mock('drizzle-orm', () => ({
     and: vi.fn().mockImplementation((...conditions: any[]) => ({ _type: 'and', conditions })),
     or: vi.fn().mockImplementation((...conditions: any[]) => ({ _type: 'or', conditions })),
     eq: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'eq', column, value })),
-    sql: vi.fn(),
+    ne: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'ne', column, value })),
+    gt: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'gt', column, value })),
+    gte: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'gte', column, value })),
+    lt: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'lt', column, value })),
+    lte: vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'lte', column, value })),
+    isNull: vi.fn().mockImplementation((column: any) => ({ _type: 'isNull', column })),
+    isNotNull: vi.fn().mockImplementation((column: any) => ({ _type: 'isNotNull', column })),
+    inArray: vi.fn().mockImplementation((column: any, values: any[]) => ({ _type: 'in', column, values })),
+    notInArray: vi.fn().mockImplementation((column: any, values: any[]) => ({ _type: 'notIn', column, values })),
+    like: vi.fn().mockImplementation((column: any, pattern: any) => ({ _type: 'like', column, pattern })),
+    ilike: vi.fn().mockImplementation((column: any, pattern: any) => ({ _type: 'ilike', column, pattern })),
+    between: vi.fn().mockImplementation((column: any, min: any, max: any) => ({ _type: 'between', column, min, max })),
+    exists: vi.fn().mockImplementation((query: any) => ({ _type: 'exists', query })),
+    notExists: vi.fn().mockImplementation((query: any) => ({ _type: 'notExists', query })),
+    sql: vi.fn().mockImplementation((strings: any[], ...values: any[]) => ({ 
+      _type: 'sql', 
+      queryChunks: strings,
+      params: values 
+    })),
+    placeholder: vi.fn().mockImplementation((name: string) => ({ _type: 'placeholder', name })),
+    param: vi.fn().mockImplementation((name: string) => ({ _type: 'param', name })),
+    asc: vi.fn().mockImplementation((column: any) => ({ _type: 'asc', column })),
+    desc: vi.fn().mockImplementation((column: any) => ({ _type: 'desc', column })),
+    count: vi.fn().mockImplementation((column?: any) => ({ _type: 'count', column })),
+    sum: vi.fn().mockImplementation((column: any) => ({ _type: 'sum', column })),
+    avg: vi.fn().mockImplementation((column: any) => ({ _type: 'avg', column })),
+    min: vi.fn().mockImplementation((column: any) => ({ _type: 'min', column })),
+    max: vi.fn().mockImplementation((column: any) => ({ _type: 'max', column })),
   }));
 
   // Mock MEXC service with factory function to avoid hoisting issues
@@ -469,4 +515,6 @@ export async function initializeSimplifiedMocks(isIntegrationTest: boolean = fal
   if (process.env.VERBOSE_TESTS === 'true') {
     console.log('✅ Simplified mocks initialized');
   }
+  
+  return Promise.resolve();
 }

@@ -22,24 +22,24 @@ export const MexcApiConfigSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
   secretKey: z.string().min(1, "Secret key is required"),
   passphrase: z.string().optional(),
-  baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
-  timeout: z.number().positive("Timeout must be positive").default(10000),
-  maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
-  retryDelay: z.number().nonnegative("Retry delay cannot be negative").default(1000),
-  rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
+  baseUrl: z.string().default("https://api.mexc.com").url("Valid base URL required"),
+  timeout: z.number().default(10000).positive("Timeout must be positive"),
+  maxRetries: z.number().default(3).min(0, "Max retries cannot be negative"),
+  retryDelay: z.number().default(1000).min(0, "Retry delay cannot be negative"),
+  rateLimitDelay: z.number().default(100).min(0, "Rate limit delay cannot be negative"),
 });
 
 export const MexcCacheConfigSchema = z.object({
   enableCaching: z.boolean().default(true),
-  cacheTTL: z.number().positive("Cache TTL must be positive").default(30000),
-  apiResponseTTL: z.number().positive("API response TTL must be positive").default(1500),
+  cacheTTL: z.number().default(30000).positive("Cache TTL must be positive"),
+  apiResponseTTL: z.number().default(1500).positive("API response TTL must be positive"),
 });
 
 export const MexcReliabilityConfigSchema = z.object({
   enableCircuitBreaker: z.boolean().default(true),
   enableRateLimiter: z.boolean().default(true),
-  maxFailures: z.number().positive("Max failures must be positive").default(5),
-  resetTimeout: z.number().positive("Reset timeout must be positive").default(60000),
+  maxFailures: z.number().default(5).positive("Max failures must be positive"),
+  resetTimeout: z.number().default(60000).positive("Reset timeout must be positive"),
 });
 
 export type MexcApiConfig = z.infer<typeof MexcApiConfigSchema>;
@@ -55,22 +55,22 @@ export const UnifiedMexcConfigSchema = z.object({
   apiKey: z.string().min(1, "API key is required"),
   secretKey: z.string().min(1, "Secret key is required"),
   passphrase: z.string().optional(),
-  baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
-  timeout: z.number().positive("Timeout must be positive").default(10000),
+  baseUrl: z.string().default("https://api.mexc.com").url("Valid base URL required"),
+  timeout: z.number().default(10000).positive("Timeout must be positive"),
 
   // Cache Configuration
   enableCaching: z.boolean().default(true),
-  cacheTTL: z.number().positive("Cache TTL must be positive").default(30000),
-  apiResponseTTL: z.number().positive("API response TTL must be positive").default(1500),
+  cacheTTL: z.number().default(30000).positive("Cache TTL must be positive"),
+  apiResponseTTL: z.number().default(1500).positive("API response TTL must be positive"),
 
   // Reliability Configuration
   enableCircuitBreaker: z.boolean().default(true),
   enableRateLimiter: z.boolean().default(true),
-  maxFailures: z.number().positive("Max failures must be positive").default(5),
-  resetTimeout: z.number().positive("Reset timeout must be positive").default(60000),
-  maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
-  retryDelay: z.number().nonnegative("Retry delay cannot be negative").default(1000),
-  rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
+  maxFailures: z.number().default(5).positive("Max failures must be positive"),
+  resetTimeout: z.number().default(60000).positive("Reset timeout must be positive"),
+  maxRetries: z.number().default(3).min(0, "Max retries cannot be negative"),
+  retryDelay: z.number().default(1000).min(0, "Retry delay cannot be negative"),
+  rateLimitDelay: z.number().default(100).min(0, "Rate limit delay cannot be negative"),
 
   // Trading Configuration
   enablePaperTrading: z.boolean().default(true),

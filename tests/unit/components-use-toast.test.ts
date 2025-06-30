@@ -21,13 +21,17 @@ interface Toast {
 
 // Mock the hook structure
 const mockUseToast = () => {
-  const [toasts, setToasts] = vi.fn().mockReturnValue([[], vi.fn()]);
+  // Create proper state management using vi.fn() for each method
+  const toastsList: Toast[] = [];
+  const toastFn = vi.fn();
+  const dismissFn = vi.fn();
+  const dismissAllFn = vi.fn();
 
   return {
-    toast: vi.fn(),
-    dismiss: vi.fn(),
-    dismissAll: vi.fn(),
-    toasts: [] as Toast[]
+    toast: toastFn,
+    dismiss: dismissFn,
+    dismissAll: dismissAllFn,
+    toasts: toastsList
   };
 };
 

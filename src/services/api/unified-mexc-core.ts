@@ -34,9 +34,9 @@ const BulkActivityInputSchema = z.object({
     .max(100, "Too many currencies"),
   options: z
     .object({
-      batchSize: z.number().min(1).max(20).default(5),
-      maxRetries: z.number().min(0).max(5).default(3),
-      rateLimitDelay: z.number().min(0).max(1000).default(200),
+      batchSize: z.number().default(5).min(1).max(20),
+      maxRetries: z.number().default(3).min(0).max(5),
+      rateLimitDelay: z.number().default(200).min(0).max(1000),
     })
     .optional(),
 });

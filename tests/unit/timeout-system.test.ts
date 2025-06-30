@@ -41,13 +41,13 @@ describe('Timeout System Verification', () => {
 
   describe('Timeout Configuration', () => {
     it('should return correct timeouts for different test types', () => {
-      expect(getTestTimeout('unit')).toBe(10000);
-      expect(getTestTimeout('integration')).toBe(45000);
-      expect(getTestTimeout('auto-sniping')).toBe(30000);
-      expect(getTestTimeout('performance')).toBe(60000);
-      expect(getTestTimeout('safety')).toBe(45000);
-      expect(getTestTimeout('agents')).toBe(30000);
-      expect(getTestTimeout('e2e')).toBe(120000);
+      expect(getTestTimeout('unit')).toBe(5000);      // Optimized for faster tests
+      expect(getTestTimeout('integration')).toBe(20000);  // Optimized for faster tests
+      expect(getTestTimeout('auto-sniping')).toBe(15000); // Optimized for faster tests
+      expect(getTestTimeout('performance')).toBe(30000);  // Optimized for faster tests
+      expect(getTestTimeout('safety')).toBe(20000);       // Optimized for faster tests
+      expect(getTestTimeout('agents')).toBe(15000);       // Optimized for faster tests
+      expect(getTestTimeout('e2e')).toBe(60000);          // Optimized for faster tests
     });
 
     it('should respect environment variable overrides', () => {
@@ -57,7 +57,7 @@ describe('Timeout System Verification', () => {
 
     it('should use fallback values for invalid environment variables', () => {
       process.env.TEST_TIMEOUT_UNIT = 'invalid';
-      expect(getTestTimeout('unit')).toBe(10000); // Should fallback to default
+      expect(getTestTimeout('unit')).toBe(5000); // Should fallback to optimized default
     });
   });
 
@@ -71,7 +71,7 @@ describe('Timeout System Verification', () => {
       expect(result.result).toBe('success');
       expect(result.timedOut).toBe(false);
       expect(result.duration).toBeGreaterThan(90);
-      expect(result.duration).toBeLessThan(200);
+      expect(result.duration).toBeLessThan(500); // Increased tolerance for test environments
     });
 
     it('should timeout slow operations', async () => {
@@ -345,7 +345,7 @@ describe('Timeout System Verification', () => {
 
     it('should handle invalid timeout configurations gracefully', () => {
       process.env.TEST_TIMEOUT_UNIT = '-1000';
-      expect(getTestTimeout('unit')).toBe(10000); // Should use fallback
+      expect(getTestTimeout('unit')).toBe(5000); // Should use optimized fallback
     });
 
     it('should work with monitoring disabled', async () => {

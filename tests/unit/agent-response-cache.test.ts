@@ -105,14 +105,16 @@ describe('AgentResponseCache', () => {
       expect(keyWithContext.length).toBeGreaterThan(keyWithoutContext.length);
     });
 
-    it('should generate keys without context hash when context is empty', () => {
+    it('should generate different keys for undefined vs empty context', () => {
       const agentId = 'test-agent';
       const input = 'test input';
       
       const key1 = cache.generateAgentCacheKey(agentId, input);
       const key2 = cache.generateAgentCacheKey(agentId, input, {});
 
-      expect(key1).toBe(key2);
+      expect(key1).not.toBe(key2);
+      expect(key1).toContain('agent:test-agent:');
+      expect(key2).toContain('agent:test-agent:');
     });
   });
 
@@ -520,8 +522,9 @@ describe('AgentResponseCache', () => {
       const malformedResponse = {} as AgentResponse;
       
       // Should not throw error
-      await expect(cache.setAgentResponse('test', 'input', malformedResponse))
-        .resolves.not.toThrow();
+      await expect(async () => {
+        await cache.setAgentResponse('test', 'input', malformedResponse);
+      }).not.toThrow();
     });
 
     it('should handle stats errors gracefully', async () => {

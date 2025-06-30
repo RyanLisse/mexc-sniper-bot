@@ -35,7 +35,7 @@ export function initializeTestUtilities(): void {
 
     generateTestId: () => `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
 
-    mockApiResponse: (data: any, status = 200) => ({
+    mockApiResponse: (data: any, status = 200, customHeaders: Record<string, string> = {}) => ({
       ok: status >= 200 && status < 300,
       status,
       statusText: status === 200 ? 'OK' : 'Error',
@@ -43,6 +43,7 @@ export function initializeTestUtilities(): void {
       text: () => Promise.resolve(JSON.stringify(data)),
       headers: new Headers({
         'content-type': 'application/json',
+        ...customHeaders,
       }),
     }),
   };

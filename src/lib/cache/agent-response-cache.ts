@@ -61,7 +61,7 @@ export class AgentResponseCache {
       // Create enhanced response with cache metadata
       const cachedResponse: CachedAgentResponse = {
         // Common interfaces AgentResponse fields
-        success: cached.success || true,
+        success: cached.success !== undefined ? cached.success : true,
         data: cached.data,
         error: cached.error,
         confidence: cached.confidence || 1.0,

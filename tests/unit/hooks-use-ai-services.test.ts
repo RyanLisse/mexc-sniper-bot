@@ -9,17 +9,18 @@ import { renderHook, act } from '@testing-library/react';
 
 // Mock the hook structure
 const mockUseAiServices = () => {
-  const [isLoading, setIsLoading] = vi.fn().mockReturnValue([false, vi.fn()]);
-  const [error, setError] = vi.fn().mockReturnValue([null, vi.fn()]);
-  const [services, setServices] = vi.fn().mockReturnValue([{}, vi.fn()]);
+  // Create proper state management using vi.fn() for each method
+  const isLoadingState = false;
+  const errorState = null;
+  const servicesState = {
+    openai: { available: true, status: 'connected' },
+    perplexity: { available: true, status: 'connected' }
+  };
 
   return {
-    isLoading: false,
-    error: null,
-    services: {
-      openai: { available: true, status: 'connected' },
-      perplexity: { available: true, status: 'connected' }
-    },
+    isLoading: isLoadingState,
+    error: errorState,
+    services: servicesState,
     initializeServices: vi.fn(),
     resetServices: vi.fn(),
     checkServiceHealth: vi.fn()
