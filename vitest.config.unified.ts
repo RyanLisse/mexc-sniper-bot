@@ -175,13 +175,13 @@ export default defineConfig({
     logHeapUsage: false,
     isolate: false,
     
-    // Simple pool management
-    pool: 'threads',
+    // Use forks instead of threads for better compatibility
+    pool: 'forks',
     poolOptions: {
-      threads: {
+      forks: {
         isolate: false,
-        maxThreads: process.env.CI ? 2 : 4,
-        minThreads: 1,
+        maxForks: process.env.CI ? 1 : 2,
+        minForks: 1,
       }
     }
   },

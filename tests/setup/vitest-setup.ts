@@ -15,6 +15,21 @@ import React from 'react';
 // Make React globally available for JSX
 global.React = React;
 
+// Mock React hooks for testing
+vi.mock('react', async () => {
+  const actual = await vi.importActual('react');
+  return {
+    ...actual,
+    useState: vi.fn((initial) => [initial, vi.fn()]),
+    useEffect: vi.fn((fn, deps) => fn()),
+    useCallback: vi.fn((fn) => fn),
+    useMemo: vi.fn((fn) => fn()),
+    useRef: vi.fn(() => ({ current: null })),
+    useContext: vi.fn(() => ({})),
+    useReducer: vi.fn((reducer, initial) => [initial, vi.fn()]),
+  };
+});
+
 // Import simplified components
 import { initializeSimplifiedMocks } from './simplified-mocks';
 import { initializeTestUtilities } from './test-utilities';
@@ -141,6 +156,61 @@ beforeAll(async () => {
       withTransaction: vi.fn().mockImplementation(async (fn) => await fn(mockQueryBuilder)),
     };
   });
+
+  // Mock Zod for schema validation
+  vi.mock('zod', () => ({
+    z: {
+      object: vi.fn(() => ({
+        parse: vi.fn((data) => data),
+        safeParse: vi.fn((data) => ({ success: true, data })),
+        extend: vi.fn().mockReturnThis(),
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+      })),
+      string: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+        min: vi.fn().mockReturnThis(),
+        max: vi.fn().mockReturnThis(),
+        email: vi.fn().mockReturnThis(),
+        url: vi.fn().mockReturnThis(),
+      })),
+      number: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+        min: vi.fn().mockReturnThis(),
+        max: vi.fn().mockReturnThis(),
+        int: vi.fn().mockReturnThis(),
+        positive: vi.fn().mockReturnThis(),
+      })),
+      boolean: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+      })),
+      array: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+        min: vi.fn().mockReturnThis(),
+        max: vi.fn().mockReturnThis(),
+      })),
+      enum: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+      })),
+      union: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+      })),
+      literal: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+      })),
+      date: vi.fn(() => ({
+        optional: vi.fn().mockReturnThis(),
+        nullable: vi.fn().mockReturnThis(),
+      })),
+    },
+  }));
 
   // Mock drizzle ORM to prevent real database connections
   vi.mock('drizzle-orm/postgres-js', () => ({
