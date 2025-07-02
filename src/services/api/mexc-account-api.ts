@@ -166,14 +166,36 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
       // Get valid trading pairs for USDT conversion validation
       const exchangeInfo = await this.getExchangeInfo();
+      console.info("[MexcAccountApi] Exchange info response:", {
+        success: exchangeInfo.success,
+        hasData: !!exchangeInfo.data,
+        isArray: Array.isArray(exchangeInfo.data),
+        symbolsCount: Array.isArray(exchangeInfo.data) ? exchangeInfo.data.length : 0,
+        error: exchangeInfo.error,
+      });
+
       const validTradingPairs = new Set(
-        exchangeInfo.success ? exchangeInfo.data.map((symbol) => symbol.symbol) : []
+        exchangeInfo.success 
+          ? exchangeInfo.data
+              .filter((symbol) => symbol.quoteAsset === "USDT" && symbol.status === "1")
+              .map((symbol) => symbol.symbol) 
+          : []
       );
+
+      console.info("[MexcAccountApi] Valid trading pairs:", {
+        count: validTradingPairs.size,
+        samplePairs: Array.from(validTradingPairs).slice(0, 10),
+      });
 
       // Filter non-zero balances first
       const nonZeroBalances = actualBalances.filter((balance: any) => {
         const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
         return total > 0;
+      });
+
+      console.info("[MexcAccountApi] Non-zero balances:", {
+        count: nonZeroBalances.length,
+        assets: nonZeroBalances.map((b: any) => b.asset),
       });
 
       // Get symbols we need prices for (excluding USDT)
@@ -182,7 +204,13 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         .map((balance: any) => `${balance.asset}USDT`)
         .filter((symbol: any) => validTradingPairs.has(symbol));
 
-      console.info(`[MexcAccountApi] Need prices for ${symbolsNeeded.length} symbols`);
+      console.info("[MexcAccountApi] Symbols needed for pricing:", {
+        count: symbolsNeeded.length,
+        symbols: symbolsNeeded,
+        allPossibleSymbols: nonZeroBalances
+          .filter((balance: any) => balance.asset !== "USDT")
+          .map((balance: any) => `${balance.asset}USDT`),
+      });
 
       // Fetch prices for specific symbols
       const priceMap = new Map<string, number>();
