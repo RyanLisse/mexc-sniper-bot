@@ -123,8 +123,8 @@ jobs:
       - name: Build application
         run: bun run build
 
-      - name: Run E2E tests
-        run: bun run test:e2e:ci
+      - name: Run E2E tests with coverage
+        run: npm run test:e2e:coverage
         env:
           CI: true
 

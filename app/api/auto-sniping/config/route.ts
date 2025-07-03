@@ -1,87 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/src/lib/api-response";
+import { ConfigurationManager } from "@/src/lib/unified-configuration-management";
+import { AutoSnipingConfigSchema } from "@/src/schemas/comprehensive-api-validation-schemas";
 
-// Auto-sniping configuration endpoint with proper schema
+// Auto-sniping configuration endpoint backed by the configuration manager
 export async function GET() {
   try {
-    const config = {
-      enabled: true,
-      maxPositionSize: 1000,
-      takeProfitPercentage: 10,
-      stopLossPercentage: 5,
-      patternConfidenceThreshold: 75,
-      maxConcurrentTrades: 3,
-      enableSafetyChecks: true,
-      enablePatternDetection: true,
-    };
-    
-    return NextResponse.json({
-      success: true,
-      data: config,
-      message: "Auto-sniping configuration retrieved successfully"
-    });
-    
+    const configManager = ConfigurationManager.getInstance();
+    const config = configManager.getSection("trading").autoSniping;
+
+    return NextResponse.json(
+      createSuccessResponse({
+        config,
+        message: "Auto-sniping configuration retrieved successfully",
+      })
+    );
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: "Failed to get auto-sniping configuration"
-    }, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse("Failed to get auto-sniping configuration", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    // Handle configuration updates
-    const allowedConfigFields = [
-      'enabled',
-      'maxPositionSize',
-      'takeProfitPercentage',
-      'stopLossPercentage',
-      'patternConfidenceThreshold',
-      'maxConcurrentTrades',
-      'enableSafetyChecks',
-      'enablePatternDetection'
-    ];
 
-    // Validate configuration update
-    const configUpdates: any = {};
-    Object.keys(body).forEach(key => {
-      if (allowedConfigFields.includes(key)) {
-        configUpdates[key] = body[key];
-      }
-    });
-
-    if (Object.keys(configUpdates).length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No valid configuration fields provided'
-      }, { status: 400 });
+    const parsed = AutoSnipingConfigSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        createErrorResponse("Invalid configuration", {
+          errors: parsed.error.format(),
+        }),
+        { status: 400 }
+      );
     }
 
-    // Mock successful configuration update
-    const updatedConfig = {
-      enabled: true,
-      maxPositionSize: 1000,
-      takeProfitPercentage: 10,
-      stopLossPercentage: 5,
-      patternConfidenceThreshold: 75,
-      maxConcurrentTrades: 3,
-      enableSafetyChecks: true,
-      enablePatternDetection: true,
-      ...configUpdates,
+    const configManager = ConfigurationManager.getInstance();
+    const currentTrading = configManager.getSection("trading");
+    const updatedTrading = {
+      ...currentTrading,
+      autoSniping: { ...currentTrading.autoSniping, ...parsed.data },
     };
 
-    return NextResponse.json({
-      success: true,
-      data: updatedConfig,
-      message: "Configuration updated successfully"
-    });
-    
+    configManager.updateConfig({ trading: updatedTrading });
+
+    return NextResponse.json(
+      createSuccessResponse({
+        config: configManager.getSection("trading").autoSniping,
+        message: "Configuration updated successfully",
+      })
+    );
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: "Failed to update configuration"
-    }, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse("Failed to update configuration", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500 }
+    );
   }
 }

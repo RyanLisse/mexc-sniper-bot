@@ -4,11 +4,10 @@
  * Handles processing and execution of snipe targets with minimal complexity.
  */
 
-import { and, eq, isNull, lt, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
-import { mexcTradingService } from "@/src/services/trading/mexc-trading-service";
-import type { TradingOrderRequest } from "@/src/schemas/mexc-api-validation-schemas";
+import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 // Simple types to avoid complex dependencies
 export interface SimpleTarget {
@@ -50,9 +49,10 @@ export interface SimpleServiceResponse<T> {
 
 export class TargetProcessor {
   private initialized = false;
+  private mexcService: UnifiedMexcServiceV2;
 
-  constructor(context?: any) {
-    // Simple constructor without complex context
+  constructor(mexcService: UnifiedMexcServiceV2, _context?: any) {
+    this.mexcService = mexcService;
   }
 
   async initialize(): Promise<void> {
@@ -208,31 +208,32 @@ export class TargetProcessor {
         throw new Error('Invalid quantity for execution');
       }
 
-      const order: TradingOrderRequest = {
-        userId: 'system',
+      console.log(`Executing trade: ${side} ${quantity} ${symbol} at ${price || 'market price'}`);
+
+      const orderParams = {
         symbol,
-        side: side as 'BUY' | 'SELL',
-        type: (target.orderType?.toUpperCase() as TradingOrderRequest['type']) || 'MARKET',
-        quantity,
-        price: price || undefined,
-        timeInForce: target.timeInForce as 'GTC' | 'IOC' | 'FOK' | undefined,
+        side: side.toUpperCase() as 'BUY' | 'SELL',
+        type: (target.orderType || 'MARKET').toUpperCase() as 'MARKET' | 'LIMIT' | 'STOP_LIMIT',
+        quantity: quantity.toString(),
+        price: price ? price.toString() : undefined,
+        timeInForce: (target.timeInForce || 'IOC') as 'GTC' | 'IOC' | 'FOK',
       };
 
-      const result = await mexcTradingService.executeTrade(order);
+      const result = await this.mexcService.placeOrder(orderParams);
 
-      if (result.success && result.data) {
-        return {
-          success: true,
-          orderId: result.data.orderId,
-          symbol: result.data.symbol,
-          quantity: parseFloat(result.data.executedQty ?? result.data.quantity),
-          price: result.data.price ? parseFloat(result.data.price) : undefined,
-          side: result.data.side,
-          timestamp: new Date(result.data.timestamp),
-        };
-      } else {
-        throw new Error(result.error || 'Trade execution failed');
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Order execution failed');
       }
+
+      return {
+        success: true,
+        orderId: String((result.data as any).orderId ?? ''),
+        symbol: String((result.data as any).symbol ?? symbol),
+        quantity: parseFloat((result.data as any).origQty ?? (result.data as any).quantity ?? quantity),
+        price: parseFloat((result.data as any).price ?? String(price)),
+        side: String((result.data as any).side ?? side),
+        timestamp: new Date(Number((result.data as any).transactTime) || Date.now()),
+      };
     } catch (error: any) {
       return {
         success: false,
@@ -270,8 +271,22 @@ export class TargetProcessor {
     }
   }
 
-  getActivePositionsCount(): number {
-    // Simple implementation
-    return 0;
+  async getActivePositionsCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(snipeTargets)
+        .where(
+          and(
+            inArray(snipeTargets.status, ["executing", "completed"]),
+            or(isNull(snipeTargets.executionStatus), eq(snipeTargets.executionStatus, "success"))
+          )
+        );
+
+      return result[0]?.count ?? 0;
+    } catch (error) {
+      console.error("Error fetching active positions count:", error);
+      return 0;
+    }
   }
 }

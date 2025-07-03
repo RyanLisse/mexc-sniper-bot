@@ -55,6 +55,14 @@ export class DatabaseCostProtector {
   updateLimits(newLimits: Partial<CostLimits>): void {
     this.limits = { ...this.limits, ...newLimits };
   }
+
+  getUsageStats(): { totalQueries: number; totalCost: number; averageCost: number } {
+    return {
+      totalQueries: 0,
+      totalCost: 0,
+      averageCost: 0
+    };
+  }
 }
 
 // Export global instance

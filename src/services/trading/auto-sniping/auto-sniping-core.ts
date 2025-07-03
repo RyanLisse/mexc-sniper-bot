@@ -56,7 +56,7 @@ export class AutoSnipingCore {
       metrics: {},
     };
 
-    this.targetProcessor = new TargetProcessor(context);
+    this.targetProcessor = new TargetProcessor(context.mexcService, context);
     this.configManager = new ConfigurationManager(context);
   }
 
@@ -238,14 +238,14 @@ export class AutoSnipingCore {
     }
   }
 
-  getStatus() {
+  async getStatus() {
     return {
       isActive: this.state.isActive,
       isPaused: this.state.isPaused,
       isExecuting: this.isExecuting,
       lastExecution: this.state.lastExecution,
       stats: this.state.stats,
-      activePositions: this.targetProcessor.getActivePositionsCount(),
+      activePositions: await this.targetProcessor.getActivePositionsCount(),
     };
   }
 
