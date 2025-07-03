@@ -8,6 +8,8 @@
 import { defineConfig, devices } from '@playwright/test'
 import path from 'path'
 
+const USE_COVERAGE = process.env.PW_EXPERIMENTAL_TEST_COVERAGE === '1'
+
 // Environment configuration
 const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3008';
 const TEST_ENVIRONMENT = process.env.TEST_ENVIRONMENT || 'test';
@@ -202,4 +204,9 @@ export default defineConfig({
     timestamp: new Date().toISOString(),
     ci: CI,
   },
+  ...(USE_COVERAGE && {
+    experimental: {
+      coverage: { outDir: 'coverage/e2e' }
+    }
+  })
 })
