@@ -15,7 +15,6 @@ jobs:
     name: Code Quality & Security
     runs-on: ubuntu-latest
     # Note: Currently tolerating pre-existing lint/TS errors while CI/CD infrastructure is established
-    # TODO: Address code quality issues in follow-up PRs
     
     steps:
       - name: Checkout code
