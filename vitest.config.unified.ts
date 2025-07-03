@@ -65,11 +65,12 @@ export default defineConfig({
     // No retries for speed
     retry: 0,
     
-    // Minimal coverage for performance
+    // Conditional coverage reporting
     coverage: {
-      enabled: false, // Disable coverage by default for speed
+      enabled: process.env.COVERAGE === 'true',
       provider: 'v8',
-      reporter: ['text'],
+      reporter: ['text', 'json', 'lcov'],
+      reportsDirectory: './coverage/vitest'
     },
     
     // Simplified environment variables for testing

@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run --config=vitest.config.unified.ts",
     "test:e2e": "playwright test",
+    "test:e2e:coverage": "PW_EXPERIMENTAL_TEST_COVERAGE=1 playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:stagehand": "echo 'Stagehand tests not implemented yet'",
@@ -27,7 +28,8 @@
     "test:fast:unit": "vitest run tests/unit/",
     "test:fast:integration": "vitest run tests/integration/",
     "test:fast:parallel": "vitest run --config=vitest.config.unified.ts --reporter=basic",
-    "test:emergency": "vitest run --config=vitest.config.unified.ts --reporter=basic --run"
+    "test:emergency": "vitest run --config=vitest.config.unified.ts --reporter=basic --run",
+    "test:coverage": "rm -rf coverage .nyc_output && COVERAGE=true vitest run --config=vitest.config.unified.ts && npm run test:e2e:coverage && node scripts/merge-coverage.js"
   },
   "dependencies": {
     "@browserbasehq/stagehand": "^2.4.0",
@@ -85,7 +87,8 @@
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "istanbul-lib-coverage": "^3.2.1"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.11",
