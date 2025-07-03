@@ -8,7 +8,7 @@
 
 "use client";
 
-import { Suspense, type ReactNode } from "react";
+import { type ReactNode, Suspense } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 

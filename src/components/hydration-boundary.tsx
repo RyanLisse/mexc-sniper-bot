@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { SSRSafeErrorBoundary } from "./error-boundary";
 
 interface HydrationBoundaryProps {

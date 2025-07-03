@@ -5,7 +5,7 @@
  * across the React codebase without losing functionality.
  */
 
-import { useMemo, KeyboardEvent, ComponentType } from "react";
+import { ComponentType, KeyboardEvent, useMemo } from "react";
 
 /**
  * Generate stable keys for array rendering without using array indexes

@@ -1,10 +1,5 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { 
   Activity, 
   AlertTriangle, 
@@ -20,8 +15,13 @@ import {
   TrendingUp,
   Zap 
 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
 import { usePatternSniper } from "../../hooks/use-pattern-sniper";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface SnipeTarget {
   id: string;

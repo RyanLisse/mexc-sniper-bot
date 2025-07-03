@@ -7,7 +7,7 @@
  * tuning and optimization interfaces.
  */
 
-import { forwardRef, ChangeEvent } from "react";
+import { ChangeEvent, forwardRef } from "react";
 
 interface SliderProps {
   value?: number[];

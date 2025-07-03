@@ -7,12 +7,12 @@
 
 import { EventEmitter } from "node:events";
 import type { 
-  EmergencySession,
-  EmergencyContact,
-  ContactChannel,
-  CommunicationPlan,
   CommunicationEntry,
-  EmergencyEvent
+  CommunicationPlan,
+  ContactChannel,
+  EmergencyContact,
+  EmergencyEvent, 
+  EmergencySession
 } from './emergency-types';
 
 /**

@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
 import { Menu, X } from "lucide-react";
-import { useCallback, useEffect, ReactNode } from "react";
+import React, { ReactNode, useCallback, useEffect } from "react";
 import { useIsMobile } from "../../hooks/use-mobile-clean";
 import { cn } from "../../lib/utils";
 

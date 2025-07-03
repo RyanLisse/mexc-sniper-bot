@@ -1,10 +1,10 @@
 "use client";
 
+import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 export function UnifiedSystemCheck() {
   const [isChecking, setIsChecking] = useState(false);

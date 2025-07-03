@@ -12,13 +12,13 @@
     }
   },
   "files": {
-    "include": [
+    "includes": [
       "src/**/*.ts",
       "src/**/*.tsx",
       "app/**/*.ts", 
       "app/**/*.tsx"
     ],
-    "ignore": [
+    "experimentalScannerIgnores": [
       "**/node_modules/**",
       "**/.next/**",
       "**/dist/**",

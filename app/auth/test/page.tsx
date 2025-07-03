@@ -1,12 +1,12 @@
 "use client";
 
-import { useSupabaseAuth } from '@/src/components/auth/supabase-auth-provider-clean';
+import { useState } from 'react';
 import { AuthStatusChecker } from '@/src/components/auth/auth-status-checker';
+import { useSupabaseAuth } from '@/src/components/auth/supabase-auth-provider-clean';
 import { Button } from '@/src/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { useState } from 'react';
 
 export default function AuthTestPage() {
   const { user, session, isLoading, isHydrated, signIn, signUp, signOut, signInWithProvider } = useSupabaseAuth();

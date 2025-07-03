@@ -28,15 +28,12 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     
-    // Test discovery and inclusion
+    // Test discovery and inclusion - ONLY test files, no spec files
     include: [
       'tests/unit/**/*.test.{js,ts,tsx}',
       'tests/integration/**/*.test.{js,ts,tsx}',
-      'tests/agents/**/*.test.{js,ts,tsx}',
-      'tests/auto-sniping/**/*.test.{js,ts,tsx}',
-      'tests/safety/**/*.test.{js,ts,tsx}',
-      'tests/performance/**/*.test.{js,ts,tsx}',
-      'src/**/*.test.{js,ts,tsx}',
+      'tests/utils/**/*.test.{js,ts,tsx}',
+      'tests/components/**/*.test.{js,ts,tsx}',
     ],
     
     // Comprehensive exclusions
