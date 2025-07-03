@@ -351,18 +351,11 @@ For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/d
 
 ### Core Documentation
 - [Agent Architecture](docs/architecture/AGENTS.md) - Quick setup guide for AI agents
-- [TypeScript Multi-Agent Architecture](docs/typescript-multi-agent-architecture.md) - Technical implementation details
 - [Stagehand E2E Testing](docs/testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
-
-### Architecture & Design
-- [Architecture Diagram](docs/architecture/ARCHITECTURE_DIAGRAM.md) - System overview
-- [Transaction Locking System](docs/architecture/TRANSACTION_LOCKING_SYSTEM.md) - Concurrency control
-- [Coordination & Memory Bank](docs/architecture/coordination.md) - Agent coordination
 
 ### Deployment & Operations
 - [Deployment Guide](docs/deployment/DEPLOYMENT.md) - Production deployment
 - [NeonDB Best Practices](docs/deployment/neon-best-practices.md) - Database optimization
-- [Vercel Configuration](docs/vercel-configuration.md) - Serverless deployment
 
 ### Development
 - [Contributing Guide](docs/development/CONTRIBUTING.md) - Development guidelines

@@ -6,38 +6,20 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 ### 🏗️ Architecture Documentation
 - [**Quick Agent Setup**](architecture/AGENTS.md) - Quick setup guide for AI agents (essential for developers)
-- [**TypeScript Multi-Agent Architecture**](typescript-multi-agent-architecture.md) - Complete technical implementation details
-- [**Architecture Overview**](architecture/ARCHITECTURE_DIAGRAM.md) - Visual system architecture with diagrams
-- [**Agent Orchestrator Roles**](agent-orchestrator-roles.md) - Orchestrator patterns and coordination
-- [**Transaction Locking System**](architecture/TRANSACTION_LOCKING_SYSTEM.md) - Concurrency control implementation
-- [**Memory Bank System**](architecture/memory-bank.md) - State management and persistence
-- [**Coordination Patterns**](architecture/coordination.md) - Multi-agent coordination strategies
 
 ### 🚀 Deployment & Operations
 - [**Production Deployment Guide**](deployment/DEPLOYMENT.md) - Complete deployment instructions for Vercel & Railway
 - [**NeonDB Best Practices**](deployment/neon-best-practices.md) - Database optimization and configuration
-- [**Vercel Configuration**](vercel-configuration.md) - Platform-specific settings
-- [**Deployment Verification**](deployment-verification-report.md) - Post-deployment checklist
 
 ### 📘 Development Guides
 - [**Quick Start Guide**](guides/QUICKSTART.md) - Get up and running quickly
 - [**Secure Encryption Guide**](guides/SECURE_ENCRYPTION_QUICKSTART.md) - API key encryption setup
 - [**Contributing Guide**](development/CONTRIBUTING.md) - Development guidelines and standards
 - [**OpenCode Development**](development/OpenCode.md) - Open source contribution guide
-- [**Error Handling Guide**](error-handling-migration-guide.md) - Error management patterns
-- [**Database Migration Guide**](database-foreign-key-migration.md) - Schema evolution practices
-
-### 🤖 Technical Documentation
-- [**Sniper System Overview**](sniper-system.md) - Core trading bot implementation
-- [**API Trigger Routes**](api-trigger-routes.md) - Workflow trigger endpoints
-- [**Trading Strategies**](new_strategies.md) - Strategy implementation guide
-- [**Sprint Checklist**](sprint_checklist_ts_migration.md) - TypeScript migration tracking
 
 ### 🧪 Testing Documentation
 - [**Stagehand E2E Testing**](testing/STAGEHAND_E2E_TESTING.md) - AI-powered end-to-end testing framework
 
-### 📸 Visual Documentation
-- [**Screenshots Gallery**](screenshots/) - UI/UX reference images
 
 ## 🗺️ Quick Navigation
 
@@ -48,14 +30,12 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 ### For Developers
 1. **Essential**: Read [Quick Agent Setup](architecture/AGENTS.md) - contains troubleshooting for common issues
-2. Study [TypeScript Multi-Agent Architecture](typescript-multi-agent-architecture.md) - complete technical details
-3. Review [Stagehand E2E Testing](testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
-4. Follow [Contributing Guide](development/CONTRIBUTING.md) - development standards
+2. Review [Stagehand E2E Testing](testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
+3. Follow [Contributing Guide](development/CONTRIBUTING.md) - development standards
 
 ### For DevOps
 1. Follow [Deployment Guide](deployment/DEPLOYMENT.md)
 2. Configure [NeonDB Best Practices](deployment/neon-best-practices.md)
-3. Review [Vercel Configuration](vercel-configuration.md)
 
 ## 🔍 Key Features Documentation
 
@@ -105,7 +85,7 @@ To contribute to the documentation:
 4. Add diagrams for complex concepts
 5. Update the index when adding new docs
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for general contribution guidelines.
+See [Contributing Guide](development/CONTRIBUTING.md) for general contribution guidelines.
 
 ## 📞 Support
 
