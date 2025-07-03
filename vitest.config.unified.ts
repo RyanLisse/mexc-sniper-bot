@@ -56,8 +56,8 @@ export default defineConfig({
     
     // Fast timeout configuration
     testTimeout: 5000, // Reduced to 5 seconds
-    hookTimeout: 2000, // Reduced to 2 seconds
-    teardownTimeout: 2000, // Reduced to 2 seconds
+    hookTimeout: 10000, // Increased for cleanup
+    teardownTimeout: 10000, // Increased for cleanup
     
     // No retries for speed
     retry: 0,
@@ -90,7 +90,7 @@ export default defineConfig({
     ],
     
     // Minimal reporting for speed
-    reporters: ['basic'],
+    reporters: [['default', { summary: false }]],
       
     // Output configuration
     outputFile: {

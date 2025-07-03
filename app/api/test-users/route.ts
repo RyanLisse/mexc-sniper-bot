@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
 import { db, users } from '@/src/db';
 
 export async function DELETE(request: NextRequest) {

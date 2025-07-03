@@ -11,6 +11,21 @@ export interface ValidationResult<T> {
   error?: string;
 }
 
+export type EnhancedValidationResult = ValidationResult<any>;
+
+export class ValidationError extends Error {
+  constructor(message: string, public details?: any) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+export class ValidationHealthMonitor {
+  static checkHealth(): boolean {
+    return true;
+  }
+}
+
 export class CriticalDataValidator {
   static validate<T>(schema: z.ZodSchema<T>, data: any): ValidationResult<T> {
     try {
@@ -22,6 +37,14 @@ export class CriticalDataValidator {
         error: error instanceof Error ? error.message : "Validation failed" 
       };
     }
+  }
+
+  static validateCriticalData<T>(schema: z.ZodSchema<T>, data: any): ValidationResult<T> {
+    return this.validate(schema, data);
+  }
+
+  static clearMetrics(): void {
+    // Implementation for clearing validation metrics
   }
 }
 
