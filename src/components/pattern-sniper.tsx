@@ -15,7 +15,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { memo, useCallback, useMemo, useState, type FC } from "react";
+import { type FC, memo, useCallback, useMemo, useState } from "react";
 import { usePatternSniper } from "../hooks/use-pattern-sniper";
 import { normalizeVcoinId } from "../utils/trading-data-transformers";
 import { Badge } from "./ui/badge";

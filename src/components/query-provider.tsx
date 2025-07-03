@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, type ReactNode, Suspense } from "react";
 import { queryClient } from "../lib/query-client";
 import { EnvironmentSafeComponent } from "./client-safe-wrapper";
 import { ErrorBoundary } from "./error-boundary";

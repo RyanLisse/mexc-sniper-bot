@@ -6,11 +6,11 @@
  */
 
 import type { 
-  EmergencyProtocol, 
-  EmergencyLevel, 
-  EmergencyAction,
-  EscalationRule,
   CommunicationPlan,
+  EmergencyAction,
+  EmergencyLevel, 
+  EmergencyProtocol, 
+  EscalationRule,
   RecoveryCheckpoint
 } from './emergency-types';
 

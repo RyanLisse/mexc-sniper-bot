@@ -8,7 +8,7 @@
  */
 
 import { AlertTriangle, HelpCircle, Home, RefreshCw } from "lucide-react";
-import { Component, type ErrorInfo, type ReactNode, type ComponentType } from "react";
+import { Component, type ComponentType, type ErrorInfo, type ReactNode } from "react";
 import { errorHandler, type StandardizedErrorContext } from "../../lib/standardized-error-handler";
 import { createLogger } from "../../lib/unified-logger";
 import { Button } from "../ui/button";

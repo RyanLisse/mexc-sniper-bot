@@ -1,127 +1,29 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "linter": {
-    "enabled": false,
-    "rules": {
-      "recommended": false,
-      "all": false,
-      "correctness": {
-        "all": false
-      },
-      "suspicious": {
-        "all": false
-      },
-      "style": {
-        "all": false
-      },
-      "complexity": {
-        "all": false
-      },
-      "security": {
-        "all": false
-      },
-      "performance": {
-        "all": false
-      },
-      "a11y": {
-        "all": false
-      },
-      "nursery": {
-        "all": false
-      }
-    }
+    "enabled": false
   },
   "formatter": {
     "enabled": false
   },
-  "organizeImports": {
-    "enabled": false
-  },
   "javascript": {
     "formatter": {
-      "enabled": false
-    },
-    "linter": {
-      "enabled": false
-    }
-  },
-  "typescript": {
-    "formatter": {
-      "enabled": false
-    },
-    "linter": {
-      "enabled": false
-    }
-  },
-  "json": {
-    "formatter": {
-      "enabled": false
-    },
-    "linter": {
-      "enabled": false
-    }
-  },
-  "css": {
-    "formatter": {
-      "enabled": false
-    },
-    "linter": {
       "enabled": false
     }
   },
   "files": {
     "includes": [
       "src/**/*.ts",
-      "src/**/*.tsx", 
-      "src/**/*.js",
-      "src/**/*.jsx",
-      "app/**/*.ts",
-      "app/**/*.tsx",
-      "app/**/*.js", 
-      "app/**/*.jsx",
-      "**/*.json",
-      "**/*.css",
-      "tests/**/*.ts",
-      "tests/**/*.tsx",
-      "tests/**/*.js",
-      "tests/**/*.jsx",
-      "*.ts",
-      "*.tsx",
-      "*.js",
-      "*.jsx"
+      "src/**/*.tsx",
+      "app/**/*.ts", 
+      "app/**/*.tsx"
     ],
     "experimentalScannerIgnores": [
       "**/node_modules/**",
       "**/.next/**",
       "**/dist/**",
-      "**/build/**",
-      "**/.turbo/**",
-      "**/*.min.js",
-      "**/coverage/**",
-      "**/.venv/**",
-      "**/__pycache__/**",
-      "**/test-results.json",
       "**/test-results/**",
-      "**/test-screenshots/**",
-      "**/.claude/**",
-      "**/playwright-report/**",
-      "**/blob-report/**",
-      "**/.playwright/**",
-      "**/*.d.ts",
-      "**/migrations/**",
-      "**/drizzle/**",
-      "**/.env*",
-      "**/public/**",
-      "**/next.config.*",
-      "**/tailwind.config.*",
-      "**/postcss.config.*",
-      "**/drizzle.config.*"
+      "**/playwright-report/**"
     ]
-  },
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true,
-    "defaultBranch": "main"
   }
 }

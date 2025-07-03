@@ -1,5 +1,5 @@
 "use client";
-import { forwardRef, ReactNode, ReactElement, HTMLAttributes, lazy, Suspense } from "react";
+import { forwardRef, HTMLAttributes, lazy, ReactElement, ReactNode, Suspense } from "react";
 import { ErrorBoundary } from "../error-boundary";
 
 export interface ChartConfig {

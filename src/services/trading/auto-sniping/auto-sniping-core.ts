@@ -5,6 +5,7 @@
  * Extracted from large auto-sniping.ts for better maintainability.
  */
 
+import type { AutoSnipeTarget } from "@/src/schemas/unified";
 import type {
   CoreTradingConfig,
   ModuleContext,
@@ -12,10 +13,8 @@ import type {
   ServiceResponse,
   TradeResult,
 } from "../consolidated/core-trading/types";
-import type { AutoSnipeTarget } from "@/src/schemas/unified";
-
-import { TargetProcessor } from "./target-processor";
 import { ConfigurationManager } from "./configuration-manager";
+import { TargetProcessor } from "./target-processor";
 
 export class AutoSnipingCore {
   private context: ModuleContext;

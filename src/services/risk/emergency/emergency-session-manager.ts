@@ -8,14 +8,14 @@
 import { EventEmitter } from "node:events";
 import { createTimer } from "@/src/lib/structured-logger";
 import type { 
-  EmergencySession, 
-  EmergencyLevel, 
+  CommunicationEntry, 
   EmergencyAction,
-  EmergencyProtocol,
-  EmergencyMetrics,
-  EmergencyEvent,
   EmergencyContext,
-  CommunicationEntry
+  EmergencyEvent,
+  EmergencyLevel, 
+  EmergencyMetrics,
+  EmergencyProtocol,
+  EmergencySession 
 } from './emergency-types';
 
 /**

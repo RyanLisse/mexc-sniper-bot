@@ -10,9 +10,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { db } from '../../src/db'
 import '@testing-library/jest-dom'
-import React from 'react'
+import * as React from 'react'
 import { globalTimeoutMonitor } from '../utils/timeout-utilities'
-import { getGlobalMockStore, resetMockSystem, seedMockData, initializeUnifiedMocks, setupTestData } from './unified-mock-system'
+// Removed unified-mock-system import due to type conflicts
 
 // Make React globally available for JSX without imports
 globalThis.React = React
@@ -24,11 +24,6 @@ declare global {
   var mockDataStore: any
   var testUtils: any
   var testCleanupFunctions: Array<() => Promise<void>>
-  var localStorage: Storage
-  var sessionStorage: Storage
-  var WebSocket: any
-  var fetch: any
-  var React: typeof import('react')
 }
 
 // Global test configuration
@@ -84,31 +79,18 @@ beforeAll(async () => {
     console.log('🔗 Integration test mode: Using real database connections')
   }
 
-  // INITIALIZE UNIFIED MOCK SYSTEM (replaces 4500+ lines of redundant mocks)
-  console.log('🚀 Initializing UNIFIED MOCK SYSTEM - eliminating redundancy...')
+  // BASIC TEST ENVIRONMENT SETUP
+  console.log('🚀 Initializing test environment...')
   
   try {
-    const { store, cleanup } = await initializeUnifiedMocks({
-      enableDatabase: !isIntegrationTest, // Mock database for unit tests
-      enableAPI: true,                    // Always mock external APIs  
-      enableBrowser: true,                // Always mock browser APIs
-      isIntegrationTest
-    });
-
-    // Make store globally available for tests
-    global.mockDataStore = store;
-    
-    // Register cleanup for test teardown
+    // Setup basic test globals
+    global.mockDataStore = {};
     global.testCleanupFunctions = global.testCleanupFunctions || [];
-    global.testCleanupFunctions.push(cleanup);
     
-    // Setup basic test data scenario
-    setupTestData('basic');
-    
-    console.log('✅ UNIFIED MOCK SYSTEM initialized successfully - redundancy eliminated!');
+    console.log('✅ Test environment initialized successfully');
     
   } catch (error) {
-    console.error('❌ Failed to initialize unified mock system:', error);
+    console.error('❌ Failed to initialize test environment:', error);
     throw error;
   }
 

@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useState, type KeyboardEvent } from "react";
+import { type KeyboardEvent, memo, useCallback, useState } from "react";
 import { useAuth } from "./auth/supabase-auth-provider";
 import { Badge } from "./ui/badge";
 

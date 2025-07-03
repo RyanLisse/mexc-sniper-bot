@@ -10,10 +10,10 @@ import {
   DomainValidationError,
 } from "../../errors/trading-errors";
 import {
-  SafetyEventFactory,
   type RiskProfileCreated,
   type RiskProfileUpdated,
   type RiskThresholdViolated,
+  SafetyEventFactory,
 } from "../../events/safety-events";
 
 // Risk tolerance level enumeration

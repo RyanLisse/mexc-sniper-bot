@@ -1,7 +1,7 @@
 "use client";
 
 import * as ProgressPrimitive from "@radix-ui/react-progress";
-import { forwardRef, ElementRef, ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef, ElementRef, forwardRef } from "react";
 
 import { cn } from "../../lib/utils";
 

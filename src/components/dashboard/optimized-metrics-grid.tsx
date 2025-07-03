@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpRight, DollarSign, Eye, Target, TrendingUp, Zap } from "lucide-react";
-import { memo, ComponentType, ReactNode } from "react";
+import { ComponentType, memo, ReactNode } from "react";
 import { useCurrencyFormatting } from "../../hooks/use-currency-formatting";
 import { Card, CardContent } from "../ui/card";
 

@@ -135,6 +135,9 @@ DATABASE_URL=sqlite:///./mexc_sniper.db
 # Optional - Workflow Orchestration (auto-generated if not provided)
 # INNGEST_SIGNING_KEY=your_signing_key
 # INNGEST_EVENT_KEY=your_event_key
+# Optional credentials for automated E2E tests
+TEST_USER_EMAIL=your_test_email@example.com
+TEST_USER_PASSWORD=your_test_password
 ```
 
 ### 2.1. Kinde Authentication Setup

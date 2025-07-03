@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { ComponentType } from "react";
 import {
   Activity,
   AlertCircle,
@@ -17,6 +16,7 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
