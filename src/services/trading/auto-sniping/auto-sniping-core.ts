@@ -56,7 +56,7 @@ export class AutoSnipingCore {
       metrics: {},
     };
 
-    this.targetProcessor = new TargetProcessor(context);
+    this.targetProcessor = new TargetProcessor(context.mexcService, context);
     this.configManager = new ConfigurationManager(context);
   }
 
