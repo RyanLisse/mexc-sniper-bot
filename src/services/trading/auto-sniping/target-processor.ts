@@ -7,6 +7,7 @@
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
+import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 
 // Simple types to avoid complex dependencies
 export interface SimpleTarget {
@@ -48,9 +49,10 @@ export interface SimpleServiceResponse<T> {
 
 export class TargetProcessor {
   private initialized = false;
+  private mexcService: UnifiedMexcServiceV2;
 
-  constructor(context?: any) {
-    // Simple constructor without complex context
+  constructor(mexcService: UnifiedMexcServiceV2, _context?: any) {
+    this.mexcService = mexcService;
   }
 
   async initialize(): Promise<void> {
@@ -206,29 +208,32 @@ export class TargetProcessor {
         throw new Error('Invalid quantity for execution');
       }
 
-      // TODO: Replace with actual MEXC API trading execution
-      // For now, simulate execution with validation
       console.log(`Executing trade: ${side} ${quantity} ${symbol} at ${price || 'market price'}`);
-      
-      // Simulate execution delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate 90% success rate
-      const success = Math.random() > 0.1;
-      
-      if (success) {
-        return {
-          success: true,
-          orderId: `mexc_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          symbol,
-          quantity,
-          price: price || Math.random() * 100, // Mock market price
-          side,
-          timestamp: new Date(),
-        };
-      } else {
-        throw new Error('Order execution failed - market conditions');
+
+      const orderParams = {
+        symbol,
+        side: side.toUpperCase() as 'BUY' | 'SELL',
+        type: (target.orderType || 'MARKET').toUpperCase() as 'MARKET' | 'LIMIT' | 'STOP_LIMIT',
+        quantity: quantity.toString(),
+        price: price ? price.toString() : undefined,
+        timeInForce: (target.timeInForce || 'IOC') as 'GTC' | 'IOC' | 'FOK',
+      };
+
+      const result = await this.mexcService.placeOrder(orderParams);
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Order execution failed');
       }
+
+      return {
+        success: true,
+        orderId: String((result.data as any).orderId ?? ''),
+        symbol: String((result.data as any).symbol ?? symbol),
+        quantity: parseFloat((result.data as any).origQty ?? (result.data as any).quantity ?? quantity),
+        price: parseFloat((result.data as any).price ?? String(price)),
+        side: String((result.data as any).side ?? side),
+        timestamp: new Date(Number((result.data as any).transactTime) || Date.now()),
+      };
     } catch (error: any) {
       return {
         success: false,
