@@ -111,13 +111,30 @@ export class CircuitBreakerSafetyService {
       try {
         this._logger = {
           info: (message: string, context?: any) =>
-            console.info("[circuit-breaker-safety-service]", message, context || ""),
+            console.info(
+              "[circuit-breaker-safety-service]",
+              message,
+              context || ""
+            ),
           warn: (message: string, context?: any) =>
-            console.warn("[circuit-breaker-safety-service]", message, context || ""),
+            console.warn(
+              "[circuit-breaker-safety-service]",
+              message,
+              context || ""
+            ),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[circuit-breaker-safety-service]", message, context || "", error || ""),
+            console.error(
+              "[circuit-breaker-safety-service]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
-            console.debug("[circuit-breaker-safety-service]", message, context || ""),
+            console.debug(
+              "[circuit-breaker-safety-service]",
+              message,
+              context || ""
+            ),
         };
       } catch (_error) {
         // Fallback to console logging during build time
@@ -150,16 +167,20 @@ export class CircuitBreakerSafetyService {
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]: "circuit-breaker-safety",
+          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]:
+            "circuit-breaker-safety",
           "operation.type": "diagnosis",
         },
       },
       async (span) => {
         try {
-          const statusResponse = await this.mexcService.getCircuitBreakerStatus();
+          const statusResponse =
+            await this.mexcService.getCircuitBreakerStatus();
 
           if (!statusResponse.success) {
-            span.recordException(new Error("Circuit breaker status check failed"));
+            span.recordException(
+              new Error("Circuit breaker status check failed")
+            );
             span.setStatus({ code: SpanStatusCode.ERROR });
             const result = {
               isInProtectiveState: true,
@@ -182,7 +203,8 @@ export class CircuitBreakerSafetyService {
 
           let timeSinceLastFailure: number | undefined;
           if (status.lastFailureTime) {
-            timeSinceLastFailure = Date.now() - new Date(status.lastFailureTime).getTime();
+            timeSinceLastFailure =
+              Date.now() - new Date(status.lastFailureTime).getTime();
           }
 
           let result: CircuitBreakerDiagnosis;
@@ -194,7 +216,8 @@ export class CircuitBreakerSafetyService {
               canAutoRecover: true,
               timeSinceLastFailure,
               failureCount,
-              recommendedAction: "Reset circuit breaker after safety validation",
+              recommendedAction:
+                "Reset circuit breaker after safety validation",
               severity: failureCount > 10 ? "CRITICAL" : "HIGH",
             };
           } else if (status.state === "HALF_OPEN") {
@@ -231,7 +254,9 @@ export class CircuitBreakerSafetyService {
           span.setStatus({ code: SpanStatusCode.OK });
           return result;
         } catch (error) {
-          span.recordException(error instanceof Error ? error : new Error(String(error)));
+          span.recordException(
+            error instanceof Error ? error : new Error(String(error))
+          );
           span.setStatus({ code: SpanStatusCode.ERROR });
           const result = {
             isInProtectiveState: true,
@@ -257,13 +282,16 @@ export class CircuitBreakerSafetyService {
    * Execute safe circuit breaker recovery process with coordination
    * FIXED: Now uses coordinated circuit breaker to prevent race conditions
    */
-  async executeCircuitBreakerRecovery(_reliabilityManager: any): Promise<RecoveryResult> {
+  async executeCircuitBreakerRecovery(
+    _reliabilityManager: any
+  ): Promise<RecoveryResult> {
     return await this.tracer.startActiveSpan(
       "trading.circuit_breaker_recovery",
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]: "circuit-breaker-safety",
+          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]:
+            "circuit-breaker-safety",
           "operation.type": "recovery",
         },
       },
@@ -284,7 +312,8 @@ export class CircuitBreakerSafetyService {
               return {
                 success: false,
                 steps,
-                reason: "System connectivity check failed - unsafe to reset circuit breaker",
+                reason:
+                  "System connectivity check failed - unsafe to reset circuit breaker",
                 duration: Date.now() - startTime,
                 timestamp,
               };
@@ -292,11 +321,15 @@ export class CircuitBreakerSafetyService {
             steps.push("Validated safety conditions under coordination lock");
 
             // Get coordinated circuit breaker instance
-            const mexcApiBreaker = this.coordinatedRegistry.getBreaker("mexc-api", this.serviceId, {
-              failureThreshold: 3,
-              recoveryTimeout: 30000,
-              enableCoordination: true,
-            });
+            const mexcApiBreaker = this.coordinatedRegistry.getBreaker(
+              "mexc-api",
+              this.serviceId,
+              {
+                failureThreshold: 3,
+                recoveryTimeout: 30000,
+                enableCoordination: true,
+              }
+            );
 
             if (!mexcApiBreaker) {
               return {
@@ -325,7 +358,8 @@ export class CircuitBreakerSafetyService {
             }
 
             // Verify connectivity after reset
-            const postResetConnectivity = await this.mexcService.testConnectivityWithResponse();
+            const postResetConnectivity =
+              await this.mexcService.testConnectivityWithResponse();
             if (!postResetConnectivity.success) {
               return {
                 success: false,
@@ -339,7 +373,9 @@ export class CircuitBreakerSafetyService {
 
             // Final validation
             const finalState = mexcApiBreaker.getStats();
-            steps.push(`Coordinated circuit breaker state: ${finalState.state}`);
+            steps.push(
+              `Coordinated circuit breaker state: ${finalState.state}`
+            );
             steps.push("Coordinated recovery process completed successfully");
 
             return {
@@ -372,7 +408,10 @@ export class CircuitBreakerSafetyService {
             span.setStatus({ code: SpanStatusCode.OK });
           } else {
             span.recordException(new Error(result.reason || "Recovery failed"));
-            span.setStatus({ code: SpanStatusCode.ERROR, message: result.reason });
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: result.reason,
+            });
           }
 
           return result;
@@ -389,7 +428,9 @@ export class CircuitBreakerSafetyService {
             timestamp,
           };
 
-          span.recordException(error instanceof Error ? error : new Error(String(error)));
+          span.recordException(
+            error instanceof Error ? error : new Error(String(error))
+          );
           span.setStatus({ code: SpanStatusCode.ERROR });
           span.setAttributes({
             "recovery.success": false,
@@ -443,7 +484,9 @@ export class CircuitBreakerSafetyService {
 
       // FIXED: Auto-sniping is ALWAYS enabled by system design
       // Removed dependency on AUTO_SNIPING_ENABLED environment variable
-      console.info("ℹ️ Auto-sniping is permanently enabled by system configuration");
+      console.info(
+        "ℹ️ Auto-sniping is permanently enabled by system configuration"
+      );
 
       // Risk management configuration
       const maxPositionSize = process.env.MAX_POSITION_SIZE;
@@ -458,7 +501,9 @@ export class CircuitBreakerSafetyService {
       if (ready) {
         recommendations.push("System is ready for auto-sniping operations");
       } else {
-        recommendations.push("Resolve all blockers before enabling auto-sniping");
+        recommendations.push(
+          "Resolve all blockers before enabling auto-sniping"
+        );
       }
 
       return {
@@ -492,7 +537,8 @@ export class CircuitBreakerSafetyService {
       {
         kind: SpanKind.INTERNAL,
         attributes: {
-          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]: "circuit-breaker-safety",
+          [TRADING_TELEMETRY_CONFIG.attributes.agent_type]:
+            "circuit-breaker-safety",
           "operation.type": "comprehensive_safety_check",
         },
       },
@@ -516,10 +562,13 @@ export class CircuitBreakerSafetyService {
         // Connectivity check
         let connectivityCheck: SafetyCheckResult;
         try {
-          const connectivity = await this.mexcService.testConnectivityWithResponse();
+          const connectivity =
+            await this.mexcService.testConnectivityWithResponse();
           connectivityCheck = {
             status: connectivity.success ? "PASS" : "FAIL",
-            message: connectivity.success ? "API connectivity healthy" : "API connectivity failed",
+            message: connectivity.success
+              ? "API connectivity healthy"
+              : "API connectivity failed",
             details: connectivity,
             timestamp,
           };
@@ -531,7 +580,9 @@ export class CircuitBreakerSafetyService {
           connectivityCheck = {
             status: "FAIL",
             message: "Connectivity test failed",
-            details: { error: error instanceof Error ? error.message : "Unknown error" },
+            details: {
+              error: error instanceof Error ? error.message : "Unknown error",
+            },
             timestamp,
           };
           recommendations.push("Investigate connectivity issues");
@@ -541,7 +592,10 @@ export class CircuitBreakerSafetyService {
         const systemHealthCheck: SafetyCheckResult = {
           status: "PASS",
           message: "System health check passed",
-          details: { memoryUsage: process.memoryUsage(), uptime: process.uptime() },
+          details: {
+            memoryUsage: process.memoryUsage(),
+            uptime: process.uptime(),
+          },
           timestamp,
         };
 
@@ -568,7 +622,9 @@ export class CircuitBreakerSafetyService {
         const failedChecks = Object.values(checks).filter(
           (check) => check.status === "FAIL"
         ).length;
-        const warnChecks = Object.values(checks).filter((check) => check.status === "WARN").length;
+        const warnChecks = Object.values(checks).filter(
+          (check) => check.status === "WARN"
+        ).length;
 
         let overall: "HEALTHY" | "NEEDS_ATTENTION" | "CRITICAL";
         if (failedChecks === 0 && warnChecks === 0) {
@@ -609,7 +665,10 @@ export class CircuitBreakerSafetyService {
             message: "Critical safety issues detected",
           });
         } else {
-          span.setStatus({ code: SpanStatusCode.OK, message: "Safety issues require attention" });
+          span.setStatus({
+            code: SpanStatusCode.OK,
+            message: "Safety issues require attention",
+          });
         }
 
         span.end();
@@ -641,14 +700,17 @@ export class CircuitBreakerSafetyService {
     }
 
     // Check configuration
-    const maxPositionSize = Number.parseFloat(process.env.MAX_POSITION_SIZE || "0.1");
+    const maxPositionSize = Number.parseFloat(
+      process.env.MAX_POSITION_SIZE || "0.1"
+    );
     if (maxPositionSize > 0.5) {
       riskFactors.push("Position size too large");
       requiredActions.push("Reduce maximum position size");
       riskLevel = riskLevel === "CRITICAL" ? "CRITICAL" : "HIGH";
     }
 
-    const safeToTrade = riskLevel !== "CRITICAL" && !cbDiagnosis.isInProtectiveState;
+    const safeToTrade =
+      riskLevel !== "CRITICAL" && !cbDiagnosis.isInProtectiveState;
 
     return {
       riskLevel,
@@ -700,7 +762,8 @@ export class CircuitBreakerSafetyService {
     }
 
     const approved = blockers.length === 0 && severity !== "CRITICAL";
-    const requiresManualApproval = severity === "CRITICAL" || blockers.length > 2;
+    const requiresManualApproval =
+      severity === "CRITICAL" || blockers.length > 2;
 
     return {
       approved,
@@ -708,7 +771,9 @@ export class CircuitBreakerSafetyService {
       warnings,
       severity,
       requiresManualApproval,
-      validUntil: approved ? new Date(Date.now() + 10 * 60000).toISOString() : undefined, // 10 minutes if approved
+      validUntil: approved
+        ? new Date(Date.now() + 10 * 60000).toISOString()
+        : undefined, // 10 minutes if approved
     };
   }
 
@@ -733,11 +798,15 @@ export class CircuitBreakerSafetyService {
     }
 
     if (metrics.failedAcquisitions > 0) {
-      recommendations.push("Lock acquisition failures detected - review service coordination");
+      recommendations.push(
+        "Lock acquisition failures detected - review service coordination"
+      );
     }
 
     if (metrics.concurrentOperations > 3) {
-      recommendations.push("High concurrent operation count - monitor for potential deadlocks");
+      recommendations.push(
+        "High concurrent operation count - monitor for potential deadlocks"
+      );
     }
 
     return {

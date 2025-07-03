@@ -5,13 +5,17 @@
  * across the React codebase without losing functionality.
  */
 
-import { ComponentType, KeyboardEvent, useMemo } from "react";
+import { type ComponentType, type KeyboardEvent, useMemo } from "react";
 
 /**
  * Generate stable keys for array rendering without using array indexes
  * This solves the noArrayIndexKey linting issue while maintaining performance
  */
-export function generateStableKey(prefix: string, index: number, additionalData?: string): string {
+export function generateStableKey(
+  prefix: string,
+  index: number,
+  additionalData?: string
+): string {
   if (additionalData) {
     return `${prefix}-${additionalData}-${index}`;
   }
@@ -36,7 +40,10 @@ export function generateChartCellKey(index: number, type = "cell"): string {
  * Type-safe wrapper for chart tooltip formatters
  * Replaces (value: any, name: string) with proper typing
  */
-export type TooltipFormatter = (value: unknown, name: string) => [string, string];
+export type TooltipFormatter = (
+  value: unknown,
+  name: string
+) => [string, string];
 
 export function createTooltipFormatter(
   valueFormatter: (value: unknown) => string
@@ -176,7 +183,11 @@ export function generateComponentId(type: string, data?: string): string {
 /**
  * Safe array key generator for lists with content
  */
-export function generateListKey(item: any, _index: number, preferredKey?: string): string {
+export function generateListKey(
+  item: any,
+  _index: number,
+  preferredKey?: string
+): string {
   if (preferredKey && item[preferredKey]) {
     return `item-${item[preferredKey]}`;
   }

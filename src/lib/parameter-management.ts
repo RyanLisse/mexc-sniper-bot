@@ -6,7 +6,7 @@
 export interface Parameter {
   name: string;
   value: any;
-  type: 'string' | 'number' | 'boolean' | 'object';
+  type: "string" | "number" | "boolean" | "object";
   description?: string;
   default?: any;
   validation?: (value: any) => boolean;
@@ -22,16 +22,20 @@ class ParameterManager {
   private parameters: Map<string, Parameter> = new Map();
   private groups: Map<string, ParameterGroup> = new Map();
 
-  setParameter(name: string, value: any, type: Parameter['type'] = 'string'): void {
+  setParameter(
+    name: string,
+    value: any,
+    type: Parameter["type"] = "string"
+  ): void {
     const existing = this.parameters.get(name);
-    
+
     const parameter: Parameter = {
       name,
       value,
       type,
       description: existing?.description,
       default: existing?.default,
-      validation: existing?.validation
+      validation: existing?.validation,
     };
 
     if (parameter.validation && !parameter.validation(value)) {
@@ -62,7 +66,7 @@ class ParameterManager {
     this.groups.set(name, {
       name,
       description,
-      parameters: {}
+      parameters: {},
     });
   }
 
@@ -89,16 +93,16 @@ class ParameterManager {
   validateParameter(name: string, value: any): boolean {
     const parameter = this.parameters.get(name);
     if (!parameter) return false;
-    
+
     if (parameter.validation) {
       return parameter.validation(value);
     }
-    
+
     return true;
   }
 
   resetToDefaults(): void {
-    for (const [name, parameter] of this.parameters) {
+    for (const [_name, parameter] of this.parameters) {
       if (parameter.default !== undefined) {
         parameter.value = parameter.default;
       }
@@ -123,15 +127,19 @@ export const parameterManager = new ParameterManager();
 export { ParameterManager };
 
 // Initialize default parameters
-parameterManager.createGroup('trading', 'Trading parameters');
-parameterManager.createGroup('risk', 'Risk management parameters');
-parameterManager.createGroup('performance', 'Performance tuning parameters');
+parameterManager.createGroup("trading", "Trading parameters");
+parameterManager.createGroup("risk", "Risk management parameters");
+parameterManager.createGroup("performance", "Performance tuning parameters");
 
 export function getParameter<T = any>(name: string, defaultValue?: T): T {
   return parameterManager.getParameter(name, defaultValue);
 }
 
-export function setParameter(name: string, value: any, type: Parameter['type'] = 'string'): void {
+export function setParameter(
+  name: string,
+  value: any,
+  type: Parameter["type"] = "string"
+): void {
   parameterManager.setParameter(name, value, type);
 }
 

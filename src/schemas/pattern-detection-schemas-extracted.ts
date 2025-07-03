@@ -53,7 +53,12 @@ export const ActivityInfoSchema = z.object({
  */
 export const PatternMatchSchema = z.object({
   // Core pattern identification
-  patternType: z.enum(["ready_state", "pre_ready", "launch_sequence", "risk_warning"]),
+  patternType: z.enum([
+    "ready_state",
+    "pre_ready",
+    "launch_sequence",
+    "risk_warning",
+  ]),
   confidence: z.number().min(0).max(100),
   symbol: z.string().min(1),
   vcoinId: z.string().optional(),
@@ -68,7 +73,13 @@ export const PatternMatchSchema = z.object({
   detectedAt: z.date(),
   advanceNoticeHours: z.number().min(0),
   riskLevel: z.enum(["low", "medium", "high"]),
-  recommendation: z.enum(["immediate_action", "monitor_closely", "prepare_entry", "wait", "avoid"]),
+  recommendation: z.enum([
+    "immediate_action",
+    "monitor_closely",
+    "prepare_entry",
+    "wait",
+    "avoid",
+  ]),
 
   // Historical context (optional)
   similarPatterns: z.array(z.record(z.unknown())).optional(),
@@ -112,7 +123,12 @@ export const PatternAnalysisRequestSchema = z.object({
   calendarEntries: z.array(CalendarEntrySchema).optional(),
 
   // Required analysis type
-  analysisType: z.enum(["discovery", "monitoring", "validation", "correlation"]),
+  analysisType: z.enum([
+    "discovery",
+    "monitoring",
+    "validation",
+    "correlation",
+  ]),
 
   // Optional analysis parameters
   timeframe: z.string().optional(),
@@ -181,7 +197,11 @@ export const CorrelationAnalysisSchema = z.object({
   symbols: z.array(z.string().min(1)),
 
   // Type of correlation analysis
-  correlationType: z.enum(["launch_timing", "market_sector", "pattern_similarity"]),
+  correlationType: z.enum([
+    "launch_timing",
+    "market_sector",
+    "pattern_similarity",
+  ]),
 
   // Correlation strength (0-1 scale)
   strength: z.number().min(0).max(1),
@@ -201,9 +221,13 @@ export type ActivityInfo = z.infer<typeof ActivityInfoSchema>;
 export type PatternMatch = z.infer<typeof PatternMatchSchema>;
 export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
 export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
-export type PatternAnalysisRequest = z.infer<typeof PatternAnalysisRequestSchema>;
+export type PatternAnalysisRequest = z.infer<
+  typeof PatternAnalysisRequestSchema
+>;
 export type AnalysisSummary = z.infer<typeof AnalysisSummarySchema>;
-export type AnalysisRecommendations = z.infer<typeof AnalysisRecommendationsSchema>;
+export type AnalysisRecommendations = z.infer<
+  typeof AnalysisRecommendationsSchema
+>;
 export type AnalysisMetadata = z.infer<typeof AnalysisMetadataSchema>;
 export type PatternAnalysisResult = z.infer<typeof PatternAnalysisResultSchema>;
 export type CorrelationAnalysis = z.infer<typeof CorrelationAnalysisSchema>;
@@ -229,21 +253,27 @@ export function validatePatternMatch(data: unknown): PatternMatch {
 /**
  * Validate pattern analysis request
  */
-export function validatePatternAnalysisRequest(data: unknown): PatternAnalysisRequest {
+export function validatePatternAnalysisRequest(
+  data: unknown
+): PatternAnalysisRequest {
   return PatternAnalysisRequestSchema.parse(data);
 }
 
 /**
  * Validate pattern analysis result
  */
-export function validatePatternAnalysisResult(data: unknown): PatternAnalysisResult {
+export function validatePatternAnalysisResult(
+  data: unknown
+): PatternAnalysisResult {
   return PatternAnalysisResultSchema.parse(data);
 }
 
 /**
  * Validate correlation analysis
  */
-export function validateCorrelationAnalysis(data: unknown): CorrelationAnalysis {
+export function validateCorrelationAnalysis(
+  data: unknown
+): CorrelationAnalysis {
   return CorrelationAnalysisSchema.parse(data);
 }
 

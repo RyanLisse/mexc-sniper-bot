@@ -16,7 +16,13 @@ import {
   notificationChannels,
 } from "./schemas/alerts";
 // Import all table definitions from modular files
-import { account, session, user, userPreferences, verification } from "./schemas/auth";
+import {
+  account,
+  session,
+  user,
+  userPreferences,
+  verification,
+} from "./schemas/auth";
 import {
   coinActivities,
   monitoredListings,

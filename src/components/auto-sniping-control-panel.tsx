@@ -1,7 +1,15 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Pause, Play, RefreshCw, Settings, Shield, Target } from "lucide-react";
+import {
+  AlertTriangle,
+  Pause,
+  Play,
+  RefreshCw,
+  Settings,
+  Shield,
+  Target,
+} from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { queryKeys } from "../lib/query-client";
@@ -10,7 +18,13 @@ import { StreamlinedWorkflowStatus } from "./streamlined-workflow-status";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 
@@ -47,7 +61,9 @@ interface AutoSnipingControlPanelProps {
   className?: string;
 }
 
-export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPanelProps) {
+export function AutoSnipingControlPanel({
+  className = "",
+}: AutoSnipingControlPanelProps) {
   const queryClient = useQueryClient();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -99,13 +115,17 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || `Failed to ${enabled ? "start" : "stop"} auto-sniping`);
+        throw new Error(
+          result.error || `Failed to ${enabled ? "start" : "stop"} auto-sniping`
+        );
       }
 
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.autoSniping.status() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.autoSniping.status(),
+      });
     },
   });
 
@@ -125,7 +145,9 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.autoSniping.config() });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.autoSniping.config(),
+      });
     },
   });
 
@@ -197,11 +219,15 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
                 variant="ghost"
                 size="sm"
                 onClick={() =>
-                  queryClient.invalidateQueries({ queryKey: queryKeys.autoSniping.status() })
+                  queryClient.invalidateQueries({
+                    queryKey: queryKeys.autoSniping.status(),
+                  })
                 }
                 disabled={statusLoading}
               >
-                <RefreshCw className={`h-4 w-4 ${statusLoading ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${statusLoading ? "animate-spin" : ""}`}
+                />
               </Button>
             </div>
           </div>
@@ -228,7 +254,9 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
               onClick={handleToggleSniping}
               disabled={toggleSnipingMutation.isPending}
               className={
-                status?.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+                status?.isActive
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-green-600 hover:bg-green-700"
               }
             >
               {status?.isActive ? (
@@ -249,15 +277,21 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
           {status && (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="text-center p-3 border rounded">
-                <div className="font-bold text-lg text-blue-600">{status.activeTargets}</div>
+                <div className="font-bold text-lg text-blue-600">
+                  {status.activeTargets}
+                </div>
                 <div className="text-muted-foreground">Active Targets</div>
               </div>
               <div className="text-center p-3 border rounded">
-                <div className="font-bold text-lg text-green-600">{status.readyTargets}</div>
+                <div className="font-bold text-lg text-green-600">
+                  {status.readyTargets}
+                </div>
                 <div className="text-muted-foreground">Ready Targets</div>
               </div>
               <div className="text-center p-3 border rounded">
-                <div className="font-bold text-lg text-purple-600">{status.executedToday}</div>
+                <div className="font-bold text-lg text-purple-600">
+                  {status.executedToday}
+                </div>
                 <div className="text-muted-foreground">Trades Today</div>
               </div>
               <div className="text-center p-3 border rounded">
@@ -274,7 +308,9 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
             className={`p-3 border rounded-lg bg-${safetyConfig.color}-50 dark:bg-${safetyConfig.color}-950/20 border-${safetyConfig.color}-200 dark:border-${safetyConfig.color}-800`}
           >
             <div className="flex items-center space-x-2">
-              <SafetyIcon className={`h-4 w-4 text-${safetyConfig.color}-600`} />
+              <SafetyIcon
+                className={`h-4 w-4 text-${safetyConfig.color}-600`}
+              />
               <span
                 className={`font-medium text-${safetyConfig.color}-700 dark:text-${safetyConfig.color}-300`}
               >
@@ -288,7 +324,11 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Quick Configuration</span>
-                <Button variant="ghost" size="sm" onClick={() => setShowAdvanced(!showAdvanced)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
                   <Settings className="h-4 w-4 mr-1" />
                   {showAdvanced ? "Hide" : "Show"} Advanced
                 </Button>
@@ -302,7 +342,9 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
                   <Switch
                     id="safety-checks"
                     checked={config.enableSafetyChecks}
-                    onCheckedChange={(checked) => handleConfigUpdate("enableSafetyChecks", checked)}
+                    onCheckedChange={(checked) =>
+                      handleConfigUpdate("enableSafetyChecks", checked)
+                    }
                     disabled={updateConfigMutation.isPending}
                   />
                 </div>
@@ -325,19 +367,27 @@ export function AutoSnipingControlPanel({ className = "" }: AutoSnipingControlPa
                 <div className="grid grid-cols-2 gap-4 pt-3 border-t">
                   <div className="space-y-2">
                     <Label className="text-sm">Take Profit %</Label>
-                    <div className="text-lg font-medium">{config.takeProfitPercentage}%</div>
+                    <div className="text-lg font-medium">
+                      {config.takeProfitPercentage}%
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Stop Loss %</Label>
-                    <div className="text-lg font-medium">{config.stopLossPercentage}%</div>
+                    <div className="text-lg font-medium">
+                      {config.stopLossPercentage}%
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Confidence Threshold</Label>
-                    <div className="text-lg font-medium">{config.patternConfidenceThreshold}%</div>
+                    <div className="text-lg font-medium">
+                      {config.patternConfidenceThreshold}%
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm">Max Concurrent</Label>
-                    <div className="text-lg font-medium">{config.maxConcurrentTrades}</div>
+                    <div className="text-lg font-medium">
+                      {config.maxConcurrentTrades}
+                    </div>
                   </div>
                 </div>
               )}

@@ -1,6 +1,6 @@
 /**
  * Pattern Detection to Sniping Integration Service
- * 
+ *
  * This service bridges the gap between pattern detection and auto-sniping by:
  * 1. Monitoring pattern detection events
  * 2. Converting patterns to snipe triggers
@@ -8,12 +8,14 @@
  * 4. Providing real-time pattern monitoring
  */
 
-import { EventEmitter } from 'node:events';
-import { and, eq, gte, lte } from 'drizzle-orm';
-import { db } from '@/src/db';
-import { snipeTargets } from '@/src/db/schemas/trading';
-import { toSafeError } from '@/src/lib/error-type-utils';
-import { getCompleteAutoSnipingService, type PatternTrigger, type SnipeConfiguration } from './complete-auto-sniping-service';
+import { EventEmitter } from "node:events";
+import { db } from "@/src/db";
+import { snipeTargets } from "@/src/db/schemas/trading";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import {
+  getCompleteAutoSnipingService,
+  type PatternTrigger,
+} from "./complete-auto-sniping-service";
 
 // Pattern detection interfaces
 export interface PatternDetectionEvent {
@@ -36,7 +38,7 @@ export interface PatternDetectionEvent {
   timing: {
     detectedAt: Date;
     validUntil: Date;
-    urgency: 'low' | 'medium' | 'high' | 'critical';
+    urgency: "low" | "medium" | "high" | "critical";
   };
   metadata: {
     vcoinId?: string;
@@ -71,21 +73,25 @@ export interface PatternSnipeResult {
 
 /**
  * Pattern-Snipe Integration Service
- * 
+ *
  * Connects pattern detection system with auto-sniping execution
  */
 export class PatternSnipeIntegration extends EventEmitter {
   private logger = {
-    info: (message: string, context?: any) => console.info('[pattern-snipe-integration]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[pattern-snipe-integration]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[pattern-snipe-integration]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[pattern-snipe-integration]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[pattern-snipe-integration]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[pattern-snipe-integration]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[pattern-snipe-integration]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[pattern-snipe-integration]", message, context || ""),
   };
 
   private isActive = false;
   private config: PatternSnipeConfig;
   private autoSnipingService = getCompleteAutoSnipingService();
-  
+
   // Pattern monitoring
   private activePatterns: Map<string, PatternDetectionEvent> = new Map();
   private patternHistory: Map<string, PatternSnipeResult> = new Map();
@@ -99,21 +105,21 @@ export class PatternSnipeIntegration extends EventEmitter {
 
   constructor(config: Partial<PatternSnipeConfig> = {}) {
     super();
-    
+
     this.config = {
       enabled: true,
       minConfidenceScore: 75,
       maxConcurrentPatternSnipes: 3,
-      patternTypeFilters: ['bullish_breakout', 'accumulation', 'reversal'],
-      timeframeFilters: ['5m', '15m', '1h'],
+      patternTypeFilters: ["bullish_breakout", "accumulation", "reversal"],
+      timeframeFilters: ["5m", "15m", "1h"],
       minVolumeThreshold: 100000, // USDT
       maxPriceSlippage: 2, // %
       autoExecuteEnabled: true,
       riskPerPattern: 50, // USDT per pattern snipe
-      ...config
+      ...config,
     };
 
-    this.logger.info('Pattern-Snipe Integration initialized', {
+    this.logger.info("Pattern-Snipe Integration initialized", {
       enabled: this.config.enabled,
       autoExecute: this.config.autoExecuteEnabled,
       minConfidence: this.config.minConfidenceScore,
@@ -128,12 +134,12 @@ export class PatternSnipeIntegration extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isActive) {
-      this.logger.warn('Pattern-snipe integration already active');
+      this.logger.warn("Pattern-snipe integration already active");
       return;
     }
 
     try {
-      this.logger.info('Starting pattern-snipe integration');
+      this.logger.info("Starting pattern-snipe integration");
 
       // Initialize auto-sniping service if not already done
       if (!this.autoSnipingService.getStatus().isInitialized) {
@@ -147,13 +153,12 @@ export class PatternSnipeIntegration extends EventEmitter {
       this.startPatternCleanup();
 
       this.isActive = true;
-      this.emit('integration_started');
+      this.emit("integration_started");
 
-      this.logger.info('Pattern-snipe integration started successfully');
-
+      this.logger.info("Pattern-snipe integration started successfully");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to start pattern-snipe integration', safeError);
+      this.logger.error("Failed to start pattern-snipe integration", safeError);
       throw safeError;
     }
   }
@@ -163,18 +168,17 @@ export class PatternSnipeIntegration extends EventEmitter {
    */
   async stop(): Promise<void> {
     try {
-      this.logger.info('Stopping pattern-snipe integration');
+      this.logger.info("Stopping pattern-snipe integration");
 
       this.isActive = false;
       this.activePatterns.clear();
-      
-      this.emit('integration_stopped');
 
-      this.logger.info('Pattern-snipe integration stopped');
+      this.emit("integration_stopped");
 
+      this.logger.info("Pattern-snipe integration stopped");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to stop pattern-snipe integration', safeError);
+      this.logger.error("Failed to stop pattern-snipe integration", safeError);
       throw safeError;
     }
   }
@@ -182,15 +186,20 @@ export class PatternSnipeIntegration extends EventEmitter {
   /**
    * Process a detected pattern
    */
-  async processPattern(event: PatternDetectionEvent): Promise<PatternSnipeResult> {
+  async processPattern(
+    event: PatternDetectionEvent
+  ): Promise<PatternSnipeResult> {
     const startTime = Date.now();
 
     try {
-      this.logger.info(`Processing pattern ${event.pattern.type} for ${event.symbol}`, {
-        patternId: event.id,
-        confidence: event.pattern.confidence,
-        urgency: event.timing.urgency,
-      });
+      this.logger.info(
+        `Processing pattern ${event.pattern.type} for ${event.symbol}`,
+        {
+          patternId: event.id,
+          confidence: event.pattern.confidence,
+          urgency: event.timing.urgency,
+        }
+      );
 
       this.patternMetrics.totalDetected++;
 
@@ -201,17 +210,17 @@ export class PatternSnipeIntegration extends EventEmitter {
       const filterResult = this.applyPatternFilters(event);
       if (!filterResult.passed) {
         this.patternMetrics.totalFiltered++;
-        
+
         const result: PatternSnipeResult = {
           patternId: event.id,
           snipeExecuted: false,
           reason: filterResult.reason,
           timestamp: new Date(),
         };
-        
+
         this.patternHistory.set(event.id, result);
-        this.emit('pattern_filtered', { event, result });
-        
+        this.emit("pattern_filtered", { event, result });
+
         return result;
       }
 
@@ -220,13 +229,13 @@ export class PatternSnipeIntegration extends EventEmitter {
         const result: PatternSnipeResult = {
           patternId: event.id,
           snipeExecuted: false,
-          reason: 'Auto-execution disabled',
+          reason: "Auto-execution disabled",
           timestamp: new Date(),
         };
-        
+
         this.patternHistory.set(event.id, result);
-        this.emit('pattern_manual_review', { event, result });
-        
+        this.emit("pattern_manual_review", { event, result });
+
         return result;
       }
 
@@ -252,10 +261,11 @@ export class PatternSnipeIntegration extends EventEmitter {
       };
 
       // Execute pattern snipe
-      const snipeResult = await this.autoSnipingService.executePatternSnipe(trigger);
+      const snipeResult =
+        await this.autoSnipingService.executePatternSnipe(trigger);
 
       this.patternMetrics.totalExecuted++;
-      
+
       if (snipeResult.success) {
         this.patternMetrics.totalSuccessful++;
       } else {
@@ -266,7 +276,9 @@ export class PatternSnipeIntegration extends EventEmitter {
         patternId: event.id,
         snipeExecuted: true,
         snipeId: snipeResult.snipeId,
-        reason: snipeResult.success ? 'Pattern snipe executed successfully' : 'Pattern snipe failed',
+        reason: snipeResult.success
+          ? "Pattern snipe executed successfully"
+          : "Pattern snipe failed",
         timestamp: new Date(),
         executionTime: snipeResult.executionTime,
         success: snipeResult.success,
@@ -274,18 +286,17 @@ export class PatternSnipeIntegration extends EventEmitter {
       };
 
       this.patternHistory.set(event.id, result);
-      
+
       if (snipeResult.success) {
-        this.emit('pattern_snipe_success', { event, result, snipeResult });
+        this.emit("pattern_snipe_success", { event, result, snipeResult });
       } else {
-        this.emit('pattern_snipe_failed', { event, result, snipeResult });
+        this.emit("pattern_snipe_failed", { event, result, snipeResult });
       }
 
       // Create snipe target record in database for tracking
       await this.createPatternSnipeTarget(event, snipeResult);
 
       return result;
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(`Failed to process pattern ${event.id}`, {
@@ -306,7 +317,7 @@ export class PatternSnipeIntegration extends EventEmitter {
       };
 
       this.patternHistory.set(event.id, result);
-      this.emit('pattern_error', { event, result, error: safeError });
+      this.emit("pattern_error", { event, result, error: safeError });
 
       return result;
     }
@@ -332,8 +343,8 @@ export class PatternSnipeIntegration extends EventEmitter {
    */
   updateConfig(updates: Partial<PatternSnipeConfig>): void {
     this.config = { ...this.config, ...updates };
-    this.logger.info('Pattern-snipe integration config updated', { updates });
-    this.emit('config_updated', this.config);
+    this.logger.info("Pattern-snipe integration config updated", { updates });
+    this.emit("config_updated", this.config);
   }
 
   /**
@@ -387,26 +398,29 @@ export class PatternSnipeIntegration extends EventEmitter {
    */
   private setupEventListeners(): void {
     // Listen for pattern detection events from the pattern detection service
-    this.on('pattern_detected', async (event: PatternDetectionEvent) => {
+    this.on("pattern_detected", async (event: PatternDetectionEvent) => {
       if (this.isActive && this.config.enabled) {
         try {
           await this.processPattern(event);
         } catch (error) {
-          this.logger.error('Failed to process detected pattern', { event, error });
+          this.logger.error("Failed to process detected pattern", {
+            event,
+            error,
+          });
         }
       }
     });
 
     // Listen for auto-sniping service events
-    this.autoSnipingService.on('snipe_executed', (data) => {
-      this.logger.info('Pattern snipe executed successfully', {
+    this.autoSnipingService.on("snipe_executed", (data) => {
+      this.logger.info("Pattern snipe executed successfully", {
         snipeId: data.snipeId,
         symbol: data.target.symbolName,
       });
     });
 
-    this.autoSnipingService.on('snipe_failed', (data) => {
-      this.logger.warn('Pattern snipe failed', {
+    this.autoSnipingService.on("snipe_failed", (data) => {
+      this.logger.warn("Pattern snipe failed", {
         snipeId: data.snipeId,
         symbol: data.target.symbolName,
         error: data.error,
@@ -418,13 +432,14 @@ export class PatternSnipeIntegration extends EventEmitter {
    * Start pattern detection monitoring
    */
   private async startPatternDetectionMonitoring(): Promise<void> {
-    this.logger.info('Starting pattern detection monitoring');
+    this.logger.info("Starting pattern detection monitoring");
 
     // This would typically integrate with a real pattern detection service
     // For now, we'll create a mock pattern detector for testing
-    
+
     setInterval(() => {
-      if (this.isActive && Math.random() < 0.05) { // 5% chance every interval
+      if (this.isActive && Math.random() < 0.05) {
+        // 5% chance every interval
         this.generateMockPatternEvent();
       }
     }, 10000); // Check every 10 seconds
@@ -434,9 +449,14 @@ export class PatternSnipeIntegration extends EventEmitter {
    * Generate mock pattern event for testing
    */
   private generateMockPatternEvent(): void {
-    const symbols = ['BTCUSDT', 'ETHUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT'];
-    const patterns = ['bullish_breakout', 'accumulation', 'reversal', 'momentum'];
-    const timeframes = ['5m', '15m', '1h', '4h'];
+    const symbols = ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "DOTUSDT"];
+    const patterns = [
+      "bullish_breakout",
+      "accumulation",
+      "reversal",
+      "momentum",
+    ];
+    const timeframes = ["5m", "15m", "1h", "4h"];
 
     const symbol = symbols[Math.floor(Math.random() * symbols.length)];
     const pattern = patterns[Math.floor(Math.random() * patterns.length)];
@@ -450,7 +470,7 @@ export class PatternSnipeIntegration extends EventEmitter {
       symbol,
       pattern: {
         type: pattern,
-        name: `${pattern.replace('_', ' ').toUpperCase()} Pattern`,
+        name: `${pattern.replace("_", " ").toUpperCase()} Pattern`,
         confidence,
         timeframe,
         description: `${pattern} pattern detected on ${timeframe} timeframe`,
@@ -465,37 +485,41 @@ export class PatternSnipeIntegration extends EventEmitter {
       timing: {
         detectedAt: new Date(),
         validUntil: new Date(Date.now() + 15 * 60 * 1000), // Valid for 15 minutes
-        urgency: Math.random() > 0.7 ? 'high' : Math.random() > 0.4 ? 'medium' : 'low',
+        urgency:
+          Math.random() > 0.7 ? "high" : Math.random() > 0.4 ? "medium" : "low",
       },
       metadata: {
-        vcoinId: symbol.replace('USDT', ''),
-        exchange: 'MEXC',
+        vcoinId: symbol.replace("USDT", ""),
+        exchange: "MEXC",
         indicators: {
           rsi: 30 + Math.random() * 40, // RSI between 30-70
           macd: (Math.random() - 0.5) * 0.001,
           volume_ratio: 1 + Math.random() * 2, // 1-3x average volume
         },
         marketConditions: {
-          trend: Math.random() > 0.5 ? 'bullish' : 'bearish',
-          volatility: 'medium',
+          trend: Math.random() > 0.5 ? "bullish" : "bearish",
+          volatility: "medium",
         },
       },
     };
 
-    this.logger.debug('Generated mock pattern event', {
+    this.logger.debug("Generated mock pattern event", {
       patternId: mockEvent.id,
       symbol: mockEvent.symbol,
       pattern: mockEvent.pattern.type,
       confidence: mockEvent.pattern.confidence,
     });
 
-    this.emit('pattern_detected', mockEvent);
+    this.emit("pattern_detected", mockEvent);
   }
 
   /**
    * Apply pattern filters
    */
-  private applyPatternFilters(event: PatternDetectionEvent): { passed: boolean; reason: string } {
+  private applyPatternFilters(event: PatternDetectionEvent): {
+    passed: boolean;
+    reason: string;
+  } {
     // Check confidence score
     if (event.pattern.confidence < this.config.minConfidenceScore) {
       return {
@@ -505,8 +529,10 @@ export class PatternSnipeIntegration extends EventEmitter {
     }
 
     // Check pattern type filter
-    if (this.config.patternTypeFilters.length > 0 && 
-        !this.config.patternTypeFilters.includes(event.pattern.type)) {
+    if (
+      this.config.patternTypeFilters.length > 0 &&
+      !this.config.patternTypeFilters.includes(event.pattern.type)
+    ) {
       return {
         passed: false,
         reason: `Pattern type ${event.pattern.type} not in allowed types`,
@@ -514,8 +540,10 @@ export class PatternSnipeIntegration extends EventEmitter {
     }
 
     // Check timeframe filter
-    if (this.config.timeframeFilters.length > 0 && 
-        !this.config.timeframeFilters.includes(event.pattern.timeframe)) {
+    if (
+      this.config.timeframeFilters.length > 0 &&
+      !this.config.timeframeFilters.includes(event.pattern.timeframe)
+    ) {
       return {
         passed: false,
         reason: `Timeframe ${event.pattern.timeframe} not in allowed timeframes`,
@@ -532,7 +560,7 @@ export class PatternSnipeIntegration extends EventEmitter {
 
     // Check concurrent pattern snipes limit
     const activePatternSnipes = Array.from(this.activePatterns.values()).filter(
-      p => p.timing.validUntil > new Date()
+      (p) => p.timing.validUntil > new Date()
     ).length;
 
     if (activePatternSnipes >= this.config.maxConcurrentPatternSnipes) {
@@ -546,49 +574,57 @@ export class PatternSnipeIntegration extends EventEmitter {
     if (event.timing.validUntil < new Date()) {
       return {
         passed: false,
-        reason: 'Pattern validity expired',
+        reason: "Pattern validity expired",
       };
     }
 
-    return { passed: true, reason: 'All filters passed' };
+    return { passed: true, reason: "All filters passed" };
   }
 
   /**
    * Create snipe target record for pattern-based snipe
    */
   private async createPatternSnipeTarget(
-    event: PatternDetectionEvent, 
+    event: PatternDetectionEvent,
     snipeResult: any
   ): Promise<void> {
     try {
       await db.insert(snipeTargets).values({
-        userId: 'system', // Pattern-generated
-        vcoinId: event.metadata.vcoinId || event.symbol.replace('USDT', ''),
+        userId: "system", // Pattern-generated
+        vcoinId: event.metadata.vcoinId || event.symbol.replace("USDT", ""),
         symbolName: event.symbol,
-        entryStrategy: 'market',
+        entryStrategy: "market",
         positionSizeUsdt: this.config.riskPerPattern,
-        takeProfitCustom: ((event.price.takeProfit - event.price.entry) / event.price.entry) * 100,
-        stopLossPercent: ((event.price.entry - event.price.stopLoss) / event.price.entry) * 100,
-        status: snipeResult.success ? 'completed' : 'failed',
-        priority: event.timing.urgency === 'critical' ? 1 : event.timing.urgency === 'high' ? 2 : 3,
+        takeProfitCustom:
+          ((event.price.takeProfit - event.price.entry) / event.price.entry) *
+          100,
+        stopLossPercent:
+          ((event.price.entry - event.price.stopLoss) / event.price.entry) *
+          100,
+        status: snipeResult.success ? "completed" : "failed",
+        priority:
+          event.timing.urgency === "critical"
+            ? 1
+            : event.timing.urgency === "high"
+              ? 2
+              : 3,
         confidenceScore: event.pattern.confidence,
-        riskLevel: event.timing.urgency === 'critical' ? 'high' : 'medium',
+        riskLevel: event.timing.urgency === "critical" ? "high" : "medium",
         targetExecutionTime: event.timing.detectedAt,
         actualExecutionTime: snipeResult.success ? new Date() : undefined,
         executionPrice: snipeResult.executedPrice,
         actualPositionSize: snipeResult.executedQuantity,
-        executionStatus: snipeResult.success ? 'success' : 'failed',
+        executionStatus: snipeResult.success ? "success" : "failed",
         errorMessage: snipeResult.error,
       });
 
-      this.logger.debug('Pattern snipe target record created', {
+      this.logger.debug("Pattern snipe target record created", {
         patternId: event.id,
         symbol: event.symbol,
         success: snipeResult.success,
       });
-
     } catch (error) {
-      this.logger.error('Failed to create pattern snipe target record', {
+      this.logger.error("Failed to create pattern snipe target record", {
         patternId: event.id,
         error,
       });
@@ -629,7 +665,9 @@ export class PatternSnipeIntegration extends EventEmitter {
 // Export singleton instance
 let patternSnipeIntegration: PatternSnipeIntegration | null = null;
 
-export function getPatternSnipeIntegration(config?: Partial<PatternSnipeConfig>): PatternSnipeIntegration {
+export function getPatternSnipeIntegration(
+  config?: Partial<PatternSnipeConfig>
+): PatternSnipeIntegration {
   if (!patternSnipeIntegration) {
     patternSnipeIntegration = new PatternSnipeIntegration(config);
   }

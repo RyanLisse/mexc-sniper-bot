@@ -8,7 +8,13 @@
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
@@ -29,49 +35,61 @@ export const RiskTab = memo(function RiskTab({
             <CardDescription>Current risk exposure vs limits</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {Object.entries(data.riskManagement.riskLimits).map(([key, limit]) => (
-              <div key={key} className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="capitalize">{key.replace(/([A-Z])/g, " $1").trim()}</span>
-                  <span>
-                    {limit.current.toFixed(1)} / {limit.limit.toFixed(1)}%
-                  </span>
+            {Object.entries(data.riskManagement.riskLimits).map(
+              ([key, limit]) => (
+                <div key={key} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="capitalize">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </span>
+                    <span>
+                      {limit.current.toFixed(1)} / {limit.limit.toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={(limit.current / limit.limit) * 100}
+                    className={`h-3 ${
+                      (limit.current / limit.limit) > 0.8
+                        ? "bg-red-100"
+                        : limit.current / limit.limit > 0.6
+                          ? "bg-yellow-100"
+                          : "bg-green-100"
+                    }`}
+                  />
                 </div>
-                <Progress
-                  value={(limit.current / limit.limit) * 100}
-                  className={`h-3 ${
-                    (limit.current / limit.limit) > 0.8
-                      ? "bg-red-100"
-                      : limit.current / limit.limit > 0.6
-                        ? "bg-yellow-100"
-                        : "bg-green-100"
-                  }`}
-                />
-              </div>
-            ))}
+              )
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Stress Test Results</CardTitle>
-            <CardDescription>Portfolio impact under stress scenarios</CardDescription>
+            <CardDescription>
+              Portfolio impact under stress scenarios
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {Object.entries(data.riskManagement.stressTestResults).map(([scenario, result]) => (
-              <div
-                key={scenario}
-                className="flex items-center justify-between p-3 rounded-lg border"
-              >
-                <div>
-                  <p className="font-medium capitalize">
-                    {scenario.replace(/([A-Z])/g, " $1").trim()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Recovery: {result.recovery}</p>
+            {Object.entries(data.riskManagement.stressTestResults).map(
+              ([scenario, result]) => (
+                <div
+                  key={scenario}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div>
+                    <p className="font-medium capitalize">
+                      {scenario.replace(/([A-Z])/g, " $1").trim()}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Recovery: {result.recovery}
+                    </p>
+                  </div>
+                  <Badge variant="destructive">
+                    {result.impact.toFixed(1)}%
+                  </Badge>
                 </div>
-                <Badge variant="destructive">{result.impact.toFixed(1)}%</Badge>
-              </div>
-            ))}
+              )
+            )}
           </CardContent>
         </Card>
       </div>
@@ -87,7 +105,9 @@ export const RiskTab = memo(function RiskTab({
             <div>
               <p className="text-sm text-muted-foreground">Total Exposure</p>
               <p className="text-2xl font-bold">
-                {formatCurrency(data.riskManagement.exposureMetrics.totalExposure)}
+                {formatCurrency(
+                  data.riskManagement.exposureMetrics.totalExposure
+                )}
               </p>
             </div>
             <div>
@@ -97,9 +117,14 @@ export const RiskTab = memo(function RiskTab({
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Margin Utilization</p>
+              <p className="text-sm text-muted-foreground">
+                Margin Utilization
+              </p>
               <p className="text-2xl font-bold">
-                {data.riskManagement.exposureMetrics.marginUtilization.toFixed(1)}%
+                {data.riskManagement.exposureMetrics.marginUtilization.toFixed(
+                  1
+                )}
+                %
               </p>
               <Progress
                 value={data.riskManagement.exposureMetrics.marginUtilization}
@@ -128,14 +153,18 @@ export const RiskTab = memo(function RiskTab({
                     : "text-green-600"
                 }`}
               >
-                {data.riskManagement.circuitBreakerStatus.active ? "ACTIVE" : "INACTIVE"}
+                {data.riskManagement.circuitBreakerStatus.active
+                  ? "ACTIVE"
+                  : "INACTIVE"}
               </span>
             </div>
 
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Trigger Count</span>
-                <span>{data.riskManagement.circuitBreakerStatus.triggerCount}</span>
+                <span>
+                  {data.riskManagement.circuitBreakerStatus.triggerCount}
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Last Triggered</span>
@@ -192,9 +221,14 @@ export const RiskTab = memo(function RiskTab({
               <div className="text-3xl font-bold text-orange-600">
                 {data.riskManagement.currentRiskScore.toFixed(0)}
               </div>
-              <p className="text-sm text-muted-foreground">Current Risk Score</p>
+              <p className="text-sm text-muted-foreground">
+                Current Risk Score
+              </p>
             </div>
-            <Progress value={data.riskManagement.currentRiskScore} className="h-4" />
+            <Progress
+              value={data.riskManagement.currentRiskScore}
+              className="h-4"
+            />
           </CardContent>
         </Card>
 
@@ -238,7 +272,9 @@ export const RiskTab = memo(function RiskTab({
               <div className="text-3xl font-bold text-blue-600">
                 {data.riskManagement.diversificationRatio.toFixed(2)}
               </div>
-              <p className="text-sm text-muted-foreground">Diversification Ratio</p>
+              <p className="text-sm text-muted-foreground">
+                Diversification Ratio
+              </p>
             </div>
           </CardContent>
         </Card>

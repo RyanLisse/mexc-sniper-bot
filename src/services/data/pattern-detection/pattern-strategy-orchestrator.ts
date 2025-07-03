@@ -24,7 +24,10 @@ import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { PatternDiscoveryAgent } from "@/src/mexc-agents/pattern-discovery-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
 import { patternTargetIntegrationService } from "./pattern-target-integration-service";
 
 // ============================================================================
@@ -68,7 +71,12 @@ export interface PatternWorkflowResult {
 export interface StrategicRecommendation {
   vcoinId: string;
   symbol: string;
-  action: "immediate_trade" | "prepare_position" | "monitor_closely" | "wait" | "avoid";
+  action:
+    | "immediate_trade"
+    | "prepare_position"
+    | "monitor_closely"
+    | "wait"
+    | "avoid";
   confidence: number;
   reasoning: string;
   timing: {
@@ -111,7 +119,11 @@ export interface MonitoringSchedule {
 }
 
 export interface AlertConfiguration {
-  type: "ready_state" | "pattern_change" | "time_threshold" | "confidence_change";
+  type:
+    | "ready_state"
+    | "pattern_change"
+    | "time_threshold"
+    | "confidence_change";
   condition: string;
   urgency: "immediate" | "high" | "medium" | "low";
   recipients: string[];
@@ -139,13 +151,30 @@ export class PatternStrategyOrchestrator {
     if (!this._logger) {
       this._logger = {
         info: (message: string, context?: any) =>
-          console.info("[pattern-strategy-orchestrator]", message, context || ""),
+          console.info(
+            "[pattern-strategy-orchestrator]",
+            message,
+            context || ""
+          ),
         warn: (message: string, context?: any) =>
-          console.warn("[pattern-strategy-orchestrator]", message, context || ""),
+          console.warn(
+            "[pattern-strategy-orchestrator]",
+            message,
+            context || ""
+          ),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[pattern-strategy-orchestrator]", message, context || "", error || ""),
+          console.error(
+            "[pattern-strategy-orchestrator]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
-          console.debug("[pattern-strategy-orchestrator]", message, context || ""),
+          console.debug(
+            "[pattern-strategy-orchestrator]",
+            message,
+            context || ""
+          ),
       };
     }
     return this._logger;
@@ -161,7 +190,10 @@ export class PatternStrategyOrchestrator {
 
   // Performance tracking
   private executionMetrics: Map<string, number> = new Map();
-  private cacheMetrics: { hits: number; misses: number } = { hits: 0, misses: 0 };
+  private cacheMetrics: { hits: number; misses: number } = {
+    hits: 0,
+    misses: 0,
+  };
 
   constructor() {
     this.calendarAgent = new CalendarAgent();
@@ -181,7 +213,9 @@ export class PatternStrategyOrchestrator {
    * Main Orchestration Method - Complete Pattern Discovery Workflow
    * Preserves the 3.5+ hour advance detection timeline
    */
-  async executePatternWorkflow(request: PatternWorkflowRequest): Promise<PatternWorkflowResult> {
+  async executePatternWorkflow(
+    request: PatternWorkflowRequest
+  ): Promise<PatternWorkflowResult> {
     const startTime = Date.now();
     const agentsUsed: string[] = [];
 
@@ -190,16 +224,32 @@ export class PatternStrategyOrchestrator {
 
       switch (request.type) {
         case "discovery":
-          return await this.executeDiscoveryWorkflow(request, startTime, agentsUsed);
+          return await this.executeDiscoveryWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
 
         case "monitoring":
-          return await this.executeMonitoringWorkflow(request, startTime, agentsUsed);
+          return await this.executeMonitoringWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
 
         case "validation":
-          return await this.executeValidationWorkflow(request, startTime, agentsUsed);
+          return await this.executeValidationWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
 
         case "strategy_creation":
-          return await this.executeStrategyCreationWorkflow(request, startTime, agentsUsed);
+          return await this.executeStrategyCreationWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
 
         default:
           throw new Error(`Unknown workflow type: ${request.type}`);
@@ -236,26 +286,30 @@ export class PatternStrategyOrchestrator {
 
     // Step 1: Calendar Discovery (if no calendar data provided)
     if (!calendarEntries || calendarEntries.length === 0) {
-      console.info("[PatternOrchestrator] Fetching calendar data via Calendar Agent");
+      console.info(
+        "[PatternOrchestrator] Fetching calendar data via Calendar Agent"
+      );
       agentsUsed.push("calendar-agent");
 
       const calendarData = await this.calendarAgent.fetchLatestCalendarData();
       calendarEntries = calendarData;
 
       if (request.options?.enableAgentAnalysis) {
-        const calendarAnalysis = await this.calendarAgent.scanForNewListings(calendarData);
+        const calendarAnalysis =
+          await this.calendarAgent.scanForNewListings(calendarData);
         results.agentResponses!["calendar-analysis"] = calendarAnalysis;
       }
     }
 
     // Step 2: Core Pattern Detection Engine Analysis
     console.info("[PatternOrchestrator] Running pattern detection engine");
-    const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-      calendarEntries,
-      analysisType: "discovery",
-      confidenceThreshold: request.options?.confidenceThreshold || 70,
-      includeHistorical: true,
-    });
+    const patternAnalysis =
+      await PatternDetectionCore.getInstance().analyzePatterns({
+        calendarEntries,
+        analysisType: "discovery",
+        confidenceThreshold: request.options?.confidenceThreshold || 70,
+        includeHistorical: true,
+      });
 
     results.patternAnalysis = patternAnalysis;
 
@@ -264,21 +318,24 @@ export class PatternStrategyOrchestrator {
       console.info("[PatternOrchestrator] Running AI agent pattern analysis");
       agentsUsed.push("pattern-discovery-agent");
 
-      const agentAnalysis = await this.patternAgent.discoverNewListings(calendarEntries);
+      const agentAnalysis =
+        await this.patternAgent.discoverNewListings(calendarEntries);
       results.agentResponses!["pattern-analysis"] = agentAnalysis;
     }
 
     // Step 4: Generate Strategic Recommendations
-    const strategicRecommendations = await this.generateStrategicRecommendations(
-      patternAnalysis.matches,
-      "discovery"
-    );
+    const strategicRecommendations =
+      await this.generateStrategicRecommendations(
+        patternAnalysis.matches,
+        "discovery"
+      );
     results.strategicRecommendations = strategicRecommendations;
 
     // Step 5: Create Monitoring Plan for Discovered Opportunities
     const monitoringPlan = await this.createMonitoringPlan(
       patternAnalysis.matches.filter(
-        (m) => m.patternType === "launch_sequence" && m.advanceNoticeHours >= 3.5
+        (m) =>
+          m.patternType === "launch_sequence" && m.advanceNoticeHours >= 3.5
       )
     );
     results.monitoringPlan = monitoringPlan;
@@ -292,13 +349,17 @@ export class PatternStrategyOrchestrator {
       request.input.vcoinId || "system" // Use vcoinId if available, otherwise default to system
     );
 
-    const successfulTargets = targetCreationResults.filter((r) => r.success).length;
+    const successfulTargets = targetCreationResults.filter(
+      (r) => r.success
+    ).length;
     console.info(
       `[PatternOrchestrator] Created ${successfulTargets} snipe targets from ${patternAnalysis.matches.length} patterns`
     );
 
     const executionTime = Date.now() - startTime;
-    console.info(`[PatternOrchestrator] Discovery workflow completed in ${executionTime}ms`);
+    console.info(
+      `[PatternOrchestrator] Discovery workflow completed in ${executionTime}ms`
+    );
 
     return {
       success: true,
@@ -327,7 +388,9 @@ export class PatternStrategyOrchestrator {
     // CRITICAL FIX: Fetch monitored symbols from database if empty array provided
     // This fixes the scheduled pattern analysis that was completely non-functional
     if (symbolData.length === 0) {
-      console.info("[PatternOrchestrator] Fetching monitored symbols from database");
+      console.info(
+        "[PatternOrchestrator] Fetching monitored symbols from database"
+      );
       try {
         const monitoredSymbols = await this.getMonitoredSymbolsFromDatabase();
         symbolData = monitoredSymbols;
@@ -335,7 +398,10 @@ export class PatternStrategyOrchestrator {
           `[PatternOrchestrator] Found ${symbolData.length} monitored symbols in database`
         );
       } catch (error) {
-        console.error("[PatternOrchestrator] Failed to fetch monitored symbols:", error);
+        console.error(
+          "[PatternOrchestrator] Failed to fetch monitored symbols:",
+          error
+        );
         // Continue with empty array - will skip analysis but won't crash
       }
     }
@@ -344,11 +410,12 @@ export class PatternStrategyOrchestrator {
     if (symbolData.length > 0) {
       console.info("[PatternOrchestrator] Analyzing symbol readiness");
 
-      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-        symbols: symbolData,
-        analysisType: "monitoring",
-        confidenceThreshold: request.options?.confidenceThreshold || 80,
-      });
+      const patternAnalysis =
+        await PatternDetectionCore.getInstance().analyzePatterns({
+          symbols: symbolData,
+          analysisType: "monitoring",
+          confidenceThreshold: request.options?.confidenceThreshold || 80,
+        });
 
       results.patternAnalysis = patternAnalysis;
 
@@ -356,7 +423,8 @@ export class PatternStrategyOrchestrator {
       if (request.options?.enableAgentAnalysis) {
         const readyCandidates = patternAnalysis.matches.filter(
           (m) =>
-            m.patternType === "ready_state" || (m.patternType === "pre_ready" && m.confidence >= 75)
+            m.patternType === "ready_state" ||
+            (m.patternType === "pre_ready" && m.confidence >= 75)
         );
 
         for (const candidate of readyCandidates.slice(0, 3)) {
@@ -368,15 +436,17 @@ export class PatternStrategyOrchestrator {
             symbolData as any
           );
 
-          results.agentResponses![`symbol-${candidate.symbol}`] = symbolAnalysis;
+          results.agentResponses![`symbol-${candidate.symbol}`] =
+            symbolAnalysis;
         }
       }
 
       // Generate monitoring recommendations
-      const strategicRecommendations = await this.generateStrategicRecommendations(
-        patternAnalysis.matches,
-        "monitoring"
-      );
+      const strategicRecommendations =
+        await this.generateStrategicRecommendations(
+          patternAnalysis.matches,
+          "monitoring"
+        );
       results.strategicRecommendations = strategicRecommendations;
     }
 
@@ -410,25 +480,31 @@ export class PatternStrategyOrchestrator {
       agentsUsed.push("pattern-discovery-agent", "symbol-analysis-agent");
 
       // Run pattern validation
-      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-        symbols: request.input.symbolData,
-        analysisType: "validation",
-        confidenceThreshold: 85, // Higher threshold for validation
-      });
+      const patternAnalysis =
+        await PatternDetectionCore.getInstance().analyzePatterns({
+          symbols: request.input.symbolData,
+          analysisType: "validation",
+          confidenceThreshold: 85, // Higher threshold for validation
+        });
 
       results.patternAnalysis = patternAnalysis;
 
       // AI agent validation for ready state patterns
-      const readyPatterns = patternAnalysis.matches.filter((m) => m.patternType === "ready_state");
+      const readyPatterns = patternAnalysis.matches.filter(
+        (m) => m.patternType === "ready_state"
+      );
 
       for (const pattern of readyPatterns) {
         const validationResponse = await this.patternAgent.validateReadyState({
           vcoinId: pattern.vcoinId || pattern.symbol,
-          symbolData: request.input.symbolData?.filter((s) => s.cd === pattern.symbol),
+          symbolData: request.input.symbolData?.filter(
+            (s) => s.cd === pattern.symbol
+          ),
           count: 1,
         });
 
-        results.agentResponses![`validation-${pattern.symbol}`] = validationResponse;
+        results.agentResponses![`validation-${pattern.symbol}`] =
+          validationResponse;
       }
     }
 
@@ -461,11 +537,12 @@ export class PatternStrategyOrchestrator {
       agentsUsed.push("strategy-agent", "pattern-discovery-agent");
 
       // First validate the pattern
-      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-        symbols: request.input.symbolData,
-        analysisType: "validation",
-        confidenceThreshold: 80,
-      });
+      const patternAnalysis =
+        await PatternDetectionCore.getInstance().analyzePatterns({
+          symbols: request.input.symbolData,
+          analysisType: "validation",
+          confidenceThreshold: 80,
+        });
 
       results.patternAnalysis = patternAnalysis;
 
@@ -490,10 +567,11 @@ export class PatternStrategyOrchestrator {
       }
 
       // Generate final strategic recommendations
-      const strategicRecommendations = await this.generateStrategicRecommendations(
-        patternAnalysis.matches,
-        "strategy_creation"
-      );
+      const strategicRecommendations =
+        await this.generateStrategicRecommendations(
+          patternAnalysis.matches,
+          "strategy_creation"
+        );
       results.strategicRecommendations = strategicRecommendations;
     }
 
@@ -579,20 +657,28 @@ export class PatternStrategyOrchestrator {
     }
 
     if (pattern.advanceNoticeHours >= 3.5) {
-      reasons.push(`Excellent advance notice: ${pattern.advanceNoticeHours.toFixed(1)} hours`);
+      reasons.push(
+        `Excellent advance notice: ${pattern.advanceNoticeHours.toFixed(1)} hours`
+      );
     }
 
-    reasons.push(`${pattern.confidence.toFixed(1)}% confidence based on pattern analysis`);
+    reasons.push(
+      `${pattern.confidence.toFixed(1)}% confidence based on pattern analysis`
+    );
     reasons.push(`${pattern.riskLevel} risk level assessed`);
 
     if (pattern.historicalSuccess) {
-      reasons.push(`Historical success rate: ${pattern.historicalSuccess.toFixed(1)}%`);
+      reasons.push(
+        `Historical success rate: ${pattern.historicalSuccess.toFixed(1)}%`
+      );
     }
 
     return reasons.join(". ");
   }
 
-  private calculateOptimalTiming(pattern: PatternMatch): StrategicRecommendation["timing"] {
+  private calculateOptimalTiming(
+    pattern: PatternMatch
+  ): StrategicRecommendation["timing"] {
     const now = new Date();
     const timing: StrategicRecommendation["timing"] = {};
 
@@ -600,11 +686,15 @@ export class PatternStrategyOrchestrator {
       timing.optimalEntry = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
     } else if (pattern.patternType === "pre_ready") {
       const estimatedHours = pattern.advanceNoticeHours || 2;
-      timing.optimalEntry = new Date(now.getTime() + estimatedHours * 60 * 60 * 1000);
+      timing.optimalEntry = new Date(
+        now.getTime() + estimatedHours * 60 * 60 * 1000
+      );
       timing.monitoringStart = new Date(now.getTime() + 30 * 60 * 1000); // Start monitoring in 30 min
     } else if (pattern.patternType === "launch_sequence") {
       const launchHours = pattern.advanceNoticeHours;
-      timing.optimalEntry = new Date(now.getTime() + launchHours * 60 * 60 * 1000);
+      timing.optimalEntry = new Date(
+        now.getTime() + launchHours * 60 * 60 * 1000
+      );
       timing.monitoringStart = new Date(
         now.getTime() + Math.max((launchHours - 1) * 60 * 60 * 1000, 0)
       );
@@ -617,7 +707,11 @@ export class PatternStrategyOrchestrator {
     pattern: PatternMatch
   ): StrategicRecommendation["riskManagement"] {
     const baseRisk =
-      pattern.riskLevel === "low" ? 0.02 : pattern.riskLevel === "medium" ? 0.03 : 0.05;
+      pattern.riskLevel === "low"
+        ? 0.02
+        : pattern.riskLevel === "medium"
+          ? 0.03
+          : 0.05;
     const confidenceMultiplier = pattern.confidence / 100;
 
     return {
@@ -632,7 +726,9 @@ export class PatternStrategyOrchestrator {
   // Monitoring Plan Creation
   // ============================================================================
 
-  private async createMonitoringPlan(patterns: PatternMatch[]): Promise<MonitoringPlan> {
+  private async createMonitoringPlan(
+    patterns: PatternMatch[]
+  ): Promise<MonitoringPlan> {
     const targets: MonitoringTarget[] = [];
     const schedules: MonitoringSchedule[] = [];
     const alerts: AlertConfiguration[] = [];
@@ -684,7 +780,9 @@ export class PatternStrategyOrchestrator {
     return { targets, schedules, alerts, resources };
   }
 
-  private determinePriority(pattern: PatternMatch): MonitoringTarget["priority"] {
+  private determinePriority(
+    pattern: PatternMatch
+  ): MonitoringTarget["priority"] {
     if (pattern.patternType === "ready_state" && pattern.confidence >= 85) {
       return "critical";
     }
@@ -717,7 +815,9 @@ export class PatternStrategyOrchestrator {
     return actions;
   }
 
-  private calculateMonitoringIntervals(pattern: PatternMatch): MonitoringSchedule["intervals"] {
+  private calculateMonitoringIntervals(
+    pattern: PatternMatch
+  ): MonitoringSchedule["intervals"] {
     if (pattern.patternType === "ready_state") {
       return { current: 1, approaching: 0.5, critical: 0.25 }; // Minutes
     }
@@ -776,16 +876,17 @@ export class PatternStrategyOrchestrator {
       );
 
       // Use the pattern-target integration service
-      const results = await patternTargetIntegrationService.createTargetsFromPatterns(
-        actionablePatterns,
-        userId,
-        {
-          minConfidenceForTarget: 75,
-          enabledPatternTypes: ["ready_state", "pre_ready"],
-          defaultPositionSizeUsdt: 100,
-          maxConcurrentTargets: 5,
-        }
-      );
+      const results =
+        await patternTargetIntegrationService.createTargetsFromPatterns(
+          actionablePatterns,
+          userId,
+          {
+            minConfidenceForTarget: 75,
+            enabledPatternTypes: ["ready_state", "pre_ready"],
+            defaultPositionSizeUsdt: 100,
+            maxConcurrentTargets: 5,
+          }
+        );
 
       // Log results
       const successful = results.filter((r) => r.success);
@@ -806,16 +907,22 @@ export class PatternStrategyOrchestrator {
 
       return results;
     } catch (error) {
-      console.error("[PatternOrchestrator] Failed to create snipe targets from patterns:", error);
+      console.error(
+        "[PatternOrchestrator] Failed to create snipe targets from patterns:",
+        error
+      );
       return [];
     }
   }
 
-  private async storeDiscoveredPatterns(patterns: PatternMatch[]): Promise<void> {
+  private async storeDiscoveredPatterns(
+    patterns: PatternMatch[]
+  ): Promise<void> {
     try {
       for (const pattern of patterns) {
         if (
-          (pattern.patternType === "launch_sequence" || pattern.patternType === "ready_state") &&
+          (pattern.patternType === "launch_sequence" ||
+            pattern.patternType === "ready_state") &&
           pattern.advanceNoticeHours >= 3.5
         ) {
           // Store in monitored listings for tracking
@@ -824,7 +931,8 @@ export class PatternStrategyOrchestrator {
             .values({
               vcoinId: pattern.vcoinId || pattern.symbol,
               symbolName: pattern.symbol,
-              firstOpenTime: Date.now() + pattern.advanceNoticeHours * 60 * 60 * 1000,
+              firstOpenTime:
+                Date.now() + pattern.advanceNoticeHours * 60 * 60 * 1000,
               status: "monitoring",
               confidence: pattern.confidence,
               patternSts: pattern.indicators.sts,
@@ -850,7 +958,9 @@ export class PatternStrategyOrchestrator {
         }
       }
 
-      console.info(`[PatternOrchestrator] Stored ${patterns.length} patterns in database`);
+      console.info(
+        `[PatternOrchestrator] Stored ${patterns.length} patterns in database`
+      );
     } catch (error) {
       console.warn("[PatternOrchestrator] Failed to store patterns:", error);
     }
@@ -885,18 +995,20 @@ export class PatternStrategyOrchestrator {
         .limit(50); // Limit to prevent excessive API calls
 
       // Transform database records to SymbolEntry format for pattern analysis
-      const symbolEntries: SymbolEntry[] = monitoredSymbols.map((symbol: any) => ({
-        cd: symbol.symbolName,
-        symbol: symbol.symbolName,
-        sts: symbol.patternSts || 0,
-        st: symbol.patternSt || 0,
-        tt: symbol.patternTt || 0,
-        // Optional fields with defaults
-        ca: 1000, // Default market cap indicator
-        ps: Math.round(symbol.confidence || 0), // Use confidence as price score
-        qs: 75, // Default quality score
-        vcoinId: symbol.vcoinId,
-      }));
+      const symbolEntries: SymbolEntry[] = monitoredSymbols.map(
+        (symbol: any) => ({
+          cd: symbol.symbolName,
+          symbol: symbol.symbolName,
+          sts: symbol.patternSts || 0,
+          st: symbol.patternSt || 0,
+          tt: symbol.patternTt || 0,
+          // Optional fields with defaults
+          ca: 1000, // Default market cap indicator
+          ps: Math.round(symbol.confidence || 0), // Use confidence as price score
+          qs: 75, // Default quality score
+          vcoinId: symbol.vcoinId,
+        })
+      );
 
       return symbolEntries;
     } catch (error) {
@@ -917,7 +1029,8 @@ export class PatternStrategyOrchestrator {
       executionMetrics: Object.fromEntries(this.executionMetrics),
       cacheMetrics: this.cacheMetrics,
       cacheHitRate:
-        this.cacheMetrics.hits / (this.cacheMetrics.hits + this.cacheMetrics.misses) || 0,
+        this.cacheMetrics.hits /
+          (this.cacheMetrics.hits + this.cacheMetrics.misses) || 0,
     };
   }
 
@@ -928,4 +1041,5 @@ export class PatternStrategyOrchestrator {
 }
 
 // Export singleton instance
-export const patternStrategyOrchestrator = PatternStrategyOrchestrator.getInstance();
+export const patternStrategyOrchestrator =
+  PatternStrategyOrchestrator.getInstance();

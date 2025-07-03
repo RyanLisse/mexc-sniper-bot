@@ -118,7 +118,10 @@ export class ManualTradingModule {
       return result;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error("Trade execution failed", { params, error: safeError });
+      this.context.logger.error("Trade execution failed", {
+        params,
+        error: safeError,
+      });
 
       this.handleTradeFailure(safeError);
 
@@ -133,7 +136,9 @@ export class ManualTradingModule {
   /**
    * Execute a multi-phase trading strategy
    */
-  async executeMultiPhaseStrategy(config: MultiPhaseConfig): Promise<MultiPhaseResult> {
+  async executeMultiPhaseStrategy(
+    config: MultiPhaseConfig
+  ): Promise<MultiPhaseResult> {
     const startTime = Date.now();
 
     try {
@@ -152,7 +157,8 @@ export class ManualTradingModule {
 
       // Calculate phase allocations
       const allocations =
-        config.phaseAllocation || this.calculatePhaseAllocations(config.phaseCount);
+        config.phaseAllocation ||
+        this.calculatePhaseAllocations(config.phaseCount);
 
       const phases: MultiPhaseResult["phases"] = [];
       let totalExecuted = 0;
@@ -214,7 +220,9 @@ export class ManualTradingModule {
 
         // Wait between phases if not the last phase
         if (i < config.phaseCount - 1 && config.phaseDelayMs > 0) {
-          await new Promise((resolve) => setTimeout(resolve, config.phaseDelayMs));
+          await new Promise((resolve) =>
+            setTimeout(resolve, config.phaseDelayMs)
+          );
         }
       }
 
@@ -258,7 +266,10 @@ export class ManualTradingModule {
       totalTrades: this.totalTrades,
       successfulTrades: this.successfulTrades,
       failedTrades: this.failedTrades,
-      successRate: this.totalTrades > 0 ? (this.successfulTrades / this.totalTrades) * 100 : 0,
+      successRate:
+        this.totalTrades > 0
+          ? (this.successfulTrades / this.totalTrades) * 100
+          : 0,
     };
   }
 
@@ -269,7 +280,9 @@ export class ManualTradingModule {
   /**
    * Execute a paper trade (simulation)
    */
-  private async executePaperTrade(params: TradeParameters): Promise<TradeResult> {
+  private async executePaperTrade(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     const startTime = Date.now();
 
     // Simulate trade execution
@@ -310,7 +323,9 @@ export class ManualTradingModule {
   /**
    * Execute a real trade through MEXC API
    */
-  private async executeRealTrade(params: TradeParameters): Promise<TradeResult> {
+  private async executeRealTrade(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     const startTime = Date.now();
 
     try {
@@ -388,7 +403,9 @@ export class ManualTradingModule {
         return parseFloat(ticker.data.price);
       }
     } catch (_error) {
-      this.context.logger.debug("Could not get real price for simulation", { symbol });
+      this.context.logger.debug("Could not get real price for simulation", {
+        symbol,
+      });
     }
 
     // Fallback to mock price
@@ -460,7 +477,10 @@ export class ManualTradingModule {
   /**
    * Update trade metrics
    */
-  private updateTradeMetrics(result: TradeResult, _params: TradeParameters): void {
+  private updateTradeMetrics(
+    result: TradeResult,
+    _params: TradeParameters
+  ): void {
     this.totalTrades++;
     this.state.metrics.totalTrades++;
 
@@ -469,7 +489,8 @@ export class ManualTradingModule {
       this.state.metrics.successfulTrades++;
 
       if (result.data?.quantity && result.data?.price) {
-        const volume = parseFloat(result.data.quantity) * parseFloat(result.data.price);
+        const volume =
+          parseFloat(result.data.quantity) * parseFloat(result.data.price);
         this.state.metrics.totalVolume += volume;
       }
     } else {

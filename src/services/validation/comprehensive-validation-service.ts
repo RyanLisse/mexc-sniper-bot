@@ -1,6 +1,6 @@
 /**
  * Comprehensive Validation Service
- * 
+ *
  * Central service for managing all validation across the application.
  * Provides unified validation for API requests, external responses,
  * and critical data flows with comprehensive error handling.
@@ -12,23 +12,16 @@ import {
   type EnhancedValidationResult,
   ValidationError,
   ValidationHealthMonitor,
-  validateExternalApiResponse,
 } from "@/src/lib/enhanced-validation-middleware";
 import {
   type AccountBalance,
   CRITICAL_DATA_SCHEMAS,
   MEXC_API_SCHEMAS,
-  type MexcBaseResponse,
   type PortfolioSummary,
   safeValidateWithDefault,
   type TradingOrder,
-  validateCriticalTradingData,
   validateMexcResponse as validateExternalMexcResponse,
 } from "@/src/schemas/external-api-validation-schemas";
-import {
-  type MexcServiceResponse,
-  validateMexcData,
-} from "@/src/schemas/unified/mexc-api-schemas";
 
 // ============================================================================
 // Validation Service Configuration
@@ -131,7 +124,7 @@ export class ComprehensiveValidationService {
   constructor(config: Partial<ValidationConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.cache = new ValidationCache(this.config.maxCacheSize);
-    
+
     this.logger = {
       debug: (message: string, context?: any) => {
         if (this.config.logLevel === "debug") {
@@ -164,14 +157,14 @@ export class ComprehensiveValidationService {
     expectedSchema: keyof typeof MEXC_API_SCHEMAS
   ): Promise<EnhancedValidationResult<T>> {
     const startTime = Date.now();
-    
+
     try {
       this.logger.debug(`Validating MEXC API response for ${apiEndpoint}`);
-      
+
       const schema = MEXC_API_SCHEMAS[expectedSchema];
       const cacheKey = `mexc:${apiEndpoint}:${JSON.stringify(response).substring(0, 100)}`;
       const schemaHash = this.getSchemaHash(schema);
-      
+
       // Check cache if enabled
       if (this.config.enableCaching) {
         const cached = this.cache.get(cacheKey, schemaHash);
@@ -180,51 +173,63 @@ export class ComprehensiveValidationService {
           return cached;
         }
       }
-      
-      const validationResult = validateExternalMexcResponse(schema, response, apiEndpoint);
+
+      const validationResult = validateExternalMexcResponse(
+        schema,
+        response,
+        apiEndpoint
+      );
       const validationTime = Date.now() - startTime;
-      
+
       if (this.config.enableMetrics) {
         ValidationHealthMonitor.recordValidation(
-          validationResult.success, 
-          validationTime, 
+          validationResult.success,
+          validationTime,
           validationResult.success ? undefined : validationResult.error
         );
       }
-      
+
       const result: EnhancedValidationResult<T> = {
         success: validationResult.success,
-        data: validationResult.success ? validationResult.data as T : undefined,
+        data: validationResult.success
+          ? (validationResult.data as T)
+          : undefined,
         error: validationResult.success ? undefined : validationResult.error,
         statusCode: validationResult.success ? 200 : 502,
         metrics: {
           validationTime,
           schemaSize: 0,
           errorCount: validationResult.success ? 0 : 1,
-          validatedFields: validationResult.success ? Object.keys((validationResult.data as any) || {}) : [],
+          validatedFields: validationResult.success
+            ? Object.keys((validationResult.data as any) || {})
+            : [],
         },
       };
-      
+
       // Cache successful results
       if (this.config.enableCaching && validationResult.success) {
         this.cache.set(cacheKey, result, schemaHash);
       }
-      
+
       this.logger.debug(`MEXC API validation for ${apiEndpoint} completed`, {
         success: validationResult.success,
         validationTime,
       });
-      
+
       return result;
     } catch (error) {
       const validationTime = Date.now() - startTime;
-      
+
       if (this.config.enableMetrics) {
-        ValidationHealthMonitor.recordValidation(false, validationTime, error instanceof Error ? error.message : "Unknown error");
+        ValidationHealthMonitor.recordValidation(
+          false,
+          validationTime,
+          error instanceof Error ? error.message : "Unknown error"
+        );
       }
-      
+
       this.logger.error(`MEXC API validation failed for ${apiEndpoint}`, error);
-      
+
       return {
         success: false,
         error: `MEXC API validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -245,15 +250,18 @@ export class ComprehensiveValidationService {
 
   validateCriticalTradingOrder(orderData: unknown): TradingOrder {
     this.logger.debug("Validating critical trading order data");
-    
+
     try {
       const validated = CriticalDataValidator.validateCriticalData(
         CRITICAL_DATA_SCHEMAS.tradingOrder,
         orderData
       );
-      
+
       if (!validated.success || !validated.data) {
-        throw new ValidationError("Trading order validation failed", validated.error);
+        throw new ValidationError(
+          "Trading order validation failed",
+          validated.error
+        );
       }
 
       this.logger.info("Trading order validation successful", {
@@ -261,7 +269,7 @@ export class ComprehensiveValidationService {
         side: validated.data.side,
         type: validated.data.type,
       });
-      
+
       return validated.data;
     } catch (error) {
       this.logger.error("Critical trading order validation failed", error);
@@ -271,22 +279,25 @@ export class ComprehensiveValidationService {
 
   validateCriticalAccountBalance(balanceData: unknown): AccountBalance {
     this.logger.debug("Validating critical account balance data");
-    
+
     try {
       const validated = CriticalDataValidator.validateCriticalData(
         CRITICAL_DATA_SCHEMAS.accountBalance,
         balanceData
       );
-      
+
       if (!validated.success || !validated.data) {
-        throw new ValidationError("Account balance validation failed", validated.error);
+        throw new ValidationError(
+          "Account balance validation failed",
+          validated.error
+        );
       }
-      
+
       this.logger.debug("Account balance validation successful", {
         asset: validated.data.asset,
         total: validated.data.total,
       });
-      
+
       return validated.data;
     } catch (error) {
       this.logger.error("Critical account balance validation failed", error);
@@ -296,22 +307,25 @@ export class ComprehensiveValidationService {
 
   validateCriticalPortfolio(portfolioData: unknown): PortfolioSummary {
     this.logger.debug("Validating critical portfolio data");
-    
+
     try {
       const validated = CriticalDataValidator.validateCriticalData(
         CRITICAL_DATA_SCHEMAS.portfolioSummary,
         portfolioData
       );
-      
+
       if (!validated.success || !validated.data) {
-        throw new ValidationError("Portfolio validation failed", validated.error);
+        throw new ValidationError(
+          "Portfolio validation failed",
+          validated.error
+        );
       }
-      
+
       this.logger.info("Portfolio validation successful", {
         totalValue: validated.data.totalValue,
         balancesCount: validated.data.balances?.length || 0,
       });
-      
+
       return validated.data;
     } catch (error) {
       this.logger.error("Critical portfolio validation failed", error);
@@ -325,7 +339,7 @@ export class ComprehensiveValidationService {
 
   safeValidateMarketData(marketData: unknown, fallback: any = null): any {
     this.logger.debug("Safe validation of market data");
-    
+
     try {
       return safeValidateWithDefault(
         CRITICAL_DATA_SCHEMAS.marketData,
@@ -338,14 +352,17 @@ export class ComprehensiveValidationService {
     }
   }
 
-  safeValidateRiskParameters(riskData: unknown, fallback: any = {
-    maxPositionSize: 1000,
-    stopLossPercentage: 5,
-    takeProfitPercentage: 15,
-    riskLevel: "medium" as const,
-  }): any {
+  safeValidateRiskParameters(
+    riskData: unknown,
+    fallback: any = {
+      maxPositionSize: 1000,
+      stopLossPercentage: 5,
+      takeProfitPercentage: 15,
+      riskLevel: "medium" as const,
+    }
+  ): any {
     this.logger.debug("Safe validation of risk parameters");
-    
+
     try {
       return safeValidateWithDefault(
         CRITICAL_DATA_SCHEMAS.riskParameters,
@@ -353,7 +370,10 @@ export class ComprehensiveValidationService {
         fallback
       );
     } catch (error) {
-      this.logger.warn("Risk parameters validation failed, using fallback", error);
+      this.logger.warn(
+        "Risk parameters validation failed, using fallback",
+        error
+      );
       return fallback;
     }
   }
@@ -382,53 +402,60 @@ export class ComprehensiveValidationService {
     const { continueOnError = true, maxParallel = 10 } = options;
     const successful: T[] = [];
     const failed: { index: number; error: string; data: unknown }[] = [];
-    
+
     this.logger.debug(`Starting batch validation of ${items.length} items`);
-    
+
     // Process in chunks to control parallelism
     const chunks = this.chunkArray(items, maxParallel);
-    
+
     for (const chunk of chunks) {
       const promises = chunk.map(async (item, chunkIndex) => {
         const globalIndex = chunks.indexOf(chunk) * maxParallel + chunkIndex;
-        
+
         try {
           const result = schema.parse(item);
           successful.push(result);
           return { success: true, index: globalIndex };
         } catch (error) {
-          const errorMessage = error instanceof z.ZodError 
-            ? error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
-            : error instanceof Error ? error.message : 'Unknown error';
-          
+          const errorMessage =
+            error instanceof z.ZodError
+              ? error.errors
+                  .map((e) => `${e.path.join(".")}: ${e.message}`)
+                  .join(", ")
+              : error instanceof Error
+                ? error.message
+                : "Unknown error";
+
           failed.push({
             index: globalIndex,
             error: errorMessage,
             data: item,
           });
-          
+
           return { success: false, index: globalIndex };
         }
       });
-      
+
       await Promise.all(promises);
-      
+
       // Stop on first error if failFast is enabled
       if (!continueOnError && failed.length > 0) {
-        this.logger.warn(`Batch validation stopped at first error (item ${failed[0].index})`);
+        this.logger.warn(
+          `Batch validation stopped at first error (item ${failed[0].index})`
+        );
         break;
       }
     }
-    
+
     const summary = {
       total: items.length,
       successful: successful.length,
       failed: failed.length,
       successRate: (successful.length / items.length) * 100,
     };
-    
+
     this.logger.info("Batch validation completed", summary);
-    
+
     return { successful, failed, summary };
   }
 
@@ -488,7 +515,9 @@ export class ComprehensiveValidationService {
 
 let validationServiceInstance: ComprehensiveValidationService | null = null;
 
-export function getValidationService(config?: Partial<ValidationConfig>): ComprehensiveValidationService {
+export function getValidationService(
+  config?: Partial<ValidationConfig>
+): ComprehensiveValidationService {
   if (!validationServiceInstance) {
     validationServiceInstance = new ComprehensiveValidationService(config);
   }

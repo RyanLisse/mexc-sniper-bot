@@ -96,7 +96,9 @@ export const TradingAnalyticsReportSchema = z.object({
 
 export type TradingEvent = z.infer<typeof TradingEventSchema>;
 export type PerformanceMetrics = z.infer<typeof PerformanceMetricsSchema>;
-export type TradingAnalyticsReport = z.infer<typeof TradingAnalyticsReportSchema>;
+export type TradingAnalyticsReport = z.infer<
+  typeof TradingAnalyticsReportSchema
+>;
 
 // ============================================================================
 // Analytics Configuration
@@ -144,9 +146,18 @@ export class TradingAnalyticsService {
           warn: (message: string, context?: any) =>
             console.warn("[trading-analytics-service]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[trading-analytics-service]", message, context || "", error || ""),
+            console.error(
+              "[trading-analytics-service]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
-            console.debug("[trading-analytics-service]", message, context || ""),
+            console.debug(
+              "[trading-analytics-service]",
+              message,
+              context || ""
+            ),
         };
       } catch {
         // Fallback during build time
@@ -178,7 +189,9 @@ export class TradingAnalyticsService {
    * Initialize the analytics service
    */
   initialize(): void {
-    console.info("[TradingAnalytics] Initializing trading analytics service...");
+    console.info(
+      "[TradingAnalytics] Initializing trading analytics service..."
+    );
 
     // Start periodic flushing of events
     this.startPeriodicFlush();
@@ -214,7 +227,9 @@ export class TradingAnalyticsService {
 
       // Trim events if we exceed max storage
       if (this.events.length > ANALYTICS_CONFIG.storage.maxEvents) {
-        this.events = this.events.slice(-ANALYTICS_CONFIG.storage.maxEvents * 0.8); // Keep 80%
+        this.events = this.events.slice(
+          -ANALYTICS_CONFIG.storage.maxEvents * 0.8
+        ); // Keep 80%
       }
 
       // Update performance metrics
@@ -236,9 +251,15 @@ export class TradingAnalyticsService {
     metadata?: Record<string, unknown>
   ): void {
     // Validate inputs
-    const validResponseTime = typeof responseTimeMs === 'number' && !isNaN(responseTimeMs) ? responseTimeMs : 0;
-    const validOperation = typeof operation === 'string' && operation.trim() ? operation.trim() : 'unknown_operation';
-    
+    const validResponseTime =
+      typeof responseTimeMs === "number" && !Number.isNaN(responseTimeMs)
+        ? responseTimeMs
+        : 0;
+    const validOperation =
+      typeof operation === "string" && operation.trim()
+        ? operation.trim()
+        : "unknown_operation";
+
     this.logTradingEvent({
       eventType: "API_CALL",
       userId,
@@ -275,10 +296,16 @@ export class TradingAnalyticsService {
     };
 
     // Validate inputs
-    const validResponseTime = typeof responseTimeMs === 'number' && !isNaN(responseTimeMs) ? responseTimeMs : 0;
-    const validSymbol = typeof symbol === 'string' && symbol.trim() ? symbol.trim() : 'UNKNOWN';
-    const validUserId = typeof userId === 'string' && userId.trim() ? userId.trim() : 'anonymous';
-    const validOperation = operation && eventTypeMap[operation] ? operation : 'PLACE';
+    const validResponseTime =
+      typeof responseTimeMs === "number" && !Number.isNaN(responseTimeMs)
+        ? responseTimeMs
+        : 0;
+    const validSymbol =
+      typeof symbol === "string" && symbol.trim() ? symbol.trim() : "UNKNOWN";
+    const validUserId =
+      typeof userId === "string" && userId.trim() ? userId.trim() : "anonymous";
+    const validOperation =
+      operation && eventTypeMap[operation] ? operation : "PLACE";
 
     this.logTradingEvent({
       eventType: success ? eventTypeMap[validOperation] : "TRADE_FAILED",
@@ -293,7 +320,7 @@ export class TradingAnalyticsService {
         retryCount: metadata?.retryCount ? Number(metadata.retryCount) || 0 : 0,
       },
       success,
-      error: success ? undefined : (error || 'Unknown error'),
+      error: success ? undefined : error || "Unknown error",
     });
   }
 
@@ -319,11 +346,15 @@ export class TradingAnalyticsService {
     });
 
     if (filters?.userId) {
-      filteredEvents = filteredEvents.filter((event) => event.userId === filters.userId);
+      filteredEvents = filteredEvents.filter(
+        (event) => event.userId === filters.userId
+      );
     }
 
     if (filters?.eventType) {
-      filteredEvents = filteredEvents.filter((event) => event.eventType === filters.eventType);
+      filteredEvents = filteredEvents.filter(
+        (event) => event.eventType === filters.eventType
+      );
     }
 
     if (filters?.onlyErrors) {
@@ -332,21 +363,32 @@ export class TradingAnalyticsService {
 
     // Calculate summary metrics
     const totalEvents = filteredEvents.length;
-    const successfulEvents = filteredEvents.filter((event) => event.success).length;
+    const successfulEvents = filteredEvents.filter(
+      (event) => event.success
+    ).length;
     const failedEvents = totalEvents - successfulEvents;
 
     const tradeEvents = filteredEvents.filter((event) =>
-      ["TRADE_PLACED", "TRADE_FILLED", "TRADE_CANCELLED", "TRADE_FAILED"].includes(event.eventType)
+      [
+        "TRADE_PLACED",
+        "TRADE_FILLED",
+        "TRADE_CANCELLED",
+        "TRADE_FAILED",
+      ].includes(event.eventType)
     );
 
     const totalTrades = tradeEvents.length;
-    const successfulTrades = tradeEvents.filter((event) => event.success).length;
+    const successfulTrades = tradeEvents.filter(
+      (event) => event.success
+    ).length;
     const failedTrades = totalTrades - successfulTrades;
 
     const averageResponseTime =
       filteredEvents.length > 0
-        ? filteredEvents.reduce((sum, event) => sum + event.performance.responseTimeMs, 0) /
-          filteredEvents.length
+        ? filteredEvents.reduce(
+            (sum, event) => sum + event.performance.responseTimeMs,
+            0
+          ) / filteredEvents.length
         : 0;
 
     const errorRate = totalEvents > 0 ? failedEvents / totalEvents : 0;
@@ -356,7 +398,9 @@ export class TradingAnalyticsService {
       // Only count volume for successful trades
       if (!event.success) return sum;
       const volume = event.metadata.volume as number;
-      return sum + (typeof volume === "number" && !isNaN(volume) ? volume : 0);
+      return (
+        sum + (typeof volume === "number" && !Number.isNaN(volume) ? volume : 0)
+      );
     }, 0);
 
     // Generate breakdowns
@@ -424,7 +468,10 @@ export class TradingAnalyticsService {
   /**
    * Get real-time performance metrics
    */
-  getPerformanceMetrics(operation?: string, timeWindow = 300000): PerformanceMetrics[] {
+  getPerformanceMetrics(
+    operation?: string,
+    timeWindow = 300000
+  ): PerformanceMetrics[] {
     const since = Date.now() - timeWindow;
     const cacheKey = `${operation || "all"}-${timeWindow}`;
 
@@ -441,8 +488,10 @@ export class TradingAnalyticsService {
     const relevantEvents = this.events.filter((event) => {
       const eventTime = new Date(event.timestamp).getTime();
       const matchesTimeWindow = eventTime > since;
-      const matchesOperation = operation ? 
-        (event.metadata.operation === operation || event.eventType === operation) : true;
+      const matchesOperation = operation
+        ? event.metadata.operation === operation ||
+          event.eventType === operation
+        : true;
       return matchesTimeWindow && matchesOperation;
     });
 
@@ -465,21 +514,36 @@ export class TradingAnalyticsService {
 
       if (windowEvents.length > 0) {
         const successfulEvents = windowEvents.filter((event) => event.success);
-        const errorRate = (windowEvents.length - successfulEvents.length) / windowEvents.length;
-        
+        const errorRate =
+          (windowEvents.length - successfulEvents.length) / windowEvents.length;
+
         // Calculate average response time with validation
-        const validResponseTimes = windowEvents.filter(e => 
-          typeof e.performance.responseTimeMs === 'number' && !isNaN(e.performance.responseTimeMs)
+        const validResponseTimes = windowEvents.filter(
+          (e) =>
+            typeof e.performance.responseTimeMs === "number" &&
+            !Number.isNaN(e.performance.responseTimeMs)
         );
-        const avgResponseTime = validResponseTimes.length > 0 ?
-          validResponseTimes.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / validResponseTimes.length : 0;
-        
+        const avgResponseTime =
+          validResponseTimes.length > 0
+            ? validResponseTimes.reduce(
+                (sum, e) => sum + e.performance.responseTimeMs,
+                0
+              ) / validResponseTimes.length
+            : 0;
+
         // Calculate average retries with validation
-        const validRetries = windowEvents.filter(e => 
-          typeof e.performance.retryCount === 'number' && !isNaN(e.performance.retryCount)
+        const validRetries = windowEvents.filter(
+          (e) =>
+            typeof e.performance.retryCount === "number" &&
+            !Number.isNaN(e.performance.retryCount)
         );
-        const avgRetries = validRetries.length > 0 ?
-          validRetries.reduce((sum, e) => sum + e.performance.retryCount, 0) / validRetries.length : 0;
+        const avgRetries =
+          validRetries.length > 0
+            ? validRetries.reduce(
+                (sum, e) => sum + e.performance.retryCount,
+                0
+              ) / validRetries.length
+            : 0;
 
         metrics.push({
           operation: operation || "all",
@@ -519,7 +583,10 @@ export class TradingAnalyticsService {
       eventTypes?: TradingEvent["eventType"][];
     }
   ): string {
-    const report = this.generateAnalyticsReport(filters?.startTime, filters?.endTime);
+    const report = this.generateAnalyticsReport(
+      filters?.startTime,
+      filters?.endTime
+    );
 
     switch (format) {
       case "json":
@@ -571,7 +638,8 @@ export class TradingAnalyticsService {
     ).length;
 
     const totalEvents = this.events.length;
-    const averageEventSize = totalEvents > 0 ? JSON.stringify(this.events).length / totalEvents : 0;
+    const averageEventSize =
+      totalEvents > 0 ? JSON.stringify(this.events).length / totalEvents : 0;
 
     return {
       totalEvents,
@@ -657,7 +725,8 @@ export class TradingAnalyticsService {
     const alerts: string[] = [];
 
     if (
-      event.performance.responseTimeMs > ANALYTICS_CONFIG.performance.alertThresholds.responseTime
+      event.performance.responseTimeMs >
+      ANALYTICS_CONFIG.performance.alertThresholds.responseTime
     ) {
       alerts.push(`High response time: ${event.performance.responseTimeMs}ms`);
     }
@@ -697,7 +766,9 @@ export class TradingAnalyticsService {
     // For now, just log the flush operation
     const eventCount = this.events.length;
     if (eventCount > 0) {
-      console.info(`[TradingAnalytics] Flushing ${eventCount} events to persistent storage`);
+      console.info(
+        `[TradingAnalytics] Flushing ${eventCount} events to persistent storage`
+      );
 
       // Simulate persistent storage by keeping only recent events
       const keepRecent = ANALYTICS_CONFIG.storage.maxEvents * 0.8;
@@ -749,9 +820,17 @@ export class TradingAnalyticsService {
     }
 
     // Response time anomaly - only check if we have valid response times
-    const validResponseTimes = events.filter(e => typeof e.performance.responseTimeMs === 'number' && !isNaN(e.performance.responseTimeMs));
+    const validResponseTimes = events.filter(
+      (e) =>
+        typeof e.performance.responseTimeMs === "number" &&
+        !Number.isNaN(e.performance.responseTimeMs)
+    );
     if (validResponseTimes.length > 0) {
-      const avgResponseTime = validResponseTimes.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / validResponseTimes.length;
+      const avgResponseTime =
+        validResponseTimes.reduce(
+          (sum, e) => sum + e.performance.responseTimeMs,
+          0
+        ) / validResponseTimes.length;
       if (avgResponseTime > 10000) {
         anomalies.push({
           type: "HIGH_RESPONSE_TIME",
@@ -767,7 +846,11 @@ export class TradingAnalyticsService {
 
   private generateRecommendations(
     events: TradingEvent[],
-    metrics: { errorRate: number; averageResponseTime: number; totalTrades: number }
+    metrics: {
+      errorRate: number;
+      averageResponseTime: number;
+      totalTrades: number;
+    }
   ): string[] {
     const recommendations = [];
 
@@ -828,7 +911,10 @@ export class TradingAnalyticsService {
       ["Successful Trades", report.summary.successfulTrades.toString()],
       ["Failed Trades", report.summary.failedTrades.toString()],
       ["Total Volume", report.summary.totalVolume.toString()],
-      ["Average Response Time (ms)", report.summary.averageResponseTime.toFixed(2)],
+      [
+        "Average Response Time (ms)",
+        report.summary.averageResponseTime.toFixed(2),
+      ],
       ["Error Rate (%)", (report.summary.errorRate * 100).toFixed(2)],
     ];
 

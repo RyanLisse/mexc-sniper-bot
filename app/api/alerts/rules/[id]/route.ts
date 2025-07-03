@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { requireAuth } from "@/src/lib/supabase-auth";
 
 const alertConfigService = new AlertConfigurationService(db);
 
@@ -16,16 +15,19 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const rule = await alertConfigService.getAlertRule(id);
-    
+
     if (!rule) {
-      return NextResponse.json({
-        success: false,
-        error: "Alert rule not found",
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Alert rule not found",
+        },
+        { status: 404 }
+      );
     }
 
     // Parse JSON fields for client consumption
@@ -54,7 +56,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
@@ -62,10 +64,13 @@ export async function PUT(
     // Check if rule exists
     const existingRule = await alertConfigService.getAlertRule(id);
     if (!existingRule) {
-      return NextResponse.json({
-        success: false,
-        error: "Alert rule not found",
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Alert rule not found",
+        },
+        { status: 404 }
+      );
     }
 
     // Validate the configuration
@@ -73,14 +78,17 @@ export async function PUT(
       ...existingRule,
       ...body,
     });
-    
+
     if (!validation.isValid) {
-      return NextResponse.json({
-        success: false,
-        error: "Invalid rule configuration",
-        details: validation.errors,
-        warnings: validation.warnings,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid rule configuration",
+          details: validation.errors,
+          warnings: validation.warnings,
+        },
+        { status: 400 }
+      );
     }
 
     await alertConfigService.updateAlertRule(id, body);
@@ -105,16 +113,19 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     // Check if rule exists
     const existingRule = await alertConfigService.getAlertRule(id);
     if (!existingRule) {
-      return NextResponse.json({
-        success: false,
-        error: "Alert rule not found",
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Alert rule not found",
+        },
+        { status: 404 }
+      );
     }
 
     await alertConfigService.deleteAlertRule(id);

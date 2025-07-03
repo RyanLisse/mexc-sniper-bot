@@ -1,6 +1,6 @@
 /**
  * Optimized Auto Exit Manager
- * 
+ *
  * Stub implementation for testing purposes
  * Manages automated exit strategies with optimized performance
  */
@@ -12,13 +12,13 @@ export interface ExitTarget {
   stopLoss?: number;
   takeProfit?: number;
   quantity: number;
-  status: 'active' | 'triggered' | 'cancelled';
+  status: "active" | "triggered" | "cancelled";
 }
 
 export interface ExitStrategy {
   id: string;
   name: string;
-  type: 'stop_loss' | 'take_profit' | 'trailing_stop' | 'time_based';
+  type: "stop_loss" | "take_profit" | "trailing_stop" | "time_based";
   parameters: Record<string, any>;
 }
 
@@ -31,7 +31,7 @@ export interface OptimizedAutoExitManagerConfig {
 
 /**
  * Optimized Auto Exit Manager
- * 
+ *
  * This is a stub implementation to satisfy TypeScript compilation
  * for the corresponding test file.
  */
@@ -74,7 +74,10 @@ export class OptimizedAutoExitManager {
   /**
    * Update target status
    */
-  async updateTargetStatus(targetId: string, status: ExitTarget['status']): Promise<void> {
+  async updateTargetStatus(
+    targetId: string,
+    status: ExitTarget["status"]
+  ): Promise<void> {
     const target = this.activeTargets.get(targetId);
     if (target) {
       target.status = status;
@@ -95,7 +98,7 @@ export class OptimizedAutoExitManager {
 
     const batches = this.createBatches(targets, this.config.batchSize);
     for (const batch of batches) {
-      await Promise.all(batch.map(target => this.processTarget(target)));
+      await Promise.all(batch.map((target) => this.processTarget(target)));
     }
   }
 
@@ -129,7 +132,9 @@ export class OptimizedAutoExitManager {
   }> {
     return {
       totalTargets: this.activeTargets.size,
-      activeTargets: Array.from(this.activeTargets.values()).filter(t => t.status === 'active').length,
+      activeTargets: Array.from(this.activeTargets.values()).filter(
+        (t) => t.status === "active"
+      ).length,
       processedToday: 0,
       averageProcessingTime: 0,
     };

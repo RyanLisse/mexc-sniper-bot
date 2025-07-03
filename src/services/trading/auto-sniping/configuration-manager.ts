@@ -1,6 +1,6 @@
 /**
  * Configuration Manager Module
- * 
+ *
  * Handles configuration management and validation for auto-sniping.
  * Extracted from large auto-sniping.ts for better maintainability.
  */
@@ -21,7 +21,7 @@ export class ConfigurationManager {
 
   async initialize(): Promise<void> {
     await this.validateConfiguration();
-    console.log('ConfigurationManager initialized');
+    console.log("ConfigurationManager initialized");
   }
 
   async updateConfig(newConfig: Partial<CoreTradingConfig>): Promise<void> {
@@ -43,7 +43,10 @@ export class ConfigurationManager {
       return false;
     }
 
-    if (this.config.enableCircuitBreaker && this.context.safetyCoordinator?.isCircuitBreakerOpen?.()) {
+    if (
+      this.config.enableCircuitBreaker &&
+      this.context.safetyCoordinator?.isCircuitBreakerOpen?.()
+    ) {
       return false;
     }
 
@@ -54,37 +57,43 @@ export class ConfigurationManager {
     try {
       // Validate API credentials
       if (!this.config.apiKey) {
-        console.warn('Missing MEXC API key');
+        console.warn("Missing MEXC API key");
         return false;
       }
 
       if (!this.config.secretKey) {
-        console.warn('Missing MEXC secret key');
+        console.warn("Missing MEXC secret key");
         return false;
       }
 
       // Validate auto-sniping configuration
       if (this.config.autoSnipingEnabled) {
-        if (!this.config.snipeCheckInterval || this.config.snipeCheckInterval < 1000) {
-          console.warn('Auto-sniping interval too short (minimum 1000ms)');
+        if (
+          !this.config.snipeCheckInterval ||
+          this.config.snipeCheckInterval < 1000
+        ) {
+          console.warn("Auto-sniping interval too short (minimum 1000ms)");
           return false;
         }
 
-        if (!this.config.maxConcurrentSnipes || this.config.maxConcurrentSnipes < 1) {
-          console.warn('Invalid max concurrent snipes setting');
+        if (
+          !this.config.maxConcurrentSnipes ||
+          this.config.maxConcurrentSnipes < 1
+        ) {
+          console.warn("Invalid max concurrent snipes setting");
           return false;
         }
       }
 
       // Validate safety settings
       if (this.config.maxPositionSize && this.config.maxPositionSize <= 0) {
-        console.warn('Invalid max position size');
+        console.warn("Invalid max position size");
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Configuration validation error:', error);
+      console.error("Configuration validation error:", error);
       return false;
     }
   }
@@ -92,21 +101,23 @@ export class ConfigurationManager {
   async performHealthChecks(): Promise<boolean> {
     try {
       // Check if configuration is valid
-      if (!await this.validateConfiguration()) {
+      if (!(await this.validateConfiguration())) {
         return false;
       }
 
       // Check safety circuit breaker
-      if (this.config.safety?.circuitBreaker?.enabled && 
-          this.config.safety?.circuitBreaker?.isTripped) {
-        console.warn('Safety circuit breaker is tripped');
+      if (
+        this.config.safety?.circuitBreaker?.enabled &&
+        this.config.safety?.circuitBreaker?.isTripped
+      ) {
+        console.warn("Safety circuit breaker is tripped");
         return false;
       }
 
       // Additional health checks can be added here
       return true;
     } catch (error) {
-      console.error('Health check error:', error);
+      console.error("Health check error:", error);
       return false;
     }
   }

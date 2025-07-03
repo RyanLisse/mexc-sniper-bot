@@ -5,14 +5,21 @@ import { useUserPreferences } from "../hooks/use-user-preferences";
 import { TakeProfitLevels } from "./take-profit-levels";
 import { TradingConfiguration } from "./trading-configuration";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 
 interface UserPreferencesProps {
   userId: string;
 }
 
 export function UserPreferences({ userId }: UserPreferencesProps) {
-  const { data: preferences, isLoading: preferencesLoading } = useUserPreferences(userId);
+  const { data: preferences, isLoading: preferencesLoading } =
+    useUserPreferences(userId);
 
   if (preferencesLoading) {
     return (
@@ -44,8 +51,8 @@ export function UserPreferences({ userId }: UserPreferencesProps) {
             <div className="flex-1">
               <p className="text-sm font-medium">API Configuration Required</p>
               <p className="text-xs text-muted-foreground">
-                Configure your MEXC API credentials and system settings in System Check before using
-                trading features
+                Configure your MEXC API credentials and system settings in
+                System Check before using trading features
               </p>
             </div>
             <Button

@@ -19,7 +19,7 @@ export class PositionManager {
    */
   addPosition(position: Position): void {
     this.activePositions.set(position.id, position);
-    
+
     // Setup monitoring
     if (position.stopLossPrice) {
       this.setupStopLossMonitoring(position);
@@ -47,7 +47,7 @@ export class PositionManager {
 
     // Clear monitoring timers
     this.clearPositionMonitoring(positionId);
-    
+
     // Remove from tracking
     this.activePositions.delete(positionId);
 
@@ -97,7 +97,8 @@ export class PositionManager {
         if (!currentPrice) return;
 
         const shouldTrigger =
-          (position.side === "BUY" && currentPrice <= position.stopLossPrice!) ||
+          (position.side === "BUY" &&
+            currentPrice <= position.stopLossPrice!) ||
           (position.side === "SELL" && currentPrice >= position.stopLossPrice!);
 
         if (shouldTrigger) {
@@ -109,7 +110,7 @@ export class PositionManager {
         this.context.logger.error("Error in stop loss monitoring", {
           positionId: position.id,
           error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
         });
       }
     }, 5000); // Check every 5 seconds
@@ -129,8 +130,10 @@ export class PositionManager {
         if (!currentPrice) return;
 
         const shouldTrigger =
-          (position.side === "BUY" && currentPrice >= position.takeProfitPrice!) ||
-          (position.side === "SELL" && currentPrice <= position.takeProfitPrice!);
+          (position.side === "BUY" &&
+            currentPrice >= position.takeProfitPrice!) ||
+          (position.side === "SELL" &&
+            currentPrice <= position.takeProfitPrice!);
 
         if (shouldTrigger) {
           clearInterval(checkInterval);
@@ -141,7 +144,7 @@ export class PositionManager {
         this.context.logger.error("Error in take profit monitoring", {
           positionId: position.id,
           error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
         });
       }
     }, 5000); // Check every 5 seconds
@@ -169,7 +172,10 @@ export class PositionManager {
   /**
    * Execute stop loss for position
    */
-  private async executeStopLoss(position: Position, currentPrice: number): Promise<void> {
+  private async executeStopLoss(
+    position: Position,
+    currentPrice: number
+  ): Promise<void> {
     this.context.logger.warn("Stop loss triggered", {
       positionId: position.id,
       symbol: position.symbol,
@@ -178,7 +184,11 @@ export class PositionManager {
     });
 
     try {
-      const closeResult = await this.closePosition(position, currentPrice, "STOP_LOSS");
+      const closeResult = await this.closePosition(
+        position,
+        currentPrice,
+        "STOP_LOSS"
+      );
       if (closeResult.success) {
         this.removePosition(position.id);
       }
@@ -194,7 +204,10 @@ export class PositionManager {
   /**
    * Execute take profit for position
    */
-  private async executeTakeProfit(position: Position, currentPrice: number): Promise<void> {
+  private async executeTakeProfit(
+    position: Position,
+    currentPrice: number
+  ): Promise<void> {
     this.context.logger.info("Take profit triggered", {
       positionId: position.id,
       symbol: position.symbol,
@@ -203,7 +216,11 @@ export class PositionManager {
     });
 
     try {
-      const closeResult = await this.closePosition(position, currentPrice, "TAKE_PROFIT");
+      const closeResult = await this.closePosition(
+        position,
+        currentPrice,
+        "TAKE_PROFIT"
+      );
       if (closeResult.success) {
         this.removePosition(position.id);
       }
@@ -222,15 +239,21 @@ export class PositionManager {
   private async getCurrentPrice(symbol: string): Promise<number | null> {
     try {
       // Import the unified MEXC service factory
-      const { getUnifiedMexcService } = await import("@/src/services/api/unified-mexc-service-factory");
-      
+      const { getUnifiedMexcService } = await import(
+        "@/src/services/api/unified-mexc-service-factory"
+      );
+
       // Get MEXC service instance
       const mexcService = await getUnifiedMexcService();
-      
+
       // Get current price from MEXC API
       const priceResponse = await mexcService.getPrice(symbol);
-      
-      if (!priceResponse.success || !priceResponse.data || priceResponse.data.length === 0) {
+
+      if (
+        !priceResponse.success ||
+        !priceResponse.data ||
+        priceResponse.data.length === 0
+      ) {
         this.context.logger.warn("Failed to get current price from MEXC API", {
           symbol,
           error: priceResponse.error,
@@ -238,12 +261,12 @@ export class PositionManager {
         });
         return null;
       }
-      
+
       // Parse price from response
       const priceData = priceResponse.data[0];
       const price = parseFloat(priceData.price);
-      
-      if (isNaN(price) || price <= 0) {
+
+      if (Number.isNaN(price) || price <= 0) {
         this.context.logger.warn("Invalid price received from MEXC API", {
           symbol,
           priceString: priceData.price,
@@ -251,13 +274,13 @@ export class PositionManager {
         });
         return null;
       }
-      
+
       this.context.logger.debug("Current price retrieved successfully", {
         symbol,
         price,
         timestamp: new Date().toISOString(),
       });
-      
+
       return price;
     } catch (error) {
       this.context.logger.error("Failed to get current price", {
@@ -276,7 +299,7 @@ export class PositionManager {
   private async closePosition(
     position: Position,
     currentPrice: number,
-    reason: "STOP_LOSS" | "TAKE_PROFIT"
+    _reason: "STOP_LOSS" | "TAKE_PROFIT"
   ): Promise<TradeResult> {
     // This would integrate with the actual trading service
     // For now, return a mock successful result
@@ -307,7 +330,11 @@ export class PositionManager {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
-        return { success: false, error: `Position ${positionId} not found`, timestamp: new Date().toISOString() };
+        return {
+          success: false,
+          error: `Position ${positionId} not found`,
+          timestamp: new Date().toISOString(),
+        };
       }
 
       // Clear existing stop-loss monitoring
@@ -321,9 +348,11 @@ export class PositionManager {
       position.stopLossPercent = newStopLossPercent;
       if (newStopLossPercent > 0) {
         if (position.side === "BUY") {
-          position.stopLossPrice = position.entryPrice * (1 - newStopLossPercent / 100);
+          position.stopLossPrice =
+            position.entryPrice * (1 - newStopLossPercent / 100);
         } else {
-          position.stopLossPrice = position.entryPrice * (1 + newStopLossPercent / 100);
+          position.stopLossPrice =
+            position.entryPrice * (1 + newStopLossPercent / 100);
         }
 
         // Setup new monitoring
@@ -358,7 +387,11 @@ export class PositionManager {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
-        return { success: false, error: `Position ${positionId} not found`, timestamp: new Date().toISOString() };
+        return {
+          success: false,
+          error: `Position ${positionId} not found`,
+          timestamp: new Date().toISOString(),
+        };
       }
 
       // Clear existing take-profit monitoring
@@ -372,9 +405,11 @@ export class PositionManager {
       position.takeProfitPercent = newTakeProfitPercent;
       if (newTakeProfitPercent > 0) {
         if (position.side === "BUY") {
-          position.takeProfitPrice = position.entryPrice * (1 + newTakeProfitPercent / 100);
+          position.takeProfitPrice =
+            position.entryPrice * (1 + newTakeProfitPercent / 100);
         } else {
-          position.takeProfitPrice = position.entryPrice * (1 - newTakeProfitPercent / 100);
+          position.takeProfitPrice =
+            position.entryPrice * (1 - newTakeProfitPercent / 100);
         }
 
         // Setup new monitoring
@@ -419,17 +454,19 @@ export class PositionManager {
       status: string;
     }>;
   } {
-    const positions = Array.from(this.activePositions.values()).map(position => ({
-      id: position.id,
-      symbol: position.symbol,
-      side: position.side,
-      quantity: position.quantity.toString(),
-      entryPrice: position.entryPrice,
-      currentPnL: position.unrealizedPnL,
-      stopLossPrice: position.stopLossPrice,
-      takeProfitPrice: position.takeProfitPrice,
-      status: position.status || 'active',
-    }));
+    const positions = Array.from(this.activePositions.values()).map(
+      (position) => ({
+        id: position.id,
+        symbol: position.symbol,
+        side: position.side,
+        quantity: position.quantity.toString(),
+        entryPrice: position.entryPrice,
+        currentPnL: position.unrealizedPnL,
+        stopLossPrice: position.stopLossPrice,
+        takeProfitPrice: position.takeProfitPrice,
+        status: position.status || "active",
+      })
+    );
 
     return {
       totalPositions: this.activePositions.size,
@@ -445,9 +482,11 @@ export class PositionManager {
    */
   async initialize(): Promise<void> {
     try {
-      this.context.logger.info('PositionManager initialized successfully');
+      this.context.logger.info("PositionManager initialized successfully");
     } catch (error) {
-      this.context.logger.error('Failed to initialize PositionManager', { error: error instanceof Error ? error.message : String(error) });
+      this.context.logger.error("Failed to initialize PositionManager", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }
@@ -455,15 +494,17 @@ export class PositionManager {
   /**
    * Update configuration
    */
-  updateConfig(newConfig: any): void {
+  updateConfig(_newConfig: any): void {
     // Update configuration if needed
-    this.context.logger.info('PositionManager configuration updated');
+    this.context.logger.info("PositionManager configuration updated");
   }
 
   /**
    * Close all active positions
    */
-  async closeAllPositions(reason: string = "Emergency close"): Promise<{ success: boolean; closedCount: number; errors?: string[] }> {
+  async closeAllPositions(
+    _reason: string = "Emergency close"
+  ): Promise<{ success: boolean; closedCount: number; errors?: string[] }> {
     const positions = Array.from(this.activePositions.values());
     let closedCount = 0;
     const errors: string[] = [];
@@ -476,27 +517,32 @@ export class PositionManager {
           closedCount++;
         }
       } catch (error) {
-        errors.push(`Failed to close position ${position.id}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        errors.push(
+          `Failed to close position ${position.id}: ${error instanceof Error ? error.message : "Unknown error"}`
+        );
       }
     }
 
     return {
       success: errors.length === 0,
       closedCount,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
     };
   }
 
   /**
    * Public method to close a position
    */
-  async closePositionPublic(positionId: string, reason: string = "Manual close"): Promise<{ success: boolean; error?: string; timestamp?: string }> {
+  async closePositionPublic(
+    positionId: string,
+    _reason: string = "Manual close"
+  ): Promise<{ success: boolean; error?: string; timestamp?: string }> {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
         return {
           success: false,
-          error: `Position ${positionId} not found`
+          error: `Position ${positionId} not found`,
         };
       }
 
@@ -505,7 +551,7 @@ export class PositionManager {
         return {
           success: false,
           error: `Unable to get current price for ${position.symbol}`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
       }
 
@@ -514,8 +560,8 @@ export class PositionManager {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -523,18 +569,21 @@ export class PositionManager {
   /**
    * Setup position monitoring (wrapper for compatibility)
    */
-  async setupPositionMonitoring(position: Position, result: any): Promise<void> {
+  async setupPositionMonitoring(
+    position: Position,
+    _result: any
+  ): Promise<void> {
     try {
       this.addPosition(position);
-      this.context.logger.info('Position monitoring setup completed', {
+      this.context.logger.info("Position monitoring setup completed", {
         positionId: position.id,
         symbol: position.symbol,
-        side: position.side
+        side: position.side,
       });
     } catch (error) {
-      this.context.logger.error('Failed to setup position monitoring', {
+      this.context.logger.error("Failed to setup position monitoring", {
         positionId: position.id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
@@ -556,6 +605,6 @@ export class PositionManager {
     this.pendingTakeProfits.clear();
     this.activePositions.clear();
 
-    this.context.logger.info('PositionManager shutdown completed');
+    this.context.logger.info("PositionManager shutdown completed");
   }
 }

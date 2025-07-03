@@ -1,13 +1,16 @@
 /**
  * Performance Metrics API Routes
- * 
+ *
  * API endpoints for retrieving system performance metrics and optimization results
  */
 
-import { and, desc, eq, gte } from "drizzle-orm";
-import { NextRequest, NextResponse } from 'next/server';
+import { desc, gte } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { agentPerformanceMetrics, performanceBaselines, systemPerformanceSnapshots } from "@/src/db/schema";
+import {
+  agentPerformanceMetrics,
+  systemPerformanceSnapshots,
+} from "@/src/db/schema";
 import { logger } from "@/src/lib/utils";
 import { ParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
 
@@ -21,13 +24,13 @@ const optimizationEngine = new ParameterOptimizationEngine();
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '24h';
-    const includeBaseline = searchParams.get('includeBaseline') === 'true';
-    const includeHistory = searchParams.get('includeHistory') === 'true';
+    const period = searchParams.get("period") || "24h";
+    const includeBaseline = searchParams.get("includeBaseline") === "true";
+    const includeHistory = searchParams.get("includeHistory") === "true";
 
     // Get current performance baseline
     const baseline = optimizationEngine.getPerformanceBaseline();
-    
+
     // Get real performance metrics from database
     const [latestSnapshot] = await db
       .select()
@@ -48,18 +51,18 @@ export async function GET(request: NextRequest) {
       errorRate: latestSnapshot?.errorRate || 0.02,
       throughput: latestSnapshot?.throughput || 100,
       uptime: latestSnapshot?.uptime || 99.5,
-      
+
       // Agent metrics
       agentResponseTime: latestAgentMetrics?.responseTime || 90,
       agentSuccessRate: latestAgentMetrics?.successRate || 0.95,
-      agentCacheHitRate: latestAgentMetrics?.cacheHitRate || 0.80,
-      
+      agentCacheHitRate: latestAgentMetrics?.cacheHitRate || 0.8,
+
       // System health
       totalAgents: latestSnapshot?.totalAgents || 5,
       healthyAgents: latestSnapshot?.healthyAgents || 5,
       systemMemoryUsage: latestSnapshot?.systemMemoryUsage || 65.2,
       systemCpuUsage: latestSnapshot?.systemCpuUsage || 45.8,
-      
+
       // Trading performance (calculated from baseline)
       profitability: 0.156, // Will be replaced with real trading data
       sharpeRatio: 1.34,
@@ -78,7 +81,7 @@ export async function GET(request: NextRequest) {
       trackingError: 0.078,
       downsideDeviation: 0.067,
       timestamp: new Date(),
-      
+
       // Operational metrics
       activePositions: 3,
       totalTrades: 248,
@@ -87,49 +90,68 @@ export async function GET(request: NextRequest) {
       averageLoss: 0.034,
       profitFactor: 2.67,
       expectancy: 0.045,
-      
+
       // Pattern detection
       patternDetectionRate: 12.3,
       falsePositiveRate: 0.134,
       advanceDetectionTime: 3.7,
-      
+
       // Risk metrics
       portfolioRisk: 0.167,
       concentrationRisk: 0.089,
       liquidityRisk: 0.023,
-      marketRisk: 0.234
+      marketRisk: 0.234,
     };
 
     const response: any = {
       current: currentMetrics,
       timestamp: new Date(),
-      period
+      period,
     };
 
     if (includeBaseline && baseline) {
       response.baseline = baseline;
-      
+
       // Calculate improvement metrics
       response.improvement = {
-        profitabilityImprovement: ((currentMetrics.profitability - baseline.profitability) / baseline.profitability * 100),
-        sharpeRatioImprovement: ((currentMetrics.sharpeRatio - baseline.sharpeRatio) / baseline.sharpeRatio * 100),
-        drawdownImprovement: ((baseline.maxDrawdown - currentMetrics.maxDrawdown) / baseline.maxDrawdown * 100),
-        patternAccuracyImprovement: ((currentMetrics.patternAccuracy - baseline.patternAccuracy) / baseline.patternAccuracy * 100)
+        profitabilityImprovement:
+          ((currentMetrics.profitability - baseline.profitability) /
+            baseline.profitability) *
+          100,
+        sharpeRatioImprovement:
+          ((currentMetrics.sharpeRatio - baseline.sharpeRatio) /
+            baseline.sharpeRatio) *
+          100,
+        drawdownImprovement:
+          ((baseline.maxDrawdown - currentMetrics.maxDrawdown) /
+            baseline.maxDrawdown) *
+          100,
+        patternAccuracyImprovement:
+          ((currentMetrics.patternAccuracy - baseline.patternAccuracy) /
+            baseline.patternAccuracy) *
+          100,
       };
     }
 
     if (includeHistory) {
       // Get real historical data from database
-      const hoursBack = period === '1h' ? 1 : period === '24h' ? 24 : period === '7d' ? 168 : 720;
+      const hoursBack =
+        period === "1h"
+          ? 1
+          : period === "24h"
+            ? 24
+            : period === "7d"
+              ? 168
+              : 720;
       const timeThreshold = new Date(Date.now() - hoursBack * 60 * 60 * 1000);
-      
+
       const historicalSnapshots = await db
         .select()
         .from(systemPerformanceSnapshots)
         .where(gte(systemPerformanceSnapshots.timestamp, timeThreshold))
         .orderBy(desc(systemPerformanceSnapshots.timestamp))
         .limit(100);
-        
+
       response.history = historicalSnapshots.map((snapshot: any) => ({
         timestamp: snapshot.timestamp,
         systemLatency: snapshot.averageResponseTime,
@@ -139,16 +161,15 @@ export async function GET(request: NextRequest) {
         systemCpuUsage: snapshot.systemCpuUsage,
         totalAgents: snapshot.totalAgents,
         healthyAgents: snapshot.healthyAgents,
-        uptime: snapshot.uptime
+        uptime: snapshot.uptime,
       }));
     }
 
     return NextResponse.json(response);
-
   } catch (error) {
-    logger.error('Failed to get performance metrics:', { error });
+    logger.error("Failed to get performance metrics:", { error });
     return NextResponse.json(
-      { error: 'Failed to retrieve performance metrics' },
+      { error: "Failed to retrieve performance metrics" },
       { status: 500 }
     );
   }
@@ -164,25 +185,25 @@ export async function POST(request: NextRequest) {
     const { action, metrics } = body;
 
     switch (action) {
-      case 'update_baseline':
+      case "update_baseline":
         if (!metrics) {
           return NextResponse.json(
-            { error: 'Metrics are required for baseline update' },
+            { error: "Metrics are required for baseline update" },
             { status: 400 }
           );
         }
 
         // In real implementation, this would update the baseline in the optimization engine
-        logger.info('Performance baseline update requested', { metrics });
-        
+        logger.info("Performance baseline update requested", { metrics });
+
         return NextResponse.json({
-          message: 'Performance baseline updated successfully'
+          message: "Performance baseline updated successfully",
         });
 
-      case 'record_metrics':
+      case "record_metrics":
         if (!metrics) {
           return NextResponse.json(
-            { error: 'Metrics are required for recording' },
+            { error: "Metrics are required for recording" },
             { status: 400 }
           );
         }
@@ -208,27 +229,23 @@ export async function POST(request: NextRequest) {
           metadata: JSON.stringify({
             profitability: metrics.profitability,
             sharpeRatio: metrics.sharpeRatio,
-            patternAccuracy: metrics.patternAccuracy
-          })
+            patternAccuracy: metrics.patternAccuracy,
+          }),
         });
-        
-        logger.info('Performance metrics recorded to database', { metrics });
-        
+
+        logger.info("Performance metrics recorded to database", { metrics });
+
         return NextResponse.json({
-          message: 'Performance metrics recorded successfully'
+          message: "Performance metrics recorded successfully",
         });
 
       default:
-        return NextResponse.json(
-          { error: 'Invalid action' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
-
   } catch (error) {
-    logger.error('Failed to process performance metrics action:', { error });
+    logger.error("Failed to process performance metrics action:", { error });
     return NextResponse.json(
-      { error: 'Failed to process performance metrics action' },
+      { error: "Failed to process performance metrics action" },
       { status: 500 }
     );
   }

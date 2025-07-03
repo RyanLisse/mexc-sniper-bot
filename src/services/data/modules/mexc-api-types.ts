@@ -102,7 +102,8 @@ export const mexcQueryKeys = {
       ? ([...mexcQueryKeys.all(), "ticker", symbol] as const)
       : ([...mexcQueryKeys.all(), "ticker"] as const),
 
-  orderBook: (symbol: string) => [...mexcQueryKeys.all(), "orderBook", symbol] as const,
+  orderBook: (symbol: string) =>
+    [...mexcQueryKeys.all(), "orderBook", symbol] as const,
   klines: (symbol: string, interval: string) =>
     [...mexcQueryKeys.all(), "klines", symbol, interval] as const,
 
@@ -111,7 +112,8 @@ export const mexcQueryKeys = {
   exchangeInfo: () => [...mexcQueryKeys.all(), "exchangeInfo"] as const,
 
   // Trading
-  trades: (symbol: string) => [...mexcQueryKeys.all(), "trades", symbol] as const,
+  trades: (symbol: string) =>
+    [...mexcQueryKeys.all(), "trades", symbol] as const,
   orders: (symbol?: string) =>
     symbol
       ? ([...mexcQueryKeys.all(), "orders", symbol] as const)

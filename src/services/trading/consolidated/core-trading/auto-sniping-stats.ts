@@ -65,7 +65,7 @@ export class AutoSnipingStats {
       averageExecutionTime: 0,
       lastActivity: new Date(),
     };
-    
+
     this.executionTimes = [];
     this.confidenceScores = [];
     this.volumeHistory = [];
@@ -96,7 +96,10 @@ export class AutoSnipingStats {
 
     if (update.volume !== undefined) {
       this.volumeHistory.push(update.volume);
-      this.metrics.totalVolume = this.volumeHistory.reduce((sum, vol) => sum + vol, 0);
+      this.metrics.totalVolume = this.volumeHistory.reduce(
+        (sum, vol) => sum + vol,
+        0
+      );
     }
 
     if (update.executionTime !== undefined) {
@@ -115,7 +118,11 @@ export class AutoSnipingStats {
   /**
    * Record successful snipe
    */
-  recordSuccessfulSnipe(confidence: number, volume: number, executionTime: number): void {
+  recordSuccessfulSnipe(
+    confidence: number,
+    volume: number,
+    executionTime: number
+  ): void {
     this.metrics.processedTargets++;
     this.metrics.successfulSnipes++;
     this.metrics.lastActivity = new Date();
@@ -125,7 +132,10 @@ export class AutoSnipingStats {
     this.executionTimes.push(executionTime);
 
     this.metrics.averageConfidence = this.calculateAverageConfidence();
-    this.metrics.totalVolume = this.volumeHistory.reduce((sum, vol) => sum + vol, 0);
+    this.metrics.totalVolume = this.volumeHistory.reduce(
+      (sum, vol) => sum + vol,
+      0
+    );
     this.metrics.averageExecutionTime = this.calculateAverageExecutionTime();
 
     this.context.logger.info("Successful snipe recorded", {
@@ -163,7 +173,9 @@ export class AutoSnipingStats {
    */
   getSuccessRate(): number {
     if (this.metrics.processedTargets === 0) return 0;
-    return (this.metrics.successfulSnipes / this.metrics.processedTargets) * 100;
+    return (
+      (this.metrics.successfulSnipes / this.metrics.processedTargets) * 100
+    );
   }
 
   /**
@@ -196,7 +208,7 @@ export class AutoSnipingStats {
     };
   } {
     const recentLimit = 10;
-    
+
     return {
       summary: this.getMetrics(),
       rates: {
@@ -211,9 +223,11 @@ export class AutoSnipingStats {
       performance: {
         bestExecutionTime: Math.min(...this.executionTimes) || 0,
         worstExecutionTime: Math.max(...this.executionTimes) || 0,
-        averageVolume: this.volumeHistory.length > 0 
-          ? this.volumeHistory.reduce((sum, vol) => sum + vol, 0) / this.volumeHistory.length
-          : 0,
+        averageVolume:
+          this.volumeHistory.length > 0
+            ? this.volumeHistory.reduce((sum, vol) => sum + vol, 0) /
+              this.volumeHistory.length
+            : 0,
         totalValue: this.metrics.totalVolume || 0,
       },
     };
@@ -224,7 +238,7 @@ export class AutoSnipingStats {
    */
   private calculateAverageConfidence(): number {
     if (this.confidenceScores.length === 0) return 0;
-    
+
     const sum = this.confidenceScores.reduce((acc, score) => acc + score, 0);
     return sum / this.confidenceScores.length;
   }
@@ -234,7 +248,7 @@ export class AutoSnipingStats {
    */
   private calculateAverageExecutionTime(): number {
     if (this.executionTimes.length === 0) return 0;
-    
+
     const sum = this.executionTimes.reduce((acc, time) => acc + time, 0);
     return sum / this.executionTimes.length;
   }
@@ -246,11 +260,11 @@ export class AutoSnipingStats {
     if (this.confidenceScores.length > maxEntries) {
       this.confidenceScores = this.confidenceScores.slice(-maxEntries);
     }
-    
+
     if (this.executionTimes.length > maxEntries) {
       this.executionTimes = this.executionTimes.slice(-maxEntries);
     }
-    
+
     if (this.volumeHistory.length > maxEntries) {
       this.volumeHistory = this.volumeHistory.slice(-maxEntries);
     }
@@ -283,19 +297,19 @@ export class AutoSnipingStats {
   importStats(jsonData: string): boolean {
     try {
       const data = JSON.parse(jsonData);
-      
+
       if (data.metrics) {
         this.metrics = { ...data.metrics };
       }
-      
+
       if (Array.isArray(data.confidenceScores)) {
         this.confidenceScores = data.confidenceScores;
       }
-      
+
       if (Array.isArray(data.executionTimes)) {
         this.executionTimes = data.executionTimes;
       }
-      
+
       if (Array.isArray(data.volumeHistory)) {
         this.volumeHistory = data.volumeHistory;
       }

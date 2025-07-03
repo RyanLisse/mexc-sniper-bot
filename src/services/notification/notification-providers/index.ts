@@ -78,7 +78,12 @@ export class NotificationService {
           warn: (message: string, context?: any) =>
             console.warn("[notification-service]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[notification-service]", message, context || "", error || ""),
+            console.error(
+              "[notification-service]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[notification-service]", message, context || ""),
         };
@@ -129,7 +134,9 @@ export class NotificationService {
         try {
           // Get applicable notification channels
           const channels = await this.getChannelsForAlert(alert);
-          console.info(`Sending alert ${alert.id} to ${channels.length} channels`);
+          console.info(
+            `Sending alert ${alert.id} to ${channels.length} channels`
+          );
 
           span.setAttributes({
             "notification.channels_count": channels.length,
@@ -142,8 +149,12 @@ export class NotificationService {
 
           const results = await Promise.allSettled(notificationPromises);
 
-          const successCount = results.filter((r) => r.status === "fulfilled").length;
-          const failureCount = results.filter((r) => r.status === "rejected").length;
+          const successCount = results.filter(
+            (r) => r.status === "fulfilled"
+          ).length;
+          const failureCount = results.filter(
+            (r) => r.status === "rejected"
+          ).length;
 
           span.setAttributes({
             "notification.success_count": successCount,
@@ -156,7 +167,9 @@ export class NotificationService {
           span.setStatus({ code: SpanStatusCode.OK });
         } catch (error) {
           console.error("Error sending alert notifications:", error);
-          span.recordException(error instanceof Error ? error : new Error(String(error)));
+          span.recordException(
+            error instanceof Error ? error : new Error(String(error))
+          );
           span.setStatus({ code: SpanStatusCode.ERROR });
         } finally {
           span.end();
@@ -171,12 +184,20 @@ export class NotificationService {
       const sentNotifications = await this.db
         .select()
         .from(alertNotifications)
-        .leftJoin(notificationChannels, eq(alertNotifications.channelId, notificationChannels.id))
+        .leftJoin(
+          notificationChannels,
+          eq(alertNotifications.channelId, notificationChannels.id)
+        )
         .where(
-          and(eq(alertNotifications.alertId, alert.id), eq(alertNotifications.status, "sent"))
+          and(
+            eq(alertNotifications.alertId, alert.id),
+            eq(alertNotifications.status, "sent")
+          )
         );
 
-      const channels = sentNotifications.map((n: any) => n.notification_channels);
+      const channels = sentNotifications.map(
+        (n: any) => n.notification_channels
+      );
 
       // Send resolution notification to each channel
       const notificationPromises = channels.map((channel: any) =>
@@ -198,7 +219,11 @@ export class NotificationService {
       // Check rate limiting
       if (await this.isChannelRateLimited(channel)) {
         console.warn(`Channel ${channel.id} is rate limited`);
-        await this.recordNotificationAttempt(alert.id, channel.id, "rate_limited");
+        await this.recordNotificationAttempt(
+          alert.id,
+          channel.id,
+          "rate_limited"
+        );
         return;
       }
 
@@ -213,7 +238,11 @@ export class NotificationService {
       const message = this.buildNotificationMessage(alert, channel, type);
 
       // Record attempt
-      const notificationId = await this.recordNotificationAttempt(alert.id, channel.id, "pending");
+      const notificationId = await this.recordNotificationAttempt(
+        alert.id,
+        channel.id,
+        "pending"
+      );
 
       // Send notification
       const result = await provider.send(channel, alert, message);
@@ -243,12 +272,17 @@ export class NotificationService {
       return;
     }
 
-    const steps: EscalationStep[] = escalationPolicy.steps ? JSON.parse(escalationPolicy.steps) : [];
+    const steps: EscalationStep[] = escalationPolicy.steps
+      ? JSON.parse(escalationPolicy.steps)
+      : [];
 
     // Schedule first escalation step
     if (steps.length > 0) {
       const firstStep = steps[0];
-      setTimeout(() => this.executeEscalationStep(alert, firstStep, 1), firstStep.delay * 1000);
+      setTimeout(
+        () => this.executeEscalationStep(alert, firstStep, 1),
+        firstStep.delay * 1000
+      );
     }
   }
 
@@ -266,7 +300,9 @@ export class NotificationService {
         .limit(1);
 
       if (currentAlert.length === 0 || currentAlert[0].status !== "firing") {
-        console.info(`Alert ${alert.id} is no longer active, skipping escalation`);
+        console.info(
+          `Alert ${alert.id} is no longer active, skipping escalation`
+        );
         return;
       }
 
@@ -285,7 +321,9 @@ export class NotificationService {
           .limit(1);
 
         if (acknowledgments.length > 0) {
-          console.info(`Alert ${alert.id} has been acknowledged, skipping escalation`);
+          console.info(
+            `Alert ${alert.id} has been acknowledged, skipping escalation`
+          );
           return;
         }
       }
@@ -339,7 +377,9 @@ export class NotificationService {
         matches: await this.channelMatchesAlert(channel, alert),
       }))
     );
-    return matchResults.filter((result) => result.matches).map((result) => result.channel);
+    return matchResults
+      .filter((result) => result.matches)
+      .map((result) => result.channel);
   }
 
   private async channelMatchesAlert(
@@ -354,7 +394,10 @@ export class NotificationService {
           return false;
         }
       } catch (error) {
-        this.logger.warn("Invalid severityFilter JSON", { channelId: channel.id, error });
+        this.logger.warn("Invalid severityFilter JSON", {
+          channelId: channel.id,
+          error,
+        });
         return false;
       }
     }
@@ -382,7 +425,10 @@ export class NotificationService {
           // Continue without category filtering if query fails
         }
       } catch (error) {
-        this.logger.warn("Invalid categoryFilter JSON", { channelId: channel.id, error });
+        this.logger.warn("Invalid categoryFilter JSON", {
+          channelId: channel.id,
+          error,
+        });
         return false;
       }
     }
@@ -401,7 +447,10 @@ export class NotificationService {
           return false;
         }
       } catch (error) {
-        this.logger.warn("Invalid tagFilter or alert labels JSON", { channelId: channel.id, error });
+        this.logger.warn("Invalid tagFilter or alert labels JSON", {
+          channelId: channel.id,
+          error,
+        });
         return false;
       }
     }
@@ -413,7 +462,9 @@ export class NotificationService {
   // RATE LIMITING
   // ==========================================
 
-  private async isChannelRateLimited(channel: SelectNotificationChannel): Promise<boolean> {
+  private async isChannelRateLimited(
+    channel: SelectNotificationChannel
+  ): Promise<boolean> {
     const oneHourAgo = Date.now() - 3600000;
 
     const recentNotifications = await this.db
@@ -510,7 +561,9 @@ export class NotificationService {
       sections.push(`**Resolution:** ${alert.resolutionNotes}`);
     }
 
-    sections.push(`**Triggered:** ${new Date(alert.firstTriggeredAt).toISOString()}`);
+    sections.push(
+      `**Triggered:** ${new Date(alert.firstTriggeredAt).toISOString()}`
+    );
 
     return sections.join("\n");
   }
@@ -551,7 +604,9 @@ export class NotificationService {
     }
   }
 
-  private mapSeverityToPriority(severity: string): "low" | "medium" | "high" | "critical" {
+  private mapSeverityToPriority(
+    severity: string
+  ): "low" | "medium" | "high" | "critical" {
     switch (severity) {
       case "critical":
         return "critical";
@@ -635,10 +690,14 @@ export class NotificationService {
       };
 
       // Return policy based on alert severity
-      const policy = severityPolicies[alert.severity as keyof typeof severityPolicies];
+      const policy =
+        severityPolicies[alert.severity as keyof typeof severityPolicies];
       return policy || null;
     } catch (error) {
-      this.logger.error("Failed to get escalation policy", { error, alertId: alert.id });
+      this.logger.error("Failed to get escalation policy", {
+        error,
+        alertId: alert.id,
+      });
       return null;
     }
   }
@@ -680,8 +739,12 @@ export class NotificationService {
       name,
       type,
       config: JSON.stringify(config),
-      severityFilter: options.severityFilter ? JSON.stringify(options.severityFilter) : null,
-      categoryFilter: options.categoryFilter ? JSON.stringify(options.categoryFilter) : null,
+      severityFilter: options.severityFilter
+        ? JSON.stringify(options.severityFilter)
+        : null,
+      categoryFilter: options.categoryFilter
+        ? JSON.stringify(options.categoryFilter)
+        : null,
       tagFilter: options.tagFilter ? JSON.stringify(options.tagFilter) : null,
       isEnabled: true,
       isDefault: options.isDefault || false,
@@ -697,7 +760,9 @@ export class NotificationService {
     return channelId;
   }
 
-  async testNotificationChannel(channelId: string): Promise<NotificationResult> {
+  async testNotificationChannel(
+    channelId: string
+  ): Promise<NotificationResult> {
     const channel = await this.db
       .select()
       .from(notificationChannels)
@@ -720,7 +785,8 @@ export class NotificationService {
       status: "firing",
       severity: "info",
       message: "Test notification",
-      description: "This is a test notification to verify channel configuration",
+      description:
+        "This is a test notification to verify channel configuration",
       metricValue: 42,
       source: "test",
       environment: "test",
@@ -740,7 +806,11 @@ export class NotificationService {
       labels: null,
     };
 
-    const message = this.buildNotificationMessage(testAlert, channel[0], "alert");
+    const message = this.buildNotificationMessage(
+      testAlert,
+      channel[0],
+      "alert"
+    );
     return await provider.send(channel[0], testAlert, message);
   }
 

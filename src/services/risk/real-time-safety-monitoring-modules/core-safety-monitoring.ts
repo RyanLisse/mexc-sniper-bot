@@ -26,7 +26,9 @@ export interface CoreSafetyMonitoringConfig {
   configuration: SafetyConfiguration;
   executionService: CoreTradingService;
   patternMonitoring: PatternMonitoringService;
-  onAlert?: (alert: Omit<SafetyAlert, "id" | "timestamp" | "acknowledged">) => void;
+  onAlert?: (
+    alert: Omit<SafetyAlert, "id" | "timestamp" | "acknowledged">
+  ) => void;
 }
 
 export interface RiskAssessmentUpdate {
@@ -59,7 +61,12 @@ export class CoreSafetyMonitoring {
     warn: (message: string, context?: any) =>
       console.warn("[core-safety-monitoring]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[core-safety-monitoring]", message, context || "", error || ""),
+      console.error(
+        "[core-safety-monitoring]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[core-safety-monitoring]", message, context || ""),
   };
@@ -95,7 +102,9 @@ export class CoreSafetyMonitoring {
 
   public stop(): void {
     this.isActive = false;
-    console.info("Core safety monitoring stopped", { operation: "stop_monitoring" });
+    console.info("Core safety monitoring stopped", {
+      operation: "stop_monitoring",
+    });
   }
 
   public getStatus(): { isActive: boolean; lastUpdate: string } {
@@ -175,12 +184,17 @@ export class CoreSafetyMonitoring {
 
       // Handle potential method availability issues
       try {
-        if (typeof this.config.executionService.getExecutionReport === "function") {
-          executionReport = await this.config.executionService.getExecutionReport();
+        if (
+          typeof this.config.executionService.getExecutionReport === "function"
+        ) {
+          executionReport =
+            await this.config.executionService.getExecutionReport();
         } else {
           // Fallback: construct a basic execution report from available methods
-          const activePositions = (await this.config.executionService.getActivePositions()) || [];
-          const performanceMetrics = await this.config.executionService.getPerformanceMetrics();
+          const activePositions =
+            (await this.config.executionService.getActivePositions()) || [];
+          const performanceMetrics =
+            await this.config.executionService.getPerformanceMetrics();
           executionReport = {
             stats: {
               currentDrawdown: performanceMetrics.maxDrawdown || 0,
@@ -217,8 +231,12 @@ export class CoreSafetyMonitoring {
       }
 
       try {
-        if (typeof this.config.patternMonitoring.getMonitoringReport === "function") {
-          patternReport = await this.config.patternMonitoring.getMonitoringReport();
+        if (
+          typeof this.config.patternMonitoring.getMonitoringReport ===
+          "function"
+        ) {
+          patternReport =
+            await this.config.patternMonitoring.getMonitoringReport();
         } else {
           // Fallback pattern report
           patternReport = {
@@ -231,9 +249,12 @@ export class CoreSafetyMonitoring {
           };
         }
       } catch (error) {
-        console.warn("Failed to get pattern monitoring report, using fallback", {
-          error: (error as Error)?.message,
-        });
+        console.warn(
+          "Failed to get pattern monitoring report, using fallback",
+          {
+            error: (error as Error)?.message,
+          }
+        );
         patternReport = {
           status: "healthy",
           stats: {
@@ -247,7 +268,8 @@ export class CoreSafetyMonitoring {
       // Update portfolio metrics with real calculations
       this.riskMetrics.currentDrawdown = executionReport.stats.currentDrawdown;
       this.riskMetrics.maxDrawdown = executionReport.stats.maxDrawdown;
-      this.riskMetrics.portfolioValue = this.calculateRealPortfolioValue(executionReport);
+      this.riskMetrics.portfolioValue =
+        this.calculateRealPortfolioValue(executionReport);
       this.riskMetrics.totalExposure = this.calculateRealTotalExposure(
         executionReport.activePositions
       );
@@ -269,8 +291,10 @@ export class CoreSafetyMonitoring {
 
       // Update pattern metrics
       this.riskMetrics.patternAccuracy = patternReport.stats.averageConfidence;
-      this.riskMetrics.detectionFailures = patternReport.stats.consecutiveErrors;
-      this.riskMetrics.falsePositiveRate = this.calculateFalsePositiveRate(patternReport);
+      this.riskMetrics.detectionFailures =
+        patternReport.stats.consecutiveErrors;
+      this.riskMetrics.falsePositiveRate =
+        this.calculateFalsePositiveRate(patternReport);
 
       // Validate updated metrics
       const validatedMetrics = validateRiskMetrics(this.riskMetrics);
@@ -303,7 +327,8 @@ export class CoreSafetyMonitoring {
     // Consolidated threshold checking
     const checks = [
       {
-        condition: this.riskMetrics.currentDrawdown > thresholds.maxDrawdownPercentage,
+        condition:
+          this.riskMetrics.currentDrawdown > thresholds.maxDrawdownPercentage,
         type: "max_drawdown_exceeded",
         severity: "critical",
         category: "portfolio",
@@ -315,7 +340,8 @@ export class CoreSafetyMonitoring {
         riskLevel: 90,
       },
       {
-        condition: this.riskMetrics.successRate < thresholds.minSuccessRatePercentage,
+        condition:
+          this.riskMetrics.successRate < thresholds.minSuccessRatePercentage,
         type: "low_success_rate",
         severity: "high",
         category: "performance",
@@ -327,7 +353,8 @@ export class CoreSafetyMonitoring {
         riskLevel: 70,
       },
       {
-        condition: this.riskMetrics.consecutiveLosses > thresholds.maxConsecutiveLosses,
+        condition:
+          this.riskMetrics.consecutiveLosses > thresholds.maxConsecutiveLosses,
         type: "excessive_consecutive_losses",
         severity: "high",
         category: "performance",
@@ -452,7 +479,8 @@ export class CoreSafetyMonitoring {
 
     // Drawdown risk (higher drawdown = higher risk)
     score +=
-      (this.riskMetrics.currentDrawdown / thresholds.maxDrawdownPercentage) * weights.drawdown;
+      (this.riskMetrics.currentDrawdown / thresholds.maxDrawdownPercentage) *
+      weights.drawdown;
 
     // Success rate risk (lower success rate = higher risk)
     const successRateRisk = Math.max(
@@ -469,11 +497,14 @@ export class CoreSafetyMonitoring {
 
     // Concentration risk
     score +=
-      (this.riskMetrics.concentrationRisk / thresholds.maxPortfolioConcentration) *
+      (this.riskMetrics.concentrationRisk /
+        thresholds.maxPortfolioConcentration) *
       weights.concentration;
 
     // API latency risk
-    score += (this.riskMetrics.apiLatency / thresholds.maxApiLatencyMs) * weights.apiLatency;
+    score +=
+      (this.riskMetrics.apiLatency / thresholds.maxApiLatencyMs) *
+      weights.apiLatency;
 
     // Pattern accuracy risk (lower accuracy = higher risk)
     const patternRisk = Math.max(
@@ -485,7 +516,8 @@ export class CoreSafetyMonitoring {
 
     // Memory usage risk
     score +=
-      (this.riskMetrics.memoryUsage / thresholds.maxMemoryUsagePercentage) * weights.memoryUsage;
+      (this.riskMetrics.memoryUsage / thresholds.maxMemoryUsagePercentage) *
+      weights.memoryUsage;
 
     return Math.min(100, Math.max(0, score));
   }
@@ -509,7 +541,9 @@ export class CoreSafetyMonitoring {
     let totalValue = 0;
 
     positions.forEach((pos) => {
-      const value = Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString());
+      const value =
+        Number.parseFloat(pos.quantity.toString()) *
+        Number.parseFloat(pos.currentPrice.toString());
       symbolMap.set(pos.symbol, (symbolMap.get(pos.symbol) || 0) + value);
       totalValue += value;
     });
@@ -523,7 +557,9 @@ export class CoreSafetyMonitoring {
     return maxConcentration;
   }
 
-  private calculateConsecutiveLosses(recentExecutions: ExecutionPosition[]): number {
+  private calculateConsecutiveLosses(
+    recentExecutions: ExecutionPosition[]
+  ): number {
     let consecutiveLosses = 0;
 
     for (let i = recentExecutions.length - 1; i >= 0; i--) {
@@ -569,7 +605,9 @@ export class CoreSafetyMonitoring {
   private async measureApiLatency(): Promise<number> {
     const startTime = Date.now();
     try {
-      if (typeof this.config.executionService.getExecutionReport === "function") {
+      if (
+        typeof this.config.executionService.getExecutionReport === "function"
+      ) {
         await this.config.executionService.getExecutionReport();
       } else {
         // Use alternative method for latency measurement
@@ -583,7 +621,8 @@ export class CoreSafetyMonitoring {
 
   private async measureApiSuccessRate(): Promise<number> {
     try {
-      const performanceMetrics = await this.config.executionService.getPerformanceMetrics();
+      const performanceMetrics =
+        await this.config.executionService.getPerformanceMetrics();
       return performanceMetrics.successRate || 100;
     } catch {
       return 50;
@@ -596,7 +635,8 @@ export class CoreSafetyMonitoring {
       return Math.min((mem.heapUsed / 1024 / 1024 / 1024) * 100, 100);
     }
     try {
-      const activePositions = await this.config.executionService.getActivePositions();
+      const activePositions =
+        await this.config.executionService.getActivePositions();
       return Math.min(20 + (activePositions?.length || 0) * 2, 90);
     } catch {
       return 20;
@@ -609,7 +649,9 @@ export class CoreSafetyMonitoring {
       const positions = report.activePositions || [];
       const posValue = positions.reduce(
         (sum: number, pos: any) =>
-          sum + (Number.parseFloat(pos.quantity) || 0) * (Number.parseFloat(pos.currentPrice) || 0),
+          sum +
+          (Number.parseFloat(pos.quantity) || 0) *
+            (Number.parseFloat(pos.currentPrice) || 0),
         0
       );
       return 10000 + pnl + posValue;

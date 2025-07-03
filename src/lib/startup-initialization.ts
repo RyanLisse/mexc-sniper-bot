@@ -18,8 +18,8 @@ class StartupInitializer {
     if (this.initialized) {
       return {
         success: true,
-        message: 'Already initialized',
-        modules: this.modules
+        message: "Already initialized",
+        modules: this.modules,
       };
     }
 
@@ -28,38 +28,38 @@ class StartupInitializer {
       await this.initializeDatabase();
       await this.initializeServices();
       await this.initializeMiddleware();
-      
+
       this.initialized = true;
-      
+
       return {
         success: true,
-        message: 'Initialization completed successfully',
-        modules: this.modules
+        message: "Initialization completed successfully",
+        modules: this.modules,
       };
     } catch (error) {
-      console.error('Startup initialization failed:', error);
-      
+      console.error("Startup initialization failed:", error);
+
       return {
         success: false,
-        message: 'Initialization failed',
+        message: "Initialization failed",
         modules: this.modules,
-        errors: [error instanceof Error ? error.message : 'Unknown error']
+        errors: [error instanceof Error ? error.message : "Unknown error"],
       };
     }
   }
 
   private async initializeDatabase(): Promise<void> {
-    this.modules.push('database');
+    this.modules.push("database");
     // Minimal database initialization
   }
 
   private async initializeServices(): Promise<void> {
-    this.modules.push('services');
+    this.modules.push("services");
     // Minimal services initialization
   }
 
   private async initializeMiddleware(): Promise<void> {
-    this.modules.push('middleware');
+    this.modules.push("middleware");
     // Minimal middleware initialization
   }
 

@@ -18,7 +18,7 @@ const defaultConfig: CircuitBreakerConfig = {
 export async function executeWithCircuitBreaker<T>(
   operation: () => Promise<T>,
   operationId: string,
-  config: CircuitBreakerConfig = defaultConfig
+  _config: CircuitBreakerConfig = defaultConfig
 ): Promise<T> {
   try {
     return await operation();

@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { requireAuth } from "@/src/lib/supabase-auth";
 import { NotificationService } from "@/src/services/notification/notification-providers";
 
 // ==========================================
@@ -16,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize services at runtime
     const alertConfigService = new AlertConfigurationService(db);
-    const notificationService = new NotificationService(db);
+    const _notificationService = new NotificationService(db);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     console.info("Deploying built-in alert rules and notification channels...");
@@ -25,25 +24,36 @@ export async function POST(request: NextRequest) {
     const deployedRules = await alertConfigService.deployBuiltInRules(user.id);
 
     // Deploy example notification channels
-    const deployedChannels = await deployExampleNotificationChannels(user.id, alertConfigService);
+    const deployedChannels = await deployExampleNotificationChannels(
+      user.id,
+      alertConfigService
+    );
 
-    return NextResponse.json({
-      success: true,
-      message: "Built-in alerting configuration deployed successfully",
-      data: {
-        rulesDeployed: deployedRules.length,
-        channelsDeployed: deployedChannels.length,
-        deployedRules,
-        deployedChannels,
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Built-in alerting configuration deployed successfully",
+        data: {
+          rulesDeployed: deployedRules.length,
+          channelsDeployed: deployedChannels.length,
+          deployedRules,
+          deployedChannels,
+        },
       },
-    }, { status: 201 });
+      { status: 201 }
+    );
   } catch (error) {
-    console.error("Error deploying built-in alerting configuration:", { error: error });
+    console.error("Error deploying built-in alerting configuration:", {
+      error: error,
+    });
     return handleApiError(error);
   }
 }
 
-async function deployExampleNotificationChannels(createdBy: string, alertConfigService: AlertConfigurationService): Promise<string[]> {
+async function deployExampleNotificationChannels(
+  createdBy: string,
+  alertConfigService: AlertConfigurationService
+): Promise<string[]> {
   const deployedChannels: string[] = [];
 
   // Example Email Channel for Critical Alerts
@@ -65,11 +75,12 @@ async function deployExampleNotificationChannels(createdBy: string, alertConfigS
       severityFilter: ["critical" as const],
       rateLimitPerHour: 20,
       titleTemplate: "🚨 CRITICAL: {{alert.message}}",
-      messageTemplate: "URGENT ACTION REQUIRED\n\n{{alert.description}}\n\nSource: {{alert.source}}\nTriggered: {{timestamp}}",
+      messageTemplate:
+        "URGENT ACTION REQUIRED\n\n{{alert.description}}\n\nSource: {{alert.source}}\nTriggered: {{timestamp}}",
     };
 
     const emailChannelId = await alertConfigService.createNotificationChannel(
-      criticalEmailChannel, 
+      criticalEmailChannel,
       createdBy
     );
     deployedChannels.push(emailChannelId);
@@ -91,7 +102,11 @@ async function deployExampleNotificationChannels(createdBy: string, alertConfigS
           iconEmoji: ":warning:",
         },
         isDefault: false,
-        severityFilter: ["critical" as const, "high" as const, "medium" as const],
+        severityFilter: [
+          "critical" as const,
+          "high" as const,
+          "medium" as const,
+        ],
         rateLimitPerHour: 100,
         titleTemplate: "{{alert.severity}} Alert: {{alert.message}}",
       };
@@ -120,10 +135,12 @@ async function deployExampleNotificationChannels(createdBy: string, alertConfigS
             "Content-Type": "application/json",
             "X-Source": "mexc-sniper-bot",
           },
-          authentication: process.env.MONITORING_WEBHOOK_TOKEN ? {
-            type: "bearer",
-            token: process.env.MONITORING_WEBHOOK_TOKEN,
-          } : undefined,
+          authentication: process.env.MONITORING_WEBHOOK_TOKEN
+            ? {
+                type: "bearer",
+                token: process.env.MONITORING_WEBHOOK_TOKEN,
+              }
+            : undefined,
           retryAttempts: 3,
           retryDelay: 1000,
           timeout: 10000,
@@ -132,10 +149,11 @@ async function deployExampleNotificationChannels(createdBy: string, alertConfigS
         rateLimitPerHour: 1000,
       };
 
-      const webhookChannelId = await alertConfigService.createNotificationChannel(
-        webhookChannel,
-        createdBy
-      );
+      const webhookChannelId =
+        await alertConfigService.createNotificationChannel(
+          webhookChannel,
+          createdBy
+        );
       deployedChannels.push(webhookChannelId);
       console.info("Deployed webhook channel");
     } catch (error) {
@@ -144,7 +162,11 @@ async function deployExampleNotificationChannels(createdBy: string, alertConfigS
   }
 
   // Example SMS Channel for Critical Alerts (if Twilio credentials are available)
-  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.ADMIN_PHONE) {
+  if (
+    process.env.TWILIO_ACCOUNT_SID &&
+    process.env.TWILIO_AUTH_TOKEN &&
+    process.env.ADMIN_PHONE
+  ) {
     try {
       const smsChannel = {
         name: "Critical SMS Alerts",

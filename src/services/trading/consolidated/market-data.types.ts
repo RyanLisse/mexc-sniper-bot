@@ -15,18 +15,33 @@ export const MarketDataConfigSchema = z.object({
   // API Configuration
   apiKey: z.string().min(1, "API key is required"),
   secretKey: z.string().min(1, "Secret key is required"),
-  baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
-  websocketUrl: z.string().url("Valid WebSocket URL required").default("wss://wbs.mexc.com"),
+  baseUrl: z
+    .string()
+    .url("Valid base URL required")
+    .default("https://api.mexc.com"),
+  websocketUrl: z
+    .string()
+    .url("Valid WebSocket URL required")
+    .default("wss://wbs.mexc.com"),
 
   // Connection Settings
   timeout: z.number().positive("Timeout must be positive").default(10000),
-  maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
-  rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
+  maxRetries: z
+    .number()
+    .nonnegative("Max retries cannot be negative")
+    .default(3),
+  rateLimitDelay: z
+    .number()
+    .nonnegative("Rate limit delay cannot be negative")
+    .default(100),
 
   // Caching Settings
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().positive("Cache TTL must be positive").default(300000), // 5 minutes
-  maxCacheSize: z.number().positive("Max cache size must be positive").default(1000),
+  maxCacheSize: z
+    .number()
+    .positive("Max cache size must be positive")
+    .default(1000),
 
   // WebSocket Settings
   maxWebSocketConnections: z
@@ -48,20 +63,36 @@ export const MarketDataConfigSchema = z.object({
     .number()
     .positive("Pattern detection interval must be positive")
     .default(30000),
-  minPatternConfidence: z.number().min(0).max(100, "Pattern confidence must be 0-100").default(70),
-  patternHistoryDays: z.number().positive("Pattern history days must be positive").default(7),
+  minPatternConfidence: z
+    .number()
+    .min(0)
+    .max(100, "Pattern confidence must be 0-100")
+    .default(70),
+  patternHistoryDays: z
+    .number()
+    .positive("Pattern history days must be positive")
+    .default(7),
 
   // Price Alert Settings
   enablePriceAlerts: z.boolean().default(true),
-  maxAlertsPerSymbol: z.number().positive("Max alerts per symbol must be positive").default(10),
-  alertCheckInterval: z.number().positive("Alert check interval must be positive").default(5000),
+  maxAlertsPerSymbol: z
+    .number()
+    .positive("Max alerts per symbol must be positive")
+    .default(10),
+  alertCheckInterval: z
+    .number()
+    .positive("Alert check interval must be positive")
+    .default(5000),
 
   // Technical Analysis Settings
   defaultTechnicalPeriod: z
     .number()
     .positive("Default technical period must be positive")
     .default(20),
-  maxTechnicalPeriod: z.number().positive("Max technical period must be positive").default(200),
+  maxTechnicalPeriod: z
+    .number()
+    .positive("Max technical period must be positive")
+    .default(200),
 });
 
 export type MarketDataConfig = z.infer<typeof MarketDataConfigSchema>;
@@ -137,9 +168,13 @@ export const KlineDataSchema = z.object({
   low: z.number().positive("Low price must be positive"),
   close: z.number().positive("Close price must be positive"),
   volume: z.number().nonnegative("Volume cannot be negative"),
-  quoteAssetVolume: z.number().nonnegative("Quote asset volume cannot be negative"),
+  quoteAssetVolume: z
+    .number()
+    .nonnegative("Quote asset volume cannot be negative"),
   trades: z.number().nonnegative("Trades count cannot be negative"),
-  takerBuyBaseAssetVolume: z.number().nonnegative("Taker buy base asset volume cannot be negative"),
+  takerBuyBaseAssetVolume: z
+    .number()
+    .nonnegative("Taker buy base asset volume cannot be negative"),
   takerBuyQuoteAssetVolume: z
     .number()
     .nonnegative("Taker buy quote asset volume cannot be negative"),
@@ -177,7 +212,12 @@ export const PatternTypeSchema = z.enum([
 
 export type PatternType = z.infer<typeof PatternTypeSchema>;
 
-export const PatternSignificanceSchema = z.enum(["low", "medium", "high", "critical"]);
+export const PatternSignificanceSchema = z.enum([
+  "low",
+  "medium",
+  "high",
+  "critical",
+]);
 
 export type PatternSignificance = z.infer<typeof PatternSignificanceSchema>;
 
@@ -191,8 +231,14 @@ export const PatternDetectionResultSchema = z.object({
 
   // Pattern-specific data
   priceLevel: z.number().positive("Price level must be positive").optional(),
-  supportLevel: z.number().positive("Support level must be positive").optional(),
-  resistanceLevel: z.number().positive("Resistance level must be positive").optional(),
+  supportLevel: z
+    .number()
+    .positive("Support level must be positive")
+    .optional(),
+  resistanceLevel: z
+    .number()
+    .positive("Resistance level must be positive")
+    .optional(),
   volume: z.number().nonnegative("Volume cannot be negative").optional(),
   volumeChange: z.number().optional(),
 
@@ -223,7 +269,9 @@ export const PatternDetectionResultSchema = z.object({
   notes: z.string().optional(),
 });
 
-export type PatternDetectionResult = z.infer<typeof PatternDetectionResultSchema>;
+export type PatternDetectionResult = z.infer<
+  typeof PatternDetectionResultSchema
+>;
 
 // ============================================================================
 // Price Alert Types
@@ -267,17 +315,29 @@ export const PriceAlertSchema = z.object({
   // Target values
   targetPrice: z.number().positive("Target price must be positive").optional(),
   targetPercent: z.number().optional(),
-  targetVolume: z.number().nonnegative("Target volume cannot be negative").optional(),
+  targetVolume: z
+    .number()
+    .nonnegative("Target volume cannot be negative")
+    .optional(),
 
   // Current values (for comparison)
-  currentPrice: z.number().positive("Current price must be positive").optional(),
+  currentPrice: z
+    .number()
+    .positive("Current price must be positive")
+    .optional(),
   currentPercent: z.number().optional(),
-  currentVolume: z.number().nonnegative("Current volume cannot be negative").optional(),
+  currentVolume: z
+    .number()
+    .nonnegative("Current volume cannot be negative")
+    .optional(),
 
   // Alert status
   enabled: z.boolean().default(true),
   triggered: z.boolean().default(false),
-  triggerCount: z.number().nonnegative("Trigger count cannot be negative").default(0),
+  triggerCount: z
+    .number()
+    .nonnegative("Trigger count cannot be negative")
+    .default(0),
   maxTriggers: z.number().positive("Max triggers must be positive").default(1),
 
   // Timing
@@ -286,7 +346,9 @@ export const PriceAlertSchema = z.object({
   expiresAt: z.date().optional(),
 
   // Notification settings
-  notificationChannels: z.array(z.enum(["email", "sms", "webhook", "push"])).default(["webhook"]),
+  notificationChannels: z
+    .array(z.enum(["email", "sms", "webhook", "push"]))
+    .default(["webhook"]),
   notificationMessage: z.string().optional(),
 
   // Metadata
@@ -408,7 +470,13 @@ export type WebSocketMessage = z.infer<typeof WebSocketMessageSchema>;
 // Market Analysis Types
 // ============================================================================
 
-export const MarketTrendSchema = z.enum(["bullish", "bearish", "sideways", "volatile", "unknown"]);
+export const MarketTrendSchema = z.enum([
+  "bullish",
+  "bearish",
+  "sideways",
+  "volatile",
+  "unknown",
+]);
 
 export type MarketTrend = z.infer<typeof MarketTrendSchema>;
 
@@ -426,7 +494,13 @@ export const MarketAnalysisSchema = z.object({
   resistance: z.number().positive().optional(),
   technicalIndicators: z.array(TechnicalIndicatorSchema),
   patterns: z.array(PatternDetectionResultSchema),
-  sentiment: z.enum(["very_bearish", "bearish", "neutral", "bullish", "very_bullish"]),
+  sentiment: z.enum([
+    "very_bearish",
+    "bearish",
+    "neutral",
+    "bullish",
+    "very_bullish",
+  ]),
   recommendation: z.enum(["strong_sell", "sell", "hold", "buy", "strong_buy"]),
   confidence: z.number().min(0).max(100),
   timestamp: z.number(),
@@ -485,7 +559,9 @@ export const MarketDataServiceStatusSchema = z.object({
     .optional(),
 });
 
-export type MarketDataServiceStatus = z.infer<typeof MarketDataServiceStatusSchema>;
+export type MarketDataServiceStatus = z.infer<
+  typeof MarketDataServiceStatusSchema
+>;
 
 // ============================================================================
 // Event Types

@@ -6,7 +6,13 @@
 
 "use client";
 
-import { type ComponentType, type LazyExoticComponent, lazy, type ReactNode, Suspense } from "react";
+import {
+  type ComponentType,
+  type LazyExoticComponent,
+  lazy,
+  type ReactNode,
+  Suspense,
+} from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 
@@ -129,7 +135,10 @@ const AlertSkeleton = () => (
     </div>
     <div className="space-y-2">
       {Array.from({ length: 6 }, (_, i) => i).map((skeletonId) => (
-        <div key={`loading-skeleton-${skeletonId}`} className="rounded-lg border p-3 space-y-2">
+        <div
+          key={`loading-skeleton-${skeletonId}`}
+          className="rounded-lg border p-3 space-y-2"
+        >
           <div className="flex items-center justify-between">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-4 w-16" />
@@ -203,7 +212,8 @@ export const SafetyMonitoringDashboard = safeLazy(
 export const PatternSniper = safeLazy(
   () =>
     import("./pattern-sniper").then((module: any) => ({
-      default: module.default || module.PatternSniper || module.PatternSniperComponent,
+      default:
+        module.default || module.PatternSniper || module.PatternSniperComponent,
     })),
   "PatternSniper",
   () => <CardSkeleton />
@@ -353,9 +363,11 @@ export const TradingAnalyticsDashboard = safeLazy(
 
 export const AutoSnipingExecutionDashboard = safeLazy(
   () =>
-    import("./auto-sniping/auto-sniping-execution-dashboard").then((module: any) => ({
-      default: module.AutoSnipingExecutionDashboard || module.default,
-    })),
+    import("./auto-sniping/auto-sniping-execution-dashboard").then(
+      (module: any) => ({
+        default: module.AutoSnipingExecutionDashboard || module.default,
+      })
+    ),
   "AutoSnipingExecutionDashboard",
   () => <ExecutionSkeleton />
 );
@@ -812,12 +824,17 @@ export async function preloadByRoute(currentRoute: string) {
         }
       });
     } else {
-      console.info(`Successfully preloaded ${successful} components for route ${currentRoute}`);
+      console.info(
+        `Successfully preloaded ${successful} components for route ${currentRoute}`
+      );
     }
 
     return results;
   } catch (error) {
-    console.error(`Failed to preload components for route ${currentRoute}:`, error);
+    console.error(
+      `Failed to preload components for route ${currentRoute}:`,
+      error
+    );
     return [];
   }
 }

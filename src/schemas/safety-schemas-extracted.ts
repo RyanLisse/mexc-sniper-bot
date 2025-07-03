@@ -131,7 +131,13 @@ export const SafetyAlertSchema = z.object({
  */
 export const SafetyActionSchema = z.object({
   id: z.string(),
-  type: z.enum(["alert", "restrict", "shutdown", "emergency_halt", "consensus_override"]),
+  type: z.enum([
+    "alert",
+    "restrict",
+    "shutdown",
+    "emergency_halt",
+    "consensus_override",
+  ]),
   target: z.string(),
   reason: z.string(),
   executedAt: z.string(),
@@ -263,13 +269,21 @@ export const RiskAssessmentSchema = z.object({
 // Type Exports
 // ============================================================================
 
-export type SafetyCoordinatorConfig = z.infer<typeof SafetyCoordinatorConfigSchema>;
-export type ComprehensiveSafetyStatus = z.infer<typeof ComprehensiveSafetyStatusSchema>;
+export type SafetyCoordinatorConfig = z.infer<
+  typeof SafetyCoordinatorConfigSchema
+>;
+export type ComprehensiveSafetyStatus = z.infer<
+  typeof ComprehensiveSafetyStatusSchema
+>;
 export type SafetyAlert = z.infer<typeof SafetyAlertSchema>;
 export type SafetyAction = z.infer<typeof SafetyActionSchema>;
 export type SafetyMetrics = z.infer<typeof SafetyMetricsSchema>;
-export type PortfolioRiskAssessment = z.infer<typeof PortfolioRiskAssessmentSchema>;
-export type PerformanceRiskAssessment = z.infer<typeof PerformanceRiskAssessmentSchema>;
+export type PortfolioRiskAssessment = z.infer<
+  typeof PortfolioRiskAssessmentSchema
+>;
+export type PerformanceRiskAssessment = z.infer<
+  typeof PerformanceRiskAssessmentSchema
+>;
 export type PatternRiskAssessment = z.infer<typeof PatternRiskAssessmentSchema>;
 export type SystemRiskAssessment = z.infer<typeof SystemRiskAssessmentSchema>;
 export type RiskAssessment = z.infer<typeof RiskAssessmentSchema>;
@@ -281,14 +295,18 @@ export type RiskAssessment = z.infer<typeof RiskAssessmentSchema>;
 /**
  * Validate safety coordinator configuration
  */
-export function validateSafetyCoordinatorConfig(data: unknown): SafetyCoordinatorConfig {
+export function validateSafetyCoordinatorConfig(
+  data: unknown
+): SafetyCoordinatorConfig {
   return SafetyCoordinatorConfigSchema.parse(data);
 }
 
 /**
  * Validate comprehensive safety status
  */
-export function validateComprehensiveSafetyStatus(data: unknown): ComprehensiveSafetyStatus {
+export function validateComprehensiveSafetyStatus(
+  data: unknown
+): ComprehensiveSafetyStatus {
   return ComprehensiveSafetyStatusSchema.parse(data);
 }
 
@@ -323,28 +341,36 @@ export function validateRiskAssessment(data: unknown): RiskAssessment {
 /**
  * Validate portfolio risk assessment
  */
-export function validatePortfolioRiskAssessment(data: unknown): PortfolioRiskAssessment {
+export function validatePortfolioRiskAssessment(
+  data: unknown
+): PortfolioRiskAssessment {
   return PortfolioRiskAssessmentSchema.parse(data);
 }
 
 /**
  * Validate performance risk assessment
  */
-export function validatePerformanceRiskAssessment(data: unknown): PerformanceRiskAssessment {
+export function validatePerformanceRiskAssessment(
+  data: unknown
+): PerformanceRiskAssessment {
   return PerformanceRiskAssessmentSchema.parse(data);
 }
 
 /**
  * Validate pattern risk assessment
  */
-export function validatePatternRiskAssessment(data: unknown): PatternRiskAssessment {
+export function validatePatternRiskAssessment(
+  data: unknown
+): PatternRiskAssessment {
   return PatternRiskAssessmentSchema.parse(data);
 }
 
 /**
  * Validate system risk assessment
  */
-export function validateSystemRiskAssessment(data: unknown): SystemRiskAssessment {
+export function validateSystemRiskAssessment(
+  data: unknown
+): SystemRiskAssessment {
   return SystemRiskAssessmentSchema.parse(data);
 }
 

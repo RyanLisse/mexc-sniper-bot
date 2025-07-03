@@ -1,26 +1,28 @@
 /**
  * Emergency Communication Manager
- * 
+ *
  * Handles all emergency communication including notifications, escalations,
  * and stakeholder communications across multiple channels.
  */
 
 import { EventEmitter } from "node:events";
-import type { 
+import type {
   CommunicationEntry,
   CommunicationPlan,
-  ContactChannel,
   EmergencyContact,
-  EmergencyEvent, 
-  EmergencySession
-} from './emergency-types';
+  EmergencySession,
+} from "./emergency-types";
 
 /**
  * Communication channel interface
  */
 interface Channel {
   type: string;
-  send(message: string, recipient: string, urgency: 'low' | 'medium' | 'high' | 'critical'): Promise<boolean>;
+  send(
+    message: string,
+    recipient: string,
+    urgency: "low" | "medium" | "high" | "critical"
+  ): Promise<boolean>;
   isAvailable(): boolean;
 }
 
@@ -65,7 +67,12 @@ export class EmergencyCommunicationManager extends EventEmitter {
     warn: (message: string, context?: any) =>
       console.warn("[emergency-communication]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[emergency-communication]", message, context || "", error || ""),
+      console.error(
+        "[emergency-communication]",
+        message,
+        context || "",
+        error || ""
+      ),
   };
 
   constructor() {
@@ -79,7 +86,10 @@ export class EmergencyCommunicationManager extends EventEmitter {
    */
   addContact(contact: EmergencyContact): void {
     this.contacts.set(contact.id, contact);
-    this.logger.info("Emergency contact added", { contactId: contact.id, name: contact.name });
+    this.logger.info("Emergency contact added", {
+      contactId: contact.id,
+      name: contact.name,
+    });
   }
 
   /**
@@ -120,7 +130,8 @@ export class EmergencyCommunicationManager extends EventEmitter {
     });
 
     // Get message template
-    const template = communicationPlan.templates[eventType] || this.templates.get(eventType);
+    const template =
+      communicationPlan.templates[eventType] || this.templates.get(eventType);
     if (!template) {
       this.logger.warn("No template found for event type", { eventType });
       return results;
@@ -138,15 +149,17 @@ export class EmergencyCommunicationManager extends EventEmitter {
 
       // Check availability for current time
       if (!this.isContactAvailable(contact)) {
-        this.logger.info("Contact not currently available", { 
-          contactId: contact.id, 
-          name: contact.name 
+        this.logger.info("Contact not currently available", {
+          contactId: contact.id,
+          name: contact.name,
         });
         continue;
       }
 
       // Send via priority channels
-      const sortedChannels = contact.channels.sort((a, b) => a.priority - b.priority);
+      const sortedChannels = contact.channels.sort(
+        (a, b) => a.priority - b.priority
+      );
       let sent = false;
 
       for (const contactChannel of sortedChannels) {
@@ -161,8 +174,8 @@ export class EmergencyCommunicationManager extends EventEmitter {
 
         try {
           const success = await channel.send(
-            message, 
-            contactChannel.value, 
+            message,
+            contactChannel.value,
             this.getUrgencyLevel(session.currentLevel)
           );
 
@@ -176,7 +189,7 @@ export class EmergencyCommunicationManager extends EventEmitter {
           if (success) {
             result.messageId = this.generateMessageId();
             sent = true;
-            
+
             // Add to communication log
             const logEntry: CommunicationEntry = {
               timestamp: result.timestamp,
@@ -185,10 +198,10 @@ export class EmergencyCommunicationManager extends EventEmitter {
               recipient: contact.name,
               status: "sent",
             };
-            
+
             this.communicationHistory.push(logEntry);
             session.communicationLog.push(logEntry);
-            
+
             this.logger.info("Notification sent successfully", {
               contactId: contact.id,
               channel: contactChannel.type,
@@ -205,7 +218,6 @@ export class EmergencyCommunicationManager extends EventEmitter {
           results.push(result);
 
           if (sent) break; // Stop trying other channels for this contact
-
         } catch (error) {
           const result: CommunicationResult = {
             success: false,
@@ -214,9 +226,9 @@ export class EmergencyCommunicationManager extends EventEmitter {
             error: (error as Error).message,
             timestamp: Date.now(),
           };
-          
+
           results.push(result);
-          
+
           this.logger.error("Notification send error", {
             contactId: contact.id,
             channel: contactChannel.type,
@@ -226,7 +238,9 @@ export class EmergencyCommunicationManager extends EventEmitter {
       }
 
       if (!sent) {
-        this.logger.warn("Failed to send notification to contact", { contactId: contact.id });
+        this.logger.warn("Failed to send notification to contact", {
+          contactId: contact.id,
+        });
       }
     }
 
@@ -252,7 +266,7 @@ export class EmergencyCommunicationManager extends EventEmitter {
     reason: string
   ): Promise<CommunicationResult[]> {
     const results: CommunicationResult[] = [];
-    
+
     const templateData: TemplateData = {
       sessionId: session.id,
       protocolId: session.protocolId,
@@ -263,9 +277,10 @@ export class EmergencyCommunicationManager extends EventEmitter {
       toLevel,
     };
 
-    const template = this.templates.get("escalated") || 
+    const template =
+      this.templates.get("escalated") ||
       "EMERGENCY ESCALATED: Protocol {protocolId} escalated from {fromLevel} to {toLevel}. Immediate attention required.";
-    
+
     const message = this.formatMessage(template, templateData);
 
     for (const contactId of escalationContacts) {
@@ -280,8 +295,12 @@ export class EmergencyCommunicationManager extends EventEmitter {
         if (!channel || !channel.isAvailable()) continue;
 
         try {
-          const success = await channel.send(message, contactChannel.value, "critical");
-          
+          const success = await channel.send(
+            message,
+            contactChannel.value,
+            "critical"
+          );
+
           results.push({
             success,
             channel: contactChannel.type,
@@ -298,11 +317,10 @@ export class EmergencyCommunicationManager extends EventEmitter {
               recipient: contact.name,
               status: "sent",
             };
-            
+
             this.communicationHistory.push(logEntry);
             session.communicationLog.push(logEntry);
           }
-
         } catch (error) {
           results.push({
             success: false,
@@ -356,11 +374,14 @@ export class EmergencyCommunicationManager extends EventEmitter {
   /**
    * Get urgency level based on emergency level
    */
-  private getUrgencyLevel(level: string): 'low' | 'medium' | 'high' | 'critical' {
+  private getUrgencyLevel(
+    level: string
+  ): "low" | "medium" | "high" | "critical" {
     // In production, this would map emergency levels to urgency
     if (level.includes("level_1")) return "medium";
     if (level.includes("level_2")) return "high";
-    if (level.includes("level_3") || level.includes("containment")) return "critical";
+    if (level.includes("level_3") || level.includes("containment"))
+      return "critical";
     return "medium";
   }
 
@@ -369,10 +390,10 @@ export class EmergencyCommunicationManager extends EventEmitter {
    */
   private formatMessage(template: string, data: TemplateData): string {
     let message = template;
-    
+
     for (const [key, value] of Object.entries(data)) {
       const placeholder = `{${key}}`;
-      message = message.replace(new RegExp(placeholder, 'g'), String(value));
+      message = message.replace(new RegExp(placeholder, "g"), String(value));
     }
 
     return message;
@@ -392,53 +413,77 @@ export class EmergencyCommunicationManager extends EventEmitter {
     // Slack channel implementation
     this.channels.set("slack", {
       type: "slack",
-      async send(message: string, recipient: string, urgency: string): Promise<boolean> {
+      async send(
+        message: string,
+        recipient: string,
+        urgency: string
+      ): Promise<boolean> {
         // Mock implementation - replace with real Slack API calls
-        console.log(`[SLACK] ${urgency.toUpperCase()}: ${message} -> ${recipient}`);
+        console.log(
+          `[SLACK] ${urgency.toUpperCase()}: ${message} -> ${recipient}`
+        );
         return true;
       },
       isAvailable(): boolean {
         return true; // Check Slack API availability
-      }
+      },
     });
 
     // Email channel implementation
     this.channels.set("email", {
       type: "email",
-      async send(message: string, recipient: string, urgency: string): Promise<boolean> {
+      async send(
+        message: string,
+        recipient: string,
+        urgency: string
+      ): Promise<boolean> {
         // Mock implementation - replace with real email service
-        console.log(`[EMAIL] ${urgency.toUpperCase()}: ${message} -> ${recipient}`);
+        console.log(
+          `[EMAIL] ${urgency.toUpperCase()}: ${message} -> ${recipient}`
+        );
         return true;
       },
       isAvailable(): boolean {
         return true; // Check email service availability
-      }
+      },
     });
 
     // SMS channel implementation
     this.channels.set("sms", {
       type: "sms",
-      async send(message: string, recipient: string, urgency: string): Promise<boolean> {
+      async send(
+        message: string,
+        recipient: string,
+        urgency: string
+      ): Promise<boolean> {
         // Mock implementation - replace with real SMS service
-        console.log(`[SMS] ${urgency.toUpperCase()}: ${message} -> ${recipient}`);
+        console.log(
+          `[SMS] ${urgency.toUpperCase()}: ${message} -> ${recipient}`
+        );
         return true;
       },
       isAvailable(): boolean {
         return true; // Check SMS service availability
-      }
+      },
     });
 
     // Phone channel implementation
     this.channels.set("phone", {
       type: "phone",
-      async send(message: string, recipient: string, urgency: string): Promise<boolean> {
+      async send(
+        message: string,
+        recipient: string,
+        urgency: string
+      ): Promise<boolean> {
         // Mock implementation - replace with real voice call service
-        console.log(`[PHONE] ${urgency.toUpperCase()}: ${message} -> ${recipient}`);
+        console.log(
+          `[PHONE] ${urgency.toUpperCase()}: ${message} -> ${recipient}`
+        );
         return urgency === "critical"; // Only make calls for critical alerts
       },
       isAvailable(): boolean {
         return true; // Check voice service availability
-      }
+      },
     });
 
     this.logger.info("Communication channels initialized", {
@@ -450,38 +495,42 @@ export class EmergencyCommunicationManager extends EventEmitter {
    * Initialize message templates
    */
   private initializeTemplates(): void {
-    this.templates.set("activated", 
+    this.templates.set(
+      "activated",
       "🚨 EMERGENCY PROTOCOL ACTIVATED\n" +
-      "Protocol: {protocolId}\n" +
-      "Level: {level}\n" +
-      "Reason: {reason}\n" +
-      "Session: {sessionId}\n" +
-      "Time: {timestamp}"
+        "Protocol: {protocolId}\n" +
+        "Level: {level}\n" +
+        "Reason: {reason}\n" +
+        "Session: {sessionId}\n" +
+        "Time: {timestamp}"
     );
 
-    this.templates.set("escalated",
+    this.templates.set(
+      "escalated",
       "⚠️ EMERGENCY ESCALATED\n" +
-      "Protocol: {protocolId}\n" +
-      "From: {fromLevel} → To: {toLevel}\n" +
-      "Reason: {reason}\n" +
-      "Session: {sessionId}\n" +
-      "IMMEDIATE ATTENTION REQUIRED"
+        "Protocol: {protocolId}\n" +
+        "From: {fromLevel} → To: {toLevel}\n" +
+        "Reason: {reason}\n" +
+        "Session: {sessionId}\n" +
+        "IMMEDIATE ATTENTION REQUIRED"
     );
 
-    this.templates.set("resolved",
+    this.templates.set(
+      "resolved",
       "✅ EMERGENCY RESOLVED\n" +
-      "Protocol: {protocolId}\n" +
-      "Level: {level}\n" +
-      "Session: {sessionId}\n" +
-      "Resolution Time: {timestamp}\n" +
-      "Normal operations resumed"
+        "Protocol: {protocolId}\n" +
+        "Level: {level}\n" +
+        "Session: {sessionId}\n" +
+        "Resolution Time: {timestamp}\n" +
+        "Normal operations resumed"
     );
 
-    this.templates.set("test",
+    this.templates.set(
+      "test",
       "🧪 EMERGENCY PROTOCOL TEST\n" +
-      "Protocol: {protocolId}\n" +
-      "This is a scheduled test of emergency procedures.\n" +
-      "No action required."
+        "Protocol: {protocolId}\n" +
+        "This is a scheduled test of emergency procedures.\n" +
+        "No action required."
     );
 
     this.logger.info("Message templates initialized", {
@@ -501,7 +550,9 @@ export class EmergencyCommunicationManager extends EventEmitter {
    * Get communication history
    */
   getCommunicationHistory(limit?: number): CommunicationEntry[] {
-    return limit ? this.communicationHistory.slice(-limit) : [...this.communicationHistory];
+    return limit
+      ? this.communicationHistory.slice(-limit)
+      : [...this.communicationHistory];
   }
 
   /**
@@ -514,7 +565,7 @@ export class EmergencyCommunicationManager extends EventEmitter {
     last24Hours: number;
   } {
     const last24Hours = Date.now() - 24 * 60 * 60 * 1000;
-    
+
     const byChannel: Record<string, number> = {};
     const byStatus: Record<string, number> = {};
     let recent = 0;
@@ -522,10 +573,10 @@ export class EmergencyCommunicationManager extends EventEmitter {
     for (const entry of this.communicationHistory) {
       // Count by channel
       byChannel[entry.channel] = (byChannel[entry.channel] || 0) + 1;
-      
+
       // Count by status
       byStatus[entry.status] = (byStatus[entry.status] || 0) + 1;
-      
+
       // Count recent
       if (entry.timestamp > last24Hours) {
         recent++;
@@ -550,7 +601,11 @@ export class EmergencyCommunicationManager extends EventEmitter {
       try {
         // Send test message
         const testMessage = "Emergency communication system test";
-        const success = await channel.send(testMessage, "test@example.com", "low");
+        const success = await channel.send(
+          testMessage,
+          "test@example.com",
+          "low"
+        );
         results[channelType] = success && channel.isAvailable();
       } catch (error) {
         results[channelType] = false;
@@ -571,13 +626,13 @@ export class EmergencyCommunicationManager extends EventEmitter {
   cleanupHistory(maxAge: number = 30 * 24 * 60 * 60 * 1000): number {
     const cutoff = Date.now() - maxAge;
     const initialLength = this.communicationHistory.length;
-    
+
     this.communicationHistory = this.communicationHistory.filter(
-      entry => entry.timestamp > cutoff
+      (entry) => entry.timestamp > cutoff
     );
 
     const removed = initialLength - this.communicationHistory.length;
-    
+
     if (removed > 0) {
       this.logger.info("Communication history cleaned up", {
         removedEntries: removed,
@@ -593,12 +648,12 @@ export class EmergencyCommunicationManager extends EventEmitter {
    */
   async shutdown(): Promise<void> {
     this.logger.info("Shutting down communication manager");
-    
+
     // Clear channels and contacts
     this.channels.clear();
     this.contacts.clear();
     this.templates.clear();
-    
+
     this.removeAllListeners();
   }
 }

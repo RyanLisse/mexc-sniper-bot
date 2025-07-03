@@ -1,6 +1,4 @@
-// Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
 import type { AgentBehaviorMetrics } from "@/src/mexc-agents/safety-monitor-agent";
@@ -8,7 +6,7 @@ import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 
 /**
  * Agent Monitoring API
- * 
+ *
  * GET /api/safety/agent-monitoring - Get agent health and behavior status
  * POST /api/safety/agent-monitoring - Update agent metrics or trigger monitoring actions
  */
@@ -16,16 +14,20 @@ import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
 export async function GET(request: NextRequest) {
   // Build-safe initialization - use console logger to avoid webpack bundling issues
   const logger = {
-    info: (message: string, context?: any) => console.info('[agent-monitoring]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[agent-monitoring]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[agent-monitoring]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[agent-monitoring]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[agent-monitoring]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-monitoring]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[agent-monitoring]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-monitoring]", message, context || ""),
   };
   const safetyMonitor = new SafetyMonitorAgent();
-  
+
   try {
     const { searchParams } = new URL(request.url);
-    const includeHistory = searchParams.get("includeHistory") === "true";
+    const _includeHistory = searchParams.get("includeHistory") === "true";
     const agentId = searchParams.get("agentId");
 
     // Get current safety status
@@ -42,7 +44,9 @@ export async function GET(request: NextRequest) {
         confidenceScore: 85 + Math.random() * 10,
         memoryUsage: 128 + Math.random() * 64,
         cacheHitRate: 75 + Math.random() * 20,
-        lastActivity: new Date(Date.now() - Math.random() * 300000).toISOString(),
+        lastActivity: new Date(
+          Date.now() - Math.random() * 300000
+        ).toISOString(),
         anomalyScore: Math.random() * 30,
       },
       {
@@ -54,7 +58,9 @@ export async function GET(request: NextRequest) {
         confidenceScore: 92 + Math.random() * 6,
         memoryUsage: 96 + Math.random() * 32,
         cacheHitRate: 85 + Math.random() * 12,
-        lastActivity: new Date(Date.now() - Math.random() * 180000).toISOString(),
+        lastActivity: new Date(
+          Date.now() - Math.random() * 180000
+        ).toISOString(),
         anomalyScore: Math.random() * 20,
       },
       {
@@ -66,7 +72,9 @@ export async function GET(request: NextRequest) {
         confidenceScore: 78 + Math.random() * 15,
         memoryUsage: 156 + Math.random() * 48,
         cacheHitRate: 65 + Math.random() * 25,
-        lastActivity: new Date(Date.now() - Math.random() * 400000).toISOString(),
+        lastActivity: new Date(
+          Date.now() - Math.random() * 400000
+        ).toISOString(),
         anomalyScore: 25 + Math.random() * 20,
       },
       {
@@ -78,7 +86,9 @@ export async function GET(request: NextRequest) {
         confidenceScore: 88 + Math.random() * 8,
         memoryUsage: 144 + Math.random() * 56,
         cacheHitRate: 72 + Math.random() * 18,
-        lastActivity: new Date(Date.now() - Math.random() * 250000).toISOString(),
+        lastActivity: new Date(
+          Date.now() - Math.random() * 250000
+        ).toISOString(),
         anomalyScore: 15 + Math.random() * 25,
       },
       {
@@ -90,18 +100,21 @@ export async function GET(request: NextRequest) {
         confidenceScore: 95 + Math.random() * 4,
         memoryUsage: 112 + Math.random() * 24,
         cacheHitRate: 88 + Math.random() * 10,
-        lastActivity: new Date(Date.now() - Math.random() * 60000).toISOString(),
+        lastActivity: new Date(
+          Date.now() - Math.random() * 60000
+        ).toISOString(),
         anomalyScore: Math.random() * 10,
       },
     ];
 
     // Filter by specific agent if requested
-    const agentMetrics = agentId ? 
-      mockAgentMetrics.filter(m => m.agentId === agentId) : 
-      mockAgentMetrics;
+    const agentMetrics = agentId
+      ? mockAgentMetrics.filter((m) => m.agentId === agentId)
+      : mockAgentMetrics;
 
     // Perform behavior monitoring
-    const behaviorAnalysis = await safetyMonitor.monitorAgentBehavior(agentMetrics);
+    const behaviorAnalysis =
+      await safetyMonitor.monitorAgentBehavior(agentMetrics);
 
     // Check for performance degradation
     const performanceCheck = await safetyMonitor.checkPerformanceDegradation();
@@ -116,24 +129,48 @@ export async function GET(request: NextRequest) {
         lastBehaviorCheck: safetyStatus.lastBehaviorCheck,
         lastPerformanceCheck: safetyStatus.lastPerformanceCheck,
       },
-      agentMetrics: agentMetrics.map(agent => ({
+      agentMetrics: agentMetrics.map((agent) => ({
         ...agent,
-        status: agent.anomalyScore > 50 ? "critical" :
-                agent.anomalyScore > 30 ? "degraded" :
-                agent.successRate < 85 ? "degraded" :
-                agent.responseTime > 3000 ? "degraded" : "healthy",
+        status:
+          agent.anomalyScore > 50
+            ? "critical"
+            : agent.anomalyScore > 30
+              ? "degraded"
+              : agent.successRate < 85
+                ? "degraded"
+                : agent.responseTime > 3000
+                  ? "degraded"
+                  : "healthy",
         recommendations: [
-          ...(agent.anomalyScore > 30 ? [`High anomaly score (${agent.anomalyScore.toFixed(1)}) - investigate behavior`] : []),
-          ...(agent.successRate < 90 ? [`Low success rate (${agent.successRate.toFixed(1)}%) - consider retraining`] : []),
-          ...(agent.responseTime > 2000 ? [`High response time (${agent.responseTime.toFixed(0)}ms) - optimize performance`] : []),
-          ...(agent.cacheHitRate < 70 ? [`Low cache hit rate (${agent.cacheHitRate.toFixed(1)}%) - review caching strategy`] : []),
+          ...(agent.anomalyScore > 30
+            ? [
+                `High anomaly score (${agent.anomalyScore.toFixed(1)}) - investigate behavior`,
+              ]
+            : []),
+          ...(agent.successRate < 90
+            ? [
+                `Low success rate (${agent.successRate.toFixed(1)}%) - consider retraining`,
+              ]
+            : []),
+          ...(agent.responseTime > 2000
+            ? [
+                `High response time (${agent.responseTime.toFixed(0)}ms) - optimize performance`,
+              ]
+            : []),
+          ...(agent.cacheHitRate < 70
+            ? [
+                `Low cache hit rate (${agent.cacheHitRate.toFixed(1)}%) - review caching strategy`,
+              ]
+            : []),
         ],
       })),
       behaviorAnalysis: {
         anomaliesDetected: behaviorAnalysis.anomaliesDetected.length,
         newViolations: behaviorAnalysis.violations.length,
         recommendations: behaviorAnalysis.recommendations,
-        anomalousAgents: behaviorAnalysis.anomaliesDetected.map(a => a.agentId),
+        anomalousAgents: behaviorAnalysis.anomaliesDetected.map(
+          (a) => a.agentId
+        ),
       },
       performanceAnalysis: {
         degradedAgents: performanceCheck.degradedAgents,
@@ -164,31 +201,31 @@ export async function GET(request: NextRequest) {
     };
 
     return apiResponse.success(response);
-
   } catch (error) {
     logger.error("[Agent Monitoring] GET Error:", { error: error });
-    return apiResponse.error(
-      "Failed to get agent monitoring data",
-      500
-    );
+    return apiResponse.error("Failed to get agent monitoring data", 500);
   }
 }
 
 export async function POST(request: NextRequest) {
   // Build-safe initialization - use console logger to avoid webpack bundling issues
   const logger = {
-    info: (message: string, context?: any) => console.info('[agent-monitoring-post]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[agent-monitoring-post]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[agent-monitoring-post]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[agent-monitoring-post]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[agent-monitoring-post]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[agent-monitoring-post]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[agent-monitoring-post]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[agent-monitoring-post]", message, context || ""),
   };
   const safetyMonitor = new SafetyMonitorAgent();
-  
+
   try {
     // Verify authentication
     try {
       await requireAuth();
-    } catch (error) {
+    } catch (_error) {
       return apiResponse.unauthorized("Authentication required");
     }
 
@@ -198,7 +235,7 @@ export async function POST(request: NextRequest) {
     let result;
 
     switch (action) {
-      case "validate_pattern":
+      case "validate_pattern": {
         if (!parameters?.patternId || !parameters?.symbol) {
           return apiResponse.badRequest("Pattern ID and symbol required");
         }
@@ -218,8 +255,9 @@ export async function POST(request: NextRequest) {
           reasoning: validation.reasoning,
         };
         break;
+      }
 
-      case "request_consensus":
+      case "request_consensus": {
         if (!parameters?.consensusRequest) {
           return apiResponse.badRequest("Consensus request required");
         }
@@ -235,8 +273,9 @@ export async function POST(request: NextRequest) {
           processingTime: consensusResponse.processingTime,
         };
         break;
+      }
 
-      case "update_agent_metrics":
+      case "update_agent_metrics": {
         if (!parameters?.agentMetrics) {
           return apiResponse.badRequest("Agent metrics required");
         }
@@ -253,6 +292,7 @@ export async function POST(request: NextRequest) {
           recommendations: behaviorAnalysis.recommendations,
         };
         break;
+      }
 
       case "acknowledge_violations":
         if (!parameters?.violationIds) {
@@ -317,12 +357,8 @@ export async function POST(request: NextRequest) {
     }
 
     return apiResponse.success(result);
-
   } catch (error) {
     logger.error("[Agent Monitoring] POST Error:", { error: error });
-    return apiResponse.error(
-      "Failed to execute agent monitoring action",
-      500
-    );
+    return apiResponse.error("Failed to execute agent monitoring action", 500);
   }
 }

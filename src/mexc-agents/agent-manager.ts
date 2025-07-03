@@ -124,7 +124,10 @@ export class AgentManager {
     const startTime = Date.now();
 
     // Check cache first for performance optimization
-    if (this.healthCache && Date.now() - this.healthCache.timestamp < this.HEALTH_CACHE_TTL) {
+    if (
+      this.healthCache &&
+      Date.now() - this.healthCache.timestamp < this.HEALTH_CACHE_TTL
+    ) {
       this.logger.debug("[AgentManager] Returning cached health status");
       return {
         ...this.healthCache.data,
@@ -151,9 +154,13 @@ export class AgentManager {
       ])) as PromiseSettledResult<any>[];
 
       const coreSystemsHealth =
-        coreSystemsResult.status === "fulfilled" ? coreSystemsResult.value : null;
+        coreSystemsResult.status === "fulfilled"
+          ? coreSystemsResult.value
+          : null;
       const safetyAgentsHealth =
-        safetyAgentsResult.status === "fulfilled" ? safetyAgentsResult.value : null;
+        safetyAgentsResult.status === "fulfilled"
+          ? safetyAgentsResult.value
+          : null;
 
       const result = {
         // Core trading agents (based on system dependencies)
@@ -184,7 +191,9 @@ export class AgentManager {
         data: result,
       };
 
-      this.logger.debug(`[AgentManager] Health check completed in ${result.responseTime}ms`);
+      this.logger.debug(
+        `[AgentManager] Health check completed in ${result.responseTime}ms`
+      );
       return result;
     } catch (error) {
       this.logger.error("[AgentManager] Health check failed:", error);
@@ -234,9 +243,16 @@ export class AgentManager {
     ]);
 
     return {
-      mexcApiStatus: mexcHealth.status === "fulfilled" ? mexcHealth.value.status : "unhealthy",
-      openAiStatus: openAiHealth.status === "fulfilled" ? openAiHealth.value.status : "unhealthy",
-      databaseStatus: dbHealth.status === "fulfilled" ? dbHealth.value.status : "unhealthy",
+      mexcApiStatus:
+        mexcHealth.status === "fulfilled"
+          ? mexcHealth.value.status
+          : "unhealthy",
+      openAiStatus:
+        openAiHealth.status === "fulfilled"
+          ? openAiHealth.value.status
+          : "unhealthy",
+      databaseStatus:
+        dbHealth.status === "fulfilled" ? dbHealth.value.status : "unhealthy",
     };
   }
 
@@ -252,32 +268,52 @@ export class AgentManager {
     // Batch safety agent health checks with shorter timeout
     const agentHealthChecks = await Promise.allSettled([
       Promise.race([
-        this.simulationAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
+        this.simulationAgent
+          .checkAgentHealth()
+          .then((result) => result.healthy),
+        new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(false), 1000)
+        ),
       ]),
       Promise.race([
-        this.riskManagerAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
+        this.riskManagerAgent
+          .checkAgentHealth()
+          .then((result) => result.healthy),
+        new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(false), 1000)
+        ),
       ]),
       Promise.race([
-        this.reconciliationAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
+        this.reconciliationAgent
+          .checkAgentHealth()
+          .then((result) => result.healthy),
+        new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(false), 1000)
+        ),
       ]),
       Promise.race([
-        this.errorRecoveryAgent.checkAgentHealth().then((result) => result.healthy),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(false), 1000)),
+        this.errorRecoveryAgent
+          .checkAgentHealth()
+          .then((result) => result.healthy),
+        new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(false), 1000)
+        ),
       ]),
     ]);
 
     return {
       simulation:
-        agentHealthChecks[0].status === "fulfilled" && agentHealthChecks[0].value === true,
+        agentHealthChecks[0].status === "fulfilled" &&
+        agentHealthChecks[0].value === true,
       riskManager:
-        agentHealthChecks[1].status === "fulfilled" && agentHealthChecks[1].value === true,
+        agentHealthChecks[1].status === "fulfilled" &&
+        agentHealthChecks[1].value === true,
       reconciliation:
-        agentHealthChecks[2].status === "fulfilled" && agentHealthChecks[2].value === true,
+        agentHealthChecks[2].status === "fulfilled" &&
+        agentHealthChecks[2].value === true,
       errorRecovery:
-        agentHealthChecks[3].status === "fulfilled" && agentHealthChecks[3].value === true,
+        agentHealthChecks[3].status === "fulfilled" &&
+        agentHealthChecks[3].value === true,
     };
   }
 
@@ -327,20 +363,40 @@ export class AgentManager {
   // Safety-specific methods
   async performComprehensiveSafetyCheck(): Promise<{
     overall: "pass" | "warning" | "critical";
-    simulation: { passed: boolean; issues: string[]; recommendations: string[] };
-    riskManager: { passed: boolean; issues: string[]; recommendations: string[] };
-    reconciliation: { passed: boolean; issues: string[]; recommendations: string[] };
-    errorRecovery: { passed: boolean; issues: string[]; recommendations: string[] };
+    simulation: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
+    riskManager: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
+    reconciliation: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
+    errorRecovery: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
     summary: string[];
   }> {
     try {
-      const [simulationCheck, riskCheck, reconciliationCheck, errorRecoveryCheck] =
-        await Promise.all([
-          this.simulationAgent.performSafetyCheck(null),
-          this.riskManagerAgent.performSafetyCheck(null),
-          this.reconciliationAgent.performSafetyCheck(null),
-          this.errorRecoveryAgent.performSafetyCheck(null),
-        ]);
+      const [
+        simulationCheck,
+        riskCheck,
+        reconciliationCheck,
+        errorRecoveryCheck,
+      ] = await Promise.all([
+        this.simulationAgent.performSafetyCheck(null),
+        this.riskManagerAgent.performSafetyCheck(null),
+        this.reconciliationAgent.performSafetyCheck(null),
+        this.errorRecoveryAgent.performSafetyCheck(null),
+      ]);
 
       const criticalIssues = [
         simulationCheck,
@@ -350,13 +406,19 @@ export class AgentManager {
       ].filter((check) => !check.passed);
 
       const overall =
-        criticalIssues.length === 0 ? "pass" : criticalIssues.length > 2 ? "critical" : "warning";
+        criticalIssues.length === 0
+          ? "pass"
+          : criticalIssues.length > 2
+            ? "critical"
+            : "warning";
 
       const summary: string[] = [];
       if (overall === "pass") {
         summary.push("All safety systems are operational");
       } else {
-        summary.push(`${criticalIssues.length} safety system(s) require attention`);
+        summary.push(
+          `${criticalIssues.length} safety system(s) require attention`
+        );
         criticalIssues.forEach((check) => {
           summary.push(...check.issues);
         });
@@ -373,10 +435,26 @@ export class AgentManager {
     } catch (error) {
       return {
         overall: "critical",
-        simulation: { passed: false, issues: ["Safety check failed"], recommendations: [] },
-        riskManager: { passed: false, issues: ["Safety check failed"], recommendations: [] },
-        reconciliation: { passed: false, issues: ["Safety check failed"], recommendations: [] },
-        errorRecovery: { passed: false, issues: ["Safety check failed"], recommendations: [] },
+        simulation: {
+          passed: false,
+          issues: ["Safety check failed"],
+          recommendations: [],
+        },
+        riskManager: {
+          passed: false,
+          issues: ["Safety check failed"],
+          recommendations: [],
+        },
+        reconciliation: {
+          passed: false,
+          issues: ["Safety check failed"],
+          recommendations: [],
+        },
+        errorRecovery: {
+          passed: false,
+          issues: ["Safety check failed"],
+          recommendations: [],
+        },
         summary: [`Safety check system error: ${error}`],
       };
     }

@@ -1,7 +1,7 @@
 "use client";
 
 // Force dynamic rendering for this page since it shows real-time system status
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { RefreshCw } from "lucide-react";
 import { Suspense } from "react";
@@ -37,12 +37,14 @@ export default function SystemCheckPage() {
         </div>
 
         {/* Unified System Check Component */}
-        <Suspense fallback={
-          <div className="flex items-center justify-center py-8">
-            <RefreshCw className="h-6 w-6 animate-spin mr-2" />
-            <span>Loading system status...</span>
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center py-8">
+              <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading system status...</span>
+            </div>
+          }
+        >
           <UnifiedSystemCheck />
         </Suspense>
       </div>

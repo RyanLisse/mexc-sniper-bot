@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { getSupabaseBrowserClient } from './supabase-browser-client';
+import { getSupabaseBrowserClient } from "./supabase-browser-client";
 
 interface AuthUser {
   id: string;
@@ -37,10 +37,13 @@ export const useAuth = () => {
 
       const supabase = getSupabaseBrowserClient();
       if (!supabase) {
-        throw new Error('Supabase client not available (SSR environment)');
+        throw new Error("Supabase client not available (SSR environment)");
       }
 
-      const { data: { session: supabaseSession }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session: supabaseSession },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
       if (sessionError) {
         throw new Error(sessionError.message);
@@ -51,9 +54,14 @@ export const useAuth = () => {
         const authUser: AuthUser = {
           id: user.id,
           email: user.email ?? "",
-          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "User",
+          name:
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            user.email ||
+            "User",
           username: user.user_metadata?.username,
-          picture: user.user_metadata?.picture || user.user_metadata?.avatar_url,
+          picture:
+            user.user_metadata?.picture || user.user_metadata?.avatar_url,
           emailVerified: !!user.email_confirmed_at,
         };
 
@@ -89,10 +97,12 @@ export const useAuth = () => {
       return () => {};
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, _session) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await fetchSession();
-      } else if (event === 'SIGNED_OUT') {
+      } else if (event === "SIGNED_OUT") {
         setSession({
           isAuthenticated: false,
         });
@@ -108,7 +118,9 @@ export const useAuth = () => {
     if (!supabase) {
       return null;
     }
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session?.access_token || null;
   }, []);
 
@@ -144,7 +156,7 @@ export const useSession = () => {
 export const signInWithEmail = async (email: string, password: string) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -162,13 +174,17 @@ export const signInWithEmail = async (email: string, password: string) => {
 /**
  * Sign up with email and password
  */
-export const signUpWithEmail = async (email: string, password: string, options?: {
-  name?: string;
-  username?: string;
-}) => {
+export const signUpWithEmail = async (
+  email: string,
+  password: string,
+  options?: {
+    name?: string;
+    username?: string;
+  }
+) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { data, error } = await supabase.auth.signUp({
@@ -178,8 +194,8 @@ export const signUpWithEmail = async (email: string, password: string, options?:
       data: {
         full_name: options?.name,
         username: options?.username,
-      }
-    }
+      },
+    },
   });
 
   if (error) {
@@ -192,17 +208,19 @@ export const signUpWithEmail = async (email: string, password: string, options?:
 /**
  * Sign in with OAuth providers
  */
-export const signInWithOAuth = async (provider: 'google' | 'github' | 'discord') => {
+export const signInWithOAuth = async (
+  provider: "google" | "github" | "discord"
+) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${window.location.origin}/auth/callback`
-    }
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
   });
 
   if (error) {
@@ -218,11 +236,11 @@ export const signInWithOAuth = async (provider: 'google' | 'github' | 'discord')
 export const signOut = async () => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { error } = await supabase.auth.signOut();
-  
+
   if (error) {
     throw new Error(error.message);
   }
@@ -234,11 +252,11 @@ export const signOut = async () => {
 export const resetPassword = async (email: string) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth/reset-password`
+    redirectTo: `${window.location.origin}/auth/reset-password`,
   });
 
   if (error) {
@@ -254,11 +272,11 @@ export const resetPassword = async (email: string) => {
 export const updatePassword = async (newPassword: string) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { data, error } = await supabase.auth.updateUser({
-    password: newPassword
+    password: newPassword,
   });
 
   if (error) {
@@ -278,7 +296,7 @@ export const updateProfile = async (updates: {
 }) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
-    throw new Error('Supabase client not available (SSR environment)');
+    throw new Error("Supabase client not available (SSR environment)");
   }
 
   const { data, error } = await supabase.auth.updateUser({
@@ -286,7 +304,7 @@ export const updateProfile = async (updates: {
       full_name: updates.name,
       username: updates.username,
       picture: updates.picture,
-    }
+    },
   });
 
   if (error) {
@@ -300,9 +318,9 @@ export const updateProfile = async (updates: {
 export const supabase = getSupabaseBrowserClient();
 
 // Export for compatibility with existing code
-export { 
-  signInWithEmail as signIn, 
+export {
+  signInWithEmail as signIn,
   signUpWithEmail as signUp,
-  signInWithEmail as login, 
-  signUpWithEmail as register 
+  signInWithEmail as login,
+  signUpWithEmail as register,
 };

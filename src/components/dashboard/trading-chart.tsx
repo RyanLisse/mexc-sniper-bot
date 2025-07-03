@@ -2,8 +2,21 @@
 
 import { useEffect, useState } from "react";
 // Direct imports for Recharts - since TradingChart is already lazy-loaded by dynamic-component-loader
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { ChartContainer } from "../ui/chart";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 
@@ -33,35 +46,45 @@ type MexcKlineData = [
   string, // quoteAssetVolume
   number, // trades
   string, // buyBaseAssetVolume
-  string  // buyQuoteAssetVolume
+  string, // buyQuoteAssetVolume
 ];
 
 // Real market data fetcher using API route
-const fetchMarketData = async (symbol: string = "BTCUSDT", interval: string = "1d", limit: number = 90): Promise<ChartDataPoint[]> => {
+const fetchMarketData = async (
+  symbol: string = "BTCUSDT",
+  interval: string = "1d",
+  limit: number = 90
+): Promise<ChartDataPoint[]> => {
   try {
     console.log("[TradingChart] Fetching market data from API");
-    
+
     const params = new URLSearchParams({
       symbol,
       interval,
       limit: limit.toString(),
     });
-    
+
     const response = await fetch(`/api/market-data/klines?${params}`);
-    
+
     if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `API request failed: ${response.status} ${response.statusText}`
+      );
     }
-    
+
     const result = await response.json();
-    
-    if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+
+    if (
+      result.success &&
+      Array.isArray(result.data) &&
+      result.data.length > 0
+    ) {
       console.log("[TradingChart] Successfully fetched market data", {
         dataPoints: result.data.length,
         isFallback: result.fallback || false,
-        source: result.fallback ? "fallback" : "real"
+        source: result.fallback ? "fallback" : "real",
       });
-      
+
       // The API already returns data in the correct ChartDataPoint format
       const chartData = result.data;
       (chartData as any)._dataSource = result.fallback ? "fallback" : "real";
@@ -69,10 +92,9 @@ const fetchMarketData = async (symbol: string = "BTCUSDT", interval: string = "1
     } else {
       throw new Error("No data received from API");
     }
-
   } catch (error) {
     console.error("[TradingChart] Failed to fetch market data:", error);
-    
+
     // Fallback to realistic demo data on error
     console.warn("[TradingChart] Using demo data as final fallback");
     const demoData = generateRealisticDemoData(limit);
@@ -82,43 +104,70 @@ const fetchMarketData = async (symbol: string = "BTCUSDT", interval: string = "1
 };
 
 // Convert MEXC klines data to chart data format
-const convertKlinesToChartData = (klinesData: MexcKlineData[]): ChartDataPoint[] => {
+const _convertKlinesToChartData = (
+  klinesData: MexcKlineData[]
+): ChartDataPoint[] => {
   const data: ChartDataPoint[] = [];
-  
+
   // MEXC kline data format: [openTime, open, high, low, close, volume, closeTime, quoteAssetVolume, trades, buyBaseAssetVolume, buyQuoteAssetVolume]
-  klinesData.forEach((kline, index) => {
-    const [openTime, open, high, low, close, volume, closeTime, quoteAssetVolume, trades] = kline;
-    
+  klinesData.forEach((kline, _index) => {
+    const [
+      openTime,
+      _open,
+      _high,
+      _low,
+      close,
+      volume,
+      _closeTime,
+      _quoteAssetVolume,
+      trades,
+    ] = kline;
+
     const date = new Date(openTime);
     const volumeNum = parseFloat(volume);
-    const tradesNum = typeof trades === 'number' ? trades : parseInt(String(trades), 10) || 0;
+    const tradesNum =
+      typeof trades === "number" ? trades : parseInt(String(trades), 10) || 0;
     const closePrice = parseFloat(close);
-    
+
     data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      date: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
       volume: Math.floor(volumeNum),
       trades: tradesNum,
       price: closePrice,
       timestamp: openTime,
     });
   });
-  
+
   // Sort by timestamp to ensure chronological order
   data.sort((a, b) => a.timestamp - b.timestamp);
-  
-  console.log("[TradingChart] Converted", klinesData.length, "klines to chart data");
+
+  console.log(
+    "[TradingChart] Converted",
+    klinesData.length,
+    "klines to chart data"
+  );
   return data;
 };
 
 // Generate historical-looking data from current ticker
-const generateHistoricalDataFromTicker = (ticker: any, days: number): ChartDataPoint[] => {
+const _generateHistoricalDataFromTicker = (
+  ticker: any,
+  days: number
+): ChartDataPoint[] => {
   const data: ChartDataPoint[] = [];
   const today = new Date();
-  
+
   // Extract data from MEXC ticker format
   const currentVolume = parseFloat(ticker.volume || ticker.v || "50000");
-  const currentPrice = parseFloat(ticker.lastPrice || ticker.price || ticker.c || "50000");
-  const currentTrades = parseInt(String(ticker.count || ticker.t || "0"), 10) || Math.floor(currentVolume / 100);
+  const currentPrice = parseFloat(
+    ticker.lastPrice || ticker.price || ticker.c || "50000"
+  );
+  const currentTrades =
+    parseInt(String(ticker.count || ticker.t || "0"), 10) ||
+    Math.floor(currentVolume / 100);
 
   console.log("[TradingChart] Ticker data:", {
     symbol: ticker.symbol,
@@ -144,7 +193,10 @@ const generateHistoricalDataFromTicker = (ticker: any, days: number): ChartDataP
     const price = currentPrice * priceVariation;
 
     data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      date: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
       volume: volume,
       trades: trades,
       price: price,
@@ -168,11 +220,16 @@ const generateRealisticDemoData = (days: number): ChartDataPoint[] => {
     const baseVolume = 45000 + Math.random() * 25000;
     const marketCycle = Math.sin((i / days) * Math.PI * 2) * 15000; // Weekly cycle
     const dailyVariation = (Math.random() - 0.5) * 10000;
-    
-    const volume = Math.floor(Math.max(1000, baseVolume + marketCycle + dailyVariation));
+
+    const volume = Math.floor(
+      Math.max(1000, baseVolume + marketCycle + dailyVariation)
+    );
 
     data.push({
-      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      date: date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      }),
       volume: volume,
       trades: Math.floor(volume / 85), // More realistic trade count ratio
       price: 50000 + Math.sin(i * 0.2) * 2000 + Math.random() * 1000,
@@ -194,12 +251,17 @@ const chartConfig = {
   },
 };
 
-export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProps) {
+export function TradingChart({
+  className,
+  symbol = "BTCUSDT",
+}: TradingChartProps) {
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("90d");
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dataSource, setDataSource] = useState<"real" | "ticker" | "demo">("real");
+  const [dataSource, setDataSource] = useState<"real" | "ticker" | "demo">(
+    "real"
+  );
 
   // Map time ranges to API intervals and limits
   const getIntervalAndLimit = (range: "7d" | "30d" | "90d") => {
@@ -224,9 +286,9 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
       try {
         const { interval, limit } = getIntervalAndLimit(timeRange);
         const data = await fetchMarketData(symbol, interval, limit);
-        
+
         setChartData(data);
-        
+
         // Determine data source based on how the data was fetched
         // We'll pass this information from the fetchMarketData function
         const dataSourceMetadata = (data as any)._dataSource || "demo";
@@ -246,7 +308,7 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
     const refreshInterval = setInterval(loadMarketData, 60000); // Refresh every minute
 
     return () => clearInterval(refreshInterval);
-  }, [timeRange, symbol]);
+  }, [timeRange, symbol, getIntervalAndLimit]);
 
   const getDaysDescription = () => {
     switch (timeRange) {
@@ -285,11 +347,15 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
             )}
           </CardTitle>
           <CardDescription>
-            {symbol} volume for the last {getDaysDescription()} {getDataSourceIndicator()}
+            {symbol} volume for the last {getDaysDescription()}{" "}
+            {getDataSourceIndicator()}
             {error && <span className="text-destructive ml-2">({error})</span>}
           </CardDescription>
         </div>
-        <Tabs value={timeRange} onValueChange={(v) => setTimeRange(v as typeof timeRange)}>
+        <Tabs
+          value={timeRange}
+          onValueChange={(v) => setTimeRange(v as typeof timeRange)}
+        >
           <TabsList>
             <TabsTrigger value="90d">Last 3 months</TabsTrigger>
             <TabsTrigger value="30d">Last 30 days</TabsTrigger>
@@ -303,8 +369,16 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorVolume" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+                  <stop
+                    offset="5%"
+                    stopColor="hsl(var(--chart-1))"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="hsl(var(--chart-1))"
+                    stopOpacity={0.1}
+                  />
                 </linearGradient>
               </defs>
               <XAxis
@@ -321,8 +395,12 @@ export function TradingChart({ className, symbol = "BTCUSDT" }: TradingChartProp
                 axisLine={false}
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
               />
-              <Tooltip 
-                content={(props: { active?: boolean; payload?: any[]; label?: string }) => {
+              <Tooltip
+                content={(props: {
+                  active?: boolean;
+                  payload?: any[];
+                  label?: string;
+                }) => {
                   const { active, payload, label } = props;
                   if (active && payload && payload.length) {
                     const data = payload[0].payload as ChartDataPoint;

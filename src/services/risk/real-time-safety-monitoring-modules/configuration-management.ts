@@ -49,7 +49,12 @@ export class ConfigurationManagement {
     warn: (message: string, context?: any) =>
       console.warn("[configuration-management]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[configuration-management]", message, context || "", error || ""),
+      console.error(
+        "[configuration-management]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[configuration-management]", message, context || ""),
   };
@@ -76,7 +81,9 @@ export class ConfigurationManagement {
           errors: validation.errors,
           warnings: validation.warnings,
         });
-        throw new Error(`Invalid configuration: ${validation.errors.join(", ")}`);
+        throw new Error(
+          `Invalid configuration: ${validation.errors.join(", ")}`
+        );
       }
     }
 
@@ -101,7 +108,9 @@ export class ConfigurationManagement {
   /**
    * Update configuration with validation
    */
-  public updateConfiguration(updates: Partial<SafetyConfiguration>): SafetyConfiguration {
+  public updateConfiguration(
+    updates: Partial<SafetyConfiguration>
+  ): SafetyConfiguration {
     const oldConfig = { ...this.configuration };
     const newConfig = { ...this.configuration, ...updates };
 
@@ -115,7 +124,9 @@ export class ConfigurationManagement {
           warnings: validation.warnings,
           updateFields: Object.keys(updates),
         });
-        throw new Error(`Invalid configuration update: ${validation.errors.join(", ")}`);
+        throw new Error(
+          `Invalid configuration update: ${validation.errors.join(", ")}`
+        );
       }
 
       if (validation.warnings.length > 0) {
@@ -174,8 +185,13 @@ export class ConfigurationManagement {
   /**
    * Update specific thresholds
    */
-  public updateThresholds(thresholdUpdates: Partial<SafetyThresholds>): SafetyThresholds {
-    const updatedThresholds = { ...this.configuration.thresholds, ...thresholdUpdates };
+  public updateThresholds(
+    thresholdUpdates: Partial<SafetyThresholds>
+  ): SafetyThresholds {
+    const updatedThresholds = {
+      ...this.configuration.thresholds,
+      ...thresholdUpdates,
+    };
 
     // Validate thresholds if validation is enabled
     if (this.enableValidation) {
@@ -187,7 +203,9 @@ export class ConfigurationManagement {
           updateFields: Object.keys(thresholdUpdates),
           error: (error as Error)?.message,
         });
-        throw new Error(`Invalid threshold update: ${(error as Error)?.message}`);
+        throw new Error(
+          `Invalid threshold update: ${(error as Error)?.message}`
+        );
       }
     }
 
@@ -206,7 +224,9 @@ export class ConfigurationManagement {
   /**
    * Validate configuration
    */
-  public validateConfiguration(config: SafetyConfiguration): ConfigurationValidationResult {
+  public validateConfiguration(
+    config: SafetyConfiguration
+  ): ConfigurationValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -218,7 +238,9 @@ export class ConfigurationManagement {
 
     // Additional business logic validation
     if (config.monitoringIntervalMs < 5000) {
-      warnings.push("Monitoring interval less than 5 seconds may cause high CPU usage");
+      warnings.push(
+        "Monitoring interval less than 5 seconds may cause high CPU usage"
+      );
     }
 
     if (config.riskCheckIntervalMs < config.monitoringIntervalMs) {
@@ -229,7 +251,9 @@ export class ConfigurationManagement {
 
     if (config.alertRetentionHours > 168) {
       // 1 week
-      warnings.push("Alert retention longer than 1 week may consume significant memory");
+      warnings.push(
+        "Alert retention longer than 1 week may consume significant memory"
+      );
     }
 
     // Threshold validation
@@ -240,7 +264,9 @@ export class ConfigurationManagement {
     }
 
     if (thresholds.minSuccessRatePercentage < 30) {
-      warnings.push("Minimum success rate below 30% may indicate poor strategy performance");
+      warnings.push(
+        "Minimum success rate below 30% may indicate poor strategy performance"
+      );
     }
 
     if (thresholds.maxConsecutiveLosses > 10) {
@@ -248,7 +274,9 @@ export class ConfigurationManagement {
     }
 
     if (thresholds.maxApiLatencyMs > 5000) {
-      warnings.push("API latency threshold above 5 seconds may indicate poor connectivity");
+      warnings.push(
+        "API latency threshold above 5 seconds may indicate poor connectivity"
+      );
     }
 
     return {
@@ -379,11 +407,15 @@ export class ConfigurationManagement {
    */
   public applyPreset(presetName: string): SafetyConfiguration {
     const presets = this.getConfigurationPresets();
-    const preset = presets.find((p) => p.name.toLowerCase() === presetName.toLowerCase());
+    const preset = presets.find(
+      (p) => p.name.toLowerCase() === presetName.toLowerCase()
+    );
 
     if (!preset) {
       const availablePresets = presets.map((p) => p.name).join(", ");
-      throw new Error(`Preset "${presetName}" not found. Available presets: ${availablePresets}`);
+      throw new Error(
+        `Preset "${presetName}" not found. Available presets: ${availablePresets}`
+      );
     }
 
     console.info("Applying configuration preset", {
@@ -421,9 +453,15 @@ export class ConfigurationManagement {
 
     // Determine overall risk level based on thresholds
     const avgDrawdownThreshold =
-      (config.thresholds.maxDrawdownPercentage + config.thresholds.maxDailyLossPercentage) / 2;
+      (config.thresholds.maxDrawdownPercentage +
+        config.thresholds.maxDailyLossPercentage) /
+      2;
     const riskLevel: "low" | "medium" | "high" =
-      avgDrawdownThreshold <= 5 ? "low" : avgDrawdownThreshold <= 15 ? "medium" : "high";
+      avgDrawdownThreshold <= 5
+        ? "low"
+        : avgDrawdownThreshold <= 15
+          ? "medium"
+          : "high";
 
     // Determine monitoring frequency
     const monitoringFrequency: "very_high" | "high" | "medium" | "low" =
@@ -455,7 +493,9 @@ export class ConfigurationManagement {
 
   // Private helper methods
 
-  private mergeWithDefaults(partial?: Partial<SafetyConfiguration>): SafetyConfiguration {
+  private mergeWithDefaults(
+    partial?: Partial<SafetyConfiguration>
+  ): SafetyConfiguration {
     const defaults = this.getDefaultConfiguration();
 
     if (!partial) {

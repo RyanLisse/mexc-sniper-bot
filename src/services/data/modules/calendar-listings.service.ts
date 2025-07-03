@@ -24,7 +24,10 @@ export const CalendarEntrySchema = z.object({
   symbol: z.string().min(1, "Symbol is required"),
   baseAsset: z.string().min(1, "Base asset is required"),
   quoteAsset: z.string().min(1, "Quote asset is required"),
-  tradingStartTime: z.number().int().positive("Trading start time must be positive"),
+  tradingStartTime: z
+    .number()
+    .int()
+    .positive("Trading start time must be positive"),
   status: z.enum(["PENDING", "TRADING", "BREAK", "ENDED"]),
   priceScale: z.number().int().nonnegative().optional(),
   quantityScale: z.number().int().nonnegative().optional(),
@@ -54,7 +57,9 @@ export const CalendarFilterSchema = z.object({
 // ============================================================================
 
 export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
-export type CalendarListingsResponse = z.infer<typeof CalendarListingsResponseSchema>;
+export type CalendarListingsResponse = z.infer<
+  typeof CalendarListingsResponseSchema
+>;
 export type CalendarFilter = z.infer<typeof CalendarFilterSchema>;
 
 export interface CalendarListingsConfig {
@@ -69,7 +74,11 @@ export interface CalendarListingsConfig {
     execute: <T>(fn: () => Promise<T>) => Promise<T>;
   };
   performanceMonitor?: {
-    recordMetric: (name: string, value: number, tags?: Record<string, string>) => void;
+    recordMetric: (
+      name: string,
+      value: number,
+      tags?: Record<string, string>
+    ) => void;
   };
   cacheTTL?: number;
 }
@@ -96,12 +105,16 @@ export class CalendarListingsService {
     methodName: "getListings",
     operationType: "api_call",
   })
-  async getListings(filter?: CalendarFilter): Promise<CalendarListingsResponse> {
+  async getListings(
+    filter?: CalendarFilter
+  ): Promise<CalendarListingsResponse> {
     const startTime = Date.now();
 
     try {
       // Validate input filter with default limit
-      const validatedFilter = filter ? CalendarFilterSchema.parse(filter) : { limit: 100 };
+      const validatedFilter = filter
+        ? CalendarFilterSchema.parse(filter)
+        : { limit: 100 };
 
       // Generate cache key
       const cacheKey = this.generateCacheKey(validatedFilter);
@@ -124,13 +137,18 @@ export class CalendarListingsService {
       }
 
       // Record metrics
-      this.recordMetric("response_time", Date.now() - startTime, { operation: "getListings" });
+      this.recordMetric("response_time", Date.now() - startTime, {
+        operation: "getListings",
+      });
       this.recordMetric("cache_miss", 1, { operation: "getListings" });
 
       return response;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.recordMetric("error_count", 1, { operation: "getListings", error: safeError.name });
+      this.recordMetric("error_count", 1, {
+        operation: "getListings",
+        error: safeError.name,
+      });
 
       return {
         success: false,
@@ -194,7 +212,9 @@ export class CalendarListingsService {
       return allListings;
     }
 
-    const matchedEntry = allListings.data.find((entry) => entry.symbol === symbol.toUpperCase());
+    const matchedEntry = allListings.data.find(
+      (entry) => entry.symbol === symbol.toUpperCase()
+    );
 
     return {
       success: true,
@@ -224,7 +244,9 @@ export class CalendarListingsService {
   // Private Methods
   // ============================================================================
 
-  private async fetchFromAPI(filter: CalendarFilter): Promise<CalendarListingsResponse> {
+  private async fetchFromAPI(
+    filter: CalendarFilter
+  ): Promise<CalendarListingsResponse> {
     const executeWithCircuitBreaker =
       this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
 
@@ -246,7 +268,9 @@ export class CalendarListingsService {
     };
   }
 
-  private async getCachedListings(cacheKey: string): Promise<CalendarListingsResponse | null> {
+  private async getCachedListings(
+    cacheKey: string
+  ): Promise<CalendarListingsResponse | null> {
     if (!this.config.cache) return null;
 
     try {
@@ -261,7 +285,10 @@ export class CalendarListingsService {
     }
   }
 
-  private async cacheListings(cacheKey: string, response: CalendarListingsResponse): Promise<void> {
+  private async cacheListings(
+    cacheKey: string,
+    response: CalendarListingsResponse
+  ): Promise<void> {
     if (!this.config.cache) return;
 
     const cacheData = {
@@ -311,7 +338,11 @@ export class CalendarListingsService {
       }));
   }
 
-  private recordMetric(name: string, value: number, tags?: Record<string, string>): void {
+  private recordMetric(
+    name: string,
+    value: number,
+    tags?: Record<string, string>
+  ): void {
     this.config.performanceMonitor?.recordMetric(name, value, {
       service: "calendar-listings",
       ...tags,

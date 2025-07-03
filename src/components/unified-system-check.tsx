@@ -22,10 +22,14 @@ export function UnifiedSystemCheck() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pass": return "default";
-      case "fail": return "destructive";
-      case "warning": return "secondary";
-      default: return "secondary";
+      case "pass":
+        return "default";
+      case "fail":
+        return "destructive";
+      case "warning":
+        return "secondary";
+      default:
+        return "secondary";
     }
   };
 
@@ -47,7 +51,7 @@ export function UnifiedSystemCheck() {
               </Badge>
             </div>
           ))}
-          <Button 
+          <Button
             onClick={handleRunCheck}
             disabled={isChecking}
             className="w-full"

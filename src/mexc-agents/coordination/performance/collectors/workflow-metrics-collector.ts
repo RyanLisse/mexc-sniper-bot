@@ -1,6 +1,6 @@
 /**
  * Workflow Metrics Collector
- * 
+ *
  * Records and processes workflow execution performance metrics
  */
 
@@ -29,7 +29,10 @@ export class WorkflowMetricsCollector {
   ): void {
     try {
       const stepDurations = result.steps.map((step) => step.duration);
-      const totalResponseTime = stepDurations.reduce((sum, duration) => sum + duration, 0);
+      const totalResponseTime = stepDurations.reduce(
+        (sum, duration) => sum + duration,
+        0
+      );
       const averageStepTime =
         stepDurations.length > 0 ? totalResponseTime / stepDurations.length : 0;
 
@@ -72,7 +75,10 @@ export class WorkflowMetricsCollector {
 
       // Keep only recent history
       if (workflowMetricsHistory.length > maxHistorySize) {
-        workflowMetricsHistory.splice(0, workflowMetricsHistory.length - maxHistorySize);
+        workflowMetricsHistory.splice(
+          0,
+          workflowMetricsHistory.length - maxHistorySize
+        );
       }
 
       this.logger.info(`Recorded workflow metrics for ${result.workflowId}`);
@@ -89,7 +95,7 @@ export class WorkflowMetricsCollector {
     const baseMemory = 100; // Base 100MB
     const stepMemory = result.steps.length * 10; // 10MB per step
     const durationMemory = Math.min(200, result.duration / 1000); // 1MB per second, max 200MB
-    
+
     return Math.round(baseMemory + stepMemory + durationMemory);
   }
 
@@ -98,7 +104,7 @@ export class WorkflowMetricsCollector {
     const baseCpu = 20; // Base 20%
     const stepCpu = result.steps.length * 5; // 5% per step
     const errorPenalty = result.metadata.stepsFailed * 10; // 10% penalty per failed step
-    
+
     return Math.min(100, baseCpu + stepCpu + errorPenalty);
   }
 }

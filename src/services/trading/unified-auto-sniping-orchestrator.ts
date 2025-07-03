@@ -1,6 +1,6 @@
 /**
  * Unified Auto-Sniping Orchestrator
- * 
+ *
  * This service orchestrates the complete end-to-end auto-sniping workflow by:
  * 1. Coordinating all auto-sniping components
  * 2. Managing the complete trading lifecycle
@@ -9,13 +9,25 @@
  * 5. Implementing safety checks and risk management
  */
 
-import { EventEmitter } from 'node:events';
-import { toSafeError } from '@/src/lib/error-type-utils';
-import { getCompleteAutoSnipingService, type SnipeConfiguration } from './complete-auto-sniping-service';
-import { getCoreTrading } from './consolidated/core-trading/base-service';
-import { getEnhancedMexcConfig, type MexcTradingConfig } from './enhanced-mexc-config';
-import { getPatternSnipeIntegration, type PatternSnipeConfig } from './pattern-snipe-integration';
-import { getRealtimePriceMonitor, type RealtimeMonitorConfig } from './realtime-price-monitor';
+import { EventEmitter } from "node:events";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import {
+  getCompleteAutoSnipingService,
+  type SnipeConfiguration,
+} from "./complete-auto-sniping-service";
+import { getCoreTrading } from "./consolidated/core-trading/base-service";
+import {
+  getEnhancedMexcConfig,
+  type MexcTradingConfig,
+} from "./enhanced-mexc-config";
+import {
+  getPatternSnipeIntegration,
+  type PatternSnipeConfig,
+} from "./pattern-snipe-integration";
+import {
+  getRealtimePriceMonitor,
+  type RealtimeMonitorConfig,
+} from "./realtime-price-monitor";
 
 // Unified orchestrator interfaces
 export interface OrchestratorConfig {
@@ -23,23 +35,23 @@ export interface OrchestratorConfig {
   enabled: boolean;
   paperTradingMode: boolean;
   autoInitialize: boolean;
-  
+
   // Component Configurations
   snipeConfig: Partial<SnipeConfiguration>;
   patternConfig: Partial<PatternSnipeConfig>;
   monitorConfig: Partial<RealtimeMonitorConfig>;
   mexcConfig: Partial<MexcTradingConfig>;
-  
+
   // Safety Settings
   enableSafetyChecks: boolean;
   enableRiskManagement: boolean;
   emergencyStopOnErrors: boolean;
   maxErrorsBeforeStop: number;
-  
+
   // Performance Settings
   enableMetrics: boolean;
   enableLogging: boolean;
-  logLevel: 'debug' | 'info' | 'warn' | 'error';
+  logLevel: "debug" | "info" | "warn" | "error";
 }
 
 export interface OrchestratorStatus {
@@ -47,7 +59,7 @@ export interface OrchestratorStatus {
   isInitialized: boolean;
   isActive: boolean;
   isHealthy: boolean;
-  
+
   // Component Status
   components: {
     snipingService: any;
@@ -56,7 +68,7 @@ export interface OrchestratorStatus {
     mexcConfig: any;
     coreTrading: any;
   };
-  
+
   // Performance Metrics
   metrics: {
     totalSnipes: number;
@@ -67,48 +79,52 @@ export interface OrchestratorStatus {
     activePositions: number;
     uptime: number;
   };
-  
+
   // Safety Status
   safety: {
     errorsCount: number;
     lastError?: string;
     emergencyStopTriggered: boolean;
-    riskLevel: 'low' | 'medium' | 'high' | 'critical';
+    riskLevel: "low" | "medium" | "high" | "critical";
   };
-  
+
   timestamp: string;
 }
 
 export interface ExecutionCommand {
-  action: 'start' | 'stop' | 'pause' | 'resume' | 'emergency_stop' | 'reset';
+  action: "start" | "stop" | "pause" | "resume" | "emergency_stop" | "reset";
   reason?: string;
   force?: boolean;
 }
 
 /**
  * Unified Auto-Sniping Orchestrator
- * 
+ *
  * Master controller for the complete auto-sniping system
  */
 export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
   private logger = {
-    info: (message: string, context?: any) => console.info('[unified-orchestrator]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[unified-orchestrator]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[unified-orchestrator]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[unified-orchestrator]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[unified-orchestrator]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[unified-orchestrator]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[unified-orchestrator]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[unified-orchestrator]", message, context || ""),
   };
 
   private isInitialized = false;
   private isActive = false;
   private config: OrchestratorConfig;
-  
+
   // Component services
   private snipingService = getCompleteAutoSnipingService();
   private patternIntegration = getPatternSnipeIntegration();
   private priceMonitor = getRealtimePriceMonitor();
   private mexcConfig = getEnhancedMexcConfig();
   private coreTrading = getCoreTrading();
-  
+
   // State management
   private errorCount = 0;
   private lastError: string | undefined;
@@ -124,14 +140,14 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
 
   constructor(config: Partial<OrchestratorConfig> = {}) {
     super();
-    
+
     this.config = {
       enabled: true,
-      paperTradingMode: process.env.MEXC_PAPER_TRADING === 'true',
+      paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
       autoInitialize: true,
-      
+
       snipeConfig: {
-        paperTradingMode: process.env.MEXC_PAPER_TRADING === 'true',
+        paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
         ...config.snipeConfig,
       },
       patternConfig: {
@@ -141,27 +157,27 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       },
       monitorConfig: {
         enabled: true,
-        symbols: ['BTCUSDT', 'ETHUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT'],
+        symbols: ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "DOTUSDT"],
         ...config.monitorConfig,
       },
       mexcConfig: {
-        paperTradingMode: process.env.MEXC_PAPER_TRADING === 'true',
+        paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
         ...config.mexcConfig,
       },
-      
+
       enableSafetyChecks: true,
       enableRiskManagement: true,
       emergencyStopOnErrors: true,
       maxErrorsBeforeStop: 5,
-      
+
       enableMetrics: true,
       enableLogging: true,
-      logLevel: 'info',
-      
+      logLevel: "info",
+
       ...config,
     };
 
-    this.logger.info('Unified Auto-Sniping Orchestrator created', {
+    this.logger.info("Unified Auto-Sniping Orchestrator created", {
       enabled: this.config.enabled,
       paperTradingMode: this.config.paperTradingMode,
       autoInitialize: this.config.autoInitialize,
@@ -171,8 +187,8 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
 
     // Auto-initialize if requested
     if (this.config.autoInitialize) {
-      this.initialize().catch(error => {
-        this.logger.error('Auto-initialization failed', error);
+      this.initialize().catch((error) => {
+        this.logger.error("Auto-initialization failed", error);
       });
     }
   }
@@ -182,12 +198,12 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   async initialize(): Promise<void> {
     if (this.isInitialized) {
-      this.logger.warn('Orchestrator already initialized');
+      this.logger.warn("Orchestrator already initialized");
       return;
     }
 
     try {
-      this.logger.info('Initializing Unified Auto-Sniping Orchestrator');
+      this.logger.info("Initializing Unified Auto-Sniping Orchestrator");
 
       // Reset state
       this.errorCount = 0;
@@ -195,7 +211,7 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       this.startTime = new Date();
 
       // Initialize MEXC configuration first
-      this.logger.info('Step 1/5: Initializing MEXC configuration');
+      this.logger.info("Step 1/5: Initializing MEXC configuration");
       this.mexcConfig.updateConfig(this.config.mexcConfig);
       await this.mexcConfig.initialize();
 
@@ -203,9 +219,11 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       if (!this.config.paperTradingMode) {
         const validation = await this.mexcConfig.validateCredentials();
         if (!validation.isValid) {
-          throw new Error(`MEXC credential validation failed: ${validation.error}`);
+          throw new Error(
+            `MEXC credential validation failed: ${validation.error}`
+          );
         }
-        this.logger.info('MEXC credentials validated', {
+        this.logger.info("MEXC credentials validated", {
           canTrade: validation.canTrade,
           accountType: validation.accountType,
           balanceUSDT: validation.balanceUSDT,
@@ -213,38 +231,39 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       }
 
       // Initialize core trading service
-      this.logger.info('Step 2/5: Initializing core trading service');
+      this.logger.info("Step 2/5: Initializing core trading service");
       await this.coreTrading.initialize();
 
       // Initialize complete auto-sniping service
-      this.logger.info('Step 3/5: Initializing auto-sniping service');
+      this.logger.info("Step 3/5: Initializing auto-sniping service");
       this.snipingService.updateConfig(this.config.snipeConfig);
       await this.snipingService.initialize();
 
       // Initialize pattern integration
-      this.logger.info('Step 4/5: Initializing pattern integration');
+      this.logger.info("Step 4/5: Initializing pattern integration");
       this.patternIntegration.updateConfig(this.config.patternConfig);
       await this.patternIntegration.start();
 
       // Initialize real-time price monitor
-      this.logger.info('Step 5/5: Initializing price monitor');
+      this.logger.info("Step 5/5: Initializing price monitor");
       this.priceMonitor.updateConfig(this.config.monitorConfig);
       await this.priceMonitor.start();
 
       this.isInitialized = true;
-      this.emit('orchestrator_initialized');
+      this.emit("orchestrator_initialized");
 
-      this.logger.info('Unified Auto-Sniping Orchestrator initialized successfully');
+      this.logger.info(
+        "Unified Auto-Sniping Orchestrator initialized successfully"
+      );
 
       // Auto-start if enabled
       if (this.config.enabled) {
         await this.start();
       }
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to initialize orchestrator', safeError);
-      this.handleError('Initialization failed', safeError);
+      this.logger.error("Failed to initialize orchestrator", safeError);
+      this.handleError("Initialization failed", safeError);
       throw safeError;
     }
   }
@@ -254,20 +273,22 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   async start(): Promise<void> {
     if (!this.isInitialized) {
-      throw new Error('Orchestrator not initialized. Call initialize() first.');
+      throw new Error("Orchestrator not initialized. Call initialize() first.");
     }
 
     if (this.isActive) {
-      this.logger.warn('Orchestrator already active');
+      this.logger.warn("Orchestrator already active");
       return;
     }
 
     if (this.emergencyStopTriggered) {
-      throw new Error('Emergency stop triggered. Reset required before starting.');
+      throw new Error(
+        "Emergency stop triggered. Reset required before starting."
+      );
     }
 
     try {
-      this.logger.info('Starting unified auto-sniping system');
+      this.logger.info("Starting unified auto-sniping system");
 
       // Perform safety checks
       if (this.config.enableSafetyChecks) {
@@ -277,18 +298,19 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       // Start auto-sniping service
       const snipeResult = await this.snipingService.start();
       if (!snipeResult.success) {
-        throw new Error(`Failed to start sniping service: ${snipeResult.error}`);
+        throw new Error(
+          `Failed to start sniping service: ${snipeResult.error}`
+        );
       }
 
       this.isActive = true;
-      this.emit('orchestrator_started');
+      this.emit("orchestrator_started");
 
-      this.logger.info('Unified auto-sniping system started successfully');
-
+      this.logger.info("Unified auto-sniping system started successfully");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to start orchestrator', safeError);
-      this.handleError('Start failed', safeError);
+      this.logger.error("Failed to start orchestrator", safeError);
+      this.handleError("Start failed", safeError);
       throw safeError;
     }
   }
@@ -296,22 +318,21 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
   /**
    * Stop the complete auto-sniping system
    */
-  async stop(reason = 'Manual stop'): Promise<void> {
+  async stop(reason = "Manual stop"): Promise<void> {
     try {
-      this.logger.info('Stopping unified auto-sniping system', { reason });
+      this.logger.info("Stopping unified auto-sniping system", { reason });
 
       // Stop auto-sniping service
       await this.snipingService.stop();
 
       this.isActive = false;
-      this.emit('orchestrator_stopped', { reason });
+      this.emit("orchestrator_stopped", { reason });
 
-      this.logger.info('Unified auto-sniping system stopped successfully');
-
+      this.logger.info("Unified auto-sniping system stopped successfully");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to stop orchestrator', safeError);
-      this.handleError('Stop failed', safeError);
+      this.logger.error("Failed to stop orchestrator", safeError);
+      this.handleError("Stop failed", safeError);
       throw safeError;
     }
   }
@@ -321,23 +342,22 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   async pause(): Promise<void> {
     if (!this.isActive) {
-      throw new Error('Orchestrator not active');
+      throw new Error("Orchestrator not active");
     }
 
     try {
-      this.logger.info('Pausing auto-sniping system');
+      this.logger.info("Pausing auto-sniping system");
 
       const result = await this.snipingService.stop();
       if (!result.success) {
         throw new Error(`Failed to pause: ${result.error}`);
       }
 
-      this.emit('orchestrator_paused');
-      this.logger.info('Auto-sniping system paused');
-
+      this.emit("orchestrator_paused");
+      this.logger.info("Auto-sniping system paused");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to pause orchestrator', safeError);
+      this.logger.error("Failed to pause orchestrator", safeError);
       throw safeError;
     }
   }
@@ -347,23 +367,22 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   async resume(): Promise<void> {
     if (!this.isActive) {
-      throw new Error('Orchestrator not active');
+      throw new Error("Orchestrator not active");
     }
 
     try {
-      this.logger.info('Resuming auto-sniping system');
+      this.logger.info("Resuming auto-sniping system");
 
       const result = await this.snipingService.start();
       if (!result.success) {
         throw new Error(`Failed to resume: ${result.error}`);
       }
 
-      this.emit('orchestrator_resumed');
-      this.logger.info('Auto-sniping system resumed');
-
+      this.emit("orchestrator_resumed");
+      this.logger.info("Auto-sniping system resumed");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to resume orchestrator', safeError);
+      this.logger.error("Failed to resume orchestrator", safeError);
       throw safeError;
     }
   }
@@ -371,9 +390,9 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
   /**
    * Emergency stop - immediately halt all operations
    */
-  async emergencyStop(reason = 'Emergency stop triggered'): Promise<void> {
+  async emergencyStop(reason = "Emergency stop triggered"): Promise<void> {
     try {
-      this.logger.warn('EMERGENCY STOP TRIGGERED', { reason });
+      this.logger.warn("EMERGENCY STOP TRIGGERED", { reason });
 
       this.emergencyStopTriggered = true;
       this.isActive = false;
@@ -387,18 +406,20 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       // Close all positions if not in paper trading
       if (!this.config.paperTradingMode) {
         try {
-          await this.coreTrading.closeAllPositions('Emergency stop');
+          await this.coreTrading.closeAllPositions("Emergency stop");
         } catch (error) {
-          this.logger.error('Failed to close positions during emergency stop', error);
+          this.logger.error(
+            "Failed to close positions during emergency stop",
+            error
+          );
         }
       }
 
-      this.emit('emergency_stop', { reason });
-      this.logger.warn('Emergency stop completed');
-
+      this.emit("emergency_stop", { reason });
+      this.logger.warn("Emergency stop completed");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Emergency stop failed', safeError);
+      this.logger.error("Emergency stop failed", safeError);
       throw safeError;
     }
   }
@@ -408,7 +429,7 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   async reset(): Promise<void> {
     try {
-      this.logger.info('Resetting orchestrator system');
+      this.logger.info("Resetting orchestrator system");
 
       this.emergencyStopTriggered = false;
       this.errorCount = 0;
@@ -424,12 +445,11 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
         activePositions: 0,
       };
 
-      this.emit('orchestrator_reset');
-      this.logger.info('Orchestrator system reset completed');
-
+      this.emit("orchestrator_reset");
+      this.logger.info("Orchestrator system reset completed");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to reset orchestrator', safeError);
+      this.logger.error("Failed to reset orchestrator", safeError);
       throw safeError;
     }
   }
@@ -442,22 +462,22 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
 
     try {
       switch (command.action) {
-        case 'start':
+        case "start":
           await this.start();
           break;
-        case 'stop':
+        case "stop":
           await this.stop(command.reason);
           break;
-        case 'pause':
+        case "pause":
           await this.pause();
           break;
-        case 'resume':
+        case "resume":
           await this.resume();
           break;
-        case 'emergency_stop':
+        case "emergency_stop":
           await this.emergencyStop(command.reason);
           break;
-        case 'reset':
+        case "reset":
           await this.reset();
           break;
         default:
@@ -465,7 +485,10 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(`Command execution failed: ${command.action}`, safeError);
+      this.logger.error(
+        `Command execution failed: ${command.action}`,
+        safeError
+      );
       throw safeError;
     }
   }
@@ -475,35 +498,36 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   getStatus(): OrchestratorStatus {
     const uptime = Date.now() - this.startTime.getTime();
-    
+
     return {
       isInitialized: this.isInitialized,
       isActive: this.isActive,
       isHealthy: this.isHealthy(),
-      
+
       components: {
         snipingService: this.snipingService.getStatus(),
         patternIntegration: this.patternIntegration.getStatus(),
         priceMonitor: this.priceMonitor.getStatus(),
         mexcConfig: this.mexcConfig.getStatus(),
-        coreTrading: this.isInitialized ? 'initialized' : 'not_initialized',
+        coreTrading: this.isInitialized ? "initialized" : "not_initialized",
       },
-      
+
       metrics: {
         ...this.metrics,
-        successRate: this.metrics.totalSnipes > 0 
-          ? (this.metrics.successfulSnipes / this.metrics.totalSnipes) * 100 
-          : 0,
+        successRate:
+          this.metrics.totalSnipes > 0
+            ? (this.metrics.successfulSnipes / this.metrics.totalSnipes) * 100
+            : 0,
         uptime,
       },
-      
+
       safety: {
         errorsCount: this.errorCount,
         lastError: this.lastError,
         emergencyStopTriggered: this.emergencyStopTriggered,
         riskLevel: this.calculateRiskLevel(),
       },
-      
+
       timestamp: new Date().toISOString(),
     };
   }
@@ -513,29 +537,29 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   updateConfig(updates: Partial<OrchestratorConfig>): void {
     this.config = { ...this.config, ...updates };
-    
+
     // Update component configurations
     if (updates.snipeConfig) {
       this.snipingService.updateConfig(updates.snipeConfig);
     }
-    
+
     if (updates.patternConfig) {
       this.patternIntegration.updateConfig(updates.patternConfig);
     }
-    
+
     if (updates.monitorConfig) {
       this.priceMonitor.updateConfig(updates.monitorConfig);
     }
-    
+
     if (updates.mexcConfig) {
       this.mexcConfig.updateConfig(updates.mexcConfig);
     }
 
-    this.logger.info('Orchestrator configuration updated', {
+    this.logger.info("Orchestrator configuration updated", {
       updatedFields: Object.keys(updates),
     });
 
-    this.emit('config_updated', this.config);
+    this.emit("config_updated", this.config);
   }
 
   /**
@@ -554,42 +578,42 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    */
   private setupEventListeners(): void {
     // Auto-sniping service events
-    this.snipingService.on('snipe_executed', (data) => {
+    this.snipingService.on("snipe_executed", (data) => {
       this.metrics.totalSnipes++;
       this.metrics.successfulSnipes++;
-      this.emit('snipe_executed', data);
+      this.emit("snipe_executed", data);
     });
 
-    this.snipingService.on('snipe_failed', (data) => {
+    this.snipingService.on("snipe_failed", (data) => {
       this.metrics.totalSnipes++;
       this.metrics.failedSnipes++;
-      this.handleError('Snipe failed', new Error(data.error));
-      this.emit('snipe_failed', data);
+      this.handleError("Snipe failed", new Error(data.error));
+      this.emit("snipe_failed", data);
     });
 
     // Pattern integration events
-    this.patternIntegration.on('pattern_snipe_success', (data) => {
-      this.emit('pattern_snipe_success', data);
+    this.patternIntegration.on("pattern_snipe_success", (data) => {
+      this.emit("pattern_snipe_success", data);
     });
 
-    this.patternIntegration.on('pattern_snipe_failed', (data) => {
-      this.handleError('Pattern snipe failed', new Error(data.result.error));
-      this.emit('pattern_snipe_failed', data);
+    this.patternIntegration.on("pattern_snipe_failed", (data) => {
+      this.handleError("Pattern snipe failed", new Error(data.result.error));
+      this.emit("pattern_snipe_failed", data);
     });
 
     // Price monitor events
-    this.priceMonitor.on('price_breakout', (breakout) => {
+    this.priceMonitor.on("price_breakout", (breakout) => {
       this.logger.info(`Price breakout detected: ${breakout.symbol}`, breakout);
-      this.emit('price_breakout', breakout);
+      this.emit("price_breakout", breakout);
     });
 
-    this.priceMonitor.on('websocket_error', (error) => {
-      this.handleError('Price monitor websocket error', error);
+    this.priceMonitor.on("websocket_error", (error) => {
+      this.handleError("Price monitor websocket error", error);
     });
 
     // Error handling
-    this.on('error', (error) => {
-      this.handleError('Orchestrator error', error);
+    this.on("error", (error) => {
+      this.handleError("Orchestrator error", error);
     });
   }
 
@@ -597,21 +621,24 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
    * Perform safety checks before starting
    */
   private async performSafetyChecks(): Promise<void> {
-    this.logger.info('Performing safety checks');
+    this.logger.info("Performing safety checks");
 
     // Check MEXC configuration
     if (!this.config.paperTradingMode) {
       const validation = await this.mexcConfig.validateCredentials();
       if (!validation.isValid) {
-        throw new Error(`Safety check failed: Invalid MEXC credentials - ${validation.error}`);
+        throw new Error(
+          `Safety check failed: Invalid MEXC credentials - ${validation.error}`
+        );
       }
 
       if (!validation.canTrade) {
-        throw new Error('Safety check failed: Account cannot trade');
+        throw new Error("Safety check failed: Account cannot trade");
       }
 
-      if (validation.balanceUSDT < 50) { // Minimum balance check
-        this.logger.warn('Low account balance detected', {
+      if (validation.balanceUSDT < 50) {
+        // Minimum balance check
+        this.logger.warn("Low account balance detected", {
           balance: validation.balanceUSDT,
           minimum: 50,
         });
@@ -621,20 +648,20 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
     // Check component health
     const snipeStatus = this.snipingService.getStatus();
     if (!snipeStatus.isInitialized) {
-      throw new Error('Safety check failed: Sniping service not initialized');
+      throw new Error("Safety check failed: Sniping service not initialized");
     }
 
     const patternStatus = this.patternIntegration.getStatus();
     if (!patternStatus.isActive) {
-      throw new Error('Safety check failed: Pattern integration not active');
+      throw new Error("Safety check failed: Pattern integration not active");
     }
 
     const monitorStatus = this.priceMonitor.getStatus();
     if (!monitorStatus.isActive) {
-      throw new Error('Safety check failed: Price monitor not active');
+      throw new Error("Safety check failed: Price monitor not active");
     }
 
-    this.logger.info('Safety checks passed');
+    this.logger.info("Safety checks passed");
   }
 
   /**
@@ -651,14 +678,21 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
     });
 
     // Trigger emergency stop if too many errors
-    if (this.config.emergencyStopOnErrors && 
-        this.errorCount >= this.config.maxErrorsBeforeStop) {
-      this.emergencyStop(`Too many errors: ${this.errorCount}`).catch(stopError => {
-        this.logger.error('Emergency stop failed during error handling', stopError);
-      });
+    if (
+      this.config.emergencyStopOnErrors &&
+      this.errorCount >= this.config.maxErrorsBeforeStop
+    ) {
+      this.emergencyStop(`Too many errors: ${this.errorCount}`).catch(
+        (stopError) => {
+          this.logger.error(
+            "Emergency stop failed during error handling",
+            stopError
+          );
+        }
+      );
     }
 
-    this.emit('error_handled', { context, error, errorCount: this.errorCount });
+    this.emit("error_handled", { context, error, errorCount: this.errorCount });
   }
 
   /**
@@ -667,31 +701,35 @@ export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
   private isHealthy(): boolean {
     if (this.emergencyStopTriggered) return false;
     if (this.errorCount >= this.config.maxErrorsBeforeStop) return false;
-    
+
     // Check component health
     if (!this.snipingService.getStatus().isInitialized) return false;
     if (!this.patternIntegration.getStatus().isActive) return false;
     if (!this.priceMonitor.getStatus().isActive) return false;
-    
+
     return true;
   }
 
   /**
    * Calculate current risk level
    */
-  private calculateRiskLevel(): 'low' | 'medium' | 'high' | 'critical' {
-    if (this.emergencyStopTriggered) return 'critical';
-    if (this.errorCount >= this.config.maxErrorsBeforeStop) return 'critical';
-    if (this.errorCount >= Math.floor(this.config.maxErrorsBeforeStop * 0.8)) return 'high';
-    if (this.errorCount >= Math.floor(this.config.maxErrorsBeforeStop * 0.5)) return 'medium';
-    return 'low';
+  private calculateRiskLevel(): "low" | "medium" | "high" | "critical" {
+    if (this.emergencyStopTriggered) return "critical";
+    if (this.errorCount >= this.config.maxErrorsBeforeStop) return "critical";
+    if (this.errorCount >= Math.floor(this.config.maxErrorsBeforeStop * 0.8))
+      return "high";
+    if (this.errorCount >= Math.floor(this.config.maxErrorsBeforeStop * 0.5))
+      return "medium";
+    return "low";
   }
 }
 
 // Export singleton instance
 let unifiedOrchestrator: UnifiedAutoSnipingOrchestrator | null = null;
 
-export function getUnifiedAutoSnipingOrchestrator(config?: Partial<OrchestratorConfig>): UnifiedAutoSnipingOrchestrator {
+export function getUnifiedAutoSnipingOrchestrator(
+  config?: Partial<OrchestratorConfig>
+): UnifiedAutoSnipingOrchestrator {
   if (!unifiedOrchestrator) {
     unifiedOrchestrator = new UnifiedAutoSnipingOrchestrator(config);
   }
@@ -706,12 +744,14 @@ export function resetUnifiedAutoSnipingOrchestrator(): void {
 }
 
 // Helper function to create a ready-to-use orchestrator
-export async function createReadyOrchestrator(config?: Partial<OrchestratorConfig>): Promise<UnifiedAutoSnipingOrchestrator> {
+export async function createReadyOrchestrator(
+  config?: Partial<OrchestratorConfig>
+): Promise<UnifiedAutoSnipingOrchestrator> {
   const orchestrator = getUnifiedAutoSnipingOrchestrator(config);
-  
+
   if (!orchestrator.getStatus().isInitialized) {
     await orchestrator.initialize();
   }
-  
+
   return orchestrator;
 }

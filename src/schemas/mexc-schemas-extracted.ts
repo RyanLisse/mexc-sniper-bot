@@ -117,7 +117,14 @@ export const OrderResultSchema = z.object({
 export const OrderStatusSchema = z.object({
   orderId: z.string(),
   symbol: z.string(),
-  status: z.enum(["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "REJECTED", "EXPIRED"]),
+  status: z.enum([
+    "NEW",
+    "PARTIALLY_FILLED",
+    "FILLED",
+    "CANCELED",
+    "REJECTED",
+    "EXPIRED",
+  ]),
   side: z.enum(["BUY", "SELL"]),
   type: z.enum(["LIMIT", "MARKET", "STOP_LOSS", "STOP_LOSS_LIMIT"]),
   quantity: z.string(),
@@ -185,7 +192,9 @@ export type OrderResult = z.infer<typeof OrderResultSchema>;
 export type OrderStatus = z.infer<typeof OrderStatusSchema>;
 export type OrderBook = z.infer<typeof OrderBookSchema>;
 export type Kline = z.infer<typeof KlineSchema>;
-export type MexcServiceResponse<T = any> = z.infer<typeof MexcServiceResponseSchema> & {
+export type MexcServiceResponse<T = any> = z.infer<
+  typeof MexcServiceResponseSchema
+> & {
   data?: T;
 };
 
@@ -238,7 +247,9 @@ export function validateOrderBook(data: unknown): OrderBook {
 /**
  * Validate MEXC service response
  */
-export function validateMexcServiceResponse<T = any>(data: unknown): MexcServiceResponse<T> {
+export function validateMexcServiceResponse<T = any>(
+  data: unknown
+): MexcServiceResponse<T> {
   return MexcServiceResponseSchema.parse(data) as MexcServiceResponse<T>;
 }
 

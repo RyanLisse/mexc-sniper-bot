@@ -1,10 +1,10 @@
 /**
  * Trading Analytics API Endpoint
- * 
+ *
  * Provides access to trading analytics, performance metrics, and structured logging data.
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
 import { requireAuth } from "@/src/lib/supabase-auth";
@@ -18,18 +18,20 @@ const AnalyticsQuerySchema = z.object({
   startTime: z.string().optional(),
   endTime: z.string().optional(),
   userId: z.string().optional(),
-  eventType: z.enum([
-    "TRADE_PLACED",
-    "TRADE_FILLED", 
-    "TRADE_CANCELLED",
-    "TRADE_FAILED",
-    "API_CALL",
-    "BALANCE_UPDATE",
-    "PATTERN_DETECTED",
-    "RISK_ASSESSMENT",
-    "CREDENTIAL_ROTATION",
-    "SYSTEM_ERROR"
-  ]).optional(),
+  eventType: z
+    .enum([
+      "TRADE_PLACED",
+      "TRADE_FILLED",
+      "TRADE_CANCELLED",
+      "TRADE_FAILED",
+      "API_CALL",
+      "BALANCE_UPDATE",
+      "PATTERN_DETECTED",
+      "RISK_ASSESSMENT",
+      "CREDENTIAL_ROTATION",
+      "SYSTEM_ERROR",
+    ])
+    .optional(),
   onlyErrors: z.boolean().optional(),
   format: z.enum(["json", "csv", "human-readable"]).optional(),
 });
@@ -37,7 +39,7 @@ const AnalyticsQuerySchema = z.object({
 const LogEventSchema = z.object({
   eventType: z.enum([
     "TRADE_PLACED",
-    "TRADE_FILLED", 
+    "TRADE_FILLED",
     "TRADE_CANCELLED",
     "TRADE_FAILED",
     "API_CALL",
@@ -45,7 +47,7 @@ const LogEventSchema = z.object({
     "PATTERN_DETECTED",
     "RISK_ASSESSMENT",
     "CREDENTIAL_ROTATION",
-    "SYSTEM_ERROR"
+    "SYSTEM_ERROR",
   ]),
   metadata: z.record(z.unknown()),
   performance: z.object({
@@ -68,14 +70,21 @@ export async function GET(request: NextRequest) {
 
   try {
     // Check rate limiting
-    const rateLimitResult = await checkRateLimit(ip, "/api/analytics/trading", "general", userAgent);
-    
+    const rateLimitResult = await checkRateLimit(
+      ip,
+      "/api/analytics/trading",
+      "general",
+      userAgent
+    );
+
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {
           success: false,
           error: "Rate limit exceeded",
-          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          retryAfter: Math.ceil(
+            (rateLimitResult.resetTime - Date.now()) / 1000
+          ),
         },
         { status: 429 }
       );
@@ -85,7 +94,7 @@ export async function GET(request: NextRequest) {
     let user;
     try {
       user = await requireAuth();
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json(
         {
           success: false,
@@ -121,8 +130,12 @@ export async function GET(request: NextRequest) {
     const validatedParams = AnalyticsQuerySchema.parse(queryParams);
 
     // Parse dates if provided
-    const startTime = validatedParams.startTime ? new Date(validatedParams.startTime) : undefined;
-    const endTime = validatedParams.endTime ? new Date(validatedParams.endTime) : undefined;
+    const startTime = validatedParams.startTime
+      ? new Date(validatedParams.startTime)
+      : undefined;
+    const endTime = validatedParams.endTime
+      ? new Date(validatedParams.endTime)
+      : undefined;
 
     // Validate date range
     if (startTime && endTime && startTime >= endTime) {
@@ -140,7 +153,7 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action") || "report";
 
     switch (action) {
-      case "report":
+      case "report": {
         // Generate analytics report
         const report = tradingAnalytics.generateAnalyticsReport(
           startTime,
@@ -159,13 +172,14 @@ export async function GET(request: NextRequest) {
             {
               startTime,
               endTime,
-              eventTypes: validatedParams.eventType ? [validatedParams.eventType] : undefined,
+              eventTypes: validatedParams.eventType
+                ? [validatedParams.eventType]
+                : undefined,
             }
           );
 
-          const contentType = validatedParams.format === "csv" 
-            ? "text/csv" 
-            : "text/plain";
+          const contentType =
+            validatedParams.format === "csv" ? "text/csv" : "text/plain";
 
           return new Response(exportedData, {
             headers: {
@@ -179,13 +193,17 @@ export async function GET(request: NextRequest) {
           success: true,
           data: report,
         });
+      }
 
-      case "metrics":
+      case "metrics": {
         // Get performance metrics
         const operation = searchParams.get("operation") || undefined;
         const timeWindow = Number(searchParams.get("timeWindow")) || 300000; // 5 minutes default
 
-        const metrics = tradingAnalytics.getPerformanceMetrics(operation, timeWindow);
+        const metrics = tradingAnalytics.getPerformanceMetrics(
+          operation,
+          timeWindow
+        );
 
         return NextResponse.json({
           success: true,
@@ -196,8 +214,9 @@ export async function GET(request: NextRequest) {
             timestamp: new Date().toISOString(),
           },
         });
+      }
 
-      case "stats":
+      case "stats": {
         // Get analytics statistics
         const stats = tradingAnalytics.getAnalyticsStats();
 
@@ -205,6 +224,7 @@ export async function GET(request: NextRequest) {
           success: true,
           data: stats,
         });
+      }
 
       default:
         return NextResponse.json(
@@ -217,10 +237,9 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
     }
-
   } catch (error) {
     console.error("[TradingAnalytics API] GET failed:", { error: error });
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
@@ -232,7 +251,7 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -256,14 +275,21 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check rate limiting (more permissive for logging)
-    const rateLimitResult = await checkRateLimit(ip, "/api/analytics/trading", "general", userAgent);
-    
+    const rateLimitResult = await checkRateLimit(
+      ip,
+      "/api/analytics/trading",
+      "general",
+      userAgent
+    );
+
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {
           success: false,
           error: "Rate limit exceeded",
-          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          retryAfter: Math.ceil(
+            (rateLimitResult.resetTime - Date.now()) / 1000
+          ),
         },
         { status: 429 }
       );
@@ -273,7 +299,7 @@ export async function POST(request: NextRequest) {
     let user;
     try {
       user = await requireAuth();
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json(
         {
           success: false,
@@ -297,7 +323,7 @@ export async function POST(request: NextRequest) {
 
     // Parse and validate request body
     const body = await request.json();
-    
+
     // Handle single event or batch of events
     const events = Array.isArray(body.events) ? body.events : [body];
 
@@ -307,7 +333,7 @@ export async function POST(request: NextRequest) {
     for (const eventData of events) {
       try {
         const validatedEvent = LogEventSchema.parse(eventData);
-        
+
         // Add user ID to the event
         tradingAnalytics.logTradingEvent({
           ...validatedEvent,
@@ -319,7 +345,6 @@ export async function POST(request: NextRequest) {
           success: validatedEvent.success,
           timestamp: new Date().toISOString(),
         });
-
       } catch (error) {
         failedEvents.push({
           event: eventData,
@@ -340,10 +365,9 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
       },
     });
-
   } catch (error) {
     console.error("[TradingAnalytics API] POST failed:", { error: error });
-    
+
     return NextResponse.json(
       {
         success: false,
@@ -367,14 +391,21 @@ export async function DELETE(request: NextRequest) {
 
   try {
     // Check rate limiting (stricter for delete operations)
-    const rateLimitResult = await checkRateLimit(ip, "/api/analytics/trading", "authStrict", userAgent);
-    
+    const rateLimitResult = await checkRateLimit(
+      ip,
+      "/api/analytics/trading",
+      "authStrict",
+      userAgent
+    );
+
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {
           success: false,
           error: "Rate limit exceeded",
-          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          retryAfter: Math.ceil(
+            (rateLimitResult.resetTime - Date.now()) / 1000
+          ),
         },
         { status: 429 }
       );
@@ -384,7 +415,7 @@ export async function DELETE(request: NextRequest) {
     let user;
     try {
       user = await requireAuth();
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json(
         {
           success: false,
@@ -410,11 +441,13 @@ export async function DELETE(request: NextRequest) {
     // For now, allow any authenticated user to clear their own analytics data
 
     const statsBeforeClear = tradingAnalytics.getAnalyticsStats();
-    
+
     // Clear analytics data
     tradingAnalytics.clearAnalyticsData();
 
-    console.info(`[TradingAnalytics API] User ${user.id} cleared analytics data`);
+    console.info(
+      `[TradingAnalytics API] User ${user.id} cleared analytics data`
+    );
 
     return NextResponse.json({
       success: true,
@@ -425,10 +458,9 @@ export async function DELETE(request: NextRequest) {
         timestamp: new Date().toISOString(),
       },
     });
-
   } catch (error) {
     console.error("[TradingAnalytics API] DELETE failed:", { error: error });
-    
+
     return NextResponse.json(
       {
         success: false,

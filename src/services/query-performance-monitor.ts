@@ -140,7 +140,10 @@ class QueryPerformanceMonitor {
 
     if (relevantMetrics.length === 0) return 0;
 
-    const totalTime = relevantMetrics.reduce((sum, m) => sum + m.executionTime, 0);
+    const totalTime = relevantMetrics.reduce(
+      (sum, m) => sum + m.executionTime,
+      0
+    );
     return totalTime / relevantMetrics.length;
   }
 
@@ -206,8 +209,12 @@ class QueryPerformanceMonitor {
     status: "healthy" | "warning" | "error";
   } {
     const lastQuery = this.metrics[this.metrics.length - 1];
-    const recentErrors = this.metrics.slice(-10).filter((m) => !m.success).length;
-    const recentSlowQueries = this.metrics.slice(-10).filter((m) => m.executionTime > 1000).length;
+    const recentErrors = this.metrics
+      .slice(-10)
+      .filter((m) => !m.success).length;
+    const recentSlowQueries = this.metrics
+      .slice(-10)
+      .filter((m) => m.executionTime > 1000).length;
 
     let status: "healthy" | "warning" | "error" = "healthy";
     if (recentErrors > 3) {
@@ -250,8 +257,12 @@ class QueryPerformanceMonitor {
       .map(([queryName]) => queryName);
 
     if (slowQueries.length > 10) {
-      recommendations.push("Consider adding database indexes for frequently slow queries");
-      recommendations.push("Review query execution plans for optimization opportunities");
+      recommendations.push(
+        "Consider adding database indexes for frequently slow queries"
+      );
+      recommendations.push(
+        "Review query execution plans for optimization opportunities"
+      );
     }
 
     if (frequentlyFailingQueries.length > 0) {
@@ -260,7 +271,9 @@ class QueryPerformanceMonitor {
 
     const avgTime = this.getAverageExecutionTime();
     if (avgTime > 500) {
-      recommendations.push("Overall query performance is slow - consider database optimization");
+      recommendations.push(
+        "Overall query performance is slow - consider database optimization"
+      );
     }
 
     const errorRate = this.getPerformanceStats().errorRate;

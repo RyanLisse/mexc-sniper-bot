@@ -1,17 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
-import { 
-  applyRLSMigration, 
-  checkRLSStatus, 
+import {
+  applyRLSMigration,
+  checkRLSStatus,
   createRLSHelperFunctions,
   testRLSPolicies,
-  validateRLSSetup
+  validateRLSSetup,
 } from "@/src/lib/supabase-rls";
 
 /**
  * RLS Management API
- * 
+ *
  * GET /api/admin/rls - Check RLS status
  * POST /api/admin/rls - Apply RLS migration or run tests
  */
@@ -28,30 +28,28 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get("action") || "status";
 
     switch (action) {
-      case "status":
+      case "status": {
         const rlsStatus = await checkRLSStatus();
         return apiResponse.success({
           rlsStatus,
           timestamp: new Date().toISOString(),
         });
+      }
 
-      case "validate":
+      case "validate": {
         const validation = await validateRLSSetup();
         return apiResponse.success({
           validation,
           timestamp: new Date().toISOString(),
         });
+      }
 
       default:
         return apiResponse.badRequest(`Unknown action: ${action}`);
     }
-
   } catch (error) {
     console.error("[RLS API] GET Error:", error);
-    return apiResponse.error(
-      "Failed to check RLS status",
-      500
-    );
+    return apiResponse.error("Failed to check RLS status", 500);
   }
 }
 
@@ -64,9 +62,9 @@ export async function POST(request: NextRequest) {
     }
 
     // For security, only allow specific admin users or in development
-    const isAdmin = user.email?.includes('admin') || 
-                   process.env.NODE_ENV === 'development';
-    
+    const isAdmin =
+      user.email?.includes("admin") || process.env.NODE_ENV === "development";
+
     if (!isAdmin) {
       return apiResponse.error("Admin access required for RLS management", 403);
     }
@@ -75,9 +73,9 @@ export async function POST(request: NextRequest) {
     const { action } = body;
 
     switch (action) {
-      case "apply_migration":
+      case "apply_migration": {
         console.log("[RLS API] Applying RLS migration...");
-        
+
         // First create helper functions
         const helperResult = await createRLSHelperFunctions();
         if (!helperResult.success) {
@@ -90,57 +88,56 @@ export async function POST(request: NextRequest) {
 
         // Then apply the migration
         const migrationResult = await applyRLSMigration();
-        
+
         if (migrationResult.success) {
           return apiResponse.success({
             message: "RLS migration applied successfully",
             timestamp: new Date().toISOString(),
           });
         } else {
-          return apiResponse.error(
-            "RLS migration failed",
-            500,
-            { errors: migrationResult.errors }
-          );
+          return apiResponse.error("RLS migration failed", 500, {
+            errors: migrationResult.errors,
+          });
         }
+      }
 
-      case "test_policies":
+      case "test_policies": {
         const userId = user.id;
         if (!userId) {
           return apiResponse.badRequest("User ID required for testing");
         }
 
         console.log("[RLS API] Testing RLS policies for user:", userId);
-        
+
         const testResult = await testRLSPolicies(userId);
-        
+
         return apiResponse.success({
           testResult,
           userId,
           timestamp: new Date().toISOString(),
         });
+      }
 
-      case "create_helpers":
+      case "create_helpers": {
         console.log("[RLS API] Creating RLS helper functions...");
-        
+
         const helpersResult = await createRLSHelperFunctions();
-        
+
         if (helpersResult.success) {
           return apiResponse.success({
             message: "RLS helper functions created successfully",
             timestamp: new Date().toISOString(),
           });
         } else {
-          return apiResponse.error(
-            "Failed to create helper functions",
-            500,
-            { errors: helpersResult.errors }
-          );
+          return apiResponse.error("Failed to create helper functions", 500, {
+            errors: helpersResult.errors,
+          });
         }
+      }
 
-      case "full_setup":
+      case "full_setup": {
         console.log("[RLS API] Running full RLS setup...");
-        
+
         // Step 1: Create helper functions
         const step1 = await createRLSHelperFunctions();
         if (!step1.success) {
@@ -163,7 +160,7 @@ export async function POST(request: NextRequest) {
 
         // Step 3: Validate setup
         const step3 = await validateRLSSetup();
-        
+
         // Step 4: Test policies (if validation passed)
         let step4 = null;
         if (step3.valid && user.id) {
@@ -180,16 +177,13 @@ export async function POST(request: NextRequest) {
           },
           timestamp: new Date().toISOString(),
         });
+      }
 
       default:
         return apiResponse.badRequest(`Unknown action: ${action}`);
     }
-
   } catch (error) {
     console.error("[RLS API] POST Error:", error);
-    return apiResponse.error(
-      "Failed to execute RLS operation",
-      500
-    );
+    return apiResponse.error("Failed to execute RLS operation", 500);
   }
 }

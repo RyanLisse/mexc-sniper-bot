@@ -17,7 +17,10 @@ import {
   calculateActivityBoost,
   hasHighPriorityActivity,
 } from "../../schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "../../services/api/mexc-unified-exports";
 import type { IConfidenceCalculator } from "./interfaces";
 
 /**
@@ -34,7 +37,12 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
     warn: (message: string, context?: any) =>
       console.warn("[confidence-calculator]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[confidence-calculator]", message, context || "", error || ""),
+      console.error(
+        "[confidence-calculator]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[confidence-calculator]", message, context || ""),
   };
@@ -73,7 +81,10 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       try {
         const activities = await this.getActivityDataForSymbol(symbol);
         if (activities && activities.length > 0) {
-          confidence = this.enhanceConfidenceWithActivity(confidence, activities);
+          confidence = this.enhanceConfidenceWithActivity(
+            confidence,
+            activities
+          );
         }
       } catch (error) {
         const safeError = toSafeError(error);
@@ -141,7 +152,9 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
       confidence += this.calculateAdvanceNoticeScore(advanceHours);
 
       // Project type assessment
-      const projectScore = this.getProjectTypeScore(entry.projectName || entry.symbol);
+      const projectScore = this.getProjectTypeScore(
+        entry.projectName || entry.symbol
+      );
       confidence += projectScore * 0.3;
 
       // Data completeness
@@ -255,8 +268,14 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
    *
    * Applies activity-based confidence enhancement.
    */
-  enhanceConfidenceWithActivity(baseConfidence: number, activities: ActivityData[]): number {
-    if (!this.validateConfidenceScore(baseConfidence) || !Array.isArray(activities)) {
+  enhanceConfidenceWithActivity(
+    baseConfidence: number,
+    activities: ActivityData[]
+  ): number {
+    if (
+      !this.validateConfidenceScore(baseConfidence) ||
+      !Array.isArray(activities)
+    ) {
       return baseConfidence;
     }
 
@@ -314,7 +333,8 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
     let score = 0;
 
     if (entry.projectName) score += 5;
-    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1) score += 5;
+    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1)
+      score += 5;
     if ((entry as any).sts !== undefined) score += 10;
 
     return score;
@@ -346,7 +366,8 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
     if (name.includes("defi") || name.includes("swap")) return "DeFi";
     if (name.includes("ai") || name.includes("artificial")) return "AI";
     if (name.includes("game") || name.includes("metaverse")) return "GameFi";
-    if (name.includes("layer") || name.includes("chain")) return "Infrastructure";
+    if (name.includes("layer") || name.includes("chain"))
+      return "Infrastructure";
     if (name.includes("meme")) return "Meme";
 
     return "Other";
@@ -380,25 +401,32 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
           ? symbolOrEntry
           : "symbol" in symbolOrEntry
             ? symbolOrEntry.symbol
-            : symbolOrEntry.cd;
+            : "cd" in symbolOrEntry
+              ? symbolOrEntry.cd
+              : (symbolOrEntry as CalendarEntry).vcoinId;
 
       if (!symbol) return [];
 
       // Import activity service dynamically to avoid circular dependencies
-      const { unifiedMexcService } = await import("../../services/api/unified-mexc-service-v2");
-      const activityResponse = await unifiedMexcService.getRecentActivity(symbol);
+      const { unifiedMexcService } = await import(
+        "../../services/api/unified-mexc-service-v2"
+      );
+      const activityResponse =
+        await unifiedMexcService.getRecentActivity(symbol);
       const recentActivities = activityResponse.success
         ? activityResponse.data?.activities || []
         : [];
 
       // Transform RecentActivityData structure to ActivityData structure
-      const activities: ActivityData[] = recentActivities.map((activity, index) => ({
-        currency: symbol.replace("USDT", ""),
-        activityId: `activity-${activity.timestamp}-${index}`,
-        currencyId: `${symbol.replace("USDT", "")}-id`,
-        activityType: activity.activityType.toUpperCase(),
-        symbol: symbol,
-      }));
+      const activities: ActivityData[] = recentActivities.map(
+        (activity, index) => ({
+          currency: symbol.replace("USDT", ""),
+          activityId: `activity-${activity.timestamp}-${index}`,
+          currencyId: `${symbol.replace("USDT", "")}-id`,
+          activityType: activity.activityType.toUpperCase(),
+          symbol: symbol,
+        })
+      );
 
       return activities;
     } catch (error) {
@@ -408,17 +436,24 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
             ? symbolOrEntry
             : "symbol" in symbolOrEntry
               ? symbolOrEntry.symbol
-              : symbolOrEntry.cd,
+              : "cd" in symbolOrEntry
+                ? symbolOrEntry.cd
+                : (symbolOrEntry as CalendarEntry).vcoinId,
         error: toSafeError(error).message,
       });
       return [];
     }
   }
 
-  private async getAIEnhancement(symbol: SymbolEntry, currentConfidence: number): Promise<number> {
+  private async getAIEnhancement(
+    symbol: SymbolEntry,
+    currentConfidence: number
+  ): Promise<number> {
     try {
       // Real implementation: integrate with AI intelligence service
-      const { aiIntelligenceService } = await import("../../services/ai/ai-intelligence-service");
+      const { aiIntelligenceService } = await import(
+        "../../services/ai/ai-intelligence-service"
+      );
 
       const enhancement = await aiIntelligenceService.enhanceConfidence({
         symbol: symbol.symbol || symbol.cd,
@@ -442,58 +477,68 @@ export class ConfidenceCalculator implements IConfidenceCalculator {
     }
   }
 
-  private async getMarketConditionsAdjustment(symbol: SymbolEntry): Promise<number> {
+  private async getMarketConditionsAdjustment(
+    symbol: SymbolEntry
+  ): Promise<number> {
     try {
       // Get market conditions from risk engine
-      const { AdvancedRiskEngine } = await import("../../services/risk/advanced-risk-engine");
-      
+      const { AdvancedRiskEngine } = await import(
+        "../../services/risk/advanced-risk-engine"
+      );
+
       // Create a new instance that might have been updated with market conditions
       const riskEngine = new AdvancedRiskEngine({
         emergencyVolatilityThreshold: 80,
         emergencyLiquidityThreshold: 20,
         emergencyCorrelationThreshold: 0.9,
       });
-      
+
       // Check for extreme market conditions based on pattern name and test context
       let adjustment = 0;
-      
+
       // Detection based on symbol patterns that indicate extreme volatility scenarios
       const symbolCode = symbol.cd || symbol.symbol || "";
-      
+
       // Check for test scenarios with extreme volatility keywords
-      if (symbolCode && 
-          (symbolCode.includes("EXTREMEVOLATIL") || 
-           symbolCode.includes("FLASHCRASH") || 
-           symbolCode.includes("PUMPDUMP"))) {
+      if (
+        symbolCode &&
+        (symbolCode.includes("EXTREMEVOLATIL") ||
+          symbolCode.includes("FLASHCRASH") ||
+          symbolCode.includes("PUMPDUMP"))
+      ) {
         adjustment -= 25; // Major confidence reduction for extreme volatility symbols
-        this.logger.warn("Extreme volatility symbol detected, reducing confidence", { 
-          symbolCode, 
-          adjustment 
-        });
+        this.logger.warn(
+          "Extreme volatility symbol detected, reducing confidence",
+          {
+            symbolCode,
+            adjustment,
+          }
+        );
       }
-      
+
       // Additional checks for emergency conditions
       try {
         if (riskEngine.isEmergencyModeActive()) {
           adjustment -= 20; // Emergency mode active
           this.logger.warn("Emergency mode active, reducing confidence");
         }
-      } catch (error) {
+      } catch (_error) {
         // Risk engine might not be fully initialized, continue
       }
-      
+
       // Check for high market volatility conditions globally
       // This is a heuristic based on the test setup patterns
-      const currentHour = new Date().getHours();
-      const isTestEnvironment = process.env.NODE_ENV === "test" || 
-                               process.env.VITEST === "true" ||
-                               typeof (globalThis as any).expect !== "undefined";
-      
+      const _currentHour = new Date().getHours();
+      const isTestEnvironment =
+        process.env.NODE_ENV === "test" ||
+        process.env.VITEST === "true" ||
+        typeof (globalThis as any).expect !== "undefined";
+
       if (isTestEnvironment) {
         // In test environment, apply volatility adjustment more aggressively
         adjustment -= 15; // Reduce confidence in volatile test conditions
       }
-      
+
       return adjustment;
     } catch (error) {
       this.logger.warn("Market conditions adjustment failed", {

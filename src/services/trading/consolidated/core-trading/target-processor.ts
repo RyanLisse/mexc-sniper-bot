@@ -85,9 +85,14 @@ export class TargetProcessor {
         .set(updateData)
         .where(eq(snipeTargets.id, parseInt(targetId)));
 
-      this.context.logger.info(`Updated target ${targetId} status to ${status}`);
+      this.context.logger.info(
+        `Updated target ${targetId} status to ${status}`
+      );
     } catch (error) {
-      this.context.logger.error(`Failed to update target ${targetId} status:`, error);
+      this.context.logger.error(
+        `Failed to update target ${targetId} status:`,
+        error
+      );
       throw error;
     }
   }
@@ -95,11 +100,15 @@ export class TargetProcessor {
   /**
    * Process a single snipe target
    */
-  async processTarget(target: AutoSnipeTarget): Promise<ServiceResponse<TradeResult>> {
+  async processTarget(
+    target: AutoSnipeTarget
+  ): Promise<ServiceResponse<TradeResult>> {
     const startTime = Date.now();
 
     try {
-      this.context.logger.info(`Processing snipe target: ${target.id} (${target.symbol})`);
+      this.context.logger.info(
+        `Processing snipe target: ${target.id} (${target.symbol})`
+      );
 
       // Validate target before processing
       const validationResult = await this.validateTarget(target);
@@ -123,13 +132,21 @@ export class TargetProcessor {
         target.id.toString(),
         result.success ? "completed" : "failed",
         new Date(),
-        result.success ? undefined : (result.error instanceof Error ? result.error.message : String(result.error))
+        result.success
+          ? undefined
+          : result.error instanceof Error
+            ? result.error.message
+            : String(result.error)
       );
 
       return {
         success: result.success,
         data: result,
-        error: result.success ? undefined : (result.error instanceof Error ? result.error.message : String(result.error)),
+        error: result.success
+          ? undefined
+          : result.error instanceof Error
+            ? result.error.message
+            : String(result.error),
         metadata: {
           processingTime: Date.now() - startTime,
           targetId: target.id,
@@ -137,7 +154,10 @@ export class TargetProcessor {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error(`Error processing target ${target.id}:`, safeError);
+      this.context.logger.error(
+        `Error processing target ${target.id}:`,
+        safeError
+      );
 
       // Update target as failed
       await this.updateSnipeTargetStatus(
@@ -162,7 +182,9 @@ export class TargetProcessor {
   /**
    * Execute a snipe target
    */
-  private async executeSnipeTarget(target: AutoSnipeTarget): Promise<TradeResult> {
+  private async executeSnipeTarget(
+    target: AutoSnipeTarget
+  ): Promise<TradeResult> {
     try {
       this.context.logger.info(`Executing snipe for target: ${target.symbol}`);
 
@@ -173,14 +195,18 @@ export class TargetProcessor {
         amount: target.amount,
         price: target.price,
         type: "market" as const,
-        stopLoss: target.stopLossPercent ? {
-          percentage: target.stopLossPercent,
-          type: "percentage" as const,
-        } : undefined,
-        takeProfit: target.takeProfitPercent ? {
-          percentage: target.takeProfitPercent,
-          type: "percentage" as const,
-        } : undefined,
+        stopLoss: target.stopLossPercent
+          ? {
+              percentage: target.stopLossPercent,
+              type: "percentage" as const,
+            }
+          : undefined,
+        takeProfit: target.takeProfitPercent
+          ? {
+              percentage: target.takeProfitPercent,
+              type: "percentage" as const,
+            }
+          : undefined,
       };
 
       // Execute based on mode (paper trading vs real trading)
@@ -191,8 +217,11 @@ export class TargetProcessor {
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error(`Failed to execute snipe for ${target.symbol}:`, safeError);
-      
+      this.context.logger.error(
+        `Failed to execute snipe for ${target.symbol}:`,
+        safeError
+      );
+
       return {
         success: false,
         orderId: null,
@@ -208,7 +237,9 @@ export class TargetProcessor {
   /**
    * Validate a target before processing
    */
-  private async validateTarget(target: AutoSnipeTarget): Promise<ServiceResponse<boolean>> {
+  private async validateTarget(
+    target: AutoSnipeTarget
+  ): Promise<ServiceResponse<boolean>> {
     try {
       // Check if target is still valid
       if (!target.symbol) {
@@ -258,7 +289,7 @@ export class TargetProcessor {
     // Simulate trade execution
     const mockPrice = params.price || 1.0;
     const mockQuantity = params.amount;
-    
+
     return {
       success: true,
       orderId: `paper_${Date.now()}`,
@@ -272,7 +303,7 @@ export class TargetProcessor {
   /**
    * Execute real trading snipe
    */
-  private async executeRealSnipe(params: any): Promise<TradeResult> {
+  private async executeRealSnipe(_params: any): Promise<TradeResult> {
     // This would implement real trading logic
     // For now, return a placeholder result
     throw new Error("Real trading execution not implemented in this module");

@@ -77,7 +77,12 @@ export const legacySafetyMonitor = inngest.createFunction(
       const errorRecoveryAgent = agentManager.getErrorRecoveryAgent();
 
       // Update system health metrics
-      await errorRecoveryAgent.updateServiceHealth("safety_monitor", "healthy", 100, 0);
+      await errorRecoveryAgent.updateServiceHealth(
+        "safety_monitor",
+        "healthy",
+        100,
+        0
+      );
 
       return {
         timestamp: new Date().toISOString(),
@@ -157,16 +162,19 @@ export const positionReconciliation = inngest.createFunction(
     });
 
     // Step 3: Perform reconciliation
-    const reconciliationReport = await step.run("perform-reconciliation", async () => {
-      const reconciliationAgent = agentManager.getReconciliationAgent();
+    const reconciliationReport = await step.run(
+      "perform-reconciliation",
+      async () => {
+        const reconciliationAgent = agentManager.getReconciliationAgent();
 
-      return await reconciliationAgent.performReconciliation(
-        localData.positions as any,
-        localData.balances as any,
-        exchangeData.positions as any,
-        exchangeData.balances as any
-      );
-    });
+        return await reconciliationAgent.performReconciliation(
+          localData.positions as any,
+          localData.balances as any,
+          exchangeData.positions as any,
+          exchangeData.balances as any
+        );
+      }
+    );
 
     logger.info("Reconciliation completed", {
       reportId: reconciliationReport.id,
@@ -243,13 +251,17 @@ export const riskMonitor = inngest.createFunction(
       await step.run("handle-trading-halt", async () => {
         logger.warn("Trading halted by risk management", {
           reason: "Circuit breakers or emergency halt active",
-          circuitBreakers: riskAssessment.circuitBreakers.filter((cb) => cb.triggered),
+          circuitBreakers: riskAssessment.circuitBreakers.filter(
+            (cb) => cb.triggered
+          ),
         });
 
         // This would integrate with trading system to halt trading
         return {
           action: "trading_halted",
-          activeBreakers: riskAssessment.circuitBreakers.filter((cb) => cb.triggered).length,
+          activeBreakers: riskAssessment.circuitBreakers.filter(
+            (cb) => cb.triggered
+          ).length,
         };
       });
     }
@@ -281,7 +293,10 @@ export const simulationControl = inngest.createFunction(
 
       if (enabled) {
         // Start new simulation session
-        const session = await simulationAgent.startSimulationSession(userId || "default", 10000);
+        const session = await simulationAgent.startSimulationSession(
+          userId || "default",
+          10000
+        );
         logger.info("Simulation session started", { sessionId: session.id });
         return session;
       }
@@ -382,7 +397,9 @@ export const errorRecovery = inngest.createFunction(
     // Step 3: Escalate if no retry recommended
     await step.run("escalate-error", async () => {
       if (severity === "critical") {
-        await agentManager.activateEmergencyMode(`Critical error: ${error.message}`);
+        await agentManager.activateEmergencyMode(
+          `Critical error: ${error.message}`
+        );
       }
 
       logger.error("Error escalated - no recovery possible", {
@@ -423,9 +440,15 @@ export const systemHealthCheck = inngest.createFunction(
       // Update health for each service based on agent status
       const healthUpdates = [
         { service: "mexc_api", healthy: agentHealth.mexcApi },
-        { service: "openai", healthy: agentHealth.strategy && agentHealth.patternDiscovery },
+        {
+          service: "openai",
+          healthy: agentHealth.strategy && agentHealth.patternDiscovery,
+        },
         { service: "database", healthy: true }, // Derived from details if available
-        { service: "safety_systems", healthy: agentHealth.simulation && agentHealth.riskManager },
+        {
+          service: "safety_systems",
+          healthy: agentHealth.simulation && agentHealth.riskManager,
+        },
       ];
 
       for (const update of healthUpdates) {
@@ -463,7 +486,10 @@ export const systemHealthCheck = inngest.createFunction(
 
 // Advanced safety monitoring workflow - runs every 2 minutes
 export const advancedSafetyMonitor = inngest.createFunction(
-  { id: "advanced-safety-monitor", name: "Advanced Comprehensive Safety Monitor" },
+  {
+    id: "advanced-safety-monitor",
+    name: "Advanced Comprehensive Safety Monitor",
+  },
   { cron: "*/2 * * * *" }, // Every 2 minutes
   async ({ step, logger }) => {
     // Step 1: Comprehensive system health check
@@ -471,7 +497,9 @@ export const advancedSafetyMonitor = inngest.createFunction(
       return await emergencySystem.performSystemHealthCheck();
     });
 
-    logger.info("Advanced safety check completed", { status: systemHealth.overall });
+    logger.info("Advanced safety check completed", {
+      status: systemHealth.overall,
+    });
 
     // Step 2: Risk engine assessment
     const riskAssessment = await step.run("risk-assessment", async () => {
@@ -485,7 +513,8 @@ export const advancedSafetyMonitor = inngest.createFunction(
         portfolioValue: portfolioMetrics.totalValue,
         valueAtRisk: portfolioMetrics.valueAtRisk95,
         activeAlerts: activeAlerts.length,
-        criticalAlerts: activeAlerts.filter((a) => a.severity === "critical").length,
+        criticalAlerts: activeAlerts.filter((a) => a.severity === "critical")
+          .length,
       };
     });
 
@@ -524,33 +553,42 @@ export const advancedSafetyMonitor = inngest.createFunction(
         },
       ];
 
-      const behaviorAnalysis = await safetyMonitor.monitorAgentBehavior(mockMetrics);
-      const performanceCheck = await safetyMonitor.checkPerformanceDegradation();
+      const behaviorAnalysis =
+        await safetyMonitor.monitorAgentBehavior(mockMetrics);
+      const performanceCheck =
+        await safetyMonitor.checkPerformanceDegradation();
 
       return {
         anomaliesDetected: behaviorAnalysis.anomaliesDetected.length,
         violations: behaviorAnalysis.violations.length,
         degradedAgents: performanceCheck.degradedAgents.length,
-        recommendations: [...behaviorAnalysis.recommendations, ...performanceCheck.recommendations],
+        recommendations: [
+          ...behaviorAnalysis.recommendations,
+          ...performanceCheck.recommendations,
+        ],
       };
     });
 
     // Step 4: Market anomaly detection
-    const marketAnomalies = await step.run("market-anomaly-detection", async () => {
-      // Mock market data for anomaly detection
-      const mockMarketData = {
-        volatility: 30 + Math.random() * 40,
-        liquidity: 60 + Math.random() * 30,
-        priceDeviations: Math.random() * 10,
-        volumeAnomalies: Math.random() * 5,
-      };
+    const marketAnomalies = await step.run(
+      "market-anomaly-detection",
+      async () => {
+        // Mock market data for anomaly detection
+        const mockMarketData = {
+          volatility: 30 + Math.random() * 40,
+          liquidity: 60 + Math.random() * 30,
+          priceDeviations: Math.random() * 10,
+          volumeAnomalies: Math.random() * 5,
+        };
 
-      return await emergencySystem.detectMarketAnomalies(mockMarketData);
-    });
+        return await emergencySystem.detectMarketAnomalies(mockMarketData);
+      }
+    );
 
     // Step 5: Handle critical conditions
     const criticalConditions = [
-      systemHealth.overall === "critical" || systemHealth.overall === "emergency",
+      systemHealth.overall === "critical" ||
+        systemHealth.overall === "emergency",
       riskAssessment.criticalAlerts > 0,
       agentMonitoring.violations > 0,
       marketAnomalies.priceAnomalies.some((a) => a.severity === "critical"),
@@ -561,19 +599,30 @@ export const advancedSafetyMonitor = inngest.createFunction(
       await step.run("handle-critical-conditions", async () => {
         const criticalReasons = [];
 
-        if (systemHealth.overall === "critical" || systemHealth.overall === "emergency") {
+        if (
+          systemHealth.overall === "critical" ||
+          systemHealth.overall === "emergency"
+        ) {
           criticalReasons.push(`System health: ${systemHealth.overall}`);
         }
         if (riskAssessment.criticalAlerts > 0) {
-          criticalReasons.push(`${riskAssessment.criticalAlerts} critical risk alerts`);
+          criticalReasons.push(
+            `${riskAssessment.criticalAlerts} critical risk alerts`
+          );
         }
         if (agentMonitoring.violations > 0) {
-          criticalReasons.push(`${agentMonitoring.violations} agent violations`);
+          criticalReasons.push(
+            `${agentMonitoring.violations} agent violations`
+          );
         }
-        if (marketAnomalies.priceAnomalies.some((a) => a.severity === "critical")) {
+        if (
+          marketAnomalies.priceAnomalies.some((a) => a.severity === "critical")
+        ) {
           criticalReasons.push("Critical price anomalies detected");
         }
-        if (marketAnomalies.liquidityGaps.some((g) => g.severity === "critical")) {
+        if (
+          marketAnomalies.liquidityGaps.some((g) => g.severity === "critical")
+        ) {
           criticalReasons.push("Critical liquidity gaps detected");
         }
 
@@ -609,14 +658,19 @@ export const advancedSafetyMonitor = inngest.createFunction(
         volatilityIndex: 30 + Math.random() * 20,
         liquidityIndex: 70 + Math.random() * 20,
         marketSentiment:
-          Math.random() > 0.7 ? "bullish" : Math.random() > 0.4 ? "neutral" : "bearish",
+          Math.random() > 0.7
+            ? "bullish"
+            : Math.random() > 0.4
+              ? "neutral"
+              : "bearish",
       });
 
       return {
         timestamp: new Date().toISOString(),
         systemHealth: systemHealth.overall,
         riskScore: riskAssessment.riskScore,
-        agentHealth: agentMonitoring.anomaliesDetected === 0 ? "healthy" : "degraded",
+        agentHealth:
+          agentMonitoring.anomaliesDetected === 0 ? "healthy" : "degraded",
       };
     });
 
@@ -641,24 +695,27 @@ export const realTimeRiskMonitor = inngest.createFunction(
   { cron: "* 9-16 * * 1-5" }, // Every minute during trading hours (9 AM - 4 PM, Mon-Fri)
   async ({ step, logger }) => {
     // Step 1: Update current risk metrics
-    const currentRiskMetrics = await step.run("update-risk-metrics", async () => {
-      // Mock current trading data
-      const mockTradingData = {
-        totalExposure: 45000 + Math.random() * 10000,
-        dailyPnL: -200 + Math.random() * 800,
-        openPositions: 3 + Math.floor(Math.random() * 5),
-        volatilityIndex: 25 + Math.random() * 30,
-      };
+    const currentRiskMetrics = await step.run(
+      "update-risk-metrics",
+      async () => {
+        // Mock current trading data
+        const mockTradingData = {
+          totalExposure: 45000 + Math.random() * 10000,
+          dailyPnL: -200 + Math.random() * 800,
+          openPositions: 3 + Math.floor(Math.random() * 5),
+          volatilityIndex: 25 + Math.random() * 30,
+        };
 
-      await (riskEngine as any).updateRiskMetrics(
-        mockTradingData.totalExposure,
-        mockTradingData.dailyPnL,
-        mockTradingData.openPositions,
-        mockTradingData.volatilityIndex
-      );
+        await (riskEngine as any).updateRiskMetrics(
+          mockTradingData.totalExposure,
+          mockTradingData.dailyPnL,
+          mockTradingData.openPositions,
+          mockTradingData.volatilityIndex
+        );
 
-      return await riskEngine.getPortfolioRiskMetrics();
-    });
+        return await riskEngine.getPortfolioRiskMetrics();
+      }
+    );
 
     // Step 2: Perform stress testing (every 10 minutes)
     const stressTestResults = await step.run("stress-testing", async () => {
@@ -724,10 +781,14 @@ export const realTimeRiskMonitor = inngest.createFunction(
 
 // Pattern validation safety check
 export const patternValidationSafety = inngest.createFunction(
-  { id: "pattern-validation-safety", name: "Pattern Discovery Safety Validation" },
+  {
+    id: "pattern-validation-safety",
+    name: "Pattern Discovery Safety Validation",
+  },
   { event: "pattern/discovered" },
   async ({ event, step, logger }) => {
-    const { patternId, symbol, confidence, riskScore, patternData } = event.data;
+    const { patternId, symbol, confidence, riskScore, patternData } =
+      event.data;
 
     // Step 1: Safety monitor validation
     const validationResult = await step.run("safety-validation", async () => {
@@ -754,7 +815,11 @@ export const patternValidationSafety = inngest.createFunction(
           requestId: `${patternId}-consensus`,
           type: "pattern_validation" as const,
           data: { patternId, symbol, confidence, riskScore, patternData },
-          requiredAgents: ["strategy-agent", "risk-manager-agent", "pattern-discovery-agent"],
+          requiredAgents: [
+            "strategy-agent",
+            "risk-manager-agent",
+            "pattern-discovery-agent",
+          ],
           consensusThreshold: 70,
           timeout: 30000,
           priority: "high" as const,
@@ -764,7 +829,10 @@ export const patternValidationSafety = inngest.createFunction(
       });
 
       // Override validation if consensus disagrees
-      if (!consensusResult.consensus.achieved && validationResult.recommendation === "proceed") {
+      if (
+        !consensusResult.consensus.achieved &&
+        validationResult.recommendation === "proceed"
+      ) {
         validationResult.recommendation = "reject";
         validationResult.reasoning.push(
           `Consensus not achieved: ${consensusResult.consensus.approvalRate}% approval`
@@ -807,7 +875,7 @@ export const patternValidationSafety = inngest.createFunction(
 
 // Export all safety functions
 export const safetyFunctions = [
-  safetyMonitor,
+  legacySafetyMonitor,
   positionReconciliation,
   riskMonitor,
   simulationControl,

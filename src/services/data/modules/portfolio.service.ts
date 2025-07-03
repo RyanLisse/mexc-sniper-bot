@@ -23,8 +23,12 @@ import { instrumentServiceMethod } from "@/src/lib/opentelemetry-service-instrum
 
 export const BalanceEntrySchema = z.object({
   asset: z.string().min(1, "Asset symbol is required"),
-  free: z.string().regex(/^\d+(\.\d+)?$/, "Free balance must be a valid number string"),
-  locked: z.string().regex(/^\d+(\.\d+)?$/, "Locked balance must be a valid number string"),
+  free: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/, "Free balance must be a valid number string"),
+  locked: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/, "Locked balance must be a valid number string"),
 });
 
 export const PortfolioMetricsSchema = z.object({
@@ -35,7 +39,10 @@ export const PortfolioMetricsSchema = z.object({
   worstPerformers: z.array(z.string()).max(10, "Maximum 10 worst performers"),
   assetDistribution: z.record(z.string(), z.number().nonnegative()),
   riskScore: z.number().min(0).max(100, "Risk score must be between 0-100"),
-  diversificationScore: z.number().min(0).max(100, "Diversification score must be between 0-100"),
+  diversificationScore: z
+    .number()
+    .min(0)
+    .max(100, "Diversification score must be between 0-100"),
 });
 
 export const PortfolioSchema = z.object({
@@ -88,7 +95,11 @@ export interface PortfolioConfig {
     execute: <T>(fn: () => Promise<T>) => Promise<T>;
   };
   performanceMonitor?: {
-    recordMetric: (name: string, value: number, tags?: Record<string, string>) => void;
+    recordMetric: (
+      name: string,
+      value: number,
+      tags?: Record<string, string>
+    ) => void;
   };
   cacheTTL?: number;
 }
@@ -144,13 +155,18 @@ export class PortfolioService {
       }
 
       // Record metrics
-      this.recordMetric("response_time", Date.now() - startTime, { operation: "getPortfolio" });
+      this.recordMetric("response_time", Date.now() - startTime, {
+        operation: "getPortfolio",
+      });
       this.recordMetric("cache_miss", 1, { operation: "getPortfolio" });
 
       return portfolio;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.recordMetric("error_count", 1, { operation: "getPortfolio", error: safeError.name });
+      this.recordMetric("error_count", 1, {
+        operation: "getPortfolio",
+        error: safeError.name,
+      });
 
       return {
         success: false,
@@ -287,20 +303,36 @@ export class PortfolioService {
 
     // Clear common cache patterns
     const commonKeys = [
-      this.generateCacheKey({ includeMetrics: false, excludeZeroBalances: false }),
-      this.generateCacheKey({ excludeZeroBalances: true, includeMetrics: false }),
-      this.generateCacheKey({ includeMetrics: true, excludeZeroBalances: false }),
-      this.generateCacheKey({ excludeZeroBalances: true, includeMetrics: true }),
+      this.generateCacheKey({
+        includeMetrics: false,
+        excludeZeroBalances: false,
+      }),
+      this.generateCacheKey({
+        excludeZeroBalances: true,
+        includeMetrics: false,
+      }),
+      this.generateCacheKey({
+        includeMetrics: true,
+        excludeZeroBalances: false,
+      }),
+      this.generateCacheKey({
+        excludeZeroBalances: true,
+        includeMetrics: true,
+      }),
     ];
 
-    await Promise.all(commonKeys.map((key) => this.config.cache?.set(key, null, 0)));
+    await Promise.all(
+      commonKeys.map((key) => this.config.cache?.set(key, null, 0))
+    );
   }
 
   // ============================================================================
   // Private Methods
   // ============================================================================
 
-  private async fetchPortfolioData(filter: PortfolioFilter): Promise<PortfolioResponse> {
+  private async fetchPortfolioData(
+    filter: PortfolioFilter
+  ): Promise<PortfolioResponse> {
     const executeWithCircuitBreaker =
       this.config.circuitBreaker?.execute ?? ((fn: () => Promise<any>) => fn());
 
@@ -309,7 +341,10 @@ export class PortfolioService {
     });
 
     // Transform and filter balances
-    const balances = this.transformAndFilterBalances(rawBalances.balances || [], filter);
+    const balances = this.transformAndFilterBalances(
+      rawBalances.balances || [],
+      filter
+    );
 
     // Calculate metrics if requested
     let metrics = this.getEmptyMetrics();
@@ -336,7 +371,10 @@ export class PortfolioService {
     };
   }
 
-  private transformAndFilterBalances(rawBalances: any[], filter: PortfolioFilter): BalanceEntry[] {
+  private transformAndFilterBalances(
+    rawBalances: any[],
+    filter: PortfolioFilter
+  ): BalanceEntry[] {
     const balances = rawBalances
       .map((balance) => ({
         asset: balance.asset || "",
@@ -344,7 +382,8 @@ export class PortfolioService {
         locked: balance.locked || "0",
       }))
       .filter((balance) => {
-        const totalBalance = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+        const totalBalance =
+          Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
 
         if (filter.excludeZeroBalances && totalBalance === 0) {
           return false;
@@ -369,18 +408,23 @@ export class PortfolioService {
     return balances.map((balance) => BalanceEntrySchema.parse(balance));
   }
 
-  private async calculatePortfolioMetrics(balances: BalanceEntry[]): Promise<PortfolioMetrics> {
+  private async calculatePortfolioMetrics(
+    balances: BalanceEntry[]
+  ): Promise<PortfolioMetrics> {
     // This is a simplified calculation - in a real implementation,
     // you'd fetch current prices and calculate actual values
     const totalValue = balances.reduce((sum, balance) => {
-      const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+      const total =
+        Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
       return sum + total; // Simplified: assuming 1:1 USDT value
     }, 0);
 
     const assetDistribution: Record<string, number> = {};
     balances.forEach((balance) => {
-      const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
-      assetDistribution[balance.asset] = totalValue > 0 ? (total / totalValue) * 100 : 0;
+      const total =
+        Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+      assetDistribution[balance.asset] =
+        totalValue > 0 ? (total / totalValue) * 100 : 0;
     });
 
     // Simplified metrics calculation
@@ -399,7 +443,9 @@ export class PortfolioService {
     };
   }
 
-  private async getCachedPortfolio(cacheKey: string): Promise<PortfolioResponse | null> {
+  private async getCachedPortfolio(
+    cacheKey: string
+  ): Promise<PortfolioResponse | null> {
     if (!this.config.cache) return null;
 
     try {
@@ -412,7 +458,10 @@ export class PortfolioService {
     }
   }
 
-  private async cachePortfolio(cacheKey: string, portfolio: PortfolioResponse): Promise<void> {
+  private async cachePortfolio(
+    cacheKey: string,
+    portfolio: PortfolioResponse
+  ): Promise<void> {
     if (!this.config.cache) return;
 
     const cacheData = { ...portfolio, cached: true };
@@ -451,7 +500,11 @@ export class PortfolioService {
     };
   }
 
-  private recordMetric(name: string, value: number, tags?: Record<string, string>): void {
+  private recordMetric(
+    name: string,
+    value: number,
+    tags?: Record<string, string>
+  ): void {
     this.config.performanceMonitor?.recordMetric(name, value, {
       service: "portfolio",
       ...tags,
@@ -463,7 +516,9 @@ export class PortfolioService {
 // Factory Function
 // ============================================================================
 
-export function createPortfolioService(config: PortfolioConfig): PortfolioService {
+export function createPortfolioService(
+  config: PortfolioConfig
+): PortfolioService {
   return new PortfolioService(config);
 }
 

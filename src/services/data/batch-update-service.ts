@@ -5,7 +5,7 @@
  * Extracted from batch-database-service.ts for better modularity.
  */
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, executeWithRetry } from "@/src/db";
 import { patternEmbeddings, snipeTargets } from "@/src/db/schema";
@@ -83,38 +83,49 @@ export class BatchUpdateService {
       }
 
       // Check which targets exist
-      const targetIds = updates.map(u => u.id);
+      const targetIds = updates.map((u) => u.id);
       const existingTargets = await db
         .select({ id: snipeTargets.id })
         .from(snipeTargets)
-        .where(inArray(snipeTargets.id, targetIds.map(id => Number(id))));
+        .where(
+          inArray(
+            snipeTargets.id,
+            targetIds.map((id) => Number(id))
+          )
+        );
 
       const existingIds = new Set(existingTargets.map((t: any) => t.id));
-      const validUpdates = updates.filter(u => existingIds.has(u.id));
-      
+      const validUpdates = updates.filter((u) => existingIds.has(u.id));
+
       // Track not found targets
-      updates.forEach(u => {
+      updates.forEach((u) => {
         if (!existingIds.has(u.id)) {
           notFound.push(u.id);
         }
       });
 
       if (notFound.length > 0) {
-        this.logger.warn(`${notFound.length} targets not found for update`, { notFound });
+        this.logger.warn(`${notFound.length} targets not found for update`, {
+          notFound,
+        });
       }
 
       // Process valid updates in chunks
       const chunks = this.chunkArray(validUpdates, opts.chunkSize);
-      this.logger.info(`Processing ${validUpdates.length} target updates in ${chunks.length} chunks`);
+      this.logger.info(
+        `Processing ${validUpdates.length} target updates in ${chunks.length} chunks`
+      );
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        this.logger.debug(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} items)`);
+        this.logger.debug(
+          `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} items)`
+        );
 
         try {
           const result = await this.updateSnipeTargetChunk(chunk);
           totalUpdated += result.updated;
-          
+
           if (result.errors.length > 0) {
             errors.push(...result.errors);
           }
@@ -122,7 +133,10 @@ export class BatchUpdateService {
           const safeError = toSafeError(error);
           const errorMsg = `Chunk ${i + 1} failed: ${safeError.message}`;
           errors.push(errorMsg);
-          this.logger.error(errorMsg, { chunkIndex: i, chunkSize: chunk.length });
+          this.logger.error(errorMsg, {
+            chunkIndex: i,
+            chunkSize: chunk.length,
+          });
         }
       }
 
@@ -142,8 +156,10 @@ export class BatchUpdateService {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Batch update snipe targets failed", { error: safeError.message });
-      
+      this.logger.error("Batch update snipe targets failed", {
+        error: safeError.message,
+      });
+
       return {
         success: false,
         updated: totalUpdated,
@@ -185,38 +201,46 @@ export class BatchUpdateService {
       }
 
       // Check which patterns exist
-      const patternIds = updates.map(u => u.patternId);
+      const patternIds = updates.map((u) => u.patternId);
       const existingPatterns = await db
         .select({ patternId: patternEmbeddings.patternId })
         .from(patternEmbeddings)
         .where(inArray(patternEmbeddings.patternId, patternIds));
 
-      const existingIds = new Set(existingPatterns.map((p: any) => p.patternId));
-      const validUpdates = updates.filter(u => existingIds.has(u.patternId));
-      
+      const existingIds = new Set(
+        existingPatterns.map((p: any) => p.patternId)
+      );
+      const validUpdates = updates.filter((u) => existingIds.has(u.patternId));
+
       // Track not found patterns
-      updates.forEach(u => {
+      updates.forEach((u) => {
         if (!existingIds.has(u.patternId)) {
           notFound.push(u.patternId);
         }
       });
 
       if (notFound.length > 0) {
-        this.logger.warn(`${notFound.length} patterns not found for update`, { notFound });
+        this.logger.warn(`${notFound.length} patterns not found for update`, {
+          notFound,
+        });
       }
 
       // Process valid updates in chunks
       const chunks = this.chunkArray(validUpdates, opts.chunkSize);
-      this.logger.info(`Processing ${validUpdates.length} pattern updates in ${chunks.length} chunks`);
+      this.logger.info(
+        `Processing ${validUpdates.length} pattern updates in ${chunks.length} chunks`
+      );
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        this.logger.debug(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} items)`);
+        this.logger.debug(
+          `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} items)`
+        );
 
         try {
           const result = await this.updatePatternEmbeddingChunk(chunk);
           totalUpdated += result.updated;
-          
+
           if (result.errors.length > 0) {
             errors.push(...result.errors);
           }
@@ -224,7 +248,10 @@ export class BatchUpdateService {
           const safeError = toSafeError(error);
           const errorMsg = `Chunk ${i + 1} failed: ${safeError.message}`;
           errors.push(errorMsg);
-          this.logger.error(errorMsg, { chunkIndex: i, chunkSize: chunk.length });
+          this.logger.error(errorMsg, {
+            chunkIndex: i,
+            chunkSize: chunk.length,
+          });
         }
       }
 
@@ -244,8 +271,10 @@ export class BatchUpdateService {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Batch update pattern embeddings failed", { error: safeError.message });
-      
+      this.logger.error("Batch update pattern embeddings failed", {
+        error: safeError.message,
+      });
+
       return {
         success: false,
         updated: totalUpdated,
@@ -273,33 +302,46 @@ export class BatchUpdateService {
 
     try {
       const chunks = this.chunkArray(targetIds, opts.chunkSize);
-      this.logger.info(`Toggling ${targetIds.length} targets to ${isActive ? 'active' : 'inactive'} in ${chunks.length} chunks`);
+      this.logger.info(
+        `Toggling ${targetIds.length} targets to ${isActive ? "active" : "inactive"} in ${chunks.length} chunks`
+      );
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
-        this.logger.debug(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} items)`);
+        this.logger.debug(
+          `Processing chunk ${i + 1}/${chunks.length} (${chunk.length} items)`
+        );
 
         try {
           const result = await executeWithRetry(
-            () => db
-              .update(snipeTargets)
-              .set({ 
-                isActive, 
-                updatedAt: new Date() 
-              })
-              .where(inArray(snipeTargets.id, chunk.map(id => Number(id)))),
+            () =>
+              db
+                .update(snipeTargets)
+                .set({
+                  isActive,
+                  updatedAt: new Date(),
+                })
+                .where(
+                  inArray(
+                    snipeTargets.id,
+                    chunk.map((id) => Number(id))
+                  )
+                ),
             `Update snipe targets chunk ${i + 1}`
           );
 
           const updated = (result as any)?.changes || 0;
           totalUpdated += updated;
-          
+
           this.logger.debug(`Chunk ${i + 1} updated ${updated} targets`);
         } catch (error) {
           const safeError = toSafeError(error);
           const errorMsg = `Chunk ${i + 1} failed: ${safeError.message}`;
           errors.push(errorMsg);
-          this.logger.error(errorMsg, { chunkIndex: i, chunkSize: chunk.length });
+          this.logger.error(errorMsg, {
+            chunkIndex: i,
+            chunkSize: chunk.length,
+          });
         }
       }
 
@@ -318,8 +360,10 @@ export class BatchUpdateService {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Batch toggle snipe targets failed", { error: safeError.message });
-      
+      this.logger.error("Batch toggle snipe targets failed", {
+        error: safeError.message,
+      });
+
       return {
         success: false,
         updated: totalUpdated,
@@ -355,10 +399,11 @@ export class BatchUpdateService {
         }
 
         const result = await executeWithRetry(
-          () => db
-            .update(snipeTargets)
-            .set(updateData)
-            .where(eq(snipeTargets.id, Number(update.id))),
+          () =>
+            db
+              .update(snipeTargets)
+              .set(updateData)
+              .where(eq(snipeTargets.id, Number(update.id))),
           `Update snipe target ${update.id}`
         );
 
@@ -367,7 +412,9 @@ export class BatchUpdateService {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        errors.push(`Failed to update target ${update.id}: ${safeError.message}`);
+        errors.push(
+          `Failed to update target ${update.id}: ${safeError.message}`
+        );
       }
     }
 
@@ -401,10 +448,11 @@ export class BatchUpdateService {
         }
 
         const result = await executeWithRetry(
-          () => db
-            .update(patternEmbeddings)
-            .set(updateData)
-            .where(eq(patternEmbeddings.patternId, update.patternId)),
+          () =>
+            db
+              .update(patternEmbeddings)
+              .set(updateData)
+              .where(eq(patternEmbeddings.patternId, update.patternId)),
           `Update pattern embedding ${update.patternId}`
         );
 
@@ -413,7 +461,9 @@ export class BatchUpdateService {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        errors.push(`Failed to update pattern ${update.patternId}: ${safeError.message}`);
+        errors.push(
+          `Failed to update pattern ${update.patternId}: ${safeError.message}`
+        );
       }
     }
 
@@ -431,20 +481,31 @@ export class BatchUpdateService {
 
     for (let i = 0; i < updates.length; i++) {
       const update = updates[i];
-      
+
       if (!update.id || typeof update.id !== "string") {
         errors.push(`Item ${i}: Invalid id`);
       }
-      
-      if (update.targetPrice !== undefined && (typeof update.targetPrice !== "number" || update.targetPrice <= 0)) {
+
+      if (
+        update.targetPrice !== undefined &&
+        (typeof update.targetPrice !== "number" || update.targetPrice <= 0)
+      ) {
         errors.push(`Item ${i}: Invalid targetPrice (must be positive number)`);
       }
-      
-      if (update.confidence !== undefined && (typeof update.confidence !== "number" || update.confidence < 0 || update.confidence > 100)) {
+
+      if (
+        update.confidence !== undefined &&
+        (typeof update.confidence !== "number" ||
+          update.confidence < 0 ||
+          update.confidence > 100)
+      ) {
         errors.push(`Item ${i}: Invalid confidence (must be 0-100)`);
       }
-      
-      if (update.isActive !== undefined && typeof update.isActive !== "boolean") {
+
+      if (
+        update.isActive !== undefined &&
+        typeof update.isActive !== "boolean"
+      ) {
         errors.push(`Item ${i}: Invalid isActive (must be boolean)`);
       }
     }
@@ -466,20 +527,31 @@ export class BatchUpdateService {
 
     for (let i = 0; i < updates.length; i++) {
       const update = updates[i];
-      
+
       if (!update.patternId || typeof update.patternId !== "string") {
         errors.push(`Item ${i}: Invalid patternId`);
       }
-      
-      if (update.confidence !== undefined && (typeof update.confidence !== "number" || update.confidence < 0 || update.confidence > 100)) {
+
+      if (
+        update.confidence !== undefined &&
+        (typeof update.confidence !== "number" ||
+          update.confidence < 0 ||
+          update.confidence > 100)
+      ) {
         errors.push(`Item ${i}: Invalid confidence (must be 0-100)`);
       }
-      
-      if (update.embedding !== undefined && typeof update.embedding !== "string") {
+
+      if (
+        update.embedding !== undefined &&
+        typeof update.embedding !== "string"
+      ) {
         errors.push(`Item ${i}: Invalid embedding (must be string)`);
       }
-      
-      if (update.patternData !== undefined && typeof update.patternData !== "string") {
+
+      if (
+        update.patternData !== undefined &&
+        typeof update.patternData !== "string"
+      ) {
         errors.push(`Item ${i}: Invalid patternData (must be string)`);
       }
     }

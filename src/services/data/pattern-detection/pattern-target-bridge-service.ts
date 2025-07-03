@@ -42,7 +42,12 @@ export class PatternTargetBridgeService {
     warn: (message: string, context?: any) =>
       console.warn("[pattern-target-bridge]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[pattern-target-bridge]", message, context || "", error || ""),
+      console.error(
+        "[pattern-target-bridge]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[pattern-target-bridge]", message, context || ""),
   };
@@ -91,10 +96,13 @@ export class PatternTargetBridgeService {
     );
 
     this.isListening = true;
-    console.info("Pattern-Target Bridge started - listening for pattern detection events", {
-      defaultUserId,
-      listeningFor: ["ready_state", "advance_opportunities", "pre_ready"],
-    });
+    console.info(
+      "Pattern-Target Bridge started - listening for pattern detection events",
+      {
+        defaultUserId,
+        listeningFor: ["ready_state", "advance_opportunities", "pre_ready"],
+      }
+    );
   }
 
   /**
@@ -106,7 +114,9 @@ export class PatternTargetBridgeService {
       return;
     }
 
-    EnhancedPatternDetectionCore.getInstance().removeAllListeners("patterns_detected");
+    EnhancedPatternDetectionCore.getInstance().removeAllListeners(
+      "patterns_detected"
+    );
     this.isListening = false;
     console.info("Pattern-Target Bridge stopped listening");
   }
@@ -129,7 +139,10 @@ export class PatternTargetBridgeService {
       });
 
       // Filter matches by confidence and pattern type for target creation
-      const eligibleMatches = this.filterEligibleMatches(eventData.matches, eventData.patternType);
+      const eligibleMatches = this.filterEligibleMatches(
+        eventData.matches,
+        eventData.patternType
+      );
 
       if (eligibleMatches.length === 0) {
         console.info("No eligible matches for target creation", {
@@ -142,11 +155,12 @@ export class PatternTargetBridgeService {
       }
 
       // Create snipe targets for eligible matches
-      const targetResults = await patternTargetIntegrationService.createTargetsFromPatterns(
-        eligibleMatches,
-        userId,
-        this.getConfigForPatternType(eventData.patternType)
-      );
+      const targetResults =
+        await patternTargetIntegrationService.createTargetsFromPatterns(
+          eligibleMatches,
+          userId,
+          this.getConfigForPatternType(eventData.patternType)
+        );
 
       // Count successful and failed target creations
       const successfulTargets = targetResults.filter((r) => r.success).length;
@@ -162,7 +176,12 @@ export class PatternTargetBridgeService {
       });
 
       // Update statistics
-      this.updateStatistics(eventData, successfulTargets, failedTargets, Date.now() - startTime);
+      this.updateStatistics(
+        eventData,
+        successfulTargets,
+        failedTargets,
+        Date.now() - startTime
+      );
 
       // Log target details for monitoring
       if (successfulTargets > 0) {
@@ -174,7 +193,8 @@ export class PatternTargetBridgeService {
           patternType: eventData.patternType,
           targetIds,
           count: successfulTargets,
-          nextStep: "Auto-sniping orchestrator will pick up these targets automatically",
+          nextStep:
+            "Auto-sniping orchestrator will pick up these targets automatically",
         });
       }
 
@@ -203,14 +223,22 @@ export class PatternTargetBridgeService {
       );
 
       // Update failure statistics
-      this.updateStatistics(eventData, 0, eventData.matches.length, Date.now() - startTime);
+      this.updateStatistics(
+        eventData,
+        0,
+        eventData.matches.length,
+        Date.now() - startTime
+      );
     }
   }
 
   /**
    * Filter matches that are eligible for automatic target creation
    */
-  private filterEligibleMatches(matches: PatternMatch[], patternType: string): PatternMatch[] {
+  private filterEligibleMatches(
+    matches: PatternMatch[],
+    patternType: string
+  ): PatternMatch[] {
     return matches.filter((match) => {
       // Pattern-specific confidence thresholds
       const minConfidence = this.getMinConfidenceForPatternType(patternType);
@@ -227,11 +255,16 @@ export class PatternTargetBridgeService {
 
         case "advance_opportunities":
           // Advance opportunities should have sufficient advance notice
-          return match.advanceNoticeHours >= 1 && match.advanceNoticeHours <= 72;
+          return (
+            match.advanceNoticeHours >= 1 && match.advanceNoticeHours <= 72
+          );
 
         case "pre_ready":
           // Pre-ready patterns should be worth monitoring
-          return match.recommendation === "monitor_closely" && match.advanceNoticeHours <= 12;
+          return (
+            match.recommendation === "monitor_closely" &&
+            match.advanceNoticeHours <= 12
+          );
 
         default:
           return true;
@@ -323,7 +356,8 @@ export class PatternTargetBridgeService {
       this.processingTimes = this.processingTimes.slice(-50); // Keep last 50 measurements
     }
     this.stats.averageProcessingTime =
-      this.processingTimes.reduce((sum, time) => sum + time, 0) / this.processingTimes.length;
+      this.processingTimes.reduce((sum, time) => sum + time, 0) /
+      this.processingTimes.length;
   }
 
   /**
@@ -377,4 +411,5 @@ export class PatternTargetBridgeService {
 }
 
 // Export singleton instance
-export const patternTargetBridgeService = PatternTargetBridgeService.getInstance();
+export const patternTargetBridgeService =
+  PatternTargetBridgeService.getInstance();

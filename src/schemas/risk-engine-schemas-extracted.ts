@@ -101,7 +101,7 @@ export const PortfolioRiskMetricsSchema = z.object({
 
   // Timestamp for data validity (accept both string and number)
   timestamp: z.union([z.string(), z.number()]).transform((val) => {
-    return typeof val === 'number' ? val.toString() : val;
+    return typeof val === "number" ? val.toString() : val;
   }),
 });
 
@@ -212,14 +212,18 @@ export function validateMarketConditions(data: unknown): MarketConditions {
 /**
  * Validate position risk profile data
  */
-export function validatePositionRiskProfile(data: unknown): PositionRiskProfile {
+export function validatePositionRiskProfile(
+  data: unknown
+): PositionRiskProfile {
   return PositionRiskProfileSchema.parse(data);
 }
 
 /**
  * Validate portfolio risk metrics data
  */
-export function validatePortfolioRiskMetrics(data: unknown): PortfolioRiskMetrics {
+export function validatePortfolioRiskMetrics(
+  data: unknown
+): PortfolioRiskMetrics {
   return PortfolioRiskMetricsSchema.parse(data);
 }
 

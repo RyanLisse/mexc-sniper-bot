@@ -77,13 +77,18 @@ function getLogger(): {
   return _logger;
 }
 
-export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void {
+export function logSecurityEvent(
+  event: Omit<SecurityEvent, "timestamp">
+): void {
   const securityEvent: SecurityEvent = {
     ...event,
     timestamp: Date.now(),
   };
 
-  getLogger().debug(`Logging security event: ${securityEvent.type}`, securityEvent);
+  getLogger().debug(
+    `Logging security event: ${securityEvent.type}`,
+    securityEvent
+  );
   securityEvents.push(securityEvent);
 
   // Keep only last 1000 events to prevent memory bloat
@@ -92,14 +97,20 @@ export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void 
   }
 
   // Log to console for monitoring (in production, send to logging service)
-  getLogger().info(`[SECURITY] ${event.type}: ${event.ip} -> ${event.endpoint}`, {
-    timestamp: new Date(securityEvent.timestamp).toISOString(),
-    ...event.metadata,
-  });
+  getLogger().info(
+    `[SECURITY] ${event.type}: ${event.ip} -> ${event.endpoint}`,
+    {
+      timestamp: new Date(securityEvent.timestamp).toISOString(),
+      ...event.metadata,
+    }
+  );
 }
 
 // Get security events for monitoring
-export function getSecurityEvents(limit = 100, type?: SecurityEvent["type"]): SecurityEvent[] {
+export function getSecurityEvents(
+  limit = 100,
+  type?: SecurityEvent["type"]
+): SecurityEvent[] {
   let events = securityEvents.slice(-limit);
 
   if (type) {
@@ -134,10 +145,15 @@ export async function checkRateLimit(
   // First check adaptive rate limiter for intelligent throttling
   let adaptiveResult;
   try {
-    adaptiveResult = await adaptiveRateLimiter.checkRateLimit(endpoint, userId, userAgent, {
-      ip,
-      limitType,
-    });
+    adaptiveResult = await adaptiveRateLimiter.checkRateLimit(
+      endpoint,
+      userId,
+      userAgent,
+      {
+        ip,
+        limitType,
+      }
+    );
 
     // If adaptive rate limiter blocks, respect it
     if (!adaptiveResult.allowed) {
@@ -361,7 +377,7 @@ export function getRateLimitStats(): {
   topOffenders: Array<{ ip: string; violations: number }>;
 } {
   const now = Date.now();
-  const oneHourAgo = now - 60 * 60 * 1000;
+  const _oneHourAgo = now - 60 * 60 * 1000;
 
   // Count recent violations
   const recentViolations = securityEvents.filter(
@@ -391,13 +407,13 @@ export function getRateLimitStats(): {
 
 export function isIPSuspicious(ip: string): boolean {
   const now = Date.now();
-  const oneHourAgo = now - 60 * 60 * 1000;
+  const _oneHourAgo = now - 60 * 60 * 1000;
 
-  const recentEvents = securityEvents.filter(
-    (event) => event.ip === ip
-  );
+  const recentEvents = securityEvents.filter((event) => event.ip === ip);
 
-  const violations = recentEvents.filter((event) => event.type === "RATE_LIMIT_EXCEEDED").length;
+  const violations = recentEvents.filter(
+    (event) => event.type === "RATE_LIMIT_EXCEEDED"
+  ).length;
 
   const suspiciousActivity = recentEvents.filter(
     (event) => event.type === "SUSPICIOUS_ACTIVITY"
@@ -417,18 +433,22 @@ export function getIPAnalysis(ip: string): {
   isCurrentlyLimited: boolean;
 } {
   const now = Date.now();
-  const oneHourAgo = now - 60 * 60 * 1000;
+  const _oneHourAgo = now - 60 * 60 * 1000;
 
-  const recentEvents = securityEvents.filter(
-    (event) => event.ip === ip
-  );
+  const recentEvents = securityEvents.filter((event) => event.ip === ip);
 
-  const totalAttempts = recentEvents.filter((event) => event.type === "AUTH_ATTEMPT").length;
+  const totalAttempts = recentEvents.filter(
+    (event) => event.type === "AUTH_ATTEMPT"
+  ).length;
 
-  const violations = recentEvents.filter((event) => event.type === "RATE_LIMIT_EXCEEDED").length;
+  const violations = recentEvents.filter(
+    (event) => event.type === "RATE_LIMIT_EXCEEDED"
+  ).length;
 
   const lastActivity =
-    recentEvents.length > 0 ? Math.max(...recentEvents.map((e) => e.timestamp)) : null;
+    recentEvents.length > 0
+      ? Math.max(...recentEvents.map((e) => e.timestamp))
+      : null;
 
   // Check if currently rate limited (check common auth endpoints)
   const authEndpoints = ["/api/auth", "/auth", "/login"];
@@ -437,7 +457,11 @@ export function getIPAnalysis(ip: string): {
   for (const endpoint of authEndpoints) {
     const authKey = getRateLimitKey(ip, endpoint);
     const entry = requestCounts.get(authKey);
-    if (entry && entry.count > RATE_LIMITS.auth.maxRequests && now < entry.resetTime) {
+    if (
+      entry &&
+      entry.count > RATE_LIMITS.auth.maxRequests &&
+      now < entry.resetTime
+    ) {
       isCurrentlyLimited = true;
       break;
     }
@@ -445,7 +469,10 @@ export function getIPAnalysis(ip: string): {
 
   // Determine risk level
   let riskLevel: "low" | "medium" | "high" = "low";
-  if (violations > 5 || recentEvents.some((e) => e.type === "SUSPICIOUS_ACTIVITY")) {
+  if (
+    violations > 5 ||
+    recentEvents.some((e) => e.type === "SUSPICIOUS_ACTIVITY")
+  ) {
     riskLevel = "high";
   } else if (violations > 2 || totalAttempts > 50) {
     riskLevel = "medium";
@@ -468,7 +495,9 @@ if (typeof window === "undefined") {
 
       // Also cleanup old security events (keep only last 24 hours)
       const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-      const eventsToKeep = securityEvents.filter((event) => event.timestamp > oneDayAgo);
+      const eventsToKeep = securityEvents.filter(
+        (event) => event.timestamp > oneDayAgo
+      );
       securityEvents.length = 0;
       securityEvents.push(...eventsToKeep);
     },

@@ -10,15 +10,21 @@ function Dialog({ ...props }: ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function DialogTrigger({ ...props }: ComponentProps<typeof DialogPrimitive.Trigger>) {
+function DialogTrigger({
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Trigger>) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
 }
 
-function DialogPortal({ ...props }: ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal({
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Portal>) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
 }
 
-function DialogClose({ ...props }: ComponentProps<typeof DialogPrimitive.Close>) {
+function DialogClose({
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Close>) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
@@ -86,13 +92,19 @@ function DialogFooter({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn("flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
+      className={cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      )}
       {...props}
     />
   );
 }
 
-function DialogTitle({ className, ...props }: ComponentProps<typeof DialogPrimitive.Title>) {
+function DialogTitle({
+  className,
+  ...props
+}: ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"

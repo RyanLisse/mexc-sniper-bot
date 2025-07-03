@@ -24,7 +24,7 @@ class EnhancedAgentCache {
   private cache: Map<string, AgentCacheEntry> = new Map();
   private stats = {
     hits: 0,
-    misses: 0
+    misses: 0,
   };
   private defaultTtl = 10 * 60 * 1000; // 10 minutes
   private maxSize = 500;
@@ -41,7 +41,7 @@ class EnhancedAgentCache {
       timestamp: Date.now(),
       ttl: ttl || this.defaultTtl,
       lastAccessed: Date.now(),
-      accessCount: 0
+      accessCount: 0,
     };
 
     this.cache.set(key, entry);
@@ -49,7 +49,7 @@ class EnhancedAgentCache {
 
   get(key: string): any | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.stats.misses++;
       return null;
@@ -72,7 +72,7 @@ class EnhancedAgentCache {
 
   has(key: string): boolean {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return false;
     }
@@ -111,7 +111,7 @@ class EnhancedAgentCache {
       hitRate: total > 0 ? (this.stats.hits / total) * 100 : 0,
       missRate: total > 0 ? (this.stats.misses / total) * 100 : 0,
       totalHits: this.stats.hits,
-      totalMisses: this.stats.misses
+      totalMisses: this.stats.misses,
     };
   }
 

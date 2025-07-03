@@ -56,13 +56,30 @@ export class AutomatedAlertingService {
       try {
         this._logger = {
           info: (message: string, context?: any) =>
-            console.info("[automated-alerting-service]", message, context || ""),
+            console.info(
+              "[automated-alerting-service]",
+              message,
+              context || ""
+            ),
           warn: (message: string, context?: any) =>
-            console.warn("[automated-alerting-service]", message, context || ""),
+            console.warn(
+              "[automated-alerting-service]",
+              message,
+              context || ""
+            ),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[automated-alerting-service]", message, context || "", error || ""),
+            console.error(
+              "[automated-alerting-service]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
-            console.debug("[automated-alerting-service]", message, context || ""),
+            console.debug(
+              "[automated-alerting-service]",
+              message,
+              context || ""
+            ),
         };
       } catch (_error) {
         this._logger = {
@@ -205,7 +222,10 @@ export class AutomatedAlertingService {
       console.info("Starting alert evaluation cycle...");
 
       // Get all enabled alert rules
-      const rules = await this.db.select().from(alertRules).where(eq(alertRules.isEnabled, true));
+      const rules = await this.db
+        .select()
+        .from(alertRules)
+        .where(eq(alertRules.isEnabled, true));
 
       console.info(`Evaluating ${rules.length} alert rules`);
 
@@ -234,19 +254,30 @@ export class AutomatedAlertingService {
     const rules = await this.db
       .select()
       .from(alertRules)
-      .where(and(eq(alertRules.isEnabled, true), eq(alertRules.metricName, metric.name)));
+      .where(
+        and(
+          eq(alertRules.isEnabled, true),
+          eq(alertRules.metricName, metric.name)
+        )
+      );
 
     for (const rule of rules) {
       await this.evaluateRule(rule, metric);
     }
   }
 
-  private async evaluateRule(rule: SelectAlertRule, providedMetric?: AlertMetric): Promise<void> {
+  private async evaluateRule(
+    rule: SelectAlertRule,
+    providedMetric?: AlertMetric
+  ): Promise<void> {
     try {
       // Get metric data
       const metrics = providedMetric
         ? [providedMetric]
-        : await this.getMetricData(rule.metricName, rule.aggregationWindow || 3600);
+        : await this.getMetricData(
+            rule.metricName,
+            rule.aggregationWindow || 3600
+          );
 
       if (metrics.length === 0) {
         return; // No data to evaluate
@@ -292,7 +323,11 @@ export class AutomatedAlertingService {
 
     // Standard threshold evaluation
     if (rule.operator && rule.threshold !== null) {
-      const thresholdMet = this.evaluateThreshold(metric.value, rule.operator, rule.threshold);
+      const thresholdMet = this.evaluateThreshold(
+        metric.value,
+        rule.operator,
+        rule.threshold
+      );
 
       if (thresholdMet) {
         result.shouldAlert = true;
@@ -327,7 +362,11 @@ export class AutomatedAlertingService {
     return result;
   }
 
-  private evaluateThreshold(value: number, operator: string, threshold: number): boolean {
+  private evaluateThreshold(
+    value: number,
+    operator: string,
+    threshold: number
+  ): boolean {
     switch (operator) {
       case "gt":
         return value > threshold;
@@ -399,7 +438,8 @@ export class AutomatedAlertingService {
 
     // Check for correlation
     if (this.config.enableCorrelation) {
-      const correlationId = await this.correlationEngine.findCorrelation(alertData);
+      const correlationId =
+        await this.correlationEngine.findCorrelation(alertData);
       if (correlationId) {
         alertData.correlationId = correlationId;
       }
@@ -440,7 +480,10 @@ export class AutomatedAlertingService {
       .where(eq(alertInstances.id, existingAlert.id));
   }
 
-  private async checkAlertResolution(rule: SelectAlertRule, metric: AlertMetric): Promise<void> {
+  private async checkAlertResolution(
+    rule: SelectAlertRule,
+    metric: AlertMetric
+  ): Promise<void> {
     const activeAlerts = await this.db
       .select()
       .from(alertInstances)
@@ -458,12 +501,20 @@ export class AutomatedAlertingService {
       const evaluation = await this.evaluateMetricAgainstRule(metric, rule);
 
       if (!evaluation.shouldAlert) {
-        await this.resolveAlert(alert.id, "auto_resolved", "Conditions no longer met");
+        await this.resolveAlert(
+          alert.id,
+          "auto_resolved",
+          "Conditions no longer met"
+        );
       }
     }
   }
 
-  async resolveAlert(alertId: string, resolvedBy: string, notes?: string): Promise<void> {
+  async resolveAlert(
+    alertId: string,
+    resolvedBy: string,
+    notes?: string
+  ): Promise<void> {
     const now = new Date();
 
     await this.db
@@ -558,8 +609,12 @@ export class AutomatedAlertingService {
       name,
       reason,
       ruleIds: filters.ruleIds ? JSON.stringify(filters.ruleIds) : null,
-      categoryFilter: filters.categories ? JSON.stringify(filters.categories) : null,
-      severityFilter: filters.severities ? JSON.stringify(filters.severities) : null,
+      categoryFilter: filters.categories
+        ? JSON.stringify(filters.categories)
+        : null,
+      severityFilter: filters.severities
+        ? JSON.stringify(filters.severities)
+        : null,
       sourceFilter: filters.sources ? JSON.stringify(filters.sources) : null,
       tagFilter: filters.tags ? JSON.stringify(filters.tags) : null,
       startsAt,
@@ -584,7 +639,10 @@ export class AutomatedAlertingService {
       .select({ count: count() })
       .from(alertInstances)
       .where(
-        and(eq(alertInstances.ruleId, rule.id), gte(alertInstances.firstTriggeredAt, oneHourAgo))
+        and(
+          eq(alertInstances.ruleId, rule.id),
+          gte(alertInstances.firstTriggeredAt, oneHourAgo)
+        )
       );
 
     const alertCount = recentAlerts[0]?.count || 0;
@@ -645,17 +703,24 @@ export class AutomatedAlertingService {
 
     return {
       totalAlerts: alerts.length,
-      criticalAlerts: alerts.filter((a: any) => a.severity === "critical").length,
+      criticalAlerts: alerts.filter((a: any) => a.severity === "critical")
+        .length,
       highAlerts: alerts.filter((a: any) => a.severity === "high").length,
       mediumAlerts: alerts.filter((a: any) => a.severity === "medium").length,
       lowAlerts: alerts.filter((a: any) => a.severity === "low").length,
       resolvedAlerts: resolved.length,
-      averageResolutionTime: resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
+      averageResolutionTime:
+        resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
       mttr: resolved.length > 0 ? totalResolutionTime / resolved.length : 0,
-      tradingAlerts: alerts.filter((a: any) => a.source.includes("trading")).length,
-      safetyAlerts: alerts.filter((a: any) => a.source.includes("safety")).length,
-      performanceAlerts: alerts.filter((a: any) => a.source.includes("performance")).length,
-      systemAlerts: alerts.filter((a: any) => a.source.includes("system")).length,
+      tradingAlerts: alerts.filter((a: any) => a.source.includes("trading"))
+        .length,
+      safetyAlerts: alerts.filter((a: any) => a.source.includes("safety"))
+        .length,
+      performanceAlerts: alerts.filter((a: any) =>
+        a.source.includes("performance")
+      ).length,
+      systemAlerts: alerts.filter((a: any) => a.source.includes("system"))
+        .length,
       agentAlerts: alerts.filter((a: any) => a.source.includes("agent")).length,
     };
   }
@@ -664,7 +729,10 @@ export class AutomatedAlertingService {
   // UTILITY METHODS
   // ==========================================
 
-  private async getMetricData(metricName: string, windowSeconds: number): Promise<AlertMetric[]> {
+  private async getMetricData(
+    metricName: string,
+    windowSeconds: number
+  ): Promise<AlertMetric[]> {
     const cutoff = Date.now() - windowSeconds * 1000;
     const metrics: AlertMetric[] = [];
 
@@ -696,7 +764,11 @@ export class AutomatedAlertingService {
           const systemMetrics = JSON.parse(row.system_metrics as string);
 
           // Search for the metric in different metric categories
-          const allMetrics = { ...agentMetrics, ...workflowMetrics, ...systemMetrics };
+          const allMetrics = {
+            ...agentMetrics,
+            ...workflowMetrics,
+            ...systemMetrics,
+          };
 
           if (allMetrics[metricName]) {
             metrics.push({
@@ -704,7 +776,9 @@ export class AutomatedAlertingService {
               timestamp: new Date(row.timestamp as string).getTime(),
               value:
                 typeof allMetrics[metricName] === "object"
-                  ? allMetrics[metricName].value || allMetrics[metricName].average || 0
+                  ? allMetrics[metricName].value ||
+                    allMetrics[metricName].average ||
+                    0
                   : allMetrics[metricName],
               source: "database",
               additionalData: {
@@ -718,7 +792,10 @@ export class AutomatedAlertingService {
             });
           }
         } catch (parseError) {
-          this.logger.warn(`Failed to parse historical metrics data:`, parseError);
+          this.logger.warn(
+            `Failed to parse historical metrics data:`,
+            parseError
+          );
         }
       }
 
@@ -726,7 +803,10 @@ export class AutomatedAlertingService {
         `Retrieved ${metrics.length} metrics for ${metricName} (${historicalData.rows.length} from database)`
       );
     } catch (error) {
-      this.logger.warn(`Failed to retrieve historical metrics for ${metricName}:`, error);
+      this.logger.warn(
+        `Failed to retrieve historical metrics for ${metricName}:`,
+        error
+      );
     }
 
     return metrics.sort((a, b) => a.timestamp - b.timestamp);
@@ -744,7 +824,10 @@ export class AutomatedAlertingService {
     return `${rule.name}: ${metric.name} is ${metric.value} (threshold: ${rule.operator} ${rule.threshold})`;
   }
 
-  private generateAlertDescription(metric: AlertMetric, rule: SelectAlertRule): string {
+  private generateAlertDescription(
+    metric: AlertMetric,
+    rule: SelectAlertRule
+  ): string {
     return (
       `Alert triggered for metric ${metric.name} from source ${metric.source}. ` +
       `Current value: ${metric.value}. Rule: ${rule.description || rule.name}`
@@ -764,7 +847,12 @@ export class AutomatedAlertingService {
     let query = this.db
       .select()
       .from(alertInstances)
-      .where(and(eq(alertInstances.status, "firing"), isNull(alertInstances.resolvedAt)))
+      .where(
+        and(
+          eq(alertInstances.status, "firing"),
+          isNull(alertInstances.resolvedAt)
+        )
+      )
       .orderBy(desc(alertInstances.firstTriggeredAt));
 
     if (filters?.limit) {

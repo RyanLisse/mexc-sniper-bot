@@ -45,7 +45,12 @@ export class SystemReadinessValidator {
     warn: (message: string, context?: any) =>
       console.warn("[system-readiness-validator]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[system-readiness-validator]", message, context || "", error || ""),
+      console.error(
+        "[system-readiness-validator]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[system-readiness-validator]", message, context || ""),
   };
@@ -66,7 +71,9 @@ export class SystemReadinessValidator {
     const timestamp = new Date().toISOString();
     const checks: SystemReadinessCheck[] = [];
 
-    console.info("[SystemValidator] Starting comprehensive system validation...");
+    console.info(
+      "[SystemValidator] Starting comprehensive system validation..."
+    );
 
     // 1. Environment Configuration Validation
     const envChecks = await this.validateEnvironmentConfiguration();
@@ -98,12 +105,15 @@ export class SystemReadinessValidator {
       passed: checks.filter((c) => c.status === "pass").length,
       warnings: checks.filter((c) => c.status === "warning").length,
       failures: checks.filter((c) => c.status === "fail").length,
-      requiredPassed: checks.filter((c) => c.required && c.status === "pass").length,
+      requiredPassed: checks.filter((c) => c.required && c.status === "pass")
+        .length,
       requiredTotal: checks.filter((c) => c.required).length,
     };
 
     // Determine overall status
-    const criticalFailures = checks.filter((c) => c.required && c.status === "fail");
+    const criticalFailures = checks.filter(
+      (c) => c.required && c.status === "fail"
+    );
     const hasWarnings = checks.filter((c) => c.status === "warning").length > 0;
 
     let overall: "ready" | "issues" | "critical_failure" = "ready";
@@ -143,7 +153,9 @@ export class SystemReadinessValidator {
   /**
    * Validate environment configuration
    */
-  private async validateEnvironmentConfiguration(): Promise<SystemReadinessCheck[]> {
+  private async validateEnvironmentConfiguration(): Promise<
+    SystemReadinessCheck[]
+  > {
     const checks: SystemReadinessCheck[] = [];
 
     try {
@@ -176,7 +188,10 @@ export class SystemReadinessValidator {
         checks.push({
           component: `Environment Variable: ${varName}`,
           status: varResult?.status === "configured" ? "pass" : "fail",
-          message: varResult?.status === "configured" ? "Configured" : "Missing or invalid",
+          message:
+            varResult?.status === "configured"
+              ? "Configured"
+              : "Missing or invalid",
           required: true,
           fixable: true,
           fix: `Set ${varName} in .env.local file`,
@@ -224,7 +239,10 @@ export class SystemReadinessValidator {
       checks.push({
         component: "Database Connection",
         status: response.ok && data.success ? "pass" : "fail",
-        message: response.ok && data.success ? "Database connected" : "Database connection failed",
+        message:
+          response.ok && data.success
+            ? "Database connected"
+            : "Database connection failed",
         details: data.message || "No details available",
         required: true,
         fixable: true,
@@ -262,7 +280,9 @@ export class SystemReadinessValidator {
         component: "MEXC Network Connectivity",
         status: data.connected ? "pass" : "fail",
         message: data.connected ? "MEXC API reachable" : "MEXC API unreachable",
-        details: data.error || `Connection health: ${data.details?.connectionHealth || "unknown"}`,
+        details:
+          data.error ||
+          `Connection health: ${data.details?.connectionHealth || "unknown"}`,
         required: true,
         fixable: true,
         fix: "Check internet connection and MEXC API status",
@@ -271,7 +291,11 @@ export class SystemReadinessValidator {
       // API credentials
       checks.push({
         component: "MEXC API Credentials",
-        status: data.hasCredentials ? (data.credentialsValid ? "pass" : "fail") : "warning",
+        status: data.hasCredentials
+          ? data.credentialsValid
+            ? "pass"
+            : "fail"
+          : "warning",
         message: !data.hasCredentials
           ? "No credentials configured"
           : data.credentialsValid
@@ -300,7 +324,9 @@ export class SystemReadinessValidator {
   /**
    * Validate authentication system
    */
-  private async validateAuthenticationSystem(): Promise<SystemReadinessCheck[]> {
+  private async validateAuthenticationSystem(): Promise<
+    SystemReadinessCheck[]
+  > {
     const checks: SystemReadinessCheck[] = [];
 
     try {
@@ -312,7 +338,10 @@ export class SystemReadinessValidator {
       checks.push({
         component: "Authentication System",
         status: response.ok && data.success ? "pass" : "fail",
-        message: response.ok && data.success ? "Authentication working" : "Authentication issues",
+        message:
+          response.ok && data.success
+            ? "Authentication working"
+            : "Authentication issues",
         details: data.message || "No details available",
         required: true,
         fixable: true,
@@ -348,7 +377,10 @@ export class SystemReadinessValidator {
       checks.push({
         component: "System Health",
         status: response.ok && data.success ? "pass" : "fail",
-        message: response.ok && data.success ? "All systems operational" : "System health issues",
+        message:
+          response.ok && data.success
+            ? "All systems operational"
+            : "System health issues",
         details: data.message || "No details available",
         required: true,
         fixable: true,
@@ -372,11 +404,15 @@ export class SystemReadinessValidator {
   /**
    * Validate auto-sniping specific configuration
    */
-  private async validateAutoSnipingConfiguration(): Promise<SystemReadinessCheck[]> {
+  private async validateAutoSnipingConfiguration(): Promise<
+    SystemReadinessCheck[]
+  > {
     const checks: SystemReadinessCheck[] = [];
 
     try {
-      console.info("[SystemValidator] Validating auto-sniping configuration...");
+      console.info(
+        "[SystemValidator] Validating auto-sniping configuration..."
+      );
 
       // Check if auto-sniping is enabled
       const autoSnipingEnabled = process.env.AUTO_SNIPING_ENABLED === "true";
@@ -384,7 +420,9 @@ export class SystemReadinessValidator {
       checks.push({
         component: "Auto-Sniping Enable Flag",
         status: autoSnipingEnabled ? "pass" : "fail",
-        message: autoSnipingEnabled ? "Auto-sniping enabled" : "Auto-sniping disabled",
+        message: autoSnipingEnabled
+          ? "Auto-sniping enabled"
+          : "Auto-sniping disabled",
         required: true,
         fixable: true,
         fix: 'Set AUTO_SNIPING_ENABLED="true" in environment variables',
@@ -398,7 +436,9 @@ export class SystemReadinessValidator {
         component: "Auto-Sniping Configuration",
         status: configResponse.ok && configData.success ? "pass" : "warning",
         message:
-          configResponse.ok && configData.success ? "Configuration valid" : "Configuration issues",
+          configResponse.ok && configData.success
+            ? "Configuration valid"
+            : "Configuration issues",
         details: configData.message || "No configuration details available",
         required: false,
         fixable: true,
@@ -425,11 +465,15 @@ export class SystemReadinessValidator {
   private generateRecommendations(checks: SystemReadinessCheck[]): string[] {
     const recommendations: string[] = [];
 
-    const failedRequired = checks.filter((c) => c.required && c.status === "fail");
+    const failedRequired = checks.filter(
+      (c) => c.required && c.status === "fail"
+    );
     const warnings = checks.filter((c) => c.status === "warning");
 
     if (failedRequired.length > 0) {
-      recommendations.push("Address critical system failures before enabling auto-sniping");
+      recommendations.push(
+        "Address critical system failures before enabling auto-sniping"
+      );
       failedRequired.forEach((check) => {
         if (check.fix) {
           recommendations.push(`${check.component}: ${check.fix}`);
@@ -438,7 +482,9 @@ export class SystemReadinessValidator {
     }
 
     if (warnings.length > 0) {
-      recommendations.push("Consider addressing warnings for optimal system performance");
+      recommendations.push(
+        "Consider addressing warnings for optimal system performance"
+      );
     }
 
     const envIssues = checks.filter((c) => c.component.includes("Environment"));
@@ -470,7 +516,9 @@ export class SystemReadinessValidator {
     } else {
       nextSteps.push("❌ System is not ready for auto-sniping");
 
-      const criticalIssues = checks.filter((c) => c.required && c.status === "fail");
+      const criticalIssues = checks.filter(
+        (c) => c.required && c.status === "fail"
+      );
       if (criticalIssues.length > 0) {
         nextSteps.push(`Fix ${criticalIssues.length} critical issue(s) first`);
         criticalIssues.slice(0, 3).forEach((issue) => {

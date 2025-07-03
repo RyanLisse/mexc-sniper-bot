@@ -17,7 +17,9 @@ export class MonitoringPlanCreator {
   /**
    * Create comprehensive monitoring plan from patterns
    */
-  static async createMonitoringPlan(patterns: PatternMatch[]): Promise<MonitoringPlan> {
+  static async createMonitoringPlan(
+    patterns: PatternMatch[]
+  ): Promise<MonitoringPlan> {
     const targets: MonitoringTarget[] = [];
     const schedules: MonitoringSchedule[] = [];
     const alerts: AlertConfiguration[] = [];
@@ -40,7 +42,8 @@ export class MonitoringPlanCreator {
       schedules.push({
         vcoinId: pattern.vcoinId || pattern.symbol,
         intervals: MonitoringPlanCreator.calculateMonitoringIntervals(pattern),
-        escalationTriggers: MonitoringPlanCreator.generateEscalationTriggers(pattern),
+        escalationTriggers:
+          MonitoringPlanCreator.generateEscalationTriggers(pattern),
       });
 
       // Create alert configuration
@@ -72,7 +75,9 @@ export class MonitoringPlanCreator {
   /**
    * Determine monitoring priority
    */
-  private static determinePriority(pattern: PatternMatch): MonitoringTarget["priority"] {
+  private static determinePriority(
+    pattern: PatternMatch
+  ): MonitoringTarget["priority"] {
     if (pattern.patternType === "ready_state" && pattern.confidence >= 85) {
       return "critical";
     }

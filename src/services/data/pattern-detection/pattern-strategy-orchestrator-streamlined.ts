@@ -5,7 +5,10 @@
  */
 
 import { and, desc, eq, gte } from "drizzle-orm";
-import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
+import {
+  PatternDetectionCore,
+  type PatternMatch,
+} from "@/src/core/pattern-detection";
 import { db } from "@/src/db";
 import { monitoredListings } from "@/src/db/schemas/patterns";
 import { createConsoleLogger } from "@/src/lib/shared/console-logger";
@@ -69,26 +72,41 @@ interface MonitoringRecommendation {
 class MonitoringPlanCreator {
   static createMonitoringPlan(patterns: PatternMatch[]): MonitoringPlan {
     const recommendations: MonitoringRecommendation[] = [];
-    
+
     for (const pattern of patterns) {
       const recommendation: MonitoringRecommendation = {
-        action: pattern.confidence >= 85 ? "execute" : pattern.confidence >= 70 ? "monitor" : "ignore",
+        action:
+          pattern.confidence >= 85
+            ? "execute"
+            : pattern.confidence >= 70
+              ? "monitor"
+              : "ignore",
         symbol: pattern.symbol,
-        priority: pattern.confidence >= 85 ? "high" : pattern.confidence >= 70 ? "medium" : "low",
+        priority:
+          pattern.confidence >= 85
+            ? "high"
+            : pattern.confidence >= 70
+              ? "medium"
+              : "low",
         reasoning: `Pattern ${pattern.patternType} detected with ${pattern.confidence}% confidence`,
         confidence: pattern.confidence,
-        timeframe: pattern.advanceNoticeHours || 1
+        timeframe: pattern.advanceNoticeHours || 1,
       };
       recommendations.push(recommendation);
     }
-    
+
     return {
       patterns: patterns.length,
       recommendations,
       status: "active",
       createdAt: new Date(),
-      priority: recommendations.some(r => r.priority === "high") ? "high" : "medium",
-      estimatedDuration: Math.max(...recommendations.map(r => r.timeframe), 1)
+      priority: recommendations.some((r) => r.priority === "high")
+        ? "high"
+        : "medium",
+      estimatedDuration: Math.max(
+        ...recommendations.map((r) => r.timeframe),
+        1
+      ),
     };
   }
 }
@@ -115,38 +133,55 @@ interface TradingRecommendation {
 }
 
 class StrategicRecommendationGenerator {
-  static generateStrategicRecommendations(patterns: PatternMatch[], type: string): StrategicRecommendation {
+  static generateStrategicRecommendations(
+    patterns: PatternMatch[],
+    type: string
+  ): StrategicRecommendation {
     const recommendations: TradingRecommendation[] = [];
     let totalConfidence = 0;
-    
+
     for (const pattern of patterns) {
       const recommendation: TradingRecommendation = {
         symbol: pattern.symbol,
-        action: this.determineAction(pattern, type),
+        action: StrategicRecommendationGenerator.determineAction(pattern, type),
         confidence: pattern.confidence,
-        positionSize: this.determinePositionSize(pattern.confidence, pattern.riskLevel),
-        reasoning: this.generateReasoning(pattern, type),
+        positionSize: StrategicRecommendationGenerator.determinePositionSize(
+          pattern.confidence,
+          pattern.riskLevel
+        ),
+        reasoning: StrategicRecommendationGenerator.generateReasoning(
+          pattern,
+          type
+        ),
         riskLevel: pattern.riskLevel || "medium",
-        entryStrategy: this.generateEntryStrategy(pattern),
-        exitStrategy: this.generateExitStrategy(pattern)
+        entryStrategy:
+          StrategicRecommendationGenerator.generateEntryStrategy(pattern),
+        exitStrategy:
+          StrategicRecommendationGenerator.generateExitStrategy(pattern),
       };
       recommendations.push(recommendation);
       totalConfidence += pattern.confidence;
     }
-    
-    const avgConfidence = patterns.length > 0 ? totalConfidence / patterns.length : 0;
-    
+
+    const avgConfidence =
+      patterns.length > 0 ? totalConfidence / patterns.length : 0;
+
     return {
       type,
       patterns: patterns.length,
       recommendations,
       confidence: Math.round(avgConfidence),
-      riskAssessment: this.assessOverallRisk(patterns),
-      estimatedProfitability: this.estimateProfitability(patterns)
+      riskAssessment:
+        StrategicRecommendationGenerator.assessOverallRisk(patterns),
+      estimatedProfitability:
+        StrategicRecommendationGenerator.estimateProfitability(patterns),
     };
   }
-  
-  private static determineAction(pattern: PatternMatch, type: string): "buy" | "sell" | "hold" | "monitor" {
+
+  private static determineAction(
+    pattern: PatternMatch,
+    _type: string
+  ): "buy" | "sell" | "hold" | "monitor" {
     if (pattern.patternType === "ready_state" && pattern.confidence >= 85) {
       return "buy";
     }
@@ -158,17 +193,23 @@ class StrategicRecommendationGenerator {
     }
     return "hold";
   }
-  
-  private static determinePositionSize(confidence: number, riskLevel: string): "small" | "medium" | "large" {
+
+  private static determinePositionSize(
+    confidence: number,
+    riskLevel: string
+  ): "small" | "medium" | "large" {
     if (confidence >= 90 && riskLevel === "low") return "large";
     if (confidence >= 80 && riskLevel !== "high") return "medium";
     return "small";
   }
-  
-  private static generateReasoning(pattern: PatternMatch, type: string): string {
-    return `${pattern.patternType} pattern detected with ${pattern.confidence}% confidence. ${pattern.recommendation || 'Monitor closely'}.`;
+
+  private static generateReasoning(
+    pattern: PatternMatch,
+    _type: string
+  ): string {
+    return `${pattern.patternType} pattern detected with ${pattern.confidence}% confidence. ${pattern.recommendation || "Monitor closely"}.`;
   }
-  
+
   private static generateEntryStrategy(pattern: PatternMatch): string {
     if (pattern.patternType === "ready_state") {
       return "Immediate market entry with tight stop-loss";
@@ -178,53 +219,57 @@ class StrategicRecommendationGenerator {
     }
     return "Monitor for confirmation signals before entry";
   }
-  
+
   private static generateExitStrategy(pattern: PatternMatch): string {
-    const baseStrategy = "Set stop-loss at -5%, take-profit targets at +15%, +30%";
+    const baseStrategy =
+      "Set stop-loss at -5%, take-profit targets at +15%, +30%";
     if (pattern.riskLevel === "high") {
       return `${baseStrategy}. Tighter risk management due to high risk level.`;
     }
     return baseStrategy;
   }
-  
-  private static assessOverallRisk(patterns: PatternMatch[]): "low" | "medium" | "high" {
-    const riskScores = patterns.map(p => {
+
+  private static assessOverallRisk(
+    patterns: PatternMatch[]
+  ): "low" | "medium" | "high" {
+    const riskScores = patterns.map((p) => {
       if (p.riskLevel === "high") return 3;
       if (p.riskLevel === "medium") return 2;
       return 1;
     });
-    
-    const avgRisk = riskScores.reduce((sum, score) => sum + score, 0) / patterns.length;
-    
+
+    const avgRisk =
+      riskScores.reduce((sum, score) => sum + score, 0) / patterns.length;
+
     if (avgRisk >= 2.5) return "high";
     if (avgRisk >= 1.5) return "medium";
     return "low";
   }
-  
+
   private static estimateProfitability(patterns: PatternMatch[]): number {
     // Estimate based on pattern confidence and historical performance
     let profitabilityScore = 0;
-    
+
     for (const pattern of patterns) {
       let patternScore = pattern.confidence * 0.01; // Base score from confidence
-      
+
       // Adjust based on pattern type
       if (pattern.patternType === "ready_state") {
         patternScore *= 1.2; // Ready state patterns are more profitable
       } else if (pattern.patternType === "launch_sequence") {
         patternScore *= 1.1; // Launch sequences have good potential
       }
-      
+
       // Adjust based on risk level
       if (pattern.riskLevel === "low") {
         patternScore *= 1.1;
       } else if (pattern.riskLevel === "high") {
         patternScore *= 0.8;
       }
-      
+
       profitabilityScore += patternScore;
     }
-    
+
     return Math.round((profitabilityScore / patterns.length) * 100);
   }
 }
@@ -243,7 +288,10 @@ export class StreamlinedPatternOrchestrator {
 
   // Performance tracking
   private executionMetrics: Map<string, number> = new Map();
-  private cacheMetrics: { hits: number; misses: number } = { hits: 0, misses: 0 };
+  private cacheMetrics: { hits: number; misses: number } = {
+    hits: 0,
+    misses: 0,
+  };
 
   constructor() {
     this.calendarAgent = new CalendarAgent();
@@ -254,7 +302,8 @@ export class StreamlinedPatternOrchestrator {
 
   static getInstance(): StreamlinedPatternOrchestrator {
     if (!StreamlinedPatternOrchestrator.instance) {
-      StreamlinedPatternOrchestrator.instance = new StreamlinedPatternOrchestrator();
+      StreamlinedPatternOrchestrator.instance =
+        new StreamlinedPatternOrchestrator();
     }
     return StreamlinedPatternOrchestrator.instance;
   }
@@ -262,7 +311,9 @@ export class StreamlinedPatternOrchestrator {
   /**
    * Main orchestration method - routes to specific workflow handlers
    */
-  async executePatternWorkflow(request: PatternWorkflowRequest): Promise<PatternWorkflowResult> {
+  async executePatternWorkflow(
+    request: PatternWorkflowRequest
+  ): Promise<PatternWorkflowResult> {
     const startTime = Date.now();
     const agentsUsed: string[] = [];
 
@@ -271,13 +322,29 @@ export class StreamlinedPatternOrchestrator {
 
       switch (request.type) {
         case "discovery":
-          return await this.executeDiscoveryWorkflow(request, startTime, agentsUsed);
+          return await this.executeDiscoveryWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
         case "monitoring":
-          return await this.executeMonitoringWorkflow(request, startTime, agentsUsed);
+          return await this.executeMonitoringWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
         case "validation":
-          return await this.executeValidationWorkflow(request, startTime, agentsUsed);
+          return await this.executeValidationWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
         case "strategy_creation":
-          return await this.executeStrategyCreationWorkflow(request, startTime, agentsUsed);
+          return await this.executeStrategyCreationWorkflow(
+            request,
+            startTime,
+            agentsUsed
+          );
         default:
           throw new Error(`Unknown workflow type: ${request.type}`);
       }
@@ -315,26 +382,29 @@ export class StreamlinedPatternOrchestrator {
       calendarEntries = await this.calendarAgent.fetchLatestCalendarData();
 
       if (request.options?.enableAgentAnalysis) {
-        const calendarAnalysis = await this.calendarAgent.scanForNewListings(calendarEntries);
+        const calendarAnalysis =
+          await this.calendarAgent.scanForNewListings(calendarEntries);
         results.agentResponses!["calendar-analysis"] = calendarAnalysis;
       }
     }
 
     // Step 2: Core pattern detection
     this.logger.info("Running pattern detection engine");
-    const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-      calendarEntries,
-      analysisType: "discovery",
-      confidenceThreshold: request.options?.confidenceThreshold || 70,
-      includeHistorical: true,
-    });
+    const patternAnalysis =
+      await PatternDetectionCore.getInstance().analyzePatterns({
+        calendarEntries,
+        analysisType: "discovery",
+        confidenceThreshold: request.options?.confidenceThreshold || 70,
+        includeHistorical: true,
+      });
     results.patternAnalysis = patternAnalysis;
 
     // Step 3: AI agent analysis if enabled
     if (request.options?.enableAgentAnalysis && calendarEntries.length > 0) {
       this.logger.info("Running AI agent pattern analysis");
       agentsUsed.push("pattern-discovery-agent");
-      const agentAnalysis = await this.patternAgent.discoverNewListings(calendarEntries);
+      const agentAnalysis =
+        await this.patternAgent.discoverNewListings(calendarEntries);
       results.agentResponses!["pattern-analysis"] = agentAnalysis;
     }
 
@@ -349,7 +419,8 @@ export class StreamlinedPatternOrchestrator {
     // Step 5: Create monitoring plan
     const monitoringPlan = await MonitoringPlanCreator.createMonitoringPlan(
       patternAnalysis.matches.filter(
-        (m) => m.patternType === "launch_sequence" && m.advanceNoticeHours >= 3.5
+        (m) =>
+          m.patternType === "launch_sequence" && m.advanceNoticeHours >= 3.5
       )
     );
     results.monitoringPlan = monitoringPlan;
@@ -373,7 +444,11 @@ export class StreamlinedPatternOrchestrator {
       success: true,
       type: "discovery",
       results,
-      performance: { executionTime, agentsUsed, patternsProcessed: patternAnalysis.matches.length },
+      performance: {
+        executionTime,
+        agentsUsed,
+        patternsProcessed: patternAnalysis.matches.length,
+      },
     };
   }
 
@@ -393,7 +468,9 @@ export class StreamlinedPatternOrchestrator {
       this.logger.info("Fetching monitored symbols from database");
       try {
         symbolData = await this.getMonitoredSymbolsFromDatabase();
-        this.logger.info(`Found ${symbolData.length} monitored symbols in database`);
+        this.logger.info(
+          `Found ${symbolData.length} monitored symbols in database`
+        );
       } catch (error) {
         this.logger.error("Failed to fetch monitored symbols", {
           error: error instanceof Error ? error.message : error,
@@ -405,18 +482,20 @@ export class StreamlinedPatternOrchestrator {
     if (symbolData.length > 0) {
       this.logger.info("Analyzing symbol readiness");
 
-      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-        symbols: symbolData,
-        analysisType: "monitoring",
-        confidenceThreshold: request.options?.confidenceThreshold || 80,
-      });
+      const patternAnalysis =
+        await PatternDetectionCore.getInstance().analyzePatterns({
+          symbols: symbolData,
+          analysisType: "monitoring",
+          confidenceThreshold: request.options?.confidenceThreshold || 80,
+        });
       results.patternAnalysis = patternAnalysis;
 
       // Enhanced AI analysis for high-priority symbols
       if (request.options?.enableAgentAnalysis) {
         const readyCandidates = patternAnalysis.matches.filter(
           (m) =>
-            m.patternType === "ready_state" || (m.patternType === "pre_ready" && m.confidence >= 75)
+            m.patternType === "ready_state" ||
+            (m.patternType === "pre_ready" && m.confidence >= 75)
         );
 
         for (const candidate of readyCandidates.slice(0, 3)) {
@@ -425,7 +504,8 @@ export class StreamlinedPatternOrchestrator {
             candidate.vcoinId || candidate.symbol,
             symbolData as any
           );
-          results.agentResponses![`symbol-${candidate.symbol}`] = symbolAnalysis;
+          results.agentResponses![`symbol-${candidate.symbol}`] =
+            symbolAnalysis;
         }
       }
 
@@ -443,7 +523,11 @@ export class StreamlinedPatternOrchestrator {
       success: true,
       type: "monitoring",
       results,
-      performance: { executionTime, agentsUsed, patternsProcessed: symbolData.length },
+      performance: {
+        executionTime,
+        agentsUsed,
+        patternsProcessed: symbolData.length,
+      },
     };
   }
 
@@ -460,22 +544,28 @@ export class StreamlinedPatternOrchestrator {
     if (request.input.symbolData) {
       agentsUsed.push("pattern-discovery-agent", "symbol-analysis-agent");
 
-      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-        symbols: request.input.symbolData,
-        analysisType: "validation",
-        confidenceThreshold: 85,
-      });
+      const patternAnalysis =
+        await PatternDetectionCore.getInstance().analyzePatterns({
+          symbols: request.input.symbolData,
+          analysisType: "validation",
+          confidenceThreshold: 85,
+        });
       results.patternAnalysis = patternAnalysis;
 
       // AI validation for ready state patterns
-      const readyPatterns = patternAnalysis.matches.filter((m) => m.patternType === "ready_state");
+      const readyPatterns = patternAnalysis.matches.filter(
+        (m) => m.patternType === "ready_state"
+      );
       for (const pattern of readyPatterns) {
         const validationResponse = await this.patternAgent.validateReadyState({
           vcoinId: pattern.vcoinId || pattern.symbol,
-          symbolData: request.input.symbolData?.filter((s: any) => s.cd === pattern.symbol),
+          symbolData: request.input.symbolData?.filter(
+            (s: any) => s.cd === pattern.symbol
+          ),
           count: 1,
         });
-        results.agentResponses![`validation-${pattern.symbol}`] = validationResponse;
+        results.agentResponses![`validation-${pattern.symbol}`] =
+          validationResponse;
       }
     }
 
@@ -505,11 +595,12 @@ export class StreamlinedPatternOrchestrator {
     if (request.input.vcoinId && request.input.symbolData) {
       agentsUsed.push("strategy-agent", "pattern-discovery-agent");
 
-      const patternAnalysis = await PatternDetectionCore.getInstance().analyzePatterns({
-        symbols: request.input.symbolData,
-        analysisType: "validation",
-        confidenceThreshold: 80,
-      });
+      const patternAnalysis =
+        await PatternDetectionCore.getInstance().analyzePatterns({
+          symbols: request.input.symbolData,
+          analysisType: "validation",
+          confidenceThreshold: 80,
+        });
       results.patternAnalysis = patternAnalysis;
 
       const readyPatterns = patternAnalysis.matches.filter(
@@ -566,7 +657,9 @@ export class StreamlinedPatternOrchestrator {
       );
 
       if (actionablePatterns.length === 0) {
-        this.logger.info("No actionable patterns found for snipe target creation");
+        this.logger.info(
+          "No actionable patterns found for snipe target creation"
+        );
         return [];
       }
 
@@ -574,22 +667,25 @@ export class StreamlinedPatternOrchestrator {
         `Creating snipe targets for ${actionablePatterns.length} actionable patterns`
       );
 
-      const results = await patternTargetIntegrationService.createTargetsFromPatterns(
-        actionablePatterns,
-        userId,
-        {
-          minConfidenceForTarget: 75,
-          enabledPatternTypes: ["ready_state", "pre_ready"],
-          defaultPositionSizeUsdt: 100,
-          maxConcurrentTargets: 5,
-        }
-      );
+      const results =
+        await patternTargetIntegrationService.createTargetsFromPatterns(
+          actionablePatterns,
+          userId,
+          {
+            minConfidenceForTarget: 75,
+            enabledPatternTypes: ["ready_state", "pre_ready"],
+            defaultPositionSizeUsdt: 100,
+            maxConcurrentTargets: 5,
+          }
+        );
 
       const successful = results.filter((r) => r.success);
       const failed = results.filter((r) => !r.success);
 
       if (successful.length > 0) {
-        this.logger.info(`Successfully created ${successful.length} snipe targets`);
+        this.logger.info(
+          `Successfully created ${successful.length} snipe targets`
+        );
       }
       if (failed.length > 0) {
         this.logger.info(
@@ -610,11 +706,14 @@ export class StreamlinedPatternOrchestrator {
   /**
    * Store discovered patterns in database
    */
-  private async storeDiscoveredPatterns(patterns: PatternMatch[]): Promise<void> {
+  private async storeDiscoveredPatterns(
+    patterns: PatternMatch[]
+  ): Promise<void> {
     try {
       for (const pattern of patterns) {
         if (
-          (pattern.patternType === "launch_sequence" || pattern.patternType === "ready_state") &&
+          (pattern.patternType === "launch_sequence" ||
+            pattern.patternType === "ready_state") &&
           pattern.advanceNoticeHours >= 3.5
         ) {
           await db
@@ -622,7 +721,8 @@ export class StreamlinedPatternOrchestrator {
             .values({
               vcoinId: pattern.vcoinId || pattern.symbol,
               symbolName: pattern.symbol,
-              firstOpenTime: Date.now() + pattern.advanceNoticeHours * 60 * 60 * 1000,
+              firstOpenTime:
+                Date.now() + pattern.advanceNoticeHours * 60 * 60 * 1000,
               status: "monitoring",
               confidence: pattern.confidence,
               patternSts: pattern.indicators.sts,
@@ -671,7 +771,10 @@ export class StreamlinedPatternOrchestrator {
         })
         .from(monitoredListings)
         .where(
-          and(eq(monitoredListings.status, "monitoring"), gte(monitoredListings.confidence, 60))
+          and(
+            eq(monitoredListings.status, "monitoring"),
+            gte(monitoredListings.confidence, 60)
+          )
         )
         .orderBy(desc(monitoredListings.confidence))
         .limit(50);
@@ -703,7 +806,8 @@ export class StreamlinedPatternOrchestrator {
       executionMetrics: Object.fromEntries(this.executionMetrics),
       cacheMetrics: this.cacheMetrics,
       cacheHitRate:
-        this.cacheMetrics.hits / (this.cacheMetrics.hits + this.cacheMetrics.misses) || 0,
+        this.cacheMetrics.hits /
+          (this.cacheMetrics.hits + this.cacheMetrics.misses) || 0,
     };
   }
 
@@ -717,7 +821,8 @@ export class StreamlinedPatternOrchestrator {
 }
 
 // Export singleton instance
-export const patternStrategyOrchestrator = StreamlinedPatternOrchestrator.getInstance();
+export const patternStrategyOrchestrator =
+  StreamlinedPatternOrchestrator.getInstance();
 
 // Re-export types (commented out due to missing module)
 // export type * from "./pattern-orchestrator/types";

@@ -69,7 +69,12 @@ export class EventManagementHealth extends EventEmitter {
         warn: (message: string, context?: any) =>
           console.warn("[event-management-health]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[event-management-health]", message, context || "", error || ""),
+          console.error(
+            "[event-management-health]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[event-management-health]", message, context || ""),
       };
@@ -84,7 +89,9 @@ export class EventManagementHealth extends EventEmitter {
 
   constructor(private config: EventManagementConfig) {
     super();
-    console.info("[EventManagementHealth] Initialized with event management and health monitoring");
+    console.info(
+      "[EventManagementHealth] Initialized with event management and health monitoring"
+    );
   }
 
   /**
@@ -143,7 +150,9 @@ export class EventManagementHealth extends EventEmitter {
     }
 
     // Check for critical alerts
-    const criticalAlerts = activeAlerts.filter((alert) => alert.severity === "critical");
+    const criticalAlerts = activeAlerts.filter(
+      (alert) => alert.severity === "critical"
+    );
     if (criticalAlerts.length > 0) {
       issues.push(`${criticalAlerts.length} critical alerts require attention`);
     }
@@ -181,7 +190,10 @@ export class EventManagementHealth extends EventEmitter {
         "portfolio",
         "critical",
         "Portfolio value exceeds maximum limit",
-        { current: metrics.totalValue, limit: this.config.riskConfig.maxPortfolioValue },
+        {
+          current: metrics.totalValue,
+          limit: this.config.riskConfig.maxPortfolioValue,
+        },
         ["Reduce position sizes", "Close some positions"]
       );
       alerts.push(alert);
@@ -260,7 +272,11 @@ export class EventManagementHealth extends EventEmitter {
         "critical",
         "Emergency volatility threshold breached",
         { volatility: this.config.marketConditions.volatilityIndex },
-        ["Halt new trades", "Reduce position sizes", "Activate emergency protocols"]
+        [
+          "Halt new trades",
+          "Reduce position sizes",
+          "Activate emergency protocols",
+        ]
       );
       alerts.push(alert);
 
@@ -284,7 +300,11 @@ export class EventManagementHealth extends EventEmitter {
         "critical",
         "Emergency liquidity threshold breached",
         { liquidity: this.config.marketConditions.liquidityIndex },
-        ["Halt trading", "Monitor positions closely", "Prepare for emergency exit"]
+        [
+          "Halt trading",
+          "Monitor positions closely",
+          "Prepare for emergency exit",
+        ]
       );
       alerts.push(alert);
 
@@ -333,7 +353,11 @@ export class EventManagementHealth extends EventEmitter {
           "critical",
           "Critical portfolio risk level detected",
           { riskLevel, timestamp: new Date().toISOString() },
-          ["Emergency position reduction", "Halt new trades", "Review portfolio immediately"]
+          [
+            "Emergency position reduction",
+            "Halt new trades",
+            "Review portfolio immediately",
+          ]
         );
         this.alerts.push(alert);
 
@@ -347,9 +371,14 @@ export class EventManagementHealth extends EventEmitter {
         });
       }
 
-      console.info(`[EventManagementHealth] Portfolio risk updated: ${riskLevel.toFixed(2)}%`);
+      console.info(
+        `[EventManagementHealth] Portfolio risk updated: ${riskLevel.toFixed(2)}%`
+      );
     } catch (error) {
-      console.error("[EventManagementHealth] Portfolio risk update failed:", error);
+      console.error(
+        "[EventManagementHealth] Portfolio risk update failed:",
+        error
+      );
     }
   }
 
@@ -410,7 +439,9 @@ export class EventManagementHealth extends EventEmitter {
 
     // Active alert risk (15% weight)
     const activeAlerts = this.getActiveAlerts();
-    const criticalAlerts = activeAlerts.filter((a) => a.severity === "critical").length;
+    const criticalAlerts = activeAlerts.filter(
+      (a) => a.severity === "critical"
+    ).length;
     score += Math.min(criticalAlerts * 5, 15);
 
     return Math.min(score, 100);
@@ -420,7 +451,10 @@ export class EventManagementHealth extends EventEmitter {
    * Calculate portfolio value
    */
   private calculatePortfolioValue(): number {
-    return Array.from(this.config.positions.values()).reduce((total, pos) => total + pos.size, 0);
+    return Array.from(this.config.positions.values()).reduce(
+      (total, pos) => total + pos.size,
+      0
+    );
   }
 
   /**
@@ -512,7 +546,9 @@ export class EventManagementHealth extends EventEmitter {
 }
 
 // Factory function for creating event management health instance
-export function createEventManagementHealth(config: EventManagementConfig): EventManagementHealth {
+export function createEventManagementHealth(
+  config: EventManagementConfig
+): EventManagementHealth {
   return new EventManagementHealth(config);
 }
 

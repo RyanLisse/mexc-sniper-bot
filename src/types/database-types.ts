@@ -1,6 +1,6 @@
 /**
  * Database Operation Types
- * 
+ *
  * Strict type definitions for database operations to replace 'any' types.
  * Provides type safety for Drizzle ORM operations and result handling.
  */
@@ -109,12 +109,12 @@ export interface SnipeTargetRow {
 /**
  * Where condition value types
  */
-export type WhereConditionValue = 
-  | string 
-  | number 
-  | boolean 
-  | Date 
-  | null 
+export type WhereConditionValue =
+  | string
+  | number
+  | boolean
+  | Date
+  | null
   | undefined
   | string[]
   | number[];

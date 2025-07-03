@@ -7,7 +7,13 @@
 
 import { memo, useMemo } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   createTooltipFormatter,
@@ -42,7 +48,9 @@ export const PortfolioTab = memo(function PortfolioTab({
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Allocation</CardTitle>
-            <CardDescription>Current asset allocation breakdown</CardDescription>
+            <CardDescription>
+              Current asset allocation breakdown
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -60,7 +68,11 @@ export const PortfolioTab = memo(function PortfolioTab({
                   {portfolioAllocationData.map((entry, index) => (
                     <Cell
                       key={generateChartCellKey(index, entry.asset)}
-                      fill={CHART_COLORS.PRIMARY[index % CHART_COLORS.PRIMARY.length]}
+                      fill={
+                        CHART_COLORS.PRIMARY[
+                          index % CHART_COLORS.PRIMARY.length
+                        ]
+                      }
                     />
                   ))}
                 </Pie>
@@ -73,7 +85,9 @@ export const PortfolioTab = memo(function PortfolioTab({
         <Card>
           <CardHeader>
             <CardTitle>Portfolio Performance</CardTitle>
-            <CardDescription>Return metrics and risk indicators</CardDescription>
+            <CardDescription>
+              Return metrics and risk indicators
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -95,11 +109,15 @@ export const PortfolioTab = memo(function PortfolioTab({
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Beta</p>
-                <p className="text-2xl font-bold">{data.portfolioMetrics.beta.toFixed(2)}</p>
+                <p className="text-2xl font-bold">
+                  {data.portfolioMetrics.beta.toFixed(2)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Volatility</p>
-                <p className="text-2xl font-bold">{data.portfolioMetrics.volatility.toFixed(2)}%</p>
+                <p className="text-2xl font-bold">
+                  {data.portfolioMetrics.volatility.toFixed(2)}%
+                </p>
               </div>
             </div>
 
@@ -107,31 +125,52 @@ export const PortfolioTab = memo(function PortfolioTab({
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Day Change</span>
-                  <span className={getPerformanceColor(data.portfolioMetrics.dayChange)}>
+                  <span
+                    className={getPerformanceColor(
+                      data.portfolioMetrics.dayChange
+                    )}
+                  >
                     {formatPercentage(data.portfolioMetrics.dayChange)}
                   </span>
                 </div>
-                <Progress value={Math.abs(data.portfolioMetrics.dayChange) * 10} className="h-2" />
+                <Progress
+                  value={Math.abs(data.portfolioMetrics.dayChange) * 10}
+                  className="h-2"
+                />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Week Change</span>
-                  <span className={getPerformanceColor(data.portfolioMetrics.weekChange)}>
+                  <span
+                    className={getPerformanceColor(
+                      data.portfolioMetrics.weekChange
+                    )}
+                  >
                     {formatPercentage(data.portfolioMetrics.weekChange)}
                   </span>
                 </div>
-                <Progress value={Math.abs(data.portfolioMetrics.weekChange) * 5} className="h-2" />
+                <Progress
+                  value={Math.abs(data.portfolioMetrics.weekChange) * 5}
+                  className="h-2"
+                />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Month Change</span>
-                  <span className={getPerformanceColor(data.portfolioMetrics.monthChange)}>
+                  <span
+                    className={getPerformanceColor(
+                      data.portfolioMetrics.monthChange
+                    )}
+                  >
                     {formatPercentage(data.portfolioMetrics.monthChange)}
                   </span>
                 </div>
-                <Progress value={Math.abs(data.portfolioMetrics.monthChange) * 2} className="h-2" />
+                <Progress
+                  value={Math.abs(data.portfolioMetrics.monthChange) * 2}
+                  className="h-2"
+                />
               </div>
             </div>
           </CardContent>
@@ -143,7 +182,9 @@ export const PortfolioTab = memo(function PortfolioTab({
         <Card>
           <CardHeader>
             <CardTitle>Top Performers</CardTitle>
-            <CardDescription>Best performing assets in portfolio</CardDescription>
+            <CardDescription>
+              Best performing assets in portfolio
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -156,7 +197,9 @@ export const PortfolioTab = memo(function PortfolioTab({
                     <p className="font-medium text-sm">{performer.symbol}</p>
                   </div>
                   <div className="text-right">
-                    <p className={`font-bold ${getPerformanceColor(performer.return)}`}>
+                    <p
+                      className={`font-bold ${getPerformanceColor(performer.return)}`}
+                    >
                       {formatPercentage(performer.return)}
                     </p>
                   </div>
@@ -175,7 +218,9 @@ export const PortfolioTab = memo(function PortfolioTab({
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Risk-Adjusted Return</span>
-                <span>{data.portfolioMetrics.riskAdjustedReturn.toFixed(2)}%</span>
+                <span>
+                  {data.portfolioMetrics.riskAdjustedReturn.toFixed(2)}%
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Sharpe Ratio</span>

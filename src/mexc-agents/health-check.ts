@@ -32,7 +32,11 @@ class AgentHealthChecker {
 
   private results: HealthCheckResult[] = [];
 
-  private addResult(agent: string, status: "healthy" | "unhealthy" | "warning", message: string) {
+  private addResult(
+    agent: string,
+    status: "healthy" | "unhealthy" | "warning",
+    message: string
+  ) {
     this.results.push({
       agent,
       status,
@@ -46,12 +50,24 @@ class AgentHealthChecker {
       const agent = new MexcApiAgent();
       // Basic initialization check - use correct method name
       if (agent && typeof agent.process === "function") {
-        this.addResult("MexcApiAgent", "healthy", "Agent initialized successfully");
+        this.addResult(
+          "MexcApiAgent",
+          "healthy",
+          "Agent initialized successfully"
+        );
       } else {
-        this.addResult("MexcApiAgent", "unhealthy", "Agent failed to initialize properly");
+        this.addResult(
+          "MexcApiAgent",
+          "unhealthy",
+          "Agent failed to initialize properly"
+        );
       }
     } catch (error) {
-      this.addResult("MexcApiAgent", "unhealthy", `Initialization error: ${error}`);
+      this.addResult(
+        "MexcApiAgent",
+        "unhealthy",
+        `Initialization error: ${error}`
+      );
     }
   }
 
@@ -59,12 +75,24 @@ class AgentHealthChecker {
     try {
       const agent = new PatternDiscoveryAgent();
       if (agent && typeof agent.process === "function") {
-        this.addResult("PatternDiscoveryAgent", "healthy", "Agent initialized successfully");
+        this.addResult(
+          "PatternDiscoveryAgent",
+          "healthy",
+          "Agent initialized successfully"
+        );
       } else {
-        this.addResult("PatternDiscoveryAgent", "unhealthy", "Agent failed to initialize properly");
+        this.addResult(
+          "PatternDiscoveryAgent",
+          "unhealthy",
+          "Agent failed to initialize properly"
+        );
       }
     } catch (error) {
-      this.addResult("PatternDiscoveryAgent", "unhealthy", `Initialization error: ${error}`);
+      this.addResult(
+        "PatternDiscoveryAgent",
+        "unhealthy",
+        `Initialization error: ${error}`
+      );
     }
   }
 
@@ -72,12 +100,24 @@ class AgentHealthChecker {
     try {
       const agent = new CalendarAgent();
       if (agent && typeof agent.process === "function") {
-        this.addResult("CalendarAgent", "healthy", "Agent initialized successfully");
+        this.addResult(
+          "CalendarAgent",
+          "healthy",
+          "Agent initialized successfully"
+        );
       } else {
-        this.addResult("CalendarAgent", "unhealthy", "Agent failed to initialize properly");
+        this.addResult(
+          "CalendarAgent",
+          "unhealthy",
+          "Agent failed to initialize properly"
+        );
       }
     } catch (error) {
-      this.addResult("CalendarAgent", "unhealthy", `Initialization error: ${error}`);
+      this.addResult(
+        "CalendarAgent",
+        "unhealthy",
+        `Initialization error: ${error}`
+      );
     }
   }
 
@@ -85,12 +125,24 @@ class AgentHealthChecker {
     try {
       const agent = new SymbolAnalysisAgent();
       if (agent && typeof agent.process === "function") {
-        this.addResult("SymbolAnalysisAgent", "healthy", "Agent initialized successfully");
+        this.addResult(
+          "SymbolAnalysisAgent",
+          "healthy",
+          "Agent initialized successfully"
+        );
       } else {
-        this.addResult("SymbolAnalysisAgent", "unhealthy", "Agent failed to initialize properly");
+        this.addResult(
+          "SymbolAnalysisAgent",
+          "unhealthy",
+          "Agent failed to initialize properly"
+        );
       }
     } catch (error) {
-      this.addResult("SymbolAnalysisAgent", "unhealthy", `Initialization error: ${error}`);
+      this.addResult(
+        "SymbolAnalysisAgent",
+        "unhealthy",
+        `Initialization error: ${error}`
+      );
     }
   }
 
@@ -99,7 +151,11 @@ class AgentHealthChecker {
       const orchestrator = new MexcOrchestrator();
       // Check for orchestrator-specific methods instead of coordinateAgents
       if (orchestrator && typeof orchestrator.healthCheck === "function") {
-        this.addResult("MexcOrchestrator", "healthy", "Orchestrator initialized successfully");
+        this.addResult(
+          "MexcOrchestrator",
+          "healthy",
+          "Orchestrator initialized successfully"
+        );
       } else {
         this.addResult(
           "MexcOrchestrator",
@@ -108,7 +164,11 @@ class AgentHealthChecker {
         );
       }
     } catch (error) {
-      this.addResult("MexcOrchestrator", "unhealthy", `Initialization error: ${error}`);
+      this.addResult(
+        "MexcOrchestrator",
+        "unhealthy",
+        `Initialization error: ${error}`
+      );
     }
   }
 
@@ -134,7 +194,11 @@ class AgentHealthChecker {
     }
 
     if (missingOptional === 0) {
-      this.addResult("Environment", "healthy", "All environment variables configured");
+      this.addResult(
+        "Environment",
+        "healthy",
+        "All environment variables configured"
+      );
     } else if (missingOptional === optionalEnvVars.length) {
       this.addResult(
         "Environment",
@@ -167,13 +231,23 @@ class AgentHealthChecker {
     console.info("📊 Health Check Results:");
     console.info("========================\n");
 
-    const healthyCount = this.results.filter((r) => r.status === "healthy").length;
-    const warningCount = this.results.filter((r) => r.status === "warning").length;
-    const unhealthyCount = this.results.filter((r) => r.status === "unhealthy").length;
+    const healthyCount = this.results.filter(
+      (r) => r.status === "healthy"
+    ).length;
+    const warningCount = this.results.filter(
+      (r) => r.status === "warning"
+    ).length;
+    const unhealthyCount = this.results.filter(
+      (r) => r.status === "unhealthy"
+    ).length;
 
     for (const result of this.results) {
       const statusIcon =
-        result.status === "healthy" ? "✅" : result.status === "warning" ? "⚠️" : "❌";
+        result.status === "healthy"
+          ? "✅"
+          : result.status === "warning"
+            ? "⚠️"
+            : "❌";
 
       console.info(`${statusIcon} ${result.agent}: ${result.message}`);
     }

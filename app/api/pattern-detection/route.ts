@@ -2,7 +2,7 @@
  * Pattern Detection API - Minimal Implementation
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -17,16 +17,16 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       features: [
         "Pattern Analysis",
-        "Ready State Detection", 
+        "Ready State Detection",
         "Advance Detection",
-        "Correlation Analysis"
+        "Correlation Analysis",
       ],
       capabilities: {
         readyStateDetection: true,
         advanceDetection: true,
-        correlationAnalysis: true
-      }
-    }
+        correlationAnalysis: true,
+      },
+    },
   });
 }
 
@@ -45,20 +45,22 @@ export async function POST(request: NextRequest) {
           matches: [],
           summary: { averageConfidence: 0 },
           recommendations: [],
-          correlations: []
+          correlations: [],
         },
         performance: {
           duration: 100,
-          status: 'completed'
-        }
-      }
+          status: "completed",
+        },
+      },
     });
-
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: "Pattern detection failed",
-      details: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Pattern detection failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

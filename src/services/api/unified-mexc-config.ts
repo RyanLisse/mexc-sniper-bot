@@ -15,7 +15,10 @@ import type {
 // Configuration Types
 // ============================================================================
 
-export interface UnifiedMexcConfigV2 extends MexcApiConfig, MexcCacheConfig, MexcReliabilityConfig {
+export interface UnifiedMexcConfigV2
+  extends MexcApiConfig,
+    MexcCacheConfig,
+    MexcReliabilityConfig {
   enableEnhancedFeatures?: boolean;
   enablePaperTrading?: boolean;
   circuitBreakerThreshold?: number;
@@ -116,6 +119,9 @@ export function validateConfig(config: UnifiedMexcConfigV2): {
  */
 export function hasValidCredentials(config: UnifiedMexcConfigV2): boolean {
   return Boolean(
-    config.apiKey && config.secretKey && config.apiKey.length > 0 && config.secretKey.length > 0
+    config.apiKey &&
+      config.secretKey &&
+      config.apiKey.length > 0 &&
+      config.secretKey.length > 0
   );
 }

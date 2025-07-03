@@ -38,16 +38,24 @@ export function HydrationBoundary({
   if (preserveSSR && !hasMounted) {
     return (
       <SSRSafeErrorBoundary fallback={errorFallback}>
-        <Suspense fallback={fallback || <div>Loading...</div>}>{children}</Suspense>
+        <Suspense fallback={fallback || <div>Loading...</div>}>
+          {children}
+        </Suspense>
       </SSRSafeErrorBoundary>
     );
   }
 
   if (!isHydrated) {
-    return <>{fallback || <div style={{ visibility: "hidden" }}>{children}</div>}</>;
+    return (
+      <>{fallback || <div style={{ visibility: "hidden" }}>{children}</div>}</>
+    );
   }
 
-  return <SSRSafeErrorBoundary fallback={errorFallback}>{children}</SSRSafeErrorBoundary>;
+  return (
+    <SSRSafeErrorBoundary fallback={errorFallback}>
+      {children}
+    </SSRSafeErrorBoundary>
+  );
 }
 
 /**

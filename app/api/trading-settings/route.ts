@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { db, getUserPreferences } from "@/src/db";
 import { userPreferences } from "@/src/db/schemas/auth";
-import { 
-  apiResponse, 
-  createErrorResponse, 
-  createSuccessResponse, 
-  HTTP_STATUS 
+import {
+  apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
+  HTTP_STATUS,
 } from "@/src/lib/api-response";
 import { handleApiError } from "@/src/lib/error-handler";
 import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return apiResponse(
         createErrorResponse("User ID is required", {
-          message: "Please provide userId parameter"
+          message: "Please provide userId parameter",
         }),
         HTTP_STATUS.BAD_REQUEST
       );
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     // Get user preferences from database
     const preferences = await getUserPreferences(userId);
-    
+
     // Get current Core Trading Service status
     const serviceStatus = await coreTrading.getServiceStatus();
     const performanceMetrics = await coreTrading.getPerformanceMetrics();
@@ -48,26 +48,26 @@ export async function GET(request: NextRequest) {
           level3: preferences?.takeProfitLevel3 || 15.0,
           level4: preferences?.takeProfitLevel4 || 25.0,
         },
-        customTakeProfitConfig: preferences?.takeProfitLevelsConfig 
-          ? JSON.parse(preferences.takeProfitLevelsConfig) 
+        customTakeProfitConfig: preferences?.takeProfitLevelsConfig
+          ? JSON.parse(preferences.takeProfitLevelsConfig)
           : null,
-        
+
         // Risk management
         stopLossPercent: preferences?.stopLossPercent || 5.0,
         riskTolerance: preferences?.riskTolerance || "medium",
         maxConcurrentSnipes: preferences?.maxConcurrentSnipes || 3,
         defaultBuyAmount: preferences?.defaultBuyAmountUsdt || 100.0,
-        
+
         // Automation settings
         autoSnipeEnabled: preferences?.autoSnipeEnabled ?? true,
         autoBuyEnabled: preferences?.autoBuyEnabled ?? true,
         autoSellEnabled: preferences?.autoSellEnabled ?? true,
-        
+
         // Pattern detection
         readyStatePattern: preferences?.readyStatePattern || "2,2,4",
         targetAdvanceHours: preferences?.targetAdvanceHours || 3.5,
       },
-      
+
       executionSettings: {
         // Core Trading Service configuration
         paperTradingMode: serviceStatus.paperTradingMode,
@@ -75,24 +75,24 @@ export async function GET(request: NextRequest) {
         autoSnipingEnabled: serviceStatus.autoSnipingEnabled,
         maxPositions: serviceStatus.maxPositions,
         currentRiskLevel: serviceStatus.currentRiskLevel,
-        
+
         // Performance data
         totalPnL: performanceMetrics.totalPnL,
         totalTrades: performanceMetrics.totalTrades,
         successRate: performanceMetrics.successRate,
         uptime: serviceStatus.uptime,
       },
-      
+
       syncStatus: {
         lastSync: new Date().toISOString(),
         isInSync: true, // We'll determine this by comparing settings
         pendingUpdates: [],
-      }
+      },
     };
 
     return apiResponse(
       createSuccessResponse(response, {
-        message: "Trading settings retrieved successfully"
+        message: "Trading settings retrieved successfully",
       }),
       HTTP_STATUS.OK
     );
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     if (!userId) {
       return apiResponse(
         createErrorResponse("User ID is required", {
-          message: "Please provide userId"
+          message: "Please provide userId",
         }),
         HTTP_STATUS.BAD_REQUEST
       );
@@ -128,11 +128,11 @@ export async function POST(request: NextRequest) {
       case "sync": {
         // Sync user preferences to Core Trading Service
         const preferences = await getUserPreferences(userId);
-        
+
         if (!preferences) {
           return apiResponse(
             createErrorResponse("User preferences not found", {
-              message: `No preferences found for user ${userId}`
+              message: `No preferences found for user ${userId}`,
             }),
             HTTP_STATUS.NOT_FOUND
           );
@@ -140,14 +140,14 @@ export async function POST(request: NextRequest) {
 
         // Transform user preferences to Core Trading configuration
         const coreConfig = transformPreferencesToCoreConfig(preferences);
-        
+
         // Apply configuration to Core Trading Service
         const updateResult = await coreTrading.updateConfig(coreConfig);
-        
+
         if (!updateResult.success) {
           return apiResponse(
             createErrorResponse("Failed to sync settings to execution system", {
-              message: updateResult.error
+              message: updateResult.error,
             }),
             HTTP_STATUS.INTERNAL_SERVER_ERROR
           );
@@ -155,14 +155,14 @@ export async function POST(request: NextRequest) {
 
         console.info("🔄 User preferences synced to Core Trading Service:", {
           userId,
-          syncedSettings: Object.keys(coreConfig)
+          syncedSettings: Object.keys(coreConfig),
         });
 
         return apiResponse(
           createSuccessResponse(
-            { 
+            {
               syncResult: updateResult,
-              appliedConfig: coreConfig 
+              appliedConfig: coreConfig,
             },
             { message: "Settings synced to execution system successfully" }
           ),
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
         if (!settings) {
           return apiResponse(
             createErrorResponse("Settings are required for update action", {
-              message: "Please provide settings object"
+              message: "Please provide settings object",
             }),
             HTTP_STATUS.BAD_REQUEST
           );
@@ -182,11 +182,11 @@ export async function POST(request: NextRequest) {
 
         // Update Core Trading Service directly with provided settings
         const updateResult = await coreTrading.updateConfig(settings);
-        
+
         if (!updateResult.success) {
           return apiResponse(
             createErrorResponse("Failed to update execution system", {
-              message: updateResult.error
+              message: updateResult.error,
             }),
             HTTP_STATUS.INTERNAL_SERVER_ERROR
           );
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
 
         console.info("⚙️ Trading settings updated:", {
           userId,
-          updatedSettings: Object.keys(settings)
+          updatedSettings: Object.keys(settings),
         });
 
         return apiResponse(
@@ -224,11 +224,11 @@ export async function POST(request: NextRequest) {
         };
 
         const resetResult = await coreTrading.updateConfig(defaultConfig);
-        
+
         if (!resetResult.success) {
           return apiResponse(
             createErrorResponse("Failed to reset execution system", {
-              message: resetResult.error
+              message: resetResult.error,
             }),
             HTTP_STATUS.INTERNAL_SERVER_ERROR
           );
@@ -249,14 +249,16 @@ export async function POST(request: NextRequest) {
         return apiResponse(
           createErrorResponse("Invalid action", {
             message: "Action must be one of: sync, update, reset",
-            availableActions: ["sync", "update", "reset"]
+            availableActions: ["sync", "update", "reset"],
           }),
           HTTP_STATUS.BAD_REQUEST
         );
     }
   } catch (error) {
     console.error("Trading settings POST error:", error);
-    return handleApiError(error, { message: "Failed to process trading settings request" });
+    return handleApiError(error, {
+      message: "Failed to process trading settings request",
+    });
   }
 }
 
@@ -267,37 +269,48 @@ export async function POST(request: NextRequest) {
 /**
  * Transform user preferences to Core Trading Service configuration
  */
-function transformPreferencesToCoreConfig(preferences: any): Record<string, unknown> {
+function transformPreferencesToCoreConfig(
+  preferences: any
+): Record<string, unknown> {
   const config: Record<string, unknown> = {
     // Position and risk management
     maxConcurrentPositions: preferences.maxConcurrentSnipes || 3,
     maxPositionSize: (preferences.defaultBuyAmountUsdt || 100) / 1000, // Convert to ratio
-    
+
     // Risk settings
     stopLossPercent: preferences.stopLossPercent || 5.0,
-    
+
     // Take profit settings
     takeProfitPercent: preferences.takeProfitLevel4 || 25.0, // Use highest level as main target
-    
+
     // Auto-sniping configuration
     autoSnipingEnabled: preferences.autoSnipeEnabled ?? true,
     confidenceThreshold: 75, // Default for now, could be derived from risk tolerance
-    
+
     // Pattern detection
     enablePatternDetection: true,
     patternConfig: {
       readyStatePattern: preferences.readyStatePattern || "2,2,4",
       targetAdvanceHours: preferences.targetAdvanceHours || 3.5,
     },
-    
+
     // Multi-level take profit
     enableMultiPhase: true,
     multiPhaseConfig: {
       levels: [
         { percentage: preferences.takeProfitLevel1 || 5.0, sellPercentage: 25 },
-        { percentage: preferences.takeProfitLevel2 || 10.0, sellPercentage: 35 },
-        { percentage: preferences.takeProfitLevel3 || 15.0, sellPercentage: 25 },
-        { percentage: preferences.takeProfitLevel4 || 25.0, sellPercentage: 15 },
+        {
+          percentage: preferences.takeProfitLevel2 || 10.0,
+          sellPercentage: 35,
+        },
+        {
+          percentage: preferences.takeProfitLevel3 || 15.0,
+          sellPercentage: 25,
+        },
+        {
+          percentage: preferences.takeProfitLevel4 || 25.0,
+          sellPercentage: 15,
+        },
       ],
     },
   };
@@ -309,8 +322,9 @@ function transformPreferencesToCoreConfig(preferences: any): Record<string, unkn
       medium: { confidenceThreshold: 75, maxPositionSize: 0.1 },
       high: { confidenceThreshold: 65, maxPositionSize: 0.2 },
     };
-    
-    const riskSettings = riskMapping[preferences.riskTolerance as keyof typeof riskMapping];
+
+    const riskSettings =
+      riskMapping[preferences.riskTolerance as keyof typeof riskMapping];
     if (riskSettings) {
       config.confidenceThreshold = riskSettings.confidenceThreshold;
       config.maxPositionSize = riskSettings.maxPositionSize;
@@ -333,12 +347,15 @@ function transformPreferencesToCoreConfig(preferences: any): Record<string, unkn
 /**
  * Transform Core Trading config back to user preferences format
  */
-function transformCoreConfigToPreferences(coreConfig: Record<string, unknown>): Partial<any> {
+function transformCoreConfigToPreferences(
+  coreConfig: Record<string, unknown>
+): Partial<any> {
   return {
     maxConcurrentSnipes: coreConfig.maxConcurrentPositions,
-    defaultBuyAmountUsdt: typeof coreConfig.maxPositionSize === 'number' 
-      ? coreConfig.maxPositionSize * 1000 
-      : 100,
+    defaultBuyAmountUsdt:
+      typeof coreConfig.maxPositionSize === "number"
+        ? coreConfig.maxPositionSize * 1000
+        : 100,
     stopLossPercent: coreConfig.stopLossPercent,
     autoSnipeEnabled: coreConfig.autoSnipingEnabled,
     takeProfitLevel4: coreConfig.takeProfitPercent,
@@ -348,7 +365,10 @@ function transformCoreConfigToPreferences(coreConfig: Record<string, unknown>): 
 /**
  * Update user preferences in database
  */
-async function updateUserPreferencesInDatabase(userId: string, updates: Partial<any>): Promise<void> {
+async function updateUserPreferencesInDatabase(
+  userId: string,
+  updates: Partial<any>
+): Promise<void> {
   await db
     .update(userPreferences)
     .set({

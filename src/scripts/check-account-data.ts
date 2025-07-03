@@ -8,7 +8,11 @@
 
 import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/src/db";
-import { balanceSnapshots, portfolioSummary, snipeTargets } from "@/src/db/schemas/trading";
+import {
+  balanceSnapshots,
+  portfolioSummary,
+  snipeTargets,
+} from "@/src/db/schemas/trading";
 
 async function main() {
   try {
@@ -19,7 +23,11 @@ async function main() {
     const tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
 
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayStart = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
     const tomorrowEnd = new Date(
       tomorrow.getFullYear(),
       tomorrow.getMonth(),
@@ -29,7 +37,9 @@ async function main() {
       59
     );
 
-    console.log(`📅 Date Range: ${todayStart.toISOString()} to ${tomorrowEnd.toISOString()}\n`);
+    console.log(
+      `📅 Date Range: ${todayStart.toISOString()} to ${tomorrowEnd.toISOString()}\n`
+    );
 
     // 1. Check active snipe targets for today and tomorrow
     console.log("🎯 ACTIVE SNIPE TARGETS:");
@@ -55,7 +65,9 @@ async function main() {
         console.log(`\n${index + 1}. ${target.symbolName}`);
         console.log(`   📊 Confidence: ${target.confidenceScore}%`);
         console.log(`   💰 Position Size: $${target.positionSizeUsdt} USDT`);
-        console.log(`   🎯 Target Time: ${target.targetExecutionTime?.toISOString()}`);
+        console.log(
+          `   🎯 Target Time: ${target.targetExecutionTime?.toISOString()}`
+        );
         console.log(`   ⚡ Priority: ${target.priority}`);
         console.log(`   📋 Status: ${target.status}`);
         console.log(`   🎚️ Risk Level: ${target.riskLevel}`);
@@ -75,7 +87,9 @@ async function main() {
     if (allPendingTargets.length === 0) {
       console.log("❌ No pending snipe targets found");
     } else {
-      console.log(`✅ Found ${allPendingTargets.length} pending snipe targets:`);
+      console.log(
+        `✅ Found ${allPendingTargets.length} pending snipe targets:`
+      );
       allPendingTargets.slice(0, 10).forEach((target: any, index: number) => {
         console.log(`\n${index + 1}. ${target.symbolName}`);
         console.log(`   📊 Confidence: ${target.confidenceScore}%`);
@@ -85,7 +99,9 @@ async function main() {
       });
 
       if (allPendingTargets.length > 10) {
-        console.log(`\n... and ${allPendingTargets.length - 10} more pending targets`);
+        console.log(
+          `\n... and ${allPendingTargets.length - 10} more pending targets`
+        );
       }
     }
 
@@ -106,7 +122,8 @@ async function main() {
       console.log("❌ No balance snapshots found");
     } else {
       console.log(`✅ Found ${latestBalances.length} balance entries:`);
-      const assetSummary: Record<string, { amount: number; usdValue: number }> = {};
+      const assetSummary: Record<string, { amount: number; usdValue: number }> =
+        {};
 
       latestBalances.forEach((balance: any) => {
         const asset = balance.asset;
@@ -118,10 +135,14 @@ async function main() {
         totalUsdValue += balance.usdValue;
       });
 
-      console.log(`\n💰 Total Portfolio Value: $${totalUsdValue.toFixed(2)} USD`);
+      console.log(
+        `\n💰 Total Portfolio Value: $${totalUsdValue.toFixed(2)} USD`
+      );
       console.log("\n📊 Asset Breakdown:");
       Object.entries(assetSummary).forEach(([asset, data]) => {
-        console.log(`   ${asset}: ${data.amount.toFixed(6)} ($${data.usdValue.toFixed(2)})`);
+        console.log(
+          `   ${asset}: ${data.amount.toFixed(6)} ($${data.usdValue.toFixed(2)})`
+        );
       });
     }
 
@@ -141,12 +162,22 @@ async function main() {
     } else {
       const portfolio = portfolioData[0];
       console.log(`✅ Portfolio Summary:`);
-      console.log(`   💰 Total Value: $${portfolio.totalUsdValue.toFixed(2)} USD`);
+      console.log(
+        `   💰 Total Value: $${portfolio.totalUsdValue.toFixed(2)} USD`
+      );
       console.log(`   📊 Asset Count: ${portfolio.assetCount}`);
-      console.log(`   📈 24h Performance: ${portfolio.performance24h?.toFixed(2) || "N/A"}%`);
-      console.log(`   📈 7d Performance: ${portfolio.performance7d?.toFixed(2) || "N/A"}%`);
-      console.log(`   📈 30d Performance: ${portfolio.performance30d?.toFixed(2) || "N/A"}%`);
-      console.log(`   🕐 Last Updated: ${portfolio.lastBalanceUpdate.toISOString()}`);
+      console.log(
+        `   📈 24h Performance: ${portfolio.performance24h?.toFixed(2) || "N/A"}%`
+      );
+      console.log(
+        `   📈 7d Performance: ${portfolio.performance7d?.toFixed(2) || "N/A"}%`
+      );
+      console.log(
+        `   📈 30d Performance: ${portfolio.performance30d?.toFixed(2) || "N/A"}%`
+      );
+      console.log(
+        `   🕐 Last Updated: ${portfolio.lastBalanceUpdate.toISOString()}`
+      );
 
       if (portfolio.topAssets) {
         console.log(`   🏆 Top Assets: ${portfolio.topAssets}`);
@@ -165,7 +196,9 @@ async function main() {
       (sum, target) => sum + target.positionSizeUsdt,
       0
     );
-    console.log(`🎯 Total target allocation: $${totalTargetValue.toFixed(2)} USDT`);
+    console.log(
+      `🎯 Total target allocation: $${totalTargetValue.toFixed(2)} USDT`
+    );
   } catch (error) {
     console.error("❌ Error checking account data:", error);
   } finally {

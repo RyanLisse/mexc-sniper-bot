@@ -1,5 +1,12 @@
-import type { SelectAlertInstance, SelectNotificationChannel } from "@/src/db/schemas/alerts";
-import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
+import type {
+  SelectAlertInstance,
+  SelectNotificationChannel,
+} from "@/src/db/schemas/alerts";
+import type {
+  NotificationMessage,
+  NotificationProvider,
+  NotificationResult,
+} from "./index";
 
 interface SlackConfig {
   webhookUrl: string;
@@ -52,7 +59,12 @@ export class SlackProvider implements NotificationProvider {
           warn: (message: string, context?: any) =>
             console.warn("[slack-provider]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[slack-provider]", message, context || "", error || ""),
+            console.error(
+              "[slack-provider]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[slack-provider]", message, context || ""),
         };
@@ -104,24 +116,26 @@ export class SlackProvider implements NotificationProvider {
 
       // Make actual HTTP request to Slack
       const response = await fetch(config.webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`Slack API error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Slack API error: ${response.status} ${response.statusText}`
+        );
       }
 
       const responseData = await response.text();
-      
+
       return {
         success: true,
         messageId: `slack_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        response: { 
+        response: {
           status: response.status,
           statusText: response.statusText,
-          data: responseData
+          data: responseData,
         },
       };
     } catch (error) {

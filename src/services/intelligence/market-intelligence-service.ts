@@ -97,8 +97,13 @@ export class MarketIntelligenceService {
    */
   async analyzeSentiment(symbol: string): Promise<MarketSentiment> {
     // Mock sentiment analysis (replace with actual analysis)
-    const sentiments: Array<"bullish" | "bearish" | "neutral"> = ["bullish", "bearish", "neutral"];
-    const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+    const sentiments: Array<"bullish" | "bearish" | "neutral"> = [
+      "bullish",
+      "bearish",
+      "neutral",
+    ];
+    const randomSentiment =
+      sentiments[Math.floor(Math.random() * sentiments.length)];
 
     const factors = [
       "Technical indicators",
@@ -131,14 +136,11 @@ export class MarketIntelligenceService {
     ];
     const trend = trends[Math.floor(Math.random() * trends.length)];
 
-    const recommendations: Array<"strong_buy" | "buy" | "hold" | "sell" | "strong_sell"> = [
-      "strong_buy",
-      "buy",
-      "hold",
-      "sell",
-      "strong_sell",
-    ];
-    const recommendation = recommendations[Math.floor(Math.random() * recommendations.length)];
+    const recommendations: Array<
+      "strong_buy" | "buy" | "hold" | "sell" | "strong_sell"
+    > = ["strong_buy", "buy", "hold", "sell", "strong_sell"];
+    const recommendation =
+      recommendations[Math.floor(Math.random() * recommendations.length)];
 
     return {
       symbol,
@@ -161,16 +163,14 @@ export class MarketIntelligenceService {
 
     for (let i = 0; i < signalCount; i++) {
       const types: Array<"buy" | "sell"> = ["buy", "sell"];
-      const strengths: Array<"weak" | "moderate" | "strong"> = ["weak", "moderate", "strong"];
-      const timeframes: Array<"1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "1d"> = [
-        "1m",
-        "5m",
-        "15m",
-        "30m",
-        "1h",
-        "4h",
-        "1d",
+      const strengths: Array<"weak" | "moderate" | "strong"> = [
+        "weak",
+        "moderate",
+        "strong",
       ];
+      const timeframes: Array<
+        "1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "1d"
+      > = ["1m", "5m", "15m", "30m", "1h", "4h", "1d"];
 
       const entryPrice = 100 + Math.random() * 900;
       const now = Date.now();
@@ -184,7 +184,10 @@ export class MarketIntelligenceService {
         stopLoss: entryPrice * (0.95 + Math.random() * 0.03),
         takeProfit: entryPrice * (1.02 + Math.random() * 0.08),
         timeframe: timeframes[Math.floor(Math.random() * timeframes.length)],
-        indicators: ["RSI", "MACD", "MA", "Volume"].slice(0, 2 + Math.floor(Math.random() * 2)),
+        indicators: ["RSI", "MACD", "MA", "Volume"].slice(
+          0,
+          2 + Math.floor(Math.random() * 2)
+        ),
         probability: 0.5 + Math.random() * 0.4,
         timestamp: now,
         expiresAt: now + Math.random() * 3600000, // 1 hour max
@@ -200,7 +203,9 @@ export class MarketIntelligenceService {
     if (!intelligence) return [];
 
     const now = Date.now();
-    return intelligence.signals.filter((signal) => !signal.expiresAt || signal.expiresAt > now);
+    return intelligence.signals.filter(
+      (signal) => !signal.expiresAt || signal.expiresAt > now
+    );
   }
 
   /**

@@ -2,10 +2,19 @@
 
 import { Calendar, Clock, RefreshCw, TrendingUp } from "lucide-react";
 import { useMemo } from "react";
-import { useMexcCalendar, useRefreshMexcCalendar } from "../../hooks/use-mexc-data";
+import {
+  useMexcCalendar,
+  useRefreshMexcCalendar,
+} from "../../hooks/use-mexc-data";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 interface UpcomingCalendarEntry {
   firstOpenTime?: string | number;
@@ -31,9 +40,17 @@ export function UpcomingCoinsSection() {
     }
 
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
-    const endOfTomorrow = new Date(startOfTomorrow.getTime() + 24 * 60 * 60 * 1000);
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const startOfTomorrow = new Date(
+      startOfToday.getTime() + 24 * 60 * 60 * 1000
+    );
+    const endOfTomorrow = new Date(
+      startOfTomorrow.getTime() + 24 * 60 * 60 * 1000
+    );
 
     const today: UpcomingCalendarEntry[] = [];
     const tomorrow: UpcomingCalendarEntry[] = [];
@@ -45,16 +62,24 @@ export function UpcomingCoinsSection() {
 
         if (launchTime >= startOfToday && launchTime < startOfTomorrow) {
           today.push(entry);
-        } else if (launchTime >= startOfTomorrow && launchTime < endOfTomorrow) {
+        } else if (
+          launchTime >= startOfTomorrow &&
+          launchTime < endOfTomorrow
+        ) {
           tomorrow.push(entry);
         }
       } catch (_error) {
-        console.warn("Invalid date in calendar entry:", { firstOpenTime: entry.firstOpenTime });
+        console.warn("Invalid date in calendar entry:", {
+          firstOpenTime: entry.firstOpenTime,
+        });
       }
     });
 
     // Sort by earliest launch time (ascending)
-    const sortByLaunchTime = (a: UpcomingCalendarEntry, b: UpcomingCalendarEntry) => {
+    const sortByLaunchTime = (
+      a: UpcomingCalendarEntry,
+      b: UpcomingCalendarEntry
+    ) => {
       const timeA = a.firstOpenTime ? new Date(a.firstOpenTime).getTime() : 0;
       const timeB = b.firstOpenTime ? new Date(b.firstOpenTime).getTime() : 0;
       return timeA - timeB;
@@ -70,8 +95,13 @@ export function UpcomingCoinsSection() {
     try {
       const date = new Date(firstOpenTime);
       return {
-        time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        hoursUntil: Math.floor((date.getTime() - Date.now()) / (1000 * 60 * 60)),
+        time: date.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        hoursUntil: Math.floor(
+          (date.getTime() - Date.now()) / (1000 * 60 * 60)
+        ),
       };
     } catch {
       return { time: "Invalid time", hoursUntil: 0 };
@@ -80,7 +110,8 @@ export function UpcomingCoinsSection() {
 
   const getTimeUntilColor = (hoursUntil: number) => {
     if (hoursUntil <= 2) return "bg-red-500/10 text-red-600 border-red-500/20";
-    if (hoursUntil <= 6) return "bg-orange-500/10 text-orange-600 border-orange-500/20";
+    if (hoursUntil <= 6)
+      return "bg-orange-500/10 text-orange-600 border-orange-500/20";
     return "bg-blue-500/10 text-blue-600 border-blue-500/20";
   };
 
@@ -132,9 +163,9 @@ export function UpcomingCoinsSection() {
               About Token Names
             </h3>
             <p className="text-xs text-blue-700 dark:text-blue-200 mt-1">
-              MEXC reveals actual token names and symbols closer to launch time for security
-              reasons. Current entries show placeholder IDs that will be updated with real names as
-              launch approaches.
+              MEXC reveals actual token names and symbols closer to launch time
+              for security reasons. Current entries show placeholder IDs that
+              will be updated with real names as launch approaches.
             </p>
           </div>
         </div>
@@ -169,7 +200,9 @@ export function UpcomingCoinsSection() {
           ) : (
             <div className="space-y-3">
               {groupedLaunches.today.map((entry, index) => {
-                const { time, hoursUntil } = formatLaunchTime(entry.firstOpenTime || "");
+                const { time, hoursUntil } = formatLaunchTime(
+                  entry.firstOpenTime || ""
+                );
                 return (
                   <div
                     key={`${entry.vcoinId}-${index}`}
@@ -201,7 +234,10 @@ export function UpcomingCoinsSection() {
                           <Clock className="h-3 w-3" />
                           {time}
                         </div>
-                        <Badge variant="outline" className={getTimeUntilColor(hoursUntil)}>
+                        <Badge
+                          variant="outline"
+                          className={getTimeUntilColor(hoursUntil)}
+                        >
                           {hoursUntil <= 0 ? "Now" : `${hoursUntil}h`}
                         </Badge>
                       </div>
@@ -220,7 +256,10 @@ export function UpcomingCoinsSection() {
           <div className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-blue-600" />
             <CardTitle className="text-blue-600">Tomorrow's Launches</CardTitle>
-            <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+            <Badge
+              variant="secondary"
+              className="bg-blue-500/10 text-blue-600 border-blue-500/20"
+            >
               {groupedLaunches.tomorrow.length}
             </Badge>
           </div>
@@ -237,7 +276,9 @@ export function UpcomingCoinsSection() {
           ) : (
             <div className="space-y-3">
               {groupedLaunches.tomorrow.map((entry, index) => {
-                const { time, hoursUntil } = formatLaunchTime(entry.firstOpenTime || "");
+                const { time, hoursUntil } = formatLaunchTime(
+                  entry.firstOpenTime || ""
+                );
                 return (
                   <div
                     key={`${entry.vcoinId}-${index}`}
@@ -269,7 +310,10 @@ export function UpcomingCoinsSection() {
                           <Clock className="h-3 w-3" />
                           {time}
                         </div>
-                        <Badge variant="outline" className={getTimeUntilColor(hoursUntil)}>
+                        <Badge
+                          variant="outline"
+                          className={getTimeUntilColor(hoursUntil)}
+                        >
                           {hoursUntil}h
                         </Badge>
                       </div>
@@ -292,7 +336,9 @@ export function UpcomingCoinsSection() {
                 {groupedLaunches.today.length + groupedLaunches.tomorrow.length}
               </span>
               {Array.isArray(allCalendarData) && (
-                <span className="ml-2">(Total: {allCalendarData.length} in calendar)</span>
+                <span className="ml-2">
+                  (Total: {allCalendarData.length} in calendar)
+                </span>
               )}
             </div>
             <div className="flex gap-2">
@@ -302,7 +348,10 @@ export function UpcomingCoinsSection() {
               >
                 Today: {groupedLaunches.today.length}
               </Badge>
-              <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+              <Badge
+                variant="outline"
+                className="bg-blue-500/10 text-blue-600 border-blue-500/20"
+              >
                 Tomorrow: {groupedLaunches.tomorrow.length}
               </Badge>
               <Button

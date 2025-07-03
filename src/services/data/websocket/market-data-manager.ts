@@ -7,11 +7,9 @@
 
 import { randomUUID } from "node:crypto";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
-import type { PatternAnalysisResult } from "@/src/core/pattern-detection/interfaces";
 import type {
   NotificationMessage,
   TradingPriceMessage,
-  TradingSignalMessage,
 } from "@/src/lib/websocket-types";
 import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 
@@ -79,7 +77,12 @@ export class MarketDataManager {
     warn: (message: string, context?: any) =>
       console.warn("[market-data-manager]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[market-data-manager]", message, context || "", error || ""),
+      console.error(
+        "[market-data-manager]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[market-data-manager]", message, context || ""),
   };
@@ -213,7 +216,10 @@ export class MarketDataManager {
   /**
    * Check for pattern updates based on price changes
    */
-  private async checkForPatternUpdates(symbol: string, price: TradingPriceMessage): Promise<void> {
+  private async checkForPatternUpdates(
+    symbol: string,
+    price: TradingPriceMessage
+  ): Promise<void> {
     const lastCheck = this.lastPatternCheck.get(symbol) || 0;
     const now = Date.now();
 
@@ -253,7 +259,9 @@ export class MarketDataManager {
   /**
    * Broadcast ready state pattern detection
    */
-  private async broadcastReadyStatePattern(status: SymbolStatusData): Promise<void> {
+  private async broadcastReadyStatePattern(
+    status: SymbolStatusData
+  ): Promise<void> {
     try {
       this.logger.info("Ready state pattern detected", {
         symbol: status.symbol,
@@ -352,9 +360,9 @@ export class MarketDataManager {
     // Perform enhanced analysis for near-ready states or high activity
     return (
       (status.sts >= 1 && status.st >= 1 && status.tt >= 3) || // Near ready state
-      (typeof status.ps === 'number' && status.ps > 100) || // High price score
-      (typeof status.qs === 'number' && status.qs > 100) || // High quantity score
-      (typeof status.ca === 'number' && status.ca > 50) // High combined activity
+      (typeof status.ps === "number" && status.ps > 100) || // High price score
+      (typeof status.qs === "number" && status.qs > 100) || // High quantity score
+      (typeof status.ca === "number" && status.ca > 50) // High combined activity
     );
   }
 
@@ -374,7 +382,7 @@ export class MarketDataManager {
       const priceData = this.priceCache.get(status.symbol);
 
       // Create a proper analysis request
-      const analysisRequest: SingleSymbolAnalysisRequest = {
+      const _analysisRequest: SingleSymbolAnalysisRequest = {
         symbol: status.symbol,
         sts: status.sts,
         st: status.st,

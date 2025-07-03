@@ -7,7 +7,12 @@
 
 import type { ApiResponse } from "./api-response";
 import { isServerError, isTimeoutError } from "./error-type-utils";
-import { type ApiError, isApiError, isNetworkError, isValidationError } from "./errors";
+import {
+  type ApiError,
+  isApiError,
+  isNetworkError,
+  isValidationError,
+} from "./errors";
 import { createLogger, type LogContext } from "./unified-logger";
 
 const logger = createLogger("error-handler", {
@@ -124,7 +129,10 @@ export class StandardizedErrorHandler {
   /**
    * Process and standardize an error
    */
-  processError(error: unknown, context: Partial<StandardizedErrorContext> = {}): StandardizedError {
+  processError(
+    error: unknown,
+    context: Partial<StandardizedErrorContext> = {}
+  ): StandardizedError {
     const startTime = performance.now();
 
     // Ensure we have a proper Error instance
@@ -366,9 +374,12 @@ export class StandardizedErrorHandler {
     if (isServerError(error)) return ErrorCategory.SYSTEM;
 
     if (isApiError(error)) {
-      if ((error as ApiError).statusCode === 401) return ErrorCategory.AUTHENTICATION;
-      if ((error as ApiError).statusCode === 403) return ErrorCategory.AUTHORIZATION;
-      if ((error as ApiError).statusCode === 429) return ErrorCategory.RATE_LIMIT;
+      if ((error as ApiError).statusCode === 401)
+        return ErrorCategory.AUTHENTICATION;
+      if ((error as ApiError).statusCode === 403)
+        return ErrorCategory.AUTHORIZATION;
+      if ((error as ApiError).statusCode === 429)
+        return ErrorCategory.RATE_LIMIT;
       if ((error as ApiError).statusCode >= 500) return ErrorCategory.SYSTEM;
     }
 
@@ -387,19 +398,31 @@ export class StandardizedErrorHandler {
     return ErrorCategory.BUSINESS_LOGIC;
   }
 
-  private determineSeverity(_error: Error, category: ErrorCategory): ErrorSeverity {
+  private determineSeverity(
+    _error: Error,
+    category: ErrorCategory
+  ): ErrorSeverity {
     // Critical errors
-    if (category === ErrorCategory.SYSTEM || category === ErrorCategory.DATABASE) {
+    if (
+      category === ErrorCategory.SYSTEM ||
+      category === ErrorCategory.DATABASE
+    ) {
       return ErrorSeverity.CRITICAL;
     }
 
     // High severity errors
-    if (category === ErrorCategory.AUTHENTICATION || category === ErrorCategory.CONFIGURATION) {
+    if (
+      category === ErrorCategory.AUTHENTICATION ||
+      category === ErrorCategory.CONFIGURATION
+    ) {
       return ErrorSeverity.HIGH;
     }
 
     // Medium severity errors
-    if (category === ErrorCategory.EXTERNAL_API || category === ErrorCategory.NETWORK) {
+    if (
+      category === ErrorCategory.EXTERNAL_API ||
+      category === ErrorCategory.NETWORK
+    ) {
       return ErrorSeverity.MEDIUM;
     }
 
@@ -407,12 +430,21 @@ export class StandardizedErrorHandler {
     return ErrorSeverity.LOW;
   }
 
-  private determineRecoveryStrategy(_error: Error, category: ErrorCategory): RecoveryStrategy {
-    if (category === ErrorCategory.NETWORK || category === ErrorCategory.RATE_LIMIT) {
+  private determineRecoveryStrategy(
+    _error: Error,
+    category: ErrorCategory
+  ): RecoveryStrategy {
+    if (
+      category === ErrorCategory.NETWORK ||
+      category === ErrorCategory.RATE_LIMIT
+    ) {
       return RecoveryStrategy.RETRY;
     }
 
-    if (category === ErrorCategory.VALIDATION || category === ErrorCategory.AUTHENTICATION) {
+    if (
+      category === ErrorCategory.VALIDATION ||
+      category === ErrorCategory.AUTHENTICATION
+    ) {
       return RecoveryStrategy.USER_ACTION_REQUIRED;
     }
 
@@ -494,10 +526,16 @@ export class StandardizedErrorHandler {
   }
 
   private shouldAlert(metadata: ErrorMetadata): boolean {
-    return metadata.severity === ErrorSeverity.CRITICAL || metadata.severity === ErrorSeverity.HIGH;
+    return (
+      metadata.severity === ErrorSeverity.CRITICAL ||
+      metadata.severity === ErrorSeverity.HIGH
+    );
   }
 
-  private async sendAlert(error: Error, metadata: ErrorMetadata): Promise<void> {
+  private async sendAlert(
+    error: Error,
+    metadata: ErrorMetadata
+  ): Promise<void> {
     // Implementation would integrate with alerting system
     logger.error(
       "ALERT: Critical error detected",

@@ -25,9 +25,18 @@ export class StrategyInitializationService {
     warn: (message: string, context?: any) =>
       console.warn("[strategy-initialization-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[strategy-initialization-service]", message, context || "", error || ""),
+      console.error(
+        "[strategy-initialization-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
-      console.debug("[strategy-initialization-service]", message, context || ""),
+      console.debug(
+        "[strategy-initialization-service]",
+        message,
+        context || ""
+      ),
   };
 
   private static instance: StrategyInitializationService;
@@ -37,7 +46,8 @@ export class StrategyInitializationService {
 
   static getInstance(): StrategyInitializationService {
     if (!StrategyInitializationService.instance) {
-      StrategyInitializationService.instance = new StrategyInitializationService();
+      StrategyInitializationService.instance =
+        new StrategyInitializationService();
     }
     return StrategyInitializationService.instance;
   }
@@ -67,7 +77,9 @@ export class StrategyInitializationService {
 
         // Check if already initialized (unless forced)
         if (!force && (await this.isAlreadyInitialized())) {
-          console.info("[Strategy Init] Templates already initialized, skipping");
+          console.info(
+            "[Strategy Init] Templates already initialized, skipping"
+          );
           this.lastInitialization = new Date();
           this.errors = [];
           return;
@@ -81,12 +93,18 @@ export class StrategyInitializationService {
 
         this.lastInitialization = new Date();
         this.errors = [];
-        console.info("[Strategy Init] Strategy templates initialized successfully");
+        console.info(
+          "[Strategy Init] Strategy templates initialized successfully"
+        );
         return;
       } catch (error) {
         attempts++;
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error(`[Strategy Init] Attempt ${attempts} failed:`, errorMessage);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        console.error(
+          `[Strategy Init] Attempt ${attempts} failed:`,
+          errorMessage
+        );
 
         this.errors.push(`Attempt ${attempts}: ${errorMessage}`);
 
@@ -106,10 +124,17 @@ export class StrategyInitializationService {
 
   private async isAlreadyInitialized(): Promise<boolean> {
     try {
-      const result = await db.select({ count: count() }).from(strategyTemplates);
-      return result[0]?.count > 0;
+      const result = await db
+        .select()
+        .from(strategyTemplates)
+        .limit(1)
+        .execute();
+      return result.length > 0;
     } catch (error) {
-      console.error("[Strategy Init] Error checking initialization status:", error);
+      console.error(
+        "[Strategy Init] Error checking initialization status:",
+        error
+      );
       return false;
     }
   }
@@ -147,16 +172,26 @@ export class StrategyInitializationService {
       }
 
       // Verify specific templates exist
-      const expectedTemplates = ["normal", "conservative", "aggressive", "scalping", "diamond"];
+      const expectedTemplates = [
+        "normal",
+        "conservative",
+        "aggressive",
+        "scalping",
+        "diamond",
+      ];
       const strategyNames = strategies.map((s: any) => s.name || s.strategyId);
 
       for (const expectedId of expectedTemplates) {
         if (!strategyNames.includes(expectedId)) {
-          throw new Error(`Required strategy template '${expectedId}' not found`);
+          throw new Error(
+            `Required strategy template '${expectedId}' not found`
+          );
         }
       }
 
-      console.info(`[Strategy Init] Verified ${strategies.length} strategy templates`);
+      console.info(
+        `[Strategy Init] Verified ${strategies.length} strategy templates`
+      );
     } catch (error) {
       throw new Error(
         `Initialization verification failed: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -186,7 +221,10 @@ export class StrategyInitializationService {
         templateCount: 0,
         databaseConnected: false,
         lastInitialization: this.lastInitialization,
-        errors: [...this.errors, error instanceof Error ? error.message : "Unknown error"],
+        errors: [
+          ...this.errors,
+          error instanceof Error ? error.message : "Unknown error",
+        ],
       };
     }
   }
@@ -227,4 +265,5 @@ export class StrategyInitializationService {
 }
 
 // Export singleton instance
-export const strategyInitializationService = StrategyInitializationService.getInstance();
+export const strategyInitializationService =
+  StrategyInitializationService.getInstance();

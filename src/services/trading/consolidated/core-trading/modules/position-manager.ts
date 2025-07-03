@@ -29,9 +29,11 @@ export class PositionManager {
    */
   async initialize(): Promise<void> {
     try {
-      this.context.logger.info('PositionManager initialized successfully');
+      this.context.logger.info("PositionManager initialized successfully");
     } catch (error) {
-      this.context.logger.error('Failed to initialize PositionManager', { error: error instanceof Error ? error.message : String(error) });
+      this.context.logger.error("Failed to initialize PositionManager", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       throw error;
     }
   }
@@ -41,7 +43,7 @@ export class PositionManager {
    */
   updateConfig(newConfig: Partial<CoreTradingConfig>): void {
     this.context.config = { ...this.context.config, ...newConfig };
-    this.context.logger.info('PositionManager configuration updated');
+    this.context.logger.info("PositionManager configuration updated");
   }
 
   /**
@@ -49,29 +51,38 @@ export class PositionManager {
    */
   async setupPositionMonitoring(
     position: Position,
-    result: TradeResult
+    _result: TradeResult
   ): Promise<void> {
     try {
       // Store position for tracking
       this.activePositions.set(position.id, position);
 
       // Setup stop loss monitoring if enabled
-      if (position.stopLoss && this.context.config.riskManagement.stopLossEnabled) {
+      if (
+        position.stopLoss &&
+        this.context.config.riskManagement.stopLossEnabled
+      ) {
         this.setupStopLossMonitoring(position);
       }
 
       // Setup take profit monitoring if enabled
-      if (position.takeProfit && this.context.config.riskManagement.takeProfitEnabled) {
+      if (
+        position.takeProfit &&
+        this.context.config.riskManagement.takeProfitEnabled
+      ) {
         this.setupTakeProfitMonitoring(position);
       }
 
-      this.context.logger.info(`Position monitoring setup for ${position.symbol}`, {
-        positionId: position.id,
-        symbol: position.symbol,
-        quantity: position.quantity,
-        stopLoss: position.stopLoss,
-        takeProfit: position.takeProfit,
-      });
+      this.context.logger.info(
+        `Position monitoring setup for ${position.symbol}`,
+        {
+          positionId: position.id,
+          symbol: position.symbol,
+          quantity: position.quantity,
+          stopLoss: position.stopLoss,
+          takeProfit: position.takeProfit,
+        }
+      );
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to setup position monitoring", {
@@ -88,16 +99,18 @@ export class PositionManager {
   private setupStopLossMonitoring(position: Position): void {
     if (!position.stopLoss) return;
 
-    const checkInterval = this.context.config.riskManagement.priceCheckInterval || 5000;
-    
+    const checkInterval =
+      this.context.config.riskManagement.priceCheckInterval || 5000;
+
     const stopLossTimer = setInterval(async () => {
       try {
         const currentPrice = await this.getCurrentMarketPrice(position.symbol);
         if (!currentPrice) return;
 
-        const shouldTrigger = position.side === "BUY" 
-          ? currentPrice <= position.stopLoss!
-          : currentPrice >= position.stopLoss!;
+        const shouldTrigger =
+          position.side === "BUY"
+            ? currentPrice <= position.stopLoss!
+            : currentPrice >= position.stopLoss!;
 
         if (shouldTrigger) {
           await this.executeStopLoss(position);
@@ -120,16 +133,18 @@ export class PositionManager {
   private setupTakeProfitMonitoring(position: Position): void {
     if (!position.takeProfit) return;
 
-    const checkInterval = this.context.config.riskManagement.priceCheckInterval || 5000;
-    
+    const checkInterval =
+      this.context.config.riskManagement.priceCheckInterval || 5000;
+
     const takeProfitTimer = setInterval(async () => {
       try {
         const currentPrice = await this.getCurrentMarketPrice(position.symbol);
         if (!currentPrice) return;
 
-        const shouldTrigger = position.side === "BUY" 
-          ? currentPrice >= position.takeProfit!
-          : currentPrice <= position.takeProfit!;
+        const shouldTrigger =
+          position.side === "BUY"
+            ? currentPrice >= position.takeProfit!
+            : currentPrice <= position.takeProfit!;
 
         if (shouldTrigger) {
           await this.executeTakeProfit(position);
@@ -151,11 +166,14 @@ export class PositionManager {
    */
   private async executeStopLoss(position: Position): Promise<void> {
     try {
-      this.context.logger.warn(`Executing stop loss for position ${position.id}`, {
-        symbol: position.symbol,
-        stopLoss: position.stopLoss,
-        quantity: position.quantity,
-      });
+      this.context.logger.warn(
+        `Executing stop loss for position ${position.id}`,
+        {
+          symbol: position.symbol,
+          stopLoss: position.stopLoss,
+          quantity: position.quantity,
+        }
+      );
 
       // Close the position via trading strategy
       const closeResult = await this.context.tradingStrategy.closePosition(
@@ -166,12 +184,17 @@ export class PositionManager {
       if (closeResult.success) {
         this.cleanupPositionMonitoring(position.id);
         this.activePositions.delete(position.id);
-        
-        this.context.logger.info(`Stop loss executed successfully for ${position.id}`);
+
+        this.context.logger.info(
+          `Stop loss executed successfully for ${position.id}`
+        );
       } else {
-        this.context.logger.error(`Failed to execute stop loss for ${position.id}`, {
-          error: closeResult.error,
-        });
+        this.context.logger.error(
+          `Failed to execute stop loss for ${position.id}`,
+          {
+            error: closeResult.error,
+          }
+        );
       }
     } catch (error) {
       const safeError = toSafeError(error);
@@ -187,11 +210,14 @@ export class PositionManager {
    */
   private async executeTakeProfit(position: Position): Promise<void> {
     try {
-      this.context.logger.info(`Executing take profit for position ${position.id}`, {
-        symbol: position.symbol,
-        takeProfit: position.takeProfit,
-        quantity: position.quantity,
-      });
+      this.context.logger.info(
+        `Executing take profit for position ${position.id}`,
+        {
+          symbol: position.symbol,
+          takeProfit: position.takeProfit,
+          quantity: position.quantity,
+        }
+      );
 
       // Close the position via trading strategy
       const closeResult = await this.context.tradingStrategy.closePosition(
@@ -202,12 +228,17 @@ export class PositionManager {
       if (closeResult.success) {
         this.cleanupPositionMonitoring(position.id);
         this.activePositions.delete(position.id);
-        
-        this.context.logger.info(`Take profit executed successfully for ${position.id}`);
+
+        this.context.logger.info(
+          `Take profit executed successfully for ${position.id}`
+        );
       } else {
-        this.context.logger.error(`Failed to execute take profit for ${position.id}`, {
-          error: closeResult.error,
-        });
+        this.context.logger.error(
+          `Failed to execute take profit for ${position.id}`,
+          {
+            error: closeResult.error,
+          }
+        );
       }
     } catch (error) {
       const safeError = toSafeError(error);
@@ -387,10 +418,13 @@ export class PositionManager {
       // Setup new take profit monitoring
       this.setupTakeProfitMonitoring(position);
 
-      this.context.logger.info(`Updated take profit for position ${positionId}`, {
-        oldTakeProfit: position.takeProfit,
-        newTakeProfit,
-      });
+      this.context.logger.info(
+        `Updated take profit for position ${positionId}`,
+        {
+          oldTakeProfit: position.takeProfit,
+          newTakeProfit,
+        }
+      );
 
       return {
         success: true,
@@ -435,7 +469,8 @@ export class PositionManager {
   private async getCurrentMarketPrice(symbol: string): Promise<number | null> {
     try {
       // Use market data service to get current price
-      const marketData = await this.context.marketDataService.getCurrentPrice(symbol);
+      const marketData =
+        await this.context.marketDataService.getCurrentPrice(symbol);
       return marketData?.price || null;
     } catch (error) {
       const safeError = toSafeError(error);
@@ -458,7 +493,7 @@ export class PositionManager {
       activeCount: activePositions.length,
       pendingStopLosses: this.pendingStopLosses.size,
       pendingTakeProfits: this.pendingTakeProfits.size,
-      positions: activePositions.map(position => ({
+      positions: activePositions.map((position) => ({
         id: position.id,
         symbol: position.symbol,
         side: position.side,
@@ -468,8 +503,8 @@ export class PositionManager {
         stopLossPrice: position.stopLoss,
         takeProfitPrice: position.takeProfit,
         status: position.status,
-        openTime: position.timestamp
-      }))
+        openTime: position.timestamp,
+      })),
     };
   }
 

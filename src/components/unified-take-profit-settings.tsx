@@ -15,7 +15,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -55,7 +61,9 @@ export function UnifiedTakeProfitSettings({
   investmentAmount = 1000,
   className = "",
 }: UnifiedTakeProfitSettingsProps) {
-  const [customLevels, setCustomLevels] = useState<TakeProfitLevel[]>(customStrategy?.levels || []);
+  const [customLevels, setCustomLevels] = useState<TakeProfitLevel[]>(
+    customStrategy?.levels || []
+  );
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [stopLoss, setStopLoss] = useState(15);
   const [trailingStop, setTrailingStop] = useState(true);
@@ -71,7 +79,8 @@ export function UnifiedTakeProfitSettings({
       };
     }
     return (
-      TAKE_PROFIT_STRATEGIES.find((s) => s.id === selectedStrategy) || TAKE_PROFIT_STRATEGIES[0]
+      TAKE_PROFIT_STRATEGIES.find((s) => s.id === selectedStrategy) ||
+      TAKE_PROFIT_STRATEGIES[0]
     );
   }, [selectedStrategy, customLevels]);
 
@@ -102,7 +111,8 @@ export function UnifiedTakeProfitSettings({
 
   const handleCustomLevelAdd = () => {
     if (customLevels.length < 6) {
-      const lastPercent = customLevels[customLevels.length - 1]?.profitPercentage || 0;
+      const lastPercent =
+        customLevels[customLevels.length - 1]?.profitPercentage || 0;
       const newLevel = createCustomTakeProfitLevel(
         lastPercent + 10,
         25,
@@ -114,7 +124,10 @@ export function UnifiedTakeProfitSettings({
     }
   };
 
-  const handleCustomLevelUpdate = (index: number, updates: Partial<TakeProfitLevel>) => {
+  const handleCustomLevelUpdate = (
+    index: number,
+    updates: Partial<TakeProfitLevel>
+  ) => {
     const newLevels = [...customLevels];
     newLevels[index] = { ...newLevels[index], ...updates };
     setCustomLevels(newLevels);
@@ -189,7 +202,10 @@ export function UnifiedTakeProfitSettings({
                 Strategy Type
               </Label>
               <div className="relative z-50">
-                <Select value={selectedStrategy} onValueChange={handleStrategySelect}>
+                <Select
+                  value={selectedStrategy}
+                  onValueChange={handleStrategySelect}
+                >
                   <SelectTrigger
                     id="strategy-select"
                     className="bg-background border-border text-foreground hover:bg-accent/50 focus:ring-primary/50"
@@ -239,7 +255,9 @@ export function UnifiedTakeProfitSettings({
             {selectedStrategy !== "custom" && (
               <>
                 <div className="text-center">
-                  <div className="text-xs text-muted-foreground mb-1">Levels</div>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Levels
+                  </div>
                   <div className="flex items-center justify-center gap-1">
                     <Target className="h-3 w-3 text-primary" />
                     <span className="font-medium text-foreground">
@@ -248,11 +266,17 @@ export function UnifiedTakeProfitSettings({
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-xs text-muted-foreground mb-1">Total Coverage</div>
+                  <div className="text-xs text-muted-foreground mb-1">
+                    Total Coverage
+                  </div>
                   <div className="flex items-center justify-center gap-1">
                     <DollarSign className="h-3 w-3 text-primary" />
                     <span className="font-medium text-foreground">
-                      {currentStrategy.levels.reduce((sum, l) => sum + l.sellQuantity, 0)}%
+                      {currentStrategy.levels.reduce(
+                        (sum, l) => sum + l.sellQuantity,
+                        0
+                      )}
+                      %
                     </span>
                   </div>
                 </div>
@@ -262,7 +286,9 @@ export function UnifiedTakeProfitSettings({
 
           {selectedStrategy !== "custom" && (
             <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground">{currentStrategy.description}</p>
+              <p className="text-sm text-muted-foreground">
+                {currentStrategy.description}
+              </p>
             </div>
           )}
         </CardContent>
@@ -271,7 +297,9 @@ export function UnifiedTakeProfitSettings({
       {/* Strategy Configuration */}
       <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-foreground">Strategy Configuration</CardTitle>
+          <CardTitle className="text-foreground">
+            Strategy Configuration
+          </CardTitle>
           <CardDescription className="text-muted-foreground">
             Fine-tune your selected strategy
           </CardDescription>
@@ -282,8 +310,18 @@ export function UnifiedTakeProfitSettings({
             <div className="absolute inset-0 opacity-5">
               <svg width="100%" height="100%">
                 <defs>
-                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1" />
+                  <pattern
+                    id="grid"
+                    width="40"
+                    height="40"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M 40 0 L 0 0 0 40"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1"
+                    />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill="url(#grid)" />
@@ -292,16 +330,23 @@ export function UnifiedTakeProfitSettings({
 
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-foreground">Profit Distribution</h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  Profit Distribution
+                </h3>
                 <Badge variant="outline" className="gap-1 border-border">
                   <TrendingUp className="h-3 w-3 text-primary" />
-                  <span className="text-foreground">{currentStrategy.name}</span>
+                  <span className="text-foreground">
+                    {currentStrategy.name}
+                  </span>
                 </Badge>
               </div>
 
               <div className="flex items-end justify-between h-32 sm:h-40 mb-4 gap-2">
                 {currentStrategy.levels.map((level, _index) => (
-                  <div key={level.id} className="flex-1 flex flex-col items-center min-w-0">
+                  <div
+                    key={level.id}
+                    className="flex-1 flex flex-col items-center min-w-0"
+                  >
                     <div
                       className="w-full max-w-12 sm:max-w-16 bg-primary rounded-t transition-all mx-auto shadow-sm"
                       style={{ height: `${(level.sellQuantity / 40) * 100}%` }}
@@ -319,10 +364,14 @@ export function UnifiedTakeProfitSettings({
               </div>
 
               {totalSellQuantity !== 100 && (
-                <Alert variant="destructive" className="mt-4 border-destructive bg-destructive/10">
+                <Alert
+                  variant="destructive"
+                  className="mt-4 border-destructive bg-destructive/10"
+                >
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription className="text-destructive-foreground">
-                    Total sell percentage is {totalSellQuantity}%. Adjust levels to reach 100%.
+                    Total sell percentage is {totalSellQuantity}%. Adjust levels
+                    to reach 100%.
                   </AlertDescription>
                 </Alert>
               )}
@@ -384,7 +433,9 @@ export function UnifiedTakeProfitSettings({
                         key={level.id}
                         level={level}
                         index={index}
-                        onUpdate={(updates) => handleCustomLevelUpdate(index, updates)}
+                        onUpdate={(updates) =>
+                          handleCustomLevelUpdate(index, updates)
+                        }
                         onRemove={() => handleCustomLevelRemove(index)}
                         totalSellQuantity={totalSellQuantity}
                       />
@@ -412,10 +463,14 @@ export function UnifiedTakeProfitSettings({
                     >
                       <div className="flex items-center gap-4">
                         <Badge variant="outline">Level {index + 1}</Badge>
-                        <span className="text-sm">Take profit at +{level.profitPercentage}%</span>
+                        <span className="text-sm">
+                          Take profit at +{level.profitPercentage}%
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">Sell {level.sellQuantity}%</span>
+                        <span className="text-sm font-medium">
+                          Sell {level.sellQuantity}%
+                        </span>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
@@ -427,7 +482,10 @@ export function UnifiedTakeProfitSettings({
             <TabsContent value="risk" className="space-y-6 mt-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="stop-loss" className="flex items-center gap-2 mb-2">
+                  <Label
+                    htmlFor="stop-loss"
+                    className="flex items-center gap-2 mb-2"
+                  >
                     Stop Loss
                     <Badge variant="outline" className="text-xs">
                       Protects downside
@@ -443,7 +501,9 @@ export function UnifiedTakeProfitSettings({
                       className="flex-1"
                     />
                     <div className="w-20 text-right">
-                      <span className="text-lg font-semibold">-{stopLoss}%</span>
+                      <span className="text-lg font-semibold">
+                        -{stopLoss}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -468,7 +528,10 @@ export function UnifiedTakeProfitSettings({
                 </div>
 
                 <div>
-                  <Label htmlFor="max-position" className="flex items-center gap-2 mb-2">
+                  <Label
+                    htmlFor="max-position"
+                    className="flex items-center gap-2 mb-2"
+                  >
                     Maximum Position Size
                     <Badge variant="outline" className="text-xs">
                       Per trade
@@ -480,7 +543,9 @@ export function UnifiedTakeProfitSettings({
                       id="max-position"
                       type="number"
                       value={maxPosition}
-                      onChange={(e) => setMaxPosition(Number.parseInt(e.target.value) || 0)}
+                      onChange={(e) =>
+                        setMaxPosition(Number.parseInt(e.target.value) || 0)
+                      }
                       className="flex-1"
                     />
                     <span className="text-muted-foreground">USDT</span>
@@ -511,14 +576,18 @@ export function UnifiedTakeProfitSettings({
                 <div className="flex items-center justify-between p-4 rounded-lg border">
                   <div>
                     <Label className="text-base">Auto-Rebalance</Label>
-                    <p className="text-sm text-muted-foreground">Automatically adjust positions</p>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically adjust positions
+                    </p>
                   </div>
                   <Switch />
                 </div>
 
                 <div className="flex items-center justify-between p-4 rounded-lg border">
                   <div>
-                    <Label className="text-base">Pattern Discovery Integration</Label>
+                    <Label className="text-base">
+                      Pattern Discovery Integration
+                    </Label>
                     <p className="text-sm text-muted-foreground">
                       Use AI pattern detection for timing
                     </p>
@@ -540,7 +609,9 @@ export function UnifiedTakeProfitSettings({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Strategy Type</p>
-              <p className="text-lg font-semibold text-foreground">{currentStrategy.name}</p>
+              <p className="text-lg font-semibold text-foreground">
+                {currentStrategy.name}
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Profit Levels</p>
@@ -550,11 +621,15 @@ export function UnifiedTakeProfitSettings({
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Stop Loss</p>
-              <p className="text-lg font-semibold text-foreground">-{stopLoss}%</p>
+              <p className="text-lg font-semibold text-foreground">
+                -{stopLoss}%
+              </p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Max Position</p>
-              <p className="text-lg font-semibold text-foreground">${maxPosition}</p>
+              <p className="text-lg font-semibold text-foreground">
+                ${maxPosition}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -588,13 +663,19 @@ function CustomLevelEditor({
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background/50">
-      <span className="text-sm font-medium w-16 text-foreground">Level {index + 1}</span>
+      <span className="text-sm font-medium w-16 text-foreground">
+        Level {index + 1}
+      </span>
       <div className="flex items-center gap-2 flex-1">
         <Label className="text-sm text-foreground">Profit:</Label>
         <Input
           type="number"
           value={level.profitPercentage}
-          onChange={(e) => onUpdate({ profitPercentage: Number.parseFloat(e.target.value) || 0 })}
+          onChange={(e) =>
+            onUpdate({
+              profitPercentage: Number.parseFloat(e.target.value) || 0,
+            })
+          }
           className="w-20 h-8 bg-background border-border text-foreground"
           min="0.1"
           max="1000"
@@ -607,7 +688,9 @@ function CustomLevelEditor({
         <Input
           type="number"
           value={level.sellQuantity}
-          onChange={(e) => onUpdate({ sellQuantity: Number.parseFloat(e.target.value) || 0 })}
+          onChange={(e) =>
+            onUpdate({ sellQuantity: Number.parseFloat(e.target.value) || 0 })
+          }
           className="w-20 h-8 bg-background border-border text-foreground"
           min="1"
           max="100"

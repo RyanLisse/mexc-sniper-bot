@@ -16,14 +16,26 @@ import {
 import { z } from "zod";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Progress } from "./ui/progress";
 
 // Zod schema for agent status validation
 const AgentStatusSchema = z.object({
   id: z.string(),
   name: z.string(),
-  type: z.enum(["calendar", "pattern-discovery", "symbol-analysis", "mexc-api", "orchestrator"]),
+  type: z.enum([
+    "calendar",
+    "pattern-discovery",
+    "symbol-analysis",
+    "mexc-api",
+    "orchestrator",
+  ]),
   status: z.enum(["active", "inactive", "error", "starting", "stopping"]),
   healthScore: z.number().min(0).max(100),
   lastActivity: z.string(),
@@ -175,7 +187,13 @@ export function OptimizedAgentsDashboard({
               <CardTitle>Multi-Agent Trading System</CardTitle>
             </div>
             <div className="flex items-center space-x-2">
-              <Badge variant={agentData?.systemStatus === "healthy" ? "default" : "secondary"}>
+              <Badge
+                variant={
+                  agentData?.systemStatus === "healthy"
+                    ? "default"
+                    : "secondary"
+                }
+              >
                 {agentData?.systemStatus || "Unknown"}
               </Badge>
               <Button
@@ -184,7 +202,9 @@ export function OptimizedAgentsDashboard({
                 onClick={() => refetch()}
                 disabled={isLoading || isFetching}
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`}
+                />
               </Button>
             </div>
           </div>
@@ -200,7 +220,9 @@ export function OptimizedAgentsDashboard({
           {agentData && (
             <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
               <div className="text-center p-3 border rounded">
-                <div className="font-bold text-lg text-green-600">{agentData.activeAgents}</div>
+                <div className="font-bold text-lg text-green-600">
+                  {agentData.activeAgents}
+                </div>
                 <div className="text-muted-foreground">Active Agents</div>
               </div>
               <div className="text-center p-3 border rounded">
@@ -231,7 +253,9 @@ export function OptimizedAgentsDashboard({
           {isLoading && !agentData && (
             <div className="flex items-center space-x-3 p-4">
               <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
-              <span className="text-muted-foreground">Loading agent statuses...</span>
+              <span className="text-muted-foreground">
+                Loading agent statuses...
+              </span>
             </div>
           )}
         </CardContent>
@@ -267,7 +291,9 @@ export function OptimizedAgentsDashboard({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span>Health Score</span>
-                      <span className={`font-medium ${getHealthColor(agent.healthScore)}`}>
+                      <span
+                        className={`font-medium ${getHealthColor(agent.healthScore)}`}
+                      >
                         {agent.healthScore}%
                       </span>
                     </div>
@@ -277,7 +303,9 @@ export function OptimizedAgentsDashboard({
                   {/* Current Task */}
                   {agent.currentTask && (
                     <div className="text-sm">
-                      <div className="font-medium text-muted-foreground mb-1">Current Task</div>
+                      <div className="font-medium text-muted-foreground mb-1">
+                        Current Task
+                      </div>
                       <div className="text-xs">{agent.currentTask}</div>
                     </div>
                   )}
@@ -313,13 +341,21 @@ export function OptimizedAgentsDashboard({
                   {/* Capabilities */}
                   {agent.capabilities.length > 0 && (
                     <div className="text-xs">
-                      <div className="font-medium text-muted-foreground mb-1">Capabilities</div>
+                      <div className="font-medium text-muted-foreground mb-1">
+                        Capabilities
+                      </div>
                       <div className="flex flex-wrap gap-1">
-                        {agent.capabilities.slice(0, 3).map((capability, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {capability}
-                          </Badge>
-                        ))}
+                        {agent.capabilities
+                          .slice(0, 3)
+                          .map((capability, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {capability}
+                            </Badge>
+                          ))}
                       </div>
                     </div>
                   )}
@@ -327,14 +363,19 @@ export function OptimizedAgentsDashboard({
                   {/* Errors */}
                   {agent.errors.length > 0 && (
                     <div className="text-xs">
-                      <div className="font-medium text-red-600 mb-1">Recent Errors</div>
-                      <div className="text-red-700 dark:text-red-300">{agent.errors[0]}</div>
+                      <div className="font-medium text-red-600 mb-1">
+                        Recent Errors
+                      </div>
+                      <div className="text-red-700 dark:text-red-300">
+                        {agent.errors[0]}
+                      </div>
                     </div>
                   )}
 
                   {/* Last Activity */}
                   <div className="text-xs text-muted-foreground">
-                    Last activity: {new Date(agent.lastActivity).toLocaleTimeString()}
+                    Last activity:{" "}
+                    {new Date(agent.lastActivity).toLocaleTimeString()}
                   </div>
                 </CardContent>
               </Card>
@@ -358,8 +399,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">Calendar Agent</div>
                 <div className="text-muted-foreground">
-                  Monitors MEXC calendar for new listing announcements and schedules monitoring
-                  workflows
+                  Monitors MEXC calendar for new listing announcements and
+                  schedules monitoring workflows
                 </div>
               </div>
             </div>
@@ -368,7 +409,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">Pattern Discovery Agent</div>
                 <div className="text-muted-foreground">
-                  Detects ready-state patterns (sts:2, st:2, tt:4) with 3.5+ hour advance detection
+                  Detects ready-state patterns (sts:2, st:2, tt:4) with 3.5+
+                  hour advance detection
                 </div>
               </div>
             </div>
@@ -377,8 +419,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">Symbol Analysis Agent</div>
                 <div className="text-muted-foreground">
-                  Performs real-time readiness assessment and market analysis with confidence
-                  scoring
+                  Performs real-time readiness assessment and market analysis
+                  with confidence scoring
                 </div>
               </div>
             </div>
@@ -387,8 +429,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">MEXC API Agent</div>
                 <div className="text-muted-foreground">
-                  Handles all MEXC API interactions, data analysis, and trade execution with AI
-                  insights
+                  Handles all MEXC API interactions, data analysis, and trade
+                  execution with AI insights
                 </div>
               </div>
             </div>
@@ -397,7 +439,8 @@ export function OptimizedAgentsDashboard({
               <div>
                 <div className="font-medium">Orchestrator Agent</div>
                 <div className="text-muted-foreground">
-                  Coordinates multi-agent workflows, synthesizes results, and handles error recovery
+                  Coordinates multi-agent workflows, synthesizes results, and
+                  handles error recovery
                 </div>
               </div>
             </div>

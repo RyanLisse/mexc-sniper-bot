@@ -49,8 +49,11 @@ export class CalendarWorkflow {
       patternInsights
     );
 
-    const categorizedOpportunities = this.categorizeOpportunities(processedListings);
-    const recommendations = this.generateActionableRecommendations(categorizedOpportunities);
+    const categorizedOpportunities =
+      this.categorizeOpportunities(processedListings);
+    const recommendations = this.generateActionableRecommendations(
+      categorizedOpportunities
+    );
     const overallAssessment = this.calculateOverallAssessment(recommendations);
 
     return {
@@ -68,15 +71,24 @@ export class CalendarWorkflow {
     const insights: string[] = [];
 
     // Extract key insights from calendar analysis
-    if (content.includes("new listing") || content.includes("upcoming launch")) {
+    if (
+      content.includes("new listing") ||
+      content.includes("upcoming launch")
+    ) {
       insights.push("New listing opportunities detected");
     }
 
-    if (content.includes("high interest") || content.includes("strong potential")) {
+    if (
+      content.includes("high interest") ||
+      content.includes("strong potential")
+    ) {
       insights.push("High market interest indicators");
     }
 
-    if (content.includes("ready state") || content.includes("sts:2, st:2, tt:4")) {
+    if (
+      content.includes("ready state") ||
+      content.includes("sts:2, st:2, tt:4")
+    ) {
       insights.push("Ready state patterns identified");
     }
 
@@ -98,15 +110,24 @@ export class CalendarWorkflow {
     const insights: string[] = [];
 
     // Extract pattern-specific insights
-    if (content.includes("pattern detected") || content.includes("signal identified")) {
+    if (
+      content.includes("pattern detected") ||
+      content.includes("signal identified")
+    ) {
       insights.push("Trading patterns detected");
     }
 
-    if (content.includes("volume spike") || content.includes("increased activity")) {
+    if (
+      content.includes("volume spike") ||
+      content.includes("increased activity")
+    ) {
       insights.push("Volume indicators present");
     }
 
-    if (content.includes("3.5+ hour advance") || content.includes("optimal timing")) {
+    if (
+      content.includes("3.5+ hour advance") ||
+      content.includes("optimal timing")
+    ) {
       insights.push("Optimal advance timing detected");
     }
 
@@ -128,7 +149,9 @@ export class CalendarWorkflow {
     console.info("[CalendarWorkflow] Processing listings with AI insights");
 
     if (!Array.isArray(calendarEntries)) {
-      console.warn("[CalendarWorkflow] Invalid calendar entries, using empty array");
+      console.warn(
+        "[CalendarWorkflow] Invalid calendar entries, using empty array"
+      );
       return [];
     }
 
@@ -219,14 +242,18 @@ export class CalendarWorkflow {
     for (const target of categorizedOpportunities.readyTargets) {
       const symbol = sanitizeSymbolName(target.symbol);
       const analysis = target.aiAnalysis as any;
-      immediate.push(`SNIPE ${symbol}: ${analysis?.recommendation || "High-priority target"}`);
+      immediate.push(
+        `SNIPE ${symbol}: ${analysis?.recommendation || "High-priority target"}`
+      );
     }
 
     // Process new listings for planned action
     for (const listing of categorizedOpportunities.newListings) {
       const symbol = sanitizeSymbolName(listing.symbol);
       const launchTime = formatTimestamp(listing.launchTime);
-      planned.push(`PREPARE ${symbol}: Launch at ${launchTime} - Monitor for ready state`);
+      planned.push(
+        `PREPARE ${symbol}: Launch at ${launchTime} - Monitor for ready state`
+      );
     }
 
     // Process high potential for watchlist
@@ -234,7 +261,9 @@ export class CalendarWorkflow {
       const symbol = sanitizeSymbolName(potential.symbol);
       const analysis = potential.aiAnalysis as any;
       const confidence = analysis?.confidence || 0;
-      watchlist.push(`WATCH ${symbol}: ${confidence}% confidence - Monitor conditions`);
+      watchlist.push(
+        `WATCH ${symbol}: ${confidence}% confidence - Monitor conditions`
+      );
     }
 
     const total = immediate.length + planned.length + watchlist.length;

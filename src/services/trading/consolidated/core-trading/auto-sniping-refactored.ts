@@ -104,14 +104,17 @@ export class AutoSnipingModuleRefactored {
 
   async shutdown(): Promise<void> {
     this.context.logger.info("Shutting down Auto-Sniping Module");
-    
+
     await this.stop();
     this.positionMonitoring.clearAllMonitoring();
 
     if (this.activePositions.size > 0) {
-      this.context.logger.warn(`Shutting down with ${this.activePositions.size} active positions`, {
-        positions: Array.from(this.activePositions.keys()),
-      });
+      this.context.logger.warn(
+        `Shutting down with ${this.activePositions.size} active positions`,
+        {
+          positions: Array.from(this.activePositions.keys()),
+        }
+      );
     }
 
     this.state.isInitialized = false;
@@ -202,7 +205,9 @@ export class AutoSnipingModuleRefactored {
   // Core Processing Methods - Using DatabaseOperations
   // ============================================================================
 
-  async processSnipeTargets(): Promise<ServiceResponse<{ processedCount: number; successCount: number }>> {
+  async processSnipeTargets(): Promise<
+    ServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     return ServiceResponseUtils.executeWithResponse(async () => {
       this.lastSnipeCheck = new Date();
       this.state.lastActivity = new Date();
@@ -213,7 +218,9 @@ export class AutoSnipingModuleRefactored {
         return { processedCount: 0, successCount: 0 };
       }
 
-      this.context.logger.info(`Processing ${readyTargets.length} ready snipe targets`);
+      this.context.logger.info(
+        `Processing ${readyTargets.length} ready snipe targets`
+      );
 
       let successCount = 0;
       for (const target of readyTargets) {
@@ -223,7 +230,11 @@ export class AutoSnipingModuleRefactored {
             successCount++;
             this.successfulSnipes++;
           } catch (error) {
-            await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", (error as Error).message);
+            await DatabaseOperations.updateSnipeTargetStatus(
+              target.id,
+              "failed",
+              (error as Error).message
+            );
             this.failedSnipes++;
           }
         }
@@ -245,7 +256,9 @@ export class AutoSnipingModuleRefactored {
     await DatabaseOperations.updateSnipeTargetStatus(target.id, "executing");
 
     try {
-      const strategyManager = new TradingStrategyManager(target.entryStrategy || "normal");
+      const strategyManager = new TradingStrategyManager(
+        target.entryStrategy || "normal"
+      );
       const strategy = strategyManager.getActiveStrategy();
 
       const tradeParams: TradeParameters = {
@@ -266,15 +279,30 @@ export class AutoSnipingModuleRefactored {
         : await this.executeRealTradeWithPositionSetup(tradeParams);
 
       if (result.success) {
-        await DatabaseOperations.updateSnipeTargetStatus(target.id, "completed");
-        this.context.eventEmitter.emit("auto_snipe_executed", { target, result, strategy: strategy.name });
+        await DatabaseOperations.updateSnipeTargetStatus(
+          target.id,
+          "completed"
+        );
+        this.context.eventEmitter.emit("auto_snipe_executed", {
+          target,
+          result,
+          strategy: strategy.name,
+        });
       } else {
-        await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", result.error);
+        await DatabaseOperations.updateSnipeTargetStatus(
+          target.id,
+          "failed",
+          result.error
+        );
       }
 
       return result;
     } catch (error) {
-      await DatabaseOperations.updateSnipeTargetStatus(target.id, "failed", (error as Error).message);
+      await DatabaseOperations.updateSnipeTargetStatus(
+        target.id,
+        "failed",
+        (error as Error).message
+      );
       throw error;
     }
   }
@@ -283,7 +311,9 @@ export class AutoSnipingModuleRefactored {
   // Enhanced Trading Methods - Using OrderExecutionHelper
   // ============================================================================
 
-  private async executeRealTradeWithPositionSetup(params: TradeParameters): Promise<TradeResult> {
+  private async executeRealTradeWithPositionSetup(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     // Enhanced safety checks
     await this.performPreTradeValidation(params);
 
@@ -300,17 +330,24 @@ export class AutoSnipingModuleRefactored {
     return result;
   }
 
-  private async performPreTradeValidation(params: TradeParameters): Promise<void> {
+  private async performPreTradeValidation(
+    params: TradeParameters
+  ): Promise<void> {
     // Check safety coordinator
     if (this.context.safetyCoordinator) {
       try {
-        const safetyStatus = (this.context.safetyCoordinator as any).getStatus?.() || 
-                            (this.context.safetyCoordinator as any).getCurrentStatus?.();
+        const safetyStatus =
+          (this.context.safetyCoordinator as any).getStatus?.() ||
+          (this.context.safetyCoordinator as any).getCurrentStatus?.();
         if (safetyStatus && safetyStatus.overall?.safetyLevel !== "safe") {
-          throw new Error(`Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`);
+          throw new Error(
+            `Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`
+          );
         }
       } catch (error) {
-        this.context.logger.warn("Could not check safety coordinator status", { error: error instanceof Error ? error.message : String(error) });
+        this.context.logger.warn("Could not check safety coordinator status", {
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -320,12 +357,22 @@ export class AutoSnipingModuleRefactored {
     }
 
     // Check position limits
-    if (this.activePositions.size >= this.context.config.maxConcurrentPositions) {
-      throw new Error(`Maximum concurrent positions reached: ${this.activePositions.size}`);
+    if (
+      this.activePositions.size >= this.context.config.maxConcurrentPositions
+    ) {
+      throw new Error(
+        `Maximum concurrent positions reached: ${this.activePositions.size}`
+      );
     }
 
     // Validate required parameters
-    if (!params.symbol || !params.side || !params.type || !params.quoteOrderQty || params.quoteOrderQty <= 0) {
+    if (
+      !params.symbol ||
+      !params.side ||
+      !params.type ||
+      !params.quoteOrderQty ||
+      params.quoteOrderQty <= 0
+    ) {
       throw new Error("Invalid trading parameters");
     }
   }
@@ -334,7 +381,10 @@ export class AutoSnipingModuleRefactored {
   // Position Management - Using PositionMonitoringManager
   // ============================================================================
 
-  private async createPositionEntry(orderResult: any, params: TradeParameters): Promise<Position> {
+  private async createPositionEntry(
+    orderResult: any,
+    params: TradeParameters
+  ): Promise<Position> {
     const positionId = `${params.symbol}-${orderResult.orderId}-${Date.now()}`;
     const entryPrice = parseFloat(orderResult.price);
     const quantity = parseFloat(orderResult.executedQty || orderResult.origQty);
@@ -362,22 +412,27 @@ export class AutoSnipingModuleRefactored {
 
     // Calculate stop-loss and take-profit prices
     if (params.stopLossPercent && params.stopLossPercent > 0) {
-      position.stopLossPrice = params.side === "BUY" 
-        ? entryPrice * (1 - params.stopLossPercent / 100)
-        : entryPrice * (1 + params.stopLossPercent / 100);
+      position.stopLossPrice =
+        params.side === "BUY"
+          ? entryPrice * (1 - params.stopLossPercent / 100)
+          : entryPrice * (1 + params.stopLossPercent / 100);
     }
 
     if (params.takeProfitPercent && params.takeProfitPercent > 0) {
-      position.takeProfitPrice = params.side === "BUY"
-        ? entryPrice * (1 + params.takeProfitPercent / 100)
-        : entryPrice * (1 - params.takeProfitPercent / 100);
+      position.takeProfitPrice =
+        params.side === "BUY"
+          ? entryPrice * (1 + params.takeProfitPercent / 100)
+          : entryPrice * (1 - params.takeProfitPercent / 100);
     }
 
     this.activePositions.set(positionId, position);
     return position;
   }
 
-  private async handlePositionTrigger(position: Position, triggerType: 'stop-loss' | 'take-profit'): Promise<void> {
+  private async handlePositionTrigger(
+    position: Position,
+    triggerType: "stop-loss" | "take-profit"
+  ): Promise<void> {
     try {
       const closeResult = await this.orderExecution.executeCloseOrder(
         position.symbol,
@@ -415,7 +470,11 @@ export class AutoSnipingModuleRefactored {
     }
   }
 
-  private handleMonitoringError(error: Error, position: Position, triggerType: 'stop-loss' | 'take-profit'): void {
+  private handleMonitoringError(
+    error: Error,
+    position: Position,
+    triggerType: "stop-loss" | "take-profit"
+  ): void {
     this.context.logger.error(`${triggerType} monitoring error`, {
       positionId: position.id,
       error: error.message,
@@ -425,7 +484,8 @@ export class AutoSnipingModuleRefactored {
   private async getCurrentMarketPrice(symbol: string): Promise<number | null> {
     try {
       if (this.context.mexcService?.getCurrentPrice) {
-        const priceResult = await this.context.mexcService.getCurrentPrice(symbol);
+        const priceResult =
+          await this.context.mexcService.getCurrentPrice(symbol);
         if (typeof priceResult === "number" && priceResult > 0) {
           return priceResult;
         }
@@ -440,7 +500,9 @@ export class AutoSnipingModuleRefactored {
 
       return null;
     } catch (error) {
-      this.context.logger.error(`Failed to get current price for ${symbol}`, { error: error instanceof Error ? error.message : String(error) });
+      this.context.logger.error(`Failed to get current price for ${symbol}`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   }
@@ -457,33 +519,46 @@ export class AutoSnipingModuleRefactored {
       processedTargets: this.processedTargets,
       successfulSnipes: this.successfulSnipes,
       failedSnipes: this.failedSnipes,
-      successRate: this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+      successRate:
+        this.processedTargets > 0
+          ? (this.successfulSnipes / this.processedTargets) * 100
+          : 0,
       activePositions: this.activePositions.size,
       monitoringStats: this.positionMonitoring.getMonitoringStats(),
     };
   }
 
   getStats() {
-    const totalPnL = Array.from(this.activePositions.values())
-      .reduce((sum, pos) => sum + (pos.realizedPnL || 0), 0);
+    const totalPnL = Array.from(this.activePositions.values()).reduce(
+      (sum, pos) => sum + (pos.realizedPnL || 0),
+      0
+    );
 
     return {
       activePositions: this.activePositions.size,
       totalTrades: this.processedTargets,
       successfulTrades: this.successfulSnipes,
       failedTrades: this.failedSnipes,
-      successRate: this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+      successRate:
+        this.processedTargets > 0
+          ? (this.successfulSnipes / this.processedTargets) * 100
+          : 0,
       totalPnL,
-      averagePnL: this.processedTargets > 0 ? totalPnL / this.processedTargets : 0,
+      averagePnL:
+        this.processedTargets > 0 ? totalPnL / this.processedTargets : 0,
       timestamp: Date.now(),
     };
   }
 
   updateStats(stats: StatsUpdate): void {
-    if (stats.totalTrades !== undefined) this.processedTargets = stats.totalTrades;
-    if (stats.successfulTrades !== undefined) this.successfulSnipes = stats.successfulTrades;
-    if (stats.failedTrades !== undefined) this.failedSnipes = stats.failedTrades;
-    if (stats.timestamp !== undefined) this.state.lastActivity = new Date(stats.timestamp);
+    if (stats.totalTrades !== undefined)
+      this.processedTargets = stats.totalTrades;
+    if (stats.successfulTrades !== undefined)
+      this.successfulSnipes = stats.successfulTrades;
+    if (stats.failedTrades !== undefined)
+      this.failedSnipes = stats.failedTrades;
+    if (stats.timestamp !== undefined)
+      this.state.lastActivity = new Date(stats.timestamp);
 
     this.updateMetrics();
   }
@@ -492,8 +567,10 @@ export class AutoSnipingModuleRefactored {
     this.state.metrics.processedTargets = this.processedTargets;
     this.state.metrics.successfulSnipes = this.successfulSnipes;
     this.state.metrics.failedSnipes = this.failedSnipes;
-    this.state.metrics.averageConfidence = 
-      this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0;
+    this.state.metrics.averageConfidence =
+      this.processedTargets > 0
+        ? (this.successfulSnipes / this.processedTargets) * 100
+        : 0;
   }
 
   // ============================================================================
@@ -508,7 +585,10 @@ export class AutoSnipingModuleRefactored {
     return this.activePositions.get(positionId) || null;
   }
 
-  async closePosition(positionId: string, reason: string = "manual"): Promise<ServiceResponse<void>> {
+  async closePosition(
+    positionId: string,
+    reason: string = "manual"
+  ): Promise<ServiceResponse<void>> {
     return ServiceResponseUtils.executeWithResponse(async () => {
       const position = this.activePositions.get(positionId);
       if (!position) {
@@ -525,7 +605,10 @@ export class AutoSnipingModuleRefactored {
         throw new Error(closeResult.error || "Failed to close position");
       }
 
-      const currentPrice = await this.getCurrentMarketPrice(position.symbol) || position.currentPrice || position.entryPrice;
+      const currentPrice =
+        (await this.getCurrentMarketPrice(position.symbol)) ||
+        position.currentPrice ||
+        position.entryPrice;
       const realizedPnL = OrderExecutionHelper.calculatePnL(
         position.entryPrice,
         currentPrice,
@@ -551,15 +634,21 @@ export class AutoSnipingModuleRefactored {
     }, "Failed to close position manually");
   }
 
-  async updatePositionStopLoss(positionId: string, newStopLossPercent: number): Promise<ServiceResponse<void>> {
+  async updatePositionStopLoss(
+    positionId: string,
+    newStopLossPercent: number
+  ): Promise<ServiceResponse<void>> {
     return ServiceResponseUtils.executeWithResponse(async () => {
       const position = this.activePositions.get(positionId);
       if (!position) {
         throw new Error(`Position ${positionId} not found`);
       }
 
-      this.positionMonitoring.updateStopLossMonitoring(position, newStopLossPercent);
-      
+      this.positionMonitoring.updateStopLossMonitoring(
+        position,
+        newStopLossPercent
+      );
+
       this.context.logger.info("Position stop-loss updated", {
         positionId,
         newStopLossPercent,
@@ -575,11 +664,13 @@ export class AutoSnipingModuleRefactored {
 
   async validateConfiguration(): Promise<boolean> {
     const config = this.context.config;
-    return config &&
+    return (
+      config &&
       typeof config.autoSnipingEnabled === "boolean" &&
       typeof config.confidenceThreshold === "number" &&
       config.confidenceThreshold >= 0 &&
-      config.confidenceThreshold <= 100;
+      config.confidenceThreshold <= 100
+    );
   }
 
   async performHealthChecks(): Promise<boolean> {

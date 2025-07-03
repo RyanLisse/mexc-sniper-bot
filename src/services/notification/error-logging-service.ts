@@ -76,25 +76,45 @@ export class ErrorLoggingService {
   private getStructuredLogger() {
     return {
       info: (message: string, context?: any) => {
-        const logEntry = this.createStructuredLogEntry("info", message, context);
+        const logEntry = this.createStructuredLogEntry(
+          "info",
+          message,
+          context
+        );
         this.outputStructuredLog(logEntry);
       },
       warn: (message: string, context?: any) => {
-        const logEntry = this.createStructuredLogEntry("warn", message, context);
+        const logEntry = this.createStructuredLogEntry(
+          "warn",
+          message,
+          context
+        );
         this.outputStructuredLog(logEntry);
       },
       error: (message: string, context?: any) => {
-        const logEntry = this.createStructuredLogEntry("error", message, context);
+        const logEntry = this.createStructuredLogEntry(
+          "error",
+          message,
+          context
+        );
         this.outputStructuredLog(logEntry);
       },
       debug: (message: string, context?: any) => {
-        const logEntry = this.createStructuredLogEntry("debug", message, context);
+        const logEntry = this.createStructuredLogEntry(
+          "debug",
+          message,
+          context
+        );
         this.outputStructuredLog(logEntry);
       },
     };
   }
 
-  private createStructuredLogEntry(level: string, message: string, context?: any) {
+  private createStructuredLogEntry(
+    level: string,
+    message: string,
+    context?: any
+  ) {
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -243,7 +263,10 @@ export class ErrorLoggingService {
     component?: string,
     operation?: string
   ): Promise<void> {
-    if (process.env.NODE_ENV === "development" || process.env.DEBUG === "true") {
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.DEBUG === "true"
+    ) {
       await this.log({
         timestamp: new Date(),
         level: "debug",
@@ -295,13 +318,16 @@ export class ErrorLoggingService {
               ? console.debug
               : console.info;
 
-      logMethod(`[${entry.level.toUpperCase()}] ${entry.component}::${entry.operation}`, {
-        message: entry.message,
-        timestamp: entry.timestamp.toISOString(),
-        context: entry.context,
-        performance: entry.performance,
-        recovery: entry.recovery,
-      });
+      logMethod(
+        `[${entry.level.toUpperCase()}] ${entry.component}::${entry.operation}`,
+        {
+          message: entry.message,
+          timestamp: entry.timestamp.toISOString(),
+          context: entry.context,
+          performance: entry.performance,
+          recovery: entry.recovery,
+        }
+      );
     }
   }
 
@@ -335,9 +361,12 @@ export class ErrorLoggingService {
     }
   }
 
-  private async executeLoggingStrategies(entries: ErrorLogEntry[]): Promise<void> {
+  private async executeLoggingStrategies(
+    entries: ErrorLogEntry[]
+  ): Promise<void> {
     const strategies = this.getActiveStrategies();
-    const results: Array<{ strategy: string; success: boolean; error?: any }> = [];
+    const results: Array<{ strategy: string; success: boolean; error?: any }> =
+      [];
 
     for (const strategy of strategies) {
       const circuitBreaker = this.getCircuitBreaker(strategy.name);
@@ -346,8 +375,14 @@ export class ErrorLoggingService {
         // Circuit breaker is open, try fallback if available
         if (strategy.fallback) {
           try {
-            await this.executeWithTimeout(strategy.fallback(entries), strategy.timeout);
-            results.push({ strategy: `${strategy.name}-fallback`, success: true });
+            await this.executeWithTimeout(
+              strategy.fallback(entries),
+              strategy.timeout
+            );
+            results.push({
+              strategy: `${strategy.name}-fallback`,
+              success: true,
+            });
           } catch (fallbackError) {
             results.push({
               strategy: `${strategy.name}-fallback`,
@@ -360,7 +395,10 @@ export class ErrorLoggingService {
       }
 
       try {
-        await this.executeWithTimeout(strategy.execute(entries), strategy.timeout);
+        await this.executeWithTimeout(
+          strategy.execute(entries),
+          strategy.timeout
+        );
         circuitBreaker.recordSuccess();
         results.push({ strategy: strategy.name, success: true });
       } catch (error) {
@@ -370,8 +408,14 @@ export class ErrorLoggingService {
         // Try fallback if main strategy fails
         if (strategy.fallback) {
           try {
-            await this.executeWithTimeout(strategy.fallback(entries), strategy.timeout);
-            results.push({ strategy: `${strategy.name}-fallback`, success: true });
+            await this.executeWithTimeout(
+              strategy.fallback(entries),
+              strategy.timeout
+            );
+            results.push({
+              strategy: `${strategy.name}-fallback`,
+              success: true,
+            });
           } catch (fallbackError) {
             results.push({
               strategy: `${strategy.name}-fallback`,
@@ -386,11 +430,16 @@ export class ErrorLoggingService {
     // Check if at least one strategy succeeded
     const hasSuccess = results.some((r) => r.success);
     if (!hasSuccess) {
-      throw new Error(`All logging strategies failed: ${JSON.stringify(results)}`);
+      throw new Error(
+        `All logging strategies failed: ${JSON.stringify(results)}`
+      );
     }
   }
 
-  private async executeWithTimeout<T>(promise: Promise<T>, timeout: number): Promise<T> {
+  private async executeWithTimeout<T>(
+    promise: Promise<T>,
+    timeout: number
+  ): Promise<T> {
     return Promise.race([
       promise,
       new Promise<never>((_, reject) =>
@@ -399,7 +448,10 @@ export class ErrorLoggingService {
     ]);
   }
 
-  private async handleFlushFailure(entries: ErrorLogEntry[], error: unknown): Promise<void> {
+  private async handleFlushFailure(
+    entries: ErrorLogEntry[],
+    error: unknown
+  ): Promise<void> {
     const logger = this.getStructuredLogger();
 
     // Add entries back to fallback buffer
@@ -457,7 +509,9 @@ export class ErrorLoggingService {
   private loggingStrategies: LoggingStrategy[] = [];
 
   private getActiveStrategies(): LoggingStrategy[] {
-    return this.loggingStrategies.filter((s) => s.enabled).sort((a, b) => a.priority - b.priority);
+    return this.loggingStrategies
+      .filter((s) => s.enabled)
+      .sort((a, b) => a.priority - b.priority);
   }
 
   private getCircuitBreaker(strategyName: string): CircuitBreakerState {
@@ -623,11 +677,15 @@ Object.assign(ErrorLoggingService.prototype, {
 
     try {
       // Import database service dynamically to avoid circular dependencies
-      const { BatchDatabaseService } = await import("@/src/services/data/batch-database-service");
+      const { BatchDatabaseService } = await import(
+        "@/src/services/data/batch-database-service"
+      );
       const batchDatabaseService = new BatchDatabaseService();
 
       const dbEntries = entries.map((entry) => ({
-        id: entry.id || `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id:
+          entry.id ||
+          `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         timestamp: entry.timestamp,
         level: entry.level,
         message: entry.message,
@@ -647,16 +705,22 @@ Object.assign(ErrorLoggingService.prototype, {
 
       await batchDatabaseService.batchInsert("error_logs", dbEntries);
 
-      console.info("[ErrorLoggingService] Successfully stored log entries in database", {
-        operation: "storeInDatabase",
-        entryCount: entries.length,
-      });
+      console.info(
+        "[ErrorLoggingService] Successfully stored log entries in database",
+        {
+          operation: "storeInDatabase",
+          entryCount: entries.length,
+        }
+      );
     } catch (error) {
-      console.error("[ErrorLoggingService] Failed to store entries in database", {
-        operation: "storeInDatabase",
-        error: error instanceof Error ? error.message : "Unknown error",
-        entryCount: entries.length,
-      });
+      console.error(
+        "[ErrorLoggingService] Failed to store entries in database",
+        {
+          operation: "storeInDatabase",
+          error: error instanceof Error ? error.message : "Unknown error",
+          entryCount: entries.length,
+        }
+      );
       throw error;
     }
   },
@@ -668,8 +732,8 @@ Object.assign(ErrorLoggingService.prototype, {
     // Use internal structured logging
 
     try {
-      const fs = await import("fs/promises");
-      const path = await import("path");
+      const fs = await import("node:fs/promises");
+      const path = await import("node:path");
 
       const logDir = path.join(process.cwd(), "logs");
       const logFile = path.join(
@@ -699,17 +763,23 @@ Object.assign(ErrorLoggingService.prototype, {
       // Write back to file
       await fs.writeFile(logFile, JSON.stringify(allEntries, null, 2));
 
-      console.info("[ErrorLoggingService] Successfully stored log entries in local file", {
-        operation: "storeInLocalFile",
-        entryCount: entries.length,
-        filePath: logFile,
-      });
+      console.info(
+        "[ErrorLoggingService] Successfully stored log entries in local file",
+        {
+          operation: "storeInLocalFile",
+          entryCount: entries.length,
+          filePath: logFile,
+        }
+      );
     } catch (error) {
-      console.error("[ErrorLoggingService] Failed to store entries in local file", {
-        operation: "storeInLocalFile",
-        error: error instanceof Error ? error.message : "Unknown error",
-        entryCount: entries.length,
-      });
+      console.error(
+        "[ErrorLoggingService] Failed to store entries in local file",
+        {
+          operation: "storeInLocalFile",
+          error: error instanceof Error ? error.message : "Unknown error",
+          entryCount: entries.length,
+        }
+      );
       throw error;
     }
   },
@@ -718,7 +788,6 @@ Object.assign(ErrorLoggingService.prototype, {
    * Send log entries to monitoring service
    */
   async sendToMonitoringService(entries: ErrorLogEntry[]): Promise<void> {
-
     try {
       // Mock implementation - replace with actual monitoring service
       const monitoringEndpoint = process.env.MONITORING_ENDPOINT;
@@ -746,17 +815,23 @@ Object.assign(ErrorLoggingService.prototype, {
         );
       }
 
-      console.info("[ErrorLoggingService] Successfully sent log entries to monitoring service", {
-        operation: "sendToMonitoringService",
-        entryCount: entries.length,
-        endpoint: monitoringEndpoint,
-      });
+      console.info(
+        "[ErrorLoggingService] Successfully sent log entries to monitoring service",
+        {
+          operation: "sendToMonitoringService",
+          entryCount: entries.length,
+          endpoint: monitoringEndpoint,
+        }
+      );
     } catch (error) {
-      console.error("[ErrorLoggingService] Failed to send entries to monitoring service", {
-        operation: "sendToMonitoringService",
-        error: error instanceof Error ? error.message : "Unknown error",
-        entryCount: entries.length,
-      });
+      console.error(
+        "[ErrorLoggingService] Failed to send entries to monitoring service",
+        {
+          operation: "sendToMonitoringService",
+          error: error instanceof Error ? error.message : "Unknown error",
+          entryCount: entries.length,
+        }
+      );
       throw error;
     }
   },
@@ -765,7 +840,6 @@ Object.assign(ErrorLoggingService.prototype, {
    * Send log entries to webhook as fallback
    */
   async sendToWebhook(entries: ErrorLogEntry[]): Promise<void> {
-
     try {
       const webhookUrl = process.env.ERROR_WEBHOOK_URL;
 
@@ -776,14 +850,31 @@ Object.assign(ErrorLoggingService.prototype, {
       const payload = {
         text: `🚨 Error Log Alert - ${entries.length} entries`,
         attachments: entries.slice(0, 5).map((entry) => ({
-          color: entry.level === "error" ? "danger" : entry.level === "warn" ? "warning" : "good",
+          color:
+            entry.level === "error"
+              ? "danger"
+              : entry.level === "warn"
+                ? "warning"
+                : "good",
           title: `${entry.level.toUpperCase()}: ${entry.component}::${entry.operation}`,
           text: entry.message,
           fields: [
-            { title: "Timestamp", value: entry.timestamp.toISOString(), short: true },
-            { title: "Error Code", value: entry.errorCode || "N/A", short: true },
+            {
+              title: "Timestamp",
+              value: entry.timestamp.toISOString(),
+              short: true,
+            },
+            {
+              title: "Error Code",
+              value: entry.errorCode || "N/A",
+              short: true,
+            },
             { title: "User ID", value: entry.userId || "N/A", short: true },
-            { title: "Request ID", value: entry.requestId || "N/A", short: true },
+            {
+              title: "Request ID",
+              value: entry.requestId || "N/A",
+              short: true,
+            },
           ],
         })),
       };
@@ -795,14 +886,19 @@ Object.assign(ErrorLoggingService.prototype, {
       });
 
       if (!response.ok) {
-        throw new Error(`Webhook responded with ${response.status}: ${response.statusText}`);
+        throw new Error(
+          `Webhook responded with ${response.status}: ${response.statusText}`
+        );
       }
 
-      console.info("[ErrorLoggingService] Successfully sent log entries to webhook", {
-        operation: "sendToWebhook",
-        entryCount: entries.length,
-        webhookUrl: webhookUrl.substring(0, 50) + "...",
-      });
+      console.info(
+        "[ErrorLoggingService] Successfully sent log entries to webhook",
+        {
+          operation: "sendToWebhook",
+          entryCount: entries.length,
+          webhookUrl: `${webhookUrl.substring(0, 50)}...`,
+        }
+      );
     } catch (error) {
       console.error("[ErrorLoggingService] Failed to send entries to webhook", {
         operation: "sendToWebhook",
@@ -817,7 +913,6 @@ Object.assign(ErrorLoggingService.prototype, {
    * Log entries to console with structured formatting
    */
   async logToConsole(entries: ErrorLogEntry[]): Promise<void> {
-
     try {
       entries.forEach((entry) => {
         const logData = {
@@ -843,10 +938,13 @@ Object.assign(ErrorLoggingService.prototype, {
         logMethod("[STRUCTURED-LOG]", JSON.stringify(logData, null, 2));
       });
 
-      console.info("[ErrorLoggingService] Successfully logged entries to console", {
-        operation: "logToConsole",
-        entryCount: entries.length,
-      });
+      console.info(
+        "[ErrorLoggingService] Successfully logged entries to console",
+        {
+          operation: "logToConsole",
+          entryCount: entries.length,
+        }
+      );
     } catch (error) {
       // Fallback to basic console.error if structured logging fails
       console.error("Failed to log entries to console:", error);
@@ -860,7 +958,7 @@ Object.assign(ErrorLoggingService.prototype, {
   startFlushInterval(): void {
     // Note: This method is called on prototype, so 'this' refers to the service instance
     const self = this as any; // Cast to access private properties
-    
+
     if (self.flushInterval) {
       clearInterval(self.flushInterval);
     }
@@ -882,14 +980,17 @@ Object.assign(ErrorLoggingService.prototype, {
    */
   setupGracefulShutdown(): void {
     const self = this as any; // Cast to access private properties
-    
+
     const gracefulShutdown = async () => {
       try {
-        console.info("[ErrorLoggingService] Graceful shutdown initiated, flushing remaining logs", {
-          operation: "setupGracefulShutdown",
-          bufferSize: self.buffer?.length || 0,
-          fallbackBufferSize: self.fallbackBuffer?.length || 0,
-        });
+        console.info(
+          "[ErrorLoggingService] Graceful shutdown initiated, flushing remaining logs",
+          {
+            operation: "setupGracefulShutdown",
+            bufferSize: self.buffer?.length || 0,
+            fallbackBufferSize: self.fallbackBuffer?.length || 0,
+          }
+        );
 
         if (self.flushInterval) {
           clearInterval(self.flushInterval);
@@ -897,9 +998,12 @@ Object.assign(ErrorLoggingService.prototype, {
 
         await self.flush();
 
-        console.info("[ErrorLoggingService] Successfully flushed all logs during shutdown", {
-          operation: "setupGracefulShutdown",
-        });
+        console.info(
+          "[ErrorLoggingService] Successfully flushed all logs during shutdown",
+          {
+            operation: "setupGracefulShutdown",
+          }
+        );
       } catch (error) {
         console.error("Failed to flush logs during shutdown:", error);
       }

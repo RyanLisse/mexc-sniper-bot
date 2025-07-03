@@ -21,11 +21,16 @@ export class StrategicRecommendationGenerator {
       const recommendation: StrategicRecommendation = {
         vcoinId: pattern.vcoinId || pattern.symbol,
         symbol: pattern.symbol,
-        action: StrategicRecommendationGenerator.determineAction(pattern, workflowType),
+        action: StrategicRecommendationGenerator.determineAction(
+          pattern,
+          workflowType
+        ),
         confidence: pattern.confidence,
         reasoning: StrategicRecommendationGenerator.generateReasoning(pattern),
-        timing: StrategicRecommendationGenerator.calculateOptimalTiming(pattern),
-        riskManagement: StrategicRecommendationGenerator.calculateRiskManagement(pattern),
+        timing:
+          StrategicRecommendationGenerator.calculateOptimalTiming(pattern),
+        riskManagement:
+          StrategicRecommendationGenerator.calculateRiskManagement(pattern),
       };
 
       recommendations.push(recommendation);
@@ -81,14 +86,20 @@ export class StrategicRecommendationGenerator {
     }
 
     if (pattern.advanceNoticeHours >= 3.5) {
-      reasons.push(`Excellent advance notice: ${pattern.advanceNoticeHours.toFixed(1)} hours`);
+      reasons.push(
+        `Excellent advance notice: ${pattern.advanceNoticeHours.toFixed(1)} hours`
+      );
     }
 
-    reasons.push(`${pattern.confidence.toFixed(1)}% confidence based on pattern analysis`);
+    reasons.push(
+      `${pattern.confidence.toFixed(1)}% confidence based on pattern analysis`
+    );
     reasons.push(`${pattern.riskLevel} risk level assessed`);
 
     if (pattern.historicalSuccess) {
-      reasons.push(`Historical success rate: ${pattern.historicalSuccess.toFixed(1)}%`);
+      reasons.push(
+        `Historical success rate: ${pattern.historicalSuccess.toFixed(1)}%`
+      );
     }
 
     return reasons.join(". ");
@@ -97,7 +108,9 @@ export class StrategicRecommendationGenerator {
   /**
    * Calculate optimal timing
    */
-  private static calculateOptimalTiming(pattern: PatternMatch): StrategicRecommendation["timing"] {
+  private static calculateOptimalTiming(
+    pattern: PatternMatch
+  ): StrategicRecommendation["timing"] {
     const now = new Date();
     const timing: StrategicRecommendation["timing"] = {};
 
@@ -105,11 +118,15 @@ export class StrategicRecommendationGenerator {
       timing.optimalEntry = new Date(now.getTime() + 5 * 60 * 1000); // 5 minutes from now
     } else if (pattern.patternType === "pre_ready") {
       const estimatedHours = pattern.advanceNoticeHours || 2;
-      timing.optimalEntry = new Date(now.getTime() + estimatedHours * 60 * 60 * 1000);
+      timing.optimalEntry = new Date(
+        now.getTime() + estimatedHours * 60 * 60 * 1000
+      );
       timing.monitoringStart = new Date(now.getTime() + 30 * 60 * 1000); // Start monitoring in 30 min
     } else if (pattern.patternType === "launch_sequence") {
       const launchHours = pattern.advanceNoticeHours;
-      timing.optimalEntry = new Date(now.getTime() + launchHours * 60 * 60 * 1000);
+      timing.optimalEntry = new Date(
+        now.getTime() + launchHours * 60 * 60 * 1000
+      );
       timing.monitoringStart = new Date(
         now.getTime() + Math.max((launchHours - 1) * 60 * 60 * 1000, 0)
       );
@@ -125,7 +142,11 @@ export class StrategicRecommendationGenerator {
     pattern: PatternMatch
   ): StrategicRecommendation["riskManagement"] {
     const baseRisk =
-      pattern.riskLevel === "low" ? 0.02 : pattern.riskLevel === "medium" ? 0.03 : 0.05;
+      pattern.riskLevel === "low"
+        ? 0.02
+        : pattern.riskLevel === "medium"
+          ? 0.03
+          : 0.05;
     const confidenceMultiplier = pattern.confidence / 100;
 
     return {

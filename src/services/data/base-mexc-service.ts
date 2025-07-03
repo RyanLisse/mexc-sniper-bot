@@ -6,7 +6,10 @@
 
 import type { UnifiedMexcConfig } from "../../schemas/unified/mexc-api-schemas";
 import type { MexcApiConfig } from "./modules/mexc-api-types";
-import { createMexcCoreClient, type MexcCoreClient } from "./modules/mexc-core-client";
+import {
+  createMexcCoreClient,
+  type MexcCoreClient,
+} from "./modules/mexc-core-client";
 
 export class BaseMexcService {
   protected config: UnifiedMexcConfig;
@@ -69,7 +72,9 @@ export class BaseMexcService {
 
     try {
       // Remove leading slash from endpoint if present
-      const cleanEndpoint = endpoint.startsWith("/") ? endpoint.slice(1) : endpoint;
+      const cleanEndpoint = endpoint.startsWith("/")
+        ? endpoint.slice(1)
+        : endpoint;
 
       // Build full URL
       const timestamp = Date.now();
@@ -91,18 +96,24 @@ export class BaseMexcService {
       const httpClient = this.coreClient.getHttpClient();
       const response = await httpClient.makeAuthenticatedRequest(url, {
         method,
-        ...(method === "POST" && params ? { body: JSON.stringify(params) } : {}),
+        ...(method === "POST" && params
+          ? { body: JSON.stringify(params) }
+          : {}),
       });
 
-      this.logger.debug(`API request completed in ${Date.now() - startTime}ms`, {
-        endpoint: cleanEndpoint,
-        method,
-        success: true,
-      });
+      this.logger.debug(
+        `API request completed in ${Date.now() - startTime}ms`,
+        {
+          endpoint: cleanEndpoint,
+          method,
+          success: true,
+        }
+      );
 
       return response as T;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
       this.logger.error(`API request failed for ${endpoint}:`, {
         error: errorMessage,

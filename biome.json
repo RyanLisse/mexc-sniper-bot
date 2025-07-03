@@ -1,29 +1,44 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "linter": {
-    "enabled": false
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
   },
   "formatter": {
-    "enabled": false
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
   },
   "javascript": {
     "formatter": {
-      "enabled": false
+      "enabled": true,
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "es5"
     }
   },
   "files": {
     "includes": [
       "src/**/*.ts",
       "src/**/*.tsx",
-      "app/**/*.ts", 
-      "app/**/*.tsx"
+      "app/**/*.ts",
+      "app/**/*.tsx",
+      "components/**/*.ts",
+      "components/**/*.tsx",
+      "lib/**/*.ts",
+      "lib/**/*.tsx"
     ],
     "experimentalScannerIgnores": [
       "**/node_modules/**",
       "**/.next/**",
       "**/dist/**",
       "**/test-results/**",
-      "**/playwright-report/**"
+      "**/playwright-report/**",
+      "**/coverage/**",
+      "**/.turbo/**"
     ]
   }
 }

@@ -86,11 +86,15 @@ Output Framework:
     super(config);
   }
 
-  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
-    const request: SymbolAnalysisRequest = (context as unknown as SymbolAnalysisRequest) || {
-      vcoinId: input,
-      analysisDepth: "standard",
-    };
+  async process(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
+    const request: SymbolAnalysisRequest =
+      (context as unknown as SymbolAnalysisRequest) || {
+        vcoinId: input,
+        analysisDepth: "standard",
+      };
 
     const userMessage = `
 MEXC Symbol Analysis Request:
@@ -171,7 +175,9 @@ Provide clear READY/NOT READY determination with detailed confidence metrics and
     });
   }
 
-  async validateReadyStatePattern(symbolData: SymbolData | SymbolData[]): Promise<AgentResponse> {
+  async validateReadyStatePattern(
+    symbolData: SymbolData | SymbolData[]
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Ready State Pattern Validation:
 

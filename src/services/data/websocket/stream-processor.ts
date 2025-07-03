@@ -12,7 +12,10 @@ import type {
   TradingSignalMessage,
 } from "@/src/lib/websocket-types";
 import { webSocketServer } from "../websocket-server";
-import { type ConnectionManagerOptions, MexcConnectionManager } from "./connection-manager";
+import {
+  type ConnectionManagerOptions,
+  MexcConnectionManager,
+} from "./connection-manager";
 import { MarketDataManager } from "./market-data-manager";
 
 // ======================

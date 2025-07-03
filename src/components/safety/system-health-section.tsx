@@ -64,7 +64,9 @@ export function SystemHealthSection({
         <CardTitle className="flex items-center gap-2">
           {getHealthIcon(overallHealth)}
           System Health
-          <Badge variant={overallHealth === "healthy" ? "default" : "destructive"}>
+          <Badge
+            variant={overallHealth === "healthy" ? "default" : "destructive"}
+          >
             {overallHealth?.toUpperCase()}
           </Badge>
         </CardTitle>
@@ -76,19 +78,25 @@ export function SystemHealthSection({
               <span className="text-sm text-muted-foreground">Status:</span>
               <div className="flex items-center gap-1">
                 {getHealthIcon(systemHealth?.status || "unknown")}
-                <span className="text-sm font-medium">{systemHealth?.status || "Unknown"}</span>
+                <span className="text-sm font-medium">
+                  {systemHealth?.status || "Unknown"}
+                </span>
               </div>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Uptime:</span>
               <span className="text-sm font-medium">
-                {systemHealth?.uptime ? formatUptime(systemHealth.uptime) : "N/A"}
+                {systemHealth?.uptime
+                  ? formatUptime(systemHealth.uptime)
+                  : "N/A"}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-muted-foreground">Error Rate:</span>
               <span className="text-sm font-medium">
-                {systemHealth?.errorRate ? `${systemHealth.errorRate.toFixed(2)}%` : "N/A"}
+                {systemHealth?.errorRate
+                  ? `${systemHealth.errorRate.toFixed(2)}%`
+                  : "N/A"}
               </span>
             </div>
           </div>

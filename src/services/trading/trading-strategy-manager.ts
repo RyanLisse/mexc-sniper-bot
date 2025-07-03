@@ -93,7 +93,8 @@ export class TradingStrategyManager {
 
   constructor(initialStrategy = "normal") {
     this.strategies = new Map(Object.entries(TRADING_STRATEGIES));
-    this.activeStrategy = this.strategies.get(initialStrategy) || TRADING_STRATEGIES.normal;
+    this.activeStrategy =
+      this.strategies.get(initialStrategy) || TRADING_STRATEGIES.normal;
   }
 
   // Get active strategy
@@ -153,7 +154,11 @@ export class TradingStrategyManager {
     remainingAmount: number;
     realizedProfit: number;
   } {
-    const recommendations = this.getSellRecommendations(entryPrice, currentPrice, totalAmount);
+    const recommendations = this.getSellRecommendations(
+      entryPrice,
+      currentPrice,
+      totalAmount
+    );
 
     let soldAmount = 0;
     let realizedProfit = 0;
@@ -226,7 +231,8 @@ export class TradingStrategyManager {
     this.activeStrategy.levels.forEach((level, index) => {
       if (priceIncrease >= level.percentage) {
         // Calculate expected profit for 1 unit
-        const expectedProfit = (currentPrice - entryPrice) * (level.sellPercentage / 100);
+        const expectedProfit =
+          (currentPrice - entryPrice) * (level.sellPercentage / 100);
 
         triggeredPhases.push({
           phase: index + 1,
@@ -264,7 +270,12 @@ export class TradingStrategyManager {
   importStrategy(strategy: TradingStrategy): boolean {
     try {
       // Validate strategy structure
-      if (!strategy.id || !strategy.name || !strategy.levels || !Array.isArray(strategy.levels)) {
+      if (
+        !strategy.id ||
+        !strategy.name ||
+        !strategy.levels ||
+        !Array.isArray(strategy.levels)
+      ) {
         return false;
       }
 

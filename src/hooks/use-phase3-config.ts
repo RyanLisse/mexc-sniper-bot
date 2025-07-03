@@ -78,7 +78,9 @@ export function usePhase3Config() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || "Failed to fetch Phase 3 configuration");
+        throw new Error(
+          result.error || "Failed to fetch Phase 3 configuration"
+        );
       }
 
       return result.data;
@@ -114,7 +116,9 @@ export function usePhase3ConfigUpdate() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || "Failed to update Phase 3 configuration");
+        throw new Error(
+          result.error || "Failed to update Phase 3 configuration"
+        );
       }
 
       return result.data;
@@ -156,12 +160,17 @@ export function usePhase3FeatureStatus() {
         aiIntelligenceEnabled: data.configuration.aiIntelligence.enabled,
         cohereEnabled: data.configuration.aiIntelligence.cohereEnabled,
         perplexityEnabled: data.configuration.aiIntelligence.perplexityEnabled,
-        advanceDetectionEnabled: data.configuration.patternDetection.advanceDetectionEnabled,
+        advanceDetectionEnabled:
+          data.configuration.patternDetection.advanceDetectionEnabled,
         cacheWarmingEnabled: data.configuration.cacheWarming.enabled,
-        performanceMonitoringEnabled: data.configuration.performance.monitoringEnabled,
-        targetAdvanceHours: data.configuration.patternDetection.targetAdvanceHours,
-        aiConfidenceThreshold: data.configuration.aiIntelligence.confidenceThreshold,
-        patternConfidenceThreshold: data.configuration.patternDetection.confidenceThreshold,
+        performanceMonitoringEnabled:
+          data.configuration.performance.monitoringEnabled,
+        targetAdvanceHours:
+          data.configuration.patternDetection.targetAdvanceHours,
+        aiConfidenceThreshold:
+          data.configuration.aiIntelligence.confidenceThreshold,
+        patternConfidenceThreshold:
+          data.configuration.patternDetection.confidenceThreshold,
       }
     : undefined;
 
@@ -189,7 +198,10 @@ export function usePhase3ConfigValidation() {
       errors.push("AI confidence threshold must be between 0 and 100");
     }
 
-    if (config.aiIntelligence.maxAIBoost < 0 || config.aiIntelligence.maxAIBoost > 50) {
+    if (
+      config.aiIntelligence.maxAIBoost < 0 ||
+      config.aiIntelligence.maxAIBoost > 50
+    ) {
       errors.push("Max AI boost must be between 0 and 50");
     }
 
@@ -209,7 +221,10 @@ export function usePhase3ConfigValidation() {
     }
 
     // Validate Cache Warming
-    if (config.cacheWarming.warmingInterval < 1 || config.cacheWarming.warmingInterval > 1440) {
+    if (
+      config.cacheWarming.warmingInterval < 1 ||
+      config.cacheWarming.warmingInterval > 1440
+    ) {
       errors.push("Cache warming interval must be between 1 and 1440 minutes");
     }
 

@@ -8,7 +8,10 @@
  */
 
 import type { EnhancedExecutionPosition as ExecutionPosition } from "@/src/schemas/enhanced-component-validation-schemas";
-import type { SafetyConfiguration, SystemHealth } from "@/src/schemas/safety-monitoring-schemas";
+import type {
+  SafetyConfiguration,
+  SystemHealth,
+} from "@/src/schemas/safety-monitoring-schemas";
 import { validateSystemHealth } from "@/src/schemas/safety-monitoring-schemas";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { PatternMonitoringService } from "@/src/services/notification/pattern-monitoring-service";
@@ -160,7 +163,8 @@ export class RiskAssessment {
    */
   public async assessPortfolioRisk(): Promise<PortfolioRiskAssessment> {
     try {
-      const positions = this.config.executionService.getActivePositions() as any as ExecutionPosition[];
+      const positions =
+        this.config.executionService.getActivePositions() as any as ExecutionPosition[];
       const _config = (this.config.executionService as any).getConfig?.() || {};
 
       const totalValue = this.calculatePortfolioValue(positions);
@@ -180,7 +184,9 @@ export class RiskAssessment {
       riskScore += (100 - diversificationScore) * 0.3; // 30% weight on diversification
       riskScore +=
         Math.min(
-          (positionCount / this.config.configuration.thresholds.maxPortfolioConcentration) * 100,
+          (positionCount /
+            this.config.configuration.thresholds.maxPortfolioConcentration) *
+            100,
           100
         ) * 0.2; // 20% weight on position count
       riskScore += largestPositionRatio * 0.1; // 10% weight on largest position
@@ -270,7 +276,8 @@ export class RiskAssessment {
    */
   public async assessPatternRisk(): Promise<PatternRiskAssessment> {
     try {
-      const patternReport = await this.config.patternMonitoring.getMonitoringReport();
+      const patternReport =
+        await this.config.patternMonitoring.getMonitoringReport();
 
       const patternAccuracy = patternReport.stats.averageConfidence;
       const detectionFailures = patternReport.stats.consecutiveErrors;
@@ -298,7 +305,11 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      console.error("Pattern risk assessment failed", { operation: "assess_pattern_risk" }, error);
+      console.error(
+        "Pattern risk assessment failed",
+        { operation: "assess_pattern_risk" },
+        error
+      );
       throw error;
     }
   }
@@ -316,7 +327,8 @@ export class RiskAssessment {
       // Handle execution service with fallback
       try {
         // Use fallback execution report since getExecutionReport doesn't exist
-        const activePositions = this.config.executionService.getActivePositions?.() || [];
+        const activePositions =
+          this.config.executionService.getActivePositions?.() || [];
         executionReport = {
           stats: {
             currentDrawdown: 0,
@@ -332,9 +344,12 @@ export class RiskAssessment {
           },
         };
       } catch (error) {
-        console.warn("Failed to get execution report for system risk assessment", {
-          error: (error as Error)?.message,
-        });
+        console.warn(
+          "Failed to get execution report for system risk assessment",
+          {
+            error: (error as Error)?.message,
+          }
+        );
         executionReport = {
           stats: {
             currentDrawdown: 0,
@@ -351,28 +366,47 @@ export class RiskAssessment {
 
       // Handle pattern monitoring with fallback
       try {
-        if (typeof this.config.patternMonitoring.getMonitoringReport === "function") {
-          patternReport = await this.config.patternMonitoring.getMonitoringReport();
+        if (
+          typeof this.config.patternMonitoring.getMonitoringReport ===
+          "function"
+        ) {
+          patternReport =
+            await this.config.patternMonitoring.getMonitoringReport();
         } else {
           patternReport = {
             status: "healthy",
-            stats: { averageConfidence: 80, consecutiveErrors: 0, totalPatternsDetected: 100 },
+            stats: {
+              averageConfidence: 80,
+              consecutiveErrors: 0,
+              totalPatternsDetected: 100,
+            },
           };
         }
       } catch (error) {
-        console.warn("Failed to get pattern monitoring report for system risk assessment", {
-          error: (error as Error)?.message,
-        });
+        console.warn(
+          "Failed to get pattern monitoring report for system risk assessment",
+          {
+            error: (error as Error)?.message,
+          }
+        );
         patternReport = {
           status: "healthy",
-          stats: { averageConfidence: 80, consecutiveErrors: 0, totalPatternsDetected: 100 },
+          stats: {
+            averageConfidence: 80,
+            consecutiveErrors: 0,
+            totalPatternsDetected: 100,
+          },
         };
       }
 
       // Handle emergency system with fallback
       try {
-        if (typeof this.config.emergencySystem.performSystemHealthCheck === "function") {
-          emergencyHealth = await this.config.emergencySystem.performSystemHealthCheck();
+        if (
+          typeof this.config.emergencySystem.performSystemHealthCheck ===
+          "function"
+        ) {
+          emergencyHealth =
+            await this.config.emergencySystem.performSystemHealthCheck();
         } else {
           emergencyHealth = {
             overall: "healthy",
@@ -437,7 +471,11 @@ export class RiskAssessment {
         recommendations,
       };
     } catch (error) {
-      console.error("System risk assessment failed", { operation: "assess_system_risk" }, error);
+      console.error(
+        "System risk assessment failed",
+        { operation: "assess_system_risk" },
+        error
+      );
       throw error;
     }
   }
@@ -446,7 +484,11 @@ export class RiskAssessment {
 
   private calculatePortfolioValue(positions: ExecutionPosition[]): number {
     return positions.reduce((total, pos) => {
-      return total + Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString());
+      return (
+        total +
+        Number.parseFloat(pos.quantity.toString()) *
+          Number.parseFloat(pos.currentPrice.toString())
+      );
     }, 0);
   }
 
@@ -457,7 +499,9 @@ export class RiskAssessment {
     let totalValue = 0;
 
     positions.forEach((pos) => {
-      const value = Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString());
+      const value =
+        Number.parseFloat(pos.quantity.toString()) *
+        Number.parseFloat(pos.currentPrice.toString());
       symbolMap.set(pos.symbol, (symbolMap.get(pos.symbol) || 0) + value);
       totalValue += value;
     });
@@ -475,11 +519,14 @@ export class RiskAssessment {
     largestPositionRatio: number;
     diversificationScore: number;
   } {
-    if (positions.length === 0) return { largestPositionRatio: 0, diversificationScore: 100 };
+    if (positions.length === 0)
+      return { largestPositionRatio: 0, diversificationScore: 100 };
 
     const totalValue = this.calculatePortfolioValue(positions);
     const positionValues = positions.map(
-      (pos) => Number.parseFloat(pos.quantity.toString()) * Number.parseFloat(pos.currentPrice.toString())
+      (pos) =>
+        Number.parseFloat(pos.quantity.toString()) *
+        Number.parseFloat(pos.currentPrice.toString())
     );
     const largestPosition = Math.max(...positionValues);
     const largestPositionRatio = (largestPosition / totalValue) * 100;
@@ -487,12 +534,17 @@ export class RiskAssessment {
     const idealPositionCount = Math.min(10, positions.length);
     const positionCountScore = (positions.length / idealPositionCount) * 50;
     const distributionScore = Math.max(0, 50 - (largestPositionRatio - 10));
-    const diversificationScore = Math.min(100, positionCountScore + distributionScore);
+    const diversificationScore = Math.min(
+      100,
+      positionCountScore + distributionScore
+    );
 
     return { largestPositionRatio, diversificationScore };
   }
 
-  private calculateConsecutiveLosses(recentExecutions: ExecutionPosition[]): number {
+  private calculateConsecutiveLosses(
+    recentExecutions: ExecutionPosition[]
+  ): number {
     let consecutiveLosses = 0;
 
     for (let i = recentExecutions.length - 1; i >= 0; i--) {
@@ -579,7 +631,12 @@ export class RiskAssessment {
     emergencySystem: boolean,
     mexcConnectivity: boolean
   ): number {
-    const components = [executionService, patternMonitoring, emergencySystem, mexcConnectivity];
+    const components = [
+      executionService,
+      patternMonitoring,
+      emergencySystem,
+      mexcConnectivity,
+    ];
     return (components.filter(Boolean).length / components.length) * 100;
   }
 
@@ -601,7 +658,8 @@ export class RiskAssessment {
       apiSuccessRate >= t.minApiSuccessRate * 0.9
     )
       return "good";
-    if (overallHealth >= 60 && apiSuccessRate >= t.minApiSuccessRate * 0.8) return "degraded";
+    if (overallHealth >= 60 && apiSuccessRate >= t.minApiSuccessRate * 0.8)
+      return "degraded";
     return "poor";
   }
 
@@ -612,10 +670,21 @@ export class RiskAssessment {
     pattern: PatternRiskAssessment,
     system: SystemRiskAssessment
   ): number {
-    const weights = { portfolio: 0.3, performance: 0.3, pattern: 0.2, system: 0.2 };
-    const performanceScore = this.convertPerformanceToScore(performance.performanceRating);
-    const patternScore = this.convertPatternReliabilityToScore(pattern.patternReliability);
-    const systemScore = this.convertConnectivityToScore(system.connectivityStatus);
+    const weights = {
+      portfolio: 0.3,
+      performance: 0.3,
+      pattern: 0.2,
+      system: 0.2,
+    };
+    const performanceScore = this.convertPerformanceToScore(
+      performance.performanceRating
+    );
+    const patternScore = this.convertPatternReliabilityToScore(
+      pattern.patternReliability
+    );
+    const systemScore = this.convertConnectivityToScore(
+      system.connectivityStatus
+    );
 
     const overallScore =
       portfolio.riskScore * weights.portfolio +
@@ -655,7 +724,9 @@ export class RiskAssessment {
     }
   }
 
-  private convertConnectivityToScore(status: SystemRiskAssessment["connectivityStatus"]): number {
+  private convertConnectivityToScore(
+    status: SystemRiskAssessment["connectivityStatus"]
+  ): number {
     switch (status) {
       case "excellent":
         return 10;
@@ -690,7 +761,9 @@ export class RiskAssessment {
     if (diversificationScore < 60)
       recs.push("Poor diversification - increase positions or rebalance");
     if (positionCount < 3)
-      recs.push("Consider increasing position count for better risk distribution");
+      recs.push(
+        "Consider increasing position count for better risk distribution"
+      );
     if (largestPositionRatio > 25)
       recs.push("Largest position too dominant - reduce position size");
     return recs;
@@ -726,7 +799,8 @@ export class RiskAssessment {
       recs.push("Low pattern confidence - review detection parameters");
     if (detectionFailures > t.maxPatternDetectionFailures * 0.7)
       recs.push("High detection failures - check monitoring system health");
-    if (falsePositiveRate > 20) recs.push("High false positive rate - refine recognition criteria");
+    if (falsePositiveRate > 20)
+      recs.push("High false positive rate - refine recognition criteria");
     return recs;
   }
 
@@ -738,7 +812,8 @@ export class RiskAssessment {
   ): string[] {
     const recs: string[] = [];
     const t = this.config.configuration.thresholds;
-    if (systemHealth.overallHealth < 80) recs.push("System health degraded - check service status");
+    if (systemHealth.overallHealth < 80)
+      recs.push("System health degraded - check service status");
     if (apiLatency > t.maxApiLatencyMs * 0.7)
       recs.push("High API latency - check connectivity and server load");
     if (apiSuccessRate < t.minApiSuccessRate * 0.9)
@@ -758,13 +833,21 @@ export class RiskAssessment {
     const priority: string[] = [];
 
     if (overallRiskScore > 75)
-      priority.push("CRITICAL: Overall risk score very high - immediate action required");
+      priority.push(
+        "CRITICAL: Overall risk score very high - immediate action required"
+      );
     if (portfolio.concentrationRisk > 80)
-      priority.push("URGENT: Extremely high portfolio concentration - diversify immediately");
+      priority.push(
+        "URGENT: Extremely high portfolio concentration - diversify immediately"
+      );
     if (performance.performanceRating === "poor")
-      priority.push("URGENT: Poor performance - halt trading and review strategy");
+      priority.push(
+        "URGENT: Poor performance - halt trading and review strategy"
+      );
     if (pattern.patternReliability === "unreliable")
-      priority.push("URGENT: Pattern detection unreliable - disable automated trading");
+      priority.push(
+        "URGENT: Pattern detection unreliable - disable automated trading"
+      );
     if (system.connectivityStatus === "poor")
       priority.push("URGENT: Poor system connectivity - check all connections");
 
@@ -785,6 +868,8 @@ export class RiskAssessment {
 /**
  * Factory function to create RiskAssessment instance
  */
-export function createRiskAssessment(config: RiskAssessmentConfig): RiskAssessment {
+export function createRiskAssessment(
+  config: RiskAssessmentConfig
+): RiskAssessment {
   return new RiskAssessment(config);
 }

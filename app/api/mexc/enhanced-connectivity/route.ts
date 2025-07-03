@@ -6,8 +6,8 @@
  * credential and connection status information.
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { apiResponse, handleApiError } from "@/src/lib/api-response";
+import type { NextRequest, NextResponse } from "next/server";
+import { apiResponse } from "@/src/lib/api-response";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { requireAuth } from "@/src/lib/supabase-auth";
 import { getGlobalCredentialValidator } from "@/src/services/api/enhanced-mexc-credential-validator";
@@ -22,12 +22,12 @@ interface EnhancedConnectivityResponse {
   credentialsValid: boolean;
   canAuthenticate: boolean;
   isTestCredentials: boolean;
-  
+
   // Credential Source Info
   credentialSource: "database" | "environment" | "none";
   hasUserCredentials: boolean;
   hasEnvironmentCredentials: boolean;
-  
+
   // Connection Health
   connectionHealth: "excellent" | "good" | "fair" | "poor";
   connectionQuality: {
@@ -36,7 +36,7 @@ interface EnhancedConnectivityResponse {
     reasons: string[];
     recommendations: string[];
   };
-  
+
   // Performance Metrics
   metrics: {
     totalChecks: number;
@@ -46,7 +46,7 @@ interface EnhancedConnectivityResponse {
     uptime: number;
     responseTime?: number;
   };
-  
+
   // Circuit Breaker Status
   circuitBreaker: {
     isOpen: boolean;
@@ -54,7 +54,7 @@ interface EnhancedConnectivityResponse {
     nextAttemptTime?: string;
     reason?: string;
   };
-  
+
   // Alerts and Issues
   alerts: {
     count: number;
@@ -67,18 +67,24 @@ interface EnhancedConnectivityResponse {
       timestamp: string;
     }>;
   };
-  
+
   // Recommendations
   recommendedActions: string[];
-  
+
   // Status Details
   error?: string;
   message: string;
-  status: "fully_connected" | "credentials_invalid" | "test_credentials" | "no_credentials" | "network_error" | "error";
+  status:
+    | "fully_connected"
+    | "credentials_invalid"
+    | "test_credentials"
+    | "no_credentials"
+    | "network_error"
+    | "error";
   timestamp: string;
   lastChecked: string;
   nextCheckIn: number;
-  
+
   // Trends and Analysis
   trends: {
     period: string;
@@ -87,7 +93,7 @@ interface EnhancedConnectivityResponse {
     statusChanges: number;
     mostCommonIssue?: string;
   };
-  
+
   // System Status
   monitoring: {
     isActive: boolean;
@@ -96,7 +102,7 @@ interface EnhancedConnectivityResponse {
   };
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   const requestId = `enhanced_conn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const startTime = Date.now();
 
@@ -107,7 +113,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     try {
       user = await requireAuth();
       userId = user?.id;
-    } catch (error) {
+    } catch (_error) {
       // Continue without user for anonymous connectivity check
       user = null;
       userId = null;
@@ -130,31 +136,50 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       connectionQuality,
       circuitBreakerStatus,
       realTimeStatus,
-      userCredentialInfo
+      userCredentialInfo,
     ] = await Promise.allSettled([
       credentialValidator.validateCredentials(),
       healthMonitor.getHealthMetrics(),
       healthMonitor.getConnectionQuality(),
       credentialValidator.getCircuitBreakerStatus(),
       realTimeMonitor.getCurrentStatus() || realTimeMonitor.checkStatus(),
-      getUserCredentialInfo(userId || undefined)
+      getUserCredentialInfo(userId || undefined),
     ]);
 
     // Extract results (handle any failures gracefully)
-    const validation = validationResult.status === "fulfilled" ? validationResult.value : getDefaultValidation();
-    const metrics = healthMetrics.status === "fulfilled" ? healthMetrics.value : getDefaultMetrics();
-    const quality = connectionQuality.status === "fulfilled" ? connectionQuality.value : getDefaultQuality();
-    const circuitBreaker = circuitBreakerStatus.status === "fulfilled" ? circuitBreakerStatus.value : getDefaultCircuitBreaker();
-    const rtStatus = realTimeStatus.status === "fulfilled" ? realTimeStatus.value : null;
-    const userCreds = userCredentialInfo.status === "fulfilled" ? userCredentialInfo.value : { hasUserCredentials: false, hasEnvironmentCredentials: false };
+    const validation =
+      validationResult.status === "fulfilled"
+        ? validationResult.value
+        : getDefaultValidation();
+    const metrics =
+      healthMetrics.status === "fulfilled"
+        ? healthMetrics.value
+        : getDefaultMetrics();
+    const quality =
+      connectionQuality.status === "fulfilled"
+        ? connectionQuality.value
+        : getDefaultQuality();
+    const circuitBreaker =
+      circuitBreakerStatus.status === "fulfilled"
+        ? circuitBreakerStatus.value
+        : getDefaultCircuitBreaker();
+    const rtStatus =
+      realTimeStatus.status === "fulfilled" ? realTimeStatus.value : null;
+    const userCreds =
+      userCredentialInfo.status === "fulfilled"
+        ? userCredentialInfo.value
+        : { hasUserCredentials: false, hasEnvironmentCredentials: false };
 
     // Get recent alerts
-    const recentAlerts = healthMonitor.getRecentAlerts(1).slice(0, 5).map(alert => ({
-      type: alert.type,
-      severity: alert.severity,
-      message: alert.message,
-      timestamp: alert.timestamp.toISOString(),
-    }));
+    const recentAlerts = healthMonitor
+      .getRecentAlerts(1)
+      .slice(0, 5)
+      .map((alert) => ({
+        type: alert.type,
+        severity: alert.severity,
+        message: alert.message,
+        timestamp: alert.timestamp.toISOString(),
+      }));
 
     // Get trends and analysis
     const statusSummary = realTimeMonitor.getStatusSummary(24);
@@ -170,19 +195,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Build comprehensive response
     const response: EnhancedConnectivityResponse = {
-      // Core Status  
+      // Core Status
       // FIXED: Allow connection even with test credentials for demo mode - auto-sniping always enabled
       connected: validation.hasCredentials && validation.canAuthenticate,
       hasCredentials: validation.hasCredentials,
       credentialsValid: validation.isValid,
       canAuthenticate: validation.canAuthenticate,
       isTestCredentials: validation.isTestCredentials,
-      
+
       // Credential Source Info
       credentialSource: validation.source,
       hasUserCredentials: userCreds.hasUserCredentials,
       hasEnvironmentCredentials: userCreds.hasEnvironmentCredentials,
-      
+
       // Connection Health
       connectionHealth: quality.status,
       connectionQuality: {
@@ -191,7 +216,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         reasons: quality.reasons,
         recommendations: quality.recommendations,
       },
-      
+
       // Performance Metrics
       metrics: {
         totalChecks: metrics.totalChecks,
@@ -201,7 +226,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         uptime: metrics.uptime,
         responseTime: (validation as any).responseTime || responseTime,
       },
-      
+
       // Circuit Breaker Status
       circuitBreaker: {
         isOpen: circuitBreaker.isOpen,
@@ -209,26 +234,31 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         nextAttemptTime: (circuitBreaker as any).nextAttemptTime?.toISOString(),
         reason: (circuitBreaker as any).reason,
       },
-      
+
       // Alerts and Issues
       alerts: {
         count: recentAlerts.length,
         latest: recentAlerts[0]?.message,
-        severity: rtStatus?.alerts?.severity || (recentAlerts.length > 0 ? recentAlerts[0].severity as any : "none"),
+        severity:
+          rtStatus?.alerts?.severity ||
+          (recentAlerts.length > 0
+            ? (recentAlerts[0].severity as any)
+            : "none"),
         recent: recentAlerts,
       },
-      
+
       // Recommendations
       recommendedActions,
-      
+
       // Status Details
       error: validation.error,
       message: statusMessage,
       status: overallStatus,
       timestamp: new Date().toISOString(),
-      lastChecked: rtStatus?.lastChecked?.toISOString() || new Date().toISOString(),
+      lastChecked:
+        rtStatus?.lastChecked?.toISOString() || new Date().toISOString(),
       nextCheckIn: rtStatus?.nextCheckIn || 30000,
-      
+
       // Trends and Analysis
       trends: {
         period: "last_24_hours",
@@ -237,7 +267,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         statusChanges: statusSummary.statusChanges,
         mostCommonIssue: statusSummary.mostCommonIssue,
       },
-      
+
       // System Status
       monitoring: {
         isActive: monitoringStatus.isActive,
@@ -255,11 +285,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         responseTime,
       },
     });
-
   } catch (error) {
     console.error("[Enhanced Connectivity] Error:", { error: error });
     const safeError = toSafeError(error);
-    
+
     return apiResponse.error(
       safeError.message || "Enhanced connectivity check failed",
       500,
@@ -280,19 +309,23 @@ async function getUserCredentialInfo(userId?: string): Promise<{
   hasEnvironmentCredentials: boolean;
 }> {
   let hasUserCredentials = false;
-  
+
   if (userId) {
     try {
-      const userCredentials = await getUserCredentials(userId, 'mexc');
+      const userCredentials = await getUserCredentials(userId, "mexc");
       hasUserCredentials = !!userCredentials;
     } catch (error) {
       // Ignore credential fetch errors for this status check
-      console.warn("Failed to fetch user credentials for status check:", { error: error });
+      console.warn("Failed to fetch user credentials for status check:", {
+        error: error,
+      });
     }
   }
-  
-  const hasEnvironmentCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
-  
+
+  const hasEnvironmentCredentials = !!(
+    process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY
+  );
+
   return { hasUserCredentials, hasEnvironmentCredentials };
 }
 
@@ -304,23 +337,23 @@ function determineOverallStatus(
   if (!validation.hasCredentials) {
     return "no_credentials";
   }
-  
+
   if (validation.isTestCredentials) {
     return "test_credentials";
   }
-  
+
   if (!validation.isValid || !validation.canAuthenticate) {
     return "credentials_invalid";
   }
-  
+
   if (quality.status === "poor" || metrics.consecutiveFailures > 5) {
     return "network_error";
   }
-  
+
   if (validation.error) {
     return "error";
   }
-  
+
   return "fully_connected";
 }
 
@@ -422,12 +455,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (testCredentials) {
       // Perform credential test with provided credentials
       const testResult = await credentialValidator.testAuthentication();
-      
+
       return apiResponse({
         success: testResult.canAuthenticate,
         data: testResult,
-        message: testResult.canAuthenticate 
-          ? "Credentials test successful" 
+        message: testResult.canAuthenticate
+          ? "Credentials test successful"
           : `Credentials test failed: ${testResult.error}`,
         meta: {
           timestamp: new Date().toISOString(),
@@ -439,17 +472,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     return apiResponse({
       success: false,
-      error: "Invalid request - specify testCredentials, resetCircuitBreaker, or forceRefresh",
+      error:
+        "Invalid request - specify testCredentials, resetCircuitBreaker, or forceRefresh",
       meta: {
         timestamp: new Date().toISOString(),
         requestId,
       },
     });
-
   } catch (error) {
     console.error("[Enhanced Connectivity POST] Error:", { error: error });
     return apiResponse.error(
-      error instanceof Error ? error.message : "Enhanced connectivity action failed",
+      error instanceof Error
+        ? error.message
+        : "Enhanced connectivity action failed",
       500,
       {
         requestId,

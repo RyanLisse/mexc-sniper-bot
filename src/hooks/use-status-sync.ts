@@ -47,7 +47,9 @@ export function useStatusSync() {
       const effectiveUserId = targetUserId || userId;
 
       if (!effectiveUserId) {
-        console.warn("[useStatusSync] No user ID available for cache invalidation");
+        console.warn(
+          "[useStatusSync] No user ID available for cache invalidation"
+        );
         return [];
       }
 

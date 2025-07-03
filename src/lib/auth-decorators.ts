@@ -3,7 +3,7 @@
  * Provides authentication middleware and decorators
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
 
 export interface AuthConfig {
   requireAuth?: boolean;
@@ -13,7 +13,7 @@ export interface AuthConfig {
 
 export function withAuth<T extends (...args: any[]) => Promise<NextResponse>>(
   handler: T,
-  config: AuthConfig = {}
+  _config: AuthConfig = {}
 ): T {
   return (async (...args: Parameters<T>) => {
     // Simple pass-through implementation - actual auth would go here
@@ -21,9 +21,9 @@ export function withAuth<T extends (...args: any[]) => Promise<NextResponse>>(
   }) as T;
 }
 
-export function requireAuth<T extends (...args: any[]) => Promise<NextResponse>>(
-  handler: T
-): T {
+export function requireAuth<
+  T extends (...args: any[]) => Promise<NextResponse>,
+>(handler: T): T {
   return withAuth(handler, { requireAuth: true });
 }
 

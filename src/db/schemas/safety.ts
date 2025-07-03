@@ -47,13 +47,19 @@ export const simulationSessions = pgTable(
     slippage: real("slippage").notNull().default(0.0005), // 0.05%
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("simulation_sessions_user_id_idx").on(table.userId),
     statusIdx: index("simulation_sessions_status_idx").on(table.status),
-    startTimeIdx: index("simulation_sessions_start_time_idx").on(table.startTime),
+    startTimeIdx: index("simulation_sessions_start_time_idx").on(
+      table.startTime
+    ),
   })
 );
 
@@ -89,7 +95,9 @@ export const simulationTrades = pgTable(
     marketImpactPercent: real("market_impact_percent"),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     sessionIdIdx: index("simulation_trades_session_id_idx").on(table.sessionId),
@@ -133,7 +141,9 @@ export const riskEvents = pgTable(
 
     // Timestamps
     timestamp: timestamp("timestamp").notNull(),
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("risk_events_user_id_idx").on(table.userId),
@@ -142,8 +152,14 @@ export const riskEvents = pgTable(
     timestampIdx: index("risk_events_timestamp_idx").on(table.timestamp),
     resolvedIdx: index("risk_events_resolved_idx").on(table.resolved),
     // Compound indexes
-    userSeverityIdx: index("risk_events_user_severity_idx").on(table.userId, table.severity),
-    typeTimestampIdx: index("risk_events_type_timestamp_idx").on(table.eventType, table.timestamp),
+    userSeverityIdx: index("risk_events_user_severity_idx").on(
+      table.userId,
+      table.severity
+    ),
+    typeTimestampIdx: index("risk_events_type_timestamp_idx").on(
+      table.eventType,
+      table.timestamp
+    ),
   })
 );
 
@@ -179,11 +195,15 @@ export const positionSnapshots = pgTable(
 
     // Timestamps
     timestamp: timestamp("timestamp").notNull(),
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("position_snapshots_user_id_idx").on(table.userId),
-    snapshotIdIdx: index("position_snapshots_snapshot_id_idx").on(table.snapshotId),
+    snapshotIdIdx: index("position_snapshots_snapshot_id_idx").on(
+      table.snapshotId
+    ),
     sourceIdx: index("position_snapshots_source_idx").on(table.source),
     symbolIdx: index("position_snapshots_symbol_idx").on(table.symbol),
     timestampIdx: index("position_snapshots_timestamp_idx").on(table.timestamp),
@@ -195,7 +215,10 @@ export const positionSnapshots = pgTable(
       table.source,
       table.timestamp
     ),
-    userSymbolIdx: index("position_snapshots_user_symbol_idx").on(table.userId, table.symbol),
+    userSymbolIdx: index("position_snapshots_user_symbol_idx").on(
+      table.userId,
+      table.symbol
+    ),
   })
 );
 
@@ -229,13 +252,21 @@ export const reconciliationReports = pgTable(
     processingTimeMs: integer("processing_time_ms"),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("reconciliation_reports_user_id_idx").on(table.userId),
-    startTimeIdx: index("reconciliation_reports_start_time_idx").on(table.startTime),
-    overallStatusIdx: index("reconciliation_reports_overall_status_idx").on(table.overallStatus),
-    criticalIssuesIdx: index("reconciliation_reports_critical_issues_idx").on(table.criticalIssues),
+    startTimeIdx: index("reconciliation_reports_start_time_idx").on(
+      table.startTime
+    ),
+    overallStatusIdx: index("reconciliation_reports_overall_status_idx").on(
+      table.overallStatus
+    ),
+    criticalIssuesIdx: index("reconciliation_reports_critical_issues_idx").on(
+      table.criticalIssues
+    ),
   })
 );
 
@@ -273,15 +304,23 @@ export const errorIncidents = pgTable(
     failedRecoveries: integer("failed_recoveries").notNull().default(0),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     typeIdx: index("error_incidents_type_idx").on(table.type),
     severityIdx: index("error_incidents_severity_idx").on(table.severity),
     serviceIdx: index("error_incidents_service_idx").on(table.service),
-    firstOccurrenceIdx: index("error_incidents_first_occurrence_idx").on(table.firstOccurrence),
-    lastOccurrenceIdx: index("error_incidents_last_occurrence_idx").on(table.lastOccurrence),
+    firstOccurrenceIdx: index("error_incidents_first_occurrence_idx").on(
+      table.firstOccurrence
+    ),
+    lastOccurrenceIdx: index("error_incidents_last_occurrence_idx").on(
+      table.lastOccurrence
+    ),
     recoveredIdx: index("error_incidents_recovered_idx").on(table.recovered),
     // Compound indexes
     serviceSeverityIdx: index("error_incidents_service_severity_idx").on(
@@ -323,8 +362,12 @@ export const systemHealthMetrics = pgTable(
     criticalErrors: integer("critical_errors").notNull().default(0),
 
     // Circuit Breaker Status
-    circuitBreakerOpen: boolean("circuit_breaker_open").notNull().default(false),
-    circuitBreakerFailures: integer("circuit_breaker_failures").notNull().default(0),
+    circuitBreakerOpen: boolean("circuit_breaker_open")
+      .notNull()
+      .default(false),
+    circuitBreakerFailures: integer("circuit_breaker_failures")
+      .notNull()
+      .default(0),
 
     // Additional Metadata
     metadata: text("metadata"), // JSON with service-specific metrics
@@ -332,17 +375,20 @@ export const systemHealthMetrics = pgTable(
 
     // Timestamps
     timestamp: timestamp("timestamp").notNull(),
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     serviceIdx: index("system_health_metrics_service_idx").on(table.service),
     statusIdx: index("system_health_metrics_status_idx").on(table.status),
-    timestampIdx: index("system_health_metrics_timestamp_idx").on(table.timestamp),
-    // Compound indexes
-    serviceTimestampIdx: index("system_health_metrics_service_timestamp_idx").on(
-      table.service,
+    timestampIdx: index("system_health_metrics_timestamp_idx").on(
       table.timestamp
     ),
+    // Compound indexes
+    serviceTimestampIdx: index(
+      "system_health_metrics_service_timestamp_idx"
+    ).on(table.service, table.timestamp),
     serviceStatusIdx: index("system_health_metrics_service_status_idx").on(
       table.service,
       table.status
@@ -374,8 +420,12 @@ export const errorLogs = pgTable(
 
     // Timing
     timestamp: timestamp("timestamp").notNull(),
-    created_at: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updated_at: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    created_at: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updated_at: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     levelIdx: index("error_logs_level_idx").on(table.level),
@@ -385,12 +435,18 @@ export const errorLogs = pgTable(
     sessionIdIdx: index("error_logs_session_id_idx").on(table.session_id),
     errorCodeIdx: index("error_logs_error_code_idx").on(table.error_code),
     // Compound indexes for common queries
-    levelTimestampIdx: index("error_logs_level_timestamp_idx").on(table.level, table.timestamp),
+    levelTimestampIdx: index("error_logs_level_timestamp_idx").on(
+      table.level,
+      table.timestamp
+    ),
     serviceTimestampIdx: index("error_logs_service_timestamp_idx").on(
       table.service,
       table.timestamp
     ),
-    userLevelIdx: index("error_logs_user_level_idx").on(table.user_id, table.level),
+    userLevelIdx: index("error_logs_user_level_idx").on(
+      table.user_id,
+      table.level
+    ),
   })
 );
 

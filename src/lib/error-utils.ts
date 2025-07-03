@@ -4,8 +4,10 @@
 
 export class ValidationError extends Error {
   private logger = {
-    info: (message: string, context?: any) => console.info("[error-utils]", message, context || ""),
-    warn: (message: string, context?: any) => console.warn("[error-utils]", message, context || ""),
+    info: (message: string, context?: any) =>
+      console.info("[error-utils]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[error-utils]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
       console.error("[error-utils]", message, context || "", error || ""),
     debug: (message: string, context?: any) =>
@@ -73,7 +75,9 @@ export class ErrorClassifier {
    * Checks if error is retryable (timeout or connection)
    */
   static isRetryable(error: unknown): boolean {
-    return ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error);
+    return (
+      ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error)
+    );
   }
 
   /**
@@ -134,14 +138,19 @@ export class ErrorClassifier {
     if (ErrorClassifier.isValidation(error)) return 400;
     if (ErrorClassifier.isAuth(error)) return 401;
     if (ErrorClassifier.isRateLimit(error)) return 429;
-    if (ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error)) return 503;
+    if (ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error))
+      return 503;
     return 500;
   }
 
   /**
    * Determines if error should be retried
    */
-  static shouldRetry(error: unknown, attempt: number, maxRetries: number): boolean {
+  static shouldRetry(
+    error: unknown,
+    attempt: number,
+    maxRetries: number
+  ): boolean {
     if (attempt >= maxRetries) return false;
     return ErrorClassifier.isRetryable(error);
   }
@@ -149,7 +158,11 @@ export class ErrorClassifier {
   /**
    * Calculates retry delay with exponential backoff
    */
-  static getRetryDelay(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
+  static getRetryDelay(
+    attempt: number,
+    baseDelay = 1000,
+    maxDelay = 30000
+  ): number {
     const exponentialDelay = baseDelay * 2 ** (attempt - 1);
     const jitter = Math.random() * 1000; // Add jitter to prevent thundering herd
     return Math.min(exponentialDelay + jitter, maxDelay);
@@ -275,7 +288,10 @@ export function getErrorMessage(error: unknown): string {
 /**
  * Formats error for display with optional context
  */
-export function formatErrorForDisplay(error: unknown, context?: string): string {
+export function formatErrorForDisplay(
+  error: unknown,
+  context?: string
+): string {
   const message = getErrorMessage(error);
   return context ? `${context}: ${message}` : message;
 }
@@ -283,7 +299,10 @@ export function formatErrorForDisplay(error: unknown, context?: string): string 
 /**
  * Creates a safe error object that can be serialized
  */
-export function createSafeError(error: unknown): { message: string; type: string } {
+export function createSafeError(error: unknown): {
+  message: string;
+  type: string;
+} {
   return {
     message: getErrorMessage(error),
     type: error instanceof Error ? error.constructor.name : typeof error,

@@ -1,10 +1,21 @@
 "use client";
 
-import { AlertTriangle, Info, Settings as SettingsIcon, Zap } from "lucide-react";
+import {
+  AlertTriangle,
+  Info,
+  Settings as SettingsIcon,
+  Zap,
+} from "lucide-react";
 import { useState } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
 
@@ -61,7 +72,8 @@ export function SimplifiedAutomationSettings({
                 Auto-Sniping
               </Label>
               <p className="text-sm text-muted-foreground">
-                Automatically detect patterns, buy new listings, and manage positions
+                Automatically detect patterns, buy new listings, and manage
+                positions
               </p>
               <div className="text-xs text-muted-foreground space-y-1">
                 <p>• Detects ready-state patterns in new listings</p>
@@ -96,7 +108,9 @@ export function SimplifiedAutomationSettings({
                 }`}
               />
               <span className="font-medium">
-                {autoSnipingEnabled ? "Auto-Sniping Active" : "Auto-Sniping Stopped"}
+                {autoSnipingEnabled
+                  ? "Auto-Sniping Active"
+                  : "Auto-Sniping Stopped"}
               </span>
             </div>
             <p className="text-sm mt-1">
@@ -110,15 +124,20 @@ export function SimplifiedAutomationSettings({
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Important:</strong> Auto-sniping uses real funds and carries trading risks.
-              The system includes safety controls like stop-loss orders and position limits, but you
-              should monitor your account regularly and understand the risks involved.
+              <strong>Important:</strong> Auto-sniping uses real funds and
+              carries trading risks. The system includes safety controls like
+              stop-loss orders and position limits, but you should monitor your
+              account regularly and understand the risks involved.
             </AlertDescription>
           </Alert>
 
           {/* Advanced Settings Link */}
           <div className="pt-4 border-t">
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-2"
+            >
               <SettingsIcon className="h-4 w-4" />
               Advanced Configuration
             </Button>
@@ -134,12 +153,15 @@ export function SimplifiedAutomationSettings({
         <CardContent className="p-4">
           <div className="flex items-center gap-2 mb-2">
             <Info className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-blue-800">Simplified Controls</span>
+            <span className="font-medium text-blue-800">
+              Simplified Controls
+            </span>
           </div>
           <p className="text-sm text-blue-700">
-            We've simplified the automation settings. The single "Auto-Sniping" toggle now controls
-            all trading automation, including buying, selling, and position management. This
-            replaces the previous separate toggles for a clearer user experience.
+            We've simplified the automation settings. The single "Auto-Sniping"
+            toggle now controls all trading automation, including buying,
+            selling, and position management. This replaces the previous
+            separate toggles for a clearer user experience.
           </p>
         </CardContent>
       </Card>

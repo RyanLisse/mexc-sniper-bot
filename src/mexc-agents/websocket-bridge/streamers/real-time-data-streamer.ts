@@ -1,6 +1,6 @@
 /**
  * Real-time Data Streamer
- * 
+ *
  * Handles real-time streaming of agent status and workflow updates
  */
 
@@ -19,7 +19,12 @@ export class RealTimeDataStreamer extends EventEmitter {
     warn: (message: string, context?: any) =>
       console.warn("[real-time-data-streamer]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[real-time-data-streamer]", message, context || "", error || ""),
+      console.error(
+        "[real-time-data-streamer]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[real-time-data-streamer]", message, context || ""),
   };
@@ -109,7 +114,11 @@ export class RealTimeDataStreamer extends EventEmitter {
     this.broadcastWorkflowStatus(tracker);
 
     // Clean up completed workflows after 5 minutes
-    if (status === "completed" || status === "failed" || status === "cancelled") {
+    if (
+      status === "completed" ||
+      status === "failed" ||
+      status === "cancelled"
+    ) {
       setTimeout(
         () => {
           this.workflowTrackers.delete(workflowId);

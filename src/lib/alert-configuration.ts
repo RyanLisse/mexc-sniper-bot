@@ -50,7 +50,9 @@ export const NotificationChannelConfigSchema = z.object({
   config: z.record(z.string(), z.unknown()),
 
   // Routing
-  severityFilter: z.array(z.enum(["critical", "high", "medium", "low", "info"])).optional(),
+  severityFilter: z
+    .array(z.enum(["critical", "high", "medium", "low", "info"]))
+    .optional(),
   categoryFilter: z
     .array(z.enum(["trading", "safety", "performance", "system", "agent"]))
     .optional(),
@@ -86,7 +88,9 @@ export const AlertSuppressionConfigSchema = z.object({
   categoryFilter: z
     .array(z.enum(["trading", "safety", "performance", "system", "agent"]))
     .optional(),
-  severityFilter: z.array(z.enum(["critical", "high", "medium", "low", "info"])).optional(),
+  severityFilter: z
+    .array(z.enum(["critical", "high", "medium", "low", "info"]))
+    .optional(),
   sourceFilter: z.array(z.string()).optional(),
   tagFilter: z.array(z.string()).optional(),
 
@@ -330,7 +334,12 @@ export class AlertConfigurationService {
     warn: (message: string, context?: any) =>
       console.warn("[alert-configuration]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[alert-configuration]", message, context || "", error || ""),
+      console.error(
+        "[alert-configuration]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[alert-configuration]", message, context || ""),
   };
@@ -393,27 +402,41 @@ export class AlertConfigurationService {
     };
 
     if (updates.name) updateData.name = updates.name;
-    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.description !== undefined)
+      updateData.description = updates.description;
     if (updates.category) updateData.category = updates.category;
     if (updates.severity) updateData.severity = updates.severity;
     if (updates.metricName) updateData.metricName = updates.metricName;
     if (updates.operator) updateData.operator = updates.operator;
-    if (updates.threshold !== undefined) updateData.threshold = updates.threshold;
-    if (updates.aggregationWindow) updateData.aggregationWindow = updates.aggregationWindow;
-    if (updates.evaluationInterval) updateData.evaluationInterval = updates.evaluationInterval;
+    if (updates.threshold !== undefined)
+      updateData.threshold = updates.threshold;
+    if (updates.aggregationWindow)
+      updateData.aggregationWindow = updates.aggregationWindow;
+    if (updates.evaluationInterval)
+      updateData.evaluationInterval = updates.evaluationInterval;
     if (updates.useAnomalyDetection !== undefined)
       updateData.useAnomalyDetection = updates.useAnomalyDetection;
-    if (updates.anomalyThreshold) updateData.anomalyThreshold = updates.anomalyThreshold;
-    if (updates.learningWindow) updateData.learningWindow = updates.learningWindow;
-    if (updates.suppressionDuration) updateData.suppressionDuration = updates.suppressionDuration;
-    if (updates.escalationDelay) updateData.escalationDelay = updates.escalationDelay;
+    if (updates.anomalyThreshold)
+      updateData.anomalyThreshold = updates.anomalyThreshold;
+    if (updates.learningWindow)
+      updateData.learningWindow = updates.learningWindow;
+    if (updates.suppressionDuration)
+      updateData.suppressionDuration = updates.suppressionDuration;
+    if (updates.escalationDelay)
+      updateData.escalationDelay = updates.escalationDelay;
     if (updates.maxAlerts) updateData.maxAlerts = updates.maxAlerts;
-    if (updates.correlationKey !== undefined) updateData.correlationKey = updates.correlationKey;
-    if (updates.parentRuleId !== undefined) updateData.parentRuleId = updates.parentRuleId;
+    if (updates.correlationKey !== undefined)
+      updateData.correlationKey = updates.correlationKey;
+    if (updates.parentRuleId !== undefined)
+      updateData.parentRuleId = updates.parentRuleId;
     if (updates.tags) updateData.tags = JSON.stringify(updates.tags);
-    if (updates.customFields) updateData.customFields = JSON.stringify(updates.customFields);
+    if (updates.customFields)
+      updateData.customFields = JSON.stringify(updates.customFields);
 
-    await this.db.update(alertRules).set(updateData).where(eq(alertRules.id, ruleId));
+    await this.db
+      .update(alertRules)
+      .set(updateData)
+      .where(eq(alertRules.id, ruleId));
 
     console.info(`Updated alert rule: ${ruleId}`);
   }
@@ -428,7 +451,11 @@ export class AlertConfigurationService {
   }
 
   async getAlertRule(ruleId: string): Promise<SelectAlertRule | null> {
-    const rules = await this.db.select().from(alertRules).where(eq(alertRules.id, ruleId)).limit(1);
+    const rules = await this.db
+      .select()
+      .from(alertRules)
+      .where(eq(alertRules.id, ruleId))
+      .limit(1);
 
     return rules.length > 0 ? rules[0] : null;
   }
@@ -464,7 +491,9 @@ export class AlertConfigurationService {
   async deployBuiltInRules(createdBy: string): Promise<string[]> {
     const deployedRules: string[] = [];
 
-    for (const [templateKey, template] of Object.entries(BUILT_IN_RULE_TEMPLATES)) {
+    for (const [templateKey, template] of Object.entries(
+      BUILT_IN_RULE_TEMPLATES
+    )) {
       try {
         // Check if rule already exists
         const existing = await this.db
@@ -509,7 +538,10 @@ export class AlertConfigurationService {
               customFields: templateAsAny.customFields,
             }),
           };
-          const ruleId = await this.createAlertRule(validatedTemplate, createdBy);
+          const ruleId = await this.createAlertRule(
+            validatedTemplate,
+            createdBy
+          );
           deployedRules.push(ruleId);
           console.info(`Deployed built-in rule: ${template.name}`);
         } else {
@@ -538,8 +570,12 @@ export class AlertConfigurationService {
       channels: channels.map((channel) => ({
         ...channel,
         config: JSON.parse(channel.config),
-        severityFilter: channel.severityFilter ? JSON.parse(channel.severityFilter) : null,
-        categoryFilter: channel.categoryFilter ? JSON.parse(channel.categoryFilter) : null,
+        severityFilter: channel.severityFilter
+          ? JSON.parse(channel.severityFilter)
+          : null,
+        categoryFilter: channel.categoryFilter
+          ? JSON.parse(channel.categoryFilter)
+          : null,
         tagFilter: channel.tagFilter ? JSON.parse(channel.tagFilter) : null,
       })),
     };
@@ -577,7 +613,9 @@ export class AlertConfigurationService {
             result.skipped++;
           }
         } catch (error) {
-          result.errors.push(`Failed to import rule ${ruleConfig.name}: ${error}`);
+          result.errors.push(
+            `Failed to import rule ${ruleConfig.name}: ${error}`
+          );
         }
       }
     }
@@ -599,7 +637,9 @@ export class AlertConfigurationService {
             result.skipped++;
           }
         } catch (error) {
-          result.errors.push(`Failed to import channel ${channelConfig.name}: ${error}`);
+          result.errors.push(
+            `Failed to import channel ${channelConfig.name}: ${error}`
+          );
         }
       }
     }
@@ -623,9 +663,15 @@ export class AlertConfigurationService {
       name: validated.name,
       type: validated.type,
       config: JSON.stringify(validated.config),
-      severityFilter: validated.severityFilter ? JSON.stringify(validated.severityFilter) : null,
-      categoryFilter: validated.categoryFilter ? JSON.stringify(validated.categoryFilter) : null,
-      tagFilter: validated.tagFilter ? JSON.stringify(validated.tagFilter) : null,
+      severityFilter: validated.severityFilter
+        ? JSON.stringify(validated.severityFilter)
+        : null,
+      categoryFilter: validated.categoryFilter
+        ? JSON.stringify(validated.categoryFilter)
+        : null,
+      tagFilter: validated.tagFilter
+        ? JSON.stringify(validated.tagFilter)
+        : null,
       isEnabled: true,
       isDefault: validated.isDefault,
       rateLimitPerHour: validated.rateLimitPerHour,
@@ -637,7 +683,9 @@ export class AlertConfigurationService {
     };
 
     await this.db.insert(notificationChannels).values(channelData);
-    console.info(`Created notification channel: ${channelId} - ${validated.name}`);
+    console.info(
+      `Created notification channel: ${channelId} - ${validated.name}`
+    );
     return channelId;
   }
 
@@ -677,7 +725,9 @@ export class AlertConfigurationService {
     } catch (error) {
       result.isValid = false;
       if (error instanceof z.ZodError) {
-        result.errors = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`);
+        result.errors = error.errors.map(
+          (e) => `${e.path.join(".")}: ${e.message}`
+        );
       } else {
         result.errors.push("Invalid configuration format");
       }
@@ -690,12 +740,22 @@ export class AlertConfigurationService {
       result.warnings.push("Threshold is required for non-anomaly operators");
     }
 
-    if (validatedConfig.useAnomalyDetection && validatedConfig.operator !== "anomaly") {
-      result.warnings.push("Consider using 'anomaly' operator when anomaly detection is enabled");
+    if (
+      validatedConfig.useAnomalyDetection &&
+      validatedConfig.operator !== "anomaly"
+    ) {
+      result.warnings.push(
+        "Consider using 'anomaly' operator when anomaly detection is enabled"
+      );
     }
 
-    if (validatedConfig.evaluationInterval < validatedConfig.aggregationWindow / 2) {
-      result.warnings.push("Evaluation interval should be at least half of aggregation window");
+    if (
+      validatedConfig.evaluationInterval <
+      validatedConfig.aggregationWindow / 2
+    ) {
+      result.warnings.push(
+        "Evaluation interval should be at least half of aggregation window"
+      );
     }
 
     return result;

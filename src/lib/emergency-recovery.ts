@@ -1,7 +1,10 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { executionHistory } from "../db/schema";
-import { getConnectivityStatus, performSystemHealthCheck } from "./health-checks";
+import {
+  getConnectivityStatus,
+  performSystemHealthCheck,
+} from "./health-checks";
 export interface EmergencyRecoveryPlan {
   emergencyType: string;
   severity: "low" | "medium" | "high" | "critical";
@@ -33,7 +36,12 @@ export class EmergencyRecoveryService {
     warn: (message: string, context?: any) =>
       console.warn("[emergency-recovery]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[emergency-recovery]", message, context || "", error || ""),
+      console.error(
+        "[emergency-recovery]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[emergency-recovery]", message, context || ""),
   };
@@ -82,7 +90,10 @@ export class EmergencyRecoveryService {
         return await this.handleTradingAnomalyRecovery(data);
 
       default:
-        return await this.handleGeneralEmergencyRecovery(emergencyType, severity);
+        return await this.handleGeneralEmergencyRecovery(
+          emergencyType,
+          severity
+        );
     }
   }
 
@@ -216,7 +227,8 @@ export class EmergencyRecoveryService {
       {
         id: "emergency_pattern_analysis",
         description: "Perform emergency pattern analysis",
-        action: async () => await this.performEmergencyAnalysis(data.affectedSymbols),
+        action: async () =>
+          await this.performEmergencyAnalysis(data.affectedSymbols),
         retryable: true,
         maxRetries: 2,
         timeoutMs: 60000,
@@ -300,7 +312,8 @@ export class EmergencyRecoveryService {
       {
         id: "halt_affected_trading",
         description: "Immediately halt trading for affected symbols",
-        action: async () => await this.haltAffectedTrading(data.affectedSymbols),
+        action: async () =>
+          await this.haltAffectedTrading(data.affectedSymbols),
         retryable: false,
         maxRetries: 1,
         timeoutMs: 5000,
@@ -351,7 +364,8 @@ export class EmergencyRecoveryService {
       {
         id: "log_emergency_details",
         description: "Log detailed emergency information",
-        action: async () => await this.logEmergencyDetails(emergencyType, severity),
+        action: async () =>
+          await this.logEmergencyDetails(emergencyType, severity),
         retryable: true,
         maxRetries: 3,
         timeoutMs: 5000,
@@ -454,7 +468,9 @@ export class EmergencyRecoveryService {
     };
   }
 
-  private async scheduleRecoveryChecks(emergencyType: string): Promise<RecoveryResult> {
+  private async scheduleRecoveryChecks(
+    emergencyType: string
+  ): Promise<RecoveryResult> {
     // Schedule periodic checks to attempt recovery
     return {
       success: true,
@@ -517,7 +533,8 @@ export class EmergencyRecoveryService {
   private async tightenRiskControls(): Promise<RecoveryResult> {
     return {
       success: true,
-      message: "Risk controls tightened - reduced position sizes and stricter stop losses",
+      message:
+        "Risk controls tightened - reduced position sizes and stricter stop losses",
       details: {
         maxPositionSize: "reduced_by_50%",
         stopLossBuffer: "increased_by_25%",
@@ -526,7 +543,9 @@ export class EmergencyRecoveryService {
     };
   }
 
-  private async performEmergencyAnalysis(symbols: unknown): Promise<RecoveryResult> {
+  private async performEmergencyAnalysis(
+    symbols: unknown
+  ): Promise<RecoveryResult> {
     const symbolArray = Array.isArray(symbols) ? symbols : [];
     return {
       success: true,
@@ -600,7 +619,9 @@ export class EmergencyRecoveryService {
     };
   }
 
-  private async investigateTradingAnomaly(data: Record<string, unknown>): Promise<RecoveryResult> {
+  private async investigateTradingAnomaly(
+    data: Record<string, unknown>
+  ): Promise<RecoveryResult> {
     return {
       success: true,
       message: "Trading anomaly investigation initiated",
@@ -626,7 +647,10 @@ export class EmergencyRecoveryService {
       success: true,
       message: `System health check completed - status: ${health.overall}`,
       details: health as unknown as Record<string, unknown>,
-      nextAction: health.overall === "healthy" ? "resume_operations" : "continue_recovery",
+      nextAction:
+        health.overall === "healthy"
+          ? "resume_operations"
+          : "continue_recovery",
     };
   }
 

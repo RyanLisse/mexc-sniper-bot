@@ -37,7 +37,12 @@ export class WorkflowStatusService {
     warn: (message: string, context?: any) =>
       console.warn("[workflow-status-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[workflow-status-service]", message, context || "", error || ""),
+      console.error(
+        "[workflow-status-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[workflow-status-service]", message, context || ""),
   };
@@ -87,7 +92,9 @@ export class WorkflowStatusService {
       },
       async () => {
         // Fallback when database circuit breaker is open
-        console.warn("[WorkflowStatusService] Database circuit breaker fallback triggered");
+        console.warn(
+          "[WorkflowStatusService] Database circuit breaker fallback triggered"
+        );
         return null;
       }
     );
@@ -116,10 +123,16 @@ export class WorkflowStatusService {
           bestTrade: 0,
         };
 
-        const result = await db.insert(workflowSystemStatus).values(newStatus).returning();
+        const result = await db
+          .insert(workflowSystemStatus)
+          .values(newStatus)
+          .returning();
         status = result[0];
       } catch (error) {
-        console.error("[WorkflowStatusService] Failed to create system status:", error);
+        console.error(
+          "[WorkflowStatusService] Failed to create system status:",
+          error
+        );
 
         // Return a fallback status object to prevent total failure
         return {
@@ -142,22 +155,24 @@ export class WorkflowStatusService {
     }
 
     // Ensure we never return null by providing a final fallback
-    return status || {
-      id: 0,
-      userId: this.userId,
-      systemStatus: "error" as const,
-      lastUpdate: new Date(),
-      activeWorkflows: "[]",
-      readyTokens: 0,
-      totalDetections: 0,
-      successfulSnipes: 0,
-      totalProfit: 0,
-      successRate: 0,
-      averageROI: 0,
-      bestTrade: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    return (
+      status || {
+        id: 0,
+        userId: this.userId,
+        systemStatus: "error" as const,
+        lastUpdate: new Date(),
+        activeWorkflows: "[]",
+        readyTokens: 0,
+        totalDetections: 0,
+        successfulSnipes: 0,
+        totalProfit: 0,
+        successRate: 0,
+        averageROI: 0,
+        bestTrade: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    );
   }
 
   /**
@@ -257,7 +272,10 @@ export class WorkflowStatusService {
       timestamp: new Date(),
     };
 
-    const result = await db.insert(workflowActivity).values(activityData).returning();
+    const result = await db
+      .insert(workflowActivity)
+      .values(activityData)
+      .returning();
 
     // Clean up old activities (keep only last 50)
     await this.cleanupOldActivities();
@@ -317,7 +335,10 @@ export class WorkflowStatusService {
         }
       }
     } catch (error) {
-      console.error("[WorkflowStatusService] Failed to cleanup activities:", error);
+      console.error(
+        "[WorkflowStatusService] Failed to cleanup activities:",
+        error
+      );
     }
   }
 

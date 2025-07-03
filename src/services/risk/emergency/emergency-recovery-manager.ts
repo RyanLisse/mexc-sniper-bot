@@ -1,6 +1,6 @@
 /**
  * Emergency Recovery Manager - Simplified Version
- * 
+ *
  * Manages system recovery with minimal complexity.
  */
 
@@ -39,7 +39,7 @@ export interface SimpleRecoveryAction {
 export interface SimpleRecoveryExecution {
   planId: string;
   sessionId: string;
-  status: 'pending' | 'executing' | 'completed' | 'failed' | 'paused';
+  status: "pending" | "executing" | "completed" | "failed" | "paused";
   startTime: number;
   endTime?: number;
   currentPhase: string;
@@ -65,7 +65,12 @@ export class EmergencyRecoveryManager extends EventEmitter {
     warn: (message: string, context?: any) =>
       console.warn("[emergency-recovery-manager]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[emergency-recovery-manager]", message, context || "", error || ""),
+      console.error(
+        "[emergency-recovery-manager]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[emergency-recovery-manager]", message, context || ""),
   };
@@ -108,9 +113,10 @@ export class EmergencyRecoveryManager extends EventEmitter {
     }
 
     // Check if recovery is already active for this session
-    const existingRecovery = Array.from(this.activeRecoveries.values())
-      .find(r => r.sessionId === sessionId);
-    
+    const existingRecovery = Array.from(this.activeRecoveries.values()).find(
+      (r) => r.sessionId === sessionId
+    );
+
     if (existingRecovery) {
       throw new Error(`Recovery already active for session: ${sessionId}`);
     }
@@ -121,9 +127,9 @@ export class EmergencyRecoveryManager extends EventEmitter {
     const recovery: SimpleRecoveryExecution = {
       planId,
       sessionId,
-      status: 'pending',
+      status: "pending",
       startTime: now,
-      currentPhase: plan.phases[0]?.id || '',
+      currentPhase: plan.phases[0]?.id || "",
       completedPhases: [],
       failedPhases: [],
       executedActions: new Map(),
@@ -142,7 +148,7 @@ export class EmergencyRecoveryManager extends EventEmitter {
     });
 
     // Start execution
-    recovery.status = 'executing';
+    recovery.status = "executing";
     this.executeRecoveryPlan(recoveryId, context);
 
     this.emit("recovery_started", {
@@ -170,21 +176,21 @@ export class EmergencyRecoveryManager extends EventEmitter {
 
     try {
       for (const phase of plan.phases) {
-        if (recovery.status !== 'executing') break;
+        if (recovery.status !== "executing") break;
 
         await this.executeRecoveryPhase(recoveryId, phase, context);
-        
+
         if (!recovery.failedPhases.includes(phase.id)) {
           recovery.completedPhases.push(phase.id);
-          recovery.currentPhase = this.getNextPhaseId(plan, phase.id) || '';
+          recovery.currentPhase = this.getNextPhaseId(plan, phase.id) || "";
         }
       }
 
       // Mark as completed if no failures
-      if (recovery.status === 'executing') {
-        recovery.status = 'completed';
+      if (recovery.status === "executing") {
+        recovery.status = "completed";
         recovery.endTime = Date.now();
-        
+
         this.logger.info("Recovery completed successfully", {
           recoveryId,
           duration: recovery.endTime - recovery.startTime,
@@ -198,11 +204,10 @@ export class EmergencyRecoveryManager extends EventEmitter {
           timestamp: recovery.endTime,
         });
       }
-
     } catch (error: any) {
-      recovery.status = 'failed';
+      recovery.status = "failed";
       recovery.endTime = Date.now();
-      
+
       this.logger.error("Recovery execution failed", {
         recoveryId,
         error: error?.message,
@@ -255,7 +260,6 @@ export class EmergencyRecoveryManager extends EventEmitter {
         phaseId: phase.id,
         timestamp: Date.now(),
       });
-
     } catch (error: any) {
       recovery.failedPhases.push(phase.id);
 
@@ -281,7 +285,7 @@ export class EmergencyRecoveryManager extends EventEmitter {
     if (!recovery) return;
 
     const actionExecution = {
-      status: 'executing',
+      status: "executing",
       startTime: Date.now(),
     };
 
@@ -297,7 +301,7 @@ export class EmergencyRecoveryManager extends EventEmitter {
       // Simulate action execution
       const result = await this.simulateRecoveryAction(action, context);
 
-      actionExecution.status = 'completed';
+      actionExecution.status = "completed";
       actionExecution.endTime = Date.now();
       actionExecution.result = result;
 
@@ -310,9 +314,8 @@ export class EmergencyRecoveryManager extends EventEmitter {
         recoveryId,
         actionId: action.id,
       });
-
     } catch (error: any) {
-      actionExecution.status = 'failed';
+      actionExecution.status = "failed";
       actionExecution.endTime = Date.now();
       actionExecution.error = error?.message;
 
@@ -331,30 +334,30 @@ export class EmergencyRecoveryManager extends EventEmitter {
    */
   private async simulateRecoveryAction(
     action: SimpleRecoveryAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     // Add artificial delay to simulate real execution
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     switch (action.type) {
       case "system_restart":
         return { systemRestarted: true, services: 5, timestamp: Date.now() };
-      
+
       case "health_check":
         return { healthChecks: 10, passed: 9, failed: 1 };
-      
+
       case "data_validation":
         return { recordsValidated: 1000, errors: 0, consistency: 100 };
-      
+
       case "service_restore":
         return { servicesRestored: 3, status: "healthy" };
-      
+
       case "cache_warm":
         return { cacheWarmed: true, entries: 250, hitRate: 0.95 };
-      
+
       case "monitoring_enable":
         return { monitoringEnabled: true, alerts: 12 };
-      
+
       default:
         return { actionExecuted: true, type: action.type };
     }
@@ -375,18 +378,20 @@ export class EmergencyRecoveryManager extends EventEmitter {
     try {
       // Execute rollback actions in reverse order
       for (const actionId of recovery.rollbackActions.reverse()) {
-        this.logger.debug("Executing rollback action", { recoveryId, actionId });
-        await new Promise(resolve => setTimeout(resolve, 100));
+        this.logger.debug("Executing rollback action", {
+          recoveryId,
+          actionId,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       this.logger.info("Recovery rollback completed", { recoveryId });
-      
+
       this.emit("recovery_rolled_back", {
         recoveryId,
         sessionId: recovery.sessionId,
         timestamp: Date.now(),
       });
-
     } catch (error: any) {
       this.logger.error("Recovery rollback failed", {
         recoveryId,
@@ -414,8 +419,11 @@ export class EmergencyRecoveryManager extends EventEmitter {
   /**
    * Get next phase ID in sequence
    */
-  private getNextPhaseId(plan: SimpleRecoveryPlan, currentPhaseId: string): string | null {
-    const currentIndex = plan.phases.findIndex(p => p.id === currentPhaseId);
+  private getNextPhaseId(
+    plan: SimpleRecoveryPlan,
+    currentPhaseId: string
+  ): string | null {
+    const currentIndex = plan.phases.findIndex((p) => p.id === currentPhaseId);
     if (currentIndex === -1 || currentIndex >= plan.phases.length - 1) {
       return null;
     }
@@ -523,7 +531,9 @@ export class EmergencyRecoveryManager extends EventEmitter {
    * Get recovery history
    */
   getRecoveryHistory(limit?: number): SimpleRecoveryExecution[] {
-    return limit ? this.recoveryHistory.slice(-limit) : [...this.recoveryHistory];
+    return limit
+      ? this.recoveryHistory.slice(-limit)
+      : [...this.recoveryHistory];
   }
 
   /**
@@ -536,24 +546,32 @@ export class EmergencyRecoveryManager extends EventEmitter {
     averageDuration: number;
     planUsage: Record<string, number>;
   } {
-    const totalRecoveries = this.recoveryHistory.length + this.activeRecoveries.size;
-    const successfulRecoveries = this.recoveryHistory.filter(r => r.status === 'completed').length;
-    
+    const totalRecoveries =
+      this.recoveryHistory.length + this.activeRecoveries.size;
+    const successfulRecoveries = this.recoveryHistory.filter(
+      (r) => r.status === "completed"
+    ).length;
+
     const planUsage: Record<string, number> = {};
     for (const recovery of this.recoveryHistory) {
       planUsage[recovery.planId] = (planUsage[recovery.planId] || 0) + 1;
     }
 
-    const completedRecoveries = this.recoveryHistory.filter(r => r.endTime);
-    const totalDuration = completedRecoveries.reduce((sum, r) => 
-      sum + ((r.endTime || 0) - r.startTime), 0
+    const completedRecoveries = this.recoveryHistory.filter((r) => r.endTime);
+    const totalDuration = completedRecoveries.reduce(
+      (sum, r) => sum + ((r.endTime || 0) - r.startTime),
+      0
     );
 
     return {
       activeRecoveries: this.activeRecoveries.size,
       totalRecoveries,
-      successRate: totalRecoveries > 0 ? successfulRecoveries / totalRecoveries : 0,
-      averageDuration: completedRecoveries.length > 0 ? totalDuration / completedRecoveries.length : 0,
+      successRate:
+        totalRecoveries > 0 ? successfulRecoveries / totalRecoveries : 0,
+      averageDuration:
+        completedRecoveries.length > 0
+          ? totalDuration / completedRecoveries.length
+          : 0,
       planUsage,
     };
   }
@@ -570,7 +588,7 @@ export class EmergencyRecoveryManager extends EventEmitter {
     for (const recoveryId of this.activeRecoveries.keys()) {
       const recovery = this.activeRecoveries.get(recoveryId);
       if (recovery) {
-        recovery.status = 'failed';
+        recovery.status = "failed";
         this.finalizeRecovery(recoveryId);
       }
     }

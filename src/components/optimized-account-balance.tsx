@@ -20,40 +20,155 @@ interface AccountBalanceProps {
 }
 
 // Main component (internal)
-const OptimizedAccountBalanceInternal = memo(({ userId, className }: AccountBalanceProps) => {
-  const [showBalances, setShowBalances] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+const OptimizedAccountBalanceInternal = memo(
+  ({ userId, className }: AccountBalanceProps) => {
+    const [showBalances, setShowBalances] = useState(true);
+    const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const {
-    data: balanceData,
-    isLoading,
-    isError,
-    error,
-    refetch,
-    isFetching,
-  } = useAccountBalance({
-    userId,
-    refreshInterval: autoRefresh ? 30000 : undefined,
-    enabled: true,
-  });
+    const {
+      data: balanceData,
+      isLoading,
+      isError,
+      error,
+      refetch,
+      isFetching,
+    } = useAccountBalance({
+      userId,
+      refreshInterval: autoRefresh ? 30000 : undefined,
+      enabled: true,
+    });
 
-  // Memoize sorted balances
-  const sortedBalances = useMemo(() => {
-    if (!balanceData?.balances) return [];
-    return [...balanceData.balances]
-      .filter((balance): balance is BalanceItem =>
-        Boolean(balance.asset && balance.free && balance.locked && balance.total !== undefined)
-      )
-      .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0))
-      .slice(0, 10);
-  }, [balanceData?.balances]);
+    // Memoize sorted balances
+    const sortedBalances = useMemo(() => {
+      if (!balanceData?.balances) return [];
+      return [...balanceData.balances]
+        .filter((balance): balance is BalanceItem =>
+          Boolean(
+            balance.asset &&
+              balance.free &&
+              balance.locked &&
+              balance.total !== undefined
+          )
+        )
+        .sort((a, b) => (b.usdtValue || 0) - (a.usdtValue || 0))
+        .slice(0, 10);
+    }, [balanceData?.balances]);
 
-  const handleRefresh = useCallback(() => refetch(), [refetch]);
-  const toggleVisibility = useCallback(() => setShowBalances((prev) => !prev), []);
-  const toggleAutoRefresh = useCallback(() => setAutoRefresh((prev) => !prev), []);
+    const handleRefresh = useCallback(() => refetch(), [refetch]);
+    const toggleVisibility = useCallback(
+      () => setShowBalances((prev) => !prev),
+      []
+    );
+    const toggleAutoRefresh = useCallback(
+      () => setAutoRefresh((prev) => !prev),
+      []
+    );
 
-  const renderErrorState = useCallback(
-    () => (
+    const renderErrorState = useCallback(
+      () => (
+        <Card className={`bg-card border-border backdrop-blur-sm ${className}`}>
+          <CardHeader className="pb-3">
+            <BalanceHeader
+              isFetching={isFetching}
+              autoRefresh={autoRefresh}
+              showBalances={showBalances}
+              onToggleAutoRefresh={toggleAutoRefresh}
+              onToggleVisibility={toggleVisibility}
+              onRefresh={handleRefresh}
+            />
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <p className="text-destructive text-sm">
+                Failed to load account balance
+              </p>
+              <p className="text-muted-foreground text-xs mt-1">
+                {error instanceof Error ? error.message : "Unknown error"}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="mt-4"
+              >
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ),
+      [
+        className,
+        isFetching,
+        autoRefresh,
+        showBalances,
+        toggleAutoRefresh,
+        toggleVisibility,
+        handleRefresh,
+        error,
+      ]
+    );
+
+    const renderPortfolioValue = useCallback(() => {
+      if (!balanceData) return null;
+
+      return (
+        <PortfolioSummary
+          totalValue={balanceData.totalUsdtValue || 0}
+          assetCount={balanceData.balances.length}
+          showBalances={showBalances}
+          topHoldings={sortedBalances}
+        />
+      );
+    }, [showBalances, balanceData, sortedBalances]);
+
+    const renderAssetBreakdown = useCallback(() => {
+      const balanceCount = balanceData?.balances.length || 0;
+      const hasBalances = balanceCount > 0;
+
+      return (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-foreground">
+              Asset Breakdown
+            </h4>
+            {balanceCount > 5 && (
+              <span className="text-xs text-muted-foreground">
+                Showing top holdings
+              </span>
+            )}
+          </div>
+
+          {!hasBalances ? (
+            <EmptyState />
+          ) : (
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {sortedBalances.map((balance) => (
+                <BalanceItemComponent
+                  key={balance.asset}
+                  balance={balance}
+                  showBalances={showBalances}
+                />
+              ))}
+
+              {balanceCount > 10 && (
+                <div className="text-center py-2">
+                  <span className="text-xs text-muted-foreground">
+                    +{balanceCount - 10} more assets
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }, [balanceData, showBalances, sortedBalances]);
+
+    if (isError) {
+      return renderErrorState();
+    }
+
+    return (
       <Card className={`bg-card border-border backdrop-blur-sm ${className}`}>
         <CardHeader className="pb-3">
           <BalanceHeader
@@ -63,116 +178,25 @@ const OptimizedAccountBalanceInternal = memo(({ userId, className }: AccountBala
             onToggleAutoRefresh={toggleAutoRefresh}
             onToggleVisibility={toggleVisibility}
             onRefresh={handleRefresh}
+            lastUpdated={balanceData?.lastUpdated}
           />
         </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-destructive text-sm">Failed to load account balance</p>
-            <p className="text-muted-foreground text-xs mt-1">
-              {error instanceof Error ? error.message : "Unknown error"}
-            </p>
-            <Button variant="outline" size="sm" onClick={handleRefresh} className="mt-4">
-              Try Again
-            </Button>
-          </div>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : balanceData ? (
+            <>
+              {renderPortfolioValue()}
+              {renderAssetBreakdown()}
+            </>
+          ) : (
+            <EmptyState />
+          )}
         </CardContent>
       </Card>
-    ),
-    [
-      className,
-      isFetching,
-      autoRefresh,
-      showBalances,
-      toggleAutoRefresh,
-      toggleVisibility,
-      handleRefresh,
-      error,
-    ]
-  );
-
-  const renderPortfolioValue = useCallback(() => {
-    if (!balanceData) return null;
-
-    return (
-      <PortfolioSummary
-        totalValue={balanceData.totalUsdtValue || 0}
-        assetCount={balanceData.balances.length}
-        showBalances={showBalances}
-        topHoldings={sortedBalances}
-      />
     );
-  }, [showBalances, balanceData, sortedBalances]);
-
-  const renderAssetBreakdown = useCallback(() => {
-    const balanceCount = balanceData?.balances.length || 0;
-    const hasBalances = balanceCount > 0;
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-foreground">Asset Breakdown</h4>
-          {balanceCount > 5 && (
-            <span className="text-xs text-muted-foreground">Showing top holdings</span>
-          )}
-        </div>
-
-        {!hasBalances ? (
-          <EmptyState />
-        ) : (
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {sortedBalances.map((balance) => (
-              <BalanceItemComponent
-                key={balance.asset}
-                balance={balance}
-                showBalances={showBalances}
-              />
-            ))}
-
-            {balanceCount > 10 && (
-              <div className="text-center py-2">
-                <span className="text-xs text-muted-foreground">
-                  +{balanceCount - 10} more assets
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }, [balanceData, showBalances, sortedBalances]);
-
-  if (isError) {
-    return renderErrorState();
   }
-
-  return (
-    <Card className={`bg-card border-border backdrop-blur-sm ${className}`}>
-      <CardHeader className="pb-3">
-        <BalanceHeader
-          isFetching={isFetching}
-          autoRefresh={autoRefresh}
-          showBalances={showBalances}
-          onToggleAutoRefresh={toggleAutoRefresh}
-          onToggleVisibility={toggleVisibility}
-          onRefresh={handleRefresh}
-          lastUpdated={balanceData?.lastUpdated}
-        />
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {isLoading ? (
-          <LoadingSkeleton />
-        ) : balanceData ? (
-          <>
-            {renderPortfolioValue()}
-            {renderAssetBreakdown()}
-          </>
-        ) : (
-          <EmptyState />
-        )}
-      </CardContent>
-    </Card>
-  );
-});
+);
 
 OptimizedAccountBalanceInternal.displayName = "OptimizedAccountBalanceInternal";
 
@@ -196,11 +220,13 @@ const BalanceLoadingFallback = () => (
 );
 
 // Exported component with hydration boundary
-export const OptimizedAccountBalance = memo(({ userId, className }: AccountBalanceProps) => (
-  <HydrationBoundary fallback={<BalanceLoadingFallback />}>
-    <OptimizedAccountBalanceInternal userId={userId} className={className} />
-  </HydrationBoundary>
-));
+export const OptimizedAccountBalance = memo(
+  ({ userId, className }: AccountBalanceProps) => (
+    <HydrationBoundary fallback={<BalanceLoadingFallback />}>
+      <OptimizedAccountBalanceInternal userId={userId} className={className} />
+    </HydrationBoundary>
+  )
+);
 
 OptimizedAccountBalance.displayName = "OptimizedAccountBalance";
 

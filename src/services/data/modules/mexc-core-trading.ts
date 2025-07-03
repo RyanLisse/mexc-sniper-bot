@@ -58,7 +58,9 @@ export class MexcCoreTradingClient {
   /**
    * Place a trading order
    */
-  async placeOrder(orderData: OrderData): Promise<MexcServiceResponse<OrderResult>> {
+  async placeOrder(
+    orderData: OrderData
+  ): Promise<MexcServiceResponse<OrderResult>> {
     const startTime = Date.now();
 
     try {
@@ -103,7 +105,10 @@ export class MexcCoreTradingClient {
   /**
    * Cancel an existing order
    */
-  async cancelOrder(symbol: string, orderId: number): Promise<MexcServiceResponse<any>> {
+  async cancelOrder(
+    symbol: string,
+    orderId: number
+  ): Promise<MexcServiceResponse<any>> {
     const startTime = Date.now();
 
     try {
@@ -135,7 +140,10 @@ export class MexcCoreTradingClient {
   /**
    * Get order status
    */
-  async getOrderStatus(symbol: string, orderId: number): Promise<MexcServiceResponse<OrderResult>> {
+  async getOrderStatus(
+    symbol: string,
+    orderId: number
+  ): Promise<MexcServiceResponse<OrderResult>> {
     const startTime = Date.now();
 
     try {
@@ -167,7 +175,9 @@ export class MexcCoreTradingClient {
   /**
    * Get all open orders for a symbol
    */
-  async getOpenOrders(symbol?: string): Promise<MexcServiceResponse<OrderResult[]>> {
+  async getOpenOrders(
+    symbol?: string
+  ): Promise<MexcServiceResponse<OrderResult[]>> {
     const startTime = Date.now();
 
     try {
@@ -298,7 +308,10 @@ export class MexcCoreTradingClient {
   /**
    * Place a market buy order
    */
-  async marketBuy(symbol: string, quantity: string): Promise<MexcServiceResponse<OrderResult>> {
+  async marketBuy(
+    symbol: string,
+    quantity: string
+  ): Promise<MexcServiceResponse<OrderResult>> {
     return this.placeOrder({
       symbol,
       side: "BUY",
@@ -310,7 +323,10 @@ export class MexcCoreTradingClient {
   /**
    * Place a market sell order
    */
-  async marketSell(symbol: string, quantity: string): Promise<MexcServiceResponse<OrderResult>> {
+  async marketSell(
+    symbol: string,
+    quantity: string
+  ): Promise<MexcServiceResponse<OrderResult>> {
     return this.placeOrder({
       symbol,
       side: "SELL",
@@ -406,7 +422,9 @@ export class MexcCoreTradingClient {
 /**
  * Create a new MEXC trading client instance
  */
-export function createMexcCoreTradingClient(httpClient: MexcCoreHttpClient): MexcCoreTradingClient {
+export function createMexcCoreTradingClient(
+  httpClient: MexcCoreHttpClient
+): MexcCoreTradingClient {
   return new MexcCoreTradingClient(httpClient);
 }
 

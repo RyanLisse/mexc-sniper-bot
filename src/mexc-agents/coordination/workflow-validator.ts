@@ -43,9 +43,13 @@ export class WorkflowValidator {
     }
 
     // Validate step dependencies
-    const dependencyErrors = this.dependencyResolver.validateDependencies(definition.steps);
+    const dependencyErrors = this.dependencyResolver.validateDependencies(
+      definition.steps
+    );
     if (dependencyErrors.length > 0) {
-      throw new Error(`Dependency validation failed: ${dependencyErrors.join("; ")}`);
+      throw new Error(
+        `Dependency validation failed: ${dependencyErrors.join("; ")}`
+      );
     }
 
     // Check for agent existence during registration
@@ -58,7 +62,10 @@ export class WorkflowValidator {
       }
 
       // Also check fallback agent if specified
-      if (step.fallbackAgentId && !this.agentRegistry.getAgent(step.fallbackAgentId)) {
+      if (
+        step.fallbackAgentId &&
+        !this.agentRegistry.getAgent(step.fallbackAgentId)
+      ) {
         this.deferredWarnings.push(
           `Fallback agent '${step.fallbackAgentId}' for step '${step.id}' is not registered`
         );
@@ -111,7 +118,9 @@ export class WorkflowValidator {
       this.logger.warn(
         `[WorkflowValidator] ${remainingWarnings.length} agent registration warnings remain:`
       );
-      remainingWarnings.forEach((warning) => this.logger.warn(`  - ${warning}`));
+      remainingWarnings.forEach((warning) =>
+        this.logger.warn(`  - ${warning}`)
+      );
     }
 
     return { resolvedWarnings, remainingWarnings };
@@ -132,7 +141,9 @@ export class WorkflowValidator {
     this.deferredWarnings = [];
 
     if (clearedCount > 0) {
-      this.logger.debug(`[WorkflowValidator] Cleared ${clearedCount} deferred warnings`);
+      this.logger.debug(
+        `[WorkflowValidator] Cleared ${clearedCount} deferred warnings`
+      );
     }
   }
 
@@ -143,16 +154,22 @@ export class WorkflowValidator {
     for (const step of definition.steps) {
       // Validate timeout values
       if (step.timeout !== undefined && step.timeout <= 0) {
-        throw new Error(`Step '${step.id}' has invalid timeout: ${step.timeout}`);
+        throw new Error(
+          `Step '${step.id}' has invalid timeout: ${step.timeout}`
+        );
       }
 
       // Validate retry configuration
       if (step.retries !== undefined && step.retries < 0) {
-        throw new Error(`Step '${step.id}' has invalid retry count: ${step.retries}`);
+        throw new Error(
+          `Step '${step.id}' has invalid retry count: ${step.retries}`
+        );
       }
 
       if (step.retryDelay !== undefined && step.retryDelay < 0) {
-        throw new Error(`Step '${step.id}' has invalid retry delay: ${step.retryDelay}`);
+        throw new Error(
+          `Step '${step.id}' has invalid retry delay: ${step.retryDelay}`
+        );
       }
 
       // Validate fallback configuration
@@ -163,9 +180,15 @@ export class WorkflowValidator {
       }
 
       // Validate execution mode consistency
-      if (definition.executionMode === "sequential" && step.dependencies?.length) {
+      if (
+        definition.executionMode === "sequential" &&
+        step.dependencies?.length
+      ) {
         // In sequential mode, dependencies should form a simple chain
-        const circularDeps = this.checkForCircularDependencies(definition.steps, step.id);
+        const circularDeps = this.checkForCircularDependencies(
+          definition.steps,
+          step.id
+        );
         if (circularDeps.length > 0) {
           this.logger.warn(
             `Step '${step.id}' has complex dependencies in sequential mode: ${circularDeps.join(", ")}`
@@ -176,7 +199,9 @@ export class WorkflowValidator {
 
     // Validate overall workflow timeout
     if (definition.timeout !== undefined && definition.timeout <= 0) {
-      throw new Error(`Workflow '${definition.id}' has invalid timeout: ${definition.timeout}`);
+      throw new Error(
+        `Workflow '${definition.id}' has invalid timeout: ${definition.timeout}`
+      );
     }
   }
 
@@ -201,7 +226,11 @@ export class WorkflowValidator {
     }
 
     for (const depId of step.dependencies) {
-      const circular = this.checkForCircularDependencies(steps, depId, new Set(visited));
+      const circular = this.checkForCircularDependencies(
+        steps,
+        depId,
+        new Set(visited)
+      );
       if (circular.length > 0) {
         visited.delete(startStepId);
         return [startStepId, ...circular];

@@ -29,23 +29,23 @@ export function usePatternMonitoring() {
 
   // Load pattern data
   const loadData = async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/pattern-monitoring");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to load pattern data");
       }
-      
+
       setState({
         data: result.data,
         isLoading: false,
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : "Failed to load data",
@@ -61,7 +61,7 @@ export function usePatternMonitoring() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "start" }),
       });
-      
+
       const result = await response.json();
       if (result.success) {
         await loadData();
@@ -80,7 +80,7 @@ export function usePatternMonitoring() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "stop" }),
       });
-      
+
       const result = await response.json();
       if (result.success) {
         await loadData();
@@ -94,7 +94,7 @@ export function usePatternMonitoring() {
   // Load data on mount
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   return {
     ...state,

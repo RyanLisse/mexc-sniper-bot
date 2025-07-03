@@ -3,9 +3,9 @@
  * Minimal implementation to eliminate import errors
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const response = {
       success: true,
@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
             failedExecutions: 0,
             averageExecutionTime: 0,
             lastExecution: null,
-            successRate: 0
-          }
+            successRate: 0,
+          },
         },
         performance: {
           hitRate: 0,
@@ -30,40 +30,43 @@ export async function GET(request: NextRequest) {
           cacheSize: 0,
           memoryUsage: 0,
           evictions: 0,
-          errors: 0
+          errors: 0,
         },
         connection: {
           redis: {
             connected: false,
             status: "disconnected",
             message: "Redis connection not configured",
-            lastCheck: new Date().toISOString()
+            lastCheck: new Date().toISOString(),
           },
           valkey: {
             connected: false,
-            status: "disconnected", 
+            status: "disconnected",
             message: "Valkey connection not configured",
-            lastCheck: new Date().toISOString()
+            lastCheck: new Date().toISOString(),
           },
           gracefulDegradation: {
             enabled: true,
             fallbackMode: true,
-            message: "Operating in fallback mode - cache operations disabled"
-          }
+            message: "Operating in fallback mode - cache operations disabled",
+          },
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       },
       message: "Cache warming status retrieved",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Cache warming status error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to get cache warming status',
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    console.error("Cache warming status error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to get cache warming status",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
   }
 }

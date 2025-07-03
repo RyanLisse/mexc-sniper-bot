@@ -5,7 +5,10 @@
  */
 
 import { type AgentResponse, BaseAgent } from "./base-agent";
-import type { RiskManagementPlan, TradingStrategyResult } from "./trading-strategy-workflow";
+import type {
+  RiskManagementPlan,
+  TradingStrategyResult,
+} from "./trading-strategy-workflow";
 
 export interface StrategyRequest {
   action: "create" | "analyze" | "optimize" | "recommend";
@@ -61,7 +64,10 @@ Always provide detailed, actionable insights with proper risk management conside
     });
   }
 
-  async process(input: string, context?: Record<string, any>): Promise<AgentResponse> {
+  async process(
+    input: string,
+    context?: Record<string, any>
+  ): Promise<AgentResponse> {
     try {
       // Parse input to determine strategy request type
       let request: StrategyRequest;
@@ -94,7 +100,8 @@ Always provide detailed, actionable insights with proper risk management conside
           return await this.analyzeMarketConditions(request, context);
       }
     } catch (error) {
-      const safeError = error instanceof Error ? error : new Error(String(error));
+      const safeError =
+        error instanceof Error ? error : new Error(String(error));
       return {
         content: `Strategy processing failed: ${safeError.message}`,
         metadata: {
@@ -119,7 +126,9 @@ Always provide detailed, actionable insights with proper risk management conside
     for (const symbol of symbols) {
       try {
         // Import market data services
-        const { MexcApiClient } = await import("../services/api/mexc-api-client");
+        const { MexcApiClient } = await import(
+          "../services/api/mexc-api-client"
+        );
         const { PatternDetectionCore } = await import(
           "../services/data/pattern-detection/pattern-detection-engine"
         );
@@ -170,7 +179,9 @@ Always provide detailed, actionable insights with proper risk management conside
   private generateRecommendations(analysisResults: any[]): string[] {
     const recommendations: string[] = [];
 
-    const bullishCount = analysisResults.filter((r) => r.recommendation === "bullish").length;
+    const bullishCount = analysisResults.filter(
+      (r) => r.recommendation === "bullish"
+    ).length;
     const totalSymbols = analysisResults.length;
 
     if (bullishCount > totalSymbols * 0.7) {
@@ -178,12 +189,18 @@ Always provide detailed, actionable insights with proper risk management conside
         "Strong market conditions detected - consider increasing position sizes"
       );
     } else if (bullishCount < totalSymbols * 0.3) {
-      recommendations.push("Weak market conditions - consider reducing exposure");
+      recommendations.push(
+        "Weak market conditions - consider reducing exposure"
+      );
     } else {
-      recommendations.push("Mixed market conditions - maintain balanced approach");
+      recommendations.push(
+        "Mixed market conditions - maintain balanced approach"
+      );
     }
 
-    const highVolumeSymbols = analysisResults.filter((r) => r.volume > 1000000).length;
+    const highVolumeSymbols = analysisResults.filter(
+      (r) => r.volume > 1000000
+    ).length;
     if (highVolumeSymbols > 0) {
       recommendations.push(
         `${highVolumeSymbols} symbols showing high volume - prioritize for trading`
@@ -219,21 +236,35 @@ Always provide detailed, actionable insights with proper risk management conside
         },
         riskManagement: {
           maxLoss:
-            capitalAmount * (riskLevel === "low" ? 0.02 : riskLevel === "high" ? 0.08 : 0.05),
+            capitalAmount *
+            (riskLevel === "low" ? 0.02 : riskLevel === "high" ? 0.08 : 0.05),
           positionSizing:
-            capitalAmount * (riskLevel === "low" ? 0.02 : riskLevel === "high" ? 0.1 : 0.05),
-          diversification: ["Multi-timeframe analysis", "Risk-reward ratio validation"],
+            capitalAmount *
+            (riskLevel === "low" ? 0.02 : riskLevel === "high" ? 0.1 : 0.05),
+          diversification: [
+            "Multi-timeframe analysis",
+            "Risk-reward ratio validation",
+          ],
           riskFactors: this.getRiskFactors(riskLevel),
           mitigation: this.getMitigationStrategies(riskLevel),
         },
         executionPlan: {
           timing: {
             entry: "Pattern confirmation",
-            monitoring: ["Real-time price tracking", "Volume analysis", "Pattern degradation"],
-            exit: ["Multi-phase exit strategy", "Stop loss trigger", "Take profit levels"],
+            monitoring: [
+              "Real-time price tracking",
+              "Volume analysis",
+              "Pattern degradation",
+            ],
+            exit: [
+              "Multi-phase exit strategy",
+              "Stop loss trigger",
+              "Take profit levels",
+            ],
           },
           alerts: ["Position opened", "Target reached", "Stop loss triggered"],
-          fallbackPlan: "Emergency close all positions if system health degrades",
+          fallbackPlan:
+            "Emergency close all positions if system health degrades",
         },
         confidence: this.calculateStrategyConfidence(request),
         metadata: {
@@ -267,11 +298,23 @@ Always provide detailed, actionable insights with proper risk management conside
 
     switch (riskLevel) {
       case "low":
-        return [...baseFactors, "Conservative position sizing", "Strict stop losses"];
+        return [
+          ...baseFactors,
+          "Conservative position sizing",
+          "Strict stop losses",
+        ];
       case "high":
-        return [...baseFactors, "Higher leverage exposure", "Rapid market movements"];
+        return [
+          ...baseFactors,
+          "Higher leverage exposure",
+          "Rapid market movements",
+        ];
       default:
-        return [...baseFactors, "Moderate position sizing", "Balanced risk exposure"];
+        return [
+          ...baseFactors,
+          "Moderate position sizing",
+          "Balanced risk exposure",
+        ];
     }
   }
 
@@ -280,20 +323,39 @@ Always provide detailed, actionable insights with proper risk management conside
 
     switch (riskLevel) {
       case "low":
-        return [...baseStrategies, "Conservative position sizing", "Extended analysis periods"];
+        return [
+          ...baseStrategies,
+          "Conservative position sizing",
+          "Extended analysis periods",
+        ];
       case "high":
-        return [...baseStrategies, "Rapid response protocols", "Enhanced volatility monitoring"];
+        return [
+          ...baseStrategies,
+          "Rapid response protocols",
+          "Enhanced volatility monitoring",
+        ];
       default:
-        return [...baseStrategies, "Balanced portfolio approach", "Regular strategy reviews"];
+        return [
+          ...baseStrategies,
+          "Balanced portfolio approach",
+          "Regular strategy reviews",
+        ];
     }
   }
 
   private generateEntryConditions(riskLevel: string): string[] {
-    const baseConditions = ["Ready state pattern detected", "Volume above average"];
+    const baseConditions = [
+      "Ready state pattern detected",
+      "Volume above average",
+    ];
 
     switch (riskLevel) {
       case "low":
-        return [...baseConditions, "RSI below 30", "Strong support level confirmed"];
+        return [
+          ...baseConditions,
+          "RSI below 30",
+          "Strong support level confirmed",
+        ];
       case "high":
         return [...baseConditions, "Momentum breakout confirmed"];
       default:
@@ -306,7 +368,11 @@ Always provide detailed, actionable insights with proper risk management conside
 
     switch (riskLevel) {
       case "low":
-        return [...baseConditions, "Trailing stop at 3%", "Time-based exit after 24h"];
+        return [
+          ...baseConditions,
+          "Trailing stop at 3%",
+          "Time-based exit after 24h",
+        ];
       case "high":
         return [...baseConditions, "Momentum reversal signal"];
       default:
@@ -373,7 +439,9 @@ Always provide detailed, actionable insights with proper risk management conside
 
   // Removed duplicate private optimizeStrategy method - using the public one
 
-  private async recommendStrategy(_request: StrategyRequest): Promise<StrategyResponse> {
+  private async recommendStrategy(
+    _request: StrategyRequest
+  ): Promise<StrategyResponse> {
     // Implementation for strategy recommendations
     const recommendations = [
       "Consider multi-phase exit strategy for better risk management",
@@ -580,8 +648,16 @@ Always provide detailed, actionable insights with proper risk management conside
               maxLoss: 0.05, // 5%
               positionSizing: 0.02, // 2% of capital
               diversification: ["USDT pairs", "different sectors"],
-              riskFactors: ["market volatility", "liquidity risk", "timing risk"],
-              mitigation: ["strict stop-loss", "position sizing", "market monitoring"],
+              riskFactors: [
+                "market volatility",
+                "liquidity risk",
+                "timing risk",
+              ],
+              mitigation: [
+                "strict stop-loss",
+                "position sizing",
+                "market monitoring",
+              ],
             } as RiskManagementPlan),
           executionPlan: {} as any, // Mock execution plan
           confidence: 0.8,
@@ -721,21 +797,30 @@ Always provide detailed, actionable insights with proper risk management conside
       riskAssessment: {
         riskLevel: riskProfile || "medium",
         timeHorizon: "short_to_medium",
-        suitabilityScore: riskProfile === "low" ? 7 : riskProfile === "high" ? 6 : 8,
+        suitabilityScore:
+          riskProfile === "low" ? 7 : riskProfile === "high" ? 6 : 8,
       },
       alternativeStrategies: [
         {
           name: `${symbol} Conservative Strategy`,
           description: "Lower risk approach with tighter risk management",
           levels: [
-            { phase: "entry", conditions: {}, actions: { position_size: "1%", stop_loss: "2%" } },
+            {
+              phase: "entry",
+              conditions: {},
+              actions: { position_size: "1%", stop_loss: "2%" },
+            },
           ],
         },
         {
           name: `${symbol} Aggressive Strategy`,
           description: "Higher risk approach for experienced traders",
           levels: [
-            { phase: "entry", conditions: {}, actions: { position_size: "5%", stop_loss: "5%" } },
+            {
+              phase: "entry",
+              conditions: {},
+              actions: { position_size: "5%", stop_loss: "5%" },
+            },
           ],
         },
       ],

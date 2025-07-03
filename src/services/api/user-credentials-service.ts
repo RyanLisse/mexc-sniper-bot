@@ -23,7 +23,12 @@ export async function getUserCredentials(
     const result = await db
       .select()
       .from(apiCredentials)
-      .where(and(eq(apiCredentials.userId, userId), eq(apiCredentials.provider, provider)))
+      .where(
+        and(
+          eq(apiCredentials.userId, userId),
+          eq(apiCredentials.provider, provider)
+        )
+      )
       .limit(1);
 
     if (result.length === 0) {
@@ -36,7 +41,9 @@ export async function getUserCredentials(
     const creds = result[0];
 
     if (!creds.isActive) {
-      console.info(`[UserCredentialsService] Credentials found but inactive for user ${userId}`);
+      console.info(
+        `[UserCredentialsService] Credentials found but inactive for user ${userId}`
+      );
       return null;
     }
 
@@ -71,7 +78,9 @@ export async function getUserCredentials(
         `[UserCredentialsService] Failed to decrypt credentials for user ${userId}:`,
         decryptError
       );
-      throw new Error("Failed to decrypt API credentials - encryption key may be incorrect");
+      throw new Error(
+        "Failed to decrypt API credentials - encryption key may be incorrect"
+      );
     }
 
     // Update last used timestamp
@@ -89,7 +98,10 @@ export async function getUserCredentials(
       lastUsed: creds.lastUsed || undefined,
     };
   } catch (error) {
-    console.error(`[UserCredentialsService] Error getting credentials for user ${userId}:`, error);
+    console.error(
+      `[UserCredentialsService] Error getting credentials for user ${userId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -97,7 +109,10 @@ export async function getUserCredentials(
 /**
  * Check if user has active credentials for a provider
  */
-export async function hasUserCredentials(userId: string, provider = "mexc"): Promise<boolean> {
+export async function hasUserCredentials(
+  userId: string,
+  provider = "mexc"
+): Promise<boolean> {
   try {
     const result = await db
       .select({ id: apiCredentials.id })
@@ -113,7 +128,10 @@ export async function hasUserCredentials(userId: string, provider = "mexc"): Pro
 
     return result.length > 0;
   } catch (error) {
-    console.error(`[UserCredentialsService] Error checking credentials for user ${userId}:`, error);
+    console.error(
+      `[UserCredentialsService] Error checking credentials for user ${userId}:`,
+      error
+    );
     return false;
   }
 }

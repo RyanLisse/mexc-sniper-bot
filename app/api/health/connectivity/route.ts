@@ -1,6 +1,6 @@
 /**
-* Connectivity Health Check API
- * 
+ * Connectivity Health Check API
+ *
  * Provides lightweight connectivity monitoring with fast response times
  * for real-time health monitoring and dashboard updates.
  */
@@ -41,7 +41,7 @@ interface HealthCheckResponse {
 export async function GET() {
   const startTime = Date.now();
   let retryCount = 0;
-  
+
   const response: HealthCheckResponse = {
     status: "unhealthy",
     timestamp: new Date().toISOString(),
@@ -64,7 +64,7 @@ export async function GET() {
     try {
       user = await requireAuth();
       userId = user?.id;
-    } catch (error) {
+    } catch (_error) {
       // Continue without user for anonymous health check
       user = null;
       userId = null;
@@ -77,7 +77,7 @@ export async function GET() {
     // Check for user credentials
     if (userId) {
       try {
-        userCredentials = await getUserCredentials(userId, 'mexc');
+        userCredentials = await getUserCredentials(userId, "mexc");
         hasCredentials = !!userCredentials;
         if (hasCredentials) {
           credentialSource = "database";
@@ -89,7 +89,9 @@ export async function GET() {
 
     // Check for environment credentials if no user credentials
     if (!hasCredentials) {
-      hasCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
+      hasCredentials = !!(
+        process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY
+      );
       if (hasCredentials) {
         credentialSource = "environment";
       }
@@ -112,12 +114,14 @@ export async function GET() {
       retryCount = attempt;
 
       try {
-        const mexcService = getRecommendedMexcService(userCredentials || undefined);
+        const mexcService = getRecommendedMexcService(
+          userCredentials || undefined
+        );
         const connectivityResult = await mexcService.testConnectivity();
-        
+
         networkLatency = Date.now() - attemptStart;
-        
-        if (typeof connectivityResult === 'boolean') {
+
+        if (typeof connectivityResult === "boolean") {
           networkSuccess = connectivityResult;
         } else {
           networkSuccess = connectivityResult?.success === true;
@@ -134,11 +138,12 @@ export async function GET() {
         }
       } catch (error) {
         networkLatency = Date.now() - attemptStart;
-        lastNetworkError = error instanceof Error ? error.message : "Unknown error";
-        
+        lastNetworkError =
+          error instanceof Error ? error.message : "Unknown error";
+
         // Wait before retry (except on last attempt)
         if (attempt < maxRetries - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
     }
@@ -154,13 +159,15 @@ export async function GET() {
     // Perform API test if we have credentials and network is working
     if (networkSuccess && hasCredentials) {
       const apiStart = Date.now();
-      
+
       try {
-        const mexcService = getRecommendedMexcService(userCredentials || undefined);
+        const mexcService = getRecommendedMexcService(
+          userCredentials || undefined
+        );
         const accountResult = await mexcService.getAccountBalances();
-        
+
         const apiLatency = Date.now() - apiStart;
-        
+
         if (accountResult.success) {
           response.checks.api = {
             status: "pass",
@@ -186,21 +193,21 @@ export async function GET() {
     // Calculate overall status and health score
     const overallLatency = Date.now() - startTime;
     let healthScore = 100;
-    let passedChecks = 0;
-    let totalChecks = 0;
+    let _passedChecks = 0;
+    let _totalChecks = 0;
 
     // Network check
-    totalChecks++;
+    _totalChecks++;
     if (response.checks.network.status === "pass") {
-      passedChecks++;
+      _passedChecks++;
     } else {
       healthScore -= 50;
     }
 
     // Authentication check
-    totalChecks++;
+    _totalChecks++;
     if (response.checks.authentication.status === "pass" && hasCredentials) {
-      passedChecks++;
+      _passedChecks++;
     } else if (!hasCredentials) {
       healthScore -= 20; // Less penalty for no credentials
     } else {
@@ -209,9 +216,9 @@ export async function GET() {
 
     // API check (only if we have credentials)
     if (hasCredentials) {
-      totalChecks++;
+      _totalChecks++;
       if (response.checks.api.status === "pass") {
-        passedChecks++;
+        _passedChecks++;
       } else {
         healthScore -= 30;
       }
@@ -248,14 +255,13 @@ export async function GET() {
       status: status === "healthy" ? 200 : status === "degraded" ? 206 : 503,
       headers: {
         "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
-
   } catch (error) {
     console.error("Health check failed:", { error: error });
-    
+
     const overallLatency = Date.now() - startTime;
     response.status = "unhealthy";
     response.metadata = {
@@ -263,14 +269,15 @@ export async function GET() {
       overallLatency,
       healthScore: 0,
     };
-    response.checks.network.error = error instanceof Error ? error.message : "Unknown error";
+    response.checks.network.error =
+      error instanceof Error ? error.message : "Unknown error";
 
     return NextResponse.json(response, {
       status: 503,
       headers: {
         "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
+        Pragma: "no-cache",
+        Expires: "0",
       },
     });
   }
@@ -281,9 +288,10 @@ export async function HEAD() {
   try {
     const mexcService = getRecommendedMexcService();
     const result = await mexcService.testConnectivity();
-    
-    const isConnected = typeof result === 'boolean' ? result : result?.success === true;
-    
+
+    const isConnected =
+      typeof result === "boolean" ? result : result?.success === true;
+
     return new NextResponse(null, {
       status: isConnected ? 200 : 503,
       headers: {

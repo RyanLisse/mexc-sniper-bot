@@ -7,11 +7,17 @@
 
 import type { PatternData } from "../data/pattern-embedding-service";
 import { embeddingsService } from "./embeddings-service";
-import { type EnhancedPattern, intelligenceOrchestrator } from "./intelligence-orchestrator";
+import {
+  type EnhancedPattern,
+  intelligenceOrchestrator,
+} from "./intelligence-orchestrator";
 import { type ResearchResult, researchService } from "./research-service";
 
 // Re-export types for backward compatibility
-export type { EnhancedPattern as EnhancedPatternData, ResearchResult as PerplexityResearchResult };
+export type {
+  EnhancedPattern as EnhancedPatternData,
+  ResearchResult as PerplexityResearchResult,
+};
 
 /**
  * AI Intelligence Service - Facade Pattern
@@ -65,7 +71,11 @@ export class AIIntelligenceService {
    */
   async conductMarketResearch(
     symbol: string,
-    focus: "technical" | "fundamental" | "news" | "comprehensive" = "comprehensive"
+    focus:
+      | "technical"
+      | "fundamental"
+      | "news"
+      | "comprehensive" = "comprehensive"
   ): Promise<ResearchResult> {
     // Adapt the research service interface to include focus in query
     const query = `${symbol} ${focus} analysis`;
@@ -290,10 +300,16 @@ export class AIIntelligenceService {
 
     const recommendations = [];
     if (enhancedConfidence >= 85) {
-      recommendations.push("Consider automated execution with standard position sizing");
-      recommendations.push("High confidence - proceed with full risk allocation");
+      recommendations.push(
+        "Consider automated execution with standard position sizing"
+      );
+      recommendations.push(
+        "High confidence - proceed with full risk allocation"
+      );
     } else if (enhancedConfidence >= 70) {
-      recommendations.push("Proceed with smaller position size due to moderate confidence");
+      recommendations.push(
+        "Proceed with smaller position size due to moderate confidence"
+      );
       recommendations.push("Monitor closely for confirmation signals");
     } else {
       recommendations.push("Requires manual review before execution");

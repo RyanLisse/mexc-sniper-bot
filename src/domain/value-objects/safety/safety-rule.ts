@@ -133,7 +133,9 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     super(props);
   }
 
-  static create(props: Omit<SafetyRuleProps, "id" | "createdAt" | "triggerCount">): SafetyRule {
+  static create(
+    props: Omit<SafetyRuleProps, "id" | "createdAt" | "triggerCount">
+  ): SafetyRule {
     const safetyRuleProps: SafetyRuleProps = {
       ...props,
       id: `safety_rule_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -191,7 +193,11 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
         break;
 
       case "consecutive_losses":
-        if (props.threshold <= 0 || props.threshold > 20 || !Number.isInteger(props.threshold)) {
+        if (
+          props.threshold <= 0 ||
+          props.threshold > 20 ||
+          !Number.isInteger(props.threshold)
+        ) {
           throw new DomainValidationError(
             "threshold",
             props.threshold,
@@ -232,7 +238,10 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     }
 
     // Validate scope formats
-    if (props.portfolioScope !== "all" && !props.portfolioScope.startsWith("portfolio_")) {
+    if (
+      props.portfolioScope !== "all" &&
+      !props.portfolioScope.startsWith("portfolio_")
+    ) {
       throw new DomainValidationError(
         "portfolioScope",
         props.portfolioScope,
@@ -321,12 +330,16 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     }
 
     if (!this.appliesToContext(context)) {
-      return this.createNonTriggeredResult(context, "Rule scope does not match context");
+      return this.createNonTriggeredResult(
+        context,
+        "Rule scope does not match context"
+      );
     }
 
     const isTriggered = this.evaluateCondition(context.currentValue);
     const variance = context.currentValue - this.threshold;
-    const variancePercentage = this.threshold !== 0 ? (variance / this.threshold) * 100 : 0;
+    const variancePercentage =
+      this.threshold !== 0 ? (variance / this.threshold) * 100 : 0;
 
     if (isTriggered) {
       return {
@@ -342,7 +355,10 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
       };
     }
 
-    return this.createNonTriggeredResult(context, "Threshold condition not met");
+    return this.createNonTriggeredResult(
+      context,
+      "Threshold condition not met"
+    );
   }
 
   private evaluateCondition(currentValue: number): boolean {
@@ -364,7 +380,10 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
 
   private appliesToContext(context: SafetyRuleEvaluationContext): boolean {
     // Check portfolio scope
-    if (this.portfolioScope !== "all" && context.portfolioId !== this.portfolioScope) {
+    if (
+      this.portfolioScope !== "all" &&
+      context.portfolioId !== this.portfolioScope
+    ) {
       return false;
     }
 
@@ -390,7 +409,8 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     reason: string
   ): SafetyRuleEvaluationResult {
     const variance = context.currentValue - this.threshold;
-    const variancePercentage = this.threshold !== 0 ? (variance / this.threshold) * 100 : 0;
+    const variancePercentage =
+      this.threshold !== 0 ? (variance / this.threshold) * 100 : 0;
 
     return {
       isTriggered: false,
@@ -540,7 +560,9 @@ export class SafetyRule extends ValueObject<SafetyRuleProps> {
     }
     const daysSinceCreation = Math.max(
       1,
-      Math.floor((Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+      Math.floor(
+        (Date.now() - this.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+      )
     );
     return this.triggerCount / daysSinceCreation;
   }

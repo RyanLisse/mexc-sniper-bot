@@ -95,7 +95,10 @@ export class SafetyManager {
    */
   async getHealthStatus(): Promise<"operational" | "degraded" | "offline"> {
     if (!this.state.isInitialized) return "offline";
-    if (!this.state.isHealthy || this.currentRiskScore > this.RISK_THRESHOLDS.high)
+    if (
+      !this.state.isHealthy ||
+      this.currentRiskScore > this.RISK_THRESHOLDS.high
+    )
       return "degraded";
     return "operational";
   }
@@ -140,7 +143,8 @@ export class SafetyManager {
       this.lastSafetyCheck = new Date();
 
       // Update metrics
-      const currentChecks = (this.state.metrics.safetyChecksPerformed as number) || 0;
+      const currentChecks =
+        (this.state.metrics.safetyChecksPerformed as number) || 0;
       this.state.metrics.safetyChecksPerformed = currentChecks + 1;
       this.state.metrics.lastSafetyCheck = this.lastSafetyCheck.toISOString();
       this.state.metrics.currentRiskScore = this.currentRiskScore;
@@ -189,7 +193,10 @@ export class SafetyManager {
       const issues: string[] = [];
 
       // Check position size
-      if (target.positionSizeUsdt > this.SAFETY_LIMITS.maxPositionSize * 10000) {
+      if (
+        target.positionSizeUsdt >
+        this.SAFETY_LIMITS.maxPositionSize * 10000
+      ) {
         // Assuming $10k portfolio
         issues.push(
           `Position size too large: ${target.positionSizeUsdt} > ${this.SAFETY_LIMITS.maxPositionSize * 10000}`
@@ -205,7 +212,9 @@ export class SafetyManager {
 
       // Check if symbol is blacklisted (simulated)
       const blacklistedSymbols = ["SCAMCOIN", "RUGPULL", "HONEYPOT"];
-      if (blacklistedSymbols.some((symbol) => target.symbolName.includes(symbol))) {
+      if (
+        blacklistedSymbols.some((symbol) => target.symbolName.includes(symbol))
+      ) {
         issues.push(`Symbol is blacklisted: ${target.symbolName}`);
       }
 
@@ -565,10 +574,13 @@ export class SafetyManager {
 
     const reason = criticalChecks.map((check) => check.message).join("; ");
 
-    this.context.logger.error("Critical safety violation - triggering emergency stop", {
-      criticalChecks: criticalChecks.length,
-      reason,
-    });
+    this.context.logger.error(
+      "Critical safety violation - triggering emergency stop",
+      {
+        criticalChecks: criticalChecks.length,
+        reason,
+      }
+    );
 
     this.context.eventEmitter.emit("emergency_stop", reason);
   }
@@ -625,19 +637,19 @@ export class SafetyManager {
   async emergencyStop(): Promise<ServiceResponse<boolean>> {
     try {
       this.context.logger.warn("EMERGENCY: Stopping safety manager");
-      
+
       // Mark as not healthy
       this.state.isHealthy = false;
-      
+
       // Increment emergency stops counter
       this.emergencyStops++;
       this.state.metrics.emergencyStops = this.emergencyStops;
-      
+
       // Clear last safety check
       this.lastSafetyCheck = null;
-      
+
       this.context.logger.warn("Safety manager emergency stopped");
-      
+
       return {
         success: true,
         data: true,

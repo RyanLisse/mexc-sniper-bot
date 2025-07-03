@@ -1,6 +1,6 @@
 /**
  * Main WebSocket Agent Bridge
- * 
+ *
  * Orchestrates real-time communication between the agent system and WebSocket clients
  */
 
@@ -19,12 +19,12 @@ import type { MexcWorkflowResult } from "../orchestrator-types";
 import { PatternDiscoveryStreamer } from "./streamers/pattern-discovery-streamer";
 import { RealTimeDataStreamer } from "./streamers/real-time-data-streamer";
 import { TradingSignalStreamer } from "./streamers/trading-signal-streamer";
-import type { 
-  BridgeStatus, 
+import type {
+  BridgeStatus,
   PatternDiscoveryData,
   ReadyStateData,
-  TradingSignalData, 
-  WorkflowExecutionRequest
+  TradingSignalData,
+  WorkflowExecutionRequest,
 } from "./types";
 
 export class WebSocketAgentBridge extends EventEmitter {
@@ -65,7 +65,11 @@ export class WebSocketAgentBridge extends EventEmitter {
     this.agentRegistry = agentRegistry;
 
     // Set up event listeners for agent system
-    this.setupAgentEventListeners(agentRegistry, workflowEngine, performanceCollector);
+    this.setupAgentEventListeners(
+      agentRegistry,
+      workflowEngine,
+      performanceCollector
+    );
 
     // Set up WebSocket server message handlers
     this.setupWebSocketHandlers();
@@ -326,7 +330,9 @@ export class WebSocketAgentBridge extends EventEmitter {
 
     // Listen for performance updates
     (performanceCollector as any).on?.("metrics:updated", (data: any) => {
-      for (const [agentId, metrics] of Object.entries(data.agentMetrics || {})) {
+      for (const [agentId, metrics] of Object.entries(
+        data.agentMetrics || {}
+      )) {
         this.broadcastAgentUpdate(agentId, "unknown", metrics);
       }
     });
@@ -335,7 +341,10 @@ export class WebSocketAgentBridge extends EventEmitter {
   private setupWebSocketHandlers(): void {
     // Handle workflow execution requests from WebSocket clients
     webSocketServer.addMessageHandler("agents:workflows", async (message) => {
-      if (message.type === "agent:workflow" && message.data.action === "execute") {
+      if (
+        message.type === "agent:workflow" &&
+        message.data.action === "execute"
+      ) {
         await this.handleWorkflowExecutionRequest(message.data);
       }
     });
@@ -348,9 +357,13 @@ export class WebSocketAgentBridge extends EventEmitter {
     });
   }
 
-  private async handleWorkflowExecutionRequest(data: WorkflowExecutionRequest): Promise<void> {
+  private async handleWorkflowExecutionRequest(
+    data: WorkflowExecutionRequest
+  ): Promise<void> {
     if (!this.orchestrator) {
-      console.error("[WebSocket Bridge] Orchestrator not available for workflow execution");
+      console.error(
+        "[WebSocket Bridge] Orchestrator not available for workflow execution"
+      );
       return;
     }
 
@@ -360,16 +373,20 @@ export class WebSocketAgentBridge extends EventEmitter {
 
       switch (workflowType) {
         case "calendar_discovery":
-          result = await this.orchestrator.executeCalendarDiscoveryWorkflow(request);
+          result =
+            await this.orchestrator.executeCalendarDiscoveryWorkflow(request);
           break;
         case "symbol_analysis":
-          result = await this.orchestrator.executeSymbolAnalysisWorkflow(request);
+          result =
+            await this.orchestrator.executeSymbolAnalysisWorkflow(request);
           break;
         case "pattern_analysis":
-          result = await this.orchestrator.executePatternAnalysisWorkflow(request);
+          result =
+            await this.orchestrator.executePatternAnalysisWorkflow(request);
           break;
         case "trading_strategy":
-          result = await this.orchestrator.executeTradingStrategyWorkflow(request);
+          result =
+            await this.orchestrator.executeTradingStrategyWorkflow(request);
           break;
         default:
           throw new Error(`Unknown workflow type: ${workflowType}`);
@@ -434,7 +451,10 @@ export class WebSocketAgentBridge extends EventEmitter {
         data: healthMessage,
       });
     } catch (error) {
-      console.error("[WebSocket Bridge] Failed to broadcast health status:", error);
+      console.error(
+        "[WebSocket Bridge] Failed to broadcast health status:",
+        error
+      );
     }
   }
 

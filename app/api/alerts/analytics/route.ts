@@ -1,5 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
@@ -13,11 +12,12 @@ import { AutomatedAlertingService } from "@/src/services/notification/automated-
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const { searchParams } = new URL(request.url!);
-    const bucket = (searchParams.get("bucket") as "hourly" | "daily") || "hourly";
+    const bucket =
+      (searchParams.get("bucket") as "hourly" | "daily") || "hourly";
     const limit = parseInt(searchParams.get("limit") || "24");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     // Calculate additional metrics
     const additionalMetrics = await calculateAdditionalMetrics(
       alertingService,
-      startDate ?? undefined, 
+      startDate ?? undefined,
       endDate ?? undefined
     );
 
@@ -50,21 +50,35 @@ export async function GET(request: NextRequest) {
         data: analytics.map((item: any) => ({
           ...item,
           timestamp: new Date(item.timestamp).toISOString(),
-          alertRate: item.totalAlerts > 0 ? item.totalAlerts / (bucket === "hourly" ? 1 : 24) : 0,
-          resolutionRate: item.totalAlerts > 0 ? item.resolvedAlerts / item.totalAlerts : 0,
-          falsePositiveRate: item.totalAlerts > 0 ? item.falsePositives / item.totalAlerts : 0,
+          alertRate:
+            item.totalAlerts > 0
+              ? item.totalAlerts / (bucket === "hourly" ? 1 : 24)
+              : 0,
+          resolutionRate:
+            item.totalAlerts > 0 ? item.resolvedAlerts / item.totalAlerts : 0,
+          falsePositiveRate:
+            item.totalAlerts > 0 ? item.falsePositives / item.totalAlerts : 0,
         })),
       },
-      
+
       summary: {
-        totalAlerts: analytics.reduce((sum: number, item: any) => sum + item.totalAlerts, 0),
-        totalResolved: analytics.reduce((sum: number, item: any) => sum + item.resolvedAlerts, 0),
-        totalFalsePositives: analytics.reduce((sum: number, item: any) => sum + item.falsePositives, 0),
+        totalAlerts: analytics.reduce(
+          (sum: number, item: any) => sum + item.totalAlerts,
+          0
+        ),
+        totalResolved: analytics.reduce(
+          (sum: number, item: any) => sum + item.resolvedAlerts,
+          0
+        ),
+        totalFalsePositives: analytics.reduce(
+          (sum: number, item: any) => sum + item.falsePositives,
+          0
+        ),
         averageMTTR: calculateAverageMTTR(analytics),
         alertDistribution: calculateAlertDistribution(analytics),
         notificationStats: calculateNotificationStats(analytics),
       },
-      
+
       anomalyDetection: {
         modelsActive: modelStats.length,
         models: modelStats.map((model: any) => ({
@@ -79,10 +93,10 @@ export async function GET(request: NextRequest) {
         })),
         overallPerformance: calculateOverallMLPerformance(modelStats),
       },
-      
+
       correlations: {
         activeCount: activeCorrelations.length,
-        correlations: activeCorrelations.map(correlation => ({
+        correlations: activeCorrelations.map((correlation) => ({
           id: correlation.id,
           title: correlation.title,
           alertCount: correlation.alertCount,
@@ -90,14 +104,16 @@ export async function GET(request: NextRequest) {
           severity: correlation.severity,
           firstAlert: new Date(correlation.firstAlertAt).toISOString(),
           lastAlert: new Date(correlation.lastAlertAt).toISOString(),
-          duration: new Date(correlation.lastAlertAt).getTime() - new Date(correlation.firstAlertAt).getTime(),
+          duration:
+            new Date(correlation.lastAlertAt).getTime() -
+            new Date(correlation.firstAlertAt).getTime(),
         })),
       },
-      
+
       trends: {
         ...additionalMetrics.trends,
       },
-      
+
       insights: generateInsights(analytics, modelStats, activeCorrelations),
     };
 
@@ -116,8 +132,12 @@ export async function GET(request: NextRequest) {
 // ==========================================
 
 function calculateAverageMTTR(analytics: any[]): number {
-  const validMTTRs = analytics.filter(item => item.mttr > 0).map(item => item.mttr);
-  return validMTTRs.length > 0 ? validMTTRs.reduce((sum, mttr) => sum + mttr, 0) / validMTTRs.length : 0;
+  const validMTTRs = analytics
+    .filter((item) => item.mttr > 0)
+    .map((item) => item.mttr);
+  return validMTTRs.length > 0
+    ? validMTTRs.reduce((sum, mttr) => sum + mttr, 0) / validMTTRs.length
+    : 0;
 }
 
 function calculateAlertDistribution(analytics: any[]): Record<string, number> {
@@ -202,7 +222,7 @@ function calculateOverallMLPerformance(modelStats: any[]): {
 
 async function calculateAdditionalMetrics(
   alertingService: any,
-  startDate?: string, 
+  startDate?: string,
   endDate?: string
 ): Promise<{
   trends: {
@@ -213,34 +233,60 @@ async function calculateAdditionalMetrics(
   };
 }> {
   // Calculate trends over time
-  const currentPeriodStart = startDate ? new Date(startDate).getTime() : Date.now() - (7 * 24 * 3600000); // 7 days
+  const currentPeriodStart = startDate
+    ? new Date(startDate).getTime()
+    : Date.now() - 7 * 24 * 3600000; // 7 days
   const currentPeriodEnd = endDate ? new Date(endDate).getTime() : Date.now();
-  const previousPeriodStart = currentPeriodStart - (currentPeriodEnd - currentPeriodStart);
-  const previousPeriodEnd = currentPeriodStart;
+  const _previousPeriodStart =
+    currentPeriodStart - (currentPeriodEnd - currentPeriodStart);
+  const _previousPeriodEnd = currentPeriodStart;
 
   const [currentPeriodAnalytics, previousPeriodAnalytics] = await Promise.all([
     alertingService.getAlertAnalytics("daily", 7),
     alertingService.getAlertAnalytics("daily", 7), // Would need to adjust time range
   ]);
 
-  const currentTotalAlerts = currentPeriodAnalytics.reduce((sum: number, item: any) => sum + item.totalAlerts, 0);
-  const previousTotalAlerts = previousPeriodAnalytics.reduce((sum: number, item: any) => sum + item.totalAlerts, 0);
-  
-  const currentResolved = currentPeriodAnalytics.reduce((sum: number, item: any) => sum + item.resolvedAlerts, 0);
-  const previousResolved = previousPeriodAnalytics.reduce((sum: number, item: any) => sum + item.resolvedAlerts, 0);
-  
-  const currentFalsePositives = currentPeriodAnalytics.reduce((sum: number, item: any) => sum + item.falsePositives, 0);
-  const previousFalsePositives = previousPeriodAnalytics.reduce((sum: number, item: any) => sum + item.falsePositives, 0);
+  const currentTotalAlerts = currentPeriodAnalytics.reduce(
+    (sum: number, item: any) => sum + item.totalAlerts,
+    0
+  );
+  const previousTotalAlerts = previousPeriodAnalytics.reduce(
+    (sum: number, item: any) => sum + item.totalAlerts,
+    0
+  );
+
+  const currentResolved = currentPeriodAnalytics.reduce(
+    (sum: number, item: any) => sum + item.resolvedAlerts,
+    0
+  );
+  const previousResolved = previousPeriodAnalytics.reduce(
+    (sum: number, item: any) => sum + item.resolvedAlerts,
+    0
+  );
+
+  const currentFalsePositives = currentPeriodAnalytics.reduce(
+    (sum: number, item: any) => sum + item.falsePositives,
+    0
+  );
+  const previousFalsePositives = previousPeriodAnalytics.reduce(
+    (sum: number, item: any) => sum + item.falsePositives,
+    0
+  );
 
   return {
     trends: {
-      alertVelocity: calculatePercentageChange(currentTotalAlerts, previousTotalAlerts),
+      alertVelocity: calculatePercentageChange(
+        currentTotalAlerts,
+        previousTotalAlerts
+      ),
       resolutionTrend: calculatePercentageChange(
         currentTotalAlerts > 0 ? currentResolved / currentTotalAlerts : 0,
         previousTotalAlerts > 0 ? previousResolved / previousTotalAlerts : 0
       ),
       noiseReduction: calculatePercentageChange(
-        previousTotalAlerts > 0 ? previousFalsePositives / previousTotalAlerts : 0,
+        previousTotalAlerts > 0
+          ? previousFalsePositives / previousTotalAlerts
+          : 0,
         currentTotalAlerts > 0 ? currentFalsePositives / currentTotalAlerts : 0
       ),
       systemReliability: calculateSystemReliability(currentPeriodAnalytics),
@@ -255,60 +301,95 @@ function calculatePercentageChange(current: number, previous: number): number {
 
 function calculateSystemReliability(analytics: any[]): number {
   // Calculate based on critical alert frequency and resolution time
-  const criticalAlerts = analytics.reduce((sum: number, item: any) => sum + item.criticalAlerts, 0);
-  const totalAlerts = analytics.reduce((sum, item) => sum + item.totalAlerts, 0);
+  const criticalAlerts = analytics.reduce(
+    (sum: number, item: any) => sum + item.criticalAlerts,
+    0
+  );
+  const totalAlerts = analytics.reduce(
+    (sum, item) => sum + item.totalAlerts,
+    0
+  );
   const avgMTTR = calculateAverageMTTR(analytics);
-  
+
   // Simple reliability score (inverse of critical alert ratio and MTTR)
   const criticalRatio = totalAlerts > 0 ? criticalAlerts / totalAlerts : 0;
-  const mttrScore = avgMTTR > 0 ? Math.max(0, 1 - (avgMTTR / 3600000)) : 1; // Normalize to 1 hour
-  
+  const mttrScore = avgMTTR > 0 ? Math.max(0, 1 - avgMTTR / 3600000) : 1; // Normalize to 1 hour
+
   return Math.max(0, (1 - criticalRatio) * mttrScore * 100);
 }
 
-function generateInsights(analytics: any[], modelStats: any[], correlations: any[]): string[] {
+function generateInsights(
+  analytics: any[],
+  modelStats: any[],
+  correlations: any[]
+): string[] {
   const insights: string[] = [];
-  
-  const totalAlerts = analytics.reduce((sum, item) => sum + item.totalAlerts, 0);
-  const criticalAlerts = analytics.reduce((sum, item) => sum + item.criticalAlerts, 0);
-  const falsePositives = analytics.reduce((sum, item) => sum + item.falsePositives, 0);
-  
+
+  const totalAlerts = analytics.reduce(
+    (sum, item) => sum + item.totalAlerts,
+    0
+  );
+  const criticalAlerts = analytics.reduce(
+    (sum, item) => sum + item.criticalAlerts,
+    0
+  );
+  const falsePositives = analytics.reduce(
+    (sum, item) => sum + item.falsePositives,
+    0
+  );
+
   // Alert volume insights
   if (totalAlerts > 100) {
-    insights.push("High alert volume detected. Consider reviewing alert thresholds to reduce noise.");
+    insights.push(
+      "High alert volume detected. Consider reviewing alert thresholds to reduce noise."
+    );
   } else if (totalAlerts < 10) {
-    insights.push("Low alert activity. Verify that monitoring coverage is adequate.");
+    insights.push(
+      "Low alert activity. Verify that monitoring coverage is adequate."
+    );
   }
-  
+
   // Critical alerts insights
   if (criticalAlerts > totalAlerts * 0.2) {
-    insights.push("High percentage of critical alerts. Review severity classifications and thresholds.");
+    insights.push(
+      "High percentage of critical alerts. Review severity classifications and thresholds."
+    );
   }
-  
+
   // False positive insights
   if (falsePositives > totalAlerts * 0.1) {
-    insights.push("High false positive rate detected. Consider tuning ML models and alert rules.");
+    insights.push(
+      "High false positive rate detected. Consider tuning ML models and alert rules."
+    );
   }
-  
+
   // ML model insights
-  const lowPerformingModels = modelStats.filter(m => m.performance.f1Score < 0.7);
+  const lowPerformingModels = modelStats.filter(
+    (m) => m.performance.f1Score < 0.7
+  );
   if (lowPerformingModels.length > 0) {
-    insights.push(`${lowPerformingModels.length} ML models have low performance. Consider retraining with more data.`);
+    insights.push(
+      `${lowPerformingModels.length} ML models have low performance. Consider retraining with more data.`
+    );
   }
-  
+
   // Correlation insights
   if (correlations.length > 5) {
-    insights.push("Multiple alert correlations detected. Focus on resolving root causes to reduce alert noise.");
+    insights.push(
+      "Multiple alert correlations detected. Focus on resolving root causes to reduce alert noise."
+    );
   }
-  
+
   // Add positive insights
   if (falsePositives < totalAlerts * 0.05) {
-    insights.push("Low false positive rate indicates well-tuned alerting system.");
+    insights.push(
+      "Low false positive rate indicates well-tuned alerting system."
+    );
   }
-  
-  if (modelStats.every(m => m.performance.f1Score > 0.8)) {
+
+  if (modelStats.every((m) => m.performance.f1Score > 0.8)) {
     insights.push("All ML models are performing well with high accuracy.");
   }
-  
+
   return insights;
 }

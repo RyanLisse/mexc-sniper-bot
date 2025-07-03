@@ -15,7 +15,13 @@ import { z } from "zod";
 import { queryKeys } from "../lib/query-client";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 
 // Zod schema for workflow status validation
 const WorkflowStatusSchema = z.object({
@@ -141,7 +147,10 @@ export function StreamlinedWorkflowStatus({
       };
     }
 
-    if (workflow?.systemStatus === "starting" || workflow?.systemStatus === "stopping") {
+    if (
+      workflow?.systemStatus === "starting" ||
+      workflow?.systemStatus === "stopping"
+    ) {
       return {
         color: "yellow",
         icon: Clock,
@@ -164,7 +173,9 @@ export function StreamlinedWorkflowStatus({
 
   const _isSystemRunning = workflow?.systemStatus === "running";
   const _isAnyWorkflowActive =
-    workflow?.discoveryRunning || workflow?.sniperActive || workflow?.patternDetectionActive;
+    workflow?.discoveryRunning ||
+    workflow?.sniperActive ||
+    workflow?.patternDetectionActive;
 
   const handleToggleWorkflow = (workflowType: string, isActive: boolean) => {
     controlMutation.mutate({
@@ -204,7 +215,9 @@ export function StreamlinedWorkflowStatus({
         <CardContent>
           <div className="flex items-center space-x-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
             <AlertCircle className="h-5 w-5 text-red-500" />
-            <span className="text-sm text-red-700 dark:text-red-300">{error.message}</span>
+            <span className="text-sm text-red-700 dark:text-red-300">
+              {error.message}
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -222,18 +235,24 @@ export function StreamlinedWorkflowStatus({
           </div>
           <div className="flex items-center space-x-2">
             <Badge variant={statusConfig.variant}>
-              <StatusIcon className={`h-3 w-3 mr-1 ${isFetching ? "animate-spin" : ""}`} />
+              <StatusIcon
+                className={`h-3 w-3 mr-1 ${isFetching ? "animate-spin" : ""}`}
+              />
               {statusConfig.text}
             </Badge>
             <Button
               variant="ghost"
               size="sm"
               onClick={() =>
-                queryClient.invalidateQueries({ queryKey: queryKeys.status.workflows() })
+                queryClient.invalidateQueries({
+                  queryKey: queryKeys.status.workflows(),
+                })
               }
               disabled={isLoading || isFetching}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </div>
@@ -249,7 +268,9 @@ export function StreamlinedWorkflowStatus({
         {isLoading && !workflow && (
           <div className="flex items-center space-x-3 p-4">
             <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="text-muted-foreground">Loading workflow status...</span>
+            <span className="text-muted-foreground">
+              Loading workflow status...
+            </span>
           </div>
         )}
 
@@ -264,7 +285,9 @@ export function StreamlinedWorkflowStatus({
                   <div className="flex items-center space-x-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
-                        workflow.discoveryRunning ? "bg-green-500 animate-pulse" : "bg-gray-300"
+                        workflow.discoveryRunning
+                          ? "bg-green-500 animate-pulse"
+                          : "bg-gray-300"
                       }`}
                     />
                     <span className="font-medium text-sm">Coin Discovery</span>
@@ -275,7 +298,12 @@ export function StreamlinedWorkflowStatus({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleToggleWorkflow("discovery", workflow.discoveryRunning)}
+                    onClick={() =>
+                      handleToggleWorkflow(
+                        "discovery",
+                        workflow.discoveryRunning
+                      )
+                    }
                     disabled={controlMutation.isPending}
                   >
                     {workflow.discoveryRunning ? (
@@ -298,7 +326,9 @@ export function StreamlinedWorkflowStatus({
                           : "bg-gray-300"
                       }`}
                     />
-                    <span className="font-medium text-sm">Pattern Detection</span>
+                    <span className="font-medium text-sm">
+                      Pattern Detection
+                    </span>
                     <Badge variant="outline" className="text-xs">
                       {workflow.patternDetectionActive ? "Scanning" : "Idle"}
                     </Badge>
@@ -307,7 +337,10 @@ export function StreamlinedWorkflowStatus({
                     size="sm"
                     variant="ghost"
                     onClick={() =>
-                      handleToggleWorkflow("pattern-detection", workflow.patternDetectionActive)
+                      handleToggleWorkflow(
+                        "pattern-detection",
+                        workflow.patternDetectionActive
+                      )
                     }
                     disabled={controlMutation.isPending}
                   >
@@ -326,7 +359,9 @@ export function StreamlinedWorkflowStatus({
                   <div className="flex items-center space-x-2">
                     <div
                       className={`w-2 h-2 rounded-full ${
-                        workflow.sniperActive ? "bg-red-500 animate-pulse" : "bg-gray-300"
+                        workflow.sniperActive
+                          ? "bg-red-500 animate-pulse"
+                          : "bg-gray-300"
                       }`}
                     />
                     <span className="font-medium text-sm">Auto Sniper</span>
@@ -337,7 +372,9 @@ export function StreamlinedWorkflowStatus({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleToggleWorkflow("sniper", workflow.sniperActive)}
+                    onClick={() =>
+                      handleToggleWorkflow("sniper", workflow.sniperActive)
+                    }
                     disabled={controlMutation.isPending}
                   >
                     {workflow.sniperActive ? (
@@ -383,30 +420,34 @@ export function StreamlinedWorkflowStatus({
             {/* Recent Activity */}
             {workflow.recentActivity.length > 0 && (
               <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">Recent Activity</div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Recent Activity
+                </div>
                 <div className="space-y-1 max-h-24 overflow-y-auto">
-                  {workflow.recentActivity.slice(0, 3).map((activity, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-2 p-2 text-xs border rounded"
-                    >
-                      {activity.status === "success" && (
-                        <CheckCircle className="h-3 w-3 text-green-500" />
-                      )}
-                      {activity.status === "warning" && (
-                        <AlertCircle className="h-3 w-3 text-yellow-500" />
-                      )}
-                      {activity.status === "error" && (
-                        <AlertCircle className="h-3 w-3 text-red-500" />
-                      )}
-                      <div className="flex-1">
-                        <div className="font-medium">{activity.event}</div>
-                        <div className="text-muted-foreground">
-                          {new Date(activity.timestamp).toLocaleTimeString()}
+                  {workflow.recentActivity
+                    .slice(0, 3)
+                    .map((activity, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 p-2 text-xs border rounded"
+                      >
+                        {activity.status === "success" && (
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                        )}
+                        {activity.status === "warning" && (
+                          <AlertCircle className="h-3 w-3 text-yellow-500" />
+                        )}
+                        {activity.status === "error" && (
+                          <AlertCircle className="h-3 w-3 text-red-500" />
+                        )}
+                        <div className="flex-1">
+                          <div className="font-medium">{activity.event}</div>
+                          <div className="text-muted-foreground">
+                            {new Date(activity.timestamp).toLocaleTimeString()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             )}
@@ -415,7 +456,9 @@ export function StreamlinedWorkflowStatus({
             {lastUpdate && (
               <div className="text-xs text-muted-foreground text-center">
                 Last updated: {lastUpdate.toLocaleTimeString()}
-                {isFetching && <span className="ml-2 animate-pulse">• Updating</span>}
+                {isFetching && (
+                  <span className="ml-2 animate-pulse">• Updating</span>
+                )}
               </div>
             )}
           </>

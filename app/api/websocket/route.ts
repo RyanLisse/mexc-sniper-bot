@@ -1,9 +1,9 @@
 /**
  * WebSocket API Route
- * 
+ *
  * Next.js API route to manage WebSocket server lifecycle and integration.
  * Provides endpoints for WebSocket server management and client information.
- * 
+ *
  * Features:
  * - WebSocket server status and metrics
  * - Connection management
@@ -11,12 +11,7 @@
  * - Performance monitoring
  */
 
-import { NextRequest } from 'next/server';
-import { 
-  authenticatedHandler,
-  createApiHandler,
-  publicHandler,
-} from "@/src/lib/api-middleware";
+import { authenticatedHandler, publicHandler } from "@/src/lib/api-middleware";
 import { webSocketAgentBridge } from "@/src/mexc-agents/websocket-agent-bridge";
 import { mexcWebSocketStream } from "@/src/services/data/mexc-websocket-stream";
 import { webSocketServer } from "@/src/services/data/websocket-server";
@@ -31,13 +26,17 @@ export const GET = publicHandler({
     enabled: true,
     ttl: 5000, // 5 seconds
   },
-})(async (request, context) => {
+})(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
-  const logger = {
-    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  const _logger = {
+    info: (message: string, context?: any) =>
+      console.info("[websocket-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-api]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[websocket-api]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-api]", message, context || ""),
   };
   try {
     // Get WebSocket server status
@@ -83,14 +82,11 @@ export const GET = publicHandler({
       cached: false,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error('[WebSocket API] Error getting status:', { error });
-    return context.error(
-      'Failed to get WebSocket status',
-      500,
-      { error: error instanceof Error ? error.message : 'Unknown error' }
-    );
+    console.error("[WebSocket API] Error getting status:", { error });
+    return context.error("Failed to get WebSocket status", 500, {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
@@ -101,75 +97,82 @@ export const GET = publicHandler({
 export const POST = authenticatedHandler({
   parseBody: true,
   validation: {
-    action: 'required',
+    action: "required",
   },
-})(async (request, context) => {
+})(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
-  const logger = {
-    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  const _logger = {
+    info: (message: string, context?: any) =>
+      console.info("[websocket-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-api]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[websocket-api]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-api]", message, context || ""),
   };
   try {
     const { action, ...params } = context.body;
 
     switch (action) {
-      case 'start_server':
+      case "start_server":
         if (!webSocketServer.isHealthy()) {
           await webSocketServer.start();
         }
-        return context.success({ 
-          message: 'WebSocket server started',
+        return context.success({
+          message: "WebSocket server started",
           status: webSocketServer.getServerMetrics(),
         });
 
-      case 'stop_server':
+      case "stop_server":
         if (webSocketServer.isHealthy()) {
           await webSocketServer.stop();
         }
-        return context.success({ 
-          message: 'WebSocket server stopped',
+        return context.success({
+          message: "WebSocket server stopped",
         });
 
-      case 'start_mexc_stream':
+      case "start_mexc_stream":
         if (!mexcWebSocketStream.isConnected) {
           await mexcWebSocketStream.start();
         }
-        return context.success({ 
-          message: 'MEXC stream started',
+        return context.success({
+          message: "MEXC stream started",
           status: mexcWebSocketStream.getConnectionStatus(),
         });
 
-      case 'stop_mexc_stream':
+      case "stop_mexc_stream":
         if (mexcWebSocketStream.isConnected) {
           mexcWebSocketStream.stop();
         }
-        return context.success({ 
-          message: 'MEXC stream stopped',
+        return context.success({
+          message: "MEXC stream stopped",
         });
 
-      case 'start_agent_bridge':
+      case "start_agent_bridge":
         if (!webSocketAgentBridge.isRunning()) {
           webSocketAgentBridge.start();
         }
-        return context.success({ 
-          message: 'Agent bridge started',
+        return context.success({
+          message: "Agent bridge started",
           status: webSocketAgentBridge.getStatus(),
         });
 
-      case 'stop_agent_bridge':
+      case "stop_agent_bridge":
         if (webSocketAgentBridge.isRunning()) {
           webSocketAgentBridge.stop();
         }
-        return context.success({ 
-          message: 'Agent bridge stopped',
+        return context.success({
+          message: "Agent bridge stopped",
         });
 
-      case 'broadcast_message':
+      case "broadcast_message": {
         const { channel, type, data } = params;
         if (!channel || !type || !data) {
-          return context.validationError('broadcast_message', 'channel, type, and data are required for broadcast');
+          return context.validationError(
+            "broadcast_message",
+            "channel, type, and data are required for broadcast"
+          );
         }
 
         webSocketServer.broadcast({
@@ -178,29 +181,31 @@ export const POST = authenticatedHandler({
           data,
         });
 
-        return context.success({ 
-          message: 'Message broadcasted',
+        return context.success({
+          message: "Message broadcasted",
           channel,
           type,
         });
+      }
 
-      case 'subscribe_symbols':
+      case "subscribe_symbols": {
         const { symbols } = params;
         if (!Array.isArray(symbols)) {
-          return context.validationError('symbols', 'symbols must be an array');
+          return context.validationError("symbols", "symbols must be an array");
         }
 
         await mexcWebSocketStream.subscribeToSymbolList(symbols);
-        
-        return context.success({ 
+
+        return context.success({
           message: `Subscribed to ${symbols.length} symbols`,
           symbols,
         });
+      }
 
-      case 'get_connections':
+      case "get_connections": {
         const connections = webSocketServer.getConnectionMetrics();
         return context.success({
-          connections: connections.map(conn => ({
+          connections: connections.map((conn) => ({
             connectionId: conn.connectionId,
             userId: conn.userId,
             connectedAt: conn.connectedAt,
@@ -211,8 +216,9 @@ export const POST = authenticatedHandler({
           })),
           total: connections.length,
         });
+      }
 
-      case 'get_metrics':
+      case "get_metrics": {
         const serverMetrics = webSocketServer.getServerMetrics();
         const mexcStatus = mexcWebSocketStream.getConnectionStatus();
         const bridgeStatus = webSocketAgentBridge.getStatus();
@@ -223,17 +229,17 @@ export const POST = authenticatedHandler({
           agentBridge: bridgeStatus,
           timestamp: Date.now(),
         });
+      }
 
       default:
-        return context.validationError('action', 'Invalid action specified');
+        return context.validationError("action", "Invalid action specified");
     }
-
   } catch (error) {
-    console.error('[WebSocket API] Error in POST action:', { error });
+    console.error("[WebSocket API] Error in POST action:", { error });
     return context.error(
       `Failed to execute action: ${context.body?.action}`,
       500,
-      { error: error instanceof Error ? error.message : 'Unknown error' }
+      { error: error instanceof Error ? error.message : "Unknown error" }
     );
   }
 });
@@ -244,71 +250,79 @@ export const POST = authenticatedHandler({
 
 export const PUT = authenticatedHandler({
   parseBody: true,
-})(async (request, context) => {
+})(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
-  const logger = {
-    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  const _logger = {
+    info: (message: string, context?: any) =>
+      console.info("[websocket-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-api]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[websocket-api]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-api]", message, context || ""),
   };
   try {
     const { connectionId, action, ...params } = context.body;
 
     if (!connectionId) {
-      return context.validationError('connectionId', 'Connection ID is required');
+      return context.validationError(
+        "connectionId",
+        "Connection ID is required"
+      );
     }
 
     switch (action) {
-      case 'get_info':
+      case "get_info": {
         // Get connection info
         const connections = webSocketServer.getConnectionMetrics();
-        const connection = connections.find(c => c.connectionId === connectionId);
-        
+        const connection = connections.find(
+          (c) => c.connectionId === connectionId
+        );
+
         if (!connection) {
-          return context.error('Connection not found', 404);
+          return context.error("Connection not found", 404);
         }
 
         return context.success(connection);
+      }
 
-      case 'disconnect':
+      case "disconnect":
         // Disconnect specific connection
         // This would require adding a disconnect method to the server
-        return context.success({ 
-          message: 'Connection disconnect requested',
+        return context.success({
+          message: "Connection disconnect requested",
           connectionId,
         });
 
-      case 'send_message':
+      case "send_message": {
         const { message } = params;
         if (!message) {
-          return context.validationError('message', 'Message is required');
+          return context.validationError("message", "Message is required");
         }
 
         const success = webSocketServer.sendMessage(connectionId, {
-          type: 'system:ack',
-          channel: 'system',
+          type: "system:ack",
+          channel: "system",
           data: message,
           messageId: crypto.randomUUID(),
           timestamp: Date.now(),
         });
 
-        return context.success({ 
+        return context.success({
           success,
-          message: success ? 'Message sent' : 'Failed to send message',
+          message: success ? "Message sent" : "Failed to send message",
         });
+      }
 
       default:
-        return context.validationError('action', 'Invalid action specified');
+        return context.validationError("action", "Invalid action specified");
     }
-
   } catch (error) {
-    console.error('[WebSocket API] Error in PUT action:', { error });
-    return context.error(
-      'Failed to manage connection',
-      500,
-      { error: error instanceof Error ? error.message : 'Unknown error' }
-    );
+    console.error("[WebSocket API] Error in PUT action:", { error });
+    return context.error("Failed to manage connection", 500, {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
@@ -319,19 +333,23 @@ export const PUT = authenticatedHandler({
 export const PATCH = authenticatedHandler({
   parseBody: true,
   // Admin only operations - auth is handled by authenticatedHandler
-})(async (request, context) => {
+})(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
-  const logger = {
-    info: (message: string, context?: any) => console.info('[websocket-api]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[websocket-api]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[websocket-api]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[websocket-api]', message, context || ''),
+  const _logger = {
+    info: (message: string, context?: any) =>
+      console.info("[websocket-api]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[websocket-api]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[websocket-api]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[websocket-api]", message, context || ""),
   };
   try {
     const { operation, ...params } = context.body;
 
     switch (operation) {
-      case 'health_check':
+      case "health_check": {
         // Comprehensive health check
         const serverHealthy = webSocketServer.isHealthy();
         const mexcHealthy = await mexcWebSocketStream.healthCheck();
@@ -341,18 +359,18 @@ export const PATCH = authenticatedHandler({
         const recommendations: string[] = [];
 
         if (!serverHealthy) {
-          issues.push('WebSocket server is not running');
-          recommendations.push('Start the WebSocket server');
+          issues.push("WebSocket server is not running");
+          recommendations.push("Start the WebSocket server");
         }
 
         if (!mexcHealthy) {
-          issues.push('MEXC WebSocket stream is not connected');
-          recommendations.push('Check MEXC connectivity and restart stream');
+          issues.push("MEXC WebSocket stream is not connected");
+          recommendations.push("Check MEXC connectivity and restart stream");
         }
 
         if (!bridgeHealthy) {
-          issues.push('Agent bridge is not running');
-          recommendations.push('Initialize and start the agent bridge');
+          issues.push("Agent bridge is not running");
+          recommendations.push("Initialize and start the agent bridge");
         }
 
         const overall = serverHealthy && mexcHealthy && bridgeHealthy;
@@ -368,16 +386,17 @@ export const PATCH = authenticatedHandler({
           recommendations,
           timestamp: Date.now(),
         });
+      }
 
-      case 'restart_all':
+      case "restart_all":
         // Restart all WebSocket services
-        console.info('[WebSocket API] Restarting all WebSocket services...');
+        console.info("[WebSocket API] Restarting all WebSocket services...");
 
         // Stop services
         if (webSocketAgentBridge.isRunning()) {
           webSocketAgentBridge.stop();
         }
-        
+
         if (mexcWebSocketStream.isConnected) {
           mexcWebSocketStream.stop();
         }
@@ -387,7 +406,7 @@ export const PATCH = authenticatedHandler({
         }
 
         // Wait a moment
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Start services
         await webSocketServer.start();
@@ -395,11 +414,11 @@ export const PATCH = authenticatedHandler({
         webSocketAgentBridge.start();
 
         return context.success({
-          message: 'All WebSocket services restarted',
+          message: "All WebSocket services restarted",
           timestamp: Date.now(),
         });
 
-      case 'performance_report':
+      case "performance_report": {
         // Generate comprehensive performance report
         const serverMetrics = webSocketServer.getServerMetrics();
         const connectionMetrics = webSocketServer.getConnectionMetrics();
@@ -416,12 +435,23 @@ export const PATCH = authenticatedHandler({
           },
           connections: {
             total: connectionMetrics.length,
-            active: connectionMetrics.filter(c => Date.now() - c.lastActivity < 60000).length,
-            averageMessages: connectionMetrics.reduce((sum, c) => sum + c.messagesSent + c.messagesReceived, 0) / connectionMetrics.length || 0,
+            active: connectionMetrics.filter(
+              (c) => Date.now() - c.lastActivity < 60000
+            ).length,
+            averageMessages:
+              connectionMetrics.reduce(
+                (sum, c) => sum + c.messagesSent + c.messagesReceived,
+                0
+              ) / connectionMetrics.length || 0,
             topUsers: connectionMetrics
-              .sort((a, b) => (b.messagesSent + b.messagesReceived) - (a.messagesSent + a.messagesReceived))
+              .sort(
+                (a, b) =>
+                  b.messagesSent +
+                  b.messagesReceived -
+                  (a.messagesSent + a.messagesReceived)
+              )
               .slice(0, 10)
-              .map(c => ({
+              .map((c) => ({
                 userId: c.userId,
                 connectionId: c.connectionId,
                 totalMessages: c.messagesSent + c.messagesReceived,
@@ -433,22 +463,26 @@ export const PATCH = authenticatedHandler({
             subscriptions: mexcStatus.subscriptions,
             connecting: mexcStatus.connecting,
           },
-          recommendations: generatePerformanceRecommendations(serverMetrics, connectionMetrics),
+          recommendations: generatePerformanceRecommendations(
+            serverMetrics,
+            connectionMetrics
+          ),
         };
 
         return context.success(performanceReport);
+      }
 
       default:
-        return context.validationError('operation', 'Invalid operation specified');
+        return context.validationError(
+          "operation",
+          "Invalid operation specified"
+        );
     }
-
   } catch (error) {
-    console.error('[WebSocket API] Error in PATCH operation:', { error });
-    return context.error(
-      'Failed to execute operation',
-      500,
-      { error: error instanceof Error ? error.message : 'Unknown error' }
-    );
+    console.error("[WebSocket API] Error in PATCH operation:", { error });
+    return context.error("Failed to execute operation", 500, {
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 });
 
@@ -456,28 +490,41 @@ export const PATCH = authenticatedHandler({
 // Helper Functions
 // ======================
 
-function generatePerformanceRecommendations(serverMetrics: any, connectionMetrics: any[]): string[] {
+function generatePerformanceRecommendations(
+  serverMetrics: any,
+  connectionMetrics: any[]
+): string[] {
   const recommendations: string[] = [];
 
   if (serverMetrics.totalConnections > 1000) {
-    recommendations.push('Consider implementing connection pooling for high connection counts');
+    recommendations.push(
+      "Consider implementing connection pooling for high connection counts"
+    );
   }
 
   if (serverMetrics.errorRate > 0.05) {
-    recommendations.push('High error rate detected - investigate error patterns');
+    recommendations.push(
+      "High error rate detected - investigate error patterns"
+    );
   }
 
   if (serverMetrics.averageLatency > 100) {
-    recommendations.push('High latency detected - consider optimizing message handling');
+    recommendations.push(
+      "High latency detected - consider optimizing message handling"
+    );
   }
 
-  const inactiveConnections = connectionMetrics.filter(c => Date.now() - c.lastActivity > 300000).length;
+  const inactiveConnections = connectionMetrics.filter(
+    (c) => Date.now() - c.lastActivity > 300000
+  ).length;
   if (inactiveConnections > connectionMetrics.length * 0.3) {
-    recommendations.push('High number of inactive connections - consider implementing connection cleanup');
+    recommendations.push(
+      "High number of inactive connections - consider implementing connection cleanup"
+    );
   }
 
   if (recommendations.length === 0) {
-    recommendations.push('All metrics within normal ranges');
+    recommendations.push("All metrics within normal ranges");
   }
 
   return recommendations;

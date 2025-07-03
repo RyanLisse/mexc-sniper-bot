@@ -1,7 +1,12 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import type { BaseAgent } from "../base-agent";
 
-export type AgentStatus = "healthy" | "degraded" | "unhealthy" | "unknown" | "recovering";
+export type AgentStatus =
+  | "healthy"
+  | "degraded"
+  | "unhealthy"
+  | "unknown"
+  | "recovering";
 
 export interface HealthThresholds {
   responseTime: { warning: number; critical: number };
@@ -165,14 +170,18 @@ export class AgentRegistryCore {
    * Get agents by type
    */
   getAgentsByType(type: string): RegisteredAgent[] {
-    return Array.from(this.agents.values()).filter((agent) => agent.type === type);
+    return Array.from(this.agents.values()).filter(
+      (agent) => agent.type === type
+    );
   }
 
   /**
    * Get agents by tag
    */
   getAgentsByTag(tag: string): RegisteredAgent[] {
-    return Array.from(this.agents.values()).filter((agent) => agent.tags.includes(tag));
+    return Array.from(this.agents.values()).filter((agent) =>
+      agent.tags.includes(tag)
+    );
   }
 
   /**
@@ -181,14 +190,18 @@ export class AgentRegistryCore {
   isAgentAvailable(id: string): boolean {
     const agent = this.agents.get(id);
     if (!agent) return false;
-    return agent.health.status === "healthy" || agent.health.status === "degraded";
+    return (
+      agent.health.status === "healthy" || agent.health.status === "degraded"
+    );
   }
 
   /**
    * Get available agents by type
    */
   getAvailableAgentsByType(type: string): RegisteredAgent[] {
-    return this.getAgentsByType(type).filter((agent) => this.isAgentAvailable(agent.id));
+    return this.getAgentsByType(type).filter((agent) =>
+      this.isAgentAvailable(agent.id)
+    );
   }
 
   /**

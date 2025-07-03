@@ -7,13 +7,9 @@ interface OptimizedDynamicLoaderProps {
   fallback?: ReactNode;
 }
 
-export function OptimizedDynamicLoader({ 
-  children, 
-  fallback = <div>Loading...</div> 
+export function OptimizedDynamicLoader({
+  children,
+  fallback = <div>Loading...</div>,
 }: OptimizedDynamicLoaderProps) {
-  return (
-    <Suspense fallback={fallback}>
-      {children}
-    </Suspense>
-  );
+  return <Suspense fallback={fallback}>{children}</Suspense>;
 }

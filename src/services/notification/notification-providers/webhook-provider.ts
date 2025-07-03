@@ -1,5 +1,12 @@
-import type { SelectAlertInstance, SelectNotificationChannel } from "@/src/db/schemas/alerts";
-import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
+import type {
+  SelectAlertInstance,
+  SelectNotificationChannel,
+} from "@/src/db/schemas/alerts";
+import type {
+  NotificationMessage,
+  NotificationProvider,
+  NotificationResult,
+} from "./index";
 
 interface WebhookConfig {
   url: string;
@@ -36,7 +43,12 @@ export class WebhookProvider implements NotificationProvider {
           warn: (message: string, context?: any) =>
             console.warn("[webhook-provider]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[webhook-provider]", message, context || "", error || ""),
+            console.error(
+              "[webhook-provider]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[webhook-provider]", message, context || ""),
         };
@@ -77,7 +89,11 @@ export class WebhookProvider implements NotificationProvider {
 
     // Validate method
     const method = config.method;
-    if (method && typeof method === "string" && !["POST", "PUT", "PATCH"].includes(method)) {
+    if (
+      method &&
+      typeof method === "string" &&
+      !["POST", "PUT", "PATCH"].includes(method)
+    ) {
       return false;
     }
 
@@ -130,7 +146,8 @@ export class WebhookProvider implements NotificationProvider {
         if (attempt >= maxRetries) {
           return {
             success: false,
-            error: error instanceof Error ? error.message : "Unknown webhook error",
+            error:
+              error instanceof Error ? error.message : "Unknown webhook error",
           };
         }
 
@@ -213,7 +230,9 @@ export class WebhookProvider implements NotificationProvider {
           headers.Authorization = `Bearer ${auth.token}`;
           break;
         case "basic": {
-          const credentials = Buffer.from(`${auth.username}:${auth.password}`).toString("base64");
+          const credentials = Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64");
           headers.Authorization = `Basic ${credentials}`;
           break;
         }
@@ -232,7 +251,11 @@ export class WebhookProvider implements NotificationProvider {
     message: NotificationMessage
   ): Record<string, unknown> {
     if (config.customPayloadTemplate) {
-      return this.buildCustomPayload(config.customPayloadTemplate, alert, message);
+      return this.buildCustomPayload(
+        config.customPayloadTemplate,
+        alert,
+        message
+      );
     }
 
     return this.buildStandardPayload(alert, message);
@@ -262,7 +285,9 @@ export class WebhookProvider implements NotificationProvider {
         escalationLevel: alert.escalationLevel,
         correlationId: alert.correlationId,
         labels: alert.labels ? JSON.parse(alert.labels) : {},
-        additionalData: alert.additionalData ? JSON.parse(alert.additionalData) : {},
+        additionalData: alert.additionalData
+          ? JSON.parse(alert.additionalData)
+          : {},
       },
       notification: {
         title: message.title,
@@ -312,7 +337,10 @@ export class WebhookProvider implements NotificationProvider {
     let processedTemplate = template;
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{{${key}}}`;
-      processedTemplate = processedTemplate.replace(new RegExp(placeholder, "g"), value);
+      processedTemplate = processedTemplate.replace(
+        new RegExp(placeholder, "g"),
+        value
+      );
     }
 
     try {
@@ -323,7 +351,10 @@ export class WebhookProvider implements NotificationProvider {
     }
   }
 
-  private formatPayload(payload: Record<string, unknown>, format?: string): string {
+  private formatPayload(
+    payload: Record<string, unknown>,
+    format?: string
+  ): string {
     switch (format) {
       case "form":
         return new URLSearchParams(

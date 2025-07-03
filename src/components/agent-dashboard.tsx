@@ -20,7 +20,13 @@ import type { ComponentType } from "react";
 import { useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useToast } from "./ui/use-toast";
@@ -88,19 +94,25 @@ export function AgentDashboard() {
 
   // Execute agent action
   const executeAgentAction = useMutation({
-    mutationFn: async ({ agentId, action }: { agentId: string; action: string }) => {
+    mutationFn: async ({
+      agentId,
+      action,
+    }: {
+      agentId: string;
+      action: string;
+    }) => {
       const response = await fetch(`/api/agents/${agentId}/actions`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ action }),
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to execute ${action} on agent ${agentId}`);
       }
-      
+
       const result = await response.json();
       return result;
     },
@@ -147,7 +159,9 @@ export function AgentDashboard() {
   };
 
   const formatLastActivity = (timestamp: string) => {
-    const minutes = Math.floor((Date.now() - new Date(timestamp).getTime()) / 60000);
+    const minutes = Math.floor(
+      (Date.now() - new Date(timestamp).getTime()) / 60000
+    );
     if (minutes < 1) return "Just now";
     if (minutes < 60) return `${minutes}m ago`;
     const hours = Math.floor(minutes / 60);
@@ -173,8 +187,9 @@ export function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {agents?.filter((a) => a.status === "active" || a.status === "processing").length ||
-                0}
+              {agents?.filter(
+                (a) => a.status === "active" || a.status === "processing"
+              ).length || 0}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               of {agents?.length || 0} total agents
@@ -188,26 +203,35 @@ export function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {agents?.reduce((sum, agent) => sum + agent.tasksCompleted, 0).toLocaleString() || 0}
+              {agents
+                ?.reduce((sum, agent) => sum + agent.tasksCompleted, 0)
+                .toLocaleString() || 0}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">completed successfully</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              completed successfully
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Avg Success Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Avg Success Rate
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {agents
                 ? (
-                    agents.reduce((sum, agent) => sum + agent.successRate, 0) / agents.length
+                    agents.reduce((sum, agent) => sum + agent.successRate, 0) /
+                    agents.length
                   ).toFixed(1)
                 : 0}
               %
             </div>
-            <p className="text-xs text-muted-foreground mt-1">across all agents</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              across all agents
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -237,7 +261,10 @@ export function AgentDashboard() {
                       </CardDescription>
                     </div>
                   </div>
-                  <Badge variant="outline" className={getStatusColor(agent.status)}>
+                  <Badge
+                    variant="outline"
+                    className={getStatusColor(agent.status)}
+                  >
                     {getStatusIcon(agent.status)}
                     <span className="ml-1 capitalize">{agent.status}</span>
                   </Badge>
@@ -248,14 +275,18 @@ export function AgentDashboard() {
                   {agent.currentTask && (
                     <div className="text-sm">
                       <span className="text-muted-foreground">Current: </span>
-                      <span className="text-foreground">{agent.currentTask}</span>
+                      <span className="text-foreground">
+                        {agent.currentTask}
+                      </span>
                     </div>
                   )}
 
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Tasks</p>
-                      <p className="font-medium">{agent.tasksCompleted.toLocaleString()}</p>
+                      <p className="font-medium">
+                        {agent.tasksCompleted.toLocaleString()}
+                      </p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Success</p>
@@ -269,7 +300,10 @@ export function AgentDashboard() {
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        executeAgentAction.mutate({ agentId: agent.id, action: "restart" });
+                        executeAgentAction.mutate({
+                          agentId: agent.id,
+                          action: "restart",
+                        });
                       }}
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
@@ -282,7 +316,8 @@ export function AgentDashboard() {
                         e.stopPropagation();
                         executeAgentAction.mutate({
                           agentId: agent.id,
-                          action: agent.status === "active" ? "pause" : "resume",
+                          action:
+                            agent.status === "active" ? "pause" : "resume",
                         });
                       }}
                     >
@@ -312,7 +347,11 @@ export function AgentDashboard() {
           <CardHeader>
             <CardTitle>Agent Details</CardTitle>
             <CardDescription>
-              {agentDescriptions[agents?.find((a) => a.id === selectedAgent)?.type || ""]}
+              {
+                agentDescriptions[
+                  agents?.find((a) => a.id === selectedAgent)?.type || ""
+                ]
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -345,18 +384,28 @@ export function AgentDashboard() {
                   return agent?.metrics ? (
                     <div className="grid gap-4 md:grid-cols-3">
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Avg Response Time</p>
-                        <p className="text-2xl font-bold">{agent.metrics.avgResponseTime}ms</p>
+                        <p className="text-sm text-muted-foreground">
+                          Avg Response Time
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {agent.metrics.avgResponseTime}ms
+                        </p>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Total Executions</p>
+                        <p className="text-sm text-muted-foreground">
+                          Total Executions
+                        </p>
                         <p className="text-2xl font-bold">
                           {agent.metrics.totalExecutions.toLocaleString()}
                         </p>
                       </div>
                       <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">Error Rate</p>
-                        <p className="text-2xl font-bold">{agent.metrics.errorRate}%</p>
+                        <p className="text-sm text-muted-foreground">
+                          Error Rate
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {agent.metrics.errorRate}%
+                        </p>
                       </div>
                     </div>
                   ) : null;
@@ -382,12 +431,12 @@ function AgentActivityLogs({ agentId }: { agentId: string | null }) {
     queryKey: ["agent-logs", agentId],
     queryFn: async () => {
       if (!agentId) return [];
-      
+
       const response = await fetch(`/api/agents/${agentId}/logs?limit=20`);
       if (!response.ok) {
         throw new Error("Failed to fetch agent logs");
       }
-      
+
       const result = await response.json();
       return result.success ? result.data : [];
     },
@@ -407,7 +456,9 @@ function AgentActivityLogs({ agentId }: { agentId: string | null }) {
   if (!logs || logs.length === 0) {
     return (
       <div className="text-center py-8">
-        <span className="text-sm text-muted-foreground">No activity logs available</span>
+        <span className="text-sm text-muted-foreground">
+          No activity logs available
+        </span>
       </div>
     );
   }
@@ -424,8 +475,8 @@ function AgentActivityLogs({ agentId }: { agentId: string | null }) {
           </span>
           <span className="text-foreground">{log.message || log.activity}</span>
           {log.level && (
-            <Badge 
-              variant={log.level === 'error' ? 'destructive' : 'secondary'} 
+            <Badge
+              variant={log.level === "error" ? "destructive" : "secondary"}
               className="ml-auto text-xs"
             >
               {log.level}

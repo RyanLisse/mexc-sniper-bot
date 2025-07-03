@@ -7,7 +7,6 @@
 
 import { toSafeError } from "../../../lib/error-type-utils";
 import type { SymbolEntry } from "../../api/mexc-unified-exports";
-import { patternEmbeddingService } from "../pattern-embedding-service";
 import type { CorrelationAnalysis } from "./pattern-types";
 
 // Factory function to create logger when needed
@@ -18,7 +17,12 @@ const getLogger = () => {
     warn: (message: string, context?: any) =>
       console.warn("[correlation-analyzer]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[correlation-analyzer]", message, context || "", error || ""),
+      console.error(
+        "[correlation-analyzer]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[correlation-analyzer]", message, context || ""),
   };
@@ -137,7 +141,11 @@ export async function analyzeMLPatternCorrelations(
       const chunkResults = await Promise.all(
         chunk.map(async ({ pattern1, pattern2 }) => {
           try {
-            return await calculatePatternSimilarityOptimized(pattern1, pattern2, cache);
+            return await calculatePatternSimilarityOptimized(
+              pattern1,
+              pattern2,
+              cache
+            );
           } catch (error) {
             getLogger().warn("Pattern similarity calculation failed", {
               operation: "pattern_similarity_calculation",
@@ -163,11 +171,14 @@ export async function analyzeMLPatternCorrelations(
     // Create correlation analysis from similarity matrix
     if (similarityMatrix.length > 0) {
       avgSimilarity =
-        similarityMatrix.reduce((sum, item) => sum + item.similarity, 0) / similarityMatrix.length;
+        similarityMatrix.reduce((sum, item) => sum + item.similarity, 0) /
+        similarityMatrix.length;
 
       correlations.push({
         symbols: Array.from(
-          new Set(similarityMatrix.flatMap((item) => [item.symbol1, item.symbol2]))
+          new Set(
+            similarityMatrix.flatMap((item) => [item.symbol1, item.symbol2])
+          )
         ), // Deduplicate
         correlationType: "pattern_similarity",
         strength: avgSimilarity,
@@ -177,7 +188,10 @@ export async function analyzeMLPatternCorrelations(
           `Processed ${patternPairs.length} pairs in ${Date.now() - startTime}ms (optimized)`,
           `Cache hits: ${cache.size} patterns cached for reuse`,
         ],
-        recommendations: generateMLCorrelationRecommendations(avgSimilarity, similarityMatrix),
+        recommendations: generateMLCorrelationRecommendations(
+          avgSimilarity,
+          similarityMatrix
+        ),
       });
     }
 
@@ -234,7 +248,7 @@ export async function calculatePatternSimilarityOptimized(
   let similarPatterns2 = cache.get(cacheKey2);
 
   // Batch fetch uncached patterns
-  const fetchPromises: Promise<any>[] = [];
+  const _fetchPromises: Promise<any>[] = [];
 
   if (!similarPatterns1) {
     // Mock similar patterns for pattern1
@@ -287,9 +301,13 @@ export async function calculatePatternSimilarityOptimized(
   }
 
   // Fast similarity calculation using optimized common pattern detection
-  const commonPatterns = findCommonPatternsOptimized(similarPatterns1!, similarPatterns2!);
+  const commonPatterns = findCommonPatternsOptimized(
+    similarPatterns1!,
+    similarPatterns2!
+  );
   const similarity =
-    commonPatterns.length / Math.max(similarPatterns1?.length, similarPatterns2?.length, 1);
+    commonPatterns.length /
+    Math.max(similarPatterns1?.length, similarPatterns2?.length, 1);
 
   if (similarity >= 0.3) {
     return {
@@ -307,7 +325,10 @@ export async function calculatePatternSimilarityOptimized(
  * Optimized common pattern finder - replaces O(n²) nested loops
  * Uses Set-based lookups for O(n) complexity instead of O(n²)
  */
-export function findCommonPatternsOptimized(patterns1: any[], patterns2: any[]): any[] {
+export function findCommonPatternsOptimized(
+  patterns1: any[],
+  patterns2: any[]
+): any[] {
   if (!patterns1?.length || !patterns2?.length) return [];
 
   // Create fast lookup map for patterns2 using multiple keys
@@ -368,22 +389,37 @@ export function generateMLCorrelationRecommendations(
   const recommendations: string[] = [];
 
   if (avgSimilarity > 0.7) {
-    recommendations.push("Strong pattern correlation detected - consider batch trading strategy");
-    recommendations.push("Monitor all correlated symbols simultaneously for synchronized entries");
+    recommendations.push(
+      "Strong pattern correlation detected - consider batch trading strategy"
+    );
+    recommendations.push(
+      "Monitor all correlated symbols simultaneously for synchronized entries"
+    );
   } else if (avgSimilarity > 0.5) {
-    recommendations.push("Moderate correlation - validate signals across correlated symbols");
-    recommendations.push("Use correlation data for risk management and position sizing");
+    recommendations.push(
+      "Moderate correlation - validate signals across correlated symbols"
+    );
+    recommendations.push(
+      "Use correlation data for risk management and position sizing"
+    );
   } else if (avgSimilarity > 0.3) {
-    recommendations.push("Weak correlation - treat symbols independently but monitor for changes");
+    recommendations.push(
+      "Weak correlation - treat symbols independently but monitor for changes"
+    );
   }
 
   // Identify strongest correlated pair
   const strongestPair = similarityMatrix.reduce(
-    (strongest, current) => (current.similarity > strongest.similarity ? current : strongest),
+    (strongest, current) =>
+      current.similarity > strongest.similarity ? current : strongest,
     similarityMatrix[0] || { similarity: 0, symbol1: "", symbol2: "" }
   );
 
-  if (strongestPair.similarity > 0.6 && "symbol1" in strongestPair && "symbol2" in strongestPair) {
+  if (
+    strongestPair.similarity > 0.6 &&
+    "symbol1" in strongestPair &&
+    "symbol2" in strongestPair
+  ) {
     recommendations.push(
       `Strongest correlation: ${strongestPair.symbol1} ↔ ${strongestPair.symbol2} (${(strongestPair.similarity * 100).toFixed(1)}%)`
     );
@@ -399,7 +435,9 @@ export function generateMLCorrelationRecommendations(
 /**
  * Group symbols by their status patterns for correlation analysis
  */
-function groupSymbolsByStatus(symbols: SymbolEntry[]): Record<string, SymbolEntry[]> {
+function groupSymbolsByStatus(
+  symbols: SymbolEntry[]
+): Record<string, SymbolEntry[]> {
   const groups: Record<string, SymbolEntry[]> = {
     ready_state: [],
     pre_ready_stage_1: [], // sts:1, st:1
@@ -468,13 +506,17 @@ async function analyzeLaunchTimingCorrelations(
       insights.push(
         `High concentration: ${readyStateCount}/${totalSymbols} symbols in ready state`
       );
-      recommendations.push("Strong batch trading opportunity - consider coordinated entries");
+      recommendations.push(
+        "Strong batch trading opportunity - consider coordinated entries"
+      );
     } else if (preReadyCount / totalSymbols > 0.5) {
       correlationStrength = 0.6;
       insights.push(
         `Pre-ready cluster: ${preReadyCount}/${totalSymbols} symbols approaching ready state`
       );
-      recommendations.push("Monitor cluster for synchronized ready state transitions");
+      recommendations.push(
+        "Monitor cluster for synchronized ready state transitions"
+      );
     } else if (
       statusGroups.pre_ready_stage_2.length > 2 &&
       statusGroups.pre_ready_stage_2.length / totalSymbols > 0.3
@@ -483,15 +525,23 @@ async function analyzeLaunchTimingCorrelations(
       insights.push(
         `Stage 2 cluster: ${statusGroups.pre_ready_stage_2.length} symbols in advanced pre-ready`
       );
-      recommendations.push("Set up monitoring for imminent ready state transitions");
+      recommendations.push(
+        "Set up monitoring for imminent ready state transitions"
+      );
     } else {
       correlationStrength = 0.2;
-      insights.push("Mixed status distribution - no strong timing correlation detected");
-      recommendations.push("Analyze symbols individually for optimal entry timing");
+      insights.push(
+        "Mixed status distribution - no strong timing correlation detected"
+      );
+      recommendations.push(
+        "Analyze symbols individually for optimal entry timing"
+      );
     }
 
     // Time-based analysis for symbols with known launch times
-    const symbolsWithTiming = symbols.filter((s) => (s as any).estimatedReadyTime);
+    const symbolsWithTiming = symbols.filter(
+      (s) => (s as any).estimatedReadyTime
+    );
     if (symbolsWithTiming.length > 1) {
       const timeDifferences = calculateTimingClusters(symbolsWithTiming);
       if (timeDifferences.hasCluster) {
@@ -499,7 +549,9 @@ async function analyzeLaunchTimingCorrelations(
         insights.push(
           `Timing cluster detected: ${timeDifferences.clusterSize} symbols expected within ${timeDifferences.timeWindow} hours`
         );
-        recommendations.push("Prepare for coordinated market activity during cluster window");
+        recommendations.push(
+          "Prepare for coordinated market activity during cluster window"
+        );
       }
     }
 
@@ -532,14 +584,18 @@ async function analyzeLaunchTimingCorrelations(
 /**
  * Analyze sector correlations based on project types and market movements
  */
-async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<CorrelationAnalysis> {
+async function analyzeSectorCorrelations(
+  symbols: SymbolEntry[]
+): Promise<CorrelationAnalysis> {
   try {
     const insights: string[] = [];
     const recommendations: string[] = [];
 
     // Classify symbols by project type (extracted from symbol names/patterns)
     const sectorGroups = classifySymbolsBySector(symbols);
-    const sectorCounts = Object.values(sectorGroups).map((group) => group.length);
+    const sectorCounts = Object.values(sectorGroups).map(
+      (group) => group.length
+    );
     const maxSectorSize = Math.max(...sectorCounts);
     const totalSymbols = symbols.length;
 
@@ -560,35 +616,51 @@ async function analyzeSectorCorrelations(symbols: SymbolEntry[]): Promise<Correl
     }
     // Moderate correlation with multiple sectors
     else if (
-      Object.keys(sectorGroups).filter((sector) => sectorGroups[sector].length > 1).length > 2
+      Object.keys(sectorGroups).filter(
+        (sector) => sectorGroups[sector].length > 1
+      ).length > 2
     ) {
       correlationStrength = 0.4;
       insights.push("Multi-sector distribution with moderate clustering");
-      recommendations.push("Monitor sector-specific trends for differentiated strategies");
+      recommendations.push(
+        "Monitor sector-specific trends for differentiated strategies"
+      );
     }
     // Low correlation - diverse projects
     else {
       correlationStrength = 0.2;
       insights.push("Diverse project portfolio - low sector correlation");
-      recommendations.push("Apply individual project analysis rather than sector-wide strategy");
+      recommendations.push(
+        "Apply individual project analysis rather than sector-wide strategy"
+      );
     }
 
     // Technical indicator correlation within sectors
     const technicalCorrelation = analyzeTechnicalIndicatorCorrelation(symbols);
     if (technicalCorrelation.strength > 0.5) {
-      correlationStrength = Math.max(correlationStrength, technicalCorrelation.strength);
+      correlationStrength = Math.max(
+        correlationStrength,
+        technicalCorrelation.strength
+      );
       insights.push(...technicalCorrelation.insights);
       recommendations.push(...technicalCorrelation.recommendations);
     }
 
     // Quality score correlation analysis
-    const qualityScores = symbols.filter((s) => s.qs !== undefined).map((s) => s.qs!);
+    const qualityScores = symbols
+      .filter((s) => s.qs !== undefined)
+      .map((s) => s.qs!);
     if (qualityScores.length > 1) {
-      const qualityCorrelation = calculateQualityScoreCorrelation(qualityScores);
+      const qualityCorrelation =
+        calculateQualityScoreCorrelation(qualityScores);
       if (qualityCorrelation > 0.5) {
         correlationStrength = Math.max(correlationStrength, qualityCorrelation);
-        insights.push(`Quality score correlation: ${(qualityCorrelation * 100).toFixed(1)}%`);
-        recommendations.push("Similar quality projects - expect correlated performance");
+        insights.push(
+          `Quality score correlation: ${(qualityCorrelation * 100).toFixed(1)}%`
+        );
+        recommendations.push(
+          "Similar quality projects - expect correlated performance"
+        );
       }
     }
 
@@ -653,7 +725,8 @@ function calculateTimingClusters(symbolsWithTiming: SymbolEntry[]): {
       if (clusterSize > maxClusterSize) {
         maxClusterSize = clusterSize;
         bestTimeWindow =
-          Math.min(times[i + clusterSize - 1] - startTime, CLUSTER_WINDOW) / (60 * 60 * 1000);
+          Math.min(times[i + clusterSize - 1] - startTime, CLUSTER_WINDOW) /
+          (60 * 60 * 1000);
       }
     }
 
@@ -682,7 +755,9 @@ function getCurrentMarketSession(): string {
 /**
  * Classify symbols by sector based on naming patterns and metadata
  */
-function classifySymbolsBySector(symbols: SymbolEntry[]): Record<string, SymbolEntry[]> {
+function classifySymbolsBySector(
+  symbols: SymbolEntry[]
+): Record<string, SymbolEntry[]> {
   const sectors: Record<string, SymbolEntry[]> = {
     AI: [],
     DeFi: [],
@@ -699,7 +774,11 @@ function classifySymbolsBySector(symbols: SymbolEntry[]): Record<string, SymbolE
       const projectName = ((symbol as any).projectName || "").toLowerCase();
       const combined = `${symbolName} ${projectName}`;
 
-      if (combined.includes("ai") || combined.includes("gpt") || combined.includes("artificial")) {
+      if (
+        combined.includes("ai") ||
+        combined.includes("gpt") ||
+        combined.includes("artificial")
+      ) {
         sectors.AI.push(symbol);
       } else if (
         combined.includes("defi") ||
@@ -756,8 +835,12 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
   recommendations: string[];
 } {
   try {
-    const priceScores = symbols.filter((s) => s.ps !== undefined).map((s) => s.ps!);
-    const qualityScores = symbols.filter((s) => s.qs !== undefined).map((s) => s.qs!);
+    const priceScores = symbols
+      .filter((s) => s.ps !== undefined)
+      .map((s) => s.ps!);
+    const qualityScores = symbols
+      .filter((s) => s.qs !== undefined)
+      .map((s) => s.qs!);
 
     let strength = 0;
     const insights: string[] = [];
@@ -766,13 +849,18 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
     // Price score correlation
     if (priceScores.length > 1) {
       const priceVariance = calculateVariance(priceScores);
-      const priceAvg = priceScores.reduce((sum, score) => sum + score, 0) / priceScores.length;
+      const priceAvg =
+        priceScores.reduce((sum, score) => sum + score, 0) / priceScores.length;
 
       if (priceVariance < 100 && priceAvg > 70) {
         // Low variance, high average
         strength = 0.7;
-        insights.push(`High price score correlation: avg ${priceAvg.toFixed(1)}, low variance`);
-        recommendations.push("Strong technical setup - consider coordinated entries");
+        insights.push(
+          `High price score correlation: avg ${priceAvg.toFixed(1)}, low variance`
+        );
+        recommendations.push(
+          "Strong technical setup - consider coordinated entries"
+        );
       } else if (priceVariance < 200) {
         strength = 0.4;
         insights.push(`Moderate price score correlation detected`);
@@ -783,20 +871,27 @@ function analyzeTechnicalIndicatorCorrelation(symbols: SymbolEntry[]): {
     if (qualityScores.length > 1) {
       const qualityVariance = calculateVariance(qualityScores);
       const qualityAvg =
-        qualityScores.reduce((sum, score) => sum + score, 0) / qualityScores.length;
+        qualityScores.reduce((sum, score) => sum + score, 0) /
+        qualityScores.length;
 
       if (qualityVariance < 50 && qualityAvg > 60) {
         strength = Math.max(strength, 0.6);
         insights.push(
           `Quality score correlation: avg ${qualityAvg.toFixed(1)}, consistent quality`
         );
-        recommendations.push("High-quality symbol cluster - prioritize for trading");
+        recommendations.push(
+          "High-quality symbol cluster - prioritize for trading"
+        );
       }
     }
 
     return { strength, insights, recommendations };
   } catch (_error) {
-    return { strength: 0, insights: ["Technical analysis failed"], recommendations: [] };
+    return {
+      strength: 0,
+      insights: ["Technical analysis failed"],
+      recommendations: [],
+    };
   }
 }
 

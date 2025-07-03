@@ -1,9 +1,7 @@
-import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
   integer,
-  jsonb,
   pgTable,
   real,
   text,
@@ -40,7 +38,10 @@ export const apiCredentials = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    userProviderIdx: index("api_credentials_user_provider_idx").on(table.userId, table.provider),
+    userProviderIdx: index("api_credentials_user_provider_idx").on(
+      table.userId,
+      table.provider
+    ),
   })
 );
 
@@ -92,10 +93,14 @@ export const executionHistory = pgTable(
   },
   (table) => ({
     userIdx: index("execution_history_user_idx").on(table.userId),
-    snipeTargetIdx: index("execution_history_snipe_target_idx").on(table.snipeTargetId),
+    snipeTargetIdx: index("execution_history_snipe_target_idx").on(
+      table.snipeTargetId
+    ),
     symbolIdx: index("execution_history_symbol_idx").on(table.symbolName),
     statusIdx: index("execution_history_status_idx").on(table.status),
-    executedAtIdx: index("execution_history_executed_at_idx").on(table.executedAt),
+    executedAtIdx: index("execution_history_executed_at_idx").on(
+      table.executedAt
+    ),
     // Compound indexes for optimization
     userSymbolTimeIdx: index("execution_history_user_symbol_time_idx").on(
       table.userId,
@@ -151,7 +156,9 @@ export const transactions = pgTable(
     notes: text("notes"), // Optional notes about the transaction
 
     // Timestamps
-    transactionTime: timestamp("transaction_time", { withTimezone: true }).defaultNow(),
+    transactionTime: timestamp("transaction_time", {
+      withTimezone: true,
+    }).defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
@@ -159,11 +166,19 @@ export const transactions = pgTable(
     userIdx: index("transactions_user_idx").on(table.userId),
     symbolIdx: index("transactions_symbol_idx").on(table.symbolName),
     statusIdx: index("transactions_status_idx").on(table.status),
-    transactionTimeIdx: index("transactions_transaction_time_idx").on(table.transactionTime),
+    transactionTimeIdx: index("transactions_transaction_time_idx").on(
+      table.transactionTime
+    ),
     typeIdx: index("transactions_type_idx").on(table.transactionType),
     // Compound indexes for optimization
-    userStatusIdx: index("transactions_user_status_idx").on(table.userId, table.status),
-    userTimeIdx: index("transactions_user_time_idx").on(table.userId, table.transactionTime),
+    userStatusIdx: index("transactions_user_status_idx").on(
+      table.userId,
+      table.status
+    ),
+    userTimeIdx: index("transactions_user_time_idx").on(
+      table.userId,
+      table.transactionTime
+    ),
     symbolTimeIdx: index("transactions_symbol_time_idx").on(
       table.symbolName,
       table.transactionTime
@@ -211,17 +226,24 @@ export const transactionLocks = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => ({
-    resourceIdIdx: index("transaction_locks_resource_id_idx").on(table.resourceId),
+    resourceIdIdx: index("transaction_locks_resource_id_idx").on(
+      table.resourceId
+    ),
     statusIdx: index("transaction_locks_status_idx").on(table.status),
     expiresAtIdx: index("transaction_locks_expires_at_idx").on(table.expiresAt),
-    idempotencyKeyIdx: index("transaction_locks_idempotency_key_idx").on(table.idempotencyKey),
+    idempotencyKeyIdx: index("transaction_locks_idempotency_key_idx").on(
+      table.idempotencyKey
+    ),
     ownerIdIdx: index("transaction_locks_owner_id_idx").on(table.ownerId),
     // Compound indexes for common queries
     resourceStatusIdx: index("transaction_locks_resource_status_idx").on(
       table.resourceId,
       table.status
     ),
-    ownerStatusIdx: index("transaction_locks_owner_status_idx").on(table.ownerId, table.status),
+    ownerStatusIdx: index("transaction_locks_owner_status_idx").on(
+      table.ownerId,
+      table.status
+    ),
   })
 );
 
@@ -260,17 +282,27 @@ export const balanceSnapshots = pgTable(
     timestampIdx: index("balance_snapshots_timestamp_idx").on(table.timestamp),
 
     // Compound indexes for common queries
-    userTimeIdx: index("balance_snapshots_user_time_idx").on(table.userId, table.timestamp),
+    userTimeIdx: index("balance_snapshots_user_time_idx").on(
+      table.userId,
+      table.timestamp
+    ),
     userAssetTimeIdx: index("balance_snapshots_user_asset_time_idx").on(
       table.userId,
       table.asset,
       table.timestamp
     ),
-    assetTimeIdx: index("balance_snapshots_asset_time_idx").on(table.asset, table.timestamp),
+    assetTimeIdx: index("balance_snapshots_asset_time_idx").on(
+      table.asset,
+      table.timestamp
+    ),
 
     // Performance indexes
-    snapshotTypeIdx: index("balance_snapshots_snapshot_type_idx").on(table.snapshotType),
-    dataSourceIdx: index("balance_snapshots_data_source_idx").on(table.dataSource),
+    snapshotTypeIdx: index("balance_snapshots_snapshot_type_idx").on(
+      table.snapshotType
+    ),
+    dataSourceIdx: index("balance_snapshots_data_source_idx").on(
+      table.dataSource
+    ),
   })
 );
 
@@ -294,8 +326,12 @@ export const portfolioSummary = pgTable(
     topAssets: text("top_assets"), // JSON array of top 5 assets by value
 
     // Update tracking
-    lastBalanceUpdate: timestamp("last_balance_update", { withTimezone: true }).notNull(),
-    lastCalculated: timestamp("last_calculated", { withTimezone: true }).defaultNow(),
+    lastBalanceUpdate: timestamp("last_balance_update", {
+      withTimezone: true,
+    }).notNull(),
+    lastCalculated: timestamp("last_calculated", {
+      withTimezone: true,
+    }).defaultNow(),
 
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -303,8 +339,12 @@ export const portfolioSummary = pgTable(
   },
   (table) => ({
     userIdx: index("portfolio_summary_user_idx").on(table.userId),
-    lastUpdatedIdx: index("portfolio_summary_last_updated_idx").on(table.lastBalanceUpdate),
-    lastCalculatedIdx: index("portfolio_summary_last_calculated_idx").on(table.lastCalculated),
+    lastUpdatedIdx: index("portfolio_summary_last_updated_idx").on(
+      table.lastBalanceUpdate
+    ),
+    lastCalculatedIdx: index("portfolio_summary_last_calculated_idx").on(
+      table.lastCalculated
+    ),
   })
 );
 

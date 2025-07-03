@@ -93,7 +93,10 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   } /**
    * Set integration with risk engine and emergency system
    */
-  setIntegrations(riskEngine: AdvancedRiskEngine, emergencySystem: EmergencySafetySystem): void {
+  setIntegrations(
+    riskEngine: AdvancedRiskEngine,
+    emergencySystem: EmergencySafetySystem
+  ): void {
     this.riskEngine = riskEngine;
     this.emergencySystem = emergencySystem;
     logger.info("Integrated with risk engine and emergency system");
@@ -107,7 +110,8 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     violations: SafetyProtocolViolation[];
     recommendations: string[];
   }> {
-    const result = await this.behaviorMonitor.monitorAgentBehavior(agentMetrics);
+    const result =
+      await this.behaviorMonitor.monitorAgentBehavior(agentMetrics);
 
     // Store violations for tracking
     this.safetyViolations.push(...result.violations);
@@ -167,7 +171,9 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   /**
    * Request multi-agent consensus for high-risk decisions
    */
-  async requestAgentConsensus(request: AgentConsensusRequest): Promise<AgentConsensusResponse> {
+  async requestAgentConsensus(
+    request: AgentConsensusRequest
+  ): Promise<AgentConsensusResponse> {
     const response = await this.consensusManager.requestAgentConsensus(request);
 
     // Log consensus result
@@ -222,7 +228,9 @@ Always prioritize system safety and capital protection. When in doubt, err on th
     recommendations: string[];
   } {
     const activeViolations = this.safetyViolations.filter((v) => !v.resolved);
-    const criticalViolations = activeViolations.filter((v) => v.severity === "critical");
+    const criticalViolations = activeViolations.filter(
+      (v) => v.severity === "critical"
+    );
 
     // Calculate overall safety score
     let safetyScore = 100;
@@ -253,7 +261,9 @@ Always prioritize system safety and capital protection. When in doubt, err on th
       );
     }
     if (safetyScore < 70) {
-      recommendations.push("Overall safety score is low - comprehensive system review needed");
+      recommendations.push(
+        "Overall safety score is low - comprehensive system review needed"
+      );
     }
 
     return {
@@ -350,12 +360,17 @@ Always prioritize system safety and capital protection. When in doubt, err on th
   /**
    * Handle safety violations
    */
-  private async handleSafetyViolation(violation: SafetyProtocolViolation): Promise<void> {
-    logger.info(`Handling violation: ${violation.id} - ${violation.description}`, {
-      violationId: violation.id,
-      severity: violation.severity,
-      action: violation.action,
-    });
+  private async handleSafetyViolation(
+    violation: SafetyProtocolViolation
+  ): Promise<void> {
+    logger.info(
+      `Handling violation: ${violation.id} - ${violation.description}`,
+      {
+        violationId: violation.id,
+        severity: violation.severity,
+        action: violation.action,
+      }
+    );
 
     switch (violation.action) {
       case "shutdown":
@@ -370,16 +385,22 @@ Always prioritize system safety and capital protection. When in doubt, err on th
         break;
 
       case "restrict":
-        logger.warn(`Restricting agent: ${violation.agentId}`, { agentId: violation.agentId });
+        logger.warn(`Restricting agent: ${violation.agentId}`, {
+          agentId: violation.agentId,
+        });
         // Would implement agent restriction logic
         break;
 
       case "warn":
-        logger.warn(`Warning for agent: ${violation.agentId}`, { agentId: violation.agentId });
+        logger.warn(`Warning for agent: ${violation.agentId}`, {
+          agentId: violation.agentId,
+        });
         break;
 
       case "monitor":
-        logger.info(`Monitoring agent: ${violation.agentId}`, { agentId: violation.agentId });
+        logger.info(`Monitoring agent: ${violation.agentId}`, {
+          agentId: violation.agentId,
+        });
         break;
     }
 

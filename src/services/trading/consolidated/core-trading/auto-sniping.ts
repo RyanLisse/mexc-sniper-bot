@@ -102,9 +102,12 @@ export class AutoSnipingModule {
 
     // Log active positions that need manual handling
     if (this.activePositions.size > 0) {
-      this.context.logger.warn(`Shutting down with ${this.activePositions.size} active positions`, {
-        positions: Array.from(this.activePositions.keys()),
-      });
+      this.context.logger.warn(
+        `Shutting down with ${this.activePositions.size} active positions`,
+        {
+          positions: Array.from(this.activePositions.keys()),
+        }
+      );
     }
 
     this.state.isInitialized = false;
@@ -287,7 +290,9 @@ export class AutoSnipingModule {
       successfulSnipes: this.successfulSnipes,
       failedSnipes: this.failedSnipes,
       successRate:
-        this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+        this.processedTargets > 0
+          ? (this.successfulSnipes / this.processedTargets) * 100
+          : 0,
     };
   }
 
@@ -295,7 +300,9 @@ export class AutoSnipingModule {
    * Execute auto-sniping (main entry point)
    * This method is the primary execution point for auto-sniping operations
    */
-  async execute(): Promise<ServiceResponse<{ processedCount: number; successCount: number }>> {
+  async execute(): Promise<
+    ServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     try {
       if (!this.isActive) {
         return {
@@ -332,13 +339,18 @@ export class AutoSnipingModule {
    * Process individual snipe target
    * This method handles the execution of a single snipe target
    */
-  async processTarget(target: AutoSnipeTarget): Promise<ServiceResponse<TradeResult>> {
+  async processTarget(
+    target: AutoSnipeTarget
+  ): Promise<ServiceResponse<TradeResult>> {
     try {
-      this.context.logger.info(`Processing individual snipe target: ${target.symbolName}`, {
-        confidence: target.confidenceScore,
-        amount: target.positionSizeUsdt,
-        strategy: target.entryStrategy || "normal",
-      });
+      this.context.logger.info(
+        `Processing individual snipe target: ${target.symbolName}`,
+        {
+          confidence: target.confidenceScore,
+          amount: target.positionSizeUsdt,
+          strategy: target.entryStrategy || "normal",
+        }
+      );
 
       // Validate target before processing
       if (target.confidenceScore < this.context.config.confidenceThreshold) {
@@ -352,10 +364,13 @@ export class AutoSnipingModule {
       // Execute the snipe target
       const result = await this.executeSnipeTarget(target);
 
-      this.context.logger.info(`Individual snipe target processed successfully: ${target.symbolName}`, {
-        orderId: result.data?.orderId,
-        executedQty: result.data?.executedQty,
-      });
+      this.context.logger.info(
+        `Individual snipe target processed successfully: ${target.symbolName}`,
+        {
+          orderId: result.data?.orderId,
+          executedQty: result.data?.executedQty,
+        }
+      );
 
       return {
         success: true,
@@ -364,10 +379,13 @@ export class AutoSnipingModule {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error(`Failed to process individual snipe target: ${target.symbolName}`, {
-        error: safeError.message,
-        target,
-      });
+      this.context.logger.error(
+        `Failed to process individual snipe target: ${target.symbolName}`,
+        {
+          error: safeError.message,
+          target,
+        }
+      );
 
       return {
         success: false,
@@ -398,7 +416,9 @@ export class AutoSnipingModule {
         };
       }
 
-      this.context.logger.info(`Processing ${readyTargets.length} ready snipe targets`);
+      this.context.logger.info(
+        `Processing ${readyTargets.length} ready snipe targets`
+      );
 
       let successCount = 0;
 
@@ -415,7 +435,11 @@ export class AutoSnipingModule {
               target,
               error: safeError,
             });
-            await this.updateSnipeTargetStatus(target.id, "failed", safeError.message);
+            await this.updateSnipeTargetStatus(
+              target.id,
+              "failed",
+              safeError.message
+            );
             this.failedSnipes++;
           }
         } else {
@@ -466,7 +490,9 @@ export class AutoSnipingModule {
 
     try {
       // Initialize trading strategy manager
-      const strategyManager = new TradingStrategyManager(target.entryStrategy || "normal");
+      const strategyManager = new TradingStrategyManager(
+        target.entryStrategy || "normal"
+      );
       const strategy = strategyManager.getActiveStrategy();
 
       this.context.logger.info(`Using strategy: ${strategy.name}`, {
@@ -500,15 +526,15 @@ export class AutoSnipingModule {
           // Create MultiPhaseStrategy from TradingStrategy
           const multiPhaseStrategy: MultiPhaseStrategy = {
             id: `${target.id}_${Date.now()}`,
-            name: strategy.name || 'default',
-            description: strategy.description || 'Auto-generated strategy',
+            name: strategy.name || "default",
+            description: strategy.description || "Auto-generated strategy",
             maxPositionSize: target.positionSizeUsdt,
-            positionSizingMethod: 'fixed' as const,
+            positionSizingMethod: "fixed" as const,
             stopLossPercent: target.stopLossPercent || 5,
             takeProfitPercent: target.takeProfitCustom || 10,
             maxDrawdownPercent: 20,
-            orderType: 'MARKET' as const,
-            timeInForce: 'GTC' as const,
+            orderType: "MARKET" as const,
+            timeInForce: "GTC" as const,
             slippageTolerance: 0.5,
             enableMultiPhase: true,
             phaseCount: 1,
@@ -526,7 +552,7 @@ export class AutoSnipingModule {
               },
             ],
           };
-          
+
           await this.setupMultiPhaseMonitoring(target, multiPhaseStrategy, {
             entryPrice: parseFloat(result.data.price),
             quantity: parseFloat(result.data.executedQty),
@@ -541,13 +567,16 @@ export class AutoSnipingModule {
           strategy: strategy.name,
         });
 
-        this.context.logger.info("Snipe target executed successfully with strategy", {
-          symbol: target.symbolName,
-          orderId: result.data?.orderId,
-          strategy: strategy.name,
-          entryPrice: result.data?.price,
-          quantity: result.data?.executedQty,
-        });
+        this.context.logger.info(
+          "Snipe target executed successfully with strategy",
+          {
+            symbol: target.symbolName,
+            orderId: result.data?.orderId,
+            strategy: strategy.name,
+            entryPrice: result.data?.price,
+            quantity: result.data?.executedQty,
+          }
+        );
       } else {
         // Update target status to failed
         await this.updateSnipeTargetStatus(target.id, "failed", result.error);
@@ -556,7 +585,11 @@ export class AutoSnipingModule {
       return result;
     } catch (error) {
       const safeError = toSafeError(error);
-      await this.updateSnipeTargetStatus(target.id, "failed", safeError.message);
+      await this.updateSnipeTargetStatus(
+        target.id,
+        "failed",
+        safeError.message
+      );
       throw error;
     }
   }
@@ -570,12 +603,15 @@ export class AutoSnipingModule {
     tradeInfo: { entryPrice: number; quantity: number; orderId: string }
   ): Promise<void> {
     try {
-      this.context.logger.info(`Setting up multi-phase monitoring for ${target.symbolName}`, {
-        strategy: strategy.name,
-        entryPrice: tradeInfo.entryPrice,
-        quantity: tradeInfo.quantity,
-        levels: strategy.levels.length,
-      });
+      this.context.logger.info(
+        `Setting up multi-phase monitoring for ${target.symbolName}`,
+        {
+          strategy: strategy.name,
+          entryPrice: tradeInfo.entryPrice,
+          quantity: tradeInfo.quantity,
+          levels: strategy.levels.length,
+        }
+      );
 
       // Create monitoring context for this position
       const monitoringContext = {
@@ -599,16 +635,22 @@ export class AutoSnipingModule {
         monitoringContext,
       });
 
-      this.context.logger.info(`Multi-phase monitoring initiated for ${target.symbolName}`, {
-        targetLevels: strategy.levels.map((level) => `${level.percentage}%`),
-        firstTarget: strategy.levels[0]?.percentage,
-      });
+      this.context.logger.info(
+        `Multi-phase monitoring initiated for ${target.symbolName}`,
+        {
+          targetLevels: strategy.levels.map((level) => `${level.percentage}%`),
+          firstTarget: strategy.levels[0]?.percentage,
+        }
+      );
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error(`Failed to setup multi-phase monitoring for ${target.symbolName}`, {
-        error: safeError.message,
-        strategy: strategy.name,
-      });
+      this.context.logger.error(
+        `Failed to setup multi-phase monitoring for ${target.symbolName}`,
+        {
+          error: safeError.message,
+          strategy: strategy.name,
+        }
+      );
       // Continue execution even if monitoring setup fails
     }
   }
@@ -624,12 +666,39 @@ export class AutoSnipingModule {
     try {
       const now = new Date();
       const targets = await db
-        .select()
+        .select({
+          id: snipeTargets.id,
+          vcoinId: snipeTargets.vcoinId,
+          symbolName: snipeTargets.symbolName,
+          targetPrice: snipeTargets.targetPrice,
+          positionSizeUsdt: snipeTargets.positionSizeUsdt,
+          status: snipeTargets.status,
+          priority: snipeTargets.priority,
+          riskLevel: snipeTargets.riskLevel,
+          createdAt: snipeTargets.createdAt,
+          updatedAt: snipeTargets.updatedAt,
+          entryPrice: snipeTargets.entryPrice,
+          executionStatus: snipeTargets.executionStatus,
+          executionPrice: snipeTargets.executionPrice,
+          confidenceScore: snipeTargets.confidenceScore,
+          takeProfitLevel: snipeTargets.takeProfitLevel,
+          errorMessage: snipeTargets.errorMessage,
+          targetExecutionTime: snipeTargets.targetExecutionTime,
+          actualExecutionTime: snipeTargets.actualExecutionTime,
+          actualPositionSize: snipeTargets.actualPositionSize,
+          entryStrategy: snipeTargets.entryStrategy,
+          maxRetries: snipeTargets.maxRetries,
+          currentRetries: snipeTargets.currentRetries,
+          takeProfitCustom: snipeTargets.takeProfitCustom
+        })
         .from(snipeTargets)
         .where(
           and(
             eq(snipeTargets.status, "ready"),
-            or(isNull(snipeTargets.targetExecutionTime), lt(snipeTargets.targetExecutionTime, now))
+            or(
+              isNull(snipeTargets.targetExecutionTime),
+              lt(snipeTargets.targetExecutionTime, now)
+            )
           )
         )
         .orderBy(snipeTargets.priority, snipeTargets.createdAt)
@@ -638,7 +707,10 @@ export class AutoSnipingModule {
       return targets;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error("Failed to fetch ready snipe targets", safeError);
+      this.context.logger.error(
+        "Failed to fetch ready snipe targets",
+        safeError
+      );
       return [];
     }
   }
@@ -670,7 +742,10 @@ export class AutoSnipingModule {
         updateData.errorMessage = errorMessage;
       }
 
-      await db.update(snipeTargets).set(updateData).where(eq(snipeTargets.id, targetId));
+      await db
+        .update(snipeTargets)
+        .set(updateData)
+        .where(eq(snipeTargets.id, targetId));
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to update snipe target status", {
@@ -685,7 +760,9 @@ export class AutoSnipingModule {
    * Execute trade via manual trading module
    * This would typically call the manual trading module's executeTrade method
    */
-  private async executeTradeViaManualModule(params: TradeParameters): Promise<TradeResult> {
+  private async executeTradeViaManualModule(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     try {
       // Simulate trade execution for now
       // In a real implementation, this would call the manual trading module
@@ -704,7 +781,9 @@ export class AutoSnipingModule {
   /**
    * Execute paper snipe trade
    */
-  private async executePaperSnipe(params: TradeParameters): Promise<TradeResult> {
+  private async executePaperSnipe(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     const startTime = Date.now();
     const simulatedPrice = 100 + Math.random() * 1000; // Mock price
     const orderId = `paper-snipe-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -734,7 +813,9 @@ export class AutoSnipingModule {
   /**
    * Execute real snipe trade
    */
-  private async executeRealSnipe(params: TradeParameters): Promise<TradeResult> {
+  private async executeRealSnipe(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     const startTime = Date.now();
 
     try {
@@ -767,7 +848,11 @@ export class AutoSnipingModule {
       }
 
       // Create position tracking entry
-      const position = await this.createPositionEntry(mexcResult.data, params, currentPrice);
+      const position = await this.createPositionEntry(
+        mexcResult.data,
+        params,
+        currentPrice
+      );
 
       // Setup stop-loss and take-profit monitoring
       await this.setupPositionMonitoring(position, params);
@@ -785,7 +870,9 @@ export class AutoSnipingModule {
           status: mexcResult.data.status,
           executedQty: mexcResult.data.executedQty,
           cummulativeQuoteQty: mexcResult.data.cummulativeQuoteQty,
-          timestamp: new Date(mexcResult.data.transactTime || Date.now()).toISOString(),
+          timestamp: new Date(
+            mexcResult.data.transactTime || Date.now()
+          ).toISOString(),
           autoSnipe: true,
           confidenceScore: params.confidenceScore,
         },
@@ -827,14 +914,23 @@ export class AutoSnipingModule {
   /**
    * Perform comprehensive pre-trade validation
    */
-  private async performPreTradeValidation(params: TradeParameters): Promise<void> {
+  private async performPreTradeValidation(
+    params: TradeParameters
+  ): Promise<void> {
     // Check safety coordinator
     if (this.context.safetyCoordinator) {
       // Check if safety coordinator has a status method available
-      if (typeof (this.context.safetyCoordinator as any).getCurrentStatus === 'function') {
-        const safetyStatus = (this.context.safetyCoordinator as any).getCurrentStatus();
+      if (
+        typeof (this.context.safetyCoordinator as any).getCurrentStatus ===
+        "function"
+      ) {
+        const safetyStatus = (
+          this.context.safetyCoordinator as any
+        ).getCurrentStatus();
         if (safetyStatus?.overall?.safetyLevel !== "safe") {
-          throw new Error(`Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`);
+          throw new Error(
+            `Trading blocked by safety system: ${safetyStatus.overall.safetyLevel}`
+          );
         }
       }
       // If no getCurrentStatus method, assume safe to proceed
@@ -846,8 +942,12 @@ export class AutoSnipingModule {
     }
 
     // Check position limits
-    if (this.activePositions.size >= this.context.config.maxConcurrentPositions) {
-      throw new Error(`Maximum concurrent positions reached: ${this.activePositions.size}`);
+    if (
+      this.activePositions.size >= this.context.config.maxConcurrentPositions
+    ) {
+      throw new Error(
+        `Maximum concurrent positions reached: ${this.activePositions.size}`
+      );
     }
 
     // Validate required parameters
@@ -869,12 +969,15 @@ export class AutoSnipingModule {
       let price: number | null = null;
 
       // Primary method: Try to get ticker data from MEXC service
-      if (this.context.mexcService && typeof this.context.mexcService.getTicker === "function") {
+      if (
+        this.context.mexcService &&
+        typeof this.context.mexcService.getTicker === "function"
+      ) {
         try {
           const ticker = await this.context.mexcService.getTicker(symbol);
           if (ticker.success && ticker.data) {
             // Try different price fields that might be available
-            const priceFields = ['price', 'lastPrice', 'close', 'last'];
+            const priceFields = ["price", "lastPrice", "close", "last"];
             for (const field of priceFields) {
               const fieldValue = (ticker.data as any)[field];
               if (fieldValue) {
@@ -888,29 +991,50 @@ export class AutoSnipingModule {
           }
         } catch (tickerError) {
           this.context.logger.warn(`Failed to get ticker for ${symbol}`, {
-            error: tickerError instanceof Error ? tickerError.message : String(tickerError)
+            error:
+              tickerError instanceof Error
+                ? tickerError.message
+                : String(tickerError),
           });
         }
       }
 
       // Fallback: Try getCurrentPrice method if available
-      if (!price && this.context.mexcService && typeof this.context.mexcService.getCurrentPrice === "function") {
+      if (
+        !price &&
+        this.context.mexcService &&
+        typeof this.context.mexcService.getCurrentPrice === "function"
+      ) {
         try {
-          const priceResult = await this.context.mexcService.getCurrentPrice(symbol);
+          const priceResult =
+            await this.context.mexcService.getCurrentPrice(symbol);
           if (typeof priceResult === "number" && priceResult > 0) {
             price = priceResult;
           }
         } catch (priceError) {
-          this.context.logger.warn(`Failed to get current price for ${symbol}`, {
-            error: priceError instanceof Error ? priceError.message : String(priceError)
-          });
+          this.context.logger.warn(
+            `Failed to get current price for ${symbol}`,
+            {
+              error:
+                priceError instanceof Error
+                  ? priceError.message
+                  : String(priceError),
+            }
+          );
         }
       }
 
       // Additional fallback: Try order book data
-      if (!price && this.context.mexcService && typeof this.context.mexcService.getOrderBook === "function") {
+      if (
+        !price &&
+        this.context.mexcService &&
+        typeof this.context.mexcService.getOrderBook === "function"
+      ) {
         try {
-          const orderBook = await this.context.mexcService.getOrderBook(symbol, 5);
+          const orderBook = await this.context.mexcService.getOrderBook(
+            symbol,
+            5
+          );
           if (orderBook.success && orderBook.data) {
             const { bids, asks } = orderBook.data;
             if (bids && bids.length > 0 && asks && asks.length > 0) {
@@ -923,7 +1047,10 @@ export class AutoSnipingModule {
           }
         } catch (orderBookError) {
           this.context.logger.warn(`Failed to get order book for ${symbol}`, {
-            error: orderBookError instanceof Error ? orderBookError.message : String(orderBookError)
+            error:
+              orderBookError instanceof Error
+                ? orderBookError.message
+                : String(orderBookError),
           });
         }
       }
@@ -933,11 +1060,16 @@ export class AutoSnipingModule {
         return price;
       }
 
-      this.context.logger.error(`Unable to get current price for ${symbol} from any source`);
+      this.context.logger.error(
+        `Unable to get current price for ${symbol} from any source`
+      );
       return null;
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error(`Critical error getting current price for ${symbol}`, safeError);
+      this.context.logger.error(
+        `Critical error getting current price for ${symbol}`,
+        safeError
+      );
       return null;
     }
   }
@@ -965,7 +1097,10 @@ export class AutoSnipingModule {
     }
 
     // Validate time in force
-    if (orderParams.timeInForce && !["GTC", "IOC", "FOK"].includes(orderParams.timeInForce)) {
+    if (
+      orderParams.timeInForce &&
+      !["GTC", "IOC", "FOK"].includes(orderParams.timeInForce)
+    ) {
       throw new Error("Invalid time in force");
     }
 
@@ -973,7 +1108,9 @@ export class AutoSnipingModule {
     if (orderParams.quoteOrderQty) {
       const minOrderValue = 5; // USDT minimum
       if (orderParams.quoteOrderQty < minOrderValue) {
-        throw new Error(`Order value too small. Minimum: ${minOrderValue} USDT`);
+        throw new Error(
+          `Order value too small. Minimum: ${minOrderValue} USDT`
+        );
       }
     }
 
@@ -1000,7 +1137,7 @@ export class AutoSnipingModule {
           side: orderParams.side,
           type: orderParams.type,
         };
-        
+
         // Add optional properties only if they're defined
         if (orderParams.quantity) {
           mexcOrderData.quantity = orderParams.quantity.toString();
@@ -1017,11 +1154,17 @@ export class AutoSnipingModule {
           // For market buy orders with quoteOrderQty, we need to calculate the quantity
           if (orderParams.side === "BUY") {
             // Get current market price to calculate quantity
-            const currentPrice = await this.getCurrentMarketPrice(orderParams.symbol);
+            const currentPrice = await this.getCurrentMarketPrice(
+              orderParams.symbol
+            );
             if (!currentPrice) {
-              throw new Error(`Unable to get current price for ${orderParams.symbol}`);
+              throw new Error(
+                `Unable to get current price for ${orderParams.symbol}`
+              );
             }
-            mexcOrderData.quantity = (orderParams.quoteOrderQty / currentPrice).toString();
+            mexcOrderData.quantity = (
+              orderParams.quoteOrderQty / currentPrice
+            ).toString();
           } else {
             // For sell orders, quantity should be provided directly
             if (!orderParams.quantity) {
@@ -1045,10 +1188,13 @@ export class AutoSnipingModule {
       } catch (error) {
         lastError = toSafeError(error);
 
-        this.context.logger.warn(`Order attempt ${attempt}/${maxRetries} failed`, {
-          symbol: orderParams.symbol,
-          error: lastError.message,
-        });
+        this.context.logger.warn(
+          `Order attempt ${attempt}/${maxRetries} failed`,
+          {
+            symbol: orderParams.symbol,
+            error: lastError.message,
+          }
+        );
 
         // Don't retry on certain errors
         if (
@@ -1108,17 +1254,21 @@ export class AutoSnipingModule {
     // Calculate stop-loss and take-profit prices
     if (params.stopLossPercent && params.stopLossPercent > 0) {
       if (params.side === "BUY") {
-        position.stopLossPrice = entryPrice * (1 - params.stopLossPercent / 100);
+        position.stopLossPrice =
+          entryPrice * (1 - params.stopLossPercent / 100);
       } else {
-        position.stopLossPrice = entryPrice * (1 + params.stopLossPercent / 100);
+        position.stopLossPrice =
+          entryPrice * (1 + params.stopLossPercent / 100);
       }
     }
 
     if (params.takeProfitPercent && params.takeProfitPercent > 0) {
       if (params.side === "BUY") {
-        position.takeProfitPrice = entryPrice * (1 + params.takeProfitPercent / 100);
+        position.takeProfitPrice =
+          entryPrice * (1 + params.takeProfitPercent / 100);
       } else {
-        position.takeProfitPrice = entryPrice * (1 - params.takeProfitPercent / 100);
+        position.takeProfitPrice =
+          entryPrice * (1 - params.takeProfitPercent / 100);
       }
     }
 
@@ -1143,7 +1293,7 @@ export class AutoSnipingModule {
    */
   private async setupPositionMonitoring(
     position: Position,
-    params: TradeParameters
+    _params: TradeParameters
   ): Promise<void> {
     try {
       // Setup stop-loss monitoring
@@ -1188,9 +1338,15 @@ export class AutoSnipingModule {
 
         // Check if stop-loss should trigger
         let shouldTrigger = false;
-        if (position.side === "BUY" && currentPrice <= (position.stopLossPrice || 0)) {
+        if (
+          position.side === "BUY" &&
+          currentPrice <= (position.stopLossPrice || 0)
+        ) {
           shouldTrigger = true;
-        } else if (position.side === "SELL" && currentPrice >= (position.stopLossPrice || 0)) {
+        } else if (
+          position.side === "SELL" &&
+          currentPrice >= (position.stopLossPrice || 0)
+        ) {
           shouldTrigger = true;
         }
 
@@ -1233,9 +1389,15 @@ export class AutoSnipingModule {
 
         // Check if take-profit should trigger
         let shouldTrigger = false;
-        if (position.side === "BUY" && currentPrice >= (position.takeProfitPrice || 0)) {
+        if (
+          position.side === "BUY" &&
+          currentPrice >= (position.takeProfitPrice || 0)
+        ) {
           shouldTrigger = true;
-        } else if (position.side === "SELL" && currentPrice <= (position.takeProfitPrice || 0)) {
+        } else if (
+          position.side === "SELL" &&
+          currentPrice <= (position.takeProfitPrice || 0)
+        ) {
           shouldTrigger = true;
         }
 
@@ -1288,7 +1450,9 @@ export class AutoSnipingModule {
         const entryValue = position.entryPrice * position.quantity;
         const exitValue = (position.currentPrice || 0) * position.quantity;
         const realizedPnL =
-          position.side === "BUY" ? exitValue - entryValue : entryValue - exitValue;
+          position.side === "BUY"
+            ? exitValue - entryValue
+            : entryValue - exitValue;
 
         // Update position
         position.status = "closed";
@@ -1308,7 +1472,9 @@ export class AutoSnipingModule {
           closeOrderId: closeResult.data?.orderId,
         });
       } else {
-        throw new Error(closeResult.error || "Failed to execute stop-loss order");
+        throw new Error(
+          closeResult.error || "Failed to execute stop-loss order"
+        );
       }
     } catch (error) {
       const safeError = toSafeError(error);
@@ -1347,7 +1513,9 @@ export class AutoSnipingModule {
         const entryValue = position.entryPrice * position.quantity;
         const exitValue = (position.currentPrice || 0) * position.quantity;
         const realizedPnL =
-          position.side === "BUY" ? exitValue - entryValue : entryValue - exitValue;
+          position.side === "BUY"
+            ? exitValue - entryValue
+            : entryValue - exitValue;
 
         // Update position
         position.status = "closed";
@@ -1367,7 +1535,9 @@ export class AutoSnipingModule {
           closeOrderId: closeResult.data?.orderId,
         });
       } else {
-        throw new Error(closeResult.error || "Failed to execute take-profit order");
+        throw new Error(
+          closeResult.error || "Failed to execute take-profit order"
+        );
       }
     } catch (error) {
       const safeError = toSafeError(error);
@@ -1457,9 +1627,12 @@ export class AutoSnipingModule {
       successfulTrades: this.successfulSnipes,
       failedTrades: this.failedSnipes,
       successRate:
-        this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0,
+        this.processedTargets > 0
+          ? (this.successfulSnipes / this.processedTargets) * 100
+          : 0,
       totalPnL,
-      averagePnL: this.processedTargets > 0 ? totalPnL / this.processedTargets : 0,
+      averagePnL:
+        this.processedTargets > 0 ? totalPnL / this.processedTargets : 0,
       pendingStopLosses: this.pendingStopLosses.size,
       pendingTakeProfits: this.pendingTakeProfits.size,
       timestamp: Date.now(),
@@ -1489,7 +1662,9 @@ export class AutoSnipingModule {
     this.state.metrics.successfulSnipes = this.successfulSnipes;
     this.state.metrics.failedSnipes = this.failedSnipes;
     this.state.metrics.averageConfidence =
-      this.processedTargets > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0;
+      this.processedTargets > 0
+        ? (this.successfulSnipes / this.processedTargets) * 100
+        : 0;
   }
 
   /**
@@ -1527,18 +1702,25 @@ export class AutoSnipingModule {
           closedCount++;
         }
       } catch (error) {
-        this.context.logger.error(`Failed to close position ${position.id}`, { error: (error as Error).message });
+        this.context.logger.error(`Failed to close position ${position.id}`, {
+          error: (error as Error).message,
+        });
       }
     }
 
-    this.context.logger.warn(`Emergency closed ${closedCount}/${positions.length} positions`);
+    this.context.logger.warn(
+      `Emergency closed ${closedCount}/${positions.length} positions`
+    );
     return closedCount;
   }
 
   /**
    * Update position size
    */
-  async updatePositionSize(positionId: string, newSize: number): Promise<ServiceResponse<void>> {
+  async updatePositionSize(
+    positionId: string,
+    newSize: number
+  ): Promise<ServiceResponse<void>> {
     try {
       const position = this.activePositions.get(positionId);
       if (!position) {
@@ -1553,7 +1735,9 @@ export class AutoSnipingModule {
       position.quantity = newSize;
       this.activePositions.set(positionId, position);
 
-      this.context.logger.info(`Updated position ${positionId} size to ${newSize}`);
+      this.context.logger.info(
+        `Updated position ${positionId} size to ${newSize}`
+      );
       return {
         success: true,
         timestamp: new Date().toISOString(),
@@ -1605,7 +1789,9 @@ export class AutoSnipingModule {
         const entryValue = position.entryPrice * position.quantity;
         const exitValue = currentPrice * position.quantity;
         const realizedPnL =
-          position.side === "BUY" ? exitValue - entryValue : entryValue - exitValue;
+          position.side === "BUY"
+            ? exitValue - entryValue
+            : entryValue - exitValue;
 
         // Update position
         position.status = "closed";
@@ -1674,7 +1860,10 @@ export class AutoSnipingModule {
       } catch (error) {
         failed++;
         const safeError = toSafeError(error);
-        this.context.logger.error(`Failed to close position ${positionId}`, safeError);
+        this.context.logger.error(
+          `Failed to close position ${positionId}`,
+          safeError
+        );
       }
     }
 
@@ -1703,7 +1892,9 @@ export class AutoSnipingModule {
    * Get positions by symbol
    */
   getPositionsBySymbol(symbol: string): Position[] {
-    return Array.from(this.activePositions.values()).filter((pos) => pos.symbol === symbol);
+    return Array.from(this.activePositions.values()).filter(
+      (pos) => pos.symbol === symbol
+    );
   }
 
   /**
@@ -1734,9 +1925,11 @@ export class AutoSnipingModule {
       position.stopLossPercent = newStopLossPercent;
       if (newStopLossPercent > 0) {
         if (position.side === "BUY") {
-          position.stopLossPrice = position.entryPrice * (1 - newStopLossPercent / 100);
+          position.stopLossPrice =
+            position.entryPrice * (1 - newStopLossPercent / 100);
         } else {
-          position.stopLossPrice = position.entryPrice * (1 + newStopLossPercent / 100);
+          position.stopLossPrice =
+            position.entryPrice * (1 + newStopLossPercent / 100);
         }
 
         // Setup new monitoring
@@ -1793,9 +1986,11 @@ export class AutoSnipingModule {
       position.takeProfitPercent = newTakeProfitPercent;
       if (newTakeProfitPercent > 0) {
         if (position.side === "BUY") {
-          position.takeProfitPrice = position.entryPrice * (1 + newTakeProfitPercent / 100);
+          position.takeProfitPrice =
+            position.entryPrice * (1 + newTakeProfitPercent / 100);
         } else {
-          position.takeProfitPrice = position.entryPrice * (1 - newTakeProfitPercent / 100);
+          position.takeProfitPrice =
+            position.entryPrice * (1 - newTakeProfitPercent / 100);
         }
 
         // Setup new monitoring

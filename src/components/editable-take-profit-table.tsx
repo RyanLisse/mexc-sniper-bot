@@ -14,10 +14,23 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import { Separator } from "./ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 
 interface TakeProfitLevel {
   id: string;
@@ -82,68 +95,79 @@ export function EditableTakeProfitTable({
 }: EditableTakeProfitTableProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingLevels, setEditingLevels] = useState<TakeProfitLevel[]>(levels);
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>(
+    []
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Validation helper functions - extracted to reduce complexity
 
-  const validateProfitPercentage = useCallback((level: TakeProfitLevel): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  const validateProfitPercentage = useCallback(
+    (level: TakeProfitLevel): ValidationError[] => {
+      const errors: ValidationError[] = [];
 
-    if (level.profitPercentage <= 0) {
-      errors.push({
-        field: "profitPercentage",
-        levelId: level.id,
-        message: `${level.level}: Profit percentage must be greater than 0%`,
-        type: "error",
-      });
-    }
-    if (level.profitPercentage < 5) {
-      errors.push({
-        field: "profitPercentage",
-        levelId: level.id,
-        message: `${level.level}: Profit percentage below 5% may not be profitable after fees`,
-        type: "warning",
-      });
-    }
-    if (level.profitPercentage > 1000) {
-      errors.push({
-        field: "profitPercentage",
-        levelId: level.id,
-        message: `${level.level}: Profit percentage above 1000% seems unrealistic`,
-        type: "warning",
-      });
-    }
+      if (level.profitPercentage <= 0) {
+        errors.push({
+          field: "profitPercentage",
+          levelId: level.id,
+          message: `${level.level}: Profit percentage must be greater than 0%`,
+          type: "error",
+        });
+      }
+      if (level.profitPercentage < 5) {
+        errors.push({
+          field: "profitPercentage",
+          levelId: level.id,
+          message: `${level.level}: Profit percentage below 5% may not be profitable after fees`,
+          type: "warning",
+        });
+      }
+      if (level.profitPercentage > 1000) {
+        errors.push({
+          field: "profitPercentage",
+          levelId: level.id,
+          message: `${level.level}: Profit percentage above 1000% seems unrealistic`,
+          type: "warning",
+        });
+      }
 
-    return errors;
-  }, []);
+      return errors;
+    },
+    []
+  );
 
-  const validateSellPortion = useCallback((level: TakeProfitLevel): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  const validateSellPortion = useCallback(
+    (level: TakeProfitLevel): ValidationError[] => {
+      const errors: ValidationError[] = [];
 
-    if (level.sellPortion <= 0) {
-      errors.push({
-        field: "sellPortion",
-        levelId: level.id,
-        message: `${level.level}: Sell portion must be greater than 0%`,
-        type: "error",
-      });
-    }
-    if (level.sellPortion > 100) {
-      errors.push({
-        field: "sellPortion",
-        levelId: level.id,
-        message: `${level.level}: Sell portion cannot exceed 100%`,
-        type: "error",
-      });
-    }
+      if (level.sellPortion <= 0) {
+        errors.push({
+          field: "sellPortion",
+          levelId: level.id,
+          message: `${level.level}: Sell portion must be greater than 0%`,
+          type: "error",
+        });
+      }
+      if (level.sellPortion > 100) {
+        errors.push({
+          field: "sellPortion",
+          levelId: level.id,
+          message: `${level.level}: Sell portion cannot exceed 100%`,
+          type: "error",
+        });
+      }
 
-    return errors;
-  }, []);
+      return errors;
+    },
+    []
+  );
 
   const validateLevelProgression = useCallback(
-    (level: TakeProfitLevel, sortedLevels: TakeProfitLevel[]): ValidationError[] => {
+    (
+      level: TakeProfitLevel,
+      sortedLevels: TakeProfitLevel[]
+    ): ValidationError[] => {
       const errors: ValidationError[] = [];
 
       const currentIndex = sortedLevels.findIndex((l) => l.id === level.id);
@@ -164,23 +188,29 @@ export function EditableTakeProfitTable({
     []
   );
 
-  const validateActionDescription = useCallback((level: TakeProfitLevel): ValidationError[] => {
-    const errors: ValidationError[] = [];
+  const validateActionDescription = useCallback(
+    (level: TakeProfitLevel): ValidationError[] => {
+      const errors: ValidationError[] = [];
 
-    if (!level.actionWhenReached.trim()) {
-      errors.push({
-        field: "actionWhenReached",
-        levelId: level.id,
-        message: `${level.level}: Action description is required`,
-        type: "error",
-      });
-    }
+      if (!level.actionWhenReached.trim()) {
+        errors.push({
+          field: "actionWhenReached",
+          levelId: level.id,
+          message: `${level.level}: Action description is required`,
+          type: "error",
+        });
+      }
 
-    return errors;
-  }, []);
+      return errors;
+    },
+    []
+  );
 
   const validateSingleLevel = useCallback(
-    (level: TakeProfitLevel, sortedLevels: TakeProfitLevel[]): ValidationError[] => {
+    (
+      level: TakeProfitLevel,
+      sortedLevels: TakeProfitLevel[]
+    ): ValidationError[] => {
       return [
         ...validateProfitPercentage(level),
         ...validateSellPortion(level),
@@ -212,7 +242,9 @@ export function EditableTakeProfitTable({
       }
 
       // Sort levels by profit percentage for validation
-      const sortedLevels = [...levels].sort((a, b) => a.profitPercentage - b.profitPercentage);
+      const sortedLevels = [...levels].sort(
+        (a, b) => a.profitPercentage - b.profitPercentage
+      );
 
       // Validate each level using extracted functions
       levels.forEach((level) => {
@@ -220,7 +252,10 @@ export function EditableTakeProfitTable({
       });
 
       // Total sell portion validation
-      const totalSellPortion = levels.reduce((sum, level) => sum + level.sellPortion, 0);
+      const totalSellPortion = levels.reduce(
+        (sum, level) => sum + level.sellPortion,
+        0
+      );
       if (Math.abs(totalSellPortion - 100) > 0.01) {
         errors.push({
           field: "totalSellPortion",
@@ -259,7 +294,11 @@ export function EditableTakeProfitTable({
   const isValidConfiguration = !hasErrors;
 
   // Update a specific level
-  const updateLevel = (levelId: string, field: keyof TakeProfitLevel, value: string | number) => {
+  const updateLevel = (
+    levelId: string,
+    field: keyof TakeProfitLevel,
+    value: string | number
+  ) => {
     const updatedLevels = editingLevels.map((level) =>
       level.id === levelId ? { ...level, [field]: value } : level
     );
@@ -290,7 +329,9 @@ export function EditableTakeProfitTable({
         error: error instanceof Error ? error.message : String(error),
       });
       setSaveError(
-        error instanceof Error ? error.message : "Failed to save configuration. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Failed to save configuration. Please try again."
       );
     } finally {
       setIsSaving(false);
@@ -306,22 +347,29 @@ export function EditableTakeProfitTable({
   };
 
   // Auto-generate action descriptions
-  const generateActionDescription = (levelIndex: number, sellPortion: number): string => {
+  const generateActionDescription = (
+    levelIndex: number,
+    sellPortion: number
+  ): string => {
     if (levelIndex === 0) return `Sell ${sellPortion}%`;
-    if (levelIndex === editingLevels.length - 1) return `Sell final ${sellPortion}%`;
+    if (levelIndex === editingLevels.length - 1)
+      return `Sell final ${sellPortion}%`;
     return `Sell another ${sellPortion}%`;
   };
 
   // Get validation errors for a specific field and level
   const getFieldErrors = (field: string, levelId?: string) => {
     return validationErrors.filter(
-      (error) => error.field === field && (!levelId || error.levelId === levelId)
+      (error) =>
+        error.field === field && (!levelId || error.levelId === levelId)
     );
   };
 
   // Check if a field has errors
   const hasFieldError = (field: string, levelId?: string) => {
-    return getFieldErrors(field, levelId).some((error) => error.type === "error");
+    return getFieldErrors(field, levelId).some(
+      (error) => error.type === "error"
+    );
   };
 
   return (
@@ -333,7 +381,8 @@ export function EditableTakeProfitTable({
               <Target className="h-5 w-5" />📊 Take-Profit Levels Configuration
             </CardTitle>
             <CardDescription>
-              Configure multiple exit levels to maximize profits and manage risk automatically
+              Configure multiple exit levels to maximize profits and manage risk
+              automatically
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -388,9 +437,10 @@ export function EditableTakeProfitTable({
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>How Take-Profit Levels Work:</strong> Instead of selling your entire position at
-            once, this strategy sells portions at different profit targets. This helps you capture
-            gains while keeping exposure for potentially higher profits.
+            <strong>How Take-Profit Levels Work:</strong> Instead of selling
+            your entire position at once, this strategy sells portions at
+            different profit targets. This helps you capture gains while keeping
+            exposure for potentially higher profits.
           </AlertDescription>
         </Alert>
 
@@ -437,7 +487,9 @@ export function EditableTakeProfitTable({
                         step="1"
                       />
                     ) : (
-                      <span className="font-mono">{level.profitPercentage}%</span>
+                      <span className="font-mono">
+                        {level.profitPercentage}%
+                      </span>
                     )}
                   </TableCell>
 
@@ -448,7 +500,8 @@ export function EditableTakeProfitTable({
                         type="number"
                         value={level.sellPortion}
                         onChange={(e) => {
-                          const newValue = Number.parseFloat(e.target.value) || 0;
+                          const newValue =
+                            Number.parseFloat(e.target.value) || 0;
                           updateLevel(level.id, "sellPortion", newValue);
                           updateLevel(
                             level.id,
@@ -475,13 +528,22 @@ export function EditableTakeProfitTable({
                     {isEditing ? (
                       <Input
                         value={level.actionWhenReached}
-                        onChange={(e) => updateLevel(level.id, "actionWhenReached", e.target.value)}
+                        onChange={(e) =>
+                          updateLevel(
+                            level.id,
+                            "actionWhenReached",
+                            e.target.value
+                          )
+                        }
                         className={`min-w-[200px] ${
                           hasFieldError("actionWhenReached", level.id)
                             ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                             : ""
                         }`}
-                        placeholder={generateActionDescription(index, level.sellPortion)}
+                        placeholder={generateActionDescription(
+                          index,
+                          level.sellPortion
+                        )}
                       />
                     ) : (
                       <span>{level.actionWhenReached}</span>
@@ -514,16 +576,16 @@ export function EditableTakeProfitTable({
                 <>
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                   <AlertDescription className="text-red-800">
-                    <strong>Configuration Issues Found:</strong> Please fix the errors below before
-                    saving.
+                    <strong>Configuration Issues Found:</strong> Please fix the
+                    errors below before saving.
                   </AlertDescription>
                 </>
               ) : (
                 <>
                   <Info className="h-4 w-4 text-yellow-600" />
                   <AlertDescription className="text-yellow-800">
-                    <strong>Warnings:</strong> Configuration is valid but please review the warnings
-                    below.
+                    <strong>Warnings:</strong> Configuration is valid but please
+                    review the warnings below.
                   </AlertDescription>
                 </>
               )}
@@ -542,7 +604,11 @@ export function EditableTakeProfitTable({
                     <Info className="h-4 w-4 text-yellow-600" />
                   )}
                   <AlertDescription
-                    className={error.type === "error" ? "text-red-800" : "text-yellow-800"}
+                    className={
+                      error.type === "error"
+                        ? "text-red-800"
+                        : "text-yellow-800"
+                    }
                   >
                     {error.type === "error" ? "❌" : "⚠️"} {error.message}
                   </AlertDescription>
@@ -557,7 +623,8 @@ export function EditableTakeProfitTable({
           <Alert className="border-green-200 bg-green-50">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">
-              ✅ <strong>Valid Configuration:</strong> All checks passed. Ready to save!
+              ✅ <strong>Valid Configuration:</strong> All checks passed. Ready
+              to save!
             </AlertDescription>
           </Alert>
         )}
@@ -567,15 +634,22 @@ export function EditableTakeProfitTable({
         {/* Simulation Results */}
         <div className="space-y-3">
           <h4 className="text-sm font-medium flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />✅ Result using the above simulation
+            <TrendingUp className="h-4 w-4" />✅ Result using the above
+            simulation
           </h4>
           <div className="grid gap-2 text-sm">
             {editingLevels.map((level) => (
-              <div key={level.id} className="flex items-center gap-2 text-muted-foreground">
+              <div
+                key={level.id}
+                className="flex items-center gap-2 text-muted-foreground"
+              >
                 <span>•</span>
                 <span>
-                  At <strong className="text-green-600">{level.profitPercentage}% profit</strong>,{" "}
-                  {level.actionWhenReached.toLowerCase()}.
+                  At{" "}
+                  <strong className="text-green-600">
+                    {level.profitPercentage}% profit
+                  </strong>
+                  , {level.actionWhenReached.toLowerCase()}.
                 </span>
               </div>
             ))}
@@ -586,8 +660,9 @@ export function EditableTakeProfitTable({
         <Alert className="border-blue-200 bg-blue-50">
           <Info className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            <strong>Question:</strong> Would you also like to add a trailing stop after the last
-            sale (e.g., as extra protection against a drop)? 🎯
+            <strong>Question:</strong> Would you also like to add a trailing
+            stop after the last sale (e.g., as extra protection against a drop)?
+            🎯
           </AlertDescription>
         </Alert>
       </CardContent>

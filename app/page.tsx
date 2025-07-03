@@ -1,13 +1,31 @@
 "use client";
 
-import { BarChart3, Bot, Brain, Clock, Shield, Target, TrendingUp, Zap } from "lucide-react";
+import {
+  BarChart3,
+  Bot,
+  Brain,
+  Clock,
+  Shield,
+  Target,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
-import { ClientSafeWrapper, useIsClient } from "../src/components/client-safe-wrapper";
+import { useEffect } from "react";
+import {
+  ClientSafeWrapper,
+  useIsClient,
+} from "../src/components/client-safe-wrapper";
 import { ErrorBoundary } from "../src/components/error-boundary";
 import { Badge } from "../src/components/ui/badge";
 import { Button } from "../src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../src/components/ui/card";
 import { useAuth } from "../src/lib/supabase-auth-client";
 
 function AuthenticatedRedirect() {
@@ -68,10 +86,13 @@ function HomePage() {
             <span className="font-semibold text-lg">MEXC Sniper</span>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => window.location.href = "/auth"}>
+            <Button
+              variant="ghost"
+              onClick={() => (window.location.href = "/auth")}
+            >
               Sign In
             </Button>
-            <Button onClick={() => window.location.href = "/auth"}>
+            <Button onClick={() => (window.location.href = "/auth")}>
               Get Started
             </Button>
           </div>
@@ -87,26 +108,25 @@ function HomePage() {
               AI-Powered Trading System
             </Badge>
           </div>
-          <h1 className="text-6xl font-bold mb-6">
-            MEXC Sniper Bot
-          </h1>
+          <h1 className="text-6xl font-bold mb-6">MEXC Sniper Bot</h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            Advanced AI-powered cryptocurrency trading platform for automated sniping of new MEXC listings. 
-            Get early access to profitable trading opportunities with intelligent pattern detection.
+            Advanced AI-powered cryptocurrency trading platform for automated
+            sniping of new MEXC listings. Get early access to profitable trading
+            opportunities with intelligent pattern detection.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button 
-              size="lg" 
-              onClick={() => window.location.href = "/auth"}
+            <Button
+              size="lg"
+              onClick={() => (window.location.href = "/auth")}
               className="px-8 py-3 text-lg"
             >
               <Zap className="w-5 h-5 mr-2" />
               Get Started
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => (window.location.href = "/auth")}
               className="px-8 py-3 text-lg"
             >
               Sign In
@@ -127,7 +147,8 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Advanced AI identifies ready-state patterns (sts:2, st:2, tt:4) with 3.5+ hour advance notice for optimal entry timing.
+                Advanced AI identifies ready-state patterns (sts:2, st:2, tt:4)
+                with 3.5+ hour advance notice for optimal entry timing.
               </CardDescription>
             </CardContent>
           </Card>
@@ -143,7 +164,9 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                5 specialized TypeScript agents work together: Calendar monitoring, Pattern discovery, Symbol analysis, Strategy creation, and Orchestration.
+                5 specialized TypeScript agents work together: Calendar
+                monitoring, Pattern discovery, Symbol analysis, Strategy
+                creation, and Orchestration.
               </CardDescription>
             </CardContent>
           </Card>
@@ -159,7 +182,8 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Track profit/loss, win rates, and trading performance with comprehensive transaction history and automated reporting.
+                Track profit/loss, win rates, and trading performance with
+                comprehensive transaction history and automated reporting.
               </CardDescription>
             </CardContent>
           </Card>
@@ -168,7 +192,9 @@ function HomePage() {
         {/* Statistics */}
         <Card className="mb-16">
           <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center">Platform Performance</CardTitle>
+            <CardTitle className="text-3xl font-bold text-center">
+              Platform Performance
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-4 gap-6 text-center">
@@ -201,21 +227,30 @@ function HomePage() {
                 <Clock className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Monitor Listings</h3>
-              <p className="text-muted-foreground">AI agents continuously scan MEXC calendar for new listing announcements and pattern detection.</p>
+              <p className="text-muted-foreground">
+                AI agents continuously scan MEXC calendar for new listing
+                announcements and pattern detection.
+              </p>
             </div>
             <div className="text-center">
               <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <Brain className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Analyze Patterns</h3>
-              <p className="text-muted-foreground">Advanced algorithms identify optimal entry signals and market readiness indicators.</p>
+              <p className="text-muted-foreground">
+                Advanced algorithms identify optimal entry signals and market
+                readiness indicators.
+              </p>
             </div>
             <div className="text-center">
               <div className="bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Execute Trades</h3>
-              <p className="text-muted-foreground">Automated execution with configurable take-profit levels and risk management strategies.</p>
+              <p className="text-muted-foreground">
+                Automated execution with configurable take-profit levels and
+                risk management strategies.
+              </p>
             </div>
           </div>
         </div>
@@ -230,11 +265,12 @@ function HomePage() {
             </div>
             <h2 className="text-3xl font-bold mb-4">Ready to Start Trading?</h2>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join the future of automated cryptocurrency trading with AI-powered precision.
+              Join the future of automated cryptocurrency trading with
+              AI-powered precision.
             </p>
-            <Button 
+            <Button
               size="lg"
-              onClick={() => window.location.href = "/auth"}
+              onClick={() => (window.location.href = "/auth")}
               className="px-12 py-4 text-lg"
             >
               <Zap className="w-5 h-5 mr-2" />

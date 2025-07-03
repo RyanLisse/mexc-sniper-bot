@@ -1,13 +1,13 @@
 /**
  * Authentication Monitoring Dashboard API
- * 
+ *
  * Provides comprehensive monitoring data for authentication system health,
  * performance metrics, and alerts. Used by internal monitoring dashboards
  * and external monitoring services.
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from "@supabase/supabase-js";
+import { type NextRequest, NextResponse } from "next/server";
 
 interface MonitoringMetrics {
   timestamp: string;
@@ -19,7 +19,7 @@ interface MonitoringMetrics {
 }
 
 interface AuthMonitoringData {
-  status: 'healthy' | 'warning' | 'critical' | 'unknown';
+  status: "healthy" | "warning" | "critical" | "unknown";
   lastChecked: string;
   uptime: {
     current: number;
@@ -47,14 +47,14 @@ interface AuthMonitoringData {
     blockedIPs: string[];
   };
   supabase: {
-    sdkStatus: 'operational' | 'degraded' | 'down';
-    apiHealth: 'healthy' | 'unhealthy';
+    sdkStatus: "operational" | "degraded" | "down";
+    apiHealth: "healthy" | "unhealthy";
     lastSync: string;
-    configurationStatus: 'valid' | 'invalid' | 'partial';
+    configurationStatus: "valid" | "invalid" | "partial";
   };
   alerts: Array<{
     id: string;
-    severity: 'low' | 'medium' | 'high' | 'critical';
+    severity: "low" | "medium" | "high" | "critical";
     message: string;
     timestamp: string;
     resolved: boolean;
@@ -71,64 +71,73 @@ interface AuthMonitoringData {
 }
 
 // In-memory storage for demonstration (in production, use Redis or database)
-const monitoringData: MonitoringMetrics[] = [];
-const alerts: AuthMonitoringData['alerts'] = [];
+const _monitoringData: MonitoringMetrics[] = [];
+const alerts: AuthMonitoringData["alerts"] = [];
 
 function generateMockMetrics(): AuthMonitoringData {
   const now = new Date();
   const isHealthy = Math.random() > 0.1; // 90% chance of being healthy
-  
+
   return {
-    status: isHealthy ? 'healthy' : 'warning',
+    status: isHealthy ? "healthy" : "warning",
     lastChecked: now.toISOString(),
     uptime: {
       current: 99.95,
       last24h: 99.8,
-      last7d: 99.2
+      last7d: 99.2,
     },
     performance: {
       averageResponseTime: 150 + Math.random() * 100,
       p95ResponseTime: 300 + Math.random() * 200,
       p99ResponseTime: 500 + Math.random() * 300,
-      requestsPerMinute: 100 + Math.random() * 50
+      requestsPerMinute: 100 + Math.random() * 50,
     },
     errors: {
       last24h: Math.floor(Math.random() * 10),
       errorRate: Math.random() * 0.5,
       commonErrors: [
         {
-          error: 'Token validation failed',
+          error: "Token validation failed",
           count: Math.floor(Math.random() * 5),
-          lastOccurrence: new Date(now.getTime() - Math.random() * 3600000).toISOString()
+          lastOccurrence: new Date(
+            now.getTime() - Math.random() * 3600000
+          ).toISOString(),
         },
         {
-          error: 'Network timeout',
+          error: "Network timeout",
           count: Math.floor(Math.random() * 3),
-          lastOccurrence: new Date(now.getTime() - Math.random() * 7200000).toISOString()
-        }
-      ]
+          lastOccurrence: new Date(
+            now.getTime() - Math.random() * 7200000
+          ).toISOString(),
+        },
+      ],
     },
     security: {
       suspiciousActivities: Math.floor(Math.random() * 5),
       failedLogins: Math.floor(Math.random() * 20),
-      blockedIPs: ['192.168.1.100', '10.0.0.50'].slice(0, Math.floor(Math.random() * 3))
+      blockedIPs: ["192.168.1.100", "10.0.0.50"].slice(
+        0,
+        Math.floor(Math.random() * 3)
+      ),
     },
     supabase: {
-      sdkStatus: isHealthy ? 'operational' : 'degraded',
-      apiHealth: isHealthy ? 'healthy' : 'unhealthy',
+      sdkStatus: isHealthy ? "operational" : "degraded",
+      apiHealth: isHealthy ? "healthy" : "unhealthy",
       lastSync: new Date(now.getTime() - Math.random() * 600000).toISOString(),
-      configurationStatus: 'valid'
+      configurationStatus: "valid",
     },
-    alerts: alerts.filter(alert => !alert.resolved).slice(0, 10),
+    alerts: alerts.filter((alert) => !alert.resolved).slice(0, 10),
     environment: {
-      name: process.env.NODE_ENV || 'development',
-      version: '1.0.0',
+      name: process.env.NODE_ENV || "development",
+      version: "1.0.0",
       deployment: {
-        lastDeployment: new Date(now.getTime() - Math.random() * 86400000).toISOString(),
+        lastDeployment: new Date(
+          now.getTime() - Math.random() * 86400000
+        ).toISOString(),
         deploymentId: `deploy-${Math.random().toString(36).substr(2, 9)}`,
-        gitCommit: Math.random().toString(36).substr(2, 7)
-      }
-    }
+        gitCommit: Math.random().toString(36).substr(2, 7),
+      },
+    },
   };
 }
 
@@ -138,17 +147,20 @@ async function validateAuthenticationState() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
-    
+
     const startTime = Date.now();
-    const { data: { users }, error } = await supabase.auth.admin.listUsers();
+    const {
+      data: { users },
+      error,
+    } = await supabase.auth.admin.listUsers();
     const responseTime = Date.now() - startTime;
-    
+
     return {
       isValid: !error,
       responseTime,
       hasUser: (users?.length || 0) > 0,
       isAuthenticated: !error,
-      error: error?.message || null
+      error: error?.message || null,
     };
   } catch (error) {
     return {
@@ -156,7 +168,7 @@ async function validateAuthenticationState() {
       responseTime: 0,
       hasUser: false,
       isAuthenticated: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
@@ -164,47 +176,48 @@ async function validateAuthenticationState() {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const format = searchParams.get('format') || 'json';
-    const includeMetrics = searchParams.get('metrics') === 'true';
-    const timeRange = searchParams.get('timeRange') || '24h';
-    
+    const format = searchParams.get("format") || "json";
+    const includeMetrics = searchParams.get("metrics") === "true";
+    const _timeRange = searchParams.get("timeRange") || "24h";
+
     // Validate authentication state
     const authValidation = await validateAuthenticationState();
-    
+
     // Generate monitoring data
     const monitoringData = generateMockMetrics();
-    
+
     // Add real authentication validation results
     if (!authValidation.isValid) {
-      monitoringData.status = 'critical';
-      monitoringData.supabase.sdkStatus = 'down';
-      monitoringData.supabase.apiHealth = 'unhealthy';
-      
+      monitoringData.status = "critical";
+      monitoringData.supabase.sdkStatus = "down";
+      monitoringData.supabase.apiHealth = "unhealthy";
+
       // Add critical alert
       alerts.unshift({
         id: `alert-${Date.now()}`,
-        severity: 'critical',
+        severity: "critical",
         message: `Authentication validation failed: ${authValidation.error}`,
         timestamp: new Date().toISOString(),
-        resolved: false
+        resolved: false,
       });
     }
-    
+
     // Include performance metrics if requested
     if (includeMetrics) {
-      monitoringData.performance.averageResponseTime = authValidation.responseTime;
+      monitoringData.performance.averageResponseTime =
+        authValidation.responseTime;
     }
-    
+
     // Add environment-specific data
-    monitoringData.environment.name = process.env.NODE_ENV || 'development';
-    
+    monitoringData.environment.name = process.env.NODE_ENV || "development";
+
     // Format response based on request
-    if (format === 'prometheus') {
+    if (format === "prometheus") {
       // Prometheus metrics format
       const prometheusMetrics = `
 # HELP auth_status Authentication system status (1=healthy, 0=unhealthy)
 # TYPE auth_status gauge
-auth_status{environment="${monitoringData.environment.name}"} ${monitoringData.status === 'healthy' ? 1 : 0}
+auth_status{environment="${monitoringData.environment.name}"} ${monitoringData.status === "healthy" ? 1 : 0}
 
 # HELP auth_response_time_seconds Authentication response time in seconds
 # TYPE auth_response_time_seconds gauge
@@ -222,39 +235,41 @@ auth_uptime_percent{environment="${monitoringData.environment.name}"} ${monitori
 # TYPE auth_requests_per_minute gauge
 auth_requests_per_minute{environment="${monitoringData.environment.name}"} ${monitoringData.performance.requestsPerMinute}
       `.trim();
-      
+
       return new NextResponse(prometheusMetrics, {
         status: 200,
         headers: {
-          'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
         },
       });
     }
-    
+
     return NextResponse.json(monitoringData, {
       status: 200,
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-Monitoring-Version': '1.0.0',
-        'X-Last-Updated': new Date().toISOString(),
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "X-Monitoring-Version": "1.0.0",
+        "X-Last-Updated": new Date().toISOString(),
       },
     });
-    
   } catch (error) {
-    console.error('Monitoring endpoint error:', { error });
-    
-    return NextResponse.json({
-      status: 'critical',
-      error: 'Monitoring system failure',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      timestamp: new Date().toISOString(),
-    }, {
-      status: 500,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
+    console.error("Monitoring endpoint error:", { error });
+
+    return NextResponse.json(
+      {
+        status: "critical",
+        error: "Monitoring system failure",
+        message: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
-    });
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+        },
+      }
+    );
   }
 }
 
@@ -262,60 +277,68 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { type, data } = body;
-    
-    if (type === 'alert') {
+
+    if (type === "alert") {
       // Create new alert
       const alert = {
         id: `alert-${Date.now()}`,
-        severity: data.severity || 'medium',
+        severity: data.severity || "medium",
         message: data.message,
         timestamp: new Date().toISOString(),
-        resolved: false
+        resolved: false,
       };
-      
+
       alerts.unshift(alert);
-      
+
       // Keep only last 100 alerts
       if (alerts.length > 100) {
         alerts.splice(100);
       }
-      
-      return NextResponse.json({ 
-        success: true, 
-        alertId: alert.id 
+
+      return NextResponse.json({
+        success: true,
+        alertId: alert.id,
       });
     }
-    
-    if (type === 'resolve') {
+
+    if (type === "resolve") {
       // Resolve alert
       const alertId = data.alertId;
-      const alert = alerts.find(a => a.id === alertId);
-      
+      const alert = alerts.find((a) => a.id === alertId);
+
       if (alert) {
         alert.resolved = true;
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Alert resolved' 
+        return NextResponse.json({
+          success: true,
+          message: "Alert resolved",
         });
       }
-      
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Alert not found' 
-      }, { status: 404 });
+
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Alert not found",
+        },
+        { status: 404 }
+      );
     }
-    
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Invalid request type' 
-    }, { status: 400 });
-    
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Invalid request type",
+      },
+      { status: 400 }
+    );
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to process monitoring request',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to process monitoring request",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -324,10 +347,10 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
-      'Allow': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      Allow: "GET, POST, OPTIONS",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
 }

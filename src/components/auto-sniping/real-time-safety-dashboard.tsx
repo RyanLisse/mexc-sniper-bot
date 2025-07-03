@@ -17,11 +17,10 @@ import {
   ShieldX,
   Siren,
   StopCircle,
-  TrendingUp,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/src/components/ui/alert";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -36,7 +35,12 @@ import { Label } from "@/src/components/ui/label";
 import { Progress } from "@/src/components/ui/progress";
 import { ScrollArea } from "@/src/components/ui/scroll-area";
 import { Switch } from "@/src/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
 
 interface RealTimeSafetyDashboardProps {
   className?: string;
@@ -62,8 +66,8 @@ const mockSafetyData = {
       source: "mexc-api",
       timestamp: new Date().toISOString(),
       acknowledged: false,
-      autoActions: []
-    }
+      autoActions: [],
+    },
   ],
   recentActions: [
     {
@@ -72,15 +76,15 @@ const mockSafetyData = {
       description: "Reduced position size due to volatility",
       result: "success",
       executedAt: new Date().toISOString(),
-      details: "Position reduced by 20%"
-    }
+      details: "Position reduced by 20%",
+    },
   ],
   metrics: {
     currentDrawdown: 2.5,
     successRate: 78.5,
     consecutiveLosses: 0,
-    apiLatency: 45
-  }
+    apiLatency: 45,
+  },
 };
 
 // Simple status indicator
@@ -88,15 +92,40 @@ function SafetyStatusIndicator({ status }: { status: string }) {
   const getStatusProps = (status: string) => {
     switch (status) {
       case "safe":
-        return { icon: ShieldCheck, color: "text-green-500", bg: "bg-green-50", text: "SAFE" };
+        return {
+          icon: ShieldCheck,
+          color: "text-green-500",
+          bg: "bg-green-50",
+          text: "SAFE",
+        };
       case "warning":
-        return { icon: ShieldAlert, color: "text-yellow-500", bg: "bg-yellow-50", text: "WARNING" };
+        return {
+          icon: ShieldAlert,
+          color: "text-yellow-500",
+          bg: "bg-yellow-50",
+          text: "WARNING",
+        };
       case "critical":
-        return { icon: ShieldAlert, color: "text-orange-500", bg: "bg-orange-50", text: "CRITICAL" };
+        return {
+          icon: ShieldAlert,
+          color: "text-orange-500",
+          bg: "bg-orange-50",
+          text: "CRITICAL",
+        };
       case "emergency":
-        return { icon: ShieldX, color: "text-red-500", bg: "bg-red-50", text: "EMERGENCY" };
+        return {
+          icon: ShieldX,
+          color: "text-red-500",
+          bg: "bg-red-50",
+          text: "EMERGENCY",
+        };
       default:
-        return { icon: Shield, color: "text-gray-400", bg: "bg-gray-50", text: "UNKNOWN" };
+        return {
+          icon: Shield,
+          color: "text-gray-400",
+          bg: "bg-gray-50",
+          text: "UNKNOWN",
+        };
     }
   };
 
@@ -124,7 +153,9 @@ function RiskScoreGauge({ score }: { score: number }) {
       <div className="relative">
         <Gauge className={`h-12 w-12 ${getScoreColor(score)}`} />
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-xs font-bold ${getScoreColor(score)}`}>{score.toFixed(0)}</span>
+          <span className={`text-xs font-bold ${getScoreColor(score)}`}>
+            {score.toFixed(0)}
+          </span>
         </div>
       </div>
       <p className="text-sm text-gray-600 mt-1">Risk Score</p>
@@ -183,7 +214,9 @@ function SafetyStatusOverview({
       </div>
       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2">
-          <Bell className={`h-5 w-5 ${alertsCount > 0 ? "text-red-500" : "text-gray-400"}`} />
+          <Bell
+            className={`h-5 w-5 ${alertsCount > 0 ? "text-red-500" : "text-gray-400"}`}
+          />
           <span className="text-2xl font-bold">{alertsCount}</span>
         </div>
         <p className="text-sm text-gray-600">Active Alerts</p>
@@ -231,11 +264,15 @@ function RiskMetricsGrid({ metrics }: { metrics: any }) {
         <p className="text-sm text-gray-600">Success Rate</p>
       </div>
       <div className="text-center">
-        <div className="text-lg font-bold text-orange-600">{metrics.consecutiveLosses}</div>
+        <div className="text-lg font-bold text-orange-600">
+          {metrics.consecutiveLosses}
+        </div>
         <p className="text-sm text-gray-600">Consecutive Losses</p>
       </div>
       <div className="text-center">
-        <div className="text-lg font-bold text-green-600">{metrics.apiLatency}ms</div>
+        <div className="text-lg font-bold text-green-600">
+          {metrics.apiLatency}ms
+        </div>
         <p className="text-sm text-gray-600">API Latency</p>
       </div>
     </div>
@@ -305,8 +342,12 @@ function RiskAssessmentCard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Overall Risk Score</span>
-                <span className="text-sm font-medium">{overallRiskScore.toFixed(1)}/100</span>
+                <span className="text-sm text-gray-600">
+                  Overall Risk Score
+                </span>
+                <span className="text-sm font-medium">
+                  {overallRiskScore.toFixed(1)}/100
+                </span>
               </div>
               <Progress value={overallRiskScore} className="w-full" />
             </div>
@@ -314,7 +355,9 @@ function RiskAssessmentCard({
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">System Health</span>
-                <span className="text-sm font-medium">{systemHealthScore}%</span>
+                <span className="text-sm font-medium">
+                  {systemHealthScore}%
+                </span>
               </div>
               <Progress value={systemHealthScore} className="w-full" />
             </div>
@@ -358,7 +401,9 @@ function SystemHealthCard() {
             <p className="text-xs text-gray-600">Emergency System</p>
           </div>
           <div className="text-center p-3 bg-gray-50 rounded">
-            <div className="text-lg font-semibold text-green-600">Connected</div>
+            <div className="text-lg font-semibold text-green-600">
+              Connected
+            </div>
             <p className="text-xs text-gray-600">MEXC API</p>
           </div>
         </div>
@@ -387,7 +432,9 @@ function SafetyAlertsTab({
             <Bell className="h-5 w-5" />
             Safety Alerts ({activeAlerts.length})
           </CardTitle>
-          <CardDescription>Real-time safety alerts and risk notifications</CardDescription>
+          <CardDescription>
+            Real-time safety alerts and risk notifications
+          </CardDescription>
         </div>
         {activeAlerts.some((alert) => alert.acknowledged) && (
           <Button variant="outline" size="sm" onClick={onClearAlerts}>
@@ -462,7 +509,9 @@ function SafetyActionsTab({ recentActions }: { recentActions: any[] }) {
           <Zap className="h-5 w-5" />
           Recent Safety Actions ({recentActions.length})
         </CardTitle>
-        <CardDescription>Automated and manual safety actions taken by the system</CardDescription>
+        <CardDescription>
+          Automated and manual safety actions taken by the system
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {recentActions.length > 0 ? (
@@ -472,10 +521,14 @@ function SafetyActionsTab({ recentActions }: { recentActions: any[] }) {
                 <div key={action.id} className="border rounded-lg p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant={getActionVariant(action.result || "pending")}>
+                      <Badge
+                        variant={getActionVariant(action.result || "pending")}
+                      >
                         {action.type.replace("_", " ").toUpperCase()}
                       </Badge>
-                      <Badge variant="outline">{action.result?.toUpperCase() || "PENDING"}</Badge>
+                      <Badge variant="outline">
+                        {action.result?.toUpperCase() || "PENDING"}
+                      </Badge>
                     </div>
                     {action.executedAt && (
                       <span className="text-sm text-gray-500">
@@ -483,14 +536,20 @@ function SafetyActionsTab({ recentActions }: { recentActions: any[] }) {
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-700 mb-1">{action.description}</p>
-                  {action.details && <p className="text-xs text-gray-500">{action.details}</p>}
+                  <p className="text-sm text-gray-700 mb-1">
+                    {action.description}
+                  </p>
+                  {action.details && (
+                    <p className="text-xs text-gray-500">{action.details}</p>
+                  )}
                 </div>
               ))}
             </div>
           </ScrollArea>
         ) : (
-          <div className="text-center py-8 text-gray-500">No recent actions</div>
+          <div className="text-center py-8 text-gray-500">
+            No recent actions
+          </div>
         )}
       </CardContent>
     </Card>
@@ -519,7 +578,9 @@ function SafetyConfigTab({
             <Settings className="h-5 w-5" />
             Safety Configuration
           </CardTitle>
-          <CardDescription>Configure safety monitoring parameters and thresholds</CardDescription>
+          <CardDescription>
+            Configure safety monitoring parameters and thresholds
+          </CardDescription>
         </div>
         <div className="flex gap-2">
           {configEditMode ? (
@@ -532,7 +593,11 @@ function SafetyConfigTab({
               >
                 Cancel
               </Button>
-              <Button size="sm" onClick={onSaveConfig} disabled={isUpdatingConfig}>
+              <Button
+                size="sm"
+                onClick={onSaveConfig}
+                disabled={isUpdatingConfig}
+              >
                 Save Changes
               </Button>
             </>
@@ -648,8 +713,15 @@ export function RealTimeSafetyDashboard({
             <div className="flex gap-2">
               {showControls && (
                 <>
-                  <Button variant="outline" size="sm" onClick={refreshData} disabled={isLoading}>
-                    <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refreshData}
+                    disabled={isLoading}
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                    />
                     Refresh
                   </Button>
                   <Button

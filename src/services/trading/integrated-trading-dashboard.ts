@@ -14,7 +14,10 @@ import { getRecommendedMexcService } from "../api/mexc-unified-exports";
 import { EmergencySafetySystem } from "../risk/emergency-safety-system";
 import { enhancedRiskManagementService } from "../risk/enhanced-risk-management-service";
 import { mexcTradingService } from "./mexc-trading-service";
-import { type PortfolioSummary, portfolioTrackingService } from "./portfolio-tracking-service";
+import {
+  type PortfolioSummary,
+  portfolioTrackingService,
+} from "./portfolio-tracking-service";
 import {
   type PositionProtection,
   stopLossTakeProfitService,
@@ -219,7 +222,9 @@ export class IntegratedTradingDashboard extends EventEmitter {
       // Pre-flight checks
       const emergencyStatus = this.emergencySystem.getEmergencyStatus();
       if (emergencyStatus.tradingHalted) {
-        throw new Error("Trading is currently halted due to emergency conditions");
+        throw new Error(
+          "Trading is currently halted due to emergency conditions"
+        );
       }
 
       // Execute the trade
@@ -252,7 +257,9 @@ export class IntegratedTradingDashboard extends EventEmitter {
       let protectionId: string | undefined;
       if (
         request.side === "BUY" &&
-        (request.stopLossPercent || request.takeProfitPercent || request.trailingStopPercent)
+        (request.stopLossPercent ||
+          request.takeProfitPercent ||
+          request.trailingStopPercent)
       ) {
         const entryPrice = parseFloat(price || "0");
         const quantity = parseFloat(executedQty || request.quantity);
@@ -302,7 +309,8 @@ export class IntegratedTradingDashboard extends EventEmitter {
         protectionId,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
       this.logger.error("Trade execution failed:", error);
 
@@ -417,10 +425,13 @@ export class IntegratedTradingDashboard extends EventEmitter {
     }
   }
 
-  private async buildDashboardState(userId: string): Promise<TradingDashboardState> {
+  private async buildDashboardState(
+    userId: string
+  ): Promise<TradingDashboardState> {
     try {
       // Get portfolio
-      const portfolio = await portfolioTrackingService.getPortfolioSummary(userId);
+      const portfolio =
+        await portfolioTrackingService.getPortfolioSummary(userId);
 
       // Get protections
       const protections = stopLossTakeProfitService.getUserProtections(userId);
@@ -429,7 +440,8 @@ export class IntegratedTradingDashboard extends EventEmitter {
       const emergencyStatus = this.emergencySystem.getEmergencyStatus();
 
       // Test connectivity
-      const connectivityResult = await this.mexcService.testConnectivityWithResponse();
+      const connectivityResult =
+        await this.mexcService.testConnectivityWithResponse();
 
       // Get performance stats (simplified)
       const slStats = stopLossTakeProfitService.getStats();
@@ -455,7 +467,9 @@ export class IntegratedTradingDashboard extends EventEmitter {
         performance: {
           totalTrades: slStats.totalOrders,
           successRate:
-            slStats.totalOrders > 0 ? (slStats.filledOrders / slStats.totalOrders) * 100 : 0,
+            slStats.totalOrders > 0
+              ? (slStats.filledOrders / slStats.totalOrders) * 100
+              : 0,
           avgExecutionTime: 250, // Simplified
           totalPnl: portfolio?.totalPnl || 0,
         },
@@ -499,7 +513,10 @@ export class IntegratedTradingDashboard extends EventEmitter {
     this.logger.info("Stopped real-time dashboard updates");
   }
 
-  private handlePortfolioUpdate(userId: string, portfolio: PortfolioSummary): void {
+  private handlePortfolioUpdate(
+    userId: string,
+    portfolio: PortfolioSummary
+  ): void {
     const state = this.dashboardState.get(userId);
     if (state) {
       state.portfolio = portfolio;

@@ -7,7 +7,13 @@
 import { z } from "zod";
 
 // Base execution status schema
-export const executionStatusSchema = z.enum(["idle", "running", "paused", "stopping", "error"]);
+export const executionStatusSchema = z.enum([
+  "idle",
+  "running",
+  "paused",
+  "stopping",
+  "error",
+]);
 
 // AutoSnipingConfig validation schema (matching the actual interface)
 export const autoSnipingConfigSchema = z.object({
@@ -49,19 +55,33 @@ export const configEditorPropsSchema = z.object({
 export const configFormSchema = z.object({
   enabled: z.boolean(),
   maxPositionSize: z.coerce.number().positive("Must be greater than 0"),
-  takeProfitPercentage: z.coerce.number().min(0.1, "Minimum 0.1%").max(100, "Cannot exceed 100%"),
-  stopLossPercentage: z.coerce.number().min(0.1, "Minimum 0.1%").max(100, "Cannot exceed 100%"),
+  takeProfitPercentage: z.coerce
+    .number()
+    .min(0.1, "Minimum 0.1%")
+    .max(100, "Cannot exceed 100%"),
+  stopLossPercentage: z.coerce
+    .number()
+    .min(0.1, "Minimum 0.1%")
+    .max(100, "Cannot exceed 100%"),
   patternConfidenceThreshold: z.coerce
     .number()
     .min(50, "Minimum 50%")
     .max(100, "Cannot exceed 100%"),
-  maxConcurrentTrades: z.coerce.number().min(1, "Must be at least 1").max(10, "Cannot exceed 10"),
+  maxConcurrentTrades: z.coerce
+    .number()
+    .min(1, "Must be at least 1")
+    .max(10, "Cannot exceed 10"),
   enableSafetyChecks: z.boolean(),
   enablePatternDetection: z.boolean(),
 });
 
 // Alert severity schema
-export const alertSeveritySchema = z.enum(["info", "warning", "error", "critical"]);
+export const alertSeveritySchema = z.enum([
+  "info",
+  "warning",
+  "error",
+  "critical",
+]);
 
 // Execution alert schema
 export const executionAlertSchema = z.object({
@@ -112,5 +132,7 @@ export type ExecutionAlert = z.infer<typeof executionAlertSchema>;
 export type ExecutionStats = z.infer<typeof executionStatsSchema>;
 export type ExecutionPosition = z.infer<typeof executionPositionSchema>;
 export type DashboardProps = z.infer<typeof dashboardPropsSchema>;
-export type ExecutionControlsProps = z.infer<typeof executionControlsPropsSchema>;
+export type ExecutionControlsProps = z.infer<
+  typeof executionControlsPropsSchema
+>;
 export type ConfigEditorProps = z.infer<typeof configEditorPropsSchema>;

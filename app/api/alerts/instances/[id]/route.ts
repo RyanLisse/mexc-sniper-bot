@@ -1,11 +1,10 @@
 import { eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/src/db";
 import { alertInstances } from "@/src/db/schemas/alerts";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { requireAuth } from "@/src/lib/supabase-auth";
 import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
 
 const alertingService = new AutomatedAlertingService(db);
@@ -18,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     const { id } = await params;
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
@@ -29,10 +28,13 @@ export async function GET(
       .limit(1);
 
     if (alert.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: "Alert instance not found",
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Alert instance not found",
+        },
+        { status: 404 }
+      );
     }
 
     const alertInstance = alert[0];
@@ -41,12 +43,23 @@ export async function GET(
     const formattedAlert = {
       ...alertInstance,
       labels: alertInstance.labels ? JSON.parse(alertInstance.labels) : {},
-      additionalData: alertInstance.additionalData ? JSON.parse(alertInstance.additionalData) : {},
-      formattedTimestamp: new Date(alertInstance.firstTriggeredAt).toISOString(),
-      formattedLastTriggered: new Date(alertInstance.lastTriggeredAt).toISOString(),
-      formattedResolvedAt: alertInstance.resolvedAt ? new Date(alertInstance.resolvedAt).toISOString() : null,
+      additionalData: alertInstance.additionalData
+        ? JSON.parse(alertInstance.additionalData)
+        : {},
+      formattedTimestamp: new Date(
+        alertInstance.firstTriggeredAt
+      ).toISOString(),
+      formattedLastTriggered: new Date(
+        alertInstance.lastTriggeredAt
+      ).toISOString(),
+      formattedResolvedAt: alertInstance.resolvedAt
+        ? new Date(alertInstance.resolvedAt).toISOString()
+        : null,
       isResolved: !!alertInstance.resolvedAt,
-      resolutionTime: alertInstance.resolvedAt ? new Date(alertInstance.resolvedAt).getTime() - new Date(alertInstance.firstTriggeredAt).getTime() : null,
+      resolutionTime: alertInstance.resolvedAt
+        ? new Date(alertInstance.resolvedAt).getTime() -
+          new Date(alertInstance.firstTriggeredAt).getTime()
+        : null,
       duration: Date.now() - new Date(alertInstance.firstTriggeredAt).getTime(),
     };
 
@@ -73,10 +86,12 @@ export async function PATCH(
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     const body = await request.json();
-    const { action, notes } = z.object({
-      action: z.enum(["resolve", "acknowledge", "suppress"]),
-      notes: z.string().optional(),
-    }).parse(body);
+    const { action, notes } = z
+      .object({
+        action: z.enum(["resolve", "acknowledge", "suppress"]),
+        notes: z.string().optional(),
+      })
+      .parse(body);
 
     // Check if alert exists
     const existingAlert = await db
@@ -86,10 +101,13 @@ export async function PATCH(
       .limit(1);
 
     if (existingAlert.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: "Alert instance not found",
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Alert instance not found",
+        },
+        { status: 404 }
+      );
     }
 
     const alert = existingAlert[0];
@@ -97,10 +115,13 @@ export async function PATCH(
     switch (action) {
       case "resolve":
         if (alert.status === "resolved") {
-          return NextResponse.json({
-            success: false,
-            error: "Alert is already resolved",
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Alert is already resolved",
+            },
+            { status: 400 }
+          );
         }
 
         await alertingService.resolveAlert(
@@ -137,7 +158,8 @@ export async function PATCH(
             status: "suppressed",
             resolutionNotes: notes,
           })
-          .where(eq(alertInstances.id, id));
+          .where(eq(alertInstances.id, id))
+          .execute();
 
         return NextResponse.json({
           success: true,
@@ -145,10 +167,13 @@ export async function PATCH(
         });
 
       default:
-        return NextResponse.json({
-          success: false,
-          error: "Invalid action",
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid action",
+          },
+          { status: 400 }
+        );
     }
   } catch (error) {
     console.error("Error updating alert instance:", { error: error });

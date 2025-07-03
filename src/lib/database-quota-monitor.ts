@@ -27,5 +27,5 @@ export class DatabaseQuotaMonitor {
 
 export const quotaMonitor = new DatabaseQuotaMonitor();
 
-// Add missing export aliases for compatibility  
+// Add missing export aliases for compatibility
 export const databaseQuotaMonitor = quotaMonitor;

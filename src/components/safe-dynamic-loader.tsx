@@ -7,7 +7,13 @@
 
 "use client";
 
-import { type ComponentType, type LazyExoticComponent, lazy, type ReactNode, Suspense } from "react";
+import {
+  type ComponentType,
+  type LazyExoticComponent,
+  lazy,
+  type ReactNode,
+  Suspense,
+} from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 
@@ -49,7 +55,9 @@ function safeLazy<T extends ComponentType<any>>(
         default:
           fallbackComponent ||
           ((() => (
-            <div className="p-4 text-center text-gray-500">Component failed to load</div>
+            <div className="p-4 text-center text-gray-500">
+              Component failed to load
+            </div>
           )) as ComponentType<any>),
       };
     })
@@ -67,15 +75,23 @@ export function SafeLazyWrapper({
   errorFallback?: ReactNode;
 }) {
   return (
-    <ErrorBoundary level="component" fallback={errorFallback || <CardSkeleton />}>
-      <Suspense fallback={fallback || <ComponentSkeleton />}>{children}</Suspense>
+    <ErrorBoundary
+      level="component"
+      fallback={errorFallback || <CardSkeleton />}
+    >
+      <Suspense fallback={fallback || <ComponentSkeleton />}>
+        {children}
+      </Suspense>
     </ErrorBoundary>
   );
 }
 
 // Performance-optimized dashboard components with efficient loading patterns
 export const MetricCard = safeLazy(
-  () => import("./dashboard/metric-card").then((module) => ({ default: module.MetricCard })),
+  () =>
+    import("./dashboard/metric-card").then((module) => ({
+      default: module.MetricCard,
+    })),
   ({ title, value }: { title: string; value: string }) => (
     <div className="rounded-lg border p-4">
       <div className="font-medium">{title}</div>
@@ -254,7 +270,9 @@ export async function preloadDashboardComponents() {
   const nonCriticalComponents = componentsToPreload.slice(3);
 
   // Load critical components first, then non-critical
-  const criticalResults = await Promise.allSettled(criticalComponents.map((loader) => loader()));
+  const criticalResults = await Promise.allSettled(
+    criticalComponents.map((loader) => loader())
+  );
 
   // Small delay to avoid blocking critical rendering
   await new Promise((resolve) => setTimeout(resolve, 100));
@@ -284,6 +302,7 @@ export async function preloadDashboardComponents() {
     successful,
     failed,
     total: successful + failed,
-    criticalLoaded: criticalResults.filter((r) => r.status === "fulfilled").length,
+    criticalLoaded: criticalResults.filter((r) => r.status === "fulfilled")
+      .length,
   };
 }

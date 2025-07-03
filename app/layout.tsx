@@ -36,8 +36,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <HydrationWrapper fallback={<div className="min-h-screen bg-background animate-pulse" />}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <HydrationWrapper
+          fallback={
+            <div className="min-h-screen bg-background animate-pulse" />
+          }
+        >
           <SupabaseAuthProvider>
             <QueryProvider>
               <StatusProviderWrapper>

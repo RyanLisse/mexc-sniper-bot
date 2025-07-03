@@ -29,10 +29,16 @@ class ClientLogger implements ILogger {
     this.service = service || "mexc-trading-bot";
   }
 
-  private formatMessage(level: string, message: string, context?: LogContext): string {
+  private formatMessage(
+    level: string,
+    message: string,
+    context?: LogContext
+  ): string {
     const timestamp = new Date().toISOString();
     const contextStr =
-      context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
+      context && Object.keys(context).length > 0
+        ? ` ${JSON.stringify(context)}`
+        : "";
     return `${timestamp} [${level.toUpperCase()}] ${this.component}: ${message}${contextStr}`;
   }
 
@@ -78,20 +84,36 @@ class ClientLogger implements ILogger {
     this.info(`Pattern detected: ${patternType}`, { ...context, confidence });
   }
 
-  api(endpoint: string, method: string, responseTime: number, context?: LogContext): void {
+  api(
+    endpoint: string,
+    method: string,
+    responseTime: number,
+    context?: LogContext
+  ): void {
     this.info(`API call: ${method} ${endpoint}`, { ...context, responseTime });
   }
 
   agent(agentId: string, taskType: string, context?: LogContext): void {
-    this.info(`Agent: ${agentId} - ${taskType}`, { ...context, agentId, taskType });
+    this.info(`Agent: ${agentId} - ${taskType}`, {
+      ...context,
+      agentId,
+      taskType,
+    });
   }
 
   performance(operation: string, duration: number, context?: LogContext): void {
     const level = duration > 1000 ? "warn" : "info";
-    this[level](`Performance: ${operation} completed in ${duration}ms`, { ...context, duration });
+    this[level](`Performance: ${operation} completed in ${duration}ms`, {
+      ...context,
+      duration,
+    });
   }
 
-  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext): void {
+  cache(
+    operation: "hit" | "miss" | "set" | "delete",
+    key: string,
+    context?: LogContext
+  ): void {
     this.debug(`Cache ${operation}: ${key}`, {
       ...context,
       cacheOperation: operation,
@@ -101,7 +123,11 @@ class ClientLogger implements ILogger {
 
   safety(event: string, riskScore: number, context?: LogContext): void {
     const level = riskScore > 70 ? "warn" : "info";
-    this[level](`Safety: ${event}`, { ...context, riskScore, safetyEvent: event });
+    this[level](`Safety: ${event}`, {
+      ...context,
+      riskScore,
+      safetyEvent: event,
+    });
   }
 }
 
@@ -118,10 +144,19 @@ export interface ILogger {
   fatal(message: string, context?: LogContext, error?: Error): void;
   trading(operation: string, context: LogContext): void;
   pattern(patternType: string, confidence: number, context?: LogContext): void;
-  api(endpoint: string, method: string, responseTime: number, context?: LogContext): void;
+  api(
+    endpoint: string,
+    method: string,
+    responseTime: number,
+    context?: LogContext
+  ): void;
   agent(agentId: string, taskType: string, context?: LogContext): void;
   performance(operation: string, duration: number, context?: LogContext): void;
-  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext): void;
+  cache(
+    operation: "hit" | "miss" | "set" | "delete",
+    key: string,
+    context?: LogContext
+  ): void;
   safety(event: string, riskScore: number, context?: LogContext): void;
 }
 
@@ -183,7 +218,9 @@ export class StructuredLogger implements ILogger {
     this.component = component;
     // Server-side environment variable access
     const envLogLevel =
-      isServer && typeof process !== "undefined" && process.env ? process.env.LOG_LEVEL : undefined;
+      isServer && typeof process !== "undefined" && process.env
+        ? process.env.LOG_LEVEL
+        : undefined;
     this.logLevel = this.parseLogLevel(envLogLevel || logLevel);
   }
 
@@ -213,7 +250,11 @@ export class StructuredLogger implements ILogger {
   /**
    * Create structured log entry
    */
-  private createLogEntry(level: LogLevel, message: string, context: LogContext = {}): LogEntry {
+  private createLogEntry(
+    level: LogLevel,
+    message: string,
+    context: LogContext = {}
+  ): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -254,7 +295,9 @@ export class StructuredLogger implements ILogger {
       // Human-readable format for development
       const timestamp = entry.timestamp;
       const contextStr =
-        Object.keys(entry.context).length > 0 ? JSON.stringify(entry.context, null, 2) : "";
+        Object.keys(entry.context).length > 0
+          ? JSON.stringify(entry.context, null, 2)
+          : "";
 
       console.log(
         `${timestamp} [${entry.level.toUpperCase()}] ${entry.component}: ${entry.message}`
@@ -326,7 +369,11 @@ export class StructuredLogger implements ILogger {
   /**
    * Log pattern detection
    */
-  pattern(patternType: string, confidence: number, context: LogContext = {}): void {
+  pattern(
+    patternType: string,
+    confidence: number,
+    context: LogContext = {}
+  ): void {
     this.info(`Pattern detected: ${patternType}`, {
       ...context,
       patternType,
@@ -338,7 +385,12 @@ export class StructuredLogger implements ILogger {
   /**
    * Log API calls
    */
-  api(endpoint: string, method: string, responseTime: number, context: LogContext = {}): void {
+  api(
+    endpoint: string,
+    method: string,
+    responseTime: number,
+    context: LogContext = {}
+  ): void {
     this.info(`API call: ${method} ${endpoint}`, {
       ...context,
       endpoint,
@@ -363,21 +415,33 @@ export class StructuredLogger implements ILogger {
   /**
    * Log performance metrics
    */
-  performance(operation: string, duration: number, context: LogContext = {}): void {
+  performance(
+    operation: string,
+    duration: number,
+    context: LogContext = {}
+  ): void {
     const level = duration > 1000 ? "warn" : "info"; // Warn for operations > 1s
     this.emit(
-      this.createLogEntry(level, `Performance: ${operation} completed in ${duration}ms`, {
-        ...context,
-        operation: "performance",
-        duration,
-      })
+      this.createLogEntry(
+        level,
+        `Performance: ${operation} completed in ${duration}ms`,
+        {
+          ...context,
+          operation: "performance",
+          duration,
+        }
+      )
     );
   }
 
   /**
    * Log cache operations
    */
-  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context: LogContext = {}): void {
+  cache(
+    operation: "hit" | "miss" | "set" | "delete",
+    key: string,
+    context: LogContext = {}
+  ): void {
     this.debug(`Cache ${operation}: ${key}`, {
       ...context,
       cacheOperation: operation,
@@ -426,7 +490,12 @@ export function createSafeLogger(
     error: (message: string, context?: LogContext, error?: Error) =>
       console.error(`[${component}]`, message, context || "", error || ""),
     fatal: (message: string, context?: LogContext, error?: Error) =>
-      console.error(`[${component}] FATAL:`, message, context || "", error || ""),
+      console.error(
+        `[${component}] FATAL:`,
+        message,
+        context || "",
+        error || ""
+      ),
     trading: (operation: string, context: LogContext) =>
       console.info(`[${component}] Trading:`, operation, context),
     pattern: (patternType: string, confidence: number, context?: LogContext) =>
@@ -436,16 +505,40 @@ export function createSafeLogger(
         `confidence: ${confidence}`,
         context || ""
       ),
-    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) =>
-      console.info(`[${component}] API:`, method, endpoint, `${responseTime}ms`, context || ""),
+    api: (
+      endpoint: string,
+      method: string,
+      responseTime: number,
+      context?: LogContext
+    ) =>
+      console.info(
+        `[${component}] API:`,
+        method,
+        endpoint,
+        `${responseTime}ms`,
+        context || ""
+      ),
     agent: (agentId: string, taskType: string, context?: LogContext) =>
       console.info(`[${component}] Agent:`, agentId, taskType, context || ""),
     performance: (operation: string, duration: number, context?: LogContext) =>
-      console.info(`[${component}] Performance:`, operation, `${duration}ms`, context || ""),
-    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) =>
-      console.debug(`[${component}] Cache:`, operation, key, context || ""),
+      console.info(
+        `[${component}] Performance:`,
+        operation,
+        `${duration}ms`,
+        context || ""
+      ),
+    cache: (
+      operation: "hit" | "miss" | "set" | "delete",
+      key: string,
+      context?: LogContext
+    ) => console.debug(`[${component}] Cache:`, operation, key, context || ""),
     safety: (event: string, riskScore: number, context?: LogContext) =>
-      console.warn(`[${component}] Safety:`, event, `risk: ${riskScore}`, context || ""),
+      console.warn(
+        `[${component}] Safety:`,
+        event,
+        `risk: ${riskScore}`,
+        context || ""
+      ),
   } as ILogger;
 }
 
@@ -475,7 +568,10 @@ export function createClientLogger(
  * Fallback logger for build-time safety
  * Creates a logger-like object that uses console methods when StructuredLogger fails
  */
-function _createFallbackLogger(component: string, _service: string): StructuredLogger {
+function _createFallbackLogger(
+  component: string,
+  _service: string
+): StructuredLogger {
   // Create a minimal logger-like object that mimics StructuredLogger interface
   const fallbackLogger = {
     debug: (message: string, context?: LogContext) =>
@@ -487,21 +583,49 @@ function _createFallbackLogger(component: string, _service: string): StructuredL
     error: (message: string, context?: LogContext, error?: Error) =>
       console.error(`[${component}] ${message}`, context || {}, error || ""),
     fatal: (message: string, context?: LogContext, error?: Error) =>
-      console.error(`[${component}] FATAL: ${message}`, context || {}, error || ""),
+      console.error(
+        `[${component}] FATAL: ${message}`,
+        context || {},
+        error || ""
+      ),
     trading: (operation: string, context: LogContext) =>
       console.info(`[${component}] Trading: ${operation}`, context),
     pattern: (patternType: string, confidence: number, context?: LogContext) =>
-      console.info(`[${component}] Pattern: ${patternType} (${confidence})`, context || {}),
-    api: (endpoint: string, method: string, responseTime: number, context?: LogContext) =>
-      console.info(`[${component}] API: ${method} ${endpoint} (${responseTime}ms)`, context || {}),
+      console.info(
+        `[${component}] Pattern: ${patternType} (${confidence})`,
+        context || {}
+      ),
+    api: (
+      endpoint: string,
+      method: string,
+      responseTime: number,
+      context?: LogContext
+    ) =>
+      console.info(
+        `[${component}] API: ${method} ${endpoint} (${responseTime}ms)`,
+        context || {}
+      ),
     agent: (agentId: string, taskType: string, context?: LogContext) =>
-      console.info(`[${component}] Agent: ${agentId} - ${taskType}`, context || {}),
+      console.info(
+        `[${component}] Agent: ${agentId} - ${taskType}`,
+        context || {}
+      ),
     performance: (operation: string, duration: number, context?: LogContext) =>
-      console.info(`[${component}] Performance: ${operation} (${duration}ms)`, context || {}),
-    cache: (operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext) =>
+      console.info(
+        `[${component}] Performance: ${operation} (${duration}ms)`,
+        context || {}
+      ),
+    cache: (
+      operation: "hit" | "miss" | "set" | "delete",
+      key: string,
+      context?: LogContext
+    ) =>
       console.debug(`[${component}] Cache ${operation}: ${key}`, context || {}),
     safety: (event: string, riskScore: number, context?: LogContext) =>
-      console.warn(`[${component}] Safety: ${event} (risk: ${riskScore})`, context || {}),
+      console.warn(
+        `[${component}] Safety: ${event} (risk: ${riskScore})`,
+        context || {}
+      ),
   };
 
   return fallbackLogger as StructuredLogger;
@@ -515,11 +639,14 @@ export const logger = {
   // Core services
   get trading() {
     return {
-      info: (message: string, context?: any) => console.info("[trading]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[trading]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[trading]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[trading]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[trading]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[trading]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[trading]", message, context || ""),
     };
   },
   get pattern() {
@@ -529,44 +656,60 @@ export const logger = {
       warn: (message: string, context?: any) =>
         console.warn("[pattern-detection]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
-        console.error("[pattern-detection]", message, context || "", error || ""),
+        console.error(
+          "[pattern-detection]",
+          message,
+          context || "",
+          error || ""
+        ),
       debug: (message: string, context?: any) =>
         console.debug("[pattern-detection]", message, context || ""),
     };
   },
   get safety() {
     return {
-      info: (message: string, context?: any) => console.info("[safety]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[safety]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[safety]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[safety]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[safety]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[safety]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[safety]", message, context || ""),
     };
   },
   get api() {
     return {
-      info: (message: string, context?: any) => console.info("[api]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[api]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[api]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[api]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[api]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[api]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[api]", message, context || ""),
     };
   },
 
   // Infrastructure
   get cache() {
     return {
-      info: (message: string, context?: any) => console.info("[cache]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[cache]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[cache]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[cache]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[cache]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[cache]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[cache]", message, context || ""),
     };
   },
   get database() {
     return {
-      info: (message: string, context?: any) => console.info("[database]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[database]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[database]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[database]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[database]", message, context || "", error || ""),
       debug: (message: string, context?: any) =>
@@ -575,8 +718,10 @@ export const logger = {
   },
   get websocket() {
     return {
-      info: (message: string, context?: any) => console.info("[websocket]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[websocket]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[websocket]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[websocket]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[websocket]", message, context || "", error || ""),
       debug: (message: string, context?: any) =>
@@ -587,11 +732,14 @@ export const logger = {
   // Agent system
   get agent() {
     return {
-      info: (message: string, context?: any) => console.info("[agent]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[agent]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[agent]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[agent]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[agent]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[agent]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[agent]", message, context || ""),
     };
   },
   get coordination() {
@@ -636,20 +784,26 @@ export const logger = {
   // General purpose
   get system() {
     return {
-      info: (message: string, context?: any) => console.info("[system]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[system]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[system]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[system]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[system]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[system]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[system]", message, context || ""),
     };
   },
   get default() {
     return {
-      info: (message: string, context?: any) => console.info("[default]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[default]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[default]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[default]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[default]", message, context || "", error || ""),
-      debug: (message: string, context?: any) => console.debug("[default]", message, context || ""),
+      debug: (message: string, context?: any) =>
+        console.debug("[default]", message, context || ""),
     };
   },
 };
@@ -706,12 +860,16 @@ export function replaceConsoleLog(component: string) {
   const componentLogger = createSafeLogger(component);
 
   return {
-    log: (message: string, context?: LogContext) => componentLogger.info(message, context),
-    info: (message: string, context?: LogContext) => componentLogger.info(message, context),
-    warn: (message: string, context?: LogContext) => componentLogger.warn(message, context),
+    log: (message: string, context?: LogContext) =>
+      componentLogger.info(message, context),
+    info: (message: string, context?: LogContext) =>
+      componentLogger.info(message, context),
+    warn: (message: string, context?: LogContext) =>
+      componentLogger.warn(message, context),
     error: (message: string, context?: LogContext, error?: Error) =>
       componentLogger.error(message, context, error),
-    debug: (message: string, context?: LogContext) => componentLogger.debug(message, context),
+    debug: (message: string, context?: LogContext) =>
+      componentLogger.debug(message, context),
   };
 }
 
@@ -739,7 +897,10 @@ export class PerformanceTimer {
 /**
  * Create performance timer
  */
-export function createTimer(operation: string, component: string): PerformanceTimer {
+export function createTimer(
+  operation: string,
+  component: string
+): PerformanceTimer {
   const logger = createSafeLogger(component);
   return new PerformanceTimer(operation, logger);
 }

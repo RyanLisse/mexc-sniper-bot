@@ -51,9 +51,12 @@ export class EnhancedPerformanceMonitor {
   private tracer = trace.getTracer("mexc-trading-bot", "1.0.0");
 
   // Performance counters
-  private executionCounter = this.meter.createCounter("trading_executions_total", {
-    description: "Total number of trading executions",
-  });
+  private executionCounter = this.meter.createCounter(
+    "trading_executions_total",
+    {
+      description: "Total number of trading executions",
+    }
+  );
 
   private apiLatencyHistogram = this.meter.createHistogram("api_latency_ms", {
     description: "API request latency in milliseconds",
@@ -69,15 +72,21 @@ export class EnhancedPerformanceMonitor {
     description: "Total number of errors",
   });
 
-  private patternDetectionHistogram = this.meter.createHistogram("pattern_detection_duration_ms", {
-    description: "Pattern detection processing time",
-    unit: "ms",
-  });
+  private patternDetectionHistogram = this.meter.createHistogram(
+    "pattern_detection_duration_ms",
+    {
+      description: "Pattern detection processing time",
+      unit: "ms",
+    }
+  );
 
-  private websocketLatencyHistogram = this.meter.createHistogram("websocket_latency_ms", {
-    description: "WebSocket message latency",
-    unit: "ms",
-  });
+  private websocketLatencyHistogram = this.meter.createHistogram(
+    "websocket_latency_ms",
+    {
+      description: "WebSocket message latency",
+      unit: "ms",
+    }
+  );
 
   private alertConfig: AlertConfiguration;
   private performanceCache = new Map<string, number>();
@@ -137,7 +146,11 @@ export class EnhancedPerformanceMonitor {
       });
 
       // Check performance thresholds
-      await this.checkPerformanceThresholds("execution", duration, operationName);
+      await this.checkPerformanceThresholds(
+        "execution",
+        duration,
+        operationName
+      );
 
       span.setStatus({ code: SpanStatusCode.OK });
       span.setAttributes({
@@ -251,7 +264,11 @@ export class EnhancedPerformanceMonitor {
   /**
    * Track pattern detection performance
    */
-  trackPatternDetection(duration: number, accuracy?: number, symbolCount?: number): void {
+  trackPatternDetection(
+    duration: number,
+    accuracy?: number,
+    symbolCount?: number
+  ): void {
     this.patternDetectionHistogram.record(duration, {
       accuracy: accuracy ? accuracy.toString() : "unknown",
       symbol_count: symbolCount?.toString() || "unknown",
@@ -260,7 +277,8 @@ export class EnhancedPerformanceMonitor {
     // Store for trend analysis
     this.performanceCache.set(
       "pattern_detection_avg",
-      (this.performanceCache.get("pattern_detection_avg") || 0) * 0.9 + duration * 0.1
+      (this.performanceCache.get("pattern_detection_avg") || 0) * 0.9 +
+        duration * 0.1
     );
   }
 
@@ -295,7 +313,8 @@ export class EnhancedPerformanceMonitor {
         executionLatency: this.performanceCache.get("execution_avg") || 0,
         orderFillRate: this.performanceCache.get("order_fill_rate") || 0,
         apiResponseTime: this.performanceCache.get("api_avg") || 0,
-        patternDetectionAccuracy: this.performanceCache.get("pattern_accuracy") || 0,
+        patternDetectionAccuracy:
+          this.performanceCache.get("pattern_accuracy") || 0,
         riskCalculationTime: this.performanceCache.get("risk_calc_time") || 0,
         websocketLatency: this.performanceCache.get("websocket_avg") || 0,
       },
@@ -307,7 +326,9 @@ export class EnhancedPerformanceMonitor {
       alerts: {
         active: this.lastAlertTime.size,
         lastAlert:
-          Array.from(this.lastAlertTime.entries()).sort(([, a], [, b]) => b - a)[0]?.[0] || null,
+          Array.from(this.lastAlertTime.entries()).sort(
+            ([, a], [, b]) => b - a
+          )[0]?.[0] || null,
       },
     };
   }
@@ -320,7 +341,9 @@ export class EnhancedPerformanceMonitor {
       const memoryUsage = process.memoryUsage();
       const memoryMB = memoryUsage.heapUsed / 1024 / 1024;
 
-      this.memoryGauge.add(memoryMB - (this.performanceCache.get("last_memory") || 0));
+      this.memoryGauge.add(
+        memoryMB - (this.performanceCache.get("last_memory") || 0)
+      );
       this.performanceCache.set("last_memory", memoryMB);
 
       // Check memory threshold
@@ -402,7 +425,9 @@ export class EnhancedPerformanceMonitor {
   /**
    * Determine alert severity
    */
-  private getAlertSeverity(alertType: string): "low" | "medium" | "high" | "critical" {
+  private getAlertSeverity(
+    alertType: string
+  ): "low" | "medium" | "high" | "critical" {
     switch (alertType) {
       case "execution_error":
       case "sla_violation":
@@ -422,42 +447,52 @@ export class EnhancedPerformanceMonitor {
     try {
       const alertPayload = {
         text: `🚨 PERFORMANCE ALERT 🚨`,
-        attachments: [{
-          color: this.getAlertColor(alert.severity),
-          title: `Performance Alert: ${alert.type}`,
-          text: `Trading bot performance issue detected requiring attention.`,
-          fields: [
-            { title: "Alert Type", value: alert.type, short: true },
-            { title: "Severity", value: alert.severity, short: true },
-            { title: "Service", value: alert.service, short: true },
-            { title: "Timestamp", value: alert.timestamp, short: true },
-            { title: "Data", value: JSON.stringify(alert.data, null, 2), short: false }
-          ],
-          ts: Math.floor(Date.now() / 1000)
-        }]
+        attachments: [
+          {
+            color: this.getAlertColor(alert.severity),
+            title: `Performance Alert: ${alert.type}`,
+            text: `Trading bot performance issue detected requiring attention.`,
+            fields: [
+              { title: "Alert Type", value: alert.type, short: true },
+              { title: "Severity", value: alert.severity, short: true },
+              { title: "Service", value: alert.service, short: true },
+              { title: "Timestamp", value: alert.timestamp, short: true },
+              {
+                title: "Data",
+                value: JSON.stringify(alert.data, null, 2),
+                short: false,
+              },
+            ],
+            ts: Math.floor(Date.now() / 1000),
+          },
+        ],
       };
 
       // Send to webhook if configured
-      const webhookUrl = this.alertConfig.webhookUrl || process.env.PERFORMANCE_ALERT_WEBHOOK_URL;
+      const webhookUrl =
+        this.alertConfig.webhookUrl ||
+        process.env.PERFORMANCE_ALERT_WEBHOOK_URL;
       if (webhookUrl) {
         await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(alertPayload)
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(alertPayload),
         });
       }
 
       // Send email if configured
-      const emailEndpoint = this.alertConfig.emailEndpoint || process.env.PERFORMANCE_ALERT_EMAIL_ENDPOINT;
+      const emailEndpoint =
+        this.alertConfig.emailEndpoint ||
+        process.env.PERFORMANCE_ALERT_EMAIL_ENDPOINT;
       if (emailEndpoint) {
         await fetch(emailEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: process.env.PERFORMANCE_ALERT_EMAIL_TO,
             subject: `Performance Alert: ${alert.type} - ${alert.severity.toUpperCase()}`,
-            body: `Performance Alert Details:\n\nType: ${alert.type}\nSeverity: ${alert.severity}\nService: ${alert.service}\nTimestamp: ${alert.timestamp}\n\nData:\n${JSON.stringify(alert.data, null, 2)}\n\nThis alert was generated by the Enhanced Performance Monitor.`
-          })
+            body: `Performance Alert Details:\n\nType: ${alert.type}\nSeverity: ${alert.severity}\nService: ${alert.service}\nTimestamp: ${alert.timestamp}\n\nData:\n${JSON.stringify(alert.data, null, 2)}\n\nThis alert was generated by the Enhanced Performance Monitor.`,
+          }),
         });
       }
 
@@ -466,17 +501,19 @@ export class EnhancedPerformanceMonitor {
       const slackWebhook = process.env.SLACK_WEBHOOK_URL;
       if (slackChannel && slackWebhook) {
         await fetch(slackWebhook, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             channel: slackChannel,
-            ...alertPayload
-          })
+            ...alertPayload,
+          }),
         });
       }
-
     } catch (error) {
-      console.error('[Enhanced Performance Monitor] Failed to send external alert:', error);
+      console.error(
+        "[Enhanced Performance Monitor] Failed to send external alert:",
+        error
+      );
     }
   }
 
@@ -491,7 +528,6 @@ export class EnhancedPerformanceMonitor {
         return "warning";
       case "medium":
         return "good";
-      case "low":
       default:
         return "#439FE0";
     }

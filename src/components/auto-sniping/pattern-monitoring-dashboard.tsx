@@ -9,8 +9,8 @@ interface PatternMonitoringDashboardProps {
   className?: string;
 }
 
-export function PatternMonitoringDashboard({ 
-  className 
+export function PatternMonitoringDashboard({
+  className,
 }: PatternMonitoringDashboardProps) {
   const [isMonitoring, setIsMonitoring] = useState(false);
 
@@ -27,7 +27,7 @@ export function PatternMonitoringDashboard({
                 {isMonitoring ? "Monitoring" : "Stopped"}
               </Badge>
             </div>
-            <Button 
+            <Button
               onClick={() => setIsMonitoring(!isMonitoring)}
               variant={isMonitoring ? "destructive" : "default"}
             >

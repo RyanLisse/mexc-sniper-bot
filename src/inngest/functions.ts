@@ -83,7 +83,9 @@ function isAgentWorkflowResult(value: unknown): value is AgentWorkflowResult {
   );
 }
 
-function isCalendarDiscoveryData(value: unknown): value is CalendarDiscoveryData {
+function isCalendarDiscoveryData(
+  value: unknown
+): value is CalendarDiscoveryData {
   return typeof value === "object" && value !== null;
 }
 
@@ -202,17 +204,22 @@ export const pollMexcCalendar = inngest.createFunction(
     }
 
     // Step 2: Execute Multi-Agent Calendar Discovery (optional enhancement)
-    const discoveryResult = await step.run("calendar-discovery-workflow", async () => {
-      if (!syncResult.success) {
-        throw new Error(`Calendar sync failed: ${syncResult.errors.join(", ")}`);
-      }
+    const discoveryResult = await step.run(
+      "calendar-discovery-workflow",
+      async () => {
+        if (!syncResult.success) {
+          throw new Error(
+            `Calendar sync failed: ${syncResult.errors.join(", ")}`
+          );
+        }
 
-      const orchestrator = new MexcOrchestrator();
-      return await orchestrator.executeCalendarDiscoveryWorkflow({
-        trigger,
-        force,
-      });
-    });
+        const orchestrator = new MexcOrchestrator();
+        return await orchestrator.executeCalendarDiscoveryWorkflow({
+          trigger,
+          force,
+        });
+      }
+    );
 
     // Type guard for discovery result
     if (!isAgentWorkflowResult(discoveryResult)) {
@@ -247,49 +254,52 @@ export const pollMexcCalendar = inngest.createFunction(
     });
 
     // Step 2: Process and send follow-up events for new listings
-    const followUpEvents = await step.run("process-discovery-results", async () => {
-      if (discoveryData?.newListings?.length) {
-        // Send symbol watch events for new discoveries
-        const events = discoveryData.newListings.map(
-          (listing: {
-            vcoinId: string;
-            symbolName?: string;
-            projectName?: string;
-            launchTime?: string;
-          }) => ({
-            name: "mexc/symbol.watch",
-            data: {
-              vcoinId: listing.vcoinId,
-              symbolName: listing.symbolName,
-              projectName: listing.projectName,
-              launchTime: listing.launchTime,
-              attempt: 1,
+    const followUpEvents = await step.run(
+      "process-discovery-results",
+      async () => {
+        if (discoveryData?.newListings?.length) {
+          // Send symbol watch events for new discoveries
+          const events = discoveryData.newListings.map(
+            (listing: {
+              vcoinId: string;
+              symbolName?: string;
+              projectName?: string;
+              launchTime?: string;
+            }) => ({
+              name: "mexc/symbol.watch",
+              data: {
+                vcoinId: listing.vcoinId,
+                symbolName: listing.symbolName,
+                projectName: listing.projectName,
+                launchTime: listing.launchTime,
+                attempt: 1,
+              },
+            })
+          );
+
+          // Send events
+          for (const eventData of events) {
+            await inngest.send(eventData);
+          }
+
+          await updateWorkflowStatus("addActivity", {
+            activity: {
+              type: "calendar",
+              message: `Calendar scan completed - ${discoveryData.newListings.length} new listings found`,
             },
-          })
-        );
+          });
 
-        // Send events
-        for (const eventData of events) {
-          await inngest.send(eventData);
+          return events.length;
         }
-
         await updateWorkflowStatus("addActivity", {
           activity: {
             type: "calendar",
-            message: `Calendar scan completed - ${discoveryData.newListings.length} new listings found`,
+            message: "Calendar scan completed - no new listings",
           },
         });
-
-        return events.length;
+        return 0;
       }
-      await updateWorkflowStatus("addActivity", {
-        activity: {
-          type: "calendar",
-          message: "Calendar scan completed - no new listings",
-        },
-      });
-      return 0;
-    });
+    );
 
     return {
       status: "success",
@@ -321,8 +331,20 @@ export const pollMexcCalendar = inngest.createFunction(
 export const watchMexcSymbol = inngest.createFunction(
   { id: "watch-mexc-symbol" },
   { event: "mexc/symbol.watch" },
-  async ({ event, step }: { event: { data: MexcSymbolWatchRequestedData }; step: InngestStep }) => {
-    const { vcoinId, symbolName, projectName, launchTime, attempt = 1 } = event.data;
+  async ({
+    event,
+    step,
+  }: {
+    event: { data: MexcSymbolWatchRequestedData };
+    step: InngestStep;
+  }) => {
+    const {
+      vcoinId,
+      symbolName,
+      projectName,
+      launchTime,
+      attempt = 1,
+    } = event.data;
 
     if (!vcoinId) {
       throw new Error("Missing vcoinId in event data");
@@ -337,16 +359,19 @@ export const watchMexcSymbol = inngest.createFunction(
     });
 
     // Step 1: Execute Multi-Agent Symbol Analysis
-    const analysisResult = await step.run("symbol-analysis-workflow", async () => {
-      const orchestrator = new MexcOrchestrator();
-      return await orchestrator.executeSymbolAnalysisWorkflow({
-        vcoinId,
-        symbolName,
-        projectName,
-        launchTime,
-        attempt,
-      });
-    });
+    const analysisResult = await step.run(
+      "symbol-analysis-workflow",
+      async () => {
+        const orchestrator = new MexcOrchestrator();
+        return await orchestrator.executeSymbolAnalysisWorkflow({
+          vcoinId,
+          symbolName,
+          projectName,
+          launchTime,
+          attempt,
+        });
+      }
+    );
 
     // Type guard for analysis result
     if (!isAgentWorkflowResult(analysisResult)) {
@@ -358,7 +383,9 @@ export const watchMexcSymbol = inngest.createFunction(
     }
 
     // Type guard for analysis data
-    const analysisData = isSymbolAnalysisData(analysisResult.data) ? analysisResult.data : null;
+    const analysisData = isSymbolAnalysisData(analysisResult.data)
+      ? analysisResult.data
+      : null;
 
     // Step 2: Handle results based on symbol status
     const actionResult = await step.run("process-symbol-results", async () => {
@@ -409,7 +436,9 @@ export const watchMexcSymbol = inngest.createFunction(
       attempt,
       symbolReady: analysisData?.symbolReady || false,
       action:
-        typeof actionResult === "object" && actionResult !== null && "action" in actionResult
+        typeof actionResult === "object" &&
+        actionResult !== null &&
+        "action" in actionResult
           ? (actionResult as { action: string }).action
           : "unknown",
       timestamp: new Date().toISOString(),
@@ -443,14 +472,17 @@ export const analyzeMexcPatterns = inngest.createFunction(
     });
 
     // Step 1: Execute Multi-Agent Pattern Analysis
-    const patternResult = await step.run("pattern-analysis-workflow", async () => {
-      const orchestrator = new MexcOrchestrator();
-      return await orchestrator.executePatternAnalysisWorkflow({
-        vcoinId,
-        symbols,
-        analysisType,
-      });
-    });
+    const patternResult = await step.run(
+      "pattern-analysis-workflow",
+      async () => {
+        const orchestrator = new MexcOrchestrator();
+        return await orchestrator.executePatternAnalysisWorkflow({
+          vcoinId,
+          symbols,
+          analysisType,
+        });
+      }
+    );
 
     // Type guard for pattern result
     if (!isAgentWorkflowResult(patternResult)) {
@@ -462,7 +494,9 @@ export const analyzeMexcPatterns = inngest.createFunction(
     }
 
     // Type guard for pattern data
-    const patternData = isPatternAnalysisData(patternResult.data) ? patternResult.data : null;
+    const patternData = isPatternAnalysisData(patternResult.data)
+      ? patternResult.data
+      : null;
 
     return {
       status: "success",
@@ -506,15 +540,18 @@ export const createMexcTradingStrategy = inngest.createFunction(
     });
 
     // Step 1: Execute Multi-Agent Trading Strategy Creation
-    const strategyResult = await step.run("trading-strategy-workflow", async () => {
-      const orchestrator = new MexcOrchestrator();
-      return await orchestrator.executeTradingStrategyWorkflow({
-        vcoinId,
-        symbolData,
-        riskLevel,
-        capital,
-      });
-    });
+    const strategyResult = await step.run(
+      "trading-strategy-workflow",
+      async () => {
+        const orchestrator = new MexcOrchestrator();
+        return await orchestrator.executeTradingStrategyWorkflow({
+          vcoinId,
+          symbolData,
+          riskLevel,
+          capital,
+        });
+      }
+    );
 
     // Type guard for strategy result
     if (!isAgentWorkflowResult(strategyResult)) {
@@ -528,11 +565,15 @@ export const createMexcTradingStrategy = inngest.createFunction(
           message: `Trading strategy failed for ${symbolData.symbol || vcoinId}`,
         },
       });
-      throw new Error(`Trading strategy creation failed: ${strategyResult.error}`);
+      throw new Error(
+        `Trading strategy creation failed: ${strategyResult.error}`
+      );
     }
 
     // Type guard for strategy data
-    const strategyData = isTradingStrategyData(strategyResult.data) ? strategyResult.data : null;
+    const strategyData = isTradingStrategyData(strategyResult.data)
+      ? strategyResult.data
+      : null;
 
     // Update metrics for successful strategy
     await updateWorkflowStatus("updateMetrics", {

@@ -33,7 +33,9 @@ export class DataFetcher {
 
       if (result && typeof result === "object" && "success" in result) {
         const enhancedResponse = result as any;
-        const dataArray = Array.isArray(enhancedResponse.data) ? enhancedResponse.data : [];
+        const dataArray = Array.isArray(enhancedResponse.data)
+          ? enhancedResponse.data
+          : [];
         return {
           success: enhancedResponse.success,
           data: dataArray,
@@ -75,7 +77,9 @@ export class DataFetcher {
   }> {
     try {
       this.logger.info(`[DataFetcher] Fetching symbol data for: ${vcoinId}`);
-      const result = await this.mexcApiAgent.callMexcApi("/symbols", { vcoinId });
+      const result = await this.mexcApiAgent.callMexcApi("/symbols", {
+        vcoinId,
+      });
 
       if (result && typeof result === "object") {
         return {
@@ -164,7 +168,9 @@ export class DataFetcher {
       data?: unknown;
     }>
   > {
-    this.logger.info(`[DataFetcher] Fetching data for ${vcoinIds.length} symbols`);
+    this.logger.info(
+      `[DataFetcher] Fetching data for ${vcoinIds.length} symbols`
+    );
 
     const promises = vcoinIds.map((vcoinId) => this.fetchSymbolData(vcoinId));
     const results = await Promise.allSettled(promises);
@@ -173,7 +179,10 @@ export class DataFetcher {
       if (result.status === "fulfilled") {
         return result.value;
       }
-      this.logger.error(`[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`, result.reason);
+      this.logger.error(
+        `[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`,
+        result.reason
+      );
       return {
         vcoinId: vcoinIds[index],
         symbol: "UNKNOWN",

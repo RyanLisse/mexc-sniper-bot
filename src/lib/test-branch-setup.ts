@@ -95,7 +95,9 @@ export class MockTestBranchManager implements TestBranchManager {
   }
 
   async listBranches(): Promise<BranchInfo[]> {
-    return Array.from(this.branches.values()).filter((b) => b.status !== "deleted");
+    return Array.from(this.branches.values()).filter(
+      (b) => b.status !== "deleted"
+    );
   }
 
   async getBranchInfo(branchName: string): Promise<BranchInfo | null> {
@@ -117,14 +119,17 @@ export class MockTestBranchManager implements TestBranchManager {
     const expiredBranches = Array.from(this.branches.values()).filter(
       (branch) =>
         branch.status === "active" &&
-        new Date(branch.createdAt).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000 // 7 days
+        new Date(branch.createdAt).getTime() <
+          Date.now() - 7 * 24 * 60 * 60 * 1000 // 7 days
     );
 
     for (const branch of expiredBranches) {
       await this.deleteBranch(branch.name);
     }
 
-    console.info(`[TestBranch] Cleaned up ${expiredBranches.length} expired branches`);
+    console.info(
+      `[TestBranch] Cleaned up ${expiredBranches.length} expired branches`
+    );
   }
 
   getCurrentBranch(): string {
@@ -255,7 +260,10 @@ export function createTestDatabase(branchInfo: BranchInfo) {
  */
 export async function withTestBranch<T>(
   testName: string,
-  testFn: (db: ReturnType<typeof drizzle>, branchInfo: BranchInfo) => Promise<T>,
+  testFn: (
+    db: ReturnType<typeof drizzle>,
+    branchInfo: BranchInfo
+  ) => Promise<T>,
   options?: {
     parentBranch?: string;
     seed?: boolean;
@@ -281,7 +289,9 @@ export function getTestDatabaseConfig(): {
   timeout: number;
 } {
   return {
-    url: process.env.TEST_DATABASE_URL || "postgresql://test:test@localhost:5432/test",
+    url:
+      process.env.TEST_DATABASE_URL ||
+      "postgresql://test:test@localhost:5432/test",
     poolSize: 5,
     timeout: 10000,
   };
@@ -328,10 +338,14 @@ export async function migrateTestBranch(
     }
 
     const _db = createTestDatabase(branch);
-    console.info(`[TestBranch] Running migrations for branch: ${contextOrBranchName}`);
+    console.info(
+      `[TestBranch] Running migrations for branch: ${contextOrBranchName}`
+    );
     // Migration logic would go here
   } else {
-    console.info(`[TestBranch] Running migrations for branch: ${contextOrBranchName.branchName}`);
+    console.info(
+      `[TestBranch] Running migrations for branch: ${contextOrBranchName.branchName}`
+    );
     // Migration logic would go here - can use contextOrBranchName.connectionString
   }
 }
@@ -349,10 +363,15 @@ export async function checkTestBranchHealth(
     try {
       const _db = createTestDatabase(branch);
       // Health check logic would go here
-      console.info(`[TestBranch] Health check passed for branch: ${contextOrBranchName}`);
+      console.info(
+        `[TestBranch] Health check passed for branch: ${contextOrBranchName}`
+      );
       return true;
     } catch (error) {
-      console.error(`[TestBranch] Health check failed for branch: ${contextOrBranchName}`, error);
+      console.error(
+        `[TestBranch] Health check failed for branch: ${contextOrBranchName}`,
+        error
+      );
       return false;
     }
   } else {

@@ -47,7 +47,10 @@ interface StatusInfo {
 }
 
 // Consolidated status information helper
-const getStatusInfo = (status: string, autoSnipingEnabled: boolean): StatusInfo => {
+const getStatusInfo = (
+  status: string,
+  autoSnipingEnabled: boolean
+): StatusInfo => {
   const statusMap: Record<string, StatusInfo> = {
     ready: {
       icon: <CheckCircle className="h-6 w-6 text-green-500" />,
@@ -87,7 +90,9 @@ const StatusDisplay = ({
         {statusInfo.icon}
         <div>
           <h3 className="font-semibold">{statusInfo.title}</h3>
-          <p className="text-sm text-muted-foreground">{statusInfo.description}</p>
+          <p className="text-sm text-muted-foreground">
+            {statusInfo.description}
+          </p>
         </div>
       </div>
       <div className="text-right">
@@ -103,7 +108,9 @@ export function ConfigStatusPanel({
   showDetailedResults = true,
   autoRefresh = false,
 }: ConfigStatusPanelProps) {
-  const [expandedComponent, setExpandedComponent] = useState<string | null>(null);
+  const [expandedComponent, setExpandedComponent] = useState<string | null>(
+    null
+  );
 
   const {
     readinessReport,
@@ -145,7 +152,8 @@ export function ConfigStatusPanel({
 
     if (status === "valid" && isValid) return statusTypes.valid_and_valid;
     if (status === "warning") return statusTypes.warning;
-    if (status === "invalid" || !isValid) return statusTypes.invalid_or_not_valid;
+    if (status === "invalid" || !isValid)
+      return statusTypes.invalid_or_not_valid;
     return statusTypes.default;
   };
 
@@ -214,8 +222,15 @@ export function ConfigStatusPanel({
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={runHealthCheck} disabled={isValidating}>
-                <RefreshCw className={`h-4 w-4 ${isValidating ? "animate-spin" : ""}`} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={runHealthCheck}
+                disabled={isValidating}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isValidating ? "animate-spin" : ""}`}
+                />
                 Quick Check
               </Button>
               <Button
@@ -224,7 +239,9 @@ export function ConfigStatusPanel({
                 onClick={generateReadinessReport}
                 disabled={isLoading}
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                />
                 Full Validation
               </Button>
             </div>
@@ -240,7 +257,10 @@ export function ConfigStatusPanel({
                 readinessScore={readinessReport.readinessScore}
               />
 
-              <Progress value={readinessReport.readinessScore} className="w-full" />
+              <Progress
+                value={readinessReport.readinessScore}
+                className="w-full"
+              />
 
               {lastUpdated && (
                 <p className="text-sm text-muted-foreground">
@@ -262,7 +282,9 @@ export function ConfigStatusPanel({
                   )}
                   <div>
                     <h3 className="font-semibold">
-                      {healthStatus.healthy ? "System Healthy" : "System Issues Detected"}
+                      {healthStatus.healthy
+                        ? "System Healthy"
+                        : "System Issues Detected"}
                     </h3>
                     <p className="text-sm text-muted-foreground">
                       {healthStatus.issues.length} issue(s) found
@@ -270,7 +292,9 @@ export function ConfigStatusPanel({
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold">{healthStatus.score}%</div>
+                  <div className="text-2xl font-bold">
+                    {healthStatus.score}%
+                  </div>
                   <p className="text-sm text-muted-foreground">Health Score</p>
                 </div>
               </div>
@@ -308,7 +332,9 @@ export function ConfigStatusPanel({
         <Card>
           <CardHeader>
             <CardTitle>Component Validation Results</CardTitle>
-            <CardDescription>Detailed status for each system component</CardDescription>
+            <CardDescription>
+              Detailed status for each system component
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -326,31 +352,45 @@ export function ConfigStatusPanel({
                             {result.component}
                             <Badge
                               variant={
-                                getComponentStatusInfo(result.status, result.isValid).variant
+                                getComponentStatusInfo(
+                                  result.status,
+                                  result.isValid
+                                ).variant
                               }
                             >
                               {result.status}
                             </Badge>
                           </h4>
-                          <p className="text-sm text-muted-foreground">{result.message}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {result.message}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getComponentStatusInfo(result.status, result.isValid).icon}
+                        {
+                          getComponentStatusInfo(result.status, result.isValid)
+                            .icon
+                        }
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleExpanded(result.component)}
                         >
-                          {expandedComponent === result.component ? "Hide" : "Details"}
+                          {expandedComponent === result.component
+                            ? "Hide"
+                            : "Details"}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleComponentValidation(result.component)}
+                          onClick={() =>
+                            handleComponentValidation(result.component)
+                          }
                           disabled={isValidating}
                         >
-                          <RefreshCw className={`h-3 w-3 ${isValidating ? "animate-spin" : ""}`} />
+                          <RefreshCw
+                            className={`h-3 w-3 ${isValidating ? "animate-spin" : ""}`}
+                          />
                         </Button>
                       </div>
                     </div>
@@ -384,27 +424,32 @@ export function ConfigStatusPanel({
       )}
 
       {/* Recommendations */}
-      {readinessReport?.recommendations && readinessReport.recommendations.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Recommendations</CardTitle>
-            <CardDescription>Suggested actions to improve system readiness</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {readinessReport.recommendations.map((recommendation: string, index: number) => (
-                <div
-                  key={`recommendation-${index}-${recommendation.slice(0, 20)}`}
-                  className="flex items-start gap-2"
-                >
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                  <p className="text-sm">{recommendation}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {readinessReport?.recommendations &&
+        readinessReport.recommendations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Recommendations</CardTitle>
+              <CardDescription>
+                Suggested actions to improve system readiness
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {readinessReport.recommendations.map(
+                  (recommendation: string, index: number) => (
+                    <div
+                      key={`recommendation-${index}-${recommendation.slice(0, 20)}`}
+                      className="flex items-start gap-2"
+                    >
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                      <p className="text-sm">{recommendation}</p>
+                    </div>
+                  )
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 }

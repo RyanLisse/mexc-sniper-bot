@@ -16,7 +16,12 @@ export interface RiskMetrics {
 export interface CircuitBreaker {
   id: string;
   name: string;
-  type: "loss_limit" | "drawdown" | "position_count" | "volatility" | "exposure";
+  type:
+    | "loss_limit"
+    | "drawdown"
+    | "position_count"
+    | "volatility"
+    | "exposure";
   threshold: number;
   currentValue: number;
   triggered: boolean;
@@ -28,7 +33,11 @@ export interface CircuitBreaker {
 
 export interface RiskEvent {
   id: string;
-  type: "threshold_breach" | "circuit_breaker" | "emergency_halt" | "risk_warning";
+  type:
+    | "threshold_breach"
+    | "circuit_breaker"
+    | "emergency_halt"
+    | "risk_warning";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   circuitBreakerId?: string;
@@ -176,7 +185,10 @@ Always prioritize capital preservation over profit maximization. When in doubt, 
     }
   }
 
-  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+  async process(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
     const userMessage = `
 Risk Management Analysis Request:
 Current Risk Metrics:
@@ -225,7 +237,8 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
       dailyPnL,
       maxDrawdown: Math.min(this.riskMetrics.maxDrawdown, dailyPnL),
       openPositions,
-      averagePositionSize: openPositions > 0 ? totalExposure / openPositions : 0,
+      averagePositionSize:
+        openPositions > 0 ? totalExposure / openPositions : 0,
       riskPercentage: (totalExposure / 1000) * 100, // Assuming $1000 base capital
       volatilityIndex: volatilityIndex || this.riskMetrics.volatilityIndex,
       lastUpdated: new Date().toISOString(),
@@ -243,7 +256,10 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     await this.emitSafetyEvent("risk", "low", "Risk metrics updated", {
       previous: previousMetrics,
       current: this.riskMetrics,
-      significantChange: this.hasSignificantRiskChange(previousMetrics, this.riskMetrics),
+      significantChange: this.hasSignificantRiskChange(
+        previousMetrics,
+        this.riskMetrics
+      ),
     });
   }
 
@@ -312,9 +328,14 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
         breaker.triggered = false;
         breaker.resetAt = new Date().toISOString();
 
-        await this.emitSafetyEvent("risk", "low", `Circuit breaker reset: ${breaker.name}`, {
-          breakerId: breaker.id,
-        });
+        await this.emitSafetyEvent(
+          "risk",
+          "low",
+          `Circuit breaker reset: ${breaker.name}`,
+          {
+            breakerId: breaker.id,
+          }
+        );
       }
     }
   }
@@ -333,22 +354,30 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     }
   }
 
-  private async executeCircuitBreakerAction(breaker: CircuitBreaker): Promise<void> {
+  private async executeCircuitBreakerAction(
+    breaker: CircuitBreaker
+  ): Promise<void> {
     switch (breaker.action) {
       case "warn":
         // Just emit warning - no trading restrictions
-        this.logger.warn(`[RiskManager] Warning: ${breaker.name} threshold reached`);
+        this.logger.warn(
+          `[RiskManager] Warning: ${breaker.name} threshold reached`
+        );
         break;
 
       case "halt_new":
         // Halt new trades but allow existing ones to continue
-        this.logger.warn(`[RiskManager] Halting new trades due to: ${breaker.name}`);
+        this.logger.warn(
+          `[RiskManager] Halting new trades due to: ${breaker.name}`
+        );
         // This would integrate with trading system to prevent new trades
         break;
 
       case "halt_all":
         // Halt all trading activity
-        this.logger.error(`[RiskManager] Halting all trading due to: ${breaker.name}`);
+        this.logger.error(
+          `[RiskManager] Halting all trading due to: ${breaker.name}`
+        );
         // This would integrate with trading system to halt everything
         break;
 
@@ -387,7 +416,8 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     // Portfolio concentration risk (0-25 points)
     const newExposure = this.riskMetrics.totalExposure + totalCost;
     const concentrationRisk = Math.min(
-      (newExposure / (this.safetyConfig.riskManagement.maxPositionSize * 5)) * 25,
+      (newExposure / (this.safetyConfig.riskManagement.maxPositionSize * 5)) *
+        25,
       25
     );
     riskScore += concentrationRisk;
@@ -401,14 +431,20 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
 
     // Daily P&L risk (0-25 points)
     const pnlRisk =
-      (Math.abs(this.riskMetrics.dailyPnL) / this.safetyConfig.riskManagement.maxDailyLoss) * 25;
+      (Math.abs(this.riskMetrics.dailyPnL) /
+        this.safetyConfig.riskManagement.maxDailyLoss) *
+      25;
     riskScore += Math.min(pnlRisk, 25);
 
     // Check circuit breakers
-    const activeBreakers = Array.from(this.circuitBreakers.values()).filter((cb) => cb.triggered);
+    const activeBreakers = Array.from(this.circuitBreakers.values()).filter(
+      (cb) => cb.triggered
+    );
     if (activeBreakers.length > 0) {
       riskScore += 50; // Major penalty for active circuit breakers
-      reasons.push(`Active circuit breakers: ${activeBreakers.map((cb) => cb.name).join(", ")}`);
+      reasons.push(
+        `Active circuit breakers: ${activeBreakers.map((cb) => cb.name).join(", ")}`
+      );
     }
 
     // Emergency halt check
@@ -434,7 +470,8 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     const maxAllowedSize = approved
       ? Math.min(
           this.safetyConfig.riskManagement.maxPositionSize,
-          this.safetyConfig.riskManagement.maxPositionSize * 5 - this.riskMetrics.totalExposure
+          this.safetyConfig.riskManagement.maxPositionSize * 5 -
+            this.riskMetrics.totalExposure
         )
       : 0;
 
@@ -451,7 +488,9 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
       estimatedImpact: {
         newExposure,
         riskIncrease:
-          ((newExposure - this.riskMetrics.totalExposure) / this.riskMetrics.totalExposure) * 100,
+          ((newExposure - this.riskMetrics.totalExposure) /
+            this.riskMetrics.totalExposure) *
+          100,
         portfolioImpact: (totalCost / newExposure) * 100,
       },
     };
@@ -461,7 +500,9 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     return Array.from(this.circuitBreakers.values()).some(
       (cb) =>
         cb.triggered &&
-        (cb.action === "halt_new" || cb.action === "halt_all" || cb.action === "emergency_exit")
+        (cb.action === "halt_new" ||
+          cb.action === "halt_all" ||
+          cb.action === "emergency_exit")
     );
   }
 
@@ -480,10 +521,15 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
 
     this.riskEvents.push(riskEvent);
 
-    await this.emitSafetyEvent("risk", "critical", `EMERGENCY HALT ACTIVATED: ${reason}`, {
-      reason,
-      riskMetrics: this.riskMetrics,
-    });
+    await this.emitSafetyEvent(
+      "risk",
+      "critical",
+      `EMERGENCY HALT ACTIVATED: ${reason}`,
+      {
+        reason,
+        riskMetrics: this.riskMetrics,
+      }
+    );
 
     // Here you would integrate with the trading system to:
     // 1. Cancel all pending orders
@@ -500,9 +546,13 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     });
   }
 
-  private hasSignificantRiskChange(prev: RiskMetrics, current: RiskMetrics): boolean {
+  private hasSignificantRiskChange(
+    prev: RiskMetrics,
+    current: RiskMetrics
+  ): boolean {
     const exposureChange =
-      Math.abs(current.totalExposure - prev.totalExposure) / Math.max(prev.totalExposure, 1);
+      Math.abs(current.totalExposure - prev.totalExposure) /
+      Math.max(prev.totalExposure, 1);
     const pnlChange = Math.abs(current.dailyPnL - prev.dailyPnL);
     const positionChange = current.openPositions !== prev.openPositions;
 
@@ -526,16 +576,22 @@ Please provide detailed risk analysis, recommendations, and any necessary risk m
     }
 
     // Check for active circuit breakers
-    const activeBreakers = Array.from(this.circuitBreakers.values()).filter((cb) => cb.triggered);
+    const activeBreakers = Array.from(this.circuitBreakers.values()).filter(
+      (cb) => cb.triggered
+    );
     if (activeBreakers.length > 0) {
       issues.push(`${activeBreakers.length} circuit breaker(s) active`);
-      recommendations.push("Address circuit breaker triggers before resuming trading");
+      recommendations.push(
+        "Address circuit breaker triggers before resuming trading"
+      );
     }
 
     // Check emergency halt status
     if (this.emergencyHaltActive) {
       issues.push("Emergency halt is active");
-      recommendations.push("Investigate emergency halt cause and resolve before continuing");
+      recommendations.push(
+        "Investigate emergency halt cause and resolve before continuing"
+      );
     }
 
     return {

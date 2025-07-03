@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -14,31 +14,31 @@ import { supabaseSchema } from "./schemas/supabase-schema";
 
 // Supabase client configuration
 export const supabase = createClient(
-  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_ANON_KEY || 'placeholder_key',
+  process.env.SUPABASE_URL || "https://placeholder.supabase.co",
+  process.env.SUPABASE_ANON_KEY || "placeholder_key",
   {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
     },
     realtime: {
       params: {
-        eventsPerSecond: 10
-      }
-    }
+        eventsPerSecond: 10,
+      },
+    },
   }
 );
 
 // Admin client for server-side operations
 export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_service_role_key',
+  process.env.SUPABASE_URL || "https://placeholder.supabase.co",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder_service_role_key",
   {
     auth: {
       autoRefreshToken: false,
-      persistSession: false
-    }
+      persistSession: false,
+    },
   }
 );
 
@@ -64,8 +64,10 @@ function getLogger() {
   // Use a local static variable to ensure thread-safety
   if (!(getLogger as any)._logger) {
     (getLogger as any)._logger = {
-      info: (message: string, context?: any) => console.info("[db-index]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[db-index]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[db-index]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[db-index]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[db-index]", message, context || "", error || ""),
       debug: (message: string, context?: any) =>
@@ -100,22 +102,29 @@ async function withRetry<T>(
     }
   }
 
-  getLogger().error(`[Database] ${operationName} failed after ${retries} attempts`, lastError);
+  getLogger().error(
+    `[Database] ${operationName} failed after ${retries} attempts`,
+    lastError
+  );
   throw lastError;
 }
 
 // Check if we have NeonDB/PostgreSQL configuration
-const hasNeonConfig = () => !!process.env.DATABASE_URL?.startsWith("postgresql://") && 
-  !process.env.DATABASE_URL?.includes('supabase.com');
+const hasNeonConfig = () =>
+  !!process.env.DATABASE_URL?.startsWith("postgresql://") &&
+  !process.env.DATABASE_URL?.includes("supabase.com");
 
 // Check if we have Supabase configuration
-export const hasSupabaseConfig = () => !!process.env.DATABASE_URL?.includes('supabase.com') && 
+export const hasSupabaseConfig = () =>
+  !!process.env.DATABASE_URL?.includes("supabase.com") &&
   !!process.env.SUPABASE_URL;
 
 // Create PostgreSQL client with connection pooling
 function createPostgresClient() {
   if (!process.env.DATABASE_URL?.startsWith("postgresql://")) {
-    throw new Error("Database configuration missing: need DATABASE_URL with postgresql:// protocol");
+    throw new Error(
+      "Database configuration missing: need DATABASE_URL with postgresql:// protocol"
+    );
   }
 
   // Return cached client if available
@@ -123,14 +132,15 @@ function createPostgresClient() {
     return postgresClient;
   }
 
-  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
+  const isProduction =
+    process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
   const isSupabase = hasSupabaseConfig();
 
   // PostgreSQL connection configuration
   const connectionConfig = {
     // Connection pool settings - optimized for Supabase or NeonDB
-    max: isProduction ? (isSupabase ? 10 : 6) : (isSupabase ? 8 : 4),
+    max: isProduction ? (isSupabase ? 10 : 6) : isSupabase ? 8 : 4,
     idle_timeout: isSupabase ? 20 : 15, // Supabase can handle longer timeouts
     connect_timeout: 10,
 
@@ -145,7 +155,9 @@ function createPostgresClient() {
 
     // Connection handling
     connection: {
-      application_name: isSupabase ? "mexc-sniper-bot-supabase" : "mexc-sniper-bot-quota-optimized",
+      application_name: isSupabase
+        ? "mexc-sniper-bot-supabase"
+        : "mexc-sniper-bot-quota-optimized",
       statement_timeout: isSupabase ? 15000 : 12000,
       idle_in_transaction_session_timeout: isSupabase ? 15000 : 10000,
       lock_timeout: isSupabase ? 12000 : 8000,
@@ -160,7 +172,9 @@ function createPostgresClient() {
     },
 
     // Debug settings (only in development)
-    debug: process.env.NODE_ENV === "development" && process.env.DATABASE_DEBUG === "true",
+    debug:
+      process.env.NODE_ENV === "development" &&
+      process.env.DATABASE_DEBUG === "true",
 
     // Connection-level optimizations
     fetch_types: false,
@@ -170,51 +184,66 @@ function createPostgresClient() {
   try {
     postgresClient = postgres(process.env.DATABASE_URL, connectionConfig);
     const dbType = isSupabase ? "Supabase" : "NeonDB";
-    getLogger().info(`[Database] PostgreSQL connection established with ${dbType}`);
+    getLogger().info(
+      `[Database] PostgreSQL connection established with ${dbType}`
+    );
     return postgresClient;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    getLogger().error(`[Database] Failed to create PostgreSQL client:`, errorMessage);
+    getLogger().error(
+      `[Database] Failed to create PostgreSQL client:`,
+      errorMessage
+    );
     throw new Error(`Failed to create PostgreSQL client: ${errorMessage}`);
   }
 }
 
 // Create mock database for testing
 function createMockDatabase() {
-  // Create a thenable mock that resolves to empty array
-  const createThenable = (result: any[] = []) => {
-    const thenable = {
-      then: (resolve: any) => resolve(result),
-      catch: (reject: any) => reject,
-      finally: (fn: any) => fn(),
-      // Add common query methods that return themselves
-      where: () => thenable,
-      orderBy: () => thenable,
-      limit: () => thenable,
-      select: () => thenable,
-      from: () => thenable,
-      set: () => thenable,
-      values: () => thenable,
-      returning: () => thenable,
-    };
-    return thenable;
+  // Create a proper Promise-like mock that TypeScript recognizes
+  const createThenable = (result: any[] = []): Promise<any[]> => {
+    const promise = Promise.resolve(result);
+    
+    // Add Drizzle query builder methods that return new promises
+    (promise as any).where = () => createThenable(result);
+    (promise as any).orderBy = () => createThenable(result);
+    (promise as any).limit = () => createThenable(result);
+    (promise as any).select = () => createThenable(result);
+    (promise as any).from = () => createThenable(result);
+    (promise as any).set = () => createThenable(result);
+    (promise as any).values = () => createThenable(result);
+    (promise as any).returning = () => createThenable(result);
+    (promise as any).groupBy = () => createThenable(result);
+    (promise as any).execute = () => promise;
+    
+    return promise;
   };
 
   return {
     execute: async () => [{ test_value: 1, count: "1" }],
     query: async () => [],
     insert: () => ({
-      values: () => ({
-        returning: () => createThenable([{ id: "mock-id" }]),
+      values: (data: any) => ({
+        returning: () => createThenable([{ id: "mock-id", ...data }]),
       }),
     }),
-    select: () => ({
-      from: () => createThenable([]),
+    select: (columns?: any) => {
+      const selectQuery = createThenable([]);
+      (selectQuery as any).from = () => createThenable([]);
+      return selectQuery;
+    },
+    update: (table: any) => ({
+      set: (data: any) => {
+        const updateQuery = createThenable([]);
+        (updateQuery as any).where = () => createThenable([]);
+        return updateQuery;
+      },
     }),
-    update: () => ({
-      set: () => createThenable([]),
-    }),
-    delete: () => createThenable([]),
+    delete: (table: any) => {
+      const deleteQuery = createThenable([]);
+      (deleteQuery as any).where = () => createThenable([]);
+      return deleteQuery;
+    },
     transaction: async (cb: any) => {
       const result = await cb(createMockDatabase());
       return result;
@@ -232,14 +261,16 @@ function createMockDatabase() {
 
 // PostgreSQL-only database configuration for NeonDB
 function createDatabase() {
-  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL;
+  const isProduction =
+    process.env.NODE_ENV === "production" || process.env.VERCEL;
   const isRailway = process.env.RAILWAY_ENVIRONMENT === "production";
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
 
   // In test environment with mock flags, return a mock database
   if (
     isTest &&
-    (process.env.FORCE_MOCK_DB === "true" || process.env.USE_MOCK_DATABASE === "true")
+    (process.env.FORCE_MOCK_DB === "true" ||
+      process.env.USE_MOCK_DATABASE === "true")
   ) {
     getLogger().info("[Database] Using mocked database for tests");
     return createMockDatabase();
@@ -252,10 +283,12 @@ function createDatabase() {
   }
 
   const isSupabase = hasSupabaseConfig();
-  
+
   // Debug logging (remove in production)
   if (process.env.NODE_ENV !== "production") {
-    getLogger().info(`[Database] Using ${isSupabase ? 'Supabase' : 'NeonDB'} PostgreSQL database`);
+    getLogger().info(
+      `[Database] Using ${isSupabase ? "Supabase" : "NeonDB"} PostgreSQL database`
+    );
   }
 
   try {
@@ -278,9 +311,14 @@ function createDatabase() {
         try {
           // Test basic connectivity
           await db.execute(sql`SELECT 1 as test`);
-          getLogger().info(`[Database] ${isSupabase ? 'Supabase' : 'NeonDB'} connection verified successfully`);
+          getLogger().info(
+            `[Database] ${isSupabase ? "Supabase" : "NeonDB"} connection verified successfully`
+          );
         } catch (error) {
-          getLogger().error(`[Database] ${isSupabase ? 'Supabase' : 'NeonDB'} connection test failed:`, error);
+          getLogger().error(
+            `[Database] ${isSupabase ? "Supabase" : "NeonDB"} connection test failed:`,
+            error
+          );
         }
       }, 1000);
     }
@@ -291,10 +329,15 @@ function createDatabase() {
 
     // Enhanced error handling for production
     if (isProduction || isRailway) {
-      getLogger().error(`[Database] ${isSupabase ? 'Supabase' : 'NeonDB'} failed in production environment`);
+      getLogger().error(
+        `[Database] ${isSupabase ? "Supabase" : "NeonDB"} failed in production environment`
+      );
       getLogger().error("[Database] Error details:", {
         message: error instanceof Error ? error.message : String(error),
-        code: error instanceof Error && "code" in error ? (error as any).code : "UNKNOWN",
+        code:
+          error instanceof Error && "code" in error
+            ? (error as any).code
+            : "UNKNOWN",
         env: {
           hasUrl: !!process.env.DATABASE_URL,
           urlProtocol: process.env.DATABASE_URL?.split("://")[0],
@@ -307,7 +350,7 @@ function createDatabase() {
 
     // In production, we need to fail gracefully
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const dbType = isSupabase ? 'Supabase' : 'NeonDB';
+    const dbType = isSupabase ? "Supabase" : "NeonDB";
     throw new Error(
       `${dbType} connection failed: ${errorMessage}. Check DATABASE_URL and connection settings.`
     );
@@ -327,14 +370,32 @@ export function getDb() {
 // Clear cached database instance (for testing)
 export function clearDbCache() {
   dbInstance = null;
+  _dbInstance = null;
   postgresClient = null;
 }
 
-// Lazy initialization - db instance created when first accessed
+// Lazy database instance with proper typing
+let _dbInstance: ReturnType<typeof createDatabase> | null = null;
+
+function ensureDbInstance() {
+  if (!_dbInstance) {
+    _dbInstance = getDb();
+  }
+  return _dbInstance;
+}
+
+// Export a getter that ensures proper typing
 export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
-  get(_target, prop) {
-    const instance = getDb();
-    return (instance as any)[prop];
+  get(_target, prop: keyof ReturnType<typeof createDatabase>) {
+    const instance = ensureDbInstance();
+    const value = instance[prop];
+    
+    // Bind methods to maintain correct context
+    if (typeof value === 'function') {
+      return value.bind(instance);
+    }
+    
+    return value;
   },
 });
 
@@ -356,7 +417,7 @@ export async function initializeDatabase() {
   return withRetry(
     async () => {
       const isSupabase = hasSupabaseConfig();
-      const dbType = isSupabase ? 'Supabase' : 'NeonDB';
+      const dbType = isSupabase ? "Supabase" : "NeonDB";
       getLogger().info(`[Database] Initializing ${dbType} database...`);
 
       // Test connection with a simple query
@@ -368,10 +429,16 @@ export async function initializeDatabase() {
       // Check available PostgreSQL extensions
       try {
         // Check for vector extension (pgvector)
-        await db.execute(sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`);
-        getLogger().info("[Database] Vector extension (pgvector) available for embeddings");
+        await db.execute(
+          sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`
+        );
+        getLogger().info(
+          "[Database] Vector extension (pgvector) available for embeddings"
+        );
       } catch (_error) {
-        getLogger().info("[Database] Vector extension not available, AI features may be limited");
+        getLogger().info(
+          "[Database] Vector extension not available, AI features may be limited"
+        );
       }
 
       // Initialize performance monitoring
@@ -385,7 +452,10 @@ export async function initializeDatabase() {
             await databaseOptimizationManager.optimizeForAgentWorkloads();
             getLogger().info("[Database] Optimized for AI agent workloads");
           } catch (error) {
-            getLogger().warn("[Database] Failed to auto-optimize for agents:", error);
+            getLogger().warn(
+              "[Database] Failed to auto-optimize for agents:",
+              error
+            );
           }
         }
       }
@@ -416,10 +486,14 @@ async function _internalHealthCheck() {
     const startTime = Date.now();
     await db.execute(sql`SELECT 1`);
     const responseTime = Date.now() - startTime;
-    
+
     const isSupabase = hasSupabaseConfig();
     const isHealthy = responseTime < 2000; // Less than 2 seconds is healthy
-    const status = isHealthy ? "healthy" : responseTime < 5000 ? "degraded" : "critical";
+    const status = isHealthy
+      ? "healthy"
+      : responseTime < 5000
+        ? "degraded"
+        : "critical";
 
     return {
       status,
@@ -444,7 +518,11 @@ export async function executeOptimizedSelect<T>(
   cacheKey?: string,
   cacheTTL?: number
 ): Promise<T> {
-  return databaseConnectionPool.executeSelect(queryFn, cacheKey || "default", cacheTTL);
+  return databaseConnectionPool.executeSelect(
+    queryFn,
+    cacheKey || "default",
+    cacheTTL
+  );
 }
 
 export async function executeOptimizedWrite<T>(
@@ -490,11 +568,17 @@ export async function getUserPreferences(userId: string): Promise<any | null> {
   try {
     // Use appropriate userPreferences table based on database type
     const isSupabase = hasSupabaseConfig();
-    const userPreferencesTable = isSupabase ? supabaseUserPreferences : originalUserPreferences;
-    
+    const userPreferencesTable = isSupabase
+      ? supabaseUserPreferences
+      : originalUserPreferences;
+
     const result = (await executeWithRetry(
       async () =>
-        db.select().from(userPreferencesTable).where(eq(userPreferencesTable.userId, userId)).limit(1),
+        db
+          .select()
+          .from(userPreferencesTable)
+          .where(eq(userPreferencesTable.userId, userId))
+          .limit(1),
       "getUserPreferences"
     )) as any[];
 
@@ -507,9 +591,15 @@ export async function getUserPreferences(userId: string): Promise<any | null> {
     // Safe pattern parsing with fallbacks
     let patternParts: number[] = [2, 2, 4]; // Default fallback
     try {
-      if (prefs.readyStatePattern && typeof prefs.readyStatePattern === "string") {
+      if (
+        prefs.readyStatePattern &&
+        typeof prefs.readyStatePattern === "string"
+      ) {
         const parts = prefs.readyStatePattern.split(",").map(Number);
-        if (parts.length >= 3 && parts.every((p: number) => !Number.isNaN(p) && p > 0)) {
+        if (
+          parts.length >= 3 &&
+          parts.every((p: number) => !Number.isNaN(p) && p > 0)
+        ) {
           patternParts = parts;
         }
       }
@@ -521,7 +611,10 @@ export async function getUserPreferences(userId: string): Promise<any | null> {
     }
 
     // Safe JSON parsing helper
-    const safeJsonParse = (jsonString: string | null | undefined, fallback: any = undefined) => {
+    const safeJsonParse = (
+      jsonString: string | null | undefined,
+      fallback: any = undefined
+    ) => {
       if (!jsonString || typeof jsonString !== "string") return fallback;
       try {
         return JSON.parse(jsonString);
@@ -556,14 +649,20 @@ export async function closeDatabase() {
     try {
       queryPerformanceMonitor.stopMonitoring();
     } catch (error) {
-      getLogger().warn("[Database] Error stopping performance monitoring:", error);
+      getLogger().warn(
+        "[Database] Error stopping performance monitoring:",
+        error
+      );
     }
 
     // Shutdown connection pool
     try {
       await databaseConnectionPool.shutdown();
     } catch (error) {
-      getLogger().warn("[Database] Error shutting down connection pool:", error);
+      getLogger().warn(
+        "[Database] Error shutting down connection pool:",
+        error
+      );
     }
 
     // Close PostgreSQL connection if exists
@@ -574,20 +673,28 @@ export async function closeDatabase() {
           new Promise(
             (resolve) =>
               setTimeout(() => {
-                getLogger().warn("[Database] PostgreSQL close timed out, forcing shutdown");
+                getLogger().warn(
+                  "[Database] PostgreSQL close timed out, forcing shutdown"
+                );
                 resolve(undefined);
               }, 2000) // Reduced timeout for tests
           ),
         ]);
-        const dbType = hasSupabaseConfig() ? 'Supabase' : 'NeonDB';
+        const dbType = hasSupabaseConfig() ? "Supabase" : "NeonDB";
         getLogger().info(`[Database] ${dbType} PostgreSQL connection closed`);
       } catch (error) {
-        getLogger().warn("[Database] Error closing PostgreSQL connection:", error);
+        getLogger().warn(
+          "[Database] Error closing PostgreSQL connection:",
+          error
+        );
       }
     }
 
     // Emergency cleanup for mock databases
-    if (dbInstance && typeof (dbInstance as any).$emergencyCleanup === "function") {
+    if (
+      dbInstance &&
+      typeof (dbInstance as any).$emergencyCleanup === "function"
+    ) {
       try {
         await (dbInstance as any).$emergencyCleanup();
       } catch (error) {

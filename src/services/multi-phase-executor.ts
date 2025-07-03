@@ -41,7 +41,9 @@ export interface ExecutionStatus {
 /**
  * Creates a strategy executor from a strategy definition
  */
-export function createExecutorFromStrategy(_strategy: Strategy): StrategyExecutor {
+export function createExecutorFromStrategy(
+  _strategy: Strategy
+): StrategyExecutor {
   return {
     async execute(): Promise<ExecutionResult> {
       // Placeholder implementation

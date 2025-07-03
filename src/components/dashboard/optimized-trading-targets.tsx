@@ -1,11 +1,25 @@
 "use client";
 
-import { AlertTriangle, Clock, Eye, Target, Trash2, TrendingUp, Zap } from "lucide-react";
+import {
+  AlertTriangle,
+  Clock,
+  Eye,
+  Target,
+  Trash2,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import { memo, useCallback, useMemo } from "react";
 import { useTimeFormatting } from "../../hooks/use-time-formatting";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 interface TradingTarget {
   vcoinId: string;
@@ -45,7 +59,10 @@ const TargetDetails = memo(
     quantityDecimalPlaces,
   }: Pick<
     TradingTarget,
-    "launchTime" | "hoursAdvanceNotice" | "priceDecimalPlaces" | "quantityDecimalPlaces"
+    | "launchTime"
+    | "hoursAdvanceNotice"
+    | "priceDecimalPlaces"
+    | "quantityDecimalPlaces"
   >) => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-gray-500">
       <div>
@@ -86,13 +103,23 @@ const ReadyTargetItem = memo(
       <div className="flex justify-between items-start">
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-3 mb-2">
-            <h3 className="font-bold text-green-700 text-lg truncate">{target.symbol}</h3>
-            <Badge className="bg-green-500 hover:bg-green-600 text-white">READY</Badge>
-            <Badge variant="outline" className="border-green-500 text-green-600">
+            <h3 className="font-bold text-green-700 text-lg truncate">
+              {target.symbol}
+            </h3>
+            <Badge className="bg-green-500 hover:bg-green-600 text-white">
+              READY
+            </Badge>
+            <Badge
+              variant="outline"
+              className="border-green-500 text-green-600"
+            >
               {formatTimeRemaining(target.launchTime)}
             </Badge>
             {target.confidence && (
-              <Badge variant="outline" className="border-blue-500 text-blue-600">
+              <Badge
+                variant="outline"
+                className="border-blue-500 text-blue-600"
+              >
                 {Math.round(target.confidence * 100)}% confidence
               </Badge>
             )}
@@ -143,7 +170,9 @@ const MonitoringTargetItem = memo(
         <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
         <div>
           <span className="font-medium text-yellow-700">{target.symbol}</span>
-          <span className="text-gray-600 ml-2 text-sm">{target.projectName}</span>
+          <span className="text-gray-600 ml-2 text-sm">
+            {target.projectName}
+          </span>
         </div>
       </div>
       <div className="flex items-center space-x-3">
@@ -175,10 +204,13 @@ const EmptyState = memo(() => (
           <TrendingUp className="h-12 w-12 text-gray-400" />
         </div>
         <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Trading Targets</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Trading Targets
+          </h3>
           <p className="text-gray-500 max-w-md mx-auto">
-            Start pattern discovery to identify potential trading opportunities. The system will
-            automatically detect tokens matching the ready state pattern.
+            Start pattern discovery to identify potential trading opportunities.
+            The system will automatically detect tokens matching the ready state
+            pattern.
           </p>
         </div>
         <div className="flex items-center justify-center space-x-2 text-sm text-gray-400">
@@ -200,8 +232,8 @@ const HighVolumeWarning = memo(({ count }: { count: number }) => (
         <span className="font-medium">High Target Volume</span>
       </div>
       <p className="text-sm text-orange-600 mt-1">
-        You have {count} targets being tracked. Consider reviewing your detection criteria to focus
-        on the most promising opportunities.
+        You have {count} targets being tracked. Consider reviewing your
+        detection criteria to focus on the most promising opportunities.
       </p>
     </CardContent>
   </Card>
@@ -221,9 +253,11 @@ const LoadingSkeleton = memo(() => (
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-3">
-            {Array.from({ length: 3 }, (_, j) => `target-item-${j}`).map((subKey) => (
-              <div key={subKey} className="h-16 bg-gray-200 rounded" />
-            ))}
+            {Array.from({ length: 3 }, (_, j) => `target-item-${j}`).map(
+              (subKey) => (
+                <div key={subKey} className="h-16 bg-gray-200 rounded" />
+              )
+            )}
           </div>
         </CardContent>
       </Card>
@@ -313,7 +347,9 @@ export const OptimizedTradingTargets = memo(
                 <Eye className="h-5 w-5" />
                 <span>Monitoring ({pendingTargetsWithData.length})</span>
               </CardTitle>
-              <CardDescription>Waiting for ready state pattern detection</CardDescription>
+              <CardDescription>
+                Waiting for ready state pattern detection
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">

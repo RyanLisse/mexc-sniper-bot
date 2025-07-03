@@ -78,11 +78,12 @@ export class WorkflowExecutor {
       // Step 4: Combine results using calendar workflow
       console.info("[WorkflowExecutor] Step 4: Combining analysis results");
       context.currentStep = "combine-results";
-      const combinedAnalysis = await this.calendarWorkflow.analyzeDiscoveryResults(
-        calendarAnalysis,
-        patternAnalysis,
-        calendarData
-      );
+      const combinedAnalysis =
+        await this.calendarWorkflow.analyzeDiscoveryResults(
+          calendarAnalysis,
+          patternAnalysis,
+          calendarData
+        );
 
       const duration = Date.now() - context.startTime;
       context.agentsUsed.push("mexc-api", "calendar", "pattern-discovery");
@@ -104,7 +105,10 @@ export class WorkflowExecutor {
         },
       };
     } catch (error) {
-      console.error("[WorkflowExecutor] Calendar discovery workflow failed:", error);
+      console.error(
+        "[WorkflowExecutor] Calendar discovery workflow failed:",
+        error
+      );
       return this.createErrorResult(error, context.agentsUsed);
     }
   }
@@ -115,51 +119,63 @@ export class WorkflowExecutor {
     const context = this.createExecutionContext("symbol-analysis");
 
     try {
-      console.info(`[WorkflowExecutor] Starting symbol analysis workflow for: ${request.vcoinId}`);
+      console.info(
+        `[WorkflowExecutor] Starting symbol analysis workflow for: ${request.vcoinId}`
+      );
 
       // Step 1: Fetch symbol data
-      console.info(`[WorkflowExecutor] Step 1: Fetching symbol data for: ${request.vcoinId}`);
+      console.info(
+        `[WorkflowExecutor] Step 1: Fetching symbol data for: ${request.vcoinId}`
+      );
       context.currentStep = "fetch-symbol-data";
-      const symbolData = await this.dataFetcher.fetchSymbolData(request.vcoinId);
+      const symbolData = await this.dataFetcher.fetchSymbolData(
+        request.vcoinId
+      );
 
       // Step 2: Multi-agent analysis
       console.info("[WorkflowExecutor] Step 2: Multi-agent analysis");
       context.currentStep = "multi-agent-analysis";
-      const [readinessAnalysis, patternAnalysis, marketAnalysis] = await Promise.all([
-        this.agentManager
-          .getSymbolAnalysisAgent()
-          .process(`Analyze symbol readiness for ${request.vcoinId}`, {
-            vcoinId: request.vcoinId,
-            symbolName: request.symbolName,
-            projectName: request.projectName,
-            launchTime: request.launchTime,
-          }),
-        this.agentManager
-          .getPatternDiscoveryAgent()
-          .process(`Validate pattern for ${request.vcoinId}`, {
-            analysisType: "monitoring",
-            vcoinId: request.vcoinId,
-          }),
-        this.agentManager
-          .getMexcApiAgent()
-          .process(`Analyze market microstructure for ${request.vcoinId}`, {
-            endpoint: "/market-depth",
-            vcoinId: request.vcoinId,
-          }),
-      ]);
+      const [readinessAnalysis, patternAnalysis, marketAnalysis] =
+        await Promise.all([
+          this.agentManager
+            .getSymbolAnalysisAgent()
+            .process(`Analyze symbol readiness for ${request.vcoinId}`, {
+              vcoinId: request.vcoinId,
+              symbolName: request.symbolName,
+              projectName: request.projectName,
+              launchTime: request.launchTime,
+            }),
+          this.agentManager
+            .getPatternDiscoveryAgent()
+            .process(`Validate pattern for ${request.vcoinId}`, {
+              analysisType: "monitoring",
+              vcoinId: request.vcoinId,
+            }),
+          this.agentManager
+            .getMexcApiAgent()
+            .process(`Analyze market microstructure for ${request.vcoinId}`, {
+              endpoint: "/market-depth",
+              vcoinId: request.vcoinId,
+            }),
+        ]);
 
       // Step 3: Combine analysis
       console.info("[WorkflowExecutor] Step 3: Combining symbol analysis");
       context.currentStep = "combine-analysis";
-      const combinedAnalysis = await this.symbolAnalysisWorkflow.combineSymbolAnalysis(
-        readinessAnalysis,
-        patternAnalysis,
-        marketAnalysis,
-        symbolData
-      );
+      const combinedAnalysis =
+        await this.symbolAnalysisWorkflow.combineSymbolAnalysis(
+          readinessAnalysis,
+          patternAnalysis,
+          marketAnalysis,
+          symbolData
+        );
 
       const duration = Date.now() - context.startTime;
-      context.agentsUsed.push("symbol-analysis", "pattern-discovery", "mexc-api");
+      context.agentsUsed.push(
+        "symbol-analysis",
+        "pattern-discovery",
+        "mexc-api"
+      );
 
       return {
         success: true,
@@ -198,7 +214,9 @@ export class WorkflowExecutor {
       );
 
       // Step 1: Enhanced Pattern Analysis using Centralized Engine
-      console.info("[WorkflowExecutor] Step 1: Enhanced pattern analysis with centralized engine");
+      console.info(
+        "[WorkflowExecutor] Step 1: Enhanced pattern analysis with centralized engine"
+      );
       context.currentStep = "enhanced-pattern-analysis";
 
       // Prepare input for enhanced analysis
@@ -208,25 +226,34 @@ export class WorkflowExecutor {
       };
 
       // If we have symbol data, use it directly
-      if ((request as any).symbolData && (request as any).symbolData.length > 0) {
+      if (
+        (request as any).symbolData &&
+        (request as any).symbolData.length > 0
+      ) {
         analysisInput.symbolData = (request as any).symbolData;
       }
 
       // Try enhanced analysis first
       let processedAnalysis;
       try {
-        processedAnalysis = await this.patternAnalysisWorkflow.analyzePatternsWithEngine(
-          analysisInput,
-          request.analysisType,
-          {
-            confidenceThreshold: 70,
-            includeAgentAnalysis: true,
-            enableAdvanceDetection: true,
-          }
+        processedAnalysis =
+          await this.patternAnalysisWorkflow.analyzePatternsWithEngine(
+            analysisInput,
+            request.analysisType,
+            {
+              confidenceThreshold: 70,
+              includeAgentAnalysis: true,
+              enableAdvanceDetection: true,
+            }
+          );
+        context.agentsUsed.push(
+          "pattern-detection-engine",
+          "pattern-strategy-orchestrator"
         );
-        context.agentsUsed.push("pattern-detection-engine", "pattern-strategy-orchestrator");
 
-        console.info("[WorkflowExecutor] Enhanced pattern analysis completed successfully");
+        console.info(
+          "[WorkflowExecutor] Enhanced pattern analysis completed successfully"
+        );
       } catch (engineError) {
         console.warn(
           "[WorkflowExecutor] Enhanced analysis failed, falling back to legacy:",
@@ -234,11 +261,13 @@ export class WorkflowExecutor {
         );
 
         // Fallback to legacy pattern analysis
-        const patternAnalysis = await this.agentManager.getPatternDiscoveryAgent().analyzePatterns({
-          vcoinId: request.vcoinId || "",
-          symbols: request.symbols,
-          analysisType: request.analysisType,
-        });
+        const patternAnalysis = await this.agentManager
+          .getPatternDiscoveryAgent()
+          .analyzePatterns({
+            vcoinId: request.vcoinId || "",
+            symbols: request.symbols,
+            analysisType: request.analysisType,
+          });
 
         processedAnalysis = await this.patternAnalysisWorkflow.analyzePatterns(
           patternAnalysis,
@@ -270,7 +299,10 @@ export class WorkflowExecutor {
         },
       };
     } catch (error) {
-      console.error(`[WorkflowExecutor] Pattern analysis workflow failed:`, error);
+      console.error(
+        `[WorkflowExecutor] Pattern analysis workflow failed:`,
+        error
+      );
       return this.createErrorResult(error, context.agentsUsed);
     }
   }
@@ -281,28 +313,33 @@ export class WorkflowExecutor {
     const context = this.createExecutionContext("trading-strategy");
 
     try {
-      console.info(`[WorkflowExecutor] Starting trading strategy workflow for: ${request.vcoinId}`);
+      console.info(
+        `[WorkflowExecutor] Starting trading strategy workflow for: ${request.vcoinId}`
+      );
 
       // Step 1: Strategy analysis
       console.info("[WorkflowExecutor] Step 1: Strategy analysis");
       context.currentStep = "strategy-analysis";
-      const strategyAnalysis = await this.agentManager.getStrategyAgent().createStrategy({
-        action: "create",
-        symbols: [(request.symbolData as any)?.cd],
-        riskLevel: request.riskLevel || "medium",
-        timeframe: "medium",
-      });
+      const strategyAnalysis = await this.agentManager
+        .getStrategyAgent()
+        .createStrategy({
+          action: "create",
+          symbols: [(request.symbolData as any)?.cd],
+          riskLevel: request.riskLevel || "medium",
+          timeframe: "medium",
+        });
 
       // Step 2: Compile strategy
       console.info("[WorkflowExecutor] Step 2: Compiling trading strategy");
       context.currentStep = "compile-strategy";
-      const compiledStrategy = await this.tradingStrategyWorkflow.compileTradingStrategy(
-        strategyAnalysis,
-        request.vcoinId,
-        request.symbolData as any,
-        request.riskLevel,
-        request.capital
-      );
+      const compiledStrategy =
+        await this.tradingStrategyWorkflow.compileTradingStrategy(
+          strategyAnalysis,
+          request.vcoinId,
+          request.symbolData as any,
+          request.riskLevel,
+          request.capital
+        );
 
       const duration = Date.now() - context.startTime;
       context.agentsUsed.push("strategy");
@@ -331,7 +368,9 @@ export class WorkflowExecutor {
     }
   }
 
-  private createExecutionContext(workflowType: string): WorkflowExecutionContext {
+  private createExecutionContext(
+    workflowType: string
+  ): WorkflowExecutionContext {
     return {
       startTime: Date.now(),
       agentsUsed: [],
@@ -340,7 +379,10 @@ export class WorkflowExecutor {
     };
   }
 
-  private createErrorResult(error: unknown, agentsUsed: string[]): MexcWorkflowResult {
+  private createErrorResult(
+    error: unknown,
+    agentsUsed: string[]
+  ): MexcWorkflowResult {
     const safeError = toSafeError(error);
     return {
       success: false,

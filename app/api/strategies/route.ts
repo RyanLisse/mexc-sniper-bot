@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { 
-  apiResponse, 
-  createErrorResponse, 
-  createSuccessResponse, 
-  HTTP_STATUS 
+import type { NextRequest } from "next/server";
+import {
+  apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
+  HTTP_STATUS,
 } from "@/src/lib/api-response";
 import { handleApiError } from "@/src/lib/error-handler";
 import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
-import { 
-  type TradingStrategy as MultiPhaseStrategy, 
+import {
+  type TradingStrategy as MultiPhaseStrategy,
   TRADING_STRATEGIES,
-  TradingStrategyManager
+  TradingStrategyManager,
 } from "@/src/services/trading/trading-strategy-manager";
 
 const coreTrading = getCoreTrading();
@@ -24,47 +24,55 @@ export async function GET() {
   try {
     // Get current active strategy from local strategy manager
     const activeStrategy = strategyManager.getActiveStrategy();
-    
+
     // Get all available multi-phase strategies
     const availableStrategies = Object.values(TRADING_STRATEGIES);
-    
+
     // Get performance metrics from Core Trading Service
     const performanceMetrics = await coreTrading.getPerformanceMetrics();
     const serviceStatus = await coreTrading.getServiceStatus();
-    
+
     // Map strategy performance data (using strategy performance or defaults)
-    const strategyPerformance = availableStrategies.reduce((acc, strategy) => {
-      const strategyStats = performanceMetrics.strategyPerformance[strategy.id] || {
-        trades: 0,
-        successRate: 0,
-        averagePnL: 0,
-        maxDrawdown: 0,
-      };
-      
-      acc[strategy.id] = {
-        strategyId: strategy.id,
-        successRate: strategyStats.successRate,
-        averageProfit: strategyStats.averagePnL,
-        totalTrades: strategyStats.trades,
-        winRate: strategyStats.successRate, // Use success rate as win rate for now
-        maxDrawdown: strategyStats.maxDrawdown,
-        sharpeRatio: calculateSharpeRatio(strategyStats), // Simplified calculation
-      };
-      
-      return acc;
-    }, {} as Record<string, any>);
+    const strategyPerformance = availableStrategies.reduce(
+      (acc, strategy) => {
+        const strategyStats = performanceMetrics.strategyPerformance[
+          strategy.id
+        ] || {
+          trades: 0,
+          successRate: 0,
+          averagePnL: 0,
+          maxDrawdown: 0,
+        };
+
+        acc[strategy.id] = {
+          strategyId: strategy.id,
+          successRate: strategyStats.successRate,
+          averageProfit: strategyStats.averagePnL,
+          totalTrades: strategyStats.trades,
+          winRate: strategyStats.successRate, // Use success rate as win rate for now
+          maxDrawdown: strategyStats.maxDrawdown,
+          sharpeRatio: calculateSharpeRatio(strategyStats), // Simplified calculation
+        };
+
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
     // Get current active positions from Core Trading Service
     const activePositions = await coreTrading.getActivePositions();
-    
+
     // Transform positions to match UI expectations
-    const transformedPositions = activePositions.map(position => ({
+    const transformedPositions = activePositions.map((position) => ({
       symbol: position.symbol,
       entryPrice: position.entryPrice,
       currentPrice: position.currentPrice || position.entryPrice,
       quantity: position.quantity,
       currentPnL: position.unrealizedPnL || 0,
-      currentPnLPercentage: calculatePnLPercentage(position.entryPrice, position.currentPrice || position.entryPrice),
+      currentPnLPercentage: calculatePnLPercentage(
+        position.entryPrice,
+        position.currentPrice || position.entryPrice
+      ),
       triggeredLevels: calculateTriggeredLevels(position, activeStrategy),
       nextTarget: calculateNextTarget(position, activeStrategy),
     }));
@@ -77,16 +85,16 @@ export async function GET() {
         description: activeStrategy.description,
         levels: activeStrategy.levels,
       },
-      
+
       // All available strategies
       availableStrategies,
-      
+
       // Performance data for all strategies
       strategyPerformance,
-      
+
       // Current positions using the active strategy
       activePositions: transformedPositions,
-      
+
       // System status
       tradingStatus: {
         isActive: serviceStatus.autoSnipingEnabled,
@@ -94,7 +102,7 @@ export async function GET() {
         paperTradingMode: serviceStatus.paperTradingMode,
         healthStatus: serviceStatus.isHealthy,
       },
-      
+
       // Real-time metrics
       metrics: {
         totalPnL: performanceMetrics.totalPnL,
@@ -105,10 +113,10 @@ export async function GET() {
         uptime: serviceStatus.uptime,
       },
     };
-    
+
     return apiResponse(
       createSuccessResponse(response, {
-        message: "Strategies data retrieved successfully"
+        message: "Strategies data retrieved successfully",
       }),
       HTTP_STATUS.OK
     );
@@ -125,27 +133,27 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, strategyId, config } = body as { 
-      action: string; 
-      strategyId?: string; 
+    const { action, strategyId, config } = body as {
+      action: string;
+      strategyId?: string;
       config?: Record<string, unknown>;
     };
 
     if (!action) {
       return apiResponse(
         createErrorResponse("Action is required", {
-          message: "Please specify action: switch, update, or configure"
+          message: "Please specify action: switch, update, or configure",
         }),
         HTTP_STATUS.BAD_REQUEST
       );
     }
 
     switch (action) {
-      case "switch":
+      case "switch": {
         if (!strategyId) {
           return apiResponse(
             createErrorResponse("Strategy ID is required for switch action", {
-              message: "Please provide strategyId to switch to"
+              message: "Please provide strategyId to switch to",
             }),
             HTTP_STATUS.BAD_REQUEST
           );
@@ -157,7 +165,7 @@ export async function POST(request: NextRequest) {
           return apiResponse(
             createErrorResponse("Invalid strategy ID", {
               message: `Strategy '${strategyId}' not found`,
-              availableStrategies: Object.keys(TRADING_STRATEGIES)
+              availableStrategies: Object.keys(TRADING_STRATEGIES),
             }),
             HTTP_STATUS.BAD_REQUEST
           );
@@ -166,57 +174,60 @@ export async function POST(request: NextRequest) {
         // Update Core Trading Service configuration to reflect new strategy
         const newStrategy = strategyManager.getActiveStrategy();
         const coreConfig = mapMultiPhaseToCoreTradingConfig(newStrategy);
-        
+
         const updateResult = await coreTrading.updateConfig(coreConfig);
         if (!updateResult.success) {
           return apiResponse(
             createErrorResponse("Failed to update Core Trading Service", {
               message: updateResult.error,
-              strategy: strategyId
+              strategy: strategyId,
             }),
             HTTP_STATUS.INTERNAL_SERVER_ERROR
           );
         }
 
-        console.info("🔄 Strategy switched successfully:", { 
-          strategyId, 
-          strategyName: newStrategy.name 
+        console.info("🔄 Strategy switched successfully:", {
+          strategyId,
+          strategyName: newStrategy.name,
         });
-        
+
         return apiResponse(
           createSuccessResponse(
-            { 
+            {
               activeStrategy: newStrategy,
-              coreConfigUpdated: true 
+              coreConfigUpdated: true,
             },
-            { message: `Strategy switched to '${newStrategy.name}' successfully` }
+            {
+              message: `Strategy switched to '${newStrategy.name}' successfully`,
+            }
           ),
           HTTP_STATUS.OK
         );
+      }
 
-      case "update":
+      case "update": {
         if (!config) {
           return apiResponse(
             createErrorResponse("Configuration is required for update action", {
-              message: "Please provide config object for update"
+              message: "Please provide config object for update",
             }),
             HTTP_STATUS.BAD_REQUEST
           );
         }
-        
+
         // Update Core Trading Service configuration directly
         const configUpdateResult = await coreTrading.updateConfig(config);
         if (!configUpdateResult.success) {
           return apiResponse(
             createErrorResponse("Failed to update configuration", {
-              message: configUpdateResult.error
+              message: configUpdateResult.error,
             }),
             HTTP_STATUS.INTERNAL_SERVER_ERROR
           );
         }
 
         console.info("⚙️ Strategy configuration updated:", { context: config });
-        
+
         return apiResponse(
           createSuccessResponse(
             { configUpdated: true },
@@ -224,36 +235,40 @@ export async function POST(request: NextRequest) {
           ),
           HTTP_STATUS.OK
         );
+      }
 
-      case "configure":
+      case "configure": {
         // Get current service status and configuration
         const currentStatus = await coreTrading.getServiceStatus();
         const currentMetrics = await coreTrading.getPerformanceMetrics();
-        
+
         return apiResponse(
           createSuccessResponse(
-            { 
+            {
               status: currentStatus,
               metrics: currentMetrics,
-              activeStrategy: strategyManager.getActiveStrategy()
+              activeStrategy: strategyManager.getActiveStrategy(),
             },
             { message: "Current strategy configuration retrieved" }
           ),
           HTTP_STATUS.OK
         );
+      }
 
       default:
         return apiResponse(
           createErrorResponse("Invalid action", {
             message: "Action must be one of: switch, update, configure",
-            availableActions: ["switch", "update", "configure"]
+            availableActions: ["switch", "update", "configure"],
           }),
           HTTP_STATUS.BAD_REQUEST
         );
     }
   } catch (error) {
     console.error("Strategies POST error:", { error: error });
-    return handleApiError(error, { message: "Failed to process strategy request" });
+    return handleApiError(error, {
+      message: "Failed to process strategy request",
+    });
   }
 }
 
@@ -264,11 +279,15 @@ export async function POST(request: NextRequest) {
 /**
  * Map multi-phase strategy to Core Trading Service configuration
  */
-function mapMultiPhaseToCoreTradingConfig(strategy: MultiPhaseStrategy): Record<string, unknown> {
+function mapMultiPhaseToCoreTradingConfig(
+  strategy: MultiPhaseStrategy
+): Record<string, unknown> {
   // Extract key parameters from multi-phase strategy
-  const maxTarget = Math.max(...strategy.levels.map(l => l.percentage));
-  const avgSellPercentage = strategy.levels.reduce((sum, l) => sum + l.sellPercentage, 0) / strategy.levels.length;
-  
+  const maxTarget = Math.max(...strategy.levels.map((l) => l.percentage));
+  const avgSellPercentage =
+    strategy.levels.reduce((sum, l) => sum + l.sellPercentage, 0) /
+    strategy.levels.length;
+
   // Map to Core Trading Service configuration
   return {
     defaultStrategy: strategy.id,
@@ -290,7 +309,10 @@ function mapMultiPhaseToCoreTradingConfig(strategy: MultiPhaseStrategy): Record<
 /**
  * Calculate PnL percentage
  */
-function calculatePnLPercentage(entryPrice: number, currentPrice: number): number {
+function calculatePnLPercentage(
+  entryPrice: number,
+  currentPrice: number
+): number {
   if (entryPrice <= 0) return 0;
   return ((currentPrice - entryPrice) / entryPrice) * 100;
 }
@@ -298,26 +320,41 @@ function calculatePnLPercentage(entryPrice: number, currentPrice: number): numbe
 /**
  * Calculate triggered levels for a position based on active strategy
  */
-function calculateTriggeredLevels(position: any, strategy: MultiPhaseStrategy): number {
+function calculateTriggeredLevels(
+  position: any,
+  strategy: MultiPhaseStrategy
+): number {
   if (!position.entryPrice || !position.currentPrice) return 0;
-  
-  const priceIncrease = calculatePnLPercentage(position.entryPrice, position.currentPrice);
-  return strategy.levels.filter(level => priceIncrease >= level.percentage).length;
+
+  const priceIncrease = calculatePnLPercentage(
+    position.entryPrice,
+    position.currentPrice
+  );
+  return strategy.levels.filter((level) => priceIncrease >= level.percentage)
+    .length;
 }
 
 /**
  * Calculate next target for a position
  */
-function calculateNextTarget(position: any, strategy: MultiPhaseStrategy): number {
+function calculateNextTarget(
+  position: any,
+  strategy: MultiPhaseStrategy
+): number {
   if (!position.entryPrice || !position.currentPrice) return 0;
-  
-  const priceIncrease = calculatePnLPercentage(position.entryPrice, position.currentPrice);
-  const nextLevel = strategy.levels.find(level => priceIncrease < level.percentage);
-  
+
+  const priceIncrease = calculatePnLPercentage(
+    position.entryPrice,
+    position.currentPrice
+  );
+  const nextLevel = strategy.levels.find(
+    (level) => priceIncrease < level.percentage
+  );
+
   if (nextLevel) {
     return position.entryPrice * nextLevel.multiplier;
   }
-  
+
   // If all levels are triggered, return the highest target
   const maxLevel = strategy.levels[strategy.levels.length - 1];
   return position.entryPrice * maxLevel.multiplier;
@@ -329,8 +366,9 @@ function calculateNextTarget(position: any, strategy: MultiPhaseStrategy): numbe
 function calculateSharpeRatio(strategyStats: any): number {
   // Simplified calculation - in reality this would need more data
   if (strategyStats.trades < 10) return 0;
-  
-  const riskAdjustedReturn = strategyStats.averagePnL / Math.max(strategyStats.maxDrawdown, 1);
+
+  const riskAdjustedReturn =
+    strategyStats.averagePnL / Math.max(strategyStats.maxDrawdown, 1);
   return Math.min(Math.max(riskAdjustedReturn / 10, 0), 5); // Cap between 0 and 5
 }
 
@@ -340,10 +378,10 @@ function calculateSharpeRatio(strategyStats: any): number {
 function getPhaseDelayForStrategy(strategyId: string): number {
   const delays: Record<string, number> = {
     conservative: 10000, // 10 seconds
-    normal: 5000,        // 5 seconds
+    normal: 5000, // 5 seconds
     highPriceIncrease: 3000, // 3 seconds
-    scalping: 1000,      // 1 second
-    diamond: 15000,      // 15 seconds
+    scalping: 1000, // 1 second
+    diamond: 15000, // 15 seconds
   };
   return delays[strategyId] || 5000;
 }
@@ -366,7 +404,7 @@ function getConfidenceThresholdForStrategy(strategyId: string): number {
  * Determine if auto-snipe should be enabled for strategy
  */
 function shouldEnableAutoSnipeForStrategy(strategyId: string): boolean {
-  const autoSnipeStrategies = ['normal', 'highPriceIncrease', 'scalping'];
+  const autoSnipeStrategies = ["normal", "highPriceIncrease", "scalping"];
   return autoSnipeStrategies.includes(strategyId);
 }
 
@@ -375,11 +413,11 @@ function shouldEnableAutoSnipeForStrategy(strategyId: string): boolean {
  */
 function getSnipeDelayForStrategy(strategyId: string): number {
   const delays: Record<string, number> = {
-    conservative: 2000,  // 2 seconds
-    normal: 1000,        // 1 second
+    conservative: 2000, // 2 seconds
+    normal: 1000, // 1 second
     highPriceIncrease: 500, // 0.5 seconds
-    scalping: 100,       // 0.1 seconds
-    diamond: 5000,       // 5 seconds
+    scalping: 100, // 0.1 seconds
+    diamond: 5000, // 5 seconds
   };
   return delays[strategyId] || 1000;
 }

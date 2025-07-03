@@ -140,18 +140,29 @@ interface OptimizationRunData {
 }
 
 export function ParameterOptimizationDashboard() {
-  const [activeOptimizations, setActiveOptimizations] = useState<OptimizationStatus[]>([]);
-  const [performanceMetrics, setPerformanceMetrics] = useState<PerformanceMetrics | null>(null);
+  const [activeOptimizations, setActiveOptimizations] = useState<
+    OptimizationStatus[]
+  >([]);
+  const [performanceMetrics, setPerformanceMetrics] =
+    useState<PerformanceMetrics | null>(null);
   const [systemHealth, setSystemHealth] = useState<SystemHealth | null>(null);
-  const [_selectedOptimization, _setSelectedOptimization] = useState<string | null>(null);
+  const [_selectedOptimization, _setSelectedOptimization] = useState<
+    string | null
+  >(null);
   const [refreshInterval, _setRefreshInterval] = useState(5000); // 5 seconds
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Additional state for real API data
-  const [performanceMetricsData, setPerformanceMetricsData] = useState<PerformanceMetricsData[]>([]);
+  const [performanceMetricsData, setPerformanceMetricsData] = useState<
+    PerformanceMetricsData[]
+  >([]);
   const [abTestData, setAbTestData] = useState<ABTestData[]>([]);
-  const [safetyConstraints, setSafetyConstraints] = useState<SafetyConstraintData[]>([]);
-  const [optimizationHistory, setOptimizationHistory] = useState<OptimizationRunData[]>([]);
+  const [safetyConstraints, setSafetyConstraints] = useState<
+    SafetyConstraintData[]
+  >([]);
+  const [optimizationHistory, setOptimizationHistory] = useState<
+    OptimizationRunData[]
+  >([]);
   const [dataLoadingStates, setDataLoadingStates] = useState({
     performance: false,
     abTests: false,
@@ -170,7 +181,7 @@ export function ParameterOptimizationDashboard() {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        
+
         // Reset data errors
         setDataErrors({
           performance: null,
@@ -181,9 +192,13 @@ export function ParameterOptimizationDashboard() {
 
         // Fetch active optimizations
         try {
-          const optimizationsResponse = await fetch("/api/tuning/optimizations");
+          const optimizationsResponse = await fetch(
+            "/api/tuning/optimizations"
+          );
           if (!optimizationsResponse.ok) {
-            throw new Error(`Failed to fetch optimizations: ${optimizationsResponse.status}`);
+            throw new Error(
+              `Failed to fetch optimizations: ${optimizationsResponse.status}`
+            );
           }
           const optimizations = await optimizationsResponse.json();
           setActiveOptimizations(optimizations);
@@ -194,9 +209,13 @@ export function ParameterOptimizationDashboard() {
 
         // Fetch performance metrics
         try {
-          const metricsResponse = await fetch("/api/tuning/performance-metrics");
+          const metricsResponse = await fetch(
+            "/api/tuning/performance-metrics"
+          );
           if (!metricsResponse.ok) {
-            throw new Error(`Failed to fetch performance metrics: ${metricsResponse.status}`);
+            throw new Error(
+              `Failed to fetch performance metrics: ${metricsResponse.status}`
+            );
           }
           const metrics = await metricsResponse.json();
           setPerformanceMetrics(metrics);
@@ -209,7 +228,9 @@ export function ParameterOptimizationDashboard() {
         try {
           const healthResponse = await fetch("/api/tuning/system-health");
           if (!healthResponse.ok) {
-            throw new Error(`Failed to fetch system health: ${healthResponse.status}`);
+            throw new Error(
+              `Failed to fetch system health: ${healthResponse.status}`
+            );
           }
           const health = await healthResponse.json();
           setSystemHealth(health);
@@ -232,56 +253,73 @@ export function ParameterOptimizationDashboard() {
 
   // Fetch additional data for tabs (performance metrics data, A/B tests, safety constraints, history)
   const fetchTabData = async (tabType: string) => {
-    setDataLoadingStates(prev => ({ ...prev, [tabType]: true }));
-    setDataErrors(prev => ({ ...prev, [tabType]: null }));
+    setDataLoadingStates((prev) => ({ ...prev, [tabType]: true }));
+    setDataErrors((prev) => ({ ...prev, [tabType]: null }));
 
     try {
       switch (tabType) {
-        case 'performance':
-          const perfResponse = await fetch("/api/tuning/performance-metrics/detailed");
+        case "performance": {
+          const perfResponse = await fetch(
+            "/api/tuning/performance-metrics/detailed"
+          );
           if (!perfResponse.ok) {
-            throw new Error(`Failed to fetch detailed performance metrics: ${perfResponse.status}`);
+            throw new Error(
+              `Failed to fetch detailed performance metrics: ${perfResponse.status}`
+            );
           }
           const perfData = await perfResponse.json();
           setPerformanceMetricsData(perfData);
           break;
+        }
 
-        case 'abTests':
+        case "abTests": {
           const abTestResponse = await fetch("/api/tuning/ab-tests");
           if (!abTestResponse.ok) {
-            throw new Error(`Failed to fetch A/B tests: ${abTestResponse.status}`);
+            throw new Error(
+              `Failed to fetch A/B tests: ${abTestResponse.status}`
+            );
           }
           const abTestData = await abTestResponse.json();
           setAbTestData(abTestData);
           break;
+        }
 
-        case 'safety':
+        case "safety": {
           const safetyResponse = await fetch("/api/tuning/safety-constraints");
           if (!safetyResponse.ok) {
-            throw new Error(`Failed to fetch safety constraints: ${safetyResponse.status}`);
+            throw new Error(
+              `Failed to fetch safety constraints: ${safetyResponse.status}`
+            );
           }
           const safetyData = await safetyResponse.json();
           setSafetyConstraints(safetyData);
           break;
+        }
 
-        case 'history':
-          const historyResponse = await fetch("/api/tuning/optimization-history");
+        case "history": {
+          const historyResponse = await fetch(
+            "/api/tuning/optimization-history"
+          );
           if (!historyResponse.ok) {
-            throw new Error(`Failed to fetch optimization history: ${historyResponse.status}`);
+            throw new Error(
+              `Failed to fetch optimization history: ${historyResponse.status}`
+            );
           }
           const historyData = await historyResponse.json();
           setOptimizationHistory(historyData);
           break;
+        }
 
         default:
           console.warn(`Unknown tab type: ${tabType}`);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       console.error(`Failed to fetch ${tabType} data:`, error);
-      setDataErrors(prev => ({ ...prev, [tabType]: errorMessage }));
+      setDataErrors((prev) => ({ ...prev, [tabType]: errorMessage }));
     } finally {
-      setDataLoadingStates(prev => ({ ...prev, [tabType]: false }));
+      setDataLoadingStates((prev) => ({ ...prev, [tabType]: false }));
     }
   };
 
@@ -315,7 +353,10 @@ export function ParameterOptimizationDashboard() {
     }
   };
 
-  const handleOptimizationAction = async (action: string, optimizationId?: string) => {
+  const handleOptimizationAction = async (
+    action: string,
+    optimizationId?: string
+  ) => {
     try {
       switch (action) {
         case "start":
@@ -349,7 +390,9 @@ export function ParameterOptimizationDashboard() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
-          <p className="mt-4 text-gray-600">Loading optimization dashboard...</p>
+          <p className="mt-4 text-gray-600">
+            Loading optimization dashboard...
+          </p>
         </div>
       </div>
     );
@@ -360,8 +403,12 @@ export function ParameterOptimizationDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Parameter Optimization</h1>
-          <p className="text-gray-600 mt-1">AI-powered self-tuning system for MEXC Sniper Bot</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Parameter Optimization
+          </h1>
+          <p className="text-gray-600 mt-1">
+            AI-powered self-tuning system for MEXC Sniper Bot
+          </p>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -388,20 +435,27 @@ export function ParameterOptimizationDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Optimizations</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Optimizations
+            </CardTitle>
             <Zap className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeOptimizations.length}</div>
+            <div className="text-2xl font-bold">
+              {activeOptimizations.length}
+            </div>
             <p className="text-xs text-gray-600">
-              {activeOptimizations.filter((o) => o.status === "running").length} running
+              {activeOptimizations.filter((o) => o.status === "running").length}{" "}
+              running
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Performance</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              System Performance
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
@@ -414,7 +468,9 @@ export function ParameterOptimizationDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pattern Accuracy</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Pattern Accuracy
+            </CardTitle>
             <Target className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -430,11 +486,15 @@ export function ParameterOptimizationDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Latency</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              System Latency
+            </CardTitle>
             <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{performanceMetrics?.systemLatency || 0}ms</div>
+            <div className="text-2xl font-bold">
+              {performanceMetrics?.systemLatency || 0}ms
+            </div>
             <p className="text-xs text-gray-600">Average response time</p>
           </CardContent>
         </Card>
@@ -458,7 +518,9 @@ export function ParameterOptimizationDashboard() {
                       <Badge className={getStatusColor(optimization.status)}>
                         {optimization.status}
                       </Badge>
-                      <span className="font-medium">{optimization.algorithm}</span>
+                      <span className="font-medium">
+                        {optimization.algorithm}
+                      </span>
                       <span className="text-sm text-gray-600">
                         {optimization.parametersOptimized} parameters
                       </span>
@@ -472,7 +534,9 @@ export function ParameterOptimizationDashboard() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleOptimizationAction("stop", optimization.id)}
+                          onClick={() =>
+                            handleOptimizationAction("stop", optimization.id)
+                          }
                         >
                           Stop
                         </Button>
@@ -483,7 +547,8 @@ export function ParameterOptimizationDashboard() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>
-                        Progress: {optimization.currentIteration}/{optimization.maxIterations}
+                        Progress: {optimization.currentIteration}/
+                        {optimization.maxIterations}
                       </span>
                       <span>{optimization.progress.toFixed(1)}%</span>
                     </div>
@@ -492,7 +557,8 @@ export function ParameterOptimizationDashboard() {
 
                   {optimization.estimatedCompletion && (
                     <p className="text-xs text-gray-500 mt-2">
-                      Estimated completion: {optimization.estimatedCompletion.toLocaleString()}
+                      Estimated completion:{" "}
+                      {optimization.estimatedCompletion.toLocaleString()}
                     </p>
                   )}
                 </div>
@@ -503,18 +569,22 @@ export function ParameterOptimizationDashboard() {
       )}
 
       {/* Main Dashboard Tabs */}
-      <Tabs defaultValue="control" className="space-y-6" onValueChange={(value) => {
-        // Fetch data when tab is clicked (except for control and parameters which don't need additional data)
-        if (['performance', 'abTests', 'safety', 'history'].includes(value)) {
-          const tabMap: Record<string, string> = {
-            'performance': 'performance',
-            'ab-testing': 'abTests',
-            'safety': 'safety',
-            'history': 'history'
-          };
-          fetchTabData(tabMap[value] || value);
-        }
-      }}>
+      <Tabs
+        defaultValue="control"
+        className="space-y-6"
+        onValueChange={(value) => {
+          // Fetch data when tab is clicked (except for control and parameters which don't need additional data)
+          if (["performance", "abTests", "safety", "history"].includes(value)) {
+            const tabMap: Record<string, string> = {
+              performance: "performance",
+              "ab-testing": "abTests",
+              safety: "safety",
+              history: "history",
+            };
+            fetchTabData(tabMap[value] || value);
+          }
+        }}
+      >
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="control">Control Panel</TabsTrigger>
           <TabsTrigger value="parameters">Parameters</TabsTrigger>
@@ -540,7 +610,9 @@ export function ParameterOptimizationDashboard() {
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
-                <p className="mt-2 text-gray-600">Loading performance metrics...</p>
+                <p className="mt-2 text-gray-600">
+                  Loading performance metrics...
+                </p>
               </div>
             </div>
           ) : dataErrors.performance ? (
@@ -548,10 +620,10 @@ export function ParameterOptimizationDashboard() {
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 Failed to load performance metrics: {dataErrors.performance}
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="ml-2 p-0 h-auto text-red-600 underline"
-                  onClick={() => fetchTabData('performance')}
+                  onClick={() => fetchTabData("performance")}
                 >
                   Retry
                 </Button>
@@ -575,10 +647,10 @@ export function ParameterOptimizationDashboard() {
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 Failed to load A/B tests: {dataErrors.abTests}
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="ml-2 p-0 h-auto text-red-600 underline"
-                  onClick={() => fetchTabData('abTests')}
+                  onClick={() => fetchTabData("abTests")}
                 >
                   Retry
                 </Button>
@@ -594,7 +666,9 @@ export function ParameterOptimizationDashboard() {
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
-                <p className="mt-2 text-gray-600">Loading safety constraints...</p>
+                <p className="mt-2 text-gray-600">
+                  Loading safety constraints...
+                </p>
               </div>
             </div>
           ) : dataErrors.safety ? (
@@ -602,10 +676,10 @@ export function ParameterOptimizationDashboard() {
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 Failed to load safety constraints: {dataErrors.safety}
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="ml-2 p-0 h-auto text-red-600 underline"
-                  onClick={() => fetchTabData('safety')}
+                  onClick={() => fetchTabData("safety")}
                 >
                   Retry
                 </Button>
@@ -621,7 +695,9 @@ export function ParameterOptimizationDashboard() {
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto" />
-                <p className="mt-2 text-gray-600">Loading optimization history...</p>
+                <p className="mt-2 text-gray-600">
+                  Loading optimization history...
+                </p>
               </div>
             </div>
           ) : dataErrors.history ? (
@@ -629,10 +705,10 @@ export function ParameterOptimizationDashboard() {
               <AlertTriangle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
                 Failed to load optimization history: {dataErrors.history}
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   className="ml-2 p-0 h-auto text-red-600 underline"
-                  onClick={() => fetchTabData('history')}
+                  onClick={() => fetchTabData("history")}
                 >
                   Retry
                 </Button>
@@ -649,8 +725,9 @@ export function ParameterOptimizationDashboard() {
         <Alert className="border-red-200 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800">
-            Critical system issues detected. Optimization capabilities may be limited. Check
-            component health and resolve issues before continuing.
+            Critical system issues detected. Optimization capabilities may be
+            limited. Check component health and resolve issues before
+            continuing.
           </AlertDescription>
         </Alert>
       )}
@@ -659,7 +736,8 @@ export function ParameterOptimizationDashboard() {
         <Alert className="border-yellow-200 bg-yellow-50">
           <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800">
-            System performance degraded. Some optimization features may be slower than normal.
+            System performance degraded. Some optimization features may be
+            slower than normal.
           </AlertDescription>
         </Alert>
       )}

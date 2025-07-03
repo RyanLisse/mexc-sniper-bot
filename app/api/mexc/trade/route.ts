@@ -1,19 +1,17 @@
 import { and, eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { db } from "@/src/db";
-import type { NewExecutionHistory } from "@/src/db/schema";
-import { apiCredentials, executionHistory } from "@/src/db/schema";
-import { 
-  apiResponse, 
-  createErrorResponse, 
-  createSuccessResponse, 
-  HTTP_STATUS 
+import type { NewExecutionHistory } from "@/src/db/schemas/trading";
+import { apiCredentials, executionHistory } from "@/src/db/schemas/trading";
+import {
+  apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
+  HTTP_STATUS,
 } from "@/src/lib/api-response";
 import { getCachedCredentials } from "@/src/lib/credential-cache";
-import { handleApiError } from "@/src/lib/error-handler";
-import { type OrderParameters } from "@/src/services/api/mexc-client-types";
+import type { OrderParameters } from "@/src/services/api/mexc-client-types";
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
-import { getEncryptionService } from "@/src/services/api/secure-encryption-service";
 import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
 
@@ -21,7 +19,16 @@ import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { symbol, side, type, quantity, price, userId, snipeTargetId, skipLock } = body;
+    const {
+      symbol,
+      side,
+      type,
+      quantity,
+      price,
+      userId,
+      snipeTargetId,
+      skipLock,
+    } = body;
 
     if (!userId) {
       return apiResponse(
@@ -32,19 +39,29 @@ export async function POST(request: NextRequest) {
 
     // Get API credentials from database
     const credentials = await db
-      .select()
+      .select({
+        id: apiCredentials.id,
+        encryptedApiKey: apiCredentials.encryptedApiKey,
+        encryptedSecretKey: apiCredentials.encryptedSecretKey,
+        encryptedPassphrase: apiCredentials.encryptedPassphrase,
+        userId: apiCredentials.userId,
+        provider: apiCredentials.provider,
+        isActive: apiCredentials.isActive
+      })
       .from(apiCredentials)
-      .where(and(
-        eq(apiCredentials.userId, userId),
-        eq(apiCredentials.provider, 'mexc'),
-        eq(apiCredentials.isActive, true)
-      ))
+      .where(
+        and(
+          eq(apiCredentials.userId, userId),
+          eq(apiCredentials.provider, "mexc"),
+          eq(apiCredentials.isActive, true)
+        )
+      )
       .limit(1);
 
     if (!credentials[0]) {
       return apiResponse(
         createErrorResponse("No active MEXC API credentials found", {
-          message: "Please configure your MEXC API credentials in settings"
+          message: "Please configure your MEXC API credentials in settings",
         }),
         HTTP_STATUS.BAD_REQUEST
       );
@@ -62,7 +79,7 @@ export async function POST(request: NextRequest) {
     if (!symbol || !side || !type || !quantity) {
       return apiResponse(
         createErrorResponse("Missing required trading parameters", {
-          message: "Symbol, side, type, and quantity are required"
+          message: "Symbol, side, type, and quantity are required",
         }),
         HTTP_STATUS.BAD_REQUEST
       );
@@ -71,8 +88,8 @@ export async function POST(request: NextRequest) {
     console.info(`🚀 Trading API: Processing ${side} order for ${symbol}`);
 
     // Create resource ID for locking
-    const resourceId = `trade:${symbol}:${side}:${snipeTargetId || 'manual'}`;
-    
+    const resourceId = `trade:${symbol}:${side}:${snipeTargetId || "manual"}`;
+
     // Skip lock for certain operations (e.g., emergency sells)
     if (skipLock) {
       console.info(`⚠️ Skipping lock for ${resourceId} (skipLock=true)`);
@@ -80,7 +97,9 @@ export async function POST(request: NextRequest) {
       // Check if resource is already locked
       const lockStatus = await transactionLockService.getLockStatus(resourceId);
       if (lockStatus.isLocked) {
-        console.info(`🔒 Resource ${resourceId} is locked. Queue length: ${lockStatus.queueLength}`);
+        console.info(
+          `🔒 Resource ${resourceId} is locked. Queue length: ${lockStatus.queueLength}`
+        );
         return apiResponse(
           createErrorResponse("Trade already in progress", {
             message: `Another trade for ${symbol} ${side} is being processed. Queue position: ${lockStatus.queueLength + 1}`,
@@ -100,22 +119,25 @@ export async function POST(request: NextRequest) {
     // Prepare order parameters
     const orderParams: OrderParameters = {
       symbol,
-      side: side.toUpperCase() as 'BUY' | 'SELL',
-      type: type.toUpperCase() as 'LIMIT' | 'MARKET',
+      side: side.toUpperCase() as "BUY" | "SELL",
+      type: type.toUpperCase() as "LIMIT" | "MARKET",
       quantity: quantity.toString(),
       ...(price && { price: price.toString() }),
-      timeInForce: 'IOC' // Immediate or Cancel for safety
+      timeInForce: "IOC", // Immediate or Cancel for safety
     };
 
     // Enhanced Risk Assessment (if not skipped)
     if (!skipLock) {
-      console.info(`🎯 Risk Assessment: Evaluating trade risk for ${userId} - ${symbol} ${side}`);
-      
+      console.info(
+        `🎯 Risk Assessment: Evaluating trade risk for ${userId} - ${symbol} ${side}`
+      );
+
       try {
-        const riskAssessment = await enhancedRiskManagementService.assessTradingRisk(
-          userId, 
-          orderParams
-        );
+        const riskAssessment =
+          await enhancedRiskManagementService.assessTradingRisk(
+            userId,
+            orderParams
+          );
 
         console.info(`🎯 Risk Assessment Result:`, {
           approved: riskAssessment.approved,
@@ -129,7 +151,7 @@ export async function POST(request: NextRequest) {
           return apiResponse(
             createErrorResponse("Trade blocked by risk management", {
               message: "Trade does not meet risk management criteria",
-              code: 'RISK_MANAGEMENT_BLOCK',
+              code: "RISK_MANAGEMENT_BLOCK",
               riskAssessment: {
                 riskLevel: riskAssessment.riskLevel,
                 riskScore: riskAssessment.riskScore,
@@ -146,7 +168,10 @@ export async function POST(request: NextRequest) {
 
         // Log warnings even for approved trades
         if (riskAssessment.warnings.length > 0) {
-          console.warn(`⚠️ Risk Management Warnings for ${symbol}:`, riskAssessment.warnings);
+          console.warn(
+            `⚠️ Risk Management Warnings for ${symbol}:`,
+            riskAssessment.warnings
+          );
         }
 
         // Add risk metadata to order for tracking
@@ -156,26 +181,31 @@ export async function POST(request: NextRequest) {
           assessmentTime: riskAssessment.metadata.assessmentTime,
           portfolioImpact: riskAssessment.limits.portfolioImpact,
         };
-
       } catch (riskError) {
-        console.error(`❌ Risk Assessment Failed for ${symbol}:`, { error: riskError instanceof Error ? riskError.message : String(riskError) });
-        
+        console.error(`❌ Risk Assessment Failed for ${symbol}:`, {
+          error:
+            riskError instanceof Error ? riskError.message : String(riskError),
+        });
+
         // On risk assessment failure, block the trade for safety
         return apiResponse(
           createErrorResponse("Risk assessment system error", {
             message: "Unable to assess trade risk - blocking for safety",
-            code: 'RISK_ASSESSMENT_ERROR',
-            details: riskError instanceof Error ? riskError.message : "Unknown risk assessment error"
+            code: "RISK_ASSESSMENT_ERROR",
+            details:
+              riskError instanceof Error
+                ? riskError.message
+                : "Unknown risk assessment error",
           }),
           HTTP_STATUS.INTERNAL_SERVER_ERROR
         );
       }
     } else {
       console.info(`⚠️ Risk Assessment: Skipped for ${symbol} (skipLock=true)`);
-      
+
       // Add minimal risk metadata for emergency trades
       (orderParams as any).riskMetadata = {
-        riskLevel: 'unknown',
+        riskLevel: "unknown",
         riskScore: 0,
         assessmentTime: new Date().toISOString(),
         portfolioImpact: 0,
@@ -187,22 +217,22 @@ export async function POST(request: NextRequest) {
     const executeTrade = async () => {
       // Place order via service layer (includes validation and balance checks)
       const orderResponse = await mexcService.placeOrder(orderParams);
-      
+
       if (!orderResponse.success) {
         throw new Error(orderResponse.error || "Order placement failed");
       }
-      
+
       // Service layer returns ServiceResponse<OrderResult>, we need the OrderResult
       const orderResult = orderResponse.data;
-      
+
       if (!orderResult) {
         throw new Error("Order result is missing from response");
       }
-      
+
       if (!orderResult.success) {
         throw new Error(orderResult.error || "Order execution failed");
       }
-      
+
       return {
         ...orderResult,
         serviceMetrics: {
@@ -233,7 +263,7 @@ export async function POST(request: NextRequest) {
             snipeTargetId,
           },
           timeoutMs: 30000, // 30 second timeout
-          priority: side.toUpperCase() === 'SELL' ? 1 : 5, // Prioritize sells
+          priority: side.toUpperCase() === "SELL" ? 1 : 5, // Prioritize sells
         },
         executeTrade
       );
@@ -252,11 +282,15 @@ export async function POST(request: NextRequest) {
       result = lockResult.result;
     }
 
-    const orderResult = result as { success: boolean; error?: string; [key: string]: unknown };
+    const orderResult = result as {
+      success: boolean;
+      error?: string;
+      [key: string]: unknown;
+    };
 
     if (orderResult.success) {
       console.info(`✅ Trading order executed successfully:`, orderResult);
-      
+
       // Save execution history
       try {
         const orderData = orderResult as any; // Type assertion for MEXC order response
@@ -270,36 +304,51 @@ export async function POST(request: NextRequest) {
           orderSide: side.toLowerCase(),
           requestedQuantity: parseFloat(quantity),
           requestedPrice: price ? parseFloat(price) : null,
-          executedQuantity: orderData.executedQty ? parseFloat(orderData.executedQty) : parseFloat(quantity),
+          executedQuantity: orderData.executedQty
+            ? parseFloat(orderData.executedQty)
+            : parseFloat(quantity),
           executedPrice: orderData.price ? parseFloat(orderData.price) : null,
-          totalCost: orderData.cummulativeQuoteQty ? parseFloat(orderData.cummulativeQuoteQty) : null,
+          totalCost: orderData.cummulativeQuoteQty
+            ? parseFloat(orderData.cummulativeQuoteQty)
+            : null,
           fees: orderData.fee ? parseFloat(orderData.fee) : null,
           exchangeOrderId: orderData.orderId?.toString() || null,
           exchangeStatus: orderData.status || "filled",
           exchangeResponse: JSON.stringify(orderResult),
-          executionLatencyMs: orderData.transactTime ? Date.now() - Number(orderData.transactTime) : null,
-          slippagePercent: price && orderData.price ? ((parseFloat(orderData.price) - parseFloat(price)) / parseFloat(price)) * 100 : null,
+          executionLatencyMs: orderData.transactTime
+            ? Date.now() - Number(orderData.transactTime)
+            : null,
+          slippagePercent:
+            price && orderData.price
+              ? ((parseFloat(orderData.price) - parseFloat(price)) /
+                  parseFloat(price)) *
+                100
+              : null,
           status: "success",
           requestedAt: new Date(),
-          executedAt: orderData.transactTime ? new Date(Number(orderData.transactTime)) : new Date(),
+          executedAt: orderData.transactTime
+            ? new Date(Number(orderData.transactTime))
+            : new Date(),
         };
 
         await db.insert(executionHistory).values(executionRecord);
-        console.info(`📝 Execution history saved for order ${orderResult.orderId}`);
+        console.info(
+          `📝 Execution history saved for order ${orderResult.orderId}`
+        );
       } catch (error) {
         console.error("Failed to save execution history:", { error: error });
         // Don't fail the trade response if history save fails
       }
-      
+
       return apiResponse(
         createSuccessResponse(orderResult, {
-          message: "Order placed successfully"
+          message: "Order placed successfully",
         }),
         HTTP_STATUS.CREATED
       );
     } else {
       console.error(`❌ Trading order failed:`, orderResult);
-      
+
       return apiResponse(
         createErrorResponse(orderResult.error || "Order placement failed", {
           message: "Order placement failed",
@@ -308,10 +357,9 @@ export async function POST(request: NextRequest) {
         HTTP_STATUS.BAD_REQUEST
       );
     }
-
   } catch (error) {
     console.error("Trading API Error:", { error: error });
-    
+
     return apiResponse(
       createErrorResponse(
         error instanceof Error ? error.message : "Unknown error occurred"

@@ -11,7 +11,7 @@ interface HealthCheckCache {
 interface CircuitBreakerState {
   failures: number;
   lastFailure: number;
-  state: 'closed' | 'open' | 'half-open';
+  state: "closed" | "open" | "half-open";
 }
 
 const healthCache = new Map<string, HealthCheckCache>();
@@ -29,13 +29,13 @@ const CIRCUIT_BREAKER_TIMEOUT = 60 * 1000; // 1 minute
 function getCachedResult(key: string): any | null {
   const cached = healthCache.get(key);
   if (!cached) return null;
-  
+
   const now = Date.now();
   if (now - cached.timestamp > cached.ttl) {
     healthCache.delete(key);
     return null;
   }
-  
+
   return cached.result;
 }
 
@@ -44,77 +44,90 @@ function setCachedResult(key: string, result: any, isSuccess: boolean): void {
   healthCache.set(key, {
     result,
     timestamp: Date.now(),
-    ttl
+    ttl,
   });
 }
 
 function getCircuitBreakerState(key: string): CircuitBreakerState {
-  return circuitBreakers.get(key) || { failures: 0, lastFailure: 0, state: 'closed' };
+  return (
+    circuitBreakers.get(key) || { failures: 0, lastFailure: 0, state: "closed" }
+  );
 }
 
 function updateCircuitBreaker(key: string, isSuccess: boolean): void {
   const state = getCircuitBreakerState(key);
   const now = Date.now();
-  
+
   if (isSuccess) {
-    circuitBreakers.set(key, { failures: 0, lastFailure: 0, state: 'closed' });
+    circuitBreakers.set(key, { failures: 0, lastFailure: 0, state: "closed" });
   } else {
     const newFailures = state.failures + 1;
-    const newState = newFailures >= FAILURE_THRESHOLD ? 'open' : 'closed';
-    circuitBreakers.set(key, { 
-      failures: newFailures, 
-      lastFailure: now, 
-      state: newState 
+    const newState = newFailures >= FAILURE_THRESHOLD ? "open" : "closed";
+    circuitBreakers.set(key, {
+      failures: newFailures,
+      lastFailure: now,
+      state: newState,
     });
   }
 }
 
 function isCircuitBreakerOpen(key: string): boolean {
   const state = getCircuitBreakerState(key);
-  if (state.state === 'closed') return false;
-  
+  if (state.state === "closed") return false;
+
   const now = Date.now();
-  if (state.state === 'open' && now - state.lastFailure > CIRCUIT_BREAKER_TIMEOUT) {
+  if (
+    state.state === "open" &&
+    now - state.lastFailure > CIRCUIT_BREAKER_TIMEOUT
+  ) {
     // Transition to half-open
-    circuitBreakers.set(key, { ...state, state: 'half-open' });
+    circuitBreakers.set(key, { ...state, state: "half-open" });
     return false;
   }
-  
-  return state.state === 'open';
+
+  return state.state === "open";
 }
 export async function checkDatabaseHealth() {
-  const cacheKey = 'db-health';
-  
+  const cacheKey = "db-health";
+
   // Check cache first
   const cached = getCachedResult(cacheKey);
   if (cached) {
     return cached;
   }
-  
+
   // Check circuit breaker
   if (isCircuitBreakerOpen(cacheKey)) {
     const result = {
       healthy: false,
-      message: "Database check circuit breaker is open - too many recent failures",
+      message:
+        "Database check circuit breaker is open - too many recent failures",
       error: "Circuit breaker open",
-      fromCircuitBreaker: true
+      fromCircuitBreaker: true,
     };
     setCachedResult(cacheKey, result, false);
     return result;
   }
-  
+
   try {
     // Use a simple SELECT 1 query with timeout for faster, lighter check
     const result = await Promise.race([
       db.execute(`SELECT 1 as health_check`),
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Health check timeout after 3 seconds")), 3000)
+        setTimeout(
+          () => reject(new Error("Health check timeout after 3 seconds")),
+          3000
+        )
       ),
     ]);
 
     if (result) {
       console.info("[DB Health] Database connection successful");
-      const healthResult = { healthy: true, message: "Database is connected", error: null };
+      const healthResult = {
+        healthy: true,
+        message: "Database is connected",
+        error: null,
+      };
       setCachedResult(cacheKey, healthResult, true);
       updateCircuitBreaker(cacheKey, true);
       return healthResult;
@@ -147,7 +160,7 @@ export async function checkDatabaseHealth() {
         : "Database connection failed",
       error: errorMessage,
     };
-    
+
     setCachedResult(cacheKey, healthResult, false);
     updateCircuitBreaker(cacheKey, false);
     return healthResult;
@@ -155,30 +168,33 @@ export async function checkDatabaseHealth() {
 }
 
 export async function checkAuthTables(includeAllTables = false) {
-  const cacheKey = includeAllTables ? 'auth-tables-full' : 'auth-tables-critical';
-  
+  const cacheKey = includeAllTables
+    ? "auth-tables-full"
+    : "auth-tables-critical";
+
   // Check cache first
   const cached = getCachedResult(cacheKey);
   if (cached) {
     return cached;
   }
-  
+
   // Check circuit breaker
   if (isCircuitBreakerOpen(cacheKey)) {
     const result = {
       healthy: false,
-      message: "Auth tables check circuit breaker is open - too many recent failures",
+      message:
+        "Auth tables check circuit breaker is open - too many recent failures",
       error: "Circuit breaker open",
       tables: {},
-      fromCircuitBreaker: true
+      fromCircuitBreaker: true,
     };
     setCachedResult(cacheKey, result, false);
     return result;
   }
-  
+
   try {
     // Only check critical tables by default (reduces queries from 4 to 2)
-    const tableChecks = includeAllTables 
+    const tableChecks = includeAllTables
       ? [
           { name: "user", table: user },
           { name: "session", table: session },
@@ -197,28 +213,34 @@ export async function checkAuthTables(includeAllTables = false) {
       for (const { name, table } of tableChecks) {
         const existenceCacheKey = `table-exists-${name}`;
         const cachedExistence = getCachedResult(existenceCacheKey);
-        
+
         if (cachedExistence && name !== "user" && name !== "session") {
           results[name] = cachedExistence;
           continue;
         }
-        
+
         try {
           const result = await Promise.race([
             db.select().from(table).limit(1),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error(`Table ${name} check timeout`)), 2000)
+              setTimeout(
+                () => reject(new Error(`Table ${name} check timeout`)),
+                2000
+              )
             ),
           ]);
-          const tableResult = { exists: true, count: Array.isArray(result) ? result.length : 0 };
+          const tableResult = {
+            exists: true,
+            count: Array.isArray(result) ? result.length : 0,
+          };
           results[name] = tableResult;
-          
+
           // Cache non-critical table existence for 1 hour
           if (name !== "user" && name !== "session") {
             healthCache.set(existenceCacheKey, {
               result: tableResult,
               timestamp: Date.now(),
-              ttl: TABLE_EXISTENCE_TTL
+              ttl: TABLE_EXISTENCE_TTL,
             });
           }
         } catch (error) {
@@ -228,7 +250,8 @@ export async function checkAuthTables(includeAllTables = false) {
             error: errorMessage,
             isTimeout: errorMessage.includes("timeout"),
             isConnectivity:
-              errorMessage.includes("ECONNREFUSED") || errorMessage.includes("connection"),
+              errorMessage.includes("ECONNREFUSED") ||
+              errorMessage.includes("connection"),
           };
           results[name] = tableResult;
         }
@@ -240,22 +263,34 @@ export async function checkAuthTables(includeAllTables = false) {
           Promise.race([
             db.select().from(user).limit(1),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("User table check timeout")), 2000)
+              setTimeout(
+                () => reject(new Error("User table check timeout")),
+                2000
+              )
             ),
           ]),
           Promise.race([
             db.select().from(session).limit(1),
             new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Session table check timeout")), 2000)
+              setTimeout(
+                () => reject(new Error("Session table check timeout")),
+                2000
+              )
             ),
           ]),
         ]);
-        
-        results.user = { exists: true, count: Array.isArray(userResult) ? userResult.length : 0 };
-        results.session = { exists: true, count: Array.isArray(sessionResult) ? sessionResult.length : 0 };
+
+        results.user = {
+          exists: true,
+          count: Array.isArray(userResult) ? userResult.length : 0,
+        };
+        results.session = {
+          exists: true,
+          count: Array.isArray(sessionResult) ? sessionResult.length : 0,
+        };
       } catch (error) {
-        const errorMessage = (error as Error).message;
-        
+        const _errorMessage = (error as Error).message;
+
         // Individual fallback checks if batch fails
         for (const { name, table } of tableChecks) {
           if (!results[name]) {
@@ -263,10 +298,16 @@ export async function checkAuthTables(includeAllTables = false) {
               const result = await Promise.race([
                 db.select().from(table).limit(1),
                 new Promise((_, reject) =>
-                  setTimeout(() => reject(new Error(`Table ${name} check timeout`)), 2000)
+                  setTimeout(
+                    () => reject(new Error(`Table ${name} check timeout`)),
+                    2000
+                  )
                 ),
               ]);
-              results[name] = { exists: true, count: Array.isArray(result) ? result.length : 0 };
+              results[name] = {
+                exists: true,
+                count: Array.isArray(result) ? result.length : 0,
+              };
             } catch (tableError) {
               const tableErrorMessage = (tableError as Error).message;
               results[name] = {
@@ -274,7 +315,8 @@ export async function checkAuthTables(includeAllTables = false) {
                 error: tableErrorMessage,
                 isTimeout: tableErrorMessage.includes("timeout"),
                 isConnectivity:
-                  tableErrorMessage.includes("ECONNREFUSED") || tableErrorMessage.includes("connection"),
+                  tableErrorMessage.includes("ECONNREFUSED") ||
+                  tableErrorMessage.includes("connection"),
               };
             }
           }
@@ -284,7 +326,9 @@ export async function checkAuthTables(includeAllTables = false) {
 
     // Determine overall health based on critical tables
     const criticalTables = ["user", "session"];
-    const criticalTablesHealthy = criticalTables.every((tableName) => results[tableName]?.exists);
+    const criticalTablesHealthy = criticalTables.every(
+      (tableName) => results[tableName]?.exists
+    );
 
     const authResult = {
       healthy: criticalTablesHealthy,
@@ -294,7 +338,7 @@ export async function checkAuthTables(includeAllTables = false) {
         : "One or more critical auth tables are inaccessible",
       error: null,
     };
-    
+
     setCachedResult(cacheKey, authResult, criticalTablesHealthy);
     updateCircuitBreaker(cacheKey, criticalTablesHealthy);
     return authResult;
@@ -306,7 +350,7 @@ export async function checkAuthTables(includeAllTables = false) {
       error: errorMessage,
       tables: {},
     };
-    
+
     setCachedResult(cacheKey, authResult, false);
     updateCircuitBreaker(cacheKey, false);
     return authResult;
@@ -317,7 +361,9 @@ export async function checkAuthTables(includeAllTables = false) {
 export function clearHealthCheckCaches(): void {
   healthCache.clear();
   circuitBreakers.clear();
-  console.info("[DB Health] All health check caches and circuit breakers cleared");
+  console.info(
+    "[DB Health] All health check caches and circuit breakers cleared"
+  );
 }
 
 export function getHealthCheckCacheStats(): {
@@ -330,6 +376,6 @@ export function getHealthCheckCacheStats(): {
     cacheSize: healthCache.size,
     circuitBreakerCount: circuitBreakers.size,
     cacheKeys: Array.from(healthCache.keys()),
-    circuitBreakerStates: Object.fromEntries(circuitBreakers.entries())
+    circuitBreakerStates: Object.fromEntries(circuitBreakers.entries()),
   };
 }

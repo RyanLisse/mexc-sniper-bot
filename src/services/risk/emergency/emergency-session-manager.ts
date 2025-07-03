@@ -1,22 +1,20 @@
 /**
  * Emergency Session Manager
- * 
+ *
  * Manages the lifecycle of emergency sessions including creation, execution,
  * escalation, de-escalation, and resolution.
  */
 
 import { EventEmitter } from "node:events";
 import { createTimer } from "@/src/lib/structured-logger";
-import type { 
-  CommunicationEntry, 
+import type {
+  CommunicationEntry,
   EmergencyAction,
-  EmergencyContext,
-  EmergencyEvent,
-  EmergencyLevel, 
+  EmergencyLevel,
   EmergencyMetrics,
   EmergencyProtocol,
-  EmergencySession 
-} from './emergency-types';
+  EmergencySession,
+} from "./emergency-types";
 
 /**
  * Session state tracking
@@ -47,7 +45,12 @@ export class EmergencySessionManager extends EventEmitter {
     warn: (message: string, context?: any) =>
       console.warn("[emergency-session-manager]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[emergency-session-manager]", message, context || "", error || ""),
+      console.error(
+        "[emergency-session-manager]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[emergency-session-manager]", message, context || ""),
   };
@@ -64,7 +67,7 @@ export class EmergencySessionManager extends EventEmitter {
     protocol: EmergencyProtocol,
     triggeredBy: string,
     triggerReason: string,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<string> {
     // Check concurrent session limit
     if (this.sessions.size >= this.maxConcurrentSessions) {
@@ -150,13 +153,18 @@ export class EmergencySessionManager extends EventEmitter {
    * Get all active sessions
    */
   getActiveSessions(): EmergencySession[] {
-    return Array.from(this.sessions.values()).filter(s => s.status === "active");
+    return Array.from(this.sessions.values()).filter(
+      (s) => s.status === "active"
+    );
   }
 
   /**
    * Update session status
    */
-  updateSessionStatus(sessionId: string, status: EmergencySession["status"]): void {
+  updateSessionStatus(
+    sessionId: string,
+    status: EmergencySession["status"]
+  ): void {
     const session = this.sessions.get(sessionId);
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`);
@@ -192,7 +200,10 @@ export class EmergencySessionManager extends EventEmitter {
     level: EmergencyLevel,
     context?: Record<string, any>
   ): Promise<void> {
-    const timer = createTimer("execute_emergency_level", "emergency-session-manager");
+    const timer = createTimer(
+      "execute_emergency_level",
+      "emergency-session-manager"
+    );
     const session = this.sessions.get(sessionId);
     const sessionState = this.sessionStates.get(sessionId);
 
@@ -214,8 +225,10 @@ export class EmergencySessionManager extends EventEmitter {
       sessionState.currentLevel = level.id;
 
       // Execute actions in priority order
-      const sortedActions = level.autoActions.sort((a, b) => a.priority - b.priority);
-      
+      const sortedActions = level.autoActions.sort(
+        (a, b) => a.priority - b.priority
+      );
+
       for (const action of sortedActions) {
         try {
           await this.executeAction(sessionId, action, context);
@@ -238,7 +251,11 @@ export class EmergencySessionManager extends EventEmitter {
         this.setLevelTimeout(sessionId, level.maxDuration);
       }
 
-      const duration = timer.end({ status: "success", sessionId, levelId: level.id });
+      const duration = timer.end({
+        status: "success",
+        sessionId,
+        levelId: level.id,
+      });
 
       this.emit("level_executed", {
         sessionId,
@@ -247,10 +264,9 @@ export class EmergencySessionManager extends EventEmitter {
         duration,
         timestamp: Date.now(),
       });
-
     } catch (error) {
       timer.end({ status: "failed", sessionId, levelId: level.id });
-      
+
       this.logger.error("Emergency level execution failed", {
         sessionId,
         levelId: level.id,
@@ -323,7 +339,6 @@ export class EmergencySessionManager extends EventEmitter {
         duration: actionExecution.endTime - actionExecution.startTime,
         result,
       });
-
     } catch (error) {
       actionExecution.endTime = Date.now();
       actionExecution.status = "failed";
@@ -341,7 +356,7 @@ export class EmergencySessionManager extends EventEmitter {
           actionId: action.id,
           retriesRemaining: action.retryCount,
         });
-        
+
         // Note: In real implementation, would implement retry logic
       }
 
@@ -354,31 +369,32 @@ export class EmergencySessionManager extends EventEmitter {
    */
   private async simulateActionExecution(
     action: EmergencyAction,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<any> {
     // Add artificial delay to simulate real execution
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     switch (action.type) {
       case "halt_trading":
         return { tradingHalted: true, timestamp: Date.now() };
-      
+
       case "close_positions":
         return { positionsClosed: 5, totalValue: 100000 };
-      
-      case "reduce_exposure":
+
+      case "reduce_exposure": {
         const reduction = action.conditions?.reduction_percentage || 50;
         return { exposureReduced: reduction, newExposure: 100 - reduction };
-      
+      }
+
       case "notify_operators":
         return { notificationsSent: 3, channels: ["slack", "email"] };
-      
+
       case "system_shutdown":
         return { systemShutdown: true, gracefulShutdown: true };
-      
+
       case "market_maker_pause":
         return { marketMakerPaused: true, openOrders: 12 };
-      
+
       default:
         return { actionExecuted: true };
     }
@@ -402,10 +418,13 @@ export class EmergencySessionManager extends EventEmitter {
 
     // Find current and next level
     const currentLevelIndex = protocol.emergencyLevels.findIndex(
-      l => l.id === session.currentLevel
+      (l) => l.id === session.currentLevel
     );
-    
-    if (currentLevelIndex === -1 || currentLevelIndex >= protocol.emergencyLevels.length - 1) {
+
+    if (
+      currentLevelIndex === -1 ||
+      currentLevelIndex >= protocol.emergencyLevels.length - 1
+    ) {
       this.logger.warn("Cannot escalate - already at highest level", {
         sessionId,
         currentLevel: session.currentLevel,
@@ -462,7 +481,7 @@ export class EmergencySessionManager extends EventEmitter {
     }
 
     session.communicationLog.push(entry);
-    
+
     const sessionState = this.sessionStates.get(sessionId);
     if (sessionState) {
       sessionState.metrics.communicationsSent++;
@@ -492,7 +511,7 @@ export class EmergencySessionManager extends EventEmitter {
    */
   private handleLevelTimeout(sessionId: string): void {
     this.logger.warn("Emergency level timeout reached", { sessionId });
-    
+
     this.emit("level_timeout", {
       sessionId,
       timestamp: Date.now(),
@@ -510,12 +529,13 @@ export class EmergencySessionManager extends EventEmitter {
     if (!session) return;
 
     session.endTime = Date.now();
-    
+
     // Calculate final metrics
     if (session.startTime) {
       const sessionState = this.sessionStates.get(sessionId);
       if (sessionState) {
-        sessionState.metrics.resolutionTime = session.endTime - session.startTime;
+        sessionState.metrics.resolutionTime =
+          session.endTime - session.startTime;
         session.metrics = sessionState.metrics;
       }
     }
@@ -526,7 +546,7 @@ export class EmergencySessionManager extends EventEmitter {
     // Cleanup
     this.sessions.delete(sessionId);
     this.sessionStates.delete(sessionId);
-    
+
     const timeout = this.activeTimers.get(sessionId);
     if (timeout) {
       clearTimeout(timeout);
@@ -575,8 +595,10 @@ export class EmergencySessionManager extends EventEmitter {
     escalationRate: number;
   } {
     const totalSessions = this.sessionHistory.length + this.sessions.size;
-    const completedSessions = this.sessionHistory.filter(s => s.status === "resolved");
-    
+    const completedSessions = this.sessionHistory.filter(
+      (s) => s.status === "resolved"
+    );
+
     const totalResolutionTime = completedSessions.reduce((sum, session) => {
       return sum + (session.metrics?.resolutionTime || 0);
     }, 0);
@@ -588,12 +610,13 @@ export class EmergencySessionManager extends EventEmitter {
     return {
       activeSessions: this.sessions.size,
       totalSessions,
-      averageResolutionTime: completedSessions.length > 0 ? 
-        totalResolutionTime / completedSessions.length : 0,
-      successRate: totalSessions > 0 ? 
-        completedSessions.length / totalSessions : 0,
-      escalationRate: totalSessions > 0 ? 
-        totalEscalations / totalSessions : 0,
+      averageResolutionTime:
+        completedSessions.length > 0
+          ? totalResolutionTime / completedSessions.length
+          : 0,
+      successRate:
+        totalSessions > 0 ? completedSessions.length / totalSessions : 0,
+      escalationRate: totalSessions > 0 ? totalEscalations / totalSessions : 0,
     };
   }
 
@@ -607,7 +630,7 @@ export class EmergencySessionManager extends EventEmitter {
 
     const toRemove = this.sessionHistory.length - maxHistorySize;
     this.sessionHistory.splice(0, toRemove);
-    
+
     this.logger.info("Session history cleaned up", {
       removedSessions: toRemove,
       remainingSessions: this.sessionHistory.length,

@@ -7,7 +7,10 @@
  * OPTIMIZATION: Replaces duplicate validation logic across multiple modules
  */
 
-import type { CalendarEntry, SymbolEntry } from "../../../services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "../../../services/api/mexc-unified-exports";
 import type { PatternAnalysisRequest, PatternMatch } from "../interfaces";
 
 export interface ValidationResult {
@@ -27,7 +30,11 @@ export function validateSymbolEntry(symbol: SymbolEntry): ValidationResult {
 
   // Early exit for null/undefined
   if (!symbol) {
-    return { isValid: false, errors: ["Symbol entry is null or undefined"], warnings: [] };
+    return {
+      isValid: false,
+      errors: ["Symbol entry is null or undefined"],
+      warnings: [],
+    };
   }
 
   // Required field validation - fail fast
@@ -63,7 +70,9 @@ export function validateSymbolEntry(symbol: SymbolEntry): ValidationResult {
   // Optional field validation - batch check for performance
   if (
     symbol.cd &&
-    (symbol.cd.length < 3 || symbol.cd.length > 20 || !/^[A-Z0-9]+$/.test(symbol.cd))
+    (symbol.cd.length < 3 ||
+      symbol.cd.length > 20 ||
+      !/^[A-Z0-9]+$/.test(symbol.cd))
   ) {
     warnings.push("Symbol code format may be invalid");
   }
@@ -82,7 +91,11 @@ export function validateCalendarEntry(entry: CalendarEntry): ValidationResult {
 
   // Early exit for null/undefined
   if (!entry) {
-    return { isValid: false, errors: ["Calendar entry is null or undefined"], warnings: [] };
+    return {
+      isValid: false,
+      errors: ["Calendar entry is null or undefined"],
+      warnings: [],
+    };
   }
 
   // Critical field validation
@@ -133,7 +146,11 @@ export function validatePatternMatch(match: PatternMatch): ValidationResult {
 
   // Early exit for null/undefined
   if (!match) {
-    return { isValid: false, errors: ["Pattern match is null or undefined"], warnings: [] };
+    return {
+      isValid: false,
+      errors: ["Pattern match is null or undefined"],
+      warnings: [],
+    };
   }
 
   // Critical field validation - batch check
@@ -141,7 +158,11 @@ export function validatePatternMatch(match: PatternMatch): ValidationResult {
     { field: match.patternType, name: "patternType", type: "string" },
     { field: match.confidence, name: "confidence", type: "number" },
     { field: match.symbol, name: "symbol", type: "string" },
-    { field: match.advanceNoticeHours, name: "advanceNoticeHours", type: "number" },
+    {
+      field: match.advanceNoticeHours,
+      name: "advanceNoticeHours",
+      type: "number",
+    },
   ];
 
   for (const { field, name, type } of requiredFields) {
@@ -176,13 +197,19 @@ export function validatePatternMatch(match: PatternMatch): ValidationResult {
  *
  * OPTIMIZATION: Streamlined validation for API requests
  */
-export function validateAnalysisRequest(request: PatternAnalysisRequest): ValidationResult {
+export function validateAnalysisRequest(
+  request: PatternAnalysisRequest
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Early exit for null/undefined
   if (!request) {
-    return { isValid: false, errors: ["Analysis request is null or undefined"], warnings: [] };
+    return {
+      isValid: false,
+      errors: ["Analysis request is null or undefined"],
+      warnings: [],
+    };
   }
 
   // Required field validation

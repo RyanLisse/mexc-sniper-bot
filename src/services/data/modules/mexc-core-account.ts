@@ -50,7 +50,8 @@ export class MexcCoreAccountClient {
         const balances = responseData.balances
           .filter(
             (balance: any) =>
-              Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
+              Number.parseFloat(balance.free) > 0 ||
+              Number.parseFloat(balance.locked) > 0
           )
           .map((balance: any) => ({
             asset: balance.asset,
@@ -134,8 +135,11 @@ export class MexcCoreAccountClient {
         success: true,
         data: {
           canTrade: permissions.includes("SPOT"),
-          canWithdraw: permissions.includes("WITHDRAWALS") || permissions.includes("WITHDRAWAL"),
-          canDeposit: permissions.includes("DEPOSITS") || permissions.includes("DEPOSIT"),
+          canWithdraw:
+            permissions.includes("WITHDRAWALS") ||
+            permissions.includes("WITHDRAWAL"),
+          canDeposit:
+            permissions.includes("DEPOSITS") || permissions.includes("DEPOSIT"),
           permissions: permissions,
         },
         timestamp: Date.now(),
@@ -143,7 +147,11 @@ export class MexcCoreAccountClient {
         source: "mexc-core-account",
       };
     } catch (error) {
-      return this.httpClient.handleError(error, "checkAccountPermissions", startTime);
+      return this.httpClient.handleError(
+        error,
+        "checkAccountPermissions",
+        startTime
+      );
     }
   }
 
@@ -225,7 +233,9 @@ export class MexcCoreAccountClient {
   /**
    * Get balance for a specific asset
    */
-  async getAssetBalance(asset: string): Promise<MexcServiceResponse<BalanceEntry | null>> {
+  async getAssetBalance(
+    asset: string
+  ): Promise<MexcServiceResponse<BalanceEntry | null>> {
     const startTime = Date.now();
 
     try {
@@ -264,7 +274,9 @@ export class MexcCoreAccountClient {
 /**
  * Create a new MEXC account client instance
  */
-export function createMexcCoreAccountClient(httpClient: MexcCoreHttpClient): MexcCoreAccountClient {
+export function createMexcCoreAccountClient(
+  httpClient: MexcCoreHttpClient
+): MexcCoreAccountClient {
   return new MexcCoreAccountClient(httpClient);
 }
 

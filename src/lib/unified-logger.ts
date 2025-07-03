@@ -92,7 +92,8 @@ export class UnifiedLogger implements ILogger {
     this.config = {
       level: (process.env.LOG_LEVEL as LogLevel) || "info",
       enableStructuredLogging: process.env.NODE_ENV === "production",
-      enablePerformanceLogging: process.env.ENABLE_PERFORMANCE_LOGGING === "true",
+      enablePerformanceLogging:
+        process.env.ENABLE_PERFORMANCE_LOGGING === "true",
       maxRecentLogs: 1000,
       enableConsoleOutput: true,
       environment: (process.env.NODE_ENV as any) || "development",
@@ -169,7 +170,12 @@ export class UnifiedLogger implements ILogger {
   /**
    * API-specific logging with request tracking
    */
-  api(endpoint: string, method: string, responseTime: number, context?: LogContext): void {
+  api(
+    endpoint: string,
+    method: string,
+    responseTime: number,
+    context?: LogContext
+  ): void {
     const level = responseTime > 1000 ? "warn" : "info";
     this.log(level, `API: ${method} ${endpoint}`, {
       ...context,
@@ -226,7 +232,11 @@ export class UnifiedLogger implements ILogger {
   /**
    * Cache operation logging
    */
-  cache(operation: "hit" | "miss" | "set" | "delete", key: string, context?: LogContext): void {
+  cache(
+    operation: "hit" | "miss" | "set" | "delete",
+    key: string,
+    context?: LogContext
+  ): void {
     this.debug(`Cache ${operation}: ${key}`, {
       ...context,
       cacheOperation: operation,
@@ -295,7 +305,12 @@ export class UnifiedLogger implements ILogger {
     return levels[level] >= levels[this.config.level];
   }
 
-  private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: LogContext,
+    error?: Error
+  ): void {
     const timestamp = new Date().toISOString();
 
     const logMetadata: LogMetadata = {
@@ -339,14 +354,18 @@ export class UnifiedLogger implements ILogger {
         }),
       };
 
-      console[level === "debug" ? "debug" : level](JSON.stringify(structuredLog));
+      console[level === "debug" ? "debug" : level](
+        JSON.stringify(structuredLog)
+      );
     } else {
       // Human-readable logging for development
       const prefix = `[${timestamp}] [${level.toUpperCase()}] [${component}]`;
       const contextStr = context ? ` ${JSON.stringify(context)}` : "";
       const errorStr = error ? ` ERROR: ${error.message}` : "";
 
-      console[level === "debug" ? "debug" : level](`${prefix} ${message}${contextStr}${errorStr}`);
+      console[level === "debug" ? "debug" : level](
+        `${prefix} ${message}${contextStr}${errorStr}`
+      );
     }
   }
 }
@@ -358,7 +377,10 @@ export class UnifiedLogger implements ILogger {
 /**
  * Create a logger instance for a specific component
  */
-export function createLogger(component: string, config?: Partial<LoggerConfig>): UnifiedLogger {
+export function createLogger(
+  component: string,
+  config?: Partial<LoggerConfig>
+): UnifiedLogger {
   return new UnifiedLogger(component, config);
 }
 
@@ -376,7 +398,8 @@ export function createSimpleLogger(component: string): {
   return {
     info: (message: string, context?: any) => logger.info(message, context),
     warn: (message: string, context?: any) => logger.warn(message, context),
-    error: (message: string, context?: any, error?: Error) => logger.error(message, context, error),
+    error: (message: string, context?: any, error?: Error) =>
+      logger.error(message, context, error),
     debug: (message: string, context?: any) => logger.debug(message, context),
   };
 }
@@ -386,9 +409,15 @@ export function createSimpleLogger(component: string): {
  */
 export function createPerformanceLogger(component: string): {
   startTimer: (operation: string) => () => void;
-  measureAsync: <T>(operation: string, fn: () => Promise<T>, context?: LogContext) => Promise<T>;
+  measureAsync: <T>(
+    operation: string,
+    fn: () => Promise<T>,
+    context?: LogContext
+  ) => Promise<T>;
 } {
-  const logger = new UnifiedLogger(component, { enablePerformanceLogging: true });
+  const logger = new UnifiedLogger(component, {
+    enablePerformanceLogging: true,
+  });
 
   return {
     startTimer: (operation: string) => {
@@ -444,7 +473,10 @@ class LoggerRegistry {
     const allLoggers = this.getAllLoggers();
     return {
       totalLoggers: allLoggers.length,
-      totalRecentLogs: allLoggers.reduce((sum, logger) => sum + logger.getRecentLogs().length, 0),
+      totalRecentLogs: allLoggers.reduce(
+        (sum, logger) => sum + logger.getRecentLogs().length,
+        0
+      ),
       components: Array.from(this.loggers.keys()),
     };
   }
@@ -461,7 +493,10 @@ export const loggerRegistry = new LoggerRegistry();
 /**
  * Get a logger instance from the global registry
  */
-export function getLogger(component: string, config?: Partial<LoggerConfig>): UnifiedLogger {
+export function getLogger(
+  component: string,
+  config?: Partial<LoggerConfig>
+): UnifiedLogger {
   return loggerRegistry.getLogger(component, config);
 }
 

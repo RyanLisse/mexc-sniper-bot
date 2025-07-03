@@ -93,7 +93,12 @@ export class ErrorClassifier {
     warn: (message: string, context?: any) =>
       console.warn("[unified-error-handler]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[unified-error-handler]", message, context || "", error || ""),
+      console.error(
+        "[unified-error-handler]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[unified-error-handler]", message, context || ""),
   };
@@ -131,7 +136,9 @@ export class ErrorClassifier {
    * Checks if error is retryable (timeout or connection)
    */
   static isRetryable(error: unknown): boolean {
-    return ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error);
+    return (
+      ErrorClassifier.isTimeout(error) || ErrorClassifier.isConnection(error)
+    );
   }
 
   /**
@@ -153,7 +160,11 @@ export class ErrorClassifier {
   /**
    * Determines if error should be retried
    */
-  static shouldRetry(error: unknown, attempt: number, maxRetries: number): boolean {
+  static shouldRetry(
+    error: unknown,
+    attempt: number,
+    maxRetries: number
+  ): boolean {
     if (attempt >= maxRetries) return false;
     return ErrorClassifier.isRetryable(error);
   }
@@ -161,7 +172,11 @@ export class ErrorClassifier {
   /**
    * Calculates retry delay with exponential backoff
    */
-  static getRetryDelay(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
+  static getRetryDelay(
+    attempt: number,
+    baseDelay = 1000,
+    maxDelay = 30000
+  ): number {
     const exponentialDelay = baseDelay * 2 ** (attempt - 1);
     const jitter = Math.random() * 1000; // Add jitter to prevent thundering herd
     return Math.min(exponentialDelay + jitter, maxDelay);
@@ -286,7 +301,9 @@ export class ErrorMetrics {
     this.timestamps.clear();
   }
 
-  getTopErrors(limit = 10): Array<{ code: string; count: number; rate: number }> {
+  getTopErrors(
+    limit = 10
+  ): Array<{ code: string; count: number; rate: number }> {
     return Array.from(this.metrics.entries())
       .map(([code, count]) => ({
         code,
@@ -337,7 +354,10 @@ export class ErrorContext {
 // Enhanced API Error Handler
 // ============================================================================
 
-export function handleApiError(error: unknown, context?: Record<string, unknown>): NextResponse {
+export function handleApiError(
+  error: unknown,
+  context?: Record<string, unknown>
+): NextResponse {
   // Record error metrics
   const errorType = ErrorClassifier.getErrorType(error);
   errorMetrics.record(errorType);
@@ -354,7 +374,11 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
 
     // Log based on error type
     if (error.isOperational) {
-      errorLogger.warn(`Operational error: ${error.message}`, error, logContext);
+      errorLogger.warn(
+        `Operational error: ${error.message}`,
+        error,
+        logContext
+      );
     } else {
       errorLogger.error(`System error: ${error.message}`, error, logContext);
     }
@@ -364,9 +388,13 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
       code: error.code,
       timestamp: error.timestamp.toISOString(),
       errorType,
-      ...(isValidationError(error) && error.field ? { field: error.field } : {}),
+      ...(isValidationError(error) && error.field
+        ? { field: error.field }
+        : {}),
       ...(isRateLimitError(error) ? { retryAfter: error.retryAfter } : {}),
-      ...(isApiError(error) ? { apiName: error.apiName, apiStatusCode: error.apiStatusCode } : {}),
+      ...(isApiError(error)
+        ? { apiName: error.apiName, apiStatusCode: error.apiStatusCode }
+        : {}),
       ...(isDatabaseError(error) ? { query: error.query } : {}),
       ...(isNotFoundError(error)
         ? { resourceType: error.resourceType, resourceId: error.resourceId }
@@ -378,10 +406,14 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
 
   // Handle standard errors with enhanced classification
   if (error instanceof Error) {
-    errorLogger.error(`Unhandled error (${errorType}): ${error.message}`, error, {
-      ...context,
-      errorType,
-    });
+    errorLogger.error(
+      `Unhandled error (${errorType}): ${error.message}`,
+      error,
+      {
+        ...context,
+        errorType,
+      }
+    );
 
     // Enhanced error pattern detection
     if (ErrorClassifier.isConnection(error)) {
@@ -478,7 +510,10 @@ export const StandardErrors = {
   },
 
   conflict: (message: string, conflictType?: string) => {
-    const error = new ConflictError(message, conflictType || "resource_conflict");
+    const error = new ConflictError(
+      message,
+      conflictType || "resource_conflict"
+    );
     return handleApiError(error);
   },
 
@@ -513,7 +548,12 @@ export function createErrorMiddleware(
     logLevel?: "error" | "warn" | "info";
   } = {}
 ) {
-  const { enableRetry = false, maxRetries = 3, enableMetrics = true, logLevel = "error" } = options;
+  const {
+    enableRetry = false,
+    maxRetries = 3,
+    enableMetrics = true,
+    logLevel = "error",
+  } = options;
 
   return {
     /**
@@ -532,7 +572,10 @@ export function createErrorMiddleware(
           if (enableMetrics) {
             errorMetrics.record(ErrorClassifier.getErrorType(error));
           }
-          return handleApiError(error, { function: fn.name, args: args.length });
+          return handleApiError(error, {
+            function: fn.name,
+            args: args.length,
+          });
         }
       };
     },
@@ -556,10 +599,18 @@ export function createErrorMiddleware(
 
         if (isOperationalError(error)) {
           if (logLevel === "warn" || logLevel === "info") {
-            errorLogger.warn(`Operation failed: ${operationName}`, error as Error, enrichedContext);
+            errorLogger.warn(
+              `Operation failed: ${operationName}`,
+              error as Error,
+              enrichedContext
+            );
           }
         } else {
-          errorLogger.error(`System failure in: ${operationName}`, error as Error, enrichedContext);
+          errorLogger.error(
+            `System failure in: ${operationName}`,
+            error as Error,
+            enrichedContext
+          );
         }
 
         if (enableMetrics) {
@@ -589,7 +640,10 @@ export function createErrorMiddleware(
             errorMetrics.record(ErrorClassifier.getErrorType(error));
           }
 
-          collector.add(error instanceof Error ? error.message : String(error), `operation_${i}`);
+          collector.add(
+            error instanceof Error ? error.message : String(error),
+            `operation_${i}`
+          );
 
           results.push(error as Error);
 

@@ -10,7 +10,13 @@
  * - Use case execution wrapper with automatic metrics
  */
 
-import { context, metrics, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
+import {
+  context,
+  metrics,
+  SpanKind,
+  SpanStatusCode,
+  trace,
+} from "@opentelemetry/api";
 import { z } from "zod";
 
 // ============================================================================
@@ -70,22 +76,34 @@ export class UseCaseMetricsCollector {
   private readonly meter = metrics.getMeter("use-case-metrics", "1.0.0");
 
   // Metrics instruments
-  private readonly executionCounter = this.meter.createCounter("use_case_executions_total", {
-    description: "Total number of use case executions",
-  });
+  private readonly executionCounter = this.meter.createCounter(
+    "use_case_executions_total",
+    {
+      description: "Total number of use case executions",
+    }
+  );
 
-  private readonly latencyHistogram = this.meter.createHistogram("use_case_latency_ms", {
-    description: "Use case execution latency in milliseconds",
-    unit: "ms",
-  });
+  private readonly latencyHistogram = this.meter.createHistogram(
+    "use_case_latency_ms",
+    {
+      description: "Use case execution latency in milliseconds",
+      unit: "ms",
+    }
+  );
 
-  private readonly errorCounter = this.meter.createCounter("use_case_errors_total", {
-    description: "Total number of use case execution errors",
-  });
+  private readonly errorCounter = this.meter.createCounter(
+    "use_case_errors_total",
+    {
+      description: "Total number of use case execution errors",
+    }
+  );
 
-  private readonly businessMetricsGauge = this.meter.createGauge("use_case_business_metrics", {
-    description: "Business metrics from use case execution",
-  });
+  private readonly businessMetricsGauge = this.meter.createGauge(
+    "use_case_business_metrics",
+    {
+      description: "Business metrics from use case execution",
+    }
+  );
 
   private readonly concurrentExecutionsGauge = this.meter.createGauge(
     "use_case_concurrent_executions",
@@ -150,16 +168,27 @@ export class UseCaseMetricsCollector {
       inputValidation = await this.validateInput(input);
 
       if (inputValidation && !inputValidation.valid) {
-        this.recordValidationErrors(validatedContext, inputValidation.errors || []);
-        span.setStatus({ code: SpanStatusCode.ERROR, message: "Input validation failed" });
-        throw new Error(`Input validation failed: ${inputValidation.errors?.join(", ")}`);
+        this.recordValidationErrors(
+          validatedContext,
+          inputValidation.errors || []
+        );
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: "Input validation failed",
+        });
+        throw new Error(
+          `Input validation failed: ${inputValidation.errors?.join(", ")}`
+        );
       }
 
       // Execute use case in span context (using OpenTelemetry context)
       const otelContext = context.active();
-      result = await context.with(trace.setSpan(otelContext, span), async () => {
-        return await execution(input);
-      });
+      result = await context.with(
+        trace.setSpan(otelContext, span),
+        async () => {
+          return await execution(input);
+        }
+      );
 
       span.setStatus({ code: SpanStatusCode.OK });
     } catch (err) {
@@ -258,17 +287,23 @@ export class UseCaseMetricsCollector {
   // Private Methods
   // ============================================================================
 
-  private validateContext(context: UseCaseExecutionContext): UseCaseExecutionContext {
+  private validateContext(
+    context: UseCaseExecutionContext
+  ): UseCaseExecutionContext {
     const result = UseCaseExecutionSchema.safeParse(context);
 
     if (!result.success) {
-      throw new Error(`Invalid use case context: ${result.error.errors[0]?.message}`);
+      throw new Error(
+        `Invalid use case context: ${result.error.errors[0]?.message}`
+      );
     }
 
     return result.data as UseCaseExecutionContext;
   }
 
-  private async validateInput<T>(input: T): Promise<UseCaseMetrics["inputValidation"]> {
+  private async validateInput<T>(
+    input: T
+  ): Promise<UseCaseMetrics["inputValidation"]> {
     try {
       // Basic validation - would be enhanced with actual schema validation
       if (input === null || input === undefined) {
@@ -283,7 +318,9 @@ export class UseCaseMetricsCollector {
     } catch (error) {
       return {
         valid: false,
-        errors: [error instanceof Error ? error.message : "Unknown validation error"],
+        errors: [
+          error instanceof Error ? error.message : "Unknown validation error",
+        ],
       };
     }
   }
@@ -310,7 +347,10 @@ export class UseCaseMetricsCollector {
     this.concurrentExecutionsGauge.record(this.activeSessions.size);
   }
 
-  private recordMetrics(context: UseCaseExecutionContext, metrics: UseCaseMetrics): void {
+  private recordMetrics(
+    context: UseCaseExecutionContext,
+    metrics: UseCaseMetrics
+  ): void {
     const labels = {
       use_case: context.useCaseName,
       domain: context.domain,
@@ -350,7 +390,10 @@ export class UseCaseMetricsCollector {
     this.checkThresholds(context, metrics);
   }
 
-  private recordValidationErrors(context: UseCaseExecutionContext, errors: string[]): void {
+  private recordValidationErrors(
+    context: UseCaseExecutionContext,
+    errors: string[]
+  ): void {
     this.validationErrorCounter.add(errors.length, {
       use_case: context.useCaseName,
       domain: context.domain,
@@ -369,7 +412,11 @@ export class UseCaseMetricsCollector {
       // Trading domain metrics
       if ("trade" in result) {
         metrics.trade_volume = 1;
-        if (result.trade && typeof result.trade === "object" && "quantity" in result.trade) {
+        if (
+          result.trade &&
+          typeof result.trade === "object" &&
+          "quantity" in result.trade
+        ) {
           metrics.trade_quantity = Number(result.trade.quantity) || 0;
         }
       }
@@ -393,7 +440,10 @@ export class UseCaseMetricsCollector {
     return metrics;
   }
 
-  private checkThresholds(context: UseCaseExecutionContext, metrics: UseCaseMetrics): void {
+  private checkThresholds(
+    context: UseCaseExecutionContext,
+    metrics: UseCaseMetrics
+  ): void {
     // Check latency thresholds
     if (metrics.executionTime > this.thresholds.latencyErrorMs) {
       console.error(`[UseCaseMetrics] High latency detected`, {
@@ -420,15 +470,25 @@ export class UseCaseMetricsCollector {
 /**
  * Decorator function to automatically instrument use case executions
  */
-export function withUseCaseMetrics<TInput, TOutput>(context: UseCaseExecutionContext) {
-  return (_target: any, _propertyName: string, descriptor: PropertyDescriptor) => {
+export function withUseCaseMetrics<TInput, TOutput>(
+  context: UseCaseExecutionContext
+) {
+  return (
+    _target: any,
+    _propertyName: string,
+    descriptor: PropertyDescriptor
+  ) => {
     const method = descriptor.value;
     const collector = getUseCaseMetricsCollector();
 
     descriptor.value = async function (input: TInput): Promise<TOutput> {
-      return await collector.instrumentUseCaseExecution(context, input, async (validatedInput) => {
-        return await method.call(this, validatedInput);
-      });
+      return await collector.instrumentUseCaseExecution(
+        context,
+        input,
+        async (validatedInput) => {
+          return await method.call(this, validatedInput);
+        }
+      );
     };
 
     return descriptor;

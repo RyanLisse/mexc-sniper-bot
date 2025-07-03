@@ -48,7 +48,12 @@ export class PatternTargetIntegrationService {
     warn: (message: string, context?: any) =>
       console.warn("[pattern-target-integration]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[pattern-target-integration]", message, context || "", error || ""),
+      console.error(
+        "[pattern-target-integration]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[pattern-target-integration]", message, context || ""),
   };
@@ -77,9 +82,12 @@ export class PatternTargetIntegrationService {
     });
   }
 
-  static getInstance(config?: Partial<PatternTargetConfig>): PatternTargetIntegrationService {
+  static getInstance(
+    config?: Partial<PatternTargetConfig>
+  ): PatternTargetIntegrationService {
     if (!PatternTargetIntegrationService.instance) {
-      PatternTargetIntegrationService.instance = new PatternTargetIntegrationService(config);
+      PatternTargetIntegrationService.instance =
+        new PatternTargetIntegrationService(config);
     }
     return PatternTargetIntegrationService.instance;
   }
@@ -92,7 +100,9 @@ export class PatternTargetIntegrationService {
     userId: string,
     overrideConfig?: Partial<PatternTargetConfig>
   ): Promise<TargetCreationResult[]> {
-    const config = overrideConfig ? { ...this.config, ...overrideConfig } : this.config;
+    const config = overrideConfig
+      ? { ...this.config, ...overrideConfig }
+      : this.config;
     const results: TargetCreationResult[] = [];
 
     // Check current concurrent targets
@@ -113,7 +123,11 @@ export class PatternTargetIntegrationService {
     // Process each pattern
     for (const pattern of patterns) {
       try {
-        const result = await this.createTargetFromPattern(pattern, userId, config);
+        const result = await this.createTargetFromPattern(
+          pattern,
+          userId,
+          config
+        );
         results.push(result);
 
         if (result.success) {
@@ -212,7 +226,10 @@ export class PatternTargetIntegrationService {
   /**
    * Filter logic: Should we create a target for this pattern?
    */
-  private shouldCreateTarget(pattern: PatternMatch, config: PatternTargetConfig): boolean {
+  private shouldCreateTarget(
+    pattern: PatternMatch,
+    config: PatternTargetConfig
+  ): boolean {
     // Check pattern type
     if (!config.enabledPatternTypes.includes(pattern.patternType)) {
       return false;
@@ -284,14 +301,18 @@ export class PatternTargetIntegrationService {
 
       case "pre_ready": {
         // Execute when pattern is expected to be ready
-        const estimatedMinutes = pattern.advanceNoticeHours ? pattern.advanceNoticeHours * 60 : 120;
+        const estimatedMinutes = pattern.advanceNoticeHours
+          ? pattern.advanceNoticeHours * 60
+          : 120;
         return new Date(now.getTime() + estimatedMinutes * 60 * 1000);
       }
 
       case "launch_sequence":
         // Execute at launch time
         if (pattern.advanceNoticeHours) {
-          return new Date(now.getTime() + pattern.advanceNoticeHours * 60 * 60 * 1000);
+          return new Date(
+            now.getTime() + pattern.advanceNoticeHours * 60 * 60 * 1000
+          );
         }
         return null;
 
@@ -303,7 +324,10 @@ export class PatternTargetIntegrationService {
   /**
    * Calculate position size based on confidence and risk
    */
-  private calculatePositionSize(pattern: PatternMatch, config: PatternTargetConfig): number {
+  private calculatePositionSize(
+    pattern: PatternMatch,
+    config: PatternTargetConfig
+  ): number {
     const baseSize = config.defaultPositionSizeUsdt;
     const confidenceMultiplier = pattern.confidence / 100;
 
@@ -410,11 +434,14 @@ export class PatternTargetIntegrationService {
         ["pending", "ready", "executing"].includes(t.status)
       ).length,
       readyTargets: allTargets.filter((t: any) => t.status === "ready").length,
-      pendingTargets: allTargets.filter((t: any) => t.status === "pending").length,
-      executingTargets: allTargets.filter((t: any) => t.status === "executing").length,
+      pendingTargets: allTargets.filter((t: any) => t.status === "pending")
+        .length,
+      executingTargets: allTargets.filter((t: any) => t.status === "executing")
+        .length,
     };
   }
 }
 
 // Export singleton instance
-export const patternTargetIntegrationService = PatternTargetIntegrationService.getInstance();
+export const patternTargetIntegrationService =
+  PatternTargetIntegrationService.getInstance();

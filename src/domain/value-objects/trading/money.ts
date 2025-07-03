@@ -25,7 +25,11 @@ export class Money extends ValueObject<MoneyProps> {
     super(props);
   }
 
-  static create(amount: number, currency: string, precision: number = 8): Money {
+  static create(
+    amount: number,
+    currency: string,
+    precision: number = 8
+  ): Money {
     const moneyProps: MoneyProps = {
       amount: Math.round(amount * 10 ** precision) / 10 ** precision,
       currency: currency.toUpperCase(),
@@ -35,10 +39,18 @@ export class Money extends ValueObject<MoneyProps> {
     return Money.createWithValidation(moneyProps);
   }
 
-  static fromString(amountStr: string, currency: string, precision: number = 8): Money {
+  static fromString(
+    amountStr: string,
+    currency: string,
+    precision: number = 8
+  ): Money {
     const amount = parseFloat(amountStr);
     if (Number.isNaN(amount)) {
-      throw new DomainValidationError("amount", amountStr, "Invalid numeric format");
+      throw new DomainValidationError(
+        "amount",
+        amountStr,
+        "Invalid numeric format"
+      );
     }
     return Money.create(amount, currency, precision);
   }
@@ -65,7 +77,11 @@ export class Money extends ValueObject<MoneyProps> {
 
     // Business rule validations
     if (props.amount < 0) {
-      throw new DomainValidationError("amount", props.amount, "Amount cannot be negative");
+      throw new DomainValidationError(
+        "amount",
+        props.amount,
+        "Amount cannot be negative"
+      );
     }
 
     return new Money(props);
@@ -135,7 +151,11 @@ export class Money extends ValueObject<MoneyProps> {
     this.ensureSameCurrency(other);
     const result = this.props.amount - other.props.amount;
     if (result < 0) {
-      throw new DomainValidationError("amount", result, "Subtraction result cannot be negative");
+      throw new DomainValidationError(
+        "amount",
+        result,
+        "Subtraction result cannot be negative"
+      );
     }
     return Money.create(
       result,
@@ -146,16 +166,32 @@ export class Money extends ValueObject<MoneyProps> {
 
   multiply(factor: number): Money {
     if (factor < 0) {
-      throw new DomainValidationError("factor", factor, "Multiplication factor cannot be negative");
+      throw new DomainValidationError(
+        "factor",
+        factor,
+        "Multiplication factor cannot be negative"
+      );
     }
-    return Money.create(this.props.amount * factor, this.props.currency, this.props.precision);
+    return Money.create(
+      this.props.amount * factor,
+      this.props.currency,
+      this.props.precision
+    );
   }
 
   divide(divisor: number): Money {
     if (divisor <= 0) {
-      throw new DomainValidationError("divisor", divisor, "Division by zero or negative number");
+      throw new DomainValidationError(
+        "divisor",
+        divisor,
+        "Division by zero or negative number"
+      );
     }
-    return Money.create(this.props.amount / divisor, this.props.currency, this.props.precision);
+    return Money.create(
+      this.props.amount / divisor,
+      this.props.currency,
+      this.props.precision
+    );
   }
 
   percentage(percent: number): Money {
@@ -163,7 +199,11 @@ export class Money extends ValueObject<MoneyProps> {
   }
 
   // Currency conversion (requires exchange rate)
-  convertTo(targetCurrency: string, exchangeRate: number, precision: number = 8): Money {
+  convertTo(
+    targetCurrency: string,
+    exchangeRate: number,
+    precision: number = 8
+  ): Money {
     if (exchangeRate <= 0) {
       throw new DomainValidationError(
         "exchangeRate",
@@ -171,7 +211,11 @@ export class Money extends ValueObject<MoneyProps> {
         "Exchange rate must be positive"
       );
     }
-    return Money.create(this.props.amount * exchangeRate, targetCurrency, precision);
+    return Money.create(
+      this.props.amount * exchangeRate,
+      targetCurrency,
+      precision
+    );
   }
 
   // Formatting methods
@@ -209,7 +253,9 @@ export class Money extends ValueObject<MoneyProps> {
       );
     }
 
-    return moneys.reduce((max, current) => (current.isGreaterThan(max) ? current : max));
+    return moneys.reduce((max, current) =>
+      current.isGreaterThan(max) ? current : max
+    );
   }
 
   static min(...moneys: Money[]): Money {
@@ -221,7 +267,9 @@ export class Money extends ValueObject<MoneyProps> {
       );
     }
 
-    return moneys.reduce((min, current) => (current.isLessThan(min) ? current : min));
+    return moneys.reduce((min, current) =>
+      current.isLessThan(min) ? current : min
+    );
   }
 
   static sum(...moneys: Money[]): Money {

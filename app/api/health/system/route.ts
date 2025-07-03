@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 export async function GET() {
   try {
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3008';
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3008";
 
     // Run all health checks in parallel
     const [
@@ -11,42 +11,44 @@ export async function GET() {
       mexcResponse,
       openaiResponse,
       environmentResponse,
-      workflowResponse
+      workflowResponse,
     ] = await Promise.allSettled([
       fetch(`${baseUrl}/api/health/db`),
       fetch(`${baseUrl}/api/mexc/connectivity`),
       fetch(`${baseUrl}/api/health/openai`),
       fetch(`${baseUrl}/api/health/environment`),
-      fetch(`${baseUrl}/api/workflow-status`)
+      fetch(`${baseUrl}/api/workflow-status`),
     ]);
 
     // Process results
     const results = {
-      database: await processHealthCheck(dbResponse, 'Database'),
-      mexcApi: await processHealthCheck(mexcResponse, 'MEXC API'),
-      openaiApi: await processHealthCheck(openaiResponse, 'OpenAI API'),
-      environment: await processHealthCheck(environmentResponse, 'Environment'),
-      workflows: await processHealthCheck(workflowResponse, 'Workflows')
+      database: await processHealthCheck(dbResponse, "Database"),
+      mexcApi: await processHealthCheck(mexcResponse, "MEXC API"),
+      openaiApi: await processHealthCheck(openaiResponse, "OpenAI API"),
+      environment: await processHealthCheck(environmentResponse, "Environment"),
+      workflows: await processHealthCheck(workflowResponse, "Workflows"),
     };
 
     // Calculate overall system health
-    const healthStatuses = Object.values(results).map(r => r.status);
-    const healthyCount = healthStatuses.filter(s => s === 'healthy').length;
-    const warningCount = healthStatuses.filter(s => s === 'warning').length;
-    const unhealthyCount = healthStatuses.filter(s => s === 'unhealthy' || s === 'error').length;
+    const healthStatuses = Object.values(results).map((r) => r.status);
+    const healthyCount = healthStatuses.filter((s) => s === "healthy").length;
+    const warningCount = healthStatuses.filter((s) => s === "warning").length;
+    const unhealthyCount = healthStatuses.filter(
+      (s) => s === "unhealthy" || s === "error"
+    ).length;
 
-    let overallStatus: 'healthy' | 'warning' | 'unhealthy';
+    let overallStatus: "healthy" | "warning" | "unhealthy";
     let overallMessage: string;
 
     if (unhealthyCount > 0) {
-      overallStatus = 'unhealthy';
+      overallStatus = "unhealthy";
       overallMessage = `System has ${unhealthyCount} critical issue(s)`;
     } else if (warningCount > 0) {
-      overallStatus = 'warning';
+      overallStatus = "warning";
       overallMessage = `System operational with ${warningCount} warning(s)`;
     } else {
-      overallStatus = 'healthy';
-      overallMessage = 'All systems operational';
+      overallStatus = "healthy";
+      overallMessage = "All systems operational";
     }
 
     return NextResponse.json({
@@ -56,7 +58,7 @@ export async function GET() {
         healthy: healthyCount,
         warnings: warningCount,
         unhealthy: unhealthyCount,
-        total: healthStatuses.length
+        total: healthStatuses.length,
       },
       components: results,
       timestamp: new Date().toISOString(),
@@ -64,46 +66,49 @@ export async function GET() {
   } catch (error) {
     console.error("[System Health Check] Error:", { error: error });
     const errorObj = error as Error | { message?: string };
-    return NextResponse.json({
-      status: 'error',
-      error: errorObj?.message || 'System health check failed',
-      timestamp: new Date().toISOString(),
-    }, {
-      status: 500,
-    });
+    return NextResponse.json(
+      {
+        status: "error",
+        error: errorObj?.message || "System health check failed",
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 500,
+      }
+    );
   }
 }
 
 async function processHealthCheck(
-  response: PromiseSettledResult<Response>, 
+  response: PromiseSettledResult<Response>,
   componentName: string
 ): Promise<{ status: string; message: string; details?: any }> {
-  if (response.status === 'rejected') {
+  if (response.status === "rejected") {
     return {
-      status: 'error',
+      status: "error",
       message: `${componentName} check failed: ${response.reason}`,
     };
   }
 
   try {
     const data = await response.value.json();
-    
+
     if (response.value.ok) {
       return {
-        status: data.status || 'healthy',
+        status: data.status || "healthy",
         message: data.message || `${componentName} is operational`,
-        details: data
+        details: data,
       };
     } else {
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         message: data.error || `${componentName} has issues`,
-        details: data
+        details: data,
       };
     }
-  } catch (error) {
+  } catch (_error) {
     return {
-      status: 'error',
+      status: "error",
       message: `Failed to parse ${componentName} response`,
     };
   }

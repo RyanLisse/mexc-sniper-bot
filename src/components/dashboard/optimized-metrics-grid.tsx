@@ -1,7 +1,14 @@
 "use client";
 
-import { ArrowUpRight, DollarSign, Eye, Target, TrendingUp, Zap } from "lucide-react";
-import { ComponentType, memo, ReactNode } from "react";
+import {
+  ArrowUpRight,
+  DollarSign,
+  Eye,
+  Target,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
+import { type ComponentType, memo, type ReactNode } from "react";
 import { useCurrencyFormatting } from "../../hooks/use-currency-formatting";
 import { Card, CardContent } from "../ui/card";
 
@@ -72,12 +79,18 @@ const MetricCard = memo(
                 <Icon className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  {title}
+                </p>
                 <div className="flex items-center space-x-1">
-                  <p className="text-lg font-bold text-gray-900">{isLoading ? "..." : value}</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {isLoading ? "..." : value}
+                  </p>
                   {trendIcon}
                 </div>
-                {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+                {subtitle && (
+                  <p className="text-xs text-gray-500">{subtitle}</p>
+                )}
               </div>
             </div>
           </div>
@@ -156,7 +169,9 @@ export const OptimizedMetricsGrid = memo(
             />
             <MetricCard
               title="Successful Snipes"
-              value={metrics?.successfulSnipes || sniperStats?.executedTargets || 0}
+              value={
+                metrics?.successfulSnipes || sniperStats?.executedTargets || 0
+              }
               subtitle="Executed trades"
               icon={Zap}
               color="purple"

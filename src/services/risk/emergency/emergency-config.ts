@@ -1,11 +1,11 @@
 /**
  * Emergency Configuration Management
- * 
+ *
  * Handles configuration defaults, validation, and management for the
  * advanced emergency coordination system.
  */
 
-import type { AdvancedEmergencyConfig } from './emergency-types';
+import type { AdvancedEmergencyConfig } from "./emergency-types";
 
 /**
  * Default configuration for emergency management system
@@ -22,7 +22,7 @@ export const DEFAULT_EMERGENCY_CONFIG: AdvancedEmergencyConfig = {
   approvalTimeoutMs: 300000, // 5 minutes
   metricsSyncInterval: 60000, // 1 minute
   testingInterval: 2592000000, // 30 days
-  notificationChannels: ['slack', 'email', 'sms'],
+  notificationChannels: ["slack", "email", "sms"],
   emergencyContacts: [],
   systemIntegrations: [],
 };
@@ -54,7 +54,7 @@ export const DEFAULT_LEGACY_CONFIG: LegacyEmergencyConfig = {
   emergencySessionTimeout: 3600000, // 1 hour
   autoEscalationEnabled: true,
   autoRecoveryEnabled: true,
-  notificationChannels: ['slack', 'email'],
+  notificationChannels: ["slack", "email"],
   escalationDelayMs: 300000, // 5 minutes
   maxRetryAttempts: 3,
   recoveryVerificationRequired: true,
@@ -63,10 +63,10 @@ export const DEFAULT_LEGACY_CONFIG: LegacyEmergencyConfig = {
   emergencyTestingEnabled: true,
   testingFrequencyDays: 30,
   validationChecks: [
-    'protocol_completeness',
-    'action_dependencies',
-    'communication_channels',
-    'recovery_procedures'
+    "protocol_completeness",
+    "action_dependencies",
+    "communication_channels",
+    "recovery_procedures",
   ],
 };
 
@@ -76,7 +76,7 @@ export const DEFAULT_LEGACY_CONFIG: LegacyEmergencyConfig = {
 export interface ConfigValidationRule {
   field: string;
   required: boolean;
-  type: 'number' | 'boolean' | 'string' | 'array' | 'object';
+  type: "number" | "boolean" | "string" | "array" | "object";
   min?: number;
   max?: number;
   allowedValues?: any[];
@@ -85,37 +85,37 @@ export interface ConfigValidationRule {
 
 export const CONFIG_VALIDATION_RULES: ConfigValidationRule[] = [
   {
-    field: 'maxConcurrentSessions',
+    field: "maxConcurrentSessions",
     required: true,
-    type: 'number',
+    type: "number",
     min: 1,
-    max: 10
+    max: 10,
   },
   {
-    field: 'sessionTimeoutMs',
+    field: "sessionTimeoutMs",
     required: true,
-    type: 'number',
+    type: "number",
     min: 60000, // 1 minute
-    max: 86400000 // 24 hours
+    max: 86400000, // 24 hours
   },
   {
-    field: 'autoEscalation',
+    field: "autoEscalation",
     required: true,
-    type: 'boolean'
+    type: "boolean",
   },
   {
-    field: 'notificationChannels',
+    field: "notificationChannels",
     required: true,
-    type: 'array',
-    allowedValues: ['slack', 'email', 'sms', 'teams', 'phone']
+    type: "array",
+    allowedValues: ["slack", "email", "sms", "teams", "phone"],
   },
   {
-    field: 'communicationTimeoutMs',
+    field: "communicationTimeoutMs",
     required: true,
-    type: 'number',
+    type: "number",
     min: 5000, // 5 seconds
-    max: 300000 // 5 minutes
-  }
+    max: 300000, // 5 minutes
+  },
 ];
 
 /**
@@ -129,12 +129,12 @@ export function mergeEmergencyConfig(
     ...userConfig,
     emergencyContacts: [
       ...DEFAULT_EMERGENCY_CONFIG.emergencyContacts,
-      ...(userConfig.emergencyContacts || [])
+      ...(userConfig.emergencyContacts || []),
     ],
     systemIntegrations: [
       ...DEFAULT_EMERGENCY_CONFIG.systemIntegrations,
-      ...(userConfig.systemIntegrations || [])
-    ]
+      ...(userConfig.systemIntegrations || []),
+    ],
   };
 }
 
@@ -149,12 +149,12 @@ export function mergeLegacyConfig(
     ...userConfig,
     notificationChannels: [
       ...DEFAULT_LEGACY_CONFIG.notificationChannels,
-      ...(userConfig.notificationChannels || [])
+      ...(userConfig.notificationChannels || []),
     ],
     validationChecks: [
       ...DEFAULT_LEGACY_CONFIG.validationChecks,
-      ...(userConfig.validationChecks || [])
-    ]
+      ...(userConfig.validationChecks || []),
+    ],
   };
 }
 
@@ -185,9 +185,10 @@ export function convertLegacyConfig(
 /**
  * Validate configuration against rules
  */
-export function validateEmergencyConfig(
-  config: AdvancedEmergencyConfig
-): { valid: boolean; errors: string[] } {
+export function validateEmergencyConfig(config: AdvancedEmergencyConfig): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   for (const rule of CONFIG_VALIDATION_RULES) {
@@ -202,14 +203,16 @@ export function validateEmergencyConfig(
     if (value === undefined || value === null) continue;
 
     // Check type
-    const actualType = Array.isArray(value) ? 'array' : typeof value;
+    const actualType = Array.isArray(value) ? "array" : typeof value;
     if (actualType !== rule.type) {
-      errors.push(`Invalid type for ${rule.field}: expected ${rule.type}, got ${actualType}`);
+      errors.push(
+        `Invalid type for ${rule.field}: expected ${rule.type}, got ${actualType}`
+      );
       continue;
     }
 
     // Check numeric ranges
-    if (rule.type === 'number') {
+    if (rule.type === "number") {
       if (rule.min !== undefined && value < rule.min) {
         errors.push(`${rule.field} must be at least ${rule.min}`);
       }
@@ -219,10 +222,14 @@ export function validateEmergencyConfig(
     }
 
     // Check allowed values
-    if (rule.allowedValues && rule.type === 'array') {
-      const invalidValues = value.filter((v: any) => !rule.allowedValues!.includes(v));
+    if (rule.allowedValues && rule.type === "array") {
+      const invalidValues = value.filter(
+        (v: any) => !rule.allowedValues?.includes(v)
+      );
       if (invalidValues.length > 0) {
-        errors.push(`Invalid values in ${rule.field}: ${invalidValues.join(', ')}`);
+        errors.push(
+          `Invalid values in ${rule.field}: ${invalidValues.join(", ")}`
+        );
       }
     } else if (rule.allowedValues && !rule.allowedValues.includes(value)) {
       errors.push(`Invalid value for ${rule.field}: ${value}`);
@@ -236,39 +243,41 @@ export function validateEmergencyConfig(
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 /**
  * Get configuration for specific environment
  */
-export function getEnvironmentConfig(env: 'development' | 'staging' | 'production'): Partial<AdvancedEmergencyConfig> {
+export function getEnvironmentConfig(
+  env: "development" | "staging" | "production"
+): Partial<AdvancedEmergencyConfig> {
   switch (env) {
-    case 'development':
+    case "development":
       return {
         testMode: true,
         sessionTimeoutMs: 300000, // 5 minutes
         autoEscalation: false,
-        notificationChannels: ['slack'],
+        notificationChannels: ["slack"],
         testingInterval: 86400000, // 1 day
       };
 
-    case 'staging':
+    case "staging":
       return {
         testMode: true,
         sessionTimeoutMs: 1800000, // 30 minutes
         autoEscalation: true,
-        notificationChannels: ['slack', 'email'],
+        notificationChannels: ["slack", "email"],
         testingInterval: 604800000, // 7 days
       };
 
-    case 'production':
+    case "production":
       return {
         testMode: false,
         sessionTimeoutMs: 3600000, // 1 hour
         autoEscalation: true,
-        notificationChannels: ['slack', 'email', 'sms'],
+        notificationChannels: ["slack", "email", "sms"],
         testingInterval: 2592000000, // 30 days
       };
 
@@ -286,13 +295,14 @@ export class EmergencyConfigManager {
 
   constructor(userConfig: Partial<AdvancedEmergencyConfig> = {}) {
     const envConfig = getEnvironmentConfig(
-      (process.env.NODE_ENV as 'development' | 'staging' | 'production') || 'development'
+      (process.env.NODE_ENV as "development" | "staging" | "production") ||
+        "development"
     );
-    
+
     // Merge: defaults -> environment -> user config
     this.config = mergeEmergencyConfig({
       ...envConfig,
-      ...userConfig
+      ...userConfig,
     });
 
     this.validateConfig();
@@ -367,7 +377,9 @@ export class EmergencyConfigManager {
       this.config = mergeEmergencyConfig(importedConfig);
       this.validateConfig();
     } catch (error) {
-      throw new Error(`Failed to import configuration: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to import configuration: ${(error as Error).message}`
+      );
     }
   }
 }

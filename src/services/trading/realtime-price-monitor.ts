@@ -1,6 +1,6 @@
 /**
  * Real-time Price Monitor Service
- * 
+ *
  * This service provides real-time price monitoring using websockets to:
  * 1. Monitor price movements for snipe targets
  * 2. Trigger price-based snipe executions
@@ -9,11 +9,14 @@
  * 5. Integration with MEXC websocket streams
  */
 
-import { EventEmitter } from 'node:events';
-import WebSocket from 'ws';
-import { toSafeError } from '@/src/lib/error-type-utils';
-import { getCompleteAutoSnipingService, type PatternTrigger } from './complete-auto-sniping-service';
-import { getPatternSnipeIntegration, type PatternDetectionEvent } from './pattern-snipe-integration';
+import { EventEmitter } from "node:events";
+import WebSocket from "ws";
+import { toSafeError } from "@/src/lib/error-type-utils";
+import { getCompleteAutoSnipingService } from "./complete-auto-sniping-service";
+import {
+  getPatternSnipeIntegration,
+  type PatternDetectionEvent,
+} from "./pattern-snipe-integration";
 
 // Price monitoring interfaces
 export interface PriceData {
@@ -24,12 +27,12 @@ export interface PriceData {
   volume: number;
   volumeChange: number;
   timestamp: Date;
-  source: 'websocket' | 'api' | 'cache';
+  source: "websocket" | "api" | "cache";
 }
 
 export interface PriceBreakout {
   symbol: string;
-  breakoutType: 'resistance' | 'support' | 'volume';
+  breakoutType: "resistance" | "support" | "volume";
   currentPrice: number;
   breakoutPrice: number;
   confidence: number;
@@ -41,7 +44,7 @@ export interface PriceBreakout {
 export interface PriceTrigger {
   id: string;
   symbol: string;
-  triggerType: 'price_above' | 'price_below' | 'volume_spike' | 'momentum';
+  triggerType: "price_above" | "price_below" | "volume_spike" | "momentum";
   targetValue: number;
   currentValue: number;
   triggered: boolean;
@@ -65,15 +68,19 @@ export interface RealtimeMonitorConfig {
 
 /**
  * Real-time Price Monitor Service
- * 
+ *
  * Provides real-time price monitoring and triggering for auto-sniping
  */
 export class RealtimePriceMonitor extends EventEmitter {
   private logger = {
-    info: (message: string, context?: any) => console.info('[realtime-price-monitor]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[realtime-price-monitor]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[realtime-price-monitor]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[realtime-price-monitor]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[realtime-price-monitor]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[realtime-price-monitor]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[realtime-price-monitor]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[realtime-price-monitor]", message, context || ""),
   };
 
   private isActive = false;
@@ -81,20 +88,23 @@ export class RealtimePriceMonitor extends EventEmitter {
   private websocket: WebSocket | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
-  
+
   // Price data storage
   private priceData: Map<string, PriceData> = new Map();
   private priceHistory: Map<string, PriceData[]> = new Map();
   private priceTriggers: Map<string, PriceTrigger> = new Map();
-  
+
   // Breakout detection
-  private supportResistanceLevels: Map<string, { support: number; resistance: number }> = new Map();
+  private supportResistanceLevels: Map<
+    string,
+    { support: number; resistance: number }
+  > = new Map();
   private volumeAverages: Map<string, number> = new Map();
-  
+
   // Services
   private autoSnipingService = getCompleteAutoSnipingService();
   private patternIntegration = getPatternSnipeIntegration();
-  
+
   // Connection state
   private connectionState = {
     connected: false,
@@ -105,11 +115,11 @@ export class RealtimePriceMonitor extends EventEmitter {
 
   constructor(config: Partial<RealtimeMonitorConfig> = {}) {
     super();
-    
+
     this.config = {
       enabled: true,
-      symbols: ['BTCUSDT', 'ETHUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT'],
-      websocketUrl: 'wss://wbs.mexc.com/ws',
+      symbols: ["BTCUSDT", "ETHUSDT", "ADAUSDT", "SOLUSDT", "DOTUSDT"],
+      websocketUrl: "wss://wbs.mexc.com/ws",
       reconnectDelay: 5000,
       heartbeatInterval: 30000,
       priceChangeThreshold: 2.0, // 2% price change
@@ -117,10 +127,10 @@ export class RealtimePriceMonitor extends EventEmitter {
       breakoutDetectionEnabled: true,
       autoSnipeOnBreakouts: true,
       maxPriceAge: 60000, // 1 minute
-      ...config
+      ...config,
     };
 
-    this.logger.info('Real-time Price Monitor initialized', {
+    this.logger.info("Real-time Price Monitor initialized", {
       enabled: this.config.enabled,
       symbols: this.config.symbols.length,
       breakoutDetection: this.config.breakoutDetectionEnabled,
@@ -135,12 +145,12 @@ export class RealtimePriceMonitor extends EventEmitter {
    */
   async start(): Promise<void> {
     if (this.isActive) {
-      this.logger.warn('Real-time price monitor already active');
+      this.logger.warn("Real-time price monitor already active");
       return;
     }
 
     try {
-      this.logger.info('Starting real-time price monitoring');
+      this.logger.info("Starting real-time price monitoring");
 
       // Initialize services if needed
       if (!this.autoSnipingService.getStatus().isInitialized) {
@@ -159,13 +169,15 @@ export class RealtimePriceMonitor extends EventEmitter {
       this.startBreakoutDetection();
 
       this.isActive = true;
-      this.emit('monitor_started');
+      this.emit("monitor_started");
 
-      this.logger.info('Real-time price monitoring started successfully');
-
+      this.logger.info("Real-time price monitoring started successfully");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to start real-time price monitoring', safeError);
+      this.logger.error(
+        "Failed to start real-time price monitoring",
+        safeError
+      );
       throw safeError;
     }
   }
@@ -175,7 +187,7 @@ export class RealtimePriceMonitor extends EventEmitter {
    */
   async stop(): Promise<void> {
     try {
-      this.logger.info('Stopping real-time price monitoring');
+      this.logger.info("Stopping real-time price monitoring");
 
       this.isActive = false;
 
@@ -200,13 +212,12 @@ export class RealtimePriceMonitor extends EventEmitter {
       this.priceData.clear();
       this.priceTriggers.clear();
 
-      this.emit('monitor_stopped');
+      this.emit("monitor_stopped");
 
-      this.logger.info('Real-time price monitoring stopped');
-
+      this.logger.info("Real-time price monitoring stopped");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to stop real-time price monitoring', safeError);
+      this.logger.error("Failed to stop real-time price monitoring", safeError);
       throw safeError;
     }
   }
@@ -214,9 +225,11 @@ export class RealtimePriceMonitor extends EventEmitter {
   /**
    * Add a price trigger
    */
-  addPriceTrigger(trigger: Omit<PriceTrigger, 'id' | 'triggered' | 'createdAt'>): string {
+  addPriceTrigger(
+    trigger: Omit<PriceTrigger, "id" | "triggered" | "createdAt">
+  ): string {
     const triggerId = `trigger-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const fullTrigger: PriceTrigger = {
       id: triggerId,
       triggered: false,
@@ -240,7 +253,7 @@ export class RealtimePriceMonitor extends EventEmitter {
    */
   removePriceTrigger(triggerId: string): boolean {
     const removed = this.priceTriggers.delete(triggerId);
-    
+
     if (removed) {
       this.logger.info(`Price trigger removed`, { triggerId });
     }
@@ -270,7 +283,7 @@ export class RealtimePriceMonitor extends EventEmitter {
    * Get active price triggers
    */
   getActiveTriggers(): PriceTrigger[] {
-    return Array.from(this.priceTriggers.values()).filter(t => !t.triggered);
+    return Array.from(this.priceTriggers.values()).filter((t) => !t.triggered);
   }
 
   /**
@@ -284,7 +297,9 @@ export class RealtimePriceMonitor extends EventEmitter {
       monitoredSymbols: this.config.symbols.length,
       activeTriggers: this.getActiveTriggers().length,
       priceDataCount: this.priceData.size,
-      lastPriceUpdate: Math.max(...Array.from(this.priceData.values()).map(p => p.timestamp.getTime())),
+      lastPriceUpdate: Math.max(
+        ...Array.from(this.priceData.values()).map((p) => p.timestamp.getTime())
+      ),
       timestamp: new Date().toISOString(),
     };
   }
@@ -303,8 +318,8 @@ export class RealtimePriceMonitor extends EventEmitter {
       }
     }
 
-    this.logger.info('Real-time monitor config updated', { updates });
-    this.emit('config_updated', this.config);
+    this.logger.info("Real-time monitor config updated", { updates });
+    this.emit("config_updated", this.config);
   }
 
   // ============================================================================
@@ -316,22 +331,28 @@ export class RealtimePriceMonitor extends EventEmitter {
    */
   private setupEventListeners(): void {
     // Listen for breakout events
-    this.on('price_breakout', async (breakout: PriceBreakout) => {
+    this.on("price_breakout", async (breakout: PriceBreakout) => {
       if (this.config.autoSnipeOnBreakouts) {
         await this.handleBreakoutSnipe(breakout);
       }
     });
 
     // Listen for price trigger events
-    this.on('price_trigger', async (trigger: PriceTrigger, priceData: PriceData) => {
-      if (trigger.callback) {
-        try {
-          trigger.callback(trigger, priceData);
-        } catch (error) {
-          this.logger.error('Price trigger callback error', { triggerId: trigger.id, error });
+    this.on(
+      "price_trigger",
+      async (trigger: PriceTrigger, priceData: PriceData) => {
+        if (trigger.callback) {
+          try {
+            trigger.callback(trigger, priceData);
+          } catch (error) {
+            this.logger.error("Price trigger callback error", {
+              triggerId: trigger.id,
+              error,
+            });
+          }
         }
       }
-    });
+    );
   }
 
   /**
@@ -339,60 +360,66 @@ export class RealtimePriceMonitor extends EventEmitter {
    */
   private async connectWebSocket(): Promise<void> {
     try {
-      this.logger.info('Connecting to MEXC websocket', {
+      this.logger.info("Connecting to MEXC websocket", {
         url: this.config.websocketUrl,
         symbols: this.config.symbols.length,
       });
 
       this.websocket = new WebSocket(this.config.websocketUrl);
 
-      this.websocket.on('open', () => {
-        this.logger.info('WebSocket connected successfully');
+      this.websocket.on("open", () => {
+        this.logger.info("WebSocket connected successfully");
         this.connectionState.connected = true;
         this.connectionState.reconnectAttempts = 0;
-        
+
         // Subscribe to price streams
         this.subscribeToSymbols();
-        
+
         // Start heartbeat
         this.startHeartbeat();
-        
-        this.emit('websocket_connected');
+
+        this.emit("websocket_connected");
       });
 
-      this.websocket.on('message', (data: WebSocket.Data) => {
+      this.websocket.on("message", (data: WebSocket.Data) => {
         try {
           this.handleWebSocketMessage(data);
         } catch (error) {
-          this.logger.error('WebSocket message handling error', error);
+          this.logger.error("WebSocket message handling error", error);
         }
       });
 
-      this.websocket.on('error', (error: Error) => {
-        this.logger.error('WebSocket error', error);
+      this.websocket.on("error", (error: Error) => {
+        this.logger.error("WebSocket error", error);
         this.connectionState.connected = false;
-        this.emit('websocket_error', error);
+        this.emit("websocket_error", error);
       });
 
-      this.websocket.on('close', (code: number, reason: Buffer) => {
-        this.logger.warn('WebSocket connection closed', { 
-          code, 
+      this.websocket.on("close", (code: number, reason: Buffer) => {
+        this.logger.warn("WebSocket connection closed", {
+          code,
           reason: reason.toString(),
           reconnectAttempts: this.connectionState.reconnectAttempts,
         });
-        
+
         this.connectionState.connected = false;
-        this.emit('websocket_disconnected', { code, reason: reason.toString() });
-        
+        this.emit("websocket_disconnected", {
+          code,
+          reason: reason.toString(),
+        });
+
         // Attempt reconnection if active
-        if (this.isActive && this.connectionState.reconnectAttempts < this.connectionState.maxReconnectAttempts) {
+        if (
+          this.isActive &&
+          this.connectionState.reconnectAttempts <
+            this.connectionState.maxReconnectAttempts
+        ) {
           this.scheduleReconnect();
         }
       });
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to connect to websocket', safeError);
+      this.logger.error("Failed to connect to websocket", safeError);
       throw safeError;
     }
   }
@@ -402,28 +429,31 @@ export class RealtimePriceMonitor extends EventEmitter {
    */
   private subscribeToSymbols(): void {
     if (!this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
-      this.logger.error('Cannot subscribe - WebSocket not connected');
+      this.logger.error("Cannot subscribe - WebSocket not connected");
       return;
     }
 
     // Subscribe to ticker streams for all symbols
-    const subscriptions = this.config.symbols.map(symbol => ({
-      method: 'SUBSCRIPTION',
+    const subscriptions = this.config.symbols.map((symbol) => ({
+      method: "SUBSCRIPTION",
       params: [`spot@public.miniTicker.v3.api@${symbol}`],
     }));
 
     // Also subscribe to kline data for breakout detection
-    const klineSubscriptions = this.config.symbols.map(symbol => ({
-      method: 'SUBSCRIPTION',
+    const klineSubscriptions = this.config.symbols.map((symbol) => ({
+      method: "SUBSCRIPTION",
       params: [`spot@public.kline.v3.api@${symbol}@1m`],
     }));
 
-    [...subscriptions, ...klineSubscriptions].forEach(sub => {
+    [...subscriptions, ...klineSubscriptions].forEach((sub) => {
       try {
-        this.websocket!.send(JSON.stringify(sub));
-        this.logger.debug('Subscribed to stream', { params: sub.params });
+        this.websocket?.send(JSON.stringify(sub));
+        this.logger.debug("Subscribed to stream", { params: sub.params });
       } catch (error) {
-        this.logger.error('Failed to send subscription', { subscription: sub, error });
+        this.logger.error("Failed to send subscription", {
+          subscription: sub,
+          error,
+        });
       }
     });
   }
@@ -434,18 +464,20 @@ export class RealtimePriceMonitor extends EventEmitter {
   private handleWebSocketMessage(data: WebSocket.Data): void {
     try {
       const message = JSON.parse(data.toString());
-      
+
       // Handle different message types
-      if (message.c === 'miniTicker') {
+      if (message.c === "miniTicker") {
         this.handleTickerUpdate(message.d);
-      } else if (message.c === 'kline') {
+      } else if (message.c === "kline") {
         this.handleKlineUpdate(message.d);
-      } else if (message.msg === 'PONG') {
+      } else if (message.msg === "PONG") {
         this.connectionState.lastHeartbeat = new Date();
       }
-
     } catch (error) {
-      this.logger.error('Failed to parse websocket message', { data: data.toString(), error });
+      this.logger.error("Failed to parse websocket message", {
+        data: data.toString(),
+        error,
+      });
     }
   }
 
@@ -468,12 +500,12 @@ export class RealtimePriceMonitor extends EventEmitter {
         volume,
         volumeChange: this.calculateVolumeChange(symbol, volume),
         timestamp: new Date(),
-        source: 'websocket',
+        source: "websocket",
       };
 
       // Store current price data
       this.priceData.set(symbol, priceData);
-      
+
       // Store in price history
       this.addToPriceHistory(symbol, priceData);
 
@@ -483,10 +515,12 @@ export class RealtimePriceMonitor extends EventEmitter {
       // Detect significant price movements
       this.detectSignificantMovements(priceData);
 
-      this.emit('price_update', priceData);
-
+      this.emit("price_update", priceData);
     } catch (error) {
-      this.logger.error('Failed to handle ticker update', { tickerData, error });
+      this.logger.error("Failed to handle ticker update", {
+        tickerData,
+        error,
+      });
     }
   }
 
@@ -502,7 +536,7 @@ export class RealtimePriceMonitor extends EventEmitter {
 
       // Update support/resistance levels
       this.updateSupportResistance(symbol, high, low);
-      
+
       // Update volume averages
       this.updateVolumeAverage(symbol, volume);
 
@@ -510,9 +544,8 @@ export class RealtimePriceMonitor extends EventEmitter {
       if (this.config.breakoutDetectionEnabled) {
         this.detectBreakouts(symbol, high, low, volume);
       }
-
     } catch (error) {
-      this.logger.error('Failed to handle kline update', { klineData, error });
+      this.logger.error("Failed to handle kline update", { klineData, error });
     }
   }
 
@@ -553,20 +586,21 @@ export class RealtimePriceMonitor extends EventEmitter {
       let shouldTrigger = false;
 
       switch (trigger.triggerType) {
-        case 'price_above':
+        case "price_above":
           shouldTrigger = priceData.price >= trigger.targetValue;
           trigger.currentValue = priceData.price;
           break;
-        case 'price_below':
+        case "price_below":
           shouldTrigger = priceData.price <= trigger.targetValue;
           trigger.currentValue = priceData.price;
           break;
-        case 'volume_spike':
+        case "volume_spike":
           shouldTrigger = priceData.volumeChange >= trigger.targetValue;
           trigger.currentValue = priceData.volumeChange;
           break;
-        case 'momentum':
-          shouldTrigger = Math.abs(priceData.priceChangePercent) >= trigger.targetValue;
+        case "momentum":
+          shouldTrigger =
+            Math.abs(priceData.priceChangePercent) >= trigger.targetValue;
           trigger.currentValue = priceData.priceChangePercent;
           break;
       }
@@ -583,7 +617,7 @@ export class RealtimePriceMonitor extends EventEmitter {
           currentValue: trigger.currentValue,
         });
 
-        this.emit('price_trigger', trigger, priceData);
+        this.emit("price_trigger", trigger, priceData);
       }
     }
   }
@@ -592,14 +626,16 @@ export class RealtimePriceMonitor extends EventEmitter {
    * Detect significant price movements
    */
   private detectSignificantMovements(priceData: PriceData): void {
-    if (Math.abs(priceData.priceChangePercent) >= this.config.priceChangeThreshold) {
+    if (
+      Math.abs(priceData.priceChangePercent) >= this.config.priceChangeThreshold
+    ) {
       this.logger.info(`Significant price movement detected`, {
         symbol: priceData.symbol,
         priceChange: priceData.priceChangePercent,
         threshold: this.config.priceChangeThreshold,
       });
 
-      this.emit('significant_movement', priceData);
+      this.emit("significant_movement", priceData);
     }
 
     if (priceData.volumeChange >= this.config.volumeChangeThreshold) {
@@ -609,21 +645,28 @@ export class RealtimePriceMonitor extends EventEmitter {
         threshold: this.config.volumeChangeThreshold,
       });
 
-      this.emit('volume_spike', priceData);
+      this.emit("volume_spike", priceData);
     }
   }
 
   /**
    * Update support and resistance levels
    */
-  private updateSupportResistance(symbol: string, high: number, low: number): void {
-    const current = this.supportResistanceLevels.get(symbol) || { support: low, resistance: high };
-    
+  private updateSupportResistance(
+    symbol: string,
+    high: number,
+    low: number
+  ): void {
+    const current = this.supportResistanceLevels.get(symbol) || {
+      support: low,
+      resistance: high,
+    };
+
     // Simple moving support/resistance calculation
     const alpha = 0.1; // Smoothing factor
     current.support = current.support * (1 - alpha) + low * alpha;
     current.resistance = current.resistance * (1 - alpha) + high * alpha;
-    
+
     this.supportResistanceLevels.set(symbol, current);
   }
 
@@ -639,25 +682,31 @@ export class RealtimePriceMonitor extends EventEmitter {
   /**
    * Detect breakouts
    */
-  private detectBreakouts(symbol: string, high: number, low: number, volume: number): void {
+  private detectBreakouts(
+    symbol: string,
+    high: number,
+    low: number,
+    volume: number
+  ): void {
     const levels = this.supportResistanceLevels.get(symbol);
     const avgVolume = this.volumeAverages.get(symbol);
-    
+
     if (!levels || !avgVolume) return;
 
     const priceData = this.priceData.get(symbol);
     if (!priceData) return;
 
     // Resistance breakout
-    if (high > levels.resistance * 1.002) { // 0.2% above resistance
+    if (high > levels.resistance * 1.002) {
+      // 0.2% above resistance
       const breakout: PriceBreakout = {
         symbol,
-        breakoutType: 'resistance',
+        breakoutType: "resistance",
         currentPrice: priceData.price,
         breakoutPrice: levels.resistance,
         confidence: Math.min(95, 70 + (volume / avgVolume) * 10),
         volume,
-        timeframe: '1m',
+        timeframe: "1m",
         timestamp: new Date(),
       };
 
@@ -668,19 +717,20 @@ export class RealtimePriceMonitor extends EventEmitter {
         confidence: breakout.confidence,
       });
 
-      this.emit('price_breakout', breakout);
+      this.emit("price_breakout", breakout);
     }
 
     // Support breakdown
-    if (low < levels.support * 0.998) { // 0.2% below support
+    if (low < levels.support * 0.998) {
+      // 0.2% below support
       const breakout: PriceBreakout = {
         symbol,
-        breakoutType: 'support',
+        breakoutType: "support",
         currentPrice: priceData.price,
         breakoutPrice: levels.support,
         confidence: Math.min(95, 70 + (volume / avgVolume) * 10),
         volume,
-        timeframe: '1m',
+        timeframe: "1m",
         timestamp: new Date(),
       };
 
@@ -691,7 +741,7 @@ export class RealtimePriceMonitor extends EventEmitter {
         confidence: breakout.confidence,
       });
 
-      this.emit('price_breakout', breakout);
+      this.emit("price_breakout", breakout);
     }
   }
 
@@ -719,42 +769,48 @@ export class RealtimePriceMonitor extends EventEmitter {
         price: {
           current: breakout.currentPrice,
           entry: breakout.currentPrice,
-          stopLoss: breakout.breakoutType === 'resistance' 
-            ? breakout.breakoutPrice * 0.98 
-            : breakout.breakoutPrice * 1.02,
-          takeProfit: breakout.breakoutType === 'resistance' 
-            ? breakout.currentPrice * 1.05 
-            : breakout.currentPrice * 0.95,
+          stopLoss:
+            breakout.breakoutType === "resistance"
+              ? breakout.breakoutPrice * 0.98
+              : breakout.breakoutPrice * 1.02,
+          takeProfit:
+            breakout.breakoutType === "resistance"
+              ? breakout.currentPrice * 1.05
+              : breakout.currentPrice * 0.95,
           volume: breakout.volume,
         },
         timing: {
           detectedAt: breakout.timestamp,
           validUntil: new Date(Date.now() + 10 * 60 * 1000), // Valid for 10 minutes
-          urgency: breakout.confidence > 85 ? 'high' : 'medium',
+          urgency: breakout.confidence > 85 ? "high" : "medium",
         },
         metadata: {
-          vcoinId: breakout.symbol.replace('USDT', ''),
-          exchange: 'MEXC',
+          vcoinId: breakout.symbol.replace("USDT", ""),
+          exchange: "MEXC",
           indicators: {
             breakout_confidence: breakout.confidence,
-            volume_ratio: breakout.volume / (this.volumeAverages.get(breakout.symbol) || 1),
+            volume_ratio:
+              breakout.volume / (this.volumeAverages.get(breakout.symbol) || 1),
           },
           marketConditions: {
-            trend: breakout.breakoutType === 'resistance' ? 'bullish' : 'bearish',
-            volatility: 'high',
+            trend:
+              breakout.breakoutType === "resistance" ? "bullish" : "bearish",
+            volatility: "high",
           },
         },
       };
 
       // Process through pattern integration
       await this.patternIntegration.processPattern(patternEvent);
-
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error(`Failed to execute breakout snipe for ${breakout.symbol}`, {
-        breakout,
-        error: safeError.message,
-      });
+      this.logger.error(
+        `Failed to execute breakout snipe for ${breakout.symbol}`,
+        {
+          breakout,
+          error: safeError.message,
+        }
+      );
     }
   }
 
@@ -765,9 +821,9 @@ export class RealtimePriceMonitor extends EventEmitter {
     this.heartbeatTimer = setInterval(() => {
       if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
         try {
-          this.websocket.send(JSON.stringify({ method: 'PING' }));
+          this.websocket.send(JSON.stringify({ method: "PING" }));
         } catch (error) {
-          this.logger.error('Failed to send heartbeat', error);
+          this.logger.error("Failed to send heartbeat", error);
         }
       }
     }, this.config.heartbeatInterval);
@@ -783,7 +839,8 @@ export class RealtimePriceMonitor extends EventEmitter {
 
     this.connectionState.reconnectAttempts++;
     const delay = Math.min(
-      this.config.reconnectDelay * Math.pow(2, this.connectionState.reconnectAttempts - 1),
+      this.config.reconnectDelay *
+        2 ** (this.connectionState.reconnectAttempts - 1),
       60000 // Max 1 minute delay
     );
 
@@ -808,14 +865,18 @@ export class RealtimePriceMonitor extends EventEmitter {
       }
 
       await this.connectWebSocket();
-
     } catch (error) {
-      this.logger.error('Reconnection failed', error);
-      
-      if (this.connectionState.reconnectAttempts < this.connectionState.maxReconnectAttempts) {
+      this.logger.error("Reconnection failed", error);
+
+      if (
+        this.connectionState.reconnectAttempts <
+        this.connectionState.maxReconnectAttempts
+      ) {
         this.scheduleReconnect();
       } else {
-        this.logger.error('Max reconnection attempts reached, stopping monitor');
+        this.logger.error(
+          "Max reconnection attempts reached, stopping monitor"
+        );
         this.stop();
       }
     }
@@ -848,7 +909,11 @@ export class RealtimePriceMonitor extends EventEmitter {
 
     // Clean up triggered price triggers
     for (const [triggerId, trigger] of this.priceTriggers) {
-      if (trigger.triggered && trigger.triggeredAt && trigger.triggeredAt < cutoff) {
+      if (
+        trigger.triggered &&
+        trigger.triggeredAt &&
+        trigger.triggeredAt < cutoff
+      ) {
         this.priceTriggers.delete(triggerId);
         cleanedCount++;
       }
@@ -884,7 +949,9 @@ export class RealtimePriceMonitor extends EventEmitter {
 // Export singleton instance
 let realtimePriceMonitor: RealtimePriceMonitor | null = null;
 
-export function getRealtimePriceMonitor(config?: Partial<RealtimeMonitorConfig>): RealtimePriceMonitor {
+export function getRealtimePriceMonitor(
+  config?: Partial<RealtimeMonitorConfig>
+): RealtimePriceMonitor {
   if (!realtimePriceMonitor) {
     realtimePriceMonitor = new RealtimePriceMonitor(config);
   }

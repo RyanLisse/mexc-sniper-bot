@@ -3,7 +3,12 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { EndpointMetrics, RateLimitConfig, RateLimitResult, TokenBucket } from "./types";
+import type {
+  EndpointMetrics,
+  RateLimitConfig,
+  RateLimitResult,
+  TokenBucket,
+} from "./types";
 
 const logger = createLogger("token-bucket", {
   enableStructuredLogging: process.env.NODE_ENV === "production",
@@ -36,7 +41,8 @@ export class TokenBucketManager {
 
     // Refill tokens
     const timePassed = (now - bucket.lastRefill) / 1000; // seconds
-    const tokensToAdd = timePassed * bucket.refillRate * metrics.adaptationFactor;
+    const tokensToAdd =
+      timePassed * bucket.refillRate * metrics.adaptationFactor;
     bucket.tokens = Math.min(bucket.capacity, bucket.tokens + tokensToAdd);
     bucket.lastRefill = now;
 
@@ -47,7 +53,8 @@ export class TokenBucketManager {
       return {
         allowed: true,
         remainingRequests: Math.floor(bucket.tokens),
-        resetTime: now + ((bucket.capacity - bucket.tokens) / bucket.refillRate) * 1000,
+        resetTime:
+          now + ((bucket.capacity - bucket.tokens) / bucket.refillRate) * 1000,
         metadata: {
           algorithm: "token-bucket",
           currentWindowRequests: config.maxRequests - Math.floor(bucket.tokens),
@@ -60,7 +67,9 @@ export class TokenBucketManager {
     }
 
     // Calculate retry after
-    const retryAfterSeconds = Math.ceil((1 - bucket.tokens) / bucket.refillRate);
+    const retryAfterSeconds = Math.ceil(
+      (1 - bucket.tokens) / bucket.refillRate
+    );
 
     return {
       allowed: false,

@@ -144,7 +144,9 @@ export class InMemoryEventStore extends EventEmitter {
     }
 
     // Sort by timestamp
-    allEvents.sort((a, b) => a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime());
+    allEvents.sort(
+      (a, b) => a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime()
+    );
 
     return allEvents.slice(0, limit);
   }
@@ -168,7 +170,9 @@ export class InMemoryEventStore extends EventEmitter {
       : allEvents;
 
     // Sort by timestamp
-    filteredEvents.sort((a, b) => a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime());
+    filteredEvents.sort(
+      (a, b) => a.metadata.timestamp.getTime() - b.metadata.timestamp.getTime()
+    );
 
     return filteredEvents.slice(0, limit);
   }
@@ -184,7 +188,9 @@ export class InMemoryEventStore extends EventEmitter {
   /**
    * Get latest snapshot for aggregate
    */
-  async getLatestSnapshot(aggregateId: string): Promise<AggregateSnapshot | null> {
+  async getLatestSnapshot(
+    aggregateId: string
+  ): Promise<AggregateSnapshot | null> {
     return this.snapshots.get(aggregateId) || null;
   }
 
@@ -199,13 +205,15 @@ export class InMemoryEventStore extends EventEmitter {
   } {
     const totalAggregates = this.events.size;
     const totalSnapshots = this.snapshots.size;
-    const averageEventsPerAggregate = totalAggregates > 0 ? this.eventCounter / totalAggregates : 0;
+    const averageEventsPerAggregate =
+      totalAggregates > 0 ? this.eventCounter / totalAggregates : 0;
 
     return {
       totalEvents: this.eventCounter,
       totalAggregates,
       totalSnapshots,
-      averageEventsPerAggregate: Math.round(averageEventsPerAggregate * 100) / 100,
+      averageEventsPerAggregate:
+        Math.round(averageEventsPerAggregate * 100) / 100,
     };
   }
 

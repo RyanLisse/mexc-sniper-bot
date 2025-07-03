@@ -1,4 +1,7 @@
-import { extractConfidencePercentage, sanitizeSymbolName } from "./analysis-utils";
+import {
+  extractConfidencePercentage,
+  sanitizeSymbolName,
+} from "./analysis-utils";
 import type { AgentResponse } from "./base-agent";
 
 export interface SymbolDataInput {
@@ -77,15 +80,26 @@ export class TradingStrategyWorkflow {
     console.info(`[TradingStrategyWorkflow] Compiling strategy for ${vcoinId}`);
 
     const baseStrategy = this.extractBaseStrategy(strategyAnalysis, symbolData);
-    const riskManagement = this.createRiskManagementPlan(strategyAnalysis, riskLevel, capital);
-    const executionPlan = this.createExecutionPlan(strategyAnalysis, baseStrategy);
+    const riskManagement = this.createRiskManagementPlan(
+      strategyAnalysis,
+      riskLevel,
+      capital
+    );
+    const executionPlan = this.createExecutionPlan(
+      strategyAnalysis,
+      baseStrategy
+    );
     const confidence = this.calculateStrategyConfidence(
       strategyAnalysis,
       baseStrategy,
       riskManagement
     );
 
-    const strategy = this.refineStrategyWithRisk(baseStrategy, riskManagement, capital);
+    const strategy = this.refineStrategyWithRisk(
+      baseStrategy,
+      riskManagement,
+      capital
+    );
 
     return {
       strategy,
@@ -106,7 +120,9 @@ export class TradingStrategyWorkflow {
   ): CompiledTradingStrategy {
     const content = analysis.content || "";
     const symbol = sanitizeSymbolName(
-      Array.isArray(symbolData) ? symbolData[0]?.cd || "UNKNOWN" : symbolData?.cd || "UNKNOWN"
+      Array.isArray(symbolData)
+        ? symbolData[0]?.cd || "UNKNOWN"
+        : symbolData?.cd || "UNKNOWN"
     );
 
     // Extract action recommendation
@@ -120,7 +136,8 @@ export class TradingStrategyWorkflow {
     const entryPrice = entryMatch ? Number.parseFloat(entryMatch[1]) : null;
 
     // Extract target prices
-    const targetMatches = content.match(/target[:\s]*\$?(\d+(?:\.\d+)?)/gi) || [];
+    const targetMatches =
+      content.match(/target[:\s]*\$?(\d+(?:\.\d+)?)/gi) || [];
     const targetPrices = targetMatches
       .map((match) => {
         const priceMatch = match.match(/(\d+(?:\.\d+)?)/);
@@ -129,12 +146,16 @@ export class TradingStrategyWorkflow {
       .filter((price) => price > 0);
 
     // Extract stop loss
-    const stopLossMatch = content.match(/stop.{0,10}loss[:\s]*\$?(\d+(?:\.\d+)?)/i);
+    const stopLossMatch = content.match(
+      /stop.{0,10}loss[:\s]*\$?(\d+(?:\.\d+)?)/i
+    );
     const stopLoss = stopLossMatch ? Number.parseFloat(stopLossMatch[1]) : null;
 
     // Extract position size percentage
     const positionMatch = content.match(/position[:\s]*(\d+(?:\.\d+)?)[%\s]/i);
-    const positionSize = positionMatch ? Number.parseFloat(positionMatch[1]) / 100 : 0.05; // Default 5%
+    const positionSize = positionMatch
+      ? Number.parseFloat(positionMatch[1]) / 100
+      : 0.05; // Default 5%
 
     // Extract timeframe
     let timeframe = "short_term";
@@ -144,8 +165,10 @@ export class TradingStrategyWorkflow {
 
     // Extract conditions
     const conditions: string[] = [];
-    if (/ready.{0,10}state/i.test(content)) conditions.push("ready_state_confirmed");
-    if (/volume.{0,10}spike/i.test(content)) conditions.push("volume_confirmation");
+    if (/ready.{0,10}state/i.test(content))
+      conditions.push("ready_state_confirmed");
+    if (/volume.{0,10}spike/i.test(content))
+      conditions.push("volume_confirmation");
     if (/breakout/i.test(content)) conditions.push("breakout_signal");
     if (/3\.5.{0,10}hour/i.test(content)) conditions.push("optimal_timing");
 
@@ -169,15 +192,18 @@ export class TradingStrategyWorkflow {
     const content = analysis.content || "";
 
     // Risk-based position sizing
-    const positionSizing = riskLevel === "low" ? 0.02 : riskLevel === "medium" ? 0.05 : 0.1;
+    const positionSizing =
+      riskLevel === "low" ? 0.02 : riskLevel === "medium" ? 0.05 : 0.1;
     const maxLoss = capital * positionSizing * 0.5; // Max 50% of position size
 
     // Extract risk factors
     const riskFactors: string[] = [];
     if (/volatile/i.test(content)) riskFactors.push("high_volatility");
-    if (/low.{0,10}liquidity/i.test(content)) riskFactors.push("liquidity_risk");
+    if (/low.{0,10}liquidity/i.test(content))
+      riskFactors.push("liquidity_risk");
     if (/new.{0,10}listing/i.test(content)) riskFactors.push("new_asset_risk");
-    if (/market.{0,10}uncertainty/i.test(content)) riskFactors.push("market_risk");
+    if (/market.{0,10}uncertainty/i.test(content))
+      riskFactors.push("market_risk");
 
     // Diversification recommendations
     const diversification: string[] = [];
@@ -243,7 +269,9 @@ export class TradingStrategyWorkflow {
     // Generate alerts
     const alerts: string[] = [];
     if (strategy.entryPrice) {
-      alerts.push(`Entry alert: ${strategy.symbol} reaches $${strategy.entryPrice}`);
+      alerts.push(
+        `Entry alert: ${strategy.symbol} reaches $${strategy.entryPrice}`
+      );
     }
 
     for (const [index, target] of strategy.targetPrices.entries()) {
@@ -251,7 +279,9 @@ export class TradingStrategyWorkflow {
     }
 
     if (strategy.stopLoss) {
-      alerts.push(`Stop loss: ${strategy.symbol} falls below $${strategy.stopLoss}`);
+      alerts.push(
+        `Stop loss: ${strategy.symbol} falls below $${strategy.stopLoss}`
+      );
     }
 
     // Volume and pattern alerts
@@ -306,17 +336,25 @@ export class TradingStrategyWorkflow {
     const refinedStrategy = { ...baseStrategy };
 
     // Adjust position size based on risk management
-    refinedStrategy.positionSize = Math.min(refinedStrategy.positionSize, riskPlan.positionSizing);
+    refinedStrategy.positionSize = Math.min(
+      refinedStrategy.positionSize,
+      riskPlan.positionSizing
+    );
 
     // Ensure stop loss is set if not present
     if (!refinedStrategy.stopLoss && refinedStrategy.entryPrice) {
-      const stopLossPercent = riskPlan.riskFactors.includes("high_volatility") ? 0.03 : 0.05;
-      refinedStrategy.stopLoss = refinedStrategy.entryPrice * (1 - stopLossPercent);
+      const stopLossPercent = riskPlan.riskFactors.includes("high_volatility")
+        ? 0.03
+        : 0.05;
+      refinedStrategy.stopLoss =
+        refinedStrategy.entryPrice * (1 - stopLossPercent);
     }
 
     // Adjust targets based on risk level
     if (riskPlan.riskFactors.includes("high_volatility")) {
-      refinedStrategy.targetPrices = refinedStrategy.targetPrices.map((price) => price * 0.9);
+      refinedStrategy.targetPrices = refinedStrategy.targetPrices.map(
+        (price) => price * 0.9
+      );
     }
 
     // Add risk-based conditions

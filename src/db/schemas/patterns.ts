@@ -38,8 +38,12 @@ export const monitoredListings = pgTable(
     hasReadyPattern: boolean("has_ready_pattern").notNull().default(false),
 
     // Discovery Information
-    discoveredAt: timestamp("discovered_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    lastChecked: timestamp("last_checked").notNull().default(sql`CURRENT_TIMESTAMP`),
+    discoveredAt: timestamp("discovered_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    lastChecked: timestamp("last_checked")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
 
     // Trading Data
     tradingPairs: text("trading_pairs"), // JSON array of trading pairs
@@ -47,14 +51,22 @@ export const monitoredListings = pgTable(
     volumeData: text("volume_data"), // JSON volume information
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     vcoinIdIdx: index("monitored_listings_vcoin_id_idx").on(table.vcoinId),
     statusIdx: index("monitored_listings_status_idx").on(table.status),
-    launchTimeIdx: index("monitored_listings_launch_time_idx").on(table.firstOpenTime),
-    readyPatternIdx: index("monitored_listings_ready_pattern_idx").on(table.hasReadyPattern),
+    launchTimeIdx: index("monitored_listings_launch_time_idx").on(
+      table.firstOpenTime
+    ),
+    readyPatternIdx: index("monitored_listings_ready_pattern_idx").on(
+      table.hasReadyPattern
+    ),
   })
 );
 
@@ -76,7 +88,9 @@ export const patternEmbeddings = pgTable(
     // Vector Embedding (stored as JSON array for SQLite compatibility)
     embedding: text("embedding").notNull(), // JSON array of floats [0.1, 0.2, ...]
     embeddingDimension: integer("embedding_dimension").notNull().default(1536), // OpenAI ada-002 dimension
-    embeddingModel: text("embedding_model").notNull().default("text-embedding-ada-002"),
+    embeddingModel: text("embedding_model")
+      .notNull()
+      .default("text-embedding-ada-002"),
 
     // Pattern Metadata
     confidence: real("confidence").notNull(), // 0-100
@@ -97,13 +111,23 @@ export const patternEmbeddings = pgTable(
     isActive: boolean("is_active").notNull().default(true),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    patternTypeIdx: index("pattern_embeddings_pattern_type_idx").on(table.patternType),
-    symbolNameIdx: index("pattern_embeddings_symbol_name_idx").on(table.symbolName),
-    confidenceIdx: index("pattern_embeddings_confidence_idx").on(table.confidence),
+    patternTypeIdx: index("pattern_embeddings_pattern_type_idx").on(
+      table.patternType
+    ),
+    symbolNameIdx: index("pattern_embeddings_symbol_name_idx").on(
+      table.symbolName
+    ),
+    confidenceIdx: index("pattern_embeddings_confidence_idx").on(
+      table.confidence
+    ),
     isActiveIdx: index("pattern_embeddings_is_active_idx").on(table.isActive),
     lastSeenIdx: index("pattern_embeddings_last_seen_idx").on(table.lastSeenAt),
     // Compound indexes
@@ -141,13 +165,23 @@ export const patternSimilarityCache = pgTable(
     expiresAt: timestamp("expires_at").notNull(), // Cache expiry
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    pattern1Idx: index("pattern_similarity_cache_pattern1_idx").on(table.patternId1),
-    pattern2Idx: index("pattern_similarity_cache_pattern2_idx").on(table.patternId2),
-    similarityIdx: index("pattern_similarity_cache_similarity_idx").on(table.cosineSimilarity),
-    expiresIdx: index("pattern_similarity_cache_expires_idx").on(table.expiresAt),
+    pattern1Idx: index("pattern_similarity_cache_pattern1_idx").on(
+      table.patternId1
+    ),
+    pattern2Idx: index("pattern_similarity_cache_pattern2_idx").on(
+      table.patternId2
+    ),
+    similarityIdx: index("pattern_similarity_cache_similarity_idx").on(
+      table.cosineSimilarity
+    ),
+    expiresIdx: index("pattern_similarity_cache_expires_idx").on(
+      table.expiresAt
+    ),
     // Unique constraint on pattern pair
     uniquePairIdx: index("pattern_similarity_cache_unique_pair_idx").on(
       table.patternId1,
@@ -170,8 +204,12 @@ export const coinActivities = pgTable(
     activityType: text("activity_type").notNull(), // SUN_SHINE, PROMOTION, etc.
 
     // Discovery Metadata
-    discoveredAt: timestamp("discovered_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    lastChecked: timestamp("last_checked").notNull().default(sql`CURRENT_TIMESTAMP`),
+    discoveredAt: timestamp("discovered_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    lastChecked: timestamp("last_checked")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
     isActive: boolean("is_active").notNull().default(true),
 
     // Pattern Enhancement Data
@@ -182,16 +220,24 @@ export const coinActivities = pgTable(
     activityDetails: text("activity_details"), // JSON metadata about the activity
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     // Primary indexes
     vcoinIdIdx: index("coin_activities_vcoin_id_idx").on(table.vcoinId),
     currencyIdx: index("coin_activities_currency_idx").on(table.currency),
-    activityTypeIdx: index("coin_activities_activity_type_idx").on(table.activityType),
+    activityTypeIdx: index("coin_activities_activity_type_idx").on(
+      table.activityType
+    ),
     isActiveIdx: index("coin_activities_is_active_idx").on(table.isActive),
-    discoveredAtIdx: index("coin_activities_discovered_at_idx").on(table.discoveredAt),
+    discoveredAtIdx: index("coin_activities_discovered_at_idx").on(
+      table.discoveredAt
+    ),
 
     // Compound indexes for pattern queries
     activeCurrencyIdx: index("coin_activities_active_currency_idx").on(
@@ -213,7 +259,8 @@ export type PatternEmbedding = typeof patternEmbeddings.$inferSelect;
 export type NewPatternEmbedding = typeof patternEmbeddings.$inferInsert;
 
 export type PatternSimilarityCache = typeof patternSimilarityCache.$inferSelect;
-export type NewPatternSimilarityCache = typeof patternSimilarityCache.$inferInsert;
+export type NewPatternSimilarityCache =
+  typeof patternSimilarityCache.$inferInsert;
 
 export type CoinActivity = typeof coinActivities.$inferSelect;
 export type NewCoinActivity = typeof coinActivities.$inferInsert;

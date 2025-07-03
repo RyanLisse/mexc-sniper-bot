@@ -1,9 +1,15 @@
 "use client";
 
-import type { AuthError, Session, User } from '@supabase/supabase-js';
-import { useRouter } from 'next/navigation';
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
-import { getSupabaseBrowserClient } from '@/src/lib/supabase-browser-client';
+import type { AuthError, Session, User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { getSupabaseBrowserClient } from "@/src/lib/supabase-browser-client";
 
 type SupabaseAuthContextType = {
   user: User | null;
@@ -12,10 +18,14 @@ type SupabaseAuthContextType = {
   signOut: () => Promise<AuthError | null>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithProvider: (provider: 'google' | 'github') => Promise<{ error: any }>;
+  signInWithProvider: (
+    provider: "google" | "github"
+  ) => Promise<{ error: any }>;
 };
 
-const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
+const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(
+  undefined
+);
 
 interface SupabaseAuthProviderProps {
   children: ReactNode;
@@ -36,45 +46,47 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
 
     const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error getting session:', error);
+        console.error("Error getting session:", error);
         setIsLoading(false);
       }
     };
 
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
 
-        if (event === 'SIGNED_IN') {
-          // Sync user with database when they sign in
-          if (session?.user) {
-            try {
-              await fetch('/api/auth/supabase-session', {
-                method: 'GET',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-              });
-            } catch (error) {
-              console.warn('Failed to sync user with database:', error);
-            }
+      if (event === "SIGNED_IN") {
+        // Sync user with database when they sign in
+        if (session?.user) {
+          try {
+            await fetch("/api/auth/supabase-session", {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+          } catch (error) {
+            console.warn("Failed to sync user with database:", error);
           }
-          router.refresh();
-        } else if (event === 'SIGNED_OUT') {
-          router.push('/auth');
-          router.refresh();
         }
+        router.refresh();
+      } else if (event === "SIGNED_OUT") {
+        router.push("/auth");
+        router.refresh();
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, [router]);
@@ -82,11 +94,11 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const signOut = async () => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      return new Error('Supabase client not available (SSR environment)');
+      return new Error("Supabase client not available (SSR environment)");
     }
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
     }
     return error;
   };
@@ -94,7 +106,9 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const signIn = async (email: string, password: string) => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      return { error: new Error('Supabase client not available (SSR environment)') };
+      return {
+        error: new Error("Supabase client not available (SSR environment)"),
+      };
     }
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -106,27 +120,37 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const signUp = async (email: string, password: string) => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      return { error: new Error('Supabase client not available (SSR environment)') };
+      return {
+        error: new Error("Supabase client not available (SSR environment)"),
+      };
     }
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback',
+        emailRedirectTo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/auth/callback`
+            : "/auth/callback",
       },
     });
     return { error };
   };
 
-  const signInWithProvider = async (provider: 'google' | 'github') => {
+  const signInWithProvider = async (provider: "google" | "github") => {
     const supabase = getSupabaseBrowserClient();
     if (!supabase) {
-      return { error: new Error('Supabase client not available (SSR environment)') };
+      return {
+        error: new Error("Supabase client not available (SSR environment)"),
+      };
     }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback',
+        redirectTo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/auth/callback`
+            : "/auth/callback",
       },
     });
     return { error };
@@ -152,7 +176,9 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
 export function useSupabaseAuth() {
   const context = useContext(SupabaseAuthContext);
   if (context === undefined) {
-    throw new Error('useSupabaseAuth must be used within a SupabaseAuthProvider');
+    throw new Error(
+      "useSupabaseAuth must be used within a SupabaseAuthProvider"
+    );
   }
   return context;
 }

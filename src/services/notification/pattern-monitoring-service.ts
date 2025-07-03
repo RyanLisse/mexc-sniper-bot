@@ -5,9 +5,15 @@
  * Provides comprehensive tracking of pattern matches, confidence trends, and system performance.
  */
 
-import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
+import {
+  PatternDetectionCore,
+  type PatternMatch,
+} from "@/src/core/pattern-detection";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/mexc-unified-exports";
 
 export interface PatternMonitoringStats {
   // Overall monitoring metrics
@@ -43,7 +49,11 @@ export interface RecentPatternActivity {
 
 export interface PatternAlert {
   id: string;
-  type: "high_confidence_ready" | "advance_opportunity" | "pattern_correlation" | "system_issue";
+  type:
+    | "high_confidence_ready"
+    | "advance_opportunity"
+    | "pattern_correlation"
+    | "system_issue";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   patterns: PatternMatch[];
@@ -70,7 +80,12 @@ export class PatternMonitoringService {
         warn: (message: string, context?: any) =>
           console.warn("[pattern-monitoring-service]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[pattern-monitoring-service]", message, context || "", error || ""),
+          console.error(
+            "[pattern-monitoring-service]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[pattern-monitoring-service]", message, context || ""),
       };
@@ -133,7 +148,9 @@ export class PatternMonitoringService {
       return;
     }
 
-    console.info("[PatternMonitoring] Starting real-time pattern monitoring...");
+    console.info(
+      "[PatternMonitoring] Starting real-time pattern monitoring..."
+    );
     this.isMonitoring = true;
     this.stats.engineStatus = "active";
 
@@ -212,14 +229,18 @@ export class PatternMonitoringService {
     const allPatterns: PatternMatch[] = [];
 
     try {
-      console.info(`[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`);
+      console.info(
+        `[PatternMonitoring] Manual pattern detection on ${symbols.length} symbols`
+      );
 
       // Detect ready state patterns
-      const readyPatterns = await this.patternEngine.detectReadyStatePattern(symbols);
+      const readyPatterns =
+        await this.patternEngine.detectReadyStatePattern(symbols);
       allPatterns.push(...readyPatterns);
 
       // Detect pre-ready patterns
-      const preReadyPatterns = await this.patternEngine.detectPreReadyPatterns(symbols);
+      const preReadyPatterns =
+        await this.patternEngine.detectPreReadyPatterns(symbols);
       allPatterns.push(...preReadyPatterns);
 
       // Detect advance opportunities if calendar entries provided
@@ -271,7 +292,9 @@ export class PatternMonitoringService {
    */
   clearAcknowledgedAlerts(): number {
     const initialCount = this.activeAlerts.length;
-    this.activeAlerts = this.activeAlerts.filter((alert) => !alert.acknowledged);
+    this.activeAlerts = this.activeAlerts.filter(
+      (alert) => !alert.acknowledged
+    );
     return initialCount - this.activeAlerts.length;
   }
 
@@ -337,7 +360,9 @@ export class PatternMonitoringService {
       }
 
       // Filter to symbols that might have patterns (optimize for performance)
-      const candidateSymbols = this.filterCandidateSymbols(symbolsResponse.data);
+      const candidateSymbols = this.filterCandidateSymbols(
+        symbolsResponse.data
+      );
 
       if (candidateSymbols.length === 0) {
         console.info("[PatternMonitoring] No candidate symbols found");
@@ -348,11 +373,13 @@ export class PatternMonitoringService {
       const allPatterns: PatternMatch[] = [];
 
       // Detect ready state patterns
-      const readyPatterns = await this.patternEngine.detectReadyStatePattern(candidateSymbols);
+      const readyPatterns =
+        await this.patternEngine.detectReadyStatePattern(candidateSymbols);
       allPatterns.push(...readyPatterns);
 
       // Detect pre-ready patterns
-      const preReadyPatterns = await this.patternEngine.detectPreReadyPatterns(candidateSymbols);
+      const preReadyPatterns =
+        await this.patternEngine.detectPreReadyPatterns(candidateSymbols);
       allPatterns.push(...preReadyPatterns);
 
       const processingTime = Date.now() - startTime;
@@ -373,11 +400,14 @@ export class PatternMonitoringService {
       this.checkForAlerts(allPatterns);
 
       this.stats.consecutiveErrors = 0; // Reset error count on success
-      console.info(`[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`);
+      console.info(
+        `[PatternMonitoring] Cycle completed: ${allPatterns.length} patterns detected`
+      );
     } catch (error) {
       console.error("[PatternMonitoring] Monitoring cycle failed:", error);
       this.stats.consecutiveErrors++;
-      this.stats.engineStatus = this.stats.consecutiveErrors > 3 ? "error" : "active";
+      this.stats.engineStatus =
+        this.stats.consecutiveErrors > 3 ? "error" : "active";
     } finally {
       this.stats.lastHealthCheck = new Date().toISOString();
     }
@@ -434,7 +464,10 @@ export class PatternMonitoringService {
 
     // Update confidence average
     if (patterns.length > 0) {
-      const totalConfidence = patterns.reduce((sum, p) => sum + p.confidence, 0);
+      const totalConfidence = patterns.reduce(
+        (sum, p) => sum + p.confidence,
+        0
+      );
       const newAverage = totalConfidence / patterns.length;
       this.stats.averageConfidence =
         this.stats.averageConfidence === 0
@@ -488,7 +521,8 @@ export class PatternMonitoringService {
       recentPatterns.length * (this.monitoringIntervalMs / (60 * 60 * 1000)),
       24
     );
-    this.stats.detectionRate = hoursOfData > 0 ? this.stats.patternsLast24h / hoursOfData : 0;
+    this.stats.detectionRate =
+      hoursOfData > 0 ? this.stats.patternsLast24h / hoursOfData : 0;
   }
 
   /**
@@ -497,7 +531,9 @@ export class PatternMonitoringService {
   private checkForAlerts(patterns: PatternMatch[]): void {
     // High confidence ready state alerts
     const highConfidenceReady = patterns.filter(
-      (p) => p.patternType === "ready_state" && p.confidence >= this.confidenceThreshold
+      (p) =>
+        p.patternType === "ready_state" &&
+        p.confidence >= this.confidenceThreshold
     );
 
     if (highConfidenceReady.length > 0) {
@@ -510,7 +546,9 @@ export class PatternMonitoringService {
     }
 
     // Advance opportunity alerts
-    const advanceOpportunities = patterns.filter((p) => p.patternType === "launch_sequence");
+    const advanceOpportunities = patterns.filter(
+      (p) => p.patternType === "launch_sequence"
+    );
     if (advanceOpportunities.length > 0) {
       this.createAlert({
         type: "advance_opportunity",
@@ -534,7 +572,9 @@ export class PatternMonitoringService {
   /**
    * Create a new alert
    */
-  private createAlert(alertData: Omit<PatternAlert, "id" | "timestamp" | "acknowledged">): void {
+  private createAlert(
+    alertData: Omit<PatternAlert, "id" | "timestamp" | "acknowledged">
+  ): void {
     const alert: PatternAlert = {
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date().toISOString(),
@@ -575,7 +615,9 @@ export class PatternMonitoringService {
     }
 
     if (this.activeAlerts.length > 10) {
-      recommendations.push("High number of active alerts - consider acknowledging resolved alerts");
+      recommendations.push(
+        "High number of active alerts - consider acknowledging resolved alerts"
+      );
     }
 
     if (this.stats.avgProcessingTime > 5000) {
@@ -599,7 +641,10 @@ export class PatternMonitoringService {
       return "error";
     }
 
-    if (this.stats.consecutiveErrors > 0 || this.stats.avgProcessingTime > 10000) {
+    if (
+      this.stats.consecutiveErrors > 0 ||
+      this.stats.avgProcessingTime > 10000
+    ) {
       return "degraded";
     }
 

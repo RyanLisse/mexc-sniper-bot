@@ -55,7 +55,9 @@ export class WorkflowEngine {
     this.validator.validateWorkflowDefinition(definition);
 
     this.workflowDefinitions.set(definition.id, definition);
-    this.logger.info(`[WorkflowEngine] Registered workflow: ${definition.id} (${definition.name})`);
+    this.logger.info(
+      `[WorkflowEngine] Registered workflow: ${definition.id} (${definition.name})`
+    );
   }
 
   /**
@@ -142,7 +144,9 @@ export class WorkflowEngine {
     }
 
     context.cancelled = true;
-    this.logger.info(`[WorkflowEngine] Cancelled workflow execution: ${executionId}`);
+    this.logger.info(
+      `[WorkflowEngine] Cancelled workflow execution: ${executionId}`
+    );
     return true;
   }
 
@@ -189,7 +193,9 @@ export class WorkflowEngine {
           await this.executeMixedSteps(definition.steps, context);
           break;
         default:
-          throw new Error(`Unknown execution mode: ${definition.executionMode}`);
+          throw new Error(
+            `Unknown execution mode: ${definition.executionMode}`
+          );
       }
 
       return this.executionTracker.createExecutionResult(
@@ -240,7 +246,9 @@ export class WorkflowEngine {
       const stepResult = context.stepResults.get(step.id);
       if (stepResult?.status === "failed" && step.required !== false) {
         if (step.failureStrategy === "halt") {
-          throw new Error(`Required step '${step.id}' failed: ${stepResult.error}`);
+          throw new Error(
+            `Required step '${step.id}' failed: ${stepResult.error}`
+          );
         }
       }
     }
@@ -254,7 +262,8 @@ export class WorkflowEngine {
     context: WorkflowContext
   ): Promise<void> {
     // Group steps by dependency level
-    const dependencyGroups = this.dependencyResolver.groupStepsByDependencyLevel(steps);
+    const dependencyGroups =
+      this.dependencyResolver.groupStepsByDependencyLevel(steps);
 
     for (const group of dependencyGroups) {
       if (context.cancelled) {
@@ -276,7 +285,8 @@ export class WorkflowEngine {
     steps: WorkflowStepConfig[],
     context: WorkflowContext
   ): Promise<void> {
-    const dependencyGroups = this.dependencyResolver.groupStepsByDependencyLevel(steps);
+    const dependencyGroups =
+      this.dependencyResolver.groupStepsByDependencyLevel(steps);
 
     for (const group of dependencyGroups) {
       if (context.cancelled) {
@@ -286,7 +296,9 @@ export class WorkflowEngine {
       // Execute steps in parallel within each dependency level
       const stepPromises = group
         .filter((step) => !step.condition || step.condition(context))
-        .map((step) => this.stepExecutor.executeStepWithErrorHandling(step, context));
+        .map((step) =>
+          this.stepExecutor.executeStepWithErrorHandling(step, context)
+        );
 
       await Promise.allSettled(stepPromises);
     }

@@ -19,7 +19,12 @@ export class MexcRetryService {
     warn: (message: string, context?: any) =>
       console.warn("[mexc-retry-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[mexc-retry-service]", message, context || "", error || ""),
+      console.error(
+        "[mexc-retry-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[mexc-retry-service]", message, context || ""),
   };
@@ -35,7 +40,9 @@ export class MexcRetryService {
       baseDelay: retryConfig.baseDelay || 1000,
       maxDelay: retryConfig.maxDelay || 30000,
       backoffMultiplier: retryConfig.backoffMultiplier || 2,
-      retryableStatusCodes: retryConfig.retryableStatusCodes || [429, 500, 502, 503, 504],
+      retryableStatusCodes: retryConfig.retryableStatusCodes || [
+        429, 500, 502, 503, 504,
+      ],
       jitterFactor: retryConfig.jitterFactor || 0.1,
       adaptiveRetry: retryConfig.adaptiveRetry ?? true,
     };
@@ -172,7 +179,10 @@ export class MexcRetryService {
   /**
    * Calculate retry delay with error classification
    */
-  calculateRetryDelayWithClassification(attempt: number, lastError: Error | null): number {
+  calculateRetryDelayWithClassification(
+    attempt: number,
+    lastError: Error | null
+  ): number {
     const baseDelay = this.calculateRetryDelay(attempt);
 
     if (!lastError) {
@@ -194,7 +204,8 @@ export class MexcRetryService {
       delay = Math.min(delay, this.retryConfig.maxDelay);
 
       // Add jitter
-      const jitter = delay * this.retryConfig.jitterFactor * (Math.random() * 2 - 1);
+      const jitter =
+        delay * this.retryConfig.jitterFactor * (Math.random() * 2 - 1);
       delay += jitter;
 
       return Math.max(delay, this.retryConfig.baseDelay);
@@ -326,7 +337,10 @@ export class MexcRetryService {
         }
 
         // Calculate delay for next retry
-        const baseDelay = this.calculateRetryDelayWithClassification(attempt, lastError);
+        const baseDelay = this.calculateRetryDelayWithClassification(
+          attempt,
+          lastError
+        );
         const adaptiveMultiplier = this.getAdaptiveRetryMultiplier();
         const delay = baseDelay * adaptiveMultiplier;
 

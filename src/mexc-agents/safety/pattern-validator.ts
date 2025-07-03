@@ -31,7 +31,8 @@ export class PatternValidator {
     let overallConfidence = confidence;
 
     // Step 1: Confidence threshold check
-    const confidenceCheck = confidence >= this.safetyConfig.reconciliation.toleranceThreshold * 100;
+    const confidenceCheck =
+      confidence >= this.safetyConfig.reconciliation.toleranceThreshold * 100;
     validationSteps.push({
       step: "Confidence Threshold",
       passed: confidenceCheck,
@@ -64,7 +65,10 @@ export class PatternValidator {
     if (!marketCheck.suitable) overallConfidence *= 0.7;
 
     // Step 4: Historical validation
-    const historicalCheck = await this.validateHistoricalPerformance(symbol, patternData);
+    const historicalCheck = await this.validateHistoricalPerformance(
+      symbol,
+      patternData
+    );
     validationSteps.push({
       step: "Historical Performance",
       passed: historicalCheck.reliable,
@@ -81,7 +85,11 @@ export class PatternValidator {
     if (consensusRequired) {
       consensus = {
         required: true,
-        agentsConsulted: ["strategy-agent", "risk-manager-agent", "pattern-discovery-agent"],
+        agentsConsulted: [
+          "strategy-agent",
+          "risk-manager-agent",
+          "pattern-discovery-agent",
+        ],
         agreementLevel: 75, // Simulated consensus
         dissenting: [],
       };
@@ -107,11 +115,19 @@ export class PatternValidator {
 
     // Determine recommendation
     const allStepsPassed = validationSteps.every((step) => step.passed);
-    const safetyChecksPassed = Object.values(safetyChecks).every((check) => check);
-    const consensusAchieved = !consensusRequired || consensus.agreementLevel >= 70;
+    const safetyChecksPassed = Object.values(safetyChecks).every(
+      (check) => check
+    );
+    const consensusAchieved =
+      !consensusRequired || consensus.agreementLevel >= 70;
 
     let recommendation: PatternValidationResult["recommendation"];
-    if (allStepsPassed && safetyChecksPassed && consensusAchieved && overallConfidence >= 70) {
+    if (
+      allStepsPassed &&
+      safetyChecksPassed &&
+      consensusAchieved &&
+      overallConfidence >= 70
+    ) {
       recommendation = "proceed";
     } else if (overallConfidence >= 50 && safetyChecksPassed) {
       recommendation = "caution";
@@ -122,7 +138,9 @@ export class PatternValidator {
     // Generate reasoning
     const reasoning: string[] = [];
     if (!allStepsPassed) {
-      const failedSteps = validationSteps.filter((step) => !step.passed).map((step) => step.step);
+      const failedSteps = validationSteps
+        .filter((step) => !step.passed)
+        .map((step) => step.step);
       reasoning.push(`Failed validation steps: ${failedSteps.join(", ")}`);
     }
     if (!safetyChecksPassed) {
@@ -132,10 +150,14 @@ export class PatternValidator {
       reasoning.push(`Failed safety checks: ${failedChecks.join(", ")}`);
     }
     if (consensusRequired && consensus.agreementLevel < 70) {
-      reasoning.push(`Insufficient consensus: ${consensus.agreementLevel}% agreement`);
+      reasoning.push(
+        `Insufficient consensus: ${consensus.agreementLevel}% agreement`
+      );
     }
     if (overallConfidence < 70) {
-      reasoning.push(`Low overall confidence: ${overallConfidence.toFixed(1)}%`);
+      reasoning.push(
+        `Low overall confidence: ${overallConfidence.toFixed(1)}%`
+      );
     }
 
     const result: PatternValidationResult = {

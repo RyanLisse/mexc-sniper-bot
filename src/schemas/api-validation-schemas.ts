@@ -309,7 +309,9 @@ export type ApiResponse = z.infer<typeof ApiResponseSchema>;
 export type TransactionLock = z.infer<typeof TransactionLockSchema>;
 export type TransactionQueueItem = z.infer<typeof TransactionQueueItemSchema>;
 export type LockStats = z.infer<typeof LockStatsSchema>;
-export type TransactionLocksResponse = z.infer<typeof TransactionLocksResponseSchema>;
+export type TransactionLocksResponse = z.infer<
+  typeof TransactionLocksResponseSchema
+>;
 export type TransactionLockQuery = z.infer<typeof TransactionLockQuerySchema>;
 export type ReleaseLockRequest = z.infer<typeof ReleaseLockRequestSchema>;
 export type CheckLockRequest = z.infer<typeof CheckLockRequestSchema>;
@@ -319,7 +321,9 @@ export type PortfolioActivity = z.infer<typeof PortfolioActivitySchema>;
 export type PortfolioResponse = z.infer<typeof PortfolioResponseSchema>;
 export type PortfolioQuery = z.infer<typeof PortfolioQuerySchema>;
 export type TradingPerformance = z.infer<typeof TradingPerformanceSchema>;
-export type TradingAnalyticsResponse = z.infer<typeof TradingAnalyticsResponseSchema>;
+export type TradingAnalyticsResponse = z.infer<
+  typeof TradingAnalyticsResponseSchema
+>;
 export type PaginationQuery = z.infer<typeof PaginationQuerySchema>;
 export type DateRangeQuery = z.infer<typeof DateRangeQuerySchema>;
 export type SortQuery = z.infer<typeof SortQuerySchema>;

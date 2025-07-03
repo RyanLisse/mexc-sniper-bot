@@ -71,11 +71,14 @@ export class CoordinationSystemManager {
     }
 
     try {
-      this.logger.info("[CoordinationSystemManager] Initializing enhanced coordination system...");
+      this.logger.info(
+        "[CoordinationSystemManager] Initializing enhanced coordination system..."
+      );
 
       const systemConfig = {
         healthCheckInterval: config.healthCheckInterval ?? 30000, // 30 seconds
-        performanceCollectionInterval: config.performanceCollectionInterval ?? 60000, // 1 minute
+        performanceCollectionInterval:
+          config.performanceCollectionInterval ?? 60000, // 1 minute
         maxHistorySize: config.maxHistorySize ?? 1000,
       };
 
@@ -91,7 +94,8 @@ export class CoordinationSystemManager {
 
       // Validate all registered workflows now that agents are properly registered
       // This will resolve any deferred warnings and confirm all agents are available
-      const validationResult = this.coordinationSystem.workflowEngine.validateRegisteredWorkflows();
+      const validationResult =
+        this.coordinationSystem.workflowEngine.validateRegisteredWorkflows();
       if (validationResult.resolvedWarnings.length > 0) {
         this.logger.info(
           `[CoordinationSystemManager] Resolved ${validationResult.resolvedWarnings.length} agent registration warnings`
@@ -127,7 +131,9 @@ export class CoordinationSystemManager {
     if (!this.coordinationSystem?.orchestrator) {
       throw new Error("Coordination system not initialized");
     }
-    return await this.coordinationSystem.orchestrator.executeCalendarDiscoveryWorkflow(request);
+    return await this.coordinationSystem.orchestrator.executeCalendarDiscoveryWorkflow(
+      request
+    );
   }
 
   /**
@@ -140,7 +146,9 @@ export class CoordinationSystemManager {
     if (!this.coordinationSystem?.orchestrator) {
       throw new Error("Coordination system not initialized");
     }
-    return await this.coordinationSystem.orchestrator.executeSymbolAnalysisWorkflow(request);
+    return await this.coordinationSystem.orchestrator.executeSymbolAnalysisWorkflow(
+      request
+    );
   }
 
   /**
@@ -153,7 +161,9 @@ export class CoordinationSystemManager {
     if (!this.coordinationSystem?.orchestrator) {
       throw new Error("Coordination system not initialized");
     }
-    return await this.coordinationSystem.orchestrator.executePatternAnalysisWorkflow(request);
+    return await this.coordinationSystem.orchestrator.executePatternAnalysisWorkflow(
+      request
+    );
   }
 
   /**
@@ -166,7 +176,9 @@ export class CoordinationSystemManager {
     if (!this.coordinationSystem?.orchestrator) {
       throw new Error("Coordination system not initialized");
     }
-    return await this.coordinationSystem.orchestrator.executeTradingStrategyWorkflow(request);
+    return await this.coordinationSystem.orchestrator.executeTradingStrategyWorkflow(
+      request
+    );
   }
 
   /**
@@ -232,7 +244,9 @@ export class CoordinationSystemManager {
     }
 
     try {
-      const health = await checkCoordinationSystemHealth(this.coordinationSystem);
+      const health = await checkCoordinationSystemHealth(
+        this.coordinationSystem
+      );
       return {
         enabled: true,
         healthy: true,
@@ -252,7 +266,9 @@ export class CoordinationSystemManager {
    */
   async shutdown(): Promise<void> {
     if (!this.isEnabled || !this.coordinationSystem) {
-      this.logger.warn("[CoordinationSystemManager] Enhanced coordination is not enabled");
+      this.logger.warn(
+        "[CoordinationSystemManager] Enhanced coordination is not enabled"
+      );
       return;
     }
 
@@ -261,9 +277,14 @@ export class CoordinationSystemManager {
       this.coordinationSystem = null;
       this.isEnabled = false;
 
-      this.logger.info("[CoordinationSystemManager] Enhanced coordination disabled");
+      this.logger.info(
+        "[CoordinationSystemManager] Enhanced coordination disabled"
+      );
     } catch (error) {
-      this.logger.error("[CoordinationSystemManager] Error during shutdown:", error);
+      this.logger.error(
+        "[CoordinationSystemManager] Error during shutdown:",
+        error
+      );
       throw error;
     }
   }

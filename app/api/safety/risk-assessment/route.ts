@@ -1,5 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { requireAuth } from "@/src/lib/supabase-auth";
 import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
@@ -7,7 +6,7 @@ import { AdvancedRiskEngine } from "@/src/services/risk/advanced-risk-engine";
 
 /**
  * Risk Assessment API
- * 
+ *
  * POST /api/safety/risk-assessment - Assess risk for potential trades
  * GET /api/safety/risk-assessment - Get current risk metrics
  */
@@ -19,15 +18,19 @@ const safetyMonitor = new SafetyMonitorAgent();
 export async function GET(request: NextRequest) {
   // Build-safe logger - simple console implementation
   const logger = {
-    info: (message: string, context?: any) => console.info('[risk-assessment]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[risk-assessment]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[risk-assessment]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[risk-assessment]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[risk-assessment]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[risk-assessment]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[risk-assessment]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[risk-assessment]", message, context || ""),
   };
-  
+
   try {
     const { searchParams } = new URL(request.url);
-    const includeHistory = searchParams.get("includeHistory") === "true";
+    const _includeHistory = searchParams.get("includeHistory") === "true";
     const includeStressTest = searchParams.get("includeStressTest") === "true";
 
     // Get current portfolio risk metrics
@@ -54,15 +57,20 @@ export async function GET(request: NextRequest) {
       },
       riskScoring: {
         overallRiskScore: healthStatus.metrics.riskScore,
-        riskLevel: healthStatus.metrics.riskScore < 25 ? "low" :
-                   healthStatus.metrics.riskScore < 50 ? "medium" :
-                   healthStatus.metrics.riskScore < 75 ? "high" : "critical",
+        riskLevel:
+          healthStatus.metrics.riskScore < 25
+            ? "low"
+            : healthStatus.metrics.riskScore < 50
+              ? "medium"
+              : healthStatus.metrics.riskScore < 75
+                ? "high"
+                : "critical",
         lastUpdate: new Date(healthStatus.metrics.lastUpdate).toISOString(),
       },
       alerts: {
         active: activeAlerts.length,
-        critical: activeAlerts.filter(a => a.severity === "critical").length,
-        details: activeAlerts.map(alert => ({
+        critical: activeAlerts.filter((a) => a.severity === "critical").length,
+        details: activeAlerts.map((alert) => ({
           id: alert.id,
           type: alert.type,
           severity: alert.severity,
@@ -82,48 +90,41 @@ export async function GET(request: NextRequest) {
     };
 
     return apiResponse.success(response);
-
   } catch (error) {
     logger.error("[Risk Assessment] GET Error:", { error: error });
-    return apiResponse.error(
-      "Failed to get risk assessment",
-      500
-    );
+    return apiResponse.error("Failed to get risk assessment", 500);
   }
 }
 
 export async function POST(request: NextRequest) {
   // Build-safe logger - simple console implementation
   const logger = {
-    info: (message: string, context?: any) => console.info('[risk-assessment]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[risk-assessment]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[risk-assessment]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[risk-assessment]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[risk-assessment]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[risk-assessment]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[risk-assessment]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[risk-assessment]", message, context || ""),
   };
-  
+
   try {
     // Verify authentication
     try {
       await requireAuth();
-    } catch (error) {
+    } catch (_error) {
       return apiResponse.unauthorized("Authentication required");
     }
 
     const body = await request.json();
-    const { 
-      action, 
-      symbol, 
-      side, 
-      quantity, 
-      price, 
-      marketData,
-      patternData 
-    } = body;
+    const { action, symbol, side, quantity, price, marketData, patternData } =
+      body;
 
     let result;
 
     switch (action) {
-      case "assess_trade":
+      case "assess_trade": {
         if (!symbol || !side || !quantity || !price) {
           return apiResponse.badRequest("Missing required trade parameters");
         }
@@ -152,10 +153,16 @@ export async function POST(request: NextRequest) {
           tradeAssessment,
           patternValidation,
           recommendation: {
-            approved: tradeAssessment.approved && (!patternValidation || patternValidation.recommendation === "proceed"),
-            confidence: patternValidation ? 
-              Math.min(tradeAssessment.riskScore, patternValidation.confidence) / 100 :
-              (100 - tradeAssessment.riskScore) / 100,
+            approved:
+              tradeAssessment.approved &&
+              (!patternValidation ||
+                patternValidation.recommendation === "proceed"),
+            confidence: patternValidation
+              ? Math.min(
+                  tradeAssessment.riskScore,
+                  patternValidation.confidence
+                ) / 100
+              : (100 - tradeAssessment.riskScore) / 100,
             reasoning: [
               ...tradeAssessment.reasons,
               ...(patternValidation?.reasoning || []),
@@ -167,6 +174,7 @@ export async function POST(request: NextRequest) {
           },
         };
         break;
+      }
 
       case "update_market_conditions":
         if (!body.marketConditions) {
@@ -177,14 +185,15 @@ export async function POST(request: NextRequest) {
         result = { success: true, message: "Market conditions updated" };
         break;
 
-      case "calculate_position_sizing":
+      case "calculate_position_sizing": {
         if (!symbol || !price) {
           return apiResponse.badRequest("Symbol and price required");
         }
 
-        const maxSize = body.targetRisk ? 
-          (body.targetRisk / 100) * (await riskEngine.getPortfolioRiskMetrics()).totalValue :
-          10000; // Default max size
+        const maxSize = body.targetRisk
+          ? (body.targetRisk / 100) *
+            (await riskEngine.getPortfolioRiskMetrics()).totalValue
+          : 10000; // Default max size
 
         const portfolioMetrics = await riskEngine.getPortfolioRiskMetrics();
         const riskAdjustedSize = Math.min(
@@ -196,7 +205,8 @@ export async function POST(request: NextRequest) {
         result = {
           recommendedSize: riskAdjustedSize,
           maxSize: maxSize,
-          riskPercentage: (riskAdjustedSize / portfolioMetrics.totalValue) * 100,
+          riskPercentage:
+            (riskAdjustedSize / portfolioMetrics.totalValue) * 100,
           reasoning: [
             `Based on current portfolio value: $${portfolioMetrics.totalValue.toLocaleString()}`,
             `Risk-adjusted for diversification score: ${portfolioMetrics.diversificationScore.toFixed(1)}`,
@@ -204,10 +214,13 @@ export async function POST(request: NextRequest) {
           ],
         };
         break;
+      }
 
-      case "get_dynamic_stops":
+      case "get_dynamic_stops": {
         if (!symbol || !body.entryPrice || !body.currentPrice) {
-          return apiResponse.badRequest("Symbol, entry price, and current price required");
+          return apiResponse.badRequest(
+            "Symbol, entry price, and current price required"
+          );
         }
 
         const stopLoss = riskEngine.calculateDynamicStopLoss(
@@ -225,22 +238,20 @@ export async function POST(request: NextRequest) {
         result = {
           stopLoss,
           takeProfit,
-          riskRewardRatio: (takeProfit.takeProfitPrice - body.currentPrice) / 
-                           (body.currentPrice - stopLoss.stopLossPrice),
+          riskRewardRatio:
+            (takeProfit.takeProfitPrice - body.currentPrice) /
+            (body.currentPrice - stopLoss.stopLossPrice),
         };
         break;
+      }
 
       default:
         return apiResponse.badRequest(`Unknown action: ${action}`);
     }
 
     return apiResponse.success(result);
-
   } catch (error) {
     logger.error("[Risk Assessment] POST Error:", { error: error });
-    return apiResponse.error(
-      "Failed to perform risk assessment",
-      500
-    );
+    return apiResponse.error("Failed to perform risk assessment", 500);
   }
 }

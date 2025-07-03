@@ -12,13 +12,19 @@ import type {
   SafetyAlert,
   SafetyConfiguration,
 } from "@/src/schemas/safety-monitoring-schemas";
-import { validateSafetyAction, validateSafetyAlert } from "@/src/schemas/safety-monitoring-schemas";
+import {
+  validateSafetyAction,
+  validateSafetyAlert,
+} from "@/src/schemas/safety-monitoring-schemas";
 import type { OptimizedAutoSnipingExecutionEngine } from "@/src/services/trading/optimized-auto-sniping-execution-engine";
 
 export interface AlertManagementConfig {
   configuration: SafetyConfiguration;
   executionService: OptimizedAutoSnipingExecutionEngine;
-  onStatsUpdate?: (stats: { alertsGenerated: number; actionsExecuted: number }) => void;
+  onStatsUpdate?: (stats: {
+    alertsGenerated: number;
+    actionsExecuted: number;
+  }) => void;
 }
 
 export interface AlertGenerationData {
@@ -101,7 +107,10 @@ export class AlertManagement {
     this.stats.alertsGenerated++;
 
     // Execute auto-actions if enabled
-    if (this.config.configuration.autoActionEnabled && validatedAlert.autoActions.length > 0) {
+    if (
+      this.config.configuration.autoActionEnabled &&
+      validatedAlert.autoActions.length > 0
+    ) {
       this.executeAutoActions(validatedAlert.autoActions).catch((error) => {
         console.error(
           "Auto-action execution failed",
@@ -196,13 +205,19 @@ export class AlertManagement {
         );
       }
       if (filter.severity) {
-        filteredAlerts = filteredAlerts.filter((alert) => alert.severity === filter.severity);
+        filteredAlerts = filteredAlerts.filter(
+          (alert) => alert.severity === filter.severity
+        );
       }
       if (filter.type) {
-        filteredAlerts = filteredAlerts.filter((alert) => alert.type === filter.type);
+        filteredAlerts = filteredAlerts.filter(
+          (alert) => alert.type === filter.type
+        );
       }
       if (filter.category) {
-        filteredAlerts = filteredAlerts.filter((alert) => alert.category === filter.category);
+        filteredAlerts = filteredAlerts.filter(
+          (alert) => alert.category === filter.category
+        );
       }
     }
 
@@ -241,7 +256,8 @@ export class AlertManagement {
       stats.byType[alert.type] = (stats.byType[alert.type] || 0) + 1;
 
       // Count by severity
-      stats.bySeverity[alert.severity] = (stats.bySeverity[alert.severity] || 0) + 1;
+      stats.bySeverity[alert.severity] =
+        (stats.bySeverity[alert.severity] || 0) + 1;
 
       // Count acknowledgment status
       if (alert.acknowledged) {
@@ -263,7 +279,9 @@ export class AlertManagement {
    * Clean up old alerts based on retention policy
    */
   public cleanupOldAlerts(): number {
-    const cutoffTime = Date.now() - this.config.configuration.alertRetentionHours * 60 * 60 * 1000;
+    const cutoffTime =
+      Date.now() -
+      this.config.configuration.alertRetentionHours * 60 * 60 * 1000;
     const countBefore = this.alerts.length;
 
     this.alerts = this.alerts.filter((alert) => {
@@ -356,11 +374,14 @@ export class AlertManagement {
           break;
 
         case "emergency_close": {
-          const closedCount = await this.config.executionService.emergencyCloseAll();
-          const activePositions = this.config.executionService.getActivePositions();
+          const closedCount =
+            await this.config.executionService.emergencyCloseAll();
+          const activePositions =
+            this.config.executionService.getActivePositions();
           action.executed = true;
           action.result =
-            activePositions.length === 0 || closedCount === activePositions.length
+            activePositions.length === 0 ||
+            closedCount === activePositions.length
               ? "success"
               : "partial";
           action.details =
@@ -374,16 +395,26 @@ export class AlertManagement {
           const positions = this.config.executionService.getActivePositions();
           try {
             const sorted = [...positions].sort(
-              (a, b) => Number.parseFloat(String(b.quantity)) - Number.parseFloat(String(a.quantity))
+              (a, b) =>
+                Number.parseFloat(String(b.quantity)) -
+                Number.parseFloat(String(a.quantity))
             );
             const count = Math.ceil(positions.length * 0.5);
             let reduced = 0;
 
             for (let i = 0; i < count; i++) {
               const pos = sorted[i];
-              const newSize = Math.floor(Number.parseFloat(String(pos.quantity)) * 0.5);
-              if (newSize > 0 && this.config.executionService.updatePositionSize) {
-                await this.config.executionService.updatePositionSize(String(pos.id || pos.symbol), newSize);
+              const newSize = Math.floor(
+                Number.parseFloat(String(pos.quantity)) * 0.5
+              );
+              if (
+                newSize > 0 &&
+                this.config.executionService.updatePositionSize
+              ) {
+                await this.config.executionService.updatePositionSize(
+                  String(pos.id || pos.symbol),
+                  newSize
+                );
                 reduced++;
               }
             }
@@ -406,19 +437,31 @@ export class AlertManagement {
           const positions = this.config.executionService.getActivePositions();
           const exposure = positions.reduce(
             (sum: number, pos: any) =>
-              sum + Number.parseFloat(pos.quantity) * Number.parseFloat(pos.currentPrice),
+              sum +
+              Number.parseFloat(pos.quantity) *
+                Number.parseFloat(pos.currentPrice),
             0
           );
-          const maxAllowed = this.config.configuration.thresholds.maxPortfolioConcentration * 1000;
+          const maxAllowed =
+            this.config.configuration.thresholds.maxPortfolioConcentration *
+            1000;
 
           try {
             if (exposure > maxAllowed) {
               const ratio = maxAllowed / exposure;
               let limited = 0;
               for (const pos of positions) {
-                const newSize = Math.floor(Number.parseFloat(String(pos.quantity)) * ratio);
-                if (newSize > 0 && this.config.executionService.updatePositionSize) {
-                  await this.config.executionService.updatePositionSize(String(pos.id || pos.symbol), newSize);
+                const newSize = Math.floor(
+                  Number.parseFloat(String(pos.quantity)) * ratio
+                );
+                if (
+                  newSize > 0 &&
+                  this.config.executionService.updatePositionSize
+                ) {
+                  await this.config.executionService.updatePositionSize(
+                    String(pos.id || pos.symbol),
+                    newSize
+                  );
                   limited++;
                 }
               }
@@ -451,12 +494,15 @@ export class AlertManagement {
               alertId: action.id,
               severity: "high",
               system: "safety-monitoring",
-              positions: this.config.executionService.getActivePositions().length,
+              positions:
+                this.config.executionService.getActivePositions().length,
               message: action.description,
             };
             console.error("[ADMIN_ALERT]", JSON.stringify(data));
             if ((global as any).adminNotificationService) {
-              await (global as any).adminNotificationService.sendCriticalAlert(data);
+              await (global as any).adminNotificationService.sendCriticalAlert(
+                data
+              );
             }
             this.setActionResult(
               action,
@@ -482,7 +528,8 @@ export class AlertManagement {
               );
             }
 
-            const originalInterval = this.config.configuration.monitoringIntervalMs;
+            const originalInterval =
+              this.config.configuration.monitoringIntervalMs;
             this.config.configuration.monitoringIntervalMs = 10000;
 
             console.warn("[CIRCUIT_BREAKER_ACTIVATED]", {
@@ -552,7 +599,10 @@ export class AlertManagement {
   /**
    * Get internal statistics
    */
-  public getInternalStats(): { alertsGenerated: number; actionsExecuted: number } {
+  public getInternalStats(): {
+    alertsGenerated: number;
+    actionsExecuted: number;
+  } {
     return { ...this.stats };
   }
 
@@ -569,7 +619,11 @@ export class AlertManagement {
   /**
    * Helper method to set action result and reduce code duplication
    */
-  private setActionResult(action: SafetyAction, result: "success" | "failed" | "partial", details: string): void {
+  private setActionResult(
+    action: SafetyAction,
+    result: "success" | "failed" | "partial",
+    details: string
+  ): void {
     action.executed = true;
     action.result = result;
     action.details = details;
@@ -580,6 +634,8 @@ export class AlertManagement {
 /**
  * Factory function to create AlertManagement instance
  */
-export function createAlertManagement(config: AlertManagementConfig): AlertManagement {
+export function createAlertManagement(
+  config: AlertManagementConfig
+): AlertManagement {
   return new AlertManagement(config);
 }

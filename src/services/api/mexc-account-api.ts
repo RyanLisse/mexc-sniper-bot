@@ -6,7 +6,11 @@
  */
 
 import { getGlobalErrorRecoveryService } from "../risk/mexc-error-recovery-service";
-import type { BalanceEntry, UnifiedMexcConfig, UnifiedMexcResponse } from "./mexc-client-types";
+import type {
+  BalanceEntry,
+  UnifiedMexcConfig,
+  UnifiedMexcResponse,
+} from "./mexc-client-types";
 import { BalanceEntrySchema } from "./mexc-client-types";
 import { MexcMarketDataClient } from "./mexc-market-data";
 
@@ -37,7 +41,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
   /**
    * Get account information
    */
-  async getAccountInfo(): Promise<UnifiedMexcResponse<Record<string, unknown>>> {
+  async getAccountInfo(): Promise<
+    UnifiedMexcResponse<Record<string, unknown>>
+  > {
     if (!this.config.apiKey || !this.config.secretKey) {
       return {
         success: false,
@@ -48,7 +54,12 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
     }
 
     try {
-      const response = await this.makeRequest("/api/v3/account", {}, true, true); // Skip cache for account info
+      const response = await this.makeRequest(
+        "/api/v3/account",
+        {},
+        true,
+        true
+      ); // Skip cache for account info
       return response as UnifiedMexcResponse<Record<string, unknown>>;
     } catch (error) {
       console.error("[MexcAccountApi] Account info failed:", error);
@@ -69,7 +80,11 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
    * Get account balances with USDT conversion
    */
   async getAccountBalances(): Promise<
-    UnifiedMexcResponse<{ balances: BalanceEntry[]; totalUsdtValue: number; lastUpdated: string }>
+    UnifiedMexcResponse<{
+      balances: BalanceEntry[];
+      totalUsdtValue: number;
+      lastUpdated: string;
+    }>
   > {
     if (!this.config.apiKey || !this.config.secretKey) {
       console.error("[MexcAccountApi] MEXC API credentials not configured");
@@ -90,7 +105,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
     const recoveryService = getGlobalErrorRecoveryService();
 
     try {
-      console.info("[MexcAccountApi] Fetching account balances with error recovery...");
+      console.info(
+        "[MexcAccountApi] Fetching account balances with error recovery..."
+      );
 
       // Get account info with balances using error recovery
       const accountResponse = await recoveryService.handleMexcApiCall(
@@ -146,7 +163,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         console.error("[MexcAccountApi] Account response validation failed:", {
           success: accountResponse.success,
           hasData: !!accountResponse.data,
-          hasDirectBalances: !!(accountResponse.data && "balances" in accountResponse.data),
+          hasDirectBalances: !!(
+            accountResponse.data && "balances" in accountResponse.data
+          ),
           hasActualBalances: !!actualBalances,
           error: accountResponse.error,
           data: accountResponse.data,
@@ -170,15 +189,20 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         success: exchangeInfo.success,
         hasData: !!exchangeInfo.data,
         isArray: Array.isArray(exchangeInfo.data),
-        symbolsCount: Array.isArray(exchangeInfo.data) ? exchangeInfo.data.length : 0,
+        symbolsCount: Array.isArray(exchangeInfo.data)
+          ? exchangeInfo.data.length
+          : 0,
         error: exchangeInfo.error,
       });
 
       const validTradingPairs = new Set(
-        exchangeInfo.success 
+        exchangeInfo.success
           ? exchangeInfo.data
-              .filter((symbol) => symbol.quoteAsset === "USDT" && symbol.status === "1")
-              .map((symbol) => symbol.symbol) 
+              .filter(
+                (symbol) =>
+                  symbol.quoteAsset === "USDT" && symbol.status === "1"
+              )
+              .map((symbol) => symbol.symbol)
           : []
       );
 
@@ -189,7 +213,8 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
 
       // Filter non-zero balances first
       const nonZeroBalances = actualBalances.filter((balance: any) => {
-        const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+        const total =
+          Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
         return total > 0;
       });
 
@@ -238,7 +263,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             const price = ticker?.lastPrice || ticker?.price;
             if (price && Number.parseFloat(price) > 0) {
               priceMap.set(symbol, Number.parseFloat(price));
-              console.info(`[MexcAccountApi] ✅ Price found for ${symbol}: ${price}`);
+              console.info(
+                `[MexcAccountApi] ✅ Price found for ${symbol}: ${price}`
+              );
             } else {
               console.warn(`[MexcAccountApi] ❌ Invalid price for ${symbol}:`, {
                 price,
@@ -254,14 +281,18 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             });
           }
         } catch (error) {
-          console.error(`[MexcAccountApi] Failed to get price for ${symbol}:`, error);
+          console.error(
+            `[MexcAccountApi] Failed to get price for ${symbol}:`,
+            error
+          );
         }
       }
 
       // Process balances with fetched prices
       const balances: BalanceEntry[] = nonZeroBalances
         .map((balance: any): BalanceEntry | null => {
-          const total = Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
+          const total =
+            Number.parseFloat(balance.free) + Number.parseFloat(balance.locked);
           let usdtValue = 0;
 
           if (balance.asset === "USDT") {
@@ -291,10 +322,19 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
             return null;
           }
         })
-        .filter((balance: BalanceEntry | null): balance is BalanceEntry => balance !== null)
-        .sort((a: BalanceEntry, b: BalanceEntry) => (b.usdtValue || 0) - (a.usdtValue || 0)); // Sort by USDT value desc
+        .filter(
+          (balance: BalanceEntry | null): balance is BalanceEntry =>
+            balance !== null
+        )
+        .sort(
+          (a: BalanceEntry, b: BalanceEntry) =>
+            (b.usdtValue || 0) - (a.usdtValue || 0)
+        ); // Sort by USDT value desc
 
-      const totalUsdtValue = balances.reduce((sum, balance) => sum + (balance.usdtValue || 0), 0);
+      const totalUsdtValue = balances.reduce(
+        (sum, balance) => sum + (balance.usdtValue || 0),
+        0
+      );
       const balancesWithValue = balances.filter((b) => (b.usdtValue || 0) > 0);
 
       console.info(
@@ -315,7 +355,8 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       console.error("[MexcAccountApi] Account balances failed:", error);
 
       // Provide more helpful error messages for common MEXC API issues
-      let errorMessage = error instanceof Error ? error.message : "Unknown error";
+      let errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
       if (
         errorMessage.includes("700002") ||
@@ -323,7 +364,10 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       ) {
         errorMessage =
           "MEXC API signature validation failed. This is likely due to: 1) IP address not allowlisted for API key, 2) Invalid API credentials, or 3) Clock synchronization issues. Please check your MEXC API key settings and ensure your deployment IP is allowlisted.";
-      } else if (errorMessage.includes("10072") || errorMessage.includes("Api key info invalid")) {
+      } else if (
+        errorMessage.includes("10072") ||
+        errorMessage.includes("Api key info invalid")
+      ) {
         errorMessage =
           "MEXC API key is invalid or expired. Please check your MEXC_API_KEY and MEXC_SECRET_KEY environment variables.";
       }
@@ -344,7 +388,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
   /**
    * Get balance for a specific asset
    */
-  async getAssetBalance(asset: string): Promise<{ free: string; locked: string } | null> {
+  async getAssetBalance(
+    asset: string
+  ): Promise<{ free: string; locked: string } | null> {
     try {
       const balancesResponse = await this.getAccountBalances();
       if (!balancesResponse.success) {
@@ -384,7 +430,10 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       // MEXC account info includes canTrade field
       return Boolean(accountInfo.data?.canTrade);
     } catch (error) {
-      console.error("[MexcAccountApi] Failed to check trading permission:", error);
+      console.error(
+        "[MexcAccountApi] Failed to check trading permission:",
+        error
+      );
       return false;
     }
   }
@@ -433,7 +482,9 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
         return [];
       }
 
-      return balances.data.balances.filter((b) => (b.usdtValue || 0) > 0).slice(0, limit);
+      return balances.data.balances
+        .filter((b) => (b.usdtValue || 0) > 0)
+        .slice(0, limit);
     } catch (error) {
       console.error("[MexcAccountApi] Failed to get top assets:", error);
       return [];
@@ -443,7 +494,10 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
   /**
    * Check if user has sufficient balance for trading
    */
-  async hasSufficientBalance(asset: string, requiredAmount: number): Promise<boolean> {
+  async hasSufficientBalance(
+    asset: string,
+    requiredAmount: number
+  ): Promise<boolean> {
     try {
       const balance = await this.getAssetBalance(asset);
       if (!balance) {
@@ -453,7 +507,10 @@ export class MexcAccountApiClient extends MexcMarketDataClient {
       const availableAmount = Number.parseFloat(balance.free);
       return availableAmount >= requiredAmount;
     } catch (error) {
-      console.error("[MexcAccountApi] Failed to check balance sufficiency:", error);
+      console.error(
+        "[MexcAccountApi] Failed to check balance sufficiency:",
+        error
+      );
       return false;
     }
   }

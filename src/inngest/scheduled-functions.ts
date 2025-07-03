@@ -1,5 +1,8 @@
 import { emergencyRecoveryService } from "@/src/lib/emergency-recovery";
-import { getConnectivityStatus, performSystemHealthCheck } from "@/src/lib/health-checks";
+import {
+  getConnectivityStatus,
+  performSystemHealthCheck,
+} from "@/src/lib/health-checks";
 import { inngest } from "./client";
 
 // Helper function to update workflow status
@@ -42,17 +45,20 @@ export const scheduledCalendarMonitoring = inngest.createFunction(
     });
 
     // Step 1: Trigger calendar polling
-    const _calendarResult = await step.run("trigger-calendar-poll", async () => {
-      await inngest.send({
-        name: "mexc/calendar.poll",
-        data: {
-          trigger: "scheduled",
-          force: false,
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return { triggered: true };
-    });
+    const _calendarResult = await step.run(
+      "trigger-calendar-poll",
+      async () => {
+        await inngest.send({
+          name: "mexc/calendar.poll",
+          data: {
+            trigger: "scheduled",
+            force: false,
+            timestamp: new Date().toISOString(),
+          },
+        });
+        return { triggered: true };
+      }
+    );
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -85,18 +91,21 @@ export const scheduledPatternAnalysis = inngest.createFunction(
     });
 
     // Step 1: Trigger pattern analysis for all monitored symbols
-    const _patternResult = await step.run("trigger-pattern-analysis", async () => {
-      await inngest.send({
-        name: "mexc/patterns.analyze",
-        data: {
-          symbols: [], // Empty array means analyze all monitored symbols
-          analysisType: "monitoring",
-          trigger: "scheduled",
-          timestamp: new Date().toISOString(),
-        },
-      });
-      return { triggered: true };
-    });
+    const _patternResult = await step.run(
+      "trigger-pattern-analysis",
+      async () => {
+        await inngest.send({
+          name: "mexc/patterns.analyze",
+          data: {
+            symbols: [], // Empty array means analyze all monitored symbols
+            analysisType: "monitoring",
+            trigger: "scheduled",
+            timestamp: new Date().toISOString(),
+          },
+        });
+        return { triggered: true };
+      }
+    );
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -144,8 +153,12 @@ export const scheduledHealthCheck = inngest.createFunction(
           systemUptime: Math.floor(process.uptime() / 60), // minutes
           systemHealth: systemHealth.overall,
           apiStatus: connectivity.apiConnectivity ? "healthy" : "unhealthy",
-          databaseStatus: connectivity.databaseConnectivity ? "healthy" : "unhealthy",
-          openAiStatus: connectivity.openAiConnectivity ? "healthy" : "unhealthy",
+          databaseStatus: connectivity.databaseConnectivity
+            ? "healthy"
+            : "unhealthy",
+          openAiStatus: connectivity.openAiConnectivity
+            ? "healthy"
+            : "unhealthy",
         },
       });
 
@@ -177,7 +190,8 @@ export const scheduledHealthCheck = inngest.createFunction(
         await updateWorkflowStatus("addActivity", {
           activity: {
             type: "analysis",
-            message: "OpenAI API connectivity issues detected - agents may be affected",
+            message:
+              "OpenAI API connectivity issues detected - agents may be affected",
           },
         });
       }
@@ -237,7 +251,9 @@ export const scheduledDailyReport = inngest.createFunction(
 
     // Step 1: Collect daily metrics
     const dailyMetrics = await step.run("collect-daily-metrics", async () => {
-      const _twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      const _twentyFourHoursAgo = Math.floor(
+        (Date.now() - 24 * 60 * 60 * 1000) / 1000
+      );
 
       try {
         // For simplicity, use default values for metrics in scheduled reports
@@ -311,30 +327,33 @@ export const scheduledIntensiveAnalysis = inngest.createFunction(
     });
 
     // Step 1: Execute comprehensive multi-agent pipeline
-    const _pipelineResult = await step.run("comprehensive-pipeline", async () => {
-      // Trigger calendar discovery
-      await inngest.send({
-        name: "mexc/calendar.poll",
-        data: {
-          trigger: "intensive_scheduled",
-          force: true,
-          timestamp: new Date().toISOString(),
-        },
-      });
+    const _pipelineResult = await step.run(
+      "comprehensive-pipeline",
+      async () => {
+        // Trigger calendar discovery
+        await inngest.send({
+          name: "mexc/calendar.poll",
+          data: {
+            trigger: "intensive_scheduled",
+            force: true,
+            timestamp: new Date().toISOString(),
+          },
+        });
 
-      // Trigger pattern analysis
-      await inngest.send({
-        name: "mexc/patterns.analyze",
-        data: {
-          symbols: [],
-          analysisType: "discovery",
-          trigger: "intensive_scheduled",
-          timestamp: new Date().toISOString(),
-        },
-      });
+        // Trigger pattern analysis
+        await inngest.send({
+          name: "mexc/patterns.analyze",
+          data: {
+            symbols: [],
+            analysisType: "discovery",
+            trigger: "intensive_scheduled",
+            timestamp: new Date().toISOString(),
+          },
+        });
 
-      return { triggered: true };
-    });
+        return { triggered: true };
+      }
+    );
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -359,7 +378,9 @@ export const emergencyResponseHandler = inngest.createFunction(
   async ({ event, step }) => {
     const { emergencyType, severity, data } = event.data;
 
-    console.info(`[Emergency] ${emergencyType} detected with severity: ${severity}`);
+    console.info(
+      `[Emergency] ${emergencyType} detected with severity: ${severity}`
+    );
 
     await updateWorkflowStatus("addActivity", {
       activity: {
@@ -372,7 +393,9 @@ export const emergencyResponseHandler = inngest.createFunction(
     // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex emergency recovery with multiple steps and error handling
     const responseResult = await step.run("emergency-response", async () => {
       // Execute the comprehensive recovery plan
-      const validSeverity = ["low", "medium", "high", "critical"].includes(severity as string)
+      const validSeverity = ["low", "medium", "high", "critical"].includes(
+        severity as string
+      )
         ? (severity as "low" | "medium" | "high" | "critical")
         : "medium";
 
@@ -393,7 +416,10 @@ export const emergencyResponseHandler = inngest.createFunction(
             const result = await Promise.race([
               recoveryStep.action(),
               new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error("Recovery step timeout")), recoveryStep.timeoutMs)
+                setTimeout(
+                  () => reject(new Error("Recovery step timeout")),
+                  recoveryStep.timeoutMs
+                )
               ),
             ]);
 
@@ -422,7 +448,9 @@ export const emergencyResponseHandler = inngest.createFunction(
 
             if (attempts <= recoveryStep.maxRetries && recoveryStep.retryable) {
               // Wait before retry with exponential backoff
-              await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * attempts, 10000)));
+              await new Promise((resolve) =>
+                setTimeout(resolve, Math.min(1000 * attempts, 10000))
+              );
             }
           }
         }
@@ -452,7 +480,8 @@ export const emergencyResponseHandler = inngest.createFunction(
         recoveryPlan,
         executionResults,
         requiresManualIntervention:
-          recoveryPlan.requiresManualIntervention || executionResults.some((r) => !r.success),
+          recoveryPlan.requiresManualIntervention ||
+          executionResults.some((r) => !r.success),
         estimatedRecoveryTime: recoveryPlan.estimatedRecoveryTime,
       };
     });

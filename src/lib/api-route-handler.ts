@@ -100,7 +100,11 @@ export type ApiRouteHandler<TQuery = any, TBody = any, TResponse = any> = (
  * });
  * ```
  */
-export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any>(
+export function createApiRouteHandler<
+  TQuery = any,
+  TBody = any,
+  TResponse = any,
+>(
   options: ApiRouteOptions<TQuery, TBody, TResponse>,
   handler: ApiRouteHandler<TQuery, TBody, TResponse>
 ) {
@@ -126,11 +130,14 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
       // Validate HTTP method
       if (options.method && request.method !== options.method) {
         return apiResponse(
-          createErrorResponse(`Method ${request.method} not allowed. Expected ${options.method}`, {
-            code: "METHOD_NOT_ALLOWED",
-            requestId,
-            requestDuration: `${Date.now() - startTime}ms`,
-          }),
+          createErrorResponse(
+            `Method ${request.method} not allowed. Expected ${options.method}`,
+            {
+              code: "METHOD_NOT_ALLOWED",
+              requestId,
+              requestDuration: `${Date.now() - startTime}ms`,
+            }
+          ),
           HTTP_STATUS.METHOD_NOT_ALLOWED
         );
       }
@@ -141,9 +148,16 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
         const { searchParams } = new URL(request.url);
         const queryParams = Object.fromEntries(searchParams.entries());
 
-        const queryValidation = validateMexcApiRequest(options.querySchema, queryParams);
+        const queryValidation = validateMexcApiRequest(
+          options.querySchema,
+          queryParams
+        );
         if (!queryValidation.success) {
-          const errorResult = queryValidation as { success: false; error: string; details: string[] };
+          const errorResult = queryValidation as {
+            success: false;
+            error: string;
+            details: string[];
+          };
           logger.warn("Query validation failed", {
             requestId,
             operation: "query_validation",
@@ -167,18 +181,31 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
       // Parse and validate request body
       let bodyData = {} as TBody;
-      if (options.bodySchema && ["POST", "PUT", "PATCH"].includes(request.method)) {
+      if (
+        options.bodySchema &&
+        ["POST", "PUT", "PATCH"].includes(request.method)
+      ) {
         try {
           const rawBody = await request.json();
-          const bodyValidation = validateMexcApiRequest(options.bodySchema, rawBody);
+          const bodyValidation = validateMexcApiRequest(
+            options.bodySchema,
+            rawBody
+          );
 
           if (!bodyValidation.success) {
-            const errorResult = bodyValidation as { success: false; error: string; details: string[] };
-            console.warn(`[${routeName.toUpperCase()}] Body validation failed`, {
-              requestId,
-              error: errorResult.error,
-              details: errorResult.details,
-            });
+            const errorResult = bodyValidation as {
+              success: false;
+              error: string;
+              details: string[];
+            };
+            console.warn(
+              `[${routeName.toUpperCase()}] Body validation failed`,
+              {
+                requestId,
+                error: errorResult.error,
+                details: errorResult.details,
+              }
+            );
 
             return apiResponse(
               createErrorResponse(errorResult.error, {
@@ -192,10 +219,13 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
           }
           bodyData = bodyValidation.data;
         } catch (error) {
-          console.warn(`[${routeName.toUpperCase()}] Invalid JSON in request body`, {
-            requestId,
-            error: error instanceof Error ? error.message : "Unknown error",
-          });
+          console.warn(
+            `[${routeName.toUpperCase()}] Invalid JSON in request body`,
+            {
+              requestId,
+              error: error instanceof Error ? error.message : "Unknown error",
+            }
+          );
 
           return apiResponse(
             createErrorResponse("Invalid JSON in request body", {
@@ -212,12 +242,15 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
       const params: Record<string, string> = {};
       // Note: Next.js dynamic params would be passed via context in the actual route file
 
-      logger.debug(`[${routeName.toUpperCase()}] Request validation completed`, {
-        requestId,
-        hasQuery: Object.keys(queryData as object).length > 0,
-        hasBody: Object.keys(bodyData as object).length > 0,
-        validationDuration: `${Date.now() - startTime}ms`,
-      });
+      logger.debug(
+        `[${routeName.toUpperCase()}] Request validation completed`,
+        {
+          requestId,
+          hasQuery: Object.keys(queryData as object).length > 0,
+          hasBody: Object.keys(bodyData as object).length > 0,
+          validationDuration: `${Date.now() - startTime}ms`,
+        }
+      );
 
       // Execute the handler
       const result = await handler(context, {
@@ -235,12 +268,18 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
         );
 
         if (!responseValidation.success) {
-          const errorResult = responseValidation as { success: false; error: string };
-          console.warn(`[${routeName.toUpperCase()}] Response validation failed`, {
-            requestId,
-            error: errorResult.error,
-            result: typeof result,
-          });
+          const errorResult = responseValidation as {
+            success: false;
+            error: string;
+          };
+          console.warn(
+            `[${routeName.toUpperCase()}] Response validation failed`,
+            {
+              requestId,
+              error: errorResult.error,
+              result: typeof result,
+            }
+          );
           // Log warning but don't fail the request
         }
       }
@@ -265,7 +304,8 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
       );
     } catch (error) {
       const requestDuration = Date.now() - startTime;
-      const safeError = error instanceof Error ? error : new Error("Unknown error occurred");
+      const safeError =
+        error instanceof Error ? error : new Error("Unknown error occurred");
 
       console.error(`[${routeName.toUpperCase()}] Request failed`, {
         requestId,
@@ -279,11 +319,17 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
         try {
           return options.customErrorHandler(safeError, context);
         } catch (handlerError) {
-          console.error(`[${routeName.toUpperCase()}] Custom error handler failed`, {
-            requestId,
-            originalError: safeError.message,
-            handlerError: handlerError instanceof Error ? handlerError.message : "Unknown",
-          });
+          console.error(
+            `[${routeName.toUpperCase()}] Custom error handler failed`,
+            {
+              requestId,
+              originalError: safeError.message,
+              handlerError:
+                handlerError instanceof Error
+                  ? handlerError.message
+                  : "Unknown",
+            }
+          );
         }
       }
 
@@ -309,7 +355,11 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 /**
  * Create a public API route (no authentication required)
  */
-export function createPublicApiRoute<TQuery = any, TBody = any, TResponse = any>(
+export function createPublicApiRoute<
+  TQuery = any,
+  TBody = any,
+  TResponse = any,
+>(
   options: Omit<ApiRouteOptions<TQuery, TBody, TResponse>, "publicRoute">,
   handler: ApiRouteHandler<TQuery, TBody, TResponse>
 ) {
@@ -319,7 +369,11 @@ export function createPublicApiRoute<TQuery = any, TBody = any, TResponse = any>
 /**
  * Create a protected API route (authentication required)
  */
-export function createProtectedApiRoute<TQuery = any, TBody = any, TResponse = any>(
+export function createProtectedApiRoute<
+  TQuery = any,
+  TBody = any,
+  TResponse = any,
+>(
   options: Omit<ApiRouteOptions<TQuery, TBody, TResponse>, "requireAuth">,
   handler: ApiRouteHandler<TQuery, TBody, TResponse>
 ) {
@@ -329,7 +383,11 @@ export function createProtectedApiRoute<TQuery = any, TBody = any, TResponse = a
 /**
  * Create a sensitive data API route (enhanced security)
  */
-export function createSensitiveApiRoute<TQuery = any, TBody = any, TResponse = any>(
+export function createSensitiveApiRoute<
+  TQuery = any,
+  TBody = any,
+  TResponse = any,
+>(
   options: Omit<ApiRouteOptions<TQuery, TBody, TResponse>, "sensitiveData">,
   handler: ApiRouteHandler<TQuery, TBody, TResponse>
 ) {
@@ -381,8 +439,11 @@ export function createCorsHeaders(origin?: string) {
  */
 export function handleOptionsRequest(origin?: string) {
   const { NextResponse } = require("next/server");
-  return NextResponse.json(createSuccessResponse(null, { message: "CORS preflight request" }), {
-    status: HTTP_STATUS.OK,
-    headers: createCorsHeaders(origin),
-  });
+  return NextResponse.json(
+    createSuccessResponse(null, { message: "CORS preflight request" }),
+    {
+      status: HTTP_STATUS.OK,
+      headers: createCorsHeaders(origin),
+    }
+  );
 }

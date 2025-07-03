@@ -6,7 +6,11 @@
  */
 
 import { EventEmitter } from "node:events";
-import { type DomainEvent, EventFactory, eventStoreManager } from "../event-sourcing/event-store";
+import {
+  type DomainEvent,
+  EventFactory,
+  eventStoreManager,
+} from "../event-sourcing/event-store";
 
 // Base Command Interface
 export interface Command {
@@ -56,14 +60,20 @@ export class CommandBus extends EventEmitter {
   /**
    * Register command handler
    */
-  registerHandler<T extends Command>(commandType: string, handler: CommandHandler<T>): void {
+  registerHandler<T extends Command>(
+    commandType: string,
+    handler: CommandHandler<T>
+  ): void {
     this.handlers.set(commandType, handler);
   }
 
   /**
    * Register command validator
    */
-  registerValidator<T extends Command>(commandType: string, validator: CommandValidator<T>): void {
+  registerValidator<T extends Command>(
+    commandType: string,
+    validator: CommandValidator<T>
+  ): void {
     this.validators.set(commandType, validator);
   }
 
@@ -105,7 +115,9 @@ export class CommandBus extends EventEmitter {
       // Find handler
       const handler = this.handlers.get(command.type);
       if (!handler) {
-        throw new Error(`No handler registered for command type: ${command.type}`);
+        throw new Error(
+          `No handler registered for command type: ${command.type}`
+        );
       }
 
       // Execute command
@@ -158,7 +170,10 @@ export class CommandBus extends EventEmitter {
  * Command Middleware Interface
  */
 export interface CommandMiddleware {
-  execute<T extends Command>(command: T, next: (command: T) => Promise<T>): Promise<T | null>;
+  execute<T extends Command>(
+    command: T,
+    next: (command: T) => Promise<T>
+  ): Promise<T | null>;
 }
 
 /**
@@ -207,7 +222,9 @@ export class AuthorizationMiddleware implements CommandMiddleware {
       // In real implementation, check user roles from auth service
       const userRoles = await this.getUserRoles(command.metadata.userId);
 
-      const hasPermission = requiredRoles.some((role) => userRoles.includes(role));
+      const hasPermission = requiredRoles.some((role) =>
+        userRoles.includes(role)
+      );
       if (!hasPermission) {
         console.warn(`[AUTH] Access denied for command: ${command.type}`, {
           userId: command.metadata.userId,
@@ -254,7 +271,9 @@ export class CommandFactory {
 /**
  * Base Command Handler
  */
-export abstract class BaseCommandHandler<T extends Command> implements CommandHandler<T> {
+export abstract class BaseCommandHandler<T extends Command>
+  implements CommandHandler<T>
+{
   abstract handle(command: T): Promise<CommandResult>;
 
   canHandle(command: Command): boolean {
@@ -282,7 +301,9 @@ export abstract class BaseCommandHandler<T extends Command> implements CommandHa
       metadata
     );
 
-    await eventStoreManager.saveAggregate(aggregateId, expectedVersion, [event]);
+    await eventStoreManager.saveAggregate(aggregateId, expectedVersion, [
+      event,
+    ]);
 
     return {
       success: true,

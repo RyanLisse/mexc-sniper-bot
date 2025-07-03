@@ -15,7 +15,10 @@
 import { EventEmitter } from "node:events";
 import { toSafeError } from "../../lib/error-type-utils";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "../../services/api/mexc-unified-exports";
 import { getActivityDataForSymbol as fetchActivityData } from "../../services/data/pattern-detection/activity-integration";
 import { ConfidenceCalculator } from "./confidence-calculator";
 import type {
@@ -115,7 +118,9 @@ export class PatternDetectionCore extends EventEmitter {
     });
   }
 
-  static getInstance(config?: Partial<PatternDetectionConfig>): PatternDetectionCore {
+  static getInstance(
+    config?: Partial<PatternDetectionConfig>
+  ): PatternDetectionCore {
     if (!PatternDetectionCore.instance) {
       PatternDetectionCore.instance = new PatternDetectionCore(config);
     }
@@ -127,13 +132,16 @@ export class PatternDetectionCore extends EventEmitter {
    *
    * Main entry point for pattern analysis. Orchestrates all detection algorithms.
    */
-  async analyzePatterns(request: PatternAnalysisRequest): Promise<PatternAnalysisResult> {
+  async analyzePatterns(
+    request: PatternAnalysisRequest
+  ): Promise<PatternAnalysisResult> {
     const startTime = Date.now();
 
     try {
       // Validate request
       if (this.config.strictValidation) {
-        const validation = this.patternValidator.validateAnalysisRequest(request);
+        const validation =
+          this.patternValidator.validateAnalysisRequest(request);
         if (!validation.isValid) {
           throw new PatternDetectionError(
             `Invalid analysis request: ${validation.errors.join(", ")}`,
@@ -154,23 +162,29 @@ export class PatternDetectionCore extends EventEmitter {
 
       // Ready state detection for symbols
       if (request.symbols && request.symbols.length > 0) {
-        const readyMatches = await this.patternAnalyzer.detectReadyStatePattern(request.symbols);
-        const preReadyMatches = await this.patternAnalyzer.detectPreReadyPatterns(request.symbols);
+        const readyMatches = await this.patternAnalyzer.detectReadyStatePattern(
+          request.symbols
+        );
+        const preReadyMatches =
+          await this.patternAnalyzer.detectPreReadyPatterns(request.symbols);
         allMatches.push(...readyMatches, ...preReadyMatches);
       }
 
       // Advance opportunity detection for calendar entries
       if (request.calendarEntries && request.calendarEntries.length > 0) {
-        const advanceMatches = await this.patternAnalyzer.detectAdvanceOpportunities(
-          request.calendarEntries
-        );
+        const advanceMatches =
+          await this.patternAnalyzer.detectAdvanceOpportunities(
+            request.calendarEntries
+          );
         allMatches.push(...advanceMatches);
       }
 
       // Correlation analysis if multiple symbols
       let correlations: CorrelationAnalysis[] = [];
       if (request.symbols && request.symbols.length > 1) {
-        correlations = await this.patternAnalyzer.analyzeSymbolCorrelations(request.symbols);
+        correlations = await this.patternAnalyzer.analyzeSymbolCorrelations(
+          request.symbols
+        );
       }
 
       // OPTIMIZATION: Use optimized filtering for better performance
@@ -186,7 +200,8 @@ export class PatternDetectionCore extends EventEmitter {
       }
 
       // OPTIMIZATION: Use optimized categorization algorithm
-      const recommendations = categorizeOptimizedRecommendations(filteredMatches);
+      const recommendations =
+        categorizeOptimizedRecommendations(filteredMatches);
 
       // Calculate summary statistics
       const summary = this.calculateSummary(allMatches, filteredMatches);
@@ -202,7 +217,8 @@ export class PatternDetectionCore extends EventEmitter {
         calendarEntriesAnalyzed: request.calendarEntries?.length || 0,
         totalMatches: allMatches.length,
         filteredMatches: filteredMatches.length,
-        confidenceThreshold: request.confidenceThreshold || this.config.confidenceThreshold,
+        confidenceThreshold:
+          request.confidenceThreshold || this.config.confidenceThreshold,
         executionTime,
         correlationsFound: correlations.length,
       });
@@ -218,8 +234,10 @@ export class PatternDetectionCore extends EventEmitter {
             duration: executionTime,
             source: "pattern-detection-core",
             // OPTIMIZATION: Use optimized calculation algorithms
-            averageAdvanceHours: calculateOptimizedAverageAdvanceHours(filteredMatches),
-            averageEstimatedTimeToReady: calculateOptimizedAverageTimeToReady(filteredMatches),
+            averageAdvanceHours:
+              calculateOptimizedAverageAdvanceHours(filteredMatches),
+            averageEstimatedTimeToReady:
+              calculateOptimizedAverageTimeToReady(filteredMatches),
           },
         };
 
@@ -228,7 +246,9 @@ export class PatternDetectionCore extends EventEmitter {
         console.info("Pattern detection event emitted", {
           eventType: "patterns_detected",
           patternsCount: filteredMatches.length,
-          patternTypes: Array.from(new Set(filteredMatches.map((m) => m.patternType))),
+          patternTypes: Array.from(
+            new Set(filteredMatches.map((m) => m.patternType))
+          ),
         });
       }
 
@@ -239,9 +259,15 @@ export class PatternDetectionCore extends EventEmitter {
         correlations,
         analysisMetadata: {
           executionTime,
-          algorithmsUsed: ["ready_state", "advance_detection", "pre_ready", "correlation"],
+          algorithmsUsed: [
+            "ready_state",
+            "advance_detection",
+            "pre_ready",
+            "correlation",
+          ],
           // OPTIMIZATION: Use optimized confidence distribution algorithm
-          confidenceDistribution: calculateOptimizedConfidenceDistribution(allMatches),
+          confidenceDistribution:
+            calculateOptimizedConfidenceDistribution(allMatches),
         },
       };
     } catch (error) {
@@ -253,7 +279,9 @@ export class PatternDetectionCore extends EventEmitter {
       // OPTIMIZATION: Use optimized error context creation and shared logger
       this.logger.error(
         "Pattern analysis failed",
-        createErrorContext("pattern_analysis", request.analysisType, { executionTime }),
+        createErrorContext("pattern_analysis", request.analysisType, {
+          executionTime,
+        }),
         safeError
       );
 
@@ -297,11 +325,13 @@ export class PatternDetectionCore extends EventEmitter {
     try {
       if (!symbol) return null;
 
-      const matches = await this.patternAnalyzer.detectReadyStatePattern(symbol);
+      const matches =
+        await this.patternAnalyzer.detectReadyStatePattern(symbol);
 
       if (matches.length === 0) {
         // Check if it's pre-ready
-        const preReadyMatches = await this.patternAnalyzer.detectPreReadyPatterns([symbol]);
+        const preReadyMatches =
+          await this.patternAnalyzer.detectPreReadyPatterns([symbol]);
         if (preReadyMatches.length > 0) {
           const match = preReadyMatches[0];
           return {
@@ -326,7 +356,8 @@ export class PatternDetectionCore extends EventEmitter {
               confidence: match.confidence,
               activities: match.activityInfo.activities,
               activityBoost: match.activityInfo.activityBoost,
-              hasHighPriorityActivity: match.activityInfo.hasHighPriorityActivity,
+              hasHighPriorityActivity:
+                match.activityInfo.hasHighPriorityActivity,
             }
           : undefined,
       };
@@ -384,7 +415,9 @@ export class PatternDetectionCore extends EventEmitter {
   /**
    * Detect ready state patterns in symbols
    */
-  async detectReadyStatePattern(symbols: SymbolEntry | SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectReadyStatePattern(
+    symbols: SymbolEntry | SymbolEntry[]
+  ): Promise<PatternMatch[]> {
     try {
       return await this.patternAnalyzer.detectReadyStatePattern(symbols);
     } catch (error) {
@@ -401,7 +434,9 @@ export class PatternDetectionCore extends EventEmitter {
   /**
    * Detect pre-ready patterns in symbols
    */
-  async detectPreReadyPatterns(symbols: SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectPreReadyPatterns(
+    symbols: SymbolEntry[]
+  ): Promise<PatternMatch[]> {
     try {
       return await this.patternAnalyzer.detectPreReadyPatterns(symbols);
     } catch (error) {
@@ -417,9 +452,13 @@ export class PatternDetectionCore extends EventEmitter {
   /**
    * Detect advance opportunities from calendar entries
    */
-  async detectAdvanceOpportunities(calendarEntries: CalendarEntry[]): Promise<PatternMatch[]> {
+  async detectAdvanceOpportunities(
+    calendarEntries: CalendarEntry[]
+  ): Promise<PatternMatch[]> {
     try {
-      return await this.patternAnalyzer.detectAdvanceOpportunities(calendarEntries);
+      return await this.patternAnalyzer.detectAdvanceOpportunities(
+        calendarEntries
+      );
     } catch (error) {
       const safeError = toSafeError(error);
       console.error("Advance opportunity detection failed", {
@@ -436,7 +475,9 @@ export class PatternDetectionCore extends EventEmitter {
    * Integrates with the activity data service to fetch real activity data
    * for enhanced pattern detection confidence.
    */
-  private async getActivityDataForSymbol(symbol: string): Promise<ActivityData[]> {
+  private async getActivityDataForSymbol(
+    symbol: string
+  ): Promise<ActivityData[]> {
     try {
       // Use the dedicated activity integration service
       const activityData = await fetchActivityData(symbol);
@@ -445,7 +486,9 @@ export class PatternDetectionCore extends EventEmitter {
         this.logger.debug("Activity data fetched", {
           symbol,
           count: activityData.length,
-          activityTypes: Array.from(new Set(activityData.map((a) => a.activityType))),
+          activityTypes: Array.from(
+            new Set(activityData.map((a) => a.activityType))
+          ),
         });
       }
 
@@ -464,7 +507,9 @@ export class PatternDetectionCore extends EventEmitter {
   // Private Helper Methods
   // ============================================================================
 
-  private async validateMatches(matches: PatternMatch[]): Promise<PatternMatch[]> {
+  private async validateMatches(
+    matches: PatternMatch[]
+  ): Promise<PatternMatch[]> {
     const validatedMatches: PatternMatch[] = [];
 
     for (const match of matches) {
@@ -499,17 +544,26 @@ export class PatternDetectionCore extends EventEmitter {
 
   // OPTIMIZATION: Removed redundant categorizeRecommendations method - using optimized version from algorithm-utils
 
-  private calculateSummary(allMatches: PatternMatch[], filteredMatches: PatternMatch[]) {
-    const readyStateFound = filteredMatches.filter((m) => m.patternType === "ready_state").length;
-    const highConfidenceMatches = filteredMatches.filter((m) => m.confidence >= 80).length;
+  private calculateSummary(
+    allMatches: PatternMatch[],
+    filteredMatches: PatternMatch[]
+  ) {
+    const readyStateFound = filteredMatches.filter(
+      (m) => m.patternType === "ready_state"
+    ).length;
+    const highConfidenceMatches = filteredMatches.filter(
+      (m) => m.confidence >= 80
+    ).length;
     const advanceOpportunities = filteredMatches.filter(
       (m) =>
-        m.patternType === "launch_sequence" && m.advanceNoticeHours >= this.config.minAdvanceHours
+        m.patternType === "launch_sequence" &&
+        m.advanceNoticeHours >= this.config.minAdvanceHours
     ).length;
 
     const avgConfidence =
       filteredMatches.length > 0
-        ? filteredMatches.reduce((sum, m) => sum + m.confidence, 0) / filteredMatches.length
+        ? filteredMatches.reduce((sum, m) => sum + m.confidence, 0) /
+          filteredMatches.length
         : 0;
 
     return {
@@ -534,7 +588,8 @@ export class PatternDetectionCore extends EventEmitter {
 
     if (filteredMatches.length > 0) {
       const avgConfidence =
-        filteredMatches.reduce((sum, m) => sum + m.confidence, 0) / filteredMatches.length;
+        filteredMatches.reduce((sum, m) => sum + m.confidence, 0) /
+        filteredMatches.length;
       this.metrics.averageConfidence = Math.round(avgConfidence * 100) / 100;
     }
   }

@@ -56,21 +56,34 @@ export class EnhancedApiValidationService {
     warn: (message: string, context?: any) =>
       console.warn("[enhanced-api-validation-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[enhanced-api-validation-service]", message, context || "", error || ""),
+      console.error(
+        "[enhanced-api-validation-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
-      console.debug("[enhanced-api-validation-service]", message, context || ""),
+      console.debug(
+        "[enhanced-api-validation-service]",
+        message,
+        context || ""
+      ),
   };
 
   private static instance: EnhancedApiValidationService;
   private errorLogger = ErrorLoggingService.getInstance();
-  private validationCache = new Map<string, { result: ValidationResult; expiresAt: number }>();
+  private validationCache = new Map<
+    string,
+    { result: ValidationResult; expiresAt: number }
+  >();
   private readonly cacheExpiryMs = 5 * 60 * 1000; // 5 minutes
 
   private constructor() {}
 
   public static getInstance(): EnhancedApiValidationService {
     if (!EnhancedApiValidationService.instance) {
-      EnhancedApiValidationService.instance = new EnhancedApiValidationService();
+      EnhancedApiValidationService.instance =
+        new EnhancedApiValidationService();
     }
     return EnhancedApiValidationService.instance;
   }
@@ -78,7 +91,9 @@ export class EnhancedApiValidationService {
   /**
    * Comprehensive API validation with multiple stages
    */
-  async validateApiCredentials(config: ApiValidationConfig): Promise<ValidationResult> {
+  async validateApiCredentials(
+    config: ApiValidationConfig
+  ): Promise<ValidationResult> {
     const cacheKey = this.generateCacheKey(config);
     const cached = this.getCachedResult(cacheKey);
 
@@ -120,7 +135,9 @@ export class EnhancedApiValidationService {
 
       if (!connectivityResult.success) {
         result.error = connectivityResult.error;
-        result.recommendations.push("Check internet connection and firewall settings");
+        result.recommendations.push(
+          "Check internet connection and firewall settings"
+        );
         return this.cacheAndReturn(cacheKey, result);
       }
 
@@ -187,12 +204,15 @@ export class EnhancedApiValidationService {
       result.stage = "completed";
 
       if (result.valid) {
-        result.recommendations.push("API credentials are fully validated and ready for trading");
+        result.recommendations.push(
+          "API credentials are fully validated and ready for trading"
+        );
       }
 
       return this.cacheAndReturn(cacheKey, result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown validation error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown validation error";
       console.error("[Enhanced API Validation] Validation failed:", error);
 
       await this.errorLogger.logError(error as Error, {
@@ -203,7 +223,9 @@ export class EnhancedApiValidationService {
       });
 
       result.error = errorMessage;
-      result.recommendations.push("Check API credentials and network connectivity");
+      result.recommendations.push(
+        "Check API credentials and network connectivity"
+      );
 
       return this.cacheAndReturn(cacheKey, result);
     }
@@ -224,7 +246,9 @@ export class EnhancedApiValidationService {
       return {
         valid: false,
         error: "API key is required and must be a string",
-        recommendations: ["Provide a valid MEXC API key from your account settings"],
+        recommendations: [
+          "Provide a valid MEXC API key from your account settings",
+        ],
       };
     }
 
@@ -241,7 +265,9 @@ export class EnhancedApiValidationService {
       return {
         valid: false,
         error: "Secret key is required and must be a string",
-        recommendations: ["Provide a valid MEXC secret key from your account settings"],
+        recommendations: [
+          "Provide a valid MEXC secret key from your account settings",
+        ],
       };
     }
 
@@ -249,7 +275,9 @@ export class EnhancedApiValidationService {
       return {
         valid: false,
         error: "Secret key appears to be too short",
-        recommendations: ["Verify the secret key is complete and properly copied"],
+        recommendations: [
+          "Verify the secret key is complete and properly copied",
+        ],
       };
     }
 
@@ -262,7 +290,9 @@ export class EnhancedApiValidationService {
       return {
         valid: false,
         error: "API key and secret key cannot be the same",
-        recommendations: ["Verify you have copied the correct API key and secret key"],
+        recommendations: [
+          "Verify you have copied the correct API key and secret key",
+        ],
       };
     }
 
@@ -303,7 +333,10 @@ export class EnhancedApiValidationService {
       const latency = Date.now() - startTime;
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Network connectivity failed",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Network connectivity failed",
         latency,
       };
     }
@@ -397,7 +430,8 @@ export class EnhancedApiValidationService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Authentication test failed",
+        error:
+          error instanceof Error ? error.message : "Authentication test failed",
         recommendations: [
           "Verify API credentials are valid and active",
           "Check network connectivity to MEXC",
@@ -464,7 +498,10 @@ export class EnhancedApiValidationService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Permission validation failed",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Permission validation failed",
         recommendations: [
           "Enable all required permissions for your API key",
           "Verify API key is active and not restricted",
@@ -497,8 +534,12 @@ export class EnhancedApiValidationService {
         mexcClient.getAccountBalances(),
       ]);
 
-      const failures = testResults.filter((result) => result.status === "rejected");
-      const successes = testResults.filter((result) => result.status === "fulfilled");
+      const failures = testResults.filter(
+        (result) => result.status === "rejected"
+      );
+      const successes = testResults.filter(
+        (result) => result.status === "fulfilled"
+      );
 
       // If some requests succeed but others fail, might indicate IP issues
       if (failures.length > 0 && successes.length > 0) {
@@ -516,7 +557,8 @@ export class EnhancedApiValidationService {
       if (failures.length === testResults.length) {
         return {
           success: false,
-          error: "All authenticated requests failed - likely IP allowlist issue",
+          error:
+            "All authenticated requests failed - likely IP allowlist issue",
           recommendations: [
             "Add your current IP address to the MEXC API allowlist",
             "Check if you are connecting from an allowed region",
@@ -532,7 +574,10 @@ export class EnhancedApiValidationService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "IP allowlisting validation failed",
+        error:
+          error instanceof Error
+            ? error.message
+            : "IP allowlisting validation failed",
         recommendations: [
           "Check IP allowlist configuration in MEXC settings",
           "Ensure your server IP is properly allowlisted",
@@ -581,7 +626,8 @@ export class EnhancedApiValidationService {
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    const averageLatency = latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
+    const averageLatency =
+      latencies.reduce((sum, lat) => sum + lat, 0) / latencies.length;
     const maxLatency = Math.max(...latencies);
     const successRate = (successCount / totalTests) * 100;
 
@@ -591,15 +637,23 @@ export class EnhancedApiValidationService {
 
     // Generate recommendations based on performance
     if (averageLatency > 2000) {
-      recommendations.push("High API latency detected - consider optimizing network connection");
+      recommendations.push(
+        "High API latency detected - consider optimizing network connection"
+      );
     }
     if (successRate < 80) {
-      recommendations.push("Low API success rate - check network stability and API limits");
+      recommendations.push(
+        "Low API success rate - check network stability and API limits"
+      );
     }
     if (circuitBreakerStatus === "OPEN") {
-      recommendations.push("Circuit breaker is open - API may be experiencing issues");
+      recommendations.push(
+        "Circuit breaker is open - API may be experiencing issues"
+      );
     } else if (circuitBreakerStatus === "HALF_OPEN") {
-      recommendations.push("Circuit breaker is recovering - monitor API performance");
+      recommendations.push(
+        "Circuit breaker is recovering - monitor API performance"
+      );
     }
 
     return {
@@ -637,23 +691,33 @@ export class EnhancedApiValidationService {
     } else if (config.apiKey.length < 20 || config.secretKey.length < 40) {
       keyStrength = "weak";
       riskLevel = "high";
-      recommendedActions.push("Consider regenerating API keys for better security");
+      recommendedActions.push(
+        "Consider regenerating API keys for better security"
+      );
     }
 
     // Check for repeated patterns
     if (/(.)\1{3,}/.test(config.apiKey) || /(.)\1{3,}/.test(config.secretKey)) {
       riskLevel = "high";
-      recommendedActions.push("API keys contain repeated patterns - regenerate recommended");
+      recommendedActions.push(
+        "API keys contain repeated patterns - regenerate recommended"
+      );
     }
 
     // Security recommendations
-    recommendations.push("Store API credentials securely using environment variables");
-    recommendations.push("Regularly rotate API keys (recommended: every 90 days)");
+    recommendations.push(
+      "Store API credentials securely using environment variables"
+    );
+    recommendations.push(
+      "Regularly rotate API keys (recommended: every 90 days)"
+    );
     recommendations.push("Monitor API key usage for unauthorized activity");
     recommendations.push("Use IP allowlisting to restrict API access");
 
     if (!config.validateIpAllowlist) {
-      recommendations.push("Enable IP allowlisting validation for enhanced security");
+      recommendations.push(
+        "Enable IP allowlisting validation for enhanced security"
+      );
       if (riskLevel !== "high") {
         riskLevel = "medium";
       }
@@ -714,7 +778,10 @@ export class EnhancedApiValidationService {
   /**
    * Cache validation result and return it
    */
-  private cacheAndReturn(cacheKey: string, result: ValidationResult): ValidationResult {
+  private cacheAndReturn(
+    cacheKey: string,
+    result: ValidationResult
+  ): ValidationResult {
     this.validationCache.set(cacheKey, {
       result,
       expiresAt: Date.now() + this.cacheExpiryMs,
@@ -753,9 +820,14 @@ export class EnhancedApiValidationService {
       // Test basic connectivity
       await this.testNetworkConnectivity();
 
-      console.info("[Enhanced API Validation] Service initialized successfully");
+      console.info(
+        "[Enhanced API Validation] Service initialized successfully"
+      );
     } catch (error) {
-      console.error("[Enhanced API Validation] Service initialization failed:", error);
+      console.error(
+        "[Enhanced API Validation] Service initialization failed:",
+        error
+      );
       throw error;
     }
   }
@@ -805,7 +877,10 @@ export class EnhancedApiValidationService {
         validationDetails: validationResult,
       };
     } catch (error) {
-      console.error("[Enhanced API Validation] Comprehensive validation failed:", error);
+      console.error(
+        "[Enhanced API Validation] Comprehensive validation failed:",
+        error
+      );
       return {
         credentialsValid: false,
         securityRisks: ["Validation system error"],
@@ -830,14 +905,16 @@ export class EnhancedApiValidationService {
     } catch (error) {
       return {
         systemHealthy: false,
-        error: error instanceof Error ? error.message : "Quick validation failed",
+        error:
+          error instanceof Error ? error.message : "Quick validation failed",
       };
     }
   }
 }
 
 // Export singleton instance
-export const enhancedApiValidationService = EnhancedApiValidationService.getInstance();
+export const enhancedApiValidationService =
+  EnhancedApiValidationService.getInstance();
 
 // Export with alternative name for backward compatibility
 export const enhancedApiValidation = enhancedApiValidationService;

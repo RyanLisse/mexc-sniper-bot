@@ -27,7 +27,9 @@ export function MetricCard({
   return (
     <Card className={cn("", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardDescription className="text-sm font-medium">{title}</CardDescription>
+        <CardDescription className="text-sm font-medium">
+          {title}
+        </CardDescription>
         {change !== undefined && (
           <div
             className={cn(
@@ -48,12 +50,18 @@ export function MetricCard({
         <div className="text-2xl font-bold">{value}</div>
         {changeLabel && (
           <div className="flex items-center pt-1">
-            {trend === "up" && <TrendingUp className="mr-1 h-3 w-3 text-muted-foreground" />}
-            {trend === "down" && <TrendingDown className="mr-1 h-3 w-3 text-muted-foreground" />}
+            {trend === "up" && (
+              <TrendingUp className="mr-1 h-3 w-3 text-muted-foreground" />
+            )}
+            {trend === "down" && (
+              <TrendingDown className="mr-1 h-3 w-3 text-muted-foreground" />
+            )}
             <p className="text-xs text-muted-foreground">{changeLabel}</p>
           </div>
         )}
-        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+        {description && (
+          <p className="text-xs text-muted-foreground mt-1">{description}</p>
+        )}
       </CardContent>
     </Card>
   );

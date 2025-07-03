@@ -1,6 +1,6 @@
 /**
  * Calendar Data Analyzer
- * 
+ *
  * Handles analysis of MEXC calendar data and launch schedules
  */
 
@@ -13,7 +13,9 @@ export class CalendarAnalyzer {
    */
   async analyzeCalendarData(
     calendarData: MexcCalendarEntry[],
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(calendarData, null, 2);
 
@@ -63,11 +65,14 @@ Focus on actionable insights for trading preparation and opportunity identificat
   /**
    * Find upcoming launches within specified timeframe
    */
-  getUpcomingLaunches(calendarData: MexcCalendarEntry[], hoursAhead: number = 24): MexcCalendarEntry[] {
+  getUpcomingLaunches(
+    calendarData: MexcCalendarEntry[],
+    hoursAhead: number = 24
+  ): MexcCalendarEntry[] {
     const now = new Date();
     const cutoff = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
 
-    return calendarData.filter(entry => {
+    return calendarData.filter((entry) => {
       const launchTime = new Date(entry.launchTime);
       return launchTime > now && launchTime <= cutoff;
     });
@@ -84,9 +89,12 @@ Focus on actionable insights for trading preparation and opportunity identificat
     const hoursUntilLaunch = timeUntilLaunch / (1000 * 60 * 60);
 
     // Score based on time until launch
-    if (hoursUntilLaunch > 0 && hoursUntilLaunch <= 1) score += 40; // Very close
-    else if (hoursUntilLaunch <= 4) score += 30; // Close
-    else if (hoursUntilLaunch <= 24) score += 20; // Today
+    if (hoursUntilLaunch > 0 && hoursUntilLaunch <= 1)
+      score += 40; // Very close
+    else if (hoursUntilLaunch <= 4)
+      score += 30; // Close
+    else if (hoursUntilLaunch <= 24)
+      score += 20; // Today
     else score += 10; // Future
 
     // Score based on data completeness

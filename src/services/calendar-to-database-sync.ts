@@ -34,7 +34,8 @@ export class CalendarToDatabaseSyncService {
 
   static getInstance(): CalendarToDatabaseSyncService {
     if (!CalendarToDatabaseSyncService.instance) {
-      CalendarToDatabaseSyncService.instance = new CalendarToDatabaseSyncService();
+      CalendarToDatabaseSyncService.instance =
+        new CalendarToDatabaseSyncService();
     }
     return CalendarToDatabaseSyncService.instance;
   }
@@ -44,7 +45,11 @@ export class CalendarToDatabaseSyncService {
    */
   private async ensureSystemUser(): Promise<void> {
     try {
-      const existingUser = await db.select().from(user).where(eq(user.id, "system")).limit(1);
+      const existingUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, "system"))
+        .limit(1);
 
       if (existingUser.length === 0) {
         await db.insert(user).values({
@@ -114,7 +119,10 @@ export class CalendarToDatabaseSyncService {
       }
 
       // 2. Filter qualifying launches (within time window)
-      const qualifyingLaunches = this.filterQualifyingLaunches(calendarEntries, timeWindowHours);
+      const qualifyingLaunches = this.filterQualifyingLaunches(
+        calendarEntries,
+        timeWindowHours
+      );
       result.processed = qualifyingLaunches.length;
 
       console.info(
@@ -144,7 +152,8 @@ export class CalendarToDatabaseSyncService {
       );
     } catch (error) {
       result.success = false;
-      const errorMsg = error instanceof Error ? error.message : "Unknown sync error";
+      const errorMsg =
+        error instanceof Error ? error.message : "Unknown sync error";
       result.errors.push(errorMsg);
       console.error("❌ Calendar sync failed:", errorMsg);
     } finally {
@@ -161,7 +170,9 @@ export class CalendarToDatabaseSyncService {
     try {
       const response = await fetch("http://localhost:3008/api/mexc/calendar");
       if (!response.ok) {
-        throw new Error(`Calendar API error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Calendar API error: ${response.status} ${response.statusText}`
+        );
       }
 
       const result = await response.json();
@@ -197,9 +208,14 @@ export class CalendarToDatabaseSyncService {
         const isUpcoming = launchTime > now;
         const isWithinWindow = launchTime < now + timeWindow;
 
-        return isUpcoming && isWithinWindow && entry.vcoinId && entry.vcoinNameFull;
+        return (
+          isUpcoming && isWithinWindow && entry.vcoinId && entry.vcoinNameFull
+        );
       } catch (_error) {
-        console.warn(`Invalid launch time for ${entry.vcoinId}:`, entry.firstOpenTime);
+        console.warn(
+          `Invalid launch time for ${entry.vcoinId}:`,
+          entry.firstOpenTime
+        );
         return false;
       }
     });
@@ -220,7 +236,12 @@ export class CalendarToDatabaseSyncService {
     const existingTarget = await db
       .select()
       .from(snipeTargets)
-      .where(and(eq(snipeTargets.vcoinId, launch.vcoinId), eq(snipeTargets.userId, userId)))
+      .where(
+        and(
+          eq(snipeTargets.vcoinId, launch.vcoinId),
+          eq(snipeTargets.userId, userId)
+        )
+      )
       .limit(1);
 
     if (existingTarget.length > 0) {
@@ -239,7 +260,9 @@ export class CalendarToDatabaseSyncService {
           .where(eq(snipeTargets.id, existingTarget[0].id));
       }
       result.updated++;
-      console.debug(`Updated target for ${launch.vcoinNameFull} (${launch.vcoinId})`);
+      console.debug(
+        `Updated target for ${launch.vcoinNameFull} (${launch.vcoinId})`
+      );
     } else {
       // Create new target
       if (!dryRun) {
@@ -257,21 +280,31 @@ export class CalendarToDatabaseSyncService {
           });
           console.debug(`✅ Target inserted successfully:`, insertResult);
         } catch (insertError) {
-          console.error(`❌ Database insert failed for ${launch.vcoinId}:`, insertError);
+          console.error(
+            `❌ Database insert failed for ${launch.vcoinId}:`,
+            insertError
+          );
           throw insertError;
         }
       }
       result.created++;
-      console.debug(`Created target for ${launch.vcoinNameFull} (${launch.vcoinId})`);
+      console.debug(
+        `Created target for ${launch.vcoinNameFull} (${launch.vcoinId})`
+      );
     }
   }
 
   /**
    * Cleanup old targets that are past the time window
    */
-  private async cleanupOldTargets(timeWindowHours: number, result: SyncResult): Promise<void> {
+  private async cleanupOldTargets(
+    timeWindowHours: number,
+    result: SyncResult
+  ): Promise<void> {
     try {
-      const cutoffTime = new Date(Date.now() - timeWindowHours * 60 * 60 * 1000);
+      const cutoffTime = new Date(
+        Date.now() - timeWindowHours * 60 * 60 * 1000
+      );
 
       const _cleanupResult = await db
         .delete(snipeTargets)
@@ -282,7 +315,9 @@ export class CalendarToDatabaseSyncService {
           )
         );
 
-      console.info(`🧹 Cleaned up old targets (cutoff: ${cutoffTime.toISOString()})`);
+      console.info(
+        `🧹 Cleaned up old targets (cutoff: ${cutoffTime.toISOString()})`
+      );
     } catch (error) {
       console.error("Failed to cleanup old targets:", error);
       result.errors.push(

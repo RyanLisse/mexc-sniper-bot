@@ -47,7 +47,12 @@ export class MarketConditionsManager {
         warn: (message: string, context?: any) =>
           console.warn("[market-conditions-manager]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[market-conditions-manager]", message, context || "", error || ""),
+          console.error(
+            "[market-conditions-manager]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[market-conditions-manager]", message, context || ""),
       };
@@ -75,13 +80,17 @@ export class MarketConditionsManager {
       ...config.initialMarketConditions,
     };
 
-    console.info("[MarketConditionsManager] Initialized with market conditions");
+    console.info(
+      "[MarketConditionsManager] Initialized with market conditions"
+    );
   }
 
   /**
    * Update market conditions with validation
    */
-  async updateMarketConditions(conditions: Partial<MarketConditions>): Promise<void> {
+  async updateMarketConditions(
+    conditions: Partial<MarketConditions>
+  ): Promise<void> {
     const updatedConditions = {
       ...this.marketConditions,
       ...conditions,
@@ -91,9 +100,14 @@ export class MarketConditionsManager {
     try {
       // Validate the updated market conditions
       this.marketConditions = validateMarketConditions(updatedConditions);
-      console.info("[MarketConditionsManager] Market conditions updated and validated");
+      console.info(
+        "[MarketConditionsManager] Market conditions updated and validated"
+      );
     } catch (validationError) {
-      console.error("[MarketConditionsManager] Invalid market conditions:", validationError);
+      console.error(
+        "[MarketConditionsManager] Invalid market conditions:",
+        validationError
+      );
       throw new Error(`Invalid market conditions: ${validationError}`);
     }
 
@@ -119,7 +133,10 @@ export class MarketConditionsManager {
         `[MarketConditionsManager] Position updated and validated for ${validatedPosition.symbol}`
       );
     } catch (validationError) {
-      console.error("[MarketConditionsManager] Invalid position profile:", validationError);
+      console.error(
+        "[MarketConditionsManager] Invalid position profile:",
+        validationError
+      );
       throw new Error(`Invalid position profile: ${validationError}`);
     }
 
@@ -138,7 +155,9 @@ export class MarketConditionsManager {
    */
   removePosition(symbol: string): void {
     this.positions.delete(symbol);
-    console.info(`[MarketConditionsManager] Removed position tracking for ${symbol}`);
+    console.info(
+      `[MarketConditionsManager] Removed position tracking for ${symbol}`
+    );
   }
 
   /**
@@ -167,15 +186,22 @@ export class MarketConditionsManager {
     const diversificationScore = Math.max(
       0,
       100 -
-        (positions.length > 0 ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100 : 0)
+        (positions.length > 0
+          ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100
+          : 0)
     );
 
     // Calculate concentration risk (lower is better)
     const concentrationRisk =
-      positions.length > 0 ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100 : 0;
+      positions.length > 0
+        ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100
+        : 0;
 
     // Calculate portfolio VaR
-    const portfolioVar = positions.reduce((sum, pos) => sum + pos.valueAtRisk, 0);
+    const portfolioVar = positions.reduce(
+      (sum, pos) => sum + pos.valueAtRisk,
+      0
+    );
 
     return {
       totalValue,
@@ -187,11 +213,27 @@ export class MarketConditionsManager {
       expectedShortfall: portfolioVar * 1.3,
       sharpeRatio: 0, // Would need return data to calculate
       beta: 1.0, // Placeholder beta value
-      averageCorrelation: positions.length > 0 ? positions.reduce((sum, pos) => sum + pos.correlationScore, 0) / positions.length : 0,
-      totalUnrealizedPnL: positions.reduce((sum, pos) => sum + pos.unrealizedPnL, 0),
-      maxSinglePositionPercent: positions.length > 0 ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100 : 0,
-      currentDrawdown: positions.reduce((max, pos) => Math.max(max, pos.maxDrawdown), 0),
-      maxDrawdownRisk: positions.reduce((max, pos) => Math.max(max, pos.maxDrawdown), 0),
+      averageCorrelation:
+        positions.length > 0
+          ? positions.reduce((sum, pos) => sum + pos.correlationScore, 0) /
+            positions.length
+          : 0,
+      totalUnrealizedPnL: positions.reduce(
+        (sum, pos) => sum + pos.unrealizedPnL,
+        0
+      ),
+      maxSinglePositionPercent:
+        positions.length > 0
+          ? (Math.max(...positions.map((p) => p.size)) / totalValue) * 100
+          : 0,
+      currentDrawdown: positions.reduce(
+        (max, pos) => Math.max(max, pos.maxDrawdown),
+        0
+      ),
+      maxDrawdownRisk: positions.reduce(
+        (max, pos) => Math.max(max, pos.maxDrawdown),
+        0
+      ),
       liquidityRisk: Math.max(0, 100 - this.marketConditions.liquidityIndex),
       timestamp: new Date().toISOString(),
     };
@@ -252,7 +294,10 @@ export class MarketConditionsManager {
 
       this.lastRiskUpdate = Date.now();
     } catch (error) {
-      console.error("[MarketConditionsManager] Portfolio metrics update failed:", error);
+      console.error(
+        "[MarketConditionsManager] Portfolio metrics update failed:",
+        error
+      );
     }
   }
 
@@ -284,7 +329,10 @@ export class MarketConditionsManager {
           const newPosition: PositionRiskProfile = {
             symbol: pos.symbol,
             size: pos.value,
-            exposure: totalPortfolioValue > 0 ? (pos.value / totalPortfolioValue) * 100 : 100,
+            exposure:
+              totalPortfolioValue > 0
+                ? (pos.value / totalPortfolioValue) * 100
+                : 100,
             leverage: 1,
             unrealizedPnL: 0,
             valueAtRisk: pos.value * 0.05, // 5% VaR estimate
@@ -305,7 +353,10 @@ export class MarketConditionsManager {
         `[MarketConditionsManager] Updated ${portfolioPositions.length} portfolio positions`
       );
     } catch (error) {
-      console.error("[MarketConditionsManager] Portfolio positions update failed:", error);
+      console.error(
+        "[MarketConditionsManager] Portfolio positions update failed:",
+        error
+      );
     }
   }
 
@@ -313,7 +364,10 @@ export class MarketConditionsManager {
    * Calculate total portfolio value
    */
   calculatePortfolioValue(): number {
-    return Array.from(this.positions.values()).reduce((total, pos) => total + pos.size, 0);
+    return Array.from(this.positions.values()).reduce(
+      (total, pos) => total + pos.size,
+      0
+    );
   }
 
   /**
@@ -389,14 +443,16 @@ export class MarketConditionsManager {
           100,
           Math.max(
             0,
-            this.marketConditions.volatilityIndex * (1 + marketStressEvent.volatilityIncrease / 100)
+            this.marketConditions.volatilityIndex *
+              (1 + marketStressEvent.volatilityIncrease / 100)
           )
         ),
         liquidityIndex: Math.min(
           100,
           Math.max(
             0,
-            this.marketConditions.liquidityIndex * (1 - marketStressEvent.liquidityDecrease / 100)
+            this.marketConditions.liquidityIndex *
+              (1 - marketStressEvent.liquidityDecrease / 100)
           )
         ),
         correlationRisk: marketStressEvent.correlationSpike,
@@ -407,7 +463,10 @@ export class MarketConditionsManager {
         const position = this.positions.get(pos.symbol);
         if (position) {
           // Increase correlation during stress events
-          position.correlationScore = Math.min(0.95, marketStressEvent.correlationSpike);
+          position.correlationScore = Math.min(
+            0.95,
+            marketStressEvent.correlationSpike
+          );
         }
       }
 
@@ -415,7 +474,10 @@ export class MarketConditionsManager {
         `[MarketConditionsManager] Correlation matrix updated for stress event: ${marketStressEvent.marketDirection}`
       );
     } catch (error) {
-      console.error("[MarketConditionsManager] Correlation matrix update failed:", error);
+      console.error(
+        "[MarketConditionsManager] Correlation matrix update failed:",
+        error
+      );
     }
   }
 
@@ -438,9 +500,12 @@ export class MarketConditionsManager {
    */
   isEmergencyMarketConditions(): boolean {
     return (
-      this.marketConditions.volatilityIndex > this.config.riskConfig.emergencyVolatilityThreshold ||
-      this.marketConditions.liquidityIndex < this.config.riskConfig.emergencyLiquidityThreshold ||
-      this.marketConditions.correlationRisk > this.config.riskConfig.emergencyCorrelationThreshold
+      this.marketConditions.volatilityIndex >
+        this.config.riskConfig.emergencyVolatilityThreshold ||
+      this.marketConditions.liquidityIndex <
+        this.config.riskConfig.emergencyLiquidityThreshold ||
+      this.marketConditions.correlationRisk >
+        this.config.riskConfig.emergencyCorrelationThreshold
     );
   }
 
@@ -457,12 +522,14 @@ export class MarketConditionsManager {
     const positions = Array.from(this.positions.values());
     const totalValue = this.calculatePortfolioValue();
     const positionSizes = positions.map((p) => p.size);
-    const largestPosition = positionSizes.length > 0 ? Math.max(...positionSizes) : 0;
+    const largestPosition =
+      positionSizes.length > 0 ? Math.max(...positionSizes) : 0;
 
     return {
       positionCount: positions.length,
       totalValue,
-      averagePositionSize: positions.length > 0 ? totalValue / positions.length : 0,
+      averagePositionSize:
+        positions.length > 0 ? totalValue / positions.length : 0,
       largestPosition,
       concentration: totalValue > 0 ? (largestPosition / totalValue) * 100 : 0,
     };

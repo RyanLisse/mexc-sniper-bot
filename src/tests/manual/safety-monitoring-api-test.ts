@@ -25,7 +25,12 @@ class SafetyMonitoringAPITester {
     warn: (message: string, context?: any) =>
       console.warn("[safety-monitoring-api-test]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[safety-monitoring-api-test]", message, context || "", error || ""),
+      console.error(
+        "[safety-monitoring-api-test]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[safety-monitoring-api-test]", message, context || ""),
   };
@@ -76,7 +81,10 @@ class SafetyMonitoringAPITester {
     }
   }
 
-  private async testGetEndpoint(action: string, description: string): Promise<void> {
+  private async testGetEndpoint(
+    action: string,
+    description: string
+  ): Promise<void> {
     const startTime = Date.now();
 
     try {
@@ -317,7 +325,11 @@ class SafetyMonitoringAPITester {
         action,
         status: result.success ? "PASS" : "FAIL",
         responseTime,
-        statusCode: result.success ? 200 : result.error?.includes("already") ? 409 : 500,
+        statusCode: result.success
+          ? 200
+          : result.error?.includes("already")
+            ? 409
+            : 500,
         details: (result.data || result.error) as Record<string, unknown>,
       });
 
@@ -348,7 +360,10 @@ class SafetyMonitoringAPITester {
       switch (action) {
         case "start_monitoring": {
           if (this.safetyService.getMonitoringStatus()) {
-            return { success: false, error: "Safety monitoring is already active" };
+            return {
+              success: false,
+              error: "Safety monitoring is already active",
+            };
           }
 
           await this.safetyService.startMonitoring();
@@ -364,7 +379,10 @@ class SafetyMonitoringAPITester {
 
         case "stop_monitoring": {
           if (!this.safetyService.getMonitoringStatus()) {
-            return { success: false, error: "Safety monitoring is not currently active" };
+            return {
+              success: false,
+              error: "Safety monitoring is not currently active",
+            };
           }
 
           this.safetyService.stopMonitoring();
@@ -385,7 +403,9 @@ class SafetyMonitoringAPITester {
             success: true,
             data: {
               message: "Configuration updated successfully",
-              updatedFields: Object.keys(configuration as Record<string, unknown>),
+              updatedFields: Object.keys(
+                configuration as Record<string, unknown>
+              ),
             },
           };
         }
@@ -400,14 +420,18 @@ class SafetyMonitoringAPITester {
             success: true,
             data: {
               message: "Thresholds updated successfully",
-              updatedThresholds: Object.keys(thresholds as Record<string, unknown>),
+              updatedThresholds: Object.keys(
+                thresholds as Record<string, unknown>
+              ),
             },
           };
         }
 
         case "emergency_response": {
           const { reason } = body;
-          const actions = await this.safetyService.triggerEmergencyResponse(reason as string);
+          const actions = await this.safetyService.triggerEmergencyResponse(
+            reason as string
+          );
           return {
             success: true,
             data: {
@@ -420,7 +444,9 @@ class SafetyMonitoringAPITester {
 
         case "acknowledge_alert": {
           const { alertId } = body;
-          const acknowledged = this.safetyService.acknowledgeAlert(alertId as string);
+          const acknowledged = this.safetyService.acknowledgeAlert(
+            alertId as string
+          );
           if (!acknowledged) {
             return { success: false, error: "Alert not found" };
           }
@@ -605,11 +631,16 @@ class SafetyMonitoringAPITester {
     const totalTests = this.results.length;
     const passedTests = this.results.filter((r) => r.status === "PASS").length;
     const failedTests = this.results.filter((r) => r.status === "FAIL").length;
-    const avgResponseTime = this.results.reduce((sum, r) => sum + r.responseTime, 0) / totalTests;
+    const avgResponseTime =
+      this.results.reduce((sum, r) => sum + r.responseTime, 0) / totalTests;
 
     console.info(`Total Tests: ${totalTests}`);
-    console.info(`Passed: ${passedTests} (${Math.round((passedTests / totalTests) * 100)}%)`);
-    console.info(`Failed: ${failedTests} (${Math.round((failedTests / totalTests) * 100)}%)`);
+    console.info(
+      `Passed: ${passedTests} (${Math.round((passedTests / totalTests) * 100)}%)`
+    );
+    console.info(
+      `Failed: ${failedTests} (${Math.round((failedTests / totalTests) * 100)}%)`
+    );
     console.info(`Average Response Time: ${Math.round(avgResponseTime)}ms`);
 
     // Performance analysis

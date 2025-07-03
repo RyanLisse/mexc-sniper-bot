@@ -2,7 +2,10 @@ import type {
   PatternAnalysisResult as EngineResult,
   PatternMatch,
 } from "@/src/core/pattern-detection/interfaces";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
 import {
   type PatternWorkflowRequest,
   patternStrategyOrchestrator,
@@ -52,7 +55,12 @@ export class PatternAnalysisWorkflow {
     warn: (message: string, context?: any) =>
       console.warn("[pattern-analysis-workflow]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[pattern-analysis-workflow]", message, context || "", error || ""),
+      console.error(
+        "[pattern-analysis-workflow]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[pattern-analysis-workflow]", message, context || ""),
   };
@@ -75,7 +83,9 @@ export class PatternAnalysisWorkflow {
       enableAdvanceDetection?: boolean;
     }
   ): Promise<PatternAnalysisResult> {
-    console.info(`[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`);
+    console.info(
+      `[PatternAnalysisWorkflow] Enhanced pattern analysis for ${analysisType}`
+    );
 
     try {
       // Use the centralized pattern strategy orchestrator
@@ -91,7 +101,9 @@ export class PatternAnalysisWorkflow {
       };
 
       const workflowResult =
-        await patternStrategyOrchestrator.executePatternWorkflow(workflowRequest);
+        await patternStrategyOrchestrator.executePatternWorkflow(
+          workflowRequest
+        );
 
       if (!workflowResult.success) {
         throw new Error(workflowResult.error || "Pattern workflow failed");
@@ -99,10 +111,15 @@ export class PatternAnalysisWorkflow {
 
       // Transform engine results to workflow format
       const engineResult = workflowResult.results.patternAnalysis;
-      const strategicRecommendations = workflowResult.results.strategicRecommendations;
+      const strategicRecommendations =
+        workflowResult.results.strategicRecommendations;
 
-      const actionablePatterns = this.transformEngineMatches(engineResult?.matches || []);
-      const patternSignals = this.extractSignalsFromMatches(engineResult?.matches || []);
+      const actionablePatterns = this.transformEngineMatches(
+        engineResult?.matches || []
+      );
+      const patternSignals = this.extractSignalsFromMatches(
+        engineResult?.matches || []
+      );
       const confidence = engineResult?.summary.averageConfidence || 0;
       const recommendation = this.generateEnhancedRecommendation(
         actionablePatterns,
@@ -125,13 +142,19 @@ export class PatternAnalysisWorkflow {
         strategicRecommendations,
       };
     } catch (error) {
-      console.error("[PatternAnalysisWorkflow] Enhanced analysis failed:", error);
+      console.error(
+        "[PatternAnalysisWorkflow] Enhanced analysis failed:",
+        error
+      );
 
       // Fallback to legacy analysis
       return await this.analyzePatternsLegacy(
         {
           content: `Analysis failed: ${error}`,
-          metadata: { agent: "pattern-analysis-workflow", timestamp: new Date().toISOString() },
+          metadata: {
+            agent: "pattern-analysis-workflow",
+            timestamp: new Date().toISOString(),
+          },
         },
         [],
         analysisType
@@ -148,7 +171,11 @@ export class PatternAnalysisWorkflow {
     _symbols?: string[],
     analysisType: "discovery" | "monitoring" | "execution" = "discovery"
   ): Promise<PatternAnalysisResult> {
-    return await this.analyzePatternsLegacy(patternAnalysis, _symbols, analysisType);
+    return await this.analyzePatternsLegacy(
+      patternAnalysis,
+      _symbols,
+      analysisType
+    );
   }
 
   private async analyzePatternsLegacy(
@@ -156,11 +183,19 @@ export class PatternAnalysisWorkflow {
     _symbols?: string[],
     analysisType: "discovery" | "monitoring" | "execution" = "discovery"
   ): Promise<PatternAnalysisResult> {
-    console.info(`[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`);
+    console.info(
+      `[PatternAnalysisWorkflow] Legacy pattern analysis for ${analysisType}`
+    );
 
-    const actionablePatterns = this.extractActionablePatterns(patternAnalysis, analysisType);
+    const actionablePatterns = this.extractActionablePatterns(
+      patternAnalysis,
+      analysisType
+    );
     const patternSignals = this.extractPatternSignals(patternAnalysis);
-    const confidence = this.calculatePatternConfidence(actionablePatterns, patternSignals);
+    const confidence = this.calculatePatternConfidence(
+      actionablePatterns,
+      patternSignals
+    );
     const recommendation = this.generatePatternRecommendation(
       actionablePatterns,
       patternSignals,
@@ -213,7 +248,10 @@ export class PatternAnalysisWorkflow {
     }
 
     // Price consolidation pattern
-    if (/price\s+consolidation/i.test(content) || /sideways\s+movement/i.test(content)) {
+    if (
+      /price\s+consolidation/i.test(content) ||
+      /sideways\s+movement/i.test(content)
+    ) {
       patterns.push({
         type: "price_consolidation",
         confidence: 75,
@@ -224,7 +262,10 @@ export class PatternAnalysisWorkflow {
     }
 
     // Breakout preparation pattern
-    if (/breakout\s+potential/i.test(content) || /accumulation\s+phase/i.test(content)) {
+    if (
+      /breakout\s+potential/i.test(content) ||
+      /accumulation\s+phase/i.test(content)
+    ) {
       patterns.push({
         type: "breakout_preparation",
         confidence: 80,
@@ -235,7 +276,10 @@ export class PatternAnalysisWorkflow {
     }
 
     // Momentum building pattern
-    if (/momentum\s+building/i.test(content) || /increasing\s+interest/i.test(content)) {
+    if (
+      /momentum\s+building/i.test(content) ||
+      /increasing\s+interest/i.test(content)
+    ) {
       patterns.push({
         type: "momentum_building",
         confidence: 70,
@@ -248,7 +292,9 @@ export class PatternAnalysisWorkflow {
     // Early entry pattern
     if (/early\s+entry/i.test(content) || /pre.{0,10}launch/i.test(content)) {
       const confidenceMatch = content.match(/confidence[:\s]*(\d+)/i);
-      const confidence = confidenceMatch ? Number.parseInt(confidenceMatch[1]) : 65;
+      const confidence = confidenceMatch
+        ? Number.parseInt(confidenceMatch[1])
+        : 65;
 
       patterns.push({
         type: "early_entry",
@@ -391,7 +437,11 @@ export class PatternAnalysisWorkflow {
     // Weight patterns by significance
     for (const pattern of patterns) {
       const weight =
-        pattern.significance === "high" ? 3 : pattern.significance === "medium" ? 2 : 1;
+        pattern.significance === "high"
+          ? 3
+          : pattern.significance === "medium"
+            ? 2
+            : 1;
       totalConfidence += pattern.confidence * weight;
       weightedCount += weight;
     }
@@ -408,7 +458,9 @@ export class PatternAnalysisWorkflow {
     const baseConfidence = totalConfidence / weightedCount;
 
     // Bonus for multiple high-significance patterns
-    const highSigPatterns = patterns.filter((p) => p.significance === "high").length;
+    const highSigPatterns = patterns.filter(
+      (p) => p.significance === "high"
+    ).length;
     const bonus = Math.min(highSigPatterns * 5, 15);
 
     return Math.min(baseConfidence + bonus, 95);
@@ -428,7 +480,9 @@ export class PatternAnalysisWorkflow {
     const highSigPatterns = patterns.filter((p) => p.significance === "high");
     const readyStatePattern = patterns.find((p) => p.type === "ready_state");
     const riskPatterns = patterns.filter((p) => p.type === "risk_warning");
-    const bullishSignals = signals.filter((s) => s.direction === "bullish" && s.strength >= 70);
+    const bullishSignals = signals.filter(
+      (s) => s.direction === "bullish" && s.strength >= 70
+    );
 
     // Determine action
     let action: "execute" | "prepare" | "monitor" | "skip" = "skip";
@@ -446,7 +500,11 @@ export class PatternAnalysisWorkflow {
       priority = "high";
       timing = "Immediate";
       reasoning = `Ready state pattern confirmed with ${confidence}% confidence`;
-    } else if (highSigPatterns.length >= 2 && bullishSignals.length >= 1 && confidence >= 75) {
+    } else if (
+      highSigPatterns.length >= 2 &&
+      bullishSignals.length >= 1 &&
+      confidence >= 75
+    ) {
       action = "execute";
       priority = "high";
       timing = "Within 1 hour";
@@ -518,7 +576,10 @@ export class PatternAnalysisWorkflow {
       }
 
       // Advance detection signal
-      if (match.patternType === "launch_sequence" && match.advanceNoticeHours >= 3.5) {
+      if (
+        match.patternType === "launch_sequence" &&
+        match.advanceNoticeHours >= 3.5
+      ) {
         signals.push({
           name: "advance_opportunity_signal",
           strength: Math.min(match.advanceNoticeHours * 10, 95),
@@ -583,7 +644,12 @@ export class PatternAnalysisWorkflow {
     }
 
     // Fallback to legacy recommendation logic
-    return this.generatePatternRecommendation(patterns, [], confidence, analysisType);
+    return this.generatePatternRecommendation(
+      patterns,
+      [],
+      confidence,
+      analysisType
+    );
   }
 
   // Helper methods for transformation
@@ -597,9 +663,12 @@ export class PatternAnalysisWorkflow {
   private extractIndicators(match: PatternMatch): string[] {
     const indicators: string[] = [];
 
-    if (match.indicators.sts !== undefined) indicators.push(`sts:${match.indicators.sts}`);
-    if (match.indicators.st !== undefined) indicators.push(`st:${match.indicators.st}`);
-    if (match.indicators.tt !== undefined) indicators.push(`tt:${match.indicators.tt}`);
+    if (match.indicators.sts !== undefined)
+      indicators.push(`sts:${match.indicators.sts}`);
+    if (match.indicators.st !== undefined)
+      indicators.push(`st:${match.indicators.st}`);
+    if (match.indicators.tt !== undefined)
+      indicators.push(`tt:${match.indicators.tt}`);
     if (match.advanceNoticeHours > 0)
       indicators.push(`advance:${match.advanceNoticeHours.toFixed(1)}h`);
 
@@ -607,13 +676,16 @@ export class PatternAnalysisWorkflow {
   }
 
   private mapSignificance(match: PatternMatch): "high" | "medium" | "low" {
-    if (match.patternType === "ready_state" && match.confidence >= 85) return "high";
+    if (match.patternType === "ready_state" && match.confidence >= 85)
+      return "high";
     if (match.confidence >= 80) return "high";
     if (match.confidence >= 60) return "medium";
     return "low";
   }
 
-  private mapActionFromStrategic(action: string): "execute" | "prepare" | "monitor" | "skip" {
+  private mapActionFromStrategic(
+    action: string
+  ): "execute" | "prepare" | "monitor" | "skip" {
     switch (action) {
       case "immediate_trade":
       case "immediate_action":
@@ -628,7 +700,9 @@ export class PatternAnalysisWorkflow {
     }
   }
 
-  private mapPriorityFromConfidence(confidence: number): "high" | "medium" | "low" {
+  private mapPriorityFromConfidence(
+    confidence: number
+  ): "high" | "medium" | "low" {
     if (confidence >= 80) return "high";
     if (confidence >= 60) return "medium";
     return "low";
@@ -640,7 +714,9 @@ export class PatternAnalysisWorkflow {
     if (timing.optimalEntry) {
       const entryTime = new Date(timing.optimalEntry);
       const now = new Date();
-      const diffMinutes = Math.round((entryTime.getTime() - now.getTime()) / (1000 * 60));
+      const diffMinutes = Math.round(
+        (entryTime.getTime() - now.getTime()) / (1000 * 60)
+      );
 
       if (diffMinutes <= 5) return "Immediate";
       if (diffMinutes <= 60) return `${diffMinutes} minutes`;

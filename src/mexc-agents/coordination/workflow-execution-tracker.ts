@@ -1,5 +1,8 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type { WorkflowContext, WorkflowExecutionResult } from "./workflow-engine-types";
+import type {
+  WorkflowContext,
+  WorkflowExecutionResult,
+} from "./workflow-engine-types";
 
 /**
  * Workflow execution tracking, metadata generation, and history management
@@ -32,9 +35,15 @@ export class WorkflowExecutionTracker {
   } {
     const stepResults = Array.from(context.stepResults.values());
     const agentsUsed = [...new Set(stepResults.map((step) => step.agentId))];
-    const stepsExecuted = stepResults.filter((step) => step.status === "completed").length;
-    const stepsSkipped = stepResults.filter((step) => step.status === "skipped").length;
-    const stepsFailed = stepResults.filter((step) => step.status === "failed").length;
+    const stepsExecuted = stepResults.filter(
+      (step) => step.status === "completed"
+    ).length;
+    const stepsSkipped = stepResults.filter(
+      (step) => step.status === "skipped"
+    ).length;
+    const stepsFailed = stepResults.filter(
+      (step) => step.status === "failed"
+    ).length;
     const retriesPerformed = stepResults.reduce(
       (sum, step) => sum + Math.max(0, step.attempt - 1),
       0
@@ -67,7 +76,9 @@ export class WorkflowExecutionTracker {
     // Determine final output from last successful step
     const lastSuccessfulStep = finalStepResults
       .filter((step) => step.status === "completed")
-      .sort((a, b) => (b.endTime?.getTime() || 0) - (a.endTime?.getTime() || 0))[0];
+      .sort(
+        (a, b) => (b.endTime?.getTime() || 0) - (a.endTime?.getTime() || 0)
+      )[0];
 
     return {
       workflowId,
@@ -90,7 +101,10 @@ export class WorkflowExecutionTracker {
 
     // Keep only the most recent entries
     if (this.executionHistory.length > this.maxHistorySize) {
-      this.executionHistory.splice(0, this.executionHistory.length - this.maxHistorySize);
+      this.executionHistory.splice(
+        0,
+        this.executionHistory.length - this.maxHistorySize
+      );
     }
 
     this.logger.debug(
@@ -102,7 +116,9 @@ export class WorkflowExecutionTracker {
    * Get execution history
    */
   getExecutionHistory(limit?: number): WorkflowExecutionResult[] {
-    return limit ? this.executionHistory.slice(-limit) : [...this.executionHistory];
+    return limit
+      ? this.executionHistory.slice(-limit)
+      : [...this.executionHistory];
   }
 
   /**
@@ -116,10 +132,16 @@ export class WorkflowExecutionTracker {
     successRate: number;
   } {
     const total = this.executionHistory.length;
-    const completed = this.executionHistory.filter((r) => r.status === "completed").length;
-    const failed = this.executionHistory.filter((r) => r.status === "failed").length;
+    const completed = this.executionHistory.filter(
+      (r) => r.status === "completed"
+    ).length;
+    const failed = this.executionHistory.filter(
+      (r) => r.status === "failed"
+    ).length;
     const avgDuration =
-      total > 0 ? this.executionHistory.reduce((sum, r) => sum + r.duration, 0) / total : 0;
+      total > 0
+        ? this.executionHistory.reduce((sum, r) => sum + r.duration, 0) / total
+        : 0;
     const successRate = total > 0 ? (completed / total) * 100 : 0;
 
     return {
@@ -138,7 +160,9 @@ export class WorkflowExecutionTracker {
     const previousCount = this.executionHistory.length;
     this.executionHistory = [];
 
-    this.logger.info(`[ExecutionTracker] Cleared ${previousCount} workflow execution records`);
+    this.logger.info(
+      `[ExecutionTracker] Cleared ${previousCount} workflow execution records`
+    );
   }
 
   /**
@@ -149,7 +173,10 @@ export class WorkflowExecutionTracker {
 
     // Trim current history if needed
     if (this.executionHistory.length > this.maxHistorySize) {
-      this.executionHistory.splice(0, this.executionHistory.length - this.maxHistorySize);
+      this.executionHistory.splice(
+        0,
+        this.executionHistory.length - this.maxHistorySize
+      );
     }
   }
 
@@ -167,7 +194,12 @@ export class WorkflowExecutionTracker {
   /**
    * Get recent executions for a specific workflow
    */
-  getRecentExecutionsForWorkflow(workflowId: string, limit = 10): WorkflowExecutionResult[] {
-    return this.executionHistory.filter((result) => result.workflowId === workflowId).slice(-limit);
+  getRecentExecutionsForWorkflow(
+    workflowId: string,
+    limit = 10
+  ): WorkflowExecutionResult[] {
+    return this.executionHistory
+      .filter((result) => result.workflowId === workflowId)
+      .slice(-limit);
   }
 }

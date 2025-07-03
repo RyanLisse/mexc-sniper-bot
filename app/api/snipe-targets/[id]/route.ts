@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schema";
+import { snipeTargets } from "@/src/db/schemas/trading";
 
 export async function PATCH(
   request: NextRequest,
@@ -12,7 +12,7 @@ export async function PATCH(
     const body = await request.json();
     const targetId = parseInt(resolvedParams.id);
 
-    if (isNaN(targetId)) {
+    if (Number.isNaN(targetId)) {
       return NextResponse.json(
         {
           success: false,
@@ -48,7 +48,8 @@ export async function PATCH(
       }
     }
 
-    const result = await db.update(snipeTargets)
+    const result = await db
+      .update(snipeTargets)
       .set(updateData)
       .where(eq(snipeTargets.id, targetId))
       .returning();
@@ -81,14 +82,14 @@ export async function PATCH(
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const resolvedParams = await params;
     const targetId = parseInt(resolvedParams.id);
 
-    if (isNaN(targetId)) {
+    if (Number.isNaN(targetId)) {
       return NextResponse.json(
         {
           success: false,
@@ -98,7 +99,8 @@ export async function GET(
       );
     }
 
-    const result = await db.select()
+    const result = await db
+      .select()
       .from(snipeTargets)
       .where(eq(snipeTargets.id, targetId))
       .limit(1);
@@ -130,14 +132,14 @@ export async function GET(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const resolvedParams = await params;
     const targetId = parseInt(resolvedParams.id);
 
-    if (isNaN(targetId)) {
+    if (Number.isNaN(targetId)) {
       return NextResponse.json(
         {
           success: false,
@@ -147,7 +149,8 @@ export async function DELETE(
       );
     }
 
-    const result = await db.delete(snipeTargets)
+    const result = await db
+      .delete(snipeTargets)
       .where(eq(snipeTargets.id, targetId))
       .returning();
 

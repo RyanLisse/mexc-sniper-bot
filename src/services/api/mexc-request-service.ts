@@ -5,7 +5,7 @@
  * Extracted from mexc-api-client.ts for better modularity.
  */
 
-import * as crypto from "crypto";
+import * as crypto from "node:crypto";
 import type {
   MexcServiceResponse,
   UnifiedMexcConfig,
@@ -142,11 +142,15 @@ export class MexcRequestService {
       clearTimeout(timeoutId); // Clear timeout on error
       if (error instanceof Error) {
         if (error.name === "AbortError") {
-          throw new Error(`Request timeout after ${timeout}ms for ${requestConfig.endpoint}`);
+          throw new Error(
+            `Request timeout after ${timeout}ms for ${requestConfig.endpoint}`
+          );
         }
         throw error;
       }
-      throw new Error(`Unknown error during request to ${requestConfig.endpoint}`);
+      throw new Error(
+        `Unknown error during request to ${requestConfig.endpoint}`
+      );
     }
   }
 
@@ -236,7 +240,8 @@ export class MexcRequestService {
     }
 
     // Use endpoint-specific timeout if available
-    const endpointTimeout = this.timeoutConfig.endpointTimeouts[requestConfig.endpoint];
+    const endpointTimeout =
+      this.timeoutConfig.endpointTimeouts[requestConfig.endpoint];
     if (endpointTimeout) {
       return endpointTimeout;
     }
@@ -308,7 +313,9 @@ export class MexcRequestService {
   private estimateRequestSize(requestConfig: ApiRequestConfig): number {
     const url = this.buildUrl(requestConfig);
     const headers = JSON.stringify({ "Content-Type": "application/json" });
-    const body = requestConfig.params ? JSON.stringify(requestConfig.params) : "";
+    const body = requestConfig.params
+      ? JSON.stringify(requestConfig.params)
+      : "";
 
     return Buffer.byteLength(url + headers + body, "utf8");
   }

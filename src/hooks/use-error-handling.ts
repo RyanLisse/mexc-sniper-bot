@@ -54,7 +54,10 @@ interface UseErrorHandlingReturn {
   errorState: ErrorState;
 
   // Error handling methods
-  handleError: (error: unknown, context?: Partial<StandardizedErrorContext>) => void;
+  handleError: (
+    error: unknown,
+    context?: Partial<StandardizedErrorContext>
+  ) => void;
   clearError: () => void;
   retryOperation: (operation: () => Promise<void> | void) => Promise<void>;
 
@@ -82,7 +85,9 @@ const defaultOptions: UseErrorHandlingOptions = {
 /**
  * Custom hook for standardized error handling
  */
-export function useErrorHandling(options: UseErrorHandlingOptions = {}): UseErrorHandlingReturn {
+export function useErrorHandling(
+  options: UseErrorHandlingOptions = {}
+): UseErrorHandlingReturn {
   const config = { ...defaultOptions, ...options };
   const retryCountRef = useRef(0);
   const pendingOperationRef = useRef<(() => Promise<void> | void) | null>(null);
@@ -99,7 +104,10 @@ export function useErrorHandling(options: UseErrorHandlingOptions = {}): UseErro
       const mergedContext = {
         ...config.context,
         ...context,
-        operation: context?.operation || config.context?.operation || "component.operation",
+        operation:
+          context?.operation ||
+          config.context?.operation ||
+          "component.operation",
         additionalData: {
           ...config.context?.additionalData,
           ...context?.additionalData,
@@ -163,7 +171,10 @@ export function useErrorHandling(options: UseErrorHandlingOptions = {}): UseErro
   // Retry operation with exponential backoff
   const retryOperation = useCallback(
     async (operation: () => Promise<void> | void) => {
-      if (!config.enableRetry || retryCountRef.current >= (config.maxRetries || 3)) {
+      if (
+        !config.enableRetry ||
+        retryCountRef.current >= (config.maxRetries || 3)
+      ) {
         logger.warn("Retry attempted but not allowed or max retries exceeded", {
           retryCount: retryCountRef.current,
           maxRetries: config.maxRetries,
@@ -177,7 +188,8 @@ export function useErrorHandling(options: UseErrorHandlingOptions = {}): UseErro
 
       try {
         // Wait with exponential backoff
-        const delay = (config.retryDelay || 1000) * 2 ** (retryCountRef.current - 1);
+        const delay =
+          (config.retryDelay || 1000) * 2 ** (retryCountRef.current - 1);
         await new Promise((resolve) => setTimeout(resolve, delay));
 
         // Execute operation
@@ -318,7 +330,9 @@ export function useFormErrorHandling(options: UseErrorHandlingOptions = {}) {
 /**
  * Hook for data loading error handling
  */
-export function useDataLoadingErrorHandling(options: UseErrorHandlingOptions = {}) {
+export function useDataLoadingErrorHandling(
+  options: UseErrorHandlingOptions = {}
+) {
   return useErrorHandling({
     ...options,
     context: {
@@ -334,7 +348,9 @@ export function useDataLoadingErrorHandling(options: UseErrorHandlingOptions = {
 /**
  * Hook for file upload error handling
  */
-export function useFileUploadErrorHandling(options: UseErrorHandlingOptions = {}) {
+export function useFileUploadErrorHandling(
+  options: UseErrorHandlingOptions = {}
+) {
   return useErrorHandling({
     ...options,
     context: {

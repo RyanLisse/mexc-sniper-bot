@@ -60,10 +60,13 @@ export class IntelligenceOrchestrator {
     }
 
     tasks.push(
-      embeddingsService.enhancePatternDescription(pattern?.description || "trading pattern")
+      embeddingsService.enhancePatternDescription(
+        pattern?.description || "trading pattern"
+      )
     );
 
-    const [embedding, research, enhancedDescriptionResult] = await Promise.all(tasks);
+    const [embedding, research, enhancedDescriptionResult] =
+      await Promise.all(tasks);
     const enhancedDescription =
       typeof enhancedDescriptionResult === "string"
         ? enhancedDescriptionResult
@@ -77,7 +80,10 @@ export class IntelligenceOrchestrator {
         research,
         description: enhancedDescription,
         confidence:
-          embedding && research && typeof embedding === "object" && typeof research === "object"
+          embedding &&
+          research &&
+          typeof embedding === "object" &&
+          typeof research === "object"
             ? (embedding.confidence + research.confidence) / 2
             : embedding && typeof embedding === "object"
               ? embedding.confidence
@@ -120,7 +126,10 @@ export class IntelligenceOrchestrator {
    * Get service health status
    */
   async getServiceHealth(): Promise<{
-    embeddings: { status: "healthy" | "degraded" | "unhealthy"; latency: number };
+    embeddings: {
+      status: "healthy" | "degraded" | "unhealthy";
+      latency: number;
+    };
     research: { status: "healthy" | "degraded" | "unhealthy"; latency: number };
     overall: "healthy" | "degraded" | "unhealthy";
   }> {

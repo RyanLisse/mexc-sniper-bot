@@ -2,9 +2,20 @@
 
 import { Brain, Eye, Target, TrendingUp, Zap } from "lucide-react";
 import { Badge } from "../../ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../ui/card";
 import { Progress } from "../../ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../ui/tooltip";
 
 // ======================
 // Types
@@ -67,14 +78,17 @@ export function AIEnhancedPatternDisplay({
             <Brain className="h-5 w-5" />
             AI-Enhanced Pattern Detection
           </CardTitle>
-          <CardDescription>No patterns detected with AI enhancement</CardDescription>
+          <CardDescription>
+            No patterns detected with AI enhancement
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No AI-enhanced patterns found</p>
             <p className="text-sm">
-              Patterns will appear here when detected with 3.5+ hour advance capability
+              Patterns will appear here when detected with 3.5+ hour advance
+              capability
             </p>
           </div>
         </CardContent>
@@ -91,7 +105,8 @@ export function AIEnhancedPatternDisplay({
           <Badge variant="secondary">{patterns.length} patterns</Badge>
         </CardTitle>
         <CardDescription>
-          Patterns detected with AI intelligence and 3.5+ hour advance capability
+          Patterns detected with AI intelligence and 3.5+ hour advance
+          capability
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -169,28 +184,35 @@ function ConfidenceScores({ pattern }: { pattern: AIEnhancedPattern }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-sm">Base Confidence</span>
-        <span className={`text-sm font-medium ${getConfidenceColor(pattern.confidence)}`}>
+        <span
+          className={`text-sm font-medium ${getConfidenceColor(pattern.confidence)}`}
+        >
           {pattern.confidence.toFixed(1)}%
         </span>
       </div>
       <Progress value={pattern.confidence} className="h-2" />
 
-      {pattern.aiEnhancedConfidence && pattern.aiEnhancedConfidence !== pattern.confidence && (
-        <>
-          <div className="flex items-center justify-between">
-            <span className="text-sm">AI-Enhanced Confidence</span>
-            <span
-              className={`text-sm font-medium ${getConfidenceColor(pattern.aiEnhancedConfidence)}`}
-            >
-              {pattern.aiEnhancedConfidence.toFixed(1)}%
-              <span className="text-xs text-green-600 ml-1">
-                (+{(pattern.aiEnhancedConfidence - pattern.confidence).toFixed(1)})
+      {pattern.aiEnhancedConfidence &&
+        pattern.aiEnhancedConfidence !== pattern.confidence && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">AI-Enhanced Confidence</span>
+              <span
+                className={`text-sm font-medium ${getConfidenceColor(pattern.aiEnhancedConfidence)}`}
+              >
+                {pattern.aiEnhancedConfidence.toFixed(1)}%
+                <span className="text-xs text-green-600 ml-1">
+                  (+
+                  {(pattern.aiEnhancedConfidence - pattern.confidence).toFixed(
+                    1
+                  )}
+                  )
+                </span>
               </span>
-            </span>
-          </div>
-          <Progress value={pattern.aiEnhancedConfidence} className="h-2" />
-        </>
-      )}
+            </div>
+            <Progress value={pattern.aiEnhancedConfidence} className="h-2" />
+          </>
+        )}
     </div>
   );
 }
@@ -238,16 +260,21 @@ function AIInsightsPreview({ pattern }: { pattern: AIEnhancedPattern }) {
               <TooltipTrigger asChild>
                 <div className="text-xs text-muted-foreground cursor-help">
                   {pattern.aiInsights.perplexityInsights.opportunities[0]}
-                  {pattern.aiInsights.perplexityInsights.opportunities.length > 1 && "..."}
+                  {pattern.aiInsights.perplexityInsights.opportunities.length >
+                    1 && "..."}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
                 <div className="max-w-xs">
                   <p className="font-medium mb-1">Opportunities:</p>
                   <ul className="text-xs space-y-1">
-                    {pattern.aiInsights.perplexityInsights.opportunities.map((opp, index) => (
-                      <li key={`opportunity-${index}-${opp.slice(0, 10)}`}>• {opp}</li>
-                    ))}
+                    {pattern.aiInsights.perplexityInsights.opportunities.map(
+                      (opp, index) => (
+                        <li key={`opportunity-${index}-${opp.slice(0, 10)}`}>
+                          • {opp}
+                        </li>
+                      )
+                    )}
                   </ul>
                 </div>
               </TooltipContent>
@@ -256,12 +283,13 @@ function AIInsightsPreview({ pattern }: { pattern: AIEnhancedPattern }) {
         </div>
       )}
 
-      {pattern.aiInsights.recommendations && pattern.aiInsights.recommendations.length > 0 && (
-        <div className="text-xs text-muted-foreground">
-          <span className="font-medium">AI Recommendation:</span>{" "}
-          {pattern.aiInsights.recommendations[0]}
-        </div>
-      )}
+      {pattern.aiInsights.recommendations &&
+        pattern.aiInsights.recommendations.length > 0 && (
+          <div className="text-xs text-muted-foreground">
+            <span className="font-medium">AI Recommendation:</span>{" "}
+            {pattern.aiInsights.recommendations[0]}
+          </div>
+        )}
 
       {pattern.aiInsights.cohereEmbedding && (
         <div className="text-xs text-muted-foreground">
@@ -281,7 +309,9 @@ function ActivityData({ pattern }: { pattern: AIEnhancedPattern }) {
       {pattern.activityData.volume24h && (
         <div>
           <span className="text-muted-foreground">24h Volume:</span>
-          <div className="font-medium">${pattern.activityData.volume24h.toLocaleString()}</div>
+          <div className="font-medium">
+            ${pattern.activityData.volume24h.toLocaleString()}
+          </div>
         </div>
       )}
       {pattern.activityData.priceChange24h && (
@@ -289,7 +319,9 @@ function ActivityData({ pattern }: { pattern: AIEnhancedPattern }) {
           <span className="text-muted-foreground">24h Change:</span>
           <div
             className={`font-medium ${
-              pattern.activityData.priceChange24h >= 0 ? "text-green-600" : "text-red-600"
+              pattern.activityData.priceChange24h >= 0
+                ? "text-green-600"
+                : "text-red-600"
             }`}
           >
             {pattern.activityData.priceChange24h >= 0 ? "+" : ""}
@@ -312,7 +344,8 @@ function PatternCard({
 }) {
   const hasAIEnhancement = Boolean(
     pattern.aiInsights &&
-      (pattern.aiInsights.cohereEmbedding || pattern.aiInsights.perplexityInsights)
+      (pattern.aiInsights.cohereEmbedding ||
+        pattern.aiInsights.perplexityInsights)
   );
 
   return (
@@ -333,7 +366,10 @@ function PatternCard({
       >
         <PatternHeader pattern={pattern} hasAIEnhancement={hasAIEnhancement} />
         <ConfidenceScores pattern={pattern} />
-        <AdvanceDetection pattern={pattern} showAdvanceDetection={showAdvanceDetection} />
+        <AdvanceDetection
+          pattern={pattern}
+          showAdvanceDetection={showAdvanceDetection}
+        />
         <AIInsightsPreview pattern={pattern} />
         <ActivityData pattern={pattern} />
       </div>

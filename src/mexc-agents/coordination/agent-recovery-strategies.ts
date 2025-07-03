@@ -108,7 +108,9 @@ export class AgentRecoveryStrategies {
         finalAgent.health.status = "unhealthy";
       }
 
-      this.logger.info(`Recovery failed for agent ${agent.id} after trying all strategies`);
+      this.logger.info(
+        `Recovery failed for agent ${agent.id} after trying all strategies`
+      );
       return false;
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -128,7 +130,10 @@ export class AgentRecoveryStrategies {
         finalAgent.health.status = "unhealthy";
       }
 
-      this.logger.error(`Recovery attempt failed for agent ${agent.id}:`, error);
+      this.logger.error(
+        `Recovery attempt failed for agent ${agent.id}:`,
+        error
+      );
       return false;
     }
   }
@@ -158,7 +163,9 @@ export class AgentRecoveryStrategies {
       history = history.filter((attempt) => attempt.agentId === agentId);
     }
 
-    return history.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, limit);
+    return history
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
   }
 
   /**
@@ -184,7 +191,8 @@ export class AgentRecoveryStrategies {
 
     const averageDuration =
       history.length > 0
-        ? history.reduce((sum, attempt) => sum + attempt.duration, 0) / history.length
+        ? history.reduce((sum, attempt) => sum + attempt.duration, 0) /
+          history.length
         : 0;
 
     return {

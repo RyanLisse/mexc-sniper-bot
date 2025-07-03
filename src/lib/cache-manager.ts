@@ -9,4 +9,10 @@
 export * from "./cache";
 // Maintain backward compatibility with the global instance export
 // Re-export the main classes for backward compatibility
-export { CacheManager, globalCacheManager as default, globalCacheManager, LRUCache } from "./cache";
+export {
+  CacheManager,
+  globalCacheManager as default,
+  globalCacheManager,
+  LRUCache,
+  generateCacheKey,
+} from "./cache";

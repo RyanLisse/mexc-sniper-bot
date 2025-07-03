@@ -68,7 +68,12 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
         warn: (message: string, context?: any) =>
           console.warn("[safety-coordinator]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[safety-coordinator]", message, context || "", error || ""),
+          console.error(
+            "[safety-coordinator]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[safety-coordinator]", message, context || ""),
       };
@@ -240,7 +245,9 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
     await this.alertsManager.start();
 
     // Emergency manager doesn't have start/stop methods - just initialize state
-    this.logger.info("Emergency manager initialized - no start method required");
+    this.logger.info(
+      "Emergency manager initialized - no start method required"
+    );
 
     console.info("Safety monitoring started");
     this.emit("started");
@@ -269,7 +276,8 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
    */
   getStatus(): ComprehensiveSafetyStatus {
     // Update status with current information
-    this.status.emergency.systemActive = this.emergencyManager.isEmergencyActive();
+    this.status.emergency.systemActive =
+      this.emergencyManager.isEmergencyActive();
     this.status.risk.activeAlerts = this.alertsManager.getActiveAlerts().length;
 
     return { ...this.status };
@@ -278,21 +286,30 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
   /**
    * Create safety alert
    */
-  async createAlert(alert: Omit<SafetyAlert, "id" | "timestamp">): Promise<string> {
+  async createAlert(
+    alert: Omit<SafetyAlert, "id" | "timestamp">
+  ): Promise<string> {
     return this.alertsManager.createAlert(alert);
   }
 
   /**
    * Acknowledge alert
    */
-  async acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<boolean> {
+  async acknowledgeAlert(
+    alertId: string,
+    acknowledgedBy: string
+  ): Promise<boolean> {
     return this.alertsManager.acknowledgeAlert(alertId, acknowledgedBy);
   }
 
   /**
    * Resolve alert
    */
-  async resolveAlert(alertId: string, resolvedBy: string, resolution: string): Promise<boolean> {
+  async resolveAlert(
+    alertId: string,
+    resolvedBy: string,
+    resolution: string
+  ): Promise<boolean> {
     return this.alertsManager.resolveAlert(alertId, resolvedBy, resolution);
   }
 
@@ -324,7 +341,8 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
         averageConfidenceScore: 95,
         anomalyRate: 0,
         violationRate:
-          this.status.agents.recentViolations / Math.max(this.status.agents.totalMonitored, 1),
+          this.status.agents.recentViolations /
+          Math.max(this.status.agents.totalMonitored, 1),
       },
       consensusMetrics: {
         averageProcessingTime: 100,
@@ -424,8 +442,12 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       await this.performHealthCheck();
 
       const activeAlerts = this.alertsManager.getActiveAlerts();
-      const criticalAlerts = activeAlerts.filter((alert) => alert.severity === "critical").length;
-      const highAlerts = activeAlerts.filter((alert) => alert.severity === "high").length;
+      const criticalAlerts = activeAlerts.filter(
+        (alert) => alert.severity === "critical"
+      ).length;
+      const highAlerts = activeAlerts.filter(
+        (alert) => alert.severity === "high"
+      ).length;
 
       // Determine overall safety level
       let safetyLevel: "safe" | "moderate" | "high_risk" | "critical" = "safe";
@@ -452,8 +474,11 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       // Mock system status based on emergency state
       const isEmergencyActive = this.isEmergencyActive();
       const systemMetrics = {
-        connectivity: isEmergencyActive ? ("degraded" as const) : ("healthy" as const),
-        database: criticalAlerts > 0 ? ("degraded" as const) : ("healthy" as const),
+        connectivity: isEmergencyActive
+          ? ("degraded" as const)
+          : ("healthy" as const),
+        database:
+          criticalAlerts > 0 ? ("degraded" as const) : ("healthy" as const),
         trading: isEmergencyActive ? ("paused" as const) : ("active" as const),
       };
 
@@ -467,7 +492,9 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Safety assessment failed", { error: safeError.message });
+      this.logger.error("Safety assessment failed", {
+        error: safeError.message,
+      });
 
       // Return critical safety assessment on error
       return {
@@ -517,10 +544,16 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       // Check volatility levels
       if (conditions.highVolatility > 0.8) {
         approved = false;
-        reasons.push(`High volatility detected (${(conditions.highVolatility * 100).toFixed(1)}%)`);
-        recommendations.push("Reduce position sizes during high volatility periods");
+        reasons.push(
+          `High volatility detected (${(conditions.highVolatility * 100).toFixed(1)}%)`
+        );
+        recommendations.push(
+          "Reduce position sizes during high volatility periods"
+        );
       } else if (conditions.highVolatility > 0.5) {
-        recommendations.push("Consider smaller position sizes due to elevated volatility");
+        recommendations.push(
+          "Consider smaller position sizes due to elevated volatility"
+        );
       }
 
       // Check liquidity
@@ -533,17 +566,25 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       // Check portfolio risk
       if (conditions.portfolioRisk > 15) {
         approved = false;
-        reasons.push(`Portfolio risk too high (${conditions.portfolioRisk.toFixed(1)}%)`);
-        recommendations.push("Reduce existing positions before opening new trades");
+        reasons.push(
+          `Portfolio risk too high (${conditions.portfolioRisk.toFixed(1)}%)`
+        );
+        recommendations.push(
+          "Reduce existing positions before opening new trades"
+        );
       } else if (conditions.portfolioRisk > 10) {
-        recommendations.push("Monitor portfolio risk closely - approaching safety limits");
+        recommendations.push(
+          "Monitor portfolio risk closely - approaching safety limits"
+        );
       }
 
       // Check emergency state
       if (this.isEmergencyActive()) {
         approved = false;
         reasons.push("Emergency procedures active - trading suspended");
-        recommendations.push("Wait for emergency resolution before resuming trading");
+        recommendations.push(
+          "Wait for emergency resolution before resuming trading"
+        );
       }
 
       // If all conditions pass
@@ -558,7 +599,9 @@ export class ComprehensiveSafetyCoordinator extends EventEmitter {
       };
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Trading conditions assessment failed", { error: safeError.message });
+      this.logger.error("Trading conditions assessment failed", {
+        error: safeError.message,
+      });
 
       // Default to rejecting trading on error
       return {

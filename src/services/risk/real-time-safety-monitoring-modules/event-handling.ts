@@ -268,8 +268,14 @@ export class EventHandling {
   public getStats(): TimerCoordinatorStats {
     const allOperations = Array.from(this.operations.values());
     const runningOperations = allOperations.filter((op) => op.isRunning).length;
-    const totalExecutions = allOperations.reduce((sum, op) => sum + op.executionCount, 0);
-    const totalExecutionTime = allOperations.reduce((sum, op) => sum + op.totalExecutionTime, 0);
+    const totalExecutions = allOperations.reduce(
+      (sum, op) => sum + op.executionCount,
+      0
+    );
+    const totalExecutionTime = allOperations.reduce(
+      (sum, op) => sum + op.totalExecutionTime,
+      0
+    );
 
     return {
       isActive: this.isActive,
@@ -277,7 +283,8 @@ export class EventHandling {
       runningOperations,
       totalExecutions: this.stats.totalExecutions,
       totalErrors: this.stats.totalErrors,
-      averageExecutionTime: totalExecutions > 0 ? totalExecutionTime / totalExecutions : 0,
+      averageExecutionTime:
+        totalExecutions > 0 ? totalExecutionTime / totalExecutions : 0,
       uptime: this.isActive ? Date.now() - this.stats.startTime : 0,
     };
   }
@@ -330,7 +337,9 @@ export class EventHandling {
     if (!this.isActive) return;
 
     const now = Date.now();
-    const readyOperations: (typeof this.operations extends Map<string, infer T> ? T : never)[] = [];
+    const readyOperations: (typeof this.operations extends Map<string, infer T>
+      ? T
+      : never)[] = [];
 
     // Find operations that are ready to execute
     const allOperations = Array.from(this.operations.values());
@@ -389,7 +398,10 @@ export class EventHandling {
       operation.lastExecuted = Date.now(); // Create timeout promise
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
-          () => reject(new Error(`Operation timeout after ${this.operationTimeoutMs}ms`)),
+          () =>
+            reject(
+              new Error(`Operation timeout after ${this.operationTimeoutMs}ms`)
+            ),
           this.operationTimeoutMs
         );
       });
@@ -441,7 +453,11 @@ export class EventHandling {
   /**
    * Get coordinator status
    */
-  public getStatus(): { isActive: boolean; operationsCount: number; runningOperations: number } {
+  public getStatus(): {
+    isActive: boolean;
+    operationsCount: number;
+    runningOperations: number;
+  } {
     const runningOperations = Array.from(this.operations.values()).filter(
       (op) => op.isRunning
     ).length;
@@ -457,6 +473,8 @@ export class EventHandling {
 /**
  * Factory function to create EventHandling instance
  */
-export function createEventHandling(config?: EventHandlingConfig): EventHandling {
+export function createEventHandling(
+  config?: EventHandlingConfig
+): EventHandling {
   return new EventHandling(config);
 }

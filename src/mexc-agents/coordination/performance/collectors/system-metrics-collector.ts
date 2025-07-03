@@ -1,11 +1,15 @@
 /**
  * System Metrics Collector
- * 
+ *
  * Collects system-wide performance metrics and snapshots
  */
 
 import type { AgentRegistry } from "../../agent-registry";
-import type { AgentPerformanceMetrics, SystemPerformanceSnapshot, WorkflowPerformanceMetrics } from "../types";
+import type {
+  AgentPerformanceMetrics,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetrics,
+} from "../types";
 
 export class SystemMetricsCollector {
   private logger = {
@@ -40,18 +44,25 @@ export class SystemMetricsCollector {
       );
 
       const runningWorkflows = 0; // Would need to be tracked separately
-      const completedWorkflows = recentWorkflows.filter((w) => w.status === "completed").length;
-      const failedWorkflows = recentWorkflows.filter((w) => w.status === "failed").length;
+      const completedWorkflows = recentWorkflows.filter(
+        (w) => w.status === "completed"
+      ).length;
+      const failedWorkflows = recentWorkflows.filter(
+        (w) => w.status === "failed"
+      ).length;
 
       // Calculate system metrics
       const responseTimes = Array.from(agentMetricsHistory.values())
         .flat()
-        .filter((m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000)
+        .filter(
+          (m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000
+        )
         .map((m) => m.responseTime);
 
       const averageResponseTime =
         responseTimes.length > 0
-          ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+          ? responseTimes.reduce((sum, time) => sum + time, 0) /
+            responseTimes.length
           : 0;
 
       const totalThroughput = Array.from(agentMetricsHistory.values())
@@ -61,7 +72,9 @@ export class SystemMetricsCollector {
 
       const systemErrorRate = Array.from(agentMetricsHistory.values())
         .flat()
-        .filter((m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000)
+        .filter(
+          (m) => timestamp.getTime() - m.timestamp.getTime() < 60 * 60 * 1000
+        )
         .reduce((sum, m, _, arr) => sum + m.errorRate / arr.length, 0);
 
       const snapshot: SystemPerformanceSnapshot = {
@@ -92,7 +105,10 @@ export class SystemMetricsCollector {
 
       // Keep only recent history
       if (systemSnapshotHistory.length > maxHistorySize) {
-        systemSnapshotHistory.splice(0, systemSnapshotHistory.length - maxHistorySize);
+        systemSnapshotHistory.splice(
+          0,
+          systemSnapshotHistory.length - maxHistorySize
+        );
       }
     } catch (error) {
       this.logger.error(

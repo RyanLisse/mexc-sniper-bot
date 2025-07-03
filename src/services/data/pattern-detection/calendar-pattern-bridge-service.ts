@@ -16,7 +16,11 @@ import { CalendarWorkflow } from "@/src/mexc-agents/calendar-workflow";
 import type { CalendarEntry } from "@/src/services/api/mexc-unified-exports";
 
 export interface CalendarEventData {
-  eventType: "new_listings" | "upcoming_launches" | "ready_candidates" | "schedule_changes";
+  eventType:
+    | "new_listings"
+    | "upcoming_launches"
+    | "ready_candidates"
+    | "schedule_changes";
   calendarEntries: CalendarEntry[];
   metadata: {
     entriesCount: number;
@@ -47,7 +51,12 @@ export class CalendarPatternBridgeService {
     warn: (message: string, context?: any) =>
       console.warn("[calendar-pattern-bridge]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[calendar-pattern-bridge]", message, context || "", error || ""),
+      console.error(
+        "[calendar-pattern-bridge]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[calendar-pattern-bridge]", message, context || ""),
   };
@@ -80,7 +89,8 @@ export class CalendarPatternBridgeService {
 
   static getInstance(): CalendarPatternBridgeService {
     if (!CalendarPatternBridgeService.instance) {
-      CalendarPatternBridgeService.instance = new CalendarPatternBridgeService();
+      CalendarPatternBridgeService.instance =
+        new CalendarPatternBridgeService();
     }
     return CalendarPatternBridgeService.instance;
   }
@@ -163,7 +173,8 @@ export class CalendarPatternBridgeService {
       }
 
       // Process new listings with AI analysis
-      const analysisResponse = await this.calendarAgent.scanForNewListings(changedEntries);
+      const analysisResponse =
+        await this.calendarAgent.scanForNewListings(changedEntries);
 
       // Analyze opportunities using CalendarWorkflow
       const patternAnalysisResponse: AgentResponse = {
@@ -174,11 +185,12 @@ export class CalendarPatternBridgeService {
         },
       };
 
-      const workflowResult = await this.calendarWorkflow.analyzeDiscoveryResults(
-        analysisResponse,
-        patternAnalysisResponse,
-        { success: true, data: changedEntries }
-      );
+      const workflowResult =
+        await this.calendarWorkflow.analyzeDiscoveryResults(
+          analysisResponse,
+          patternAnalysisResponse,
+          { success: true, data: changedEntries }
+        );
 
       // Filter for high-priority candidates that need pattern analysis
       const patternCandidates = this.filterPatternCandidates(
@@ -200,7 +212,11 @@ export class CalendarPatternBridgeService {
       }
 
       // Update statistics
-      this.updateStatistics(changedEntries, patternCandidates, Date.now() - startTime);
+      this.updateStatistics(
+        changedEntries,
+        patternCandidates,
+        Date.now() - startTime
+      );
 
       // Update known state for future change detection
       this.lastKnownCalendarState = calendarData;
@@ -225,12 +241,18 @@ export class CalendarPatternBridgeService {
       return currentData.slice(0, 10); // Limit initial processing
     }
 
-    const lastKnownIds = new Set(this.lastKnownCalendarState.map((entry) => entry.vcoinId));
-    const newEntries = currentData.filter((entry) => !lastKnownIds.has(entry.vcoinId));
+    const lastKnownIds = new Set(
+      this.lastKnownCalendarState.map((entry) => entry.vcoinId)
+    );
+    const newEntries = currentData.filter(
+      (entry) => !lastKnownIds.has(entry.vcoinId)
+    );
 
     // Also detect timing changes for existing entries
     const timingChanges = currentData.filter((entry) => {
-      const lastKnown = this.lastKnownCalendarState.find((e) => e.vcoinId === entry.vcoinId);
+      const lastKnown = this.lastKnownCalendarState.find(
+        (e) => e.vcoinId === entry.vcoinId
+      );
       if (!lastKnown) return false;
 
       // Check if launch time changed significantly (more than 30 minutes)
@@ -276,7 +298,9 @@ export class CalendarPatternBridgeService {
   /**
    * Trigger pattern detection for calendar candidates
    */
-  private async triggerPatternDetection(candidates: CalendarEntry[]): Promise<void> {
+  private async triggerPatternDetection(
+    candidates: CalendarEntry[]
+  ): Promise<void> {
     try {
       console.info("Triggering pattern detection for calendar candidates", {
         candidatesCount: candidates.length,
@@ -293,7 +317,9 @@ export class CalendarPatternBridgeService {
 
       // Trigger pattern detection using calendar data
       const patternResults =
-        await EnhancedPatternDetectionCore.getInstance().analyzePatterns(analysisRequest);
+        await EnhancedPatternDetectionCore.getInstance().analyzePatterns(
+          analysisRequest
+        );
 
       this.stats.totalPatternAnalysisTriggered++;
       this.stats.lastPatternAnalysis = new Date();
@@ -302,15 +328,20 @@ export class CalendarPatternBridgeService {
         patternResults.summary.readyStateFound > 0 ||
         patternResults.summary.highConfidenceMatches > 0
       ) {
-        console.info("Pattern detection found opportunities from calendar data", {
-          readyStateFound: patternResults.summary.readyStateFound,
-          highConfidenceMatches: patternResults.summary.highConfidenceMatches,
-          totalAnalyzed: patternResults.summary.totalAnalyzed,
-          averageConfidence: patternResults.summary.averageConfidence,
-          nextStep: "Pattern-Target Bridge will automatically create snipe targets",
-        });
+        console.info(
+          "Pattern detection found opportunities from calendar data",
+          {
+            readyStateFound: patternResults.summary.readyStateFound,
+            highConfidenceMatches: patternResults.summary.highConfidenceMatches,
+            totalAnalyzed: patternResults.summary.totalAnalyzed,
+            averageConfidence: patternResults.summary.averageConfidence,
+            nextStep:
+              "Pattern-Target Bridge will automatically create snipe targets",
+          }
+        );
 
-        this.stats.readyCandidatesDetected += patternResults.summary.readyStateFound;
+        this.stats.readyCandidatesDetected +=
+          patternResults.summary.readyStateFound;
       }
     } catch (error) {
       this.stats.totalPatternAnalysisFailed++;
@@ -342,7 +373,8 @@ export class CalendarPatternBridgeService {
       this.processingTimes = this.processingTimes.slice(-50);
     }
     this.stats.averageProcessingTime =
-      this.processingTimes.reduce((sum, time) => sum + time, 0) / this.processingTimes.length;
+      this.processingTimes.reduce((sum, time) => sum + time, 0) /
+      this.processingTimes.length;
   }
 
   /**
@@ -422,7 +454,8 @@ export class CalendarPatternBridgeService {
     let nextScanIn: number | undefined;
 
     if (this.isMonitoring && this.stats.lastCalendarScan) {
-      const timeSinceLastScan = Date.now() - this.stats.lastCalendarScan.getTime();
+      const timeSinceLastScan =
+        Date.now() - this.stats.lastCalendarScan.getTime();
       const scanInterval = 15 * 60 * 1000; // 15 minutes
       nextScanIn = Math.max(0, scanInterval - timeSinceLastScan);
     }
@@ -430,11 +463,14 @@ export class CalendarPatternBridgeService {
     return {
       isActive: this.isMonitoring,
       statistics: this.getStatistics(),
-      uptime: this.stats.lastCalendarScan ? Date.now() - this.stats.lastCalendarScan.getTime() : 0,
+      uptime: this.stats.lastCalendarScan
+        ? Date.now() - this.stats.lastCalendarScan.getTime()
+        : 0,
       nextScanIn,
     };
   }
 }
 
 // Export singleton instance
-export const calendarPatternBridgeService = CalendarPatternBridgeService.getInstance();
+export const calendarPatternBridgeService =
+  CalendarPatternBridgeService.getInstance();

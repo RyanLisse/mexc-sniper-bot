@@ -83,7 +83,12 @@ export class StressTestingValidation {
         warn: (message: string, context?: any) =>
           console.warn("[stress-testing-validation]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[stress-testing-validation]", message, context || "", error || ""),
+          console.error(
+            "[stress-testing-validation]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[stress-testing-validation]", message, context || ""),
       };
@@ -96,26 +101,40 @@ export class StressTestingValidation {
   /**
    * Perform stress testing on current portfolio
    */
-  async performStressTest(scenarios?: StressTestScenario[]): Promise<StressTestResult> {
+  async performStressTest(
+    scenarios?: StressTestScenario[]
+  ): Promise<StressTestResult> {
     const defaultScenarios: StressTestScenario[] = [
       {
         name: "Market Crash",
         description: "20% market decline with high volatility",
-        marketShock: { priceChange: -20, volatilityIncrease: 3, liquidityReduction: 50 },
+        marketShock: {
+          priceChange: -20,
+          volatilityIncrease: 3,
+          liquidityReduction: 50,
+        },
         expectedLoss: 0,
         recoveryTime: 48,
       },
       {
         name: "Flash Crash",
         description: "10% sudden drop with liquidity crisis",
-        marketShock: { priceChange: -10, volatilityIncrease: 5, liquidityReduction: 80 },
+        marketShock: {
+          priceChange: -10,
+          volatilityIncrease: 5,
+          liquidityReduction: 80,
+        },
         expectedLoss: 0,
         recoveryTime: 12,
       },
       {
         name: "High Volatility",
         description: "Normal prices but extreme volatility",
-        marketShock: { priceChange: 0, volatilityIncrease: 4, liquidityReduction: 30 },
+        marketShock: {
+          priceChange: 0,
+          volatilityIncrease: 4,
+          liquidityReduction: 30,
+        },
         expectedLoss: 0,
         recoveryTime: 24,
       },
@@ -131,10 +150,12 @@ export class StressTestingValidation {
       // Calculate impact on each position
       for (const position of this.config.positions.values()) {
         const priceChange = scenario.marketShock?.priceChange || 0;
-        const volatilityIncrease = scenario.marketShock?.volatilityIncrease || 1;
-        
+        const volatilityIncrease =
+          scenario.marketShock?.volatilityIncrease || 1;
+
         const positionLoss = position.size * (priceChange / 100);
-        const volatilityImpact = position.valueAtRisk * (volatilityIncrease - 1);
+        const volatilityImpact =
+          position.valueAtRisk * (volatilityIncrease - 1);
         totalLoss += Math.abs(positionLoss) + volatilityImpact;
       }
 
@@ -168,13 +189,16 @@ export class StressTestingValidation {
     try {
       const position = this.config.positions.get(symbol);
       if (!position) {
-        console.warn(`[StressTestingValidation] Position ${symbol} not found for risk update`);
+        console.warn(
+          `[StressTestingValidation] Position ${symbol} not found for risk update`
+        );
         return;
       }
 
       // Calculate metrics
       const priceChange =
-        ((riskData.currentPrice - riskData.entryPrice) / riskData.entryPrice) * 100;
+        ((riskData.currentPrice - riskData.entryPrice) / riskData.entryPrice) *
+        100;
       const drawdown = priceChange < 0 ? Math.abs(priceChange) : 0;
 
       // Update position data
@@ -186,7 +210,10 @@ export class StressTestingValidation {
         `[StressTestingValidation] Position risk updated for ${symbol}: ${drawdown.toFixed(2)}% drawdown`
       );
     } catch (error) {
-      console.error("[StressTestingValidation] Position risk update failed:", error);
+      console.error(
+        "[StressTestingValidation] Position risk update failed:",
+        error
+      );
     }
   }
 
@@ -216,7 +243,8 @@ export class StressTestingValidation {
 
     // Calculate volume spike
     const avgVolume =
-      priceSequence.slice(0, -1).reduce((sum, p) => sum + p.volume, 0) / (priceSequence.length - 1);
+      priceSequence.slice(0, -1).reduce((sum, p) => sum + p.volume, 0) /
+      (priceSequence.length - 1);
     const maxVolume = Math.max(...priceSequence.map((p) => p.volume));
     const volumeSpike = maxVolume / avgVolume;
 
@@ -478,24 +506,34 @@ export class StressTestingValidation {
     const totalValue = positions.reduce((sum, p) => sum + p.size, 0);
 
     // Calculate concentration risk
-    const maxPosition = positions.length > 0 ? Math.max(...positions.map((p) => p.size)) : 0;
-    const concentrationRisk = totalValue > 0 ? (maxPosition / totalValue) * 100 : 0;
+    const maxPosition =
+      positions.length > 0 ? Math.max(...positions.map((p) => p.size)) : 0;
+    const concentrationRisk =
+      totalValue > 0 ? (maxPosition / totalValue) * 100 : 0;
 
     // Calculate correlation risk (simplified)
     const correlationRisk =
       positions.length > 0
-        ? (positions.reduce((sum, p) => sum + p.correlationScore, 0) / positions.length) * 100
+        ? (positions.reduce((sum, p) => sum + p.correlationScore, 0) /
+            positions.length) *
+          100
         : 0;
 
     // Calculate liquidity risk
-    const liquidityRisk = Math.max(0, 100 - this.config.marketConditions.liquidityIndex);
+    const liquidityRisk = Math.max(
+      0,
+      100 - this.config.marketConditions.liquidityIndex
+    );
 
     // Calculate volatility risk
     const volatilityRisk = this.config.marketConditions.volatilityIndex;
 
     // Overall risk (weighted average)
     const overallRisk =
-      concentrationRisk * 0.3 + correlationRisk * 0.3 + liquidityRisk * 0.2 + volatilityRisk * 0.2;
+      concentrationRisk * 0.3 +
+      correlationRisk * 0.3 +
+      liquidityRisk * 0.2 +
+      volatilityRisk * 0.2;
 
     return {
       overallRisk,
@@ -512,7 +550,10 @@ export class StressTestingValidation {
    * Calculate portfolio value
    */
   private calculatePortfolioValue(): number {
-    return Array.from(this.config.positions.values()).reduce((total, pos) => total + pos.size, 0);
+    return Array.from(this.config.positions.values()).reduce(
+      (total, pos) => total + pos.size,
+      0
+    );
   }
 
   /**

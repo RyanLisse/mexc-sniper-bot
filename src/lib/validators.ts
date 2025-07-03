@@ -41,7 +41,9 @@ export class Validators {
    */
   static userId(value: unknown): string {
     if (typeof value !== "string" || !value.trim()) {
-      throw new ValidationError("User ID is required and must be a non-empty string");
+      throw new ValidationError(
+        "User ID is required and must be a non-empty string"
+      );
     }
     return value.trim();
   }
@@ -66,8 +68,14 @@ export class Validators {
    * Validates max concurrent snipes
    */
   static maxConcurrentSnipes(value: number): number {
-    if (typeof value !== "number" || Number.isNaN(value) || !Number.isInteger(value)) {
-      throw new ValidationError("Max concurrent snipes must be a valid integer");
+    if (
+      typeof value !== "number" ||
+      Number.isNaN(value) ||
+      !Number.isInteger(value)
+    ) {
+      throw new ValidationError(
+        "Max concurrent snipes must be a valid integer"
+      );
     }
     if (value < 1) {
       throw new ValidationError("Max concurrent snipes must be at least 1");
@@ -83,7 +91,9 @@ export class Validators {
    */
   static riskTolerance(value: string): "low" | "medium" | "high" {
     if (!["low", "medium", "high"].includes(value)) {
-      throw new ValidationError("Risk tolerance must be 'low', 'medium', or 'high'");
+      throw new ValidationError(
+        "Risk tolerance must be 'low', 'medium', or 'high'"
+      );
     }
     return value as "low" | "medium" | "high";
   }
@@ -93,13 +103,17 @@ export class Validators {
    */
   static readyStatePattern(value: unknown): [number, number, number] {
     if (!Array.isArray(value) || value.length !== 3) {
-      throw new ValidationError("Ready state pattern must be an array of 3 numbers");
+      throw new ValidationError(
+        "Ready state pattern must be an array of 3 numbers"
+      );
     }
 
     const [sts, st, tt] = value;
 
     if (!Number.isInteger(sts) || sts < 0 || sts > 10) {
-      throw new ValidationError("STS value must be an integer between 0 and 10");
+      throw new ValidationError(
+        "STS value must be an integer between 0 and 10"
+      );
     }
     if (!Number.isInteger(st) || st < 0 || st > 10) {
       throw new ValidationError("ST value must be an integer between 0 and 10");
@@ -119,10 +133,14 @@ export class Validators {
       throw new ValidationError("Target advance hours must be a valid number");
     }
     if (value < 0.5) {
-      throw new ValidationError("Target advance hours must be at least 0.5 hours");
+      throw new ValidationError(
+        "Target advance hours must be at least 0.5 hours"
+      );
     }
     if (value > 168) {
-      throw new ValidationError("Target advance hours cannot exceed 168 hours (1 week)");
+      throw new ValidationError(
+        "Target advance hours cannot exceed 168 hours (1 week)"
+      );
     }
     return value;
   }
@@ -130,15 +148,27 @@ export class Validators {
   /**
    * Validates poll interval in seconds
    */
-  static pollInterval(value: number, minSeconds = 10, maxSeconds = 3600): number {
-    if (typeof value !== "number" || Number.isNaN(value) || !Number.isInteger(value)) {
+  static pollInterval(
+    value: number,
+    minSeconds = 10,
+    maxSeconds = 3600
+  ): number {
+    if (
+      typeof value !== "number" ||
+      Number.isNaN(value) ||
+      !Number.isInteger(value)
+    ) {
       throw new ValidationError("Poll interval must be a valid integer");
     }
     if (value < minSeconds) {
-      throw new ValidationError(`Poll interval must be at least ${minSeconds} seconds`);
+      throw new ValidationError(
+        `Poll interval must be at least ${minSeconds} seconds`
+      );
     }
     if (value > maxSeconds) {
-      throw new ValidationError(`Poll interval cannot exceed ${maxSeconds} seconds`);
+      throw new ValidationError(
+        `Poll interval cannot exceed ${maxSeconds} seconds`
+      );
     }
     return value;
   }
@@ -146,7 +176,9 @@ export class Validators {
   /**
    * Validates all take profit levels at once
    */
-  static validateTakeProfitLevels(data: Record<string, unknown>): Record<string, number> {
+  static validateTakeProfitLevels(
+    data: Record<string, unknown>
+  ): Record<string, number> {
     const collector = new ErrorCollector();
     const validated: Record<string, number> = {};
 
@@ -177,7 +209,9 @@ export class Validators {
   /**
    * Validates a complete user preferences object
    */
-  static validateUserPreferences(data: Record<string, unknown>): Record<string, unknown> {
+  static validateUserPreferences(
+    data: Record<string, unknown>
+  ): Record<string, unknown> {
     const collector = new ErrorCollector();
     const validated: Record<string, unknown> = {};
 
@@ -217,7 +251,9 @@ export class Validators {
 
     if (data.stopLossPercent !== undefined) {
       try {
-        validated.stopLossPercent = Validators.stopLossPercent(Number(data.stopLossPercent));
+        validated.stopLossPercent = Validators.stopLossPercent(
+          Number(data.stopLossPercent)
+        );
       } catch (error) {
         if (error instanceof ValidationError) {
           collector.add(error.message, "stopLossPercent");
@@ -227,7 +263,9 @@ export class Validators {
 
     if (data.riskTolerance !== undefined) {
       try {
-        validated.riskTolerance = Validators.riskTolerance(String(data.riskTolerance));
+        validated.riskTolerance = Validators.riskTolerance(
+          String(data.riskTolerance)
+        );
       } catch (error) {
         if (error instanceof ValidationError) {
           collector.add(error.message, "riskTolerance");
@@ -237,7 +275,9 @@ export class Validators {
 
     if (data.readyStatePattern !== undefined) {
       try {
-        validated.readyStatePattern = Validators.readyStatePattern(data.readyStatePattern);
+        validated.readyStatePattern = Validators.readyStatePattern(
+          data.readyStatePattern
+        );
       } catch (error) {
         if (error instanceof ValidationError) {
           collector.add(error.message, "readyStatePattern");

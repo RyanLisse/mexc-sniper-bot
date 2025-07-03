@@ -1,6 +1,6 @@
 /**
  * Pattern Discovery Streamer
- * 
+ *
  * Handles streaming of pattern discovery and ready state notifications
  */
 
@@ -48,7 +48,9 @@ export class PatternDiscoveryStreamer {
 
   broadcastReadyStatePattern(data: ReadyStateData): void {
     const isReady = data.sts === 2 && data.st === 2 && data.tt === 4;
-    const advanceNotice = data.estimatedLaunchTime ? data.estimatedLaunchTime - Date.now() : 0;
+    const advanceNotice = data.estimatedLaunchTime
+      ? data.estimatedLaunchTime - Date.now()
+      : 0;
 
     const message: PatternReadyStateMessage = {
       symbol: data.symbol,

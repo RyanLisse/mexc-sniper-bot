@@ -42,49 +42,57 @@ import { validateConfig } from "./types";
 export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   private logger = {
     info: (message: string, context?: any) => {
-      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
-        errorLogger.logInfo(message, { 
-          component: 'CoreTradingService',
-          operation: 'info',
-          ...context 
+      import("@/src/services/notification/error-logging-service")
+        .then(({ errorLogger }) => {
+          errorLogger.logInfo(message, {
+            component: "CoreTradingService",
+            operation: "info",
+            ...context,
+          });
+        })
+        .catch(() => {
+          console.info("[core-trading-service]", message, context || "");
         });
-      }).catch(() => {
-        console.info("[core-trading-service]", message, context || "");
-      });
     },
     warn: (message: string, context?: any) => {
-      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
-        errorLogger.logWarning(message, { 
-          component: 'CoreTradingService',
-          operation: 'warning',
-          ...context 
+      import("@/src/services/notification/error-logging-service")
+        .then(({ errorLogger }) => {
+          errorLogger.logWarning(message, {
+            component: "CoreTradingService",
+            operation: "warning",
+            ...context,
+          });
+        })
+        .catch(() => {
+          console.warn("[core-trading-service]", message, context || "");
         });
-      }).catch(() => {
-        console.warn("[core-trading-service]", message, context || "");
-      });
     },
     error: (message: string, context?: any) => {
-      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
-        const error = new Error(message);
-        errorLogger.logError(error, { 
-          component: 'CoreTradingService',
-          operation: 'error',
-          ...context 
+      import("@/src/services/notification/error-logging-service")
+        .then(({ errorLogger }) => {
+          const error = new Error(message);
+          errorLogger.logError(error, {
+            component: "CoreTradingService",
+            operation: "error",
+            ...context,
+          });
+        })
+        .catch(() => {
+          console.error("[core-trading-service]", message, context || "");
         });
-      }).catch(() => {
-        console.error("[core-trading-service]", message, context || "");
-      });
     },
     debug: (message: string, context?: any) => {
-      import('@/src/services/notification/error-logging-service').then(({ errorLogger }) => {
-        errorLogger.logDebug(message, { 
-          component: 'CoreTradingService',
-          operation: 'debug',
-          ...context 
+      import("@/src/services/notification/error-logging-service")
+        .then(({ errorLogger }) => {
+          errorLogger.logDebug(message, {
+            component: "CoreTradingService",
+            operation: "debug",
+            ...context,
+          });
+        })
+        .catch(() => {
+          console.debug("[core-trading-service]", message, context || "");
         });
-      }).catch(() => {
-        console.debug("[core-trading-service]", message, context || "");
-      });
     },
   };
 
@@ -138,38 +146,39 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       logger: this.logger,
       eventEmitter: this,
       tradingStrategy: {
-        closePosition: async (positionId: string, reason: string) => this.closePosition(positionId, reason),
+        closePosition: async (positionId: string, reason: string) =>
+          this.closePosition(positionId, reason),
       },
       orderExecutor: {
         executePaperSnipe: async (params) => this.executeTrade(params),
-        executeRealSnipe: async (params) => this.executeTrade(params), 
-        createPositionEntry: async (params, result) => ({ 
+        executeRealSnipe: async (params) => this.executeTrade(params),
+        createPositionEntry: async (params, result) => ({
           id: `${params.symbol}-${Date.now()}`,
           symbol: params.symbol,
           side: params.side,
-          orderId: result.data?.orderId || 'unknown',
-          entryPrice: parseFloat(result.data?.price || '0'),
-          quantity: parseFloat(result.data?.quantity || '0'),
+          orderId: result.data?.orderId || "unknown",
+          entryPrice: parseFloat(result.data?.price || "0"),
+          quantity: parseFloat(result.data?.quantity || "0"),
           timestamp: new Date().toISOString(),
-          status: 'open' as const,
+          status: "open" as const,
           openTime: new Date(),
-          strategy: params.strategy || 'default',
-          tags: ['auto-generated']
+          strategy: params.strategy || "default",
+          tags: ["auto-generated"],
         }),
       },
       positionManager: {
-        setupPositionMonitoring: async (position, result) => {},
-        updatePositionStopLoss: async (positionId, newStopLoss) => ({ 
-          success: true, 
-          timestamp: new Date().toISOString() 
+        setupPositionMonitoring: async (_position, _result) => {},
+        updatePositionStopLoss: async (_positionId, _newStopLoss) => ({
+          success: true,
+          timestamp: new Date().toISOString(),
         }),
-        updatePositionTakeProfit: async (positionId, newTakeProfit) => ({ 
-          success: true, 
-          timestamp: new Date().toISOString() 
+        updatePositionTakeProfit: async (_positionId, _newTakeProfit) => ({
+          success: true,
+          timestamp: new Date().toISOString(),
         }),
       },
       marketDataService: {
-        getCurrentPrice: async (symbol) => ({ price: 0 }),
+        getCurrentPrice: async (_symbol) => ({ price: 0 }),
       },
     };
 
@@ -191,7 +200,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   // Singleton Pattern
   // ============================================================================
 
-  public static getInstance(config?: Partial<CoreTradingConfig>): CoreTradingService {
+  public static getInstance(
+    config?: Partial<CoreTradingConfig>
+  ): CoreTradingService {
     if (!CoreTradingService.instance) {
       CoreTradingService.instance = new CoreTradingService(config);
     }
@@ -201,25 +212,27 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * FIXED: Get singleton instance with initialization guarantee
    */
-  public static async getInitializedInstance(config?: Partial<CoreTradingConfig>): Promise<CoreTradingService> {
+  public static async getInitializedInstance(
+    config?: Partial<CoreTradingConfig>
+  ): Promise<CoreTradingService> {
     const instance = CoreTradingService.getInstance(config);
-    
+
     // Ensure initialization
     try {
       const initResult = await instance.initialize();
       if (!initResult.success) {
         console.warn("Singleton instance initialization failed", {
           error: initResult.error,
-          operation: 'getInitializedInstance'
+          operation: "getInitializedInstance",
         });
       }
     } catch (error) {
       console.warn("Failed to initialize singleton instance", {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        operation: 'getInitializedInstance'
+        error: error instanceof Error ? error.message : "Unknown error",
+        operation: "getInitializedInstance",
       });
     }
-    
+
     return instance;
   }
 
@@ -232,8 +245,8 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
         await CoreTradingService.instance.shutdown();
       } catch (error) {
         console.warn("Error during singleton shutdown", {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          operation: 'resetInstance'
+          error: error instanceof Error ? error.message : "Unknown error",
+          operation: "resetInstance",
         });
       }
       CoreTradingService.instance.cleanup();
@@ -252,7 +265,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     try {
       // FIXED: Prevent double initialization to avoid circuit breaker conflicts
       if (this.isInitialized) {
-        this.logger.debug("Service already initialized, skipping re-initialization");
+        this.logger.debug(
+          "Service already initialized, skipping re-initialization"
+        );
         return {
           success: true,
           timestamp: new Date().toISOString(),
@@ -278,75 +293,114 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
           while (startAttempts < maxStartAttempts) {
             try {
               await this.safetyCoordinator.start();
-              this.logger.debug("Safety coordinator started successfully", { attempt: startAttempts + 1 });
+              this.logger.debug("Safety coordinator started successfully", {
+                attempt: startAttempts + 1,
+              });
               break;
             } catch (startError) {
               startAttempts++;
-              const errorMessage = startError instanceof Error ? startError.message : 'Unknown error';
-              
+              const errorMessage =
+                startError instanceof Error
+                  ? startError.message
+                  : "Unknown error";
+
               if (startAttempts >= maxStartAttempts) {
-                this.logger.warn("Safety coordinator start failed after max attempts, proceeding without emergency safety", {
-                  attempts: startAttempts,
-                  error: errorMessage
-                });
+                this.logger.warn(
+                  "Safety coordinator start failed after max attempts, proceeding without emergency safety",
+                  {
+                    attempts: startAttempts,
+                    error: errorMessage,
+                  }
+                );
                 // Don't fail initialization if safety coordinator can't start
                 break;
               } else {
-                this.logger.warn("Safety coordinator start failed, retrying...", {
-                  attempt: startAttempts,
-                  error: errorMessage,
-                  retryDelay: startDelay
-                });
-                await new Promise(resolve => setTimeout(resolve, startDelay));
+                this.logger.warn(
+                  "Safety coordinator start failed, retrying...",
+                  {
+                    attempt: startAttempts,
+                    error: errorMessage,
+                    retryDelay: startDelay,
+                  }
+                );
+                await new Promise((resolve) => setTimeout(resolve, startDelay));
               }
             }
           }
         } catch (safetyError) {
           // FIXED: Safety coordinator failures shouldn't block core service initialization
-          this.logger.warn("Safety coordinator initialization failed, proceeding without emergency safety features", {
-            error: safetyError instanceof Error ? safetyError.message : 'Unknown error',
-            circuitBreakerEnabled: this.config.enableCircuitBreaker
-          });
+          this.logger.warn(
+            "Safety coordinator initialization failed, proceeding without emergency safety features",
+            {
+              error:
+                safetyError instanceof Error
+                  ? safetyError.message
+                  : "Unknown error",
+              circuitBreakerEnabled: this.config.enableCircuitBreaker,
+            }
+          );
         }
       }
 
       // FIXED: Initialize modules with individual error handling to prevent cascade failures
       const moduleInitResults = await Promise.allSettled([
-        this.strategyManager.initialize().catch(err => {
-          this.logger.warn("Strategy manager initialization failed", { error: err.message });
+        this.strategyManager.initialize().catch((err) => {
+          this.logger.warn("Strategy manager initialization failed", {
+            error: err.message,
+          });
           throw err;
         }),
-        this.positionManager.initialize().catch(err => {
-          this.logger.warn("Position manager initialization failed", { error: err.message });
+        this.positionManager.initialize().catch((err) => {
+          this.logger.warn("Position manager initialization failed", {
+            error: err.message,
+          });
           throw err;
         }),
-        this.performanceTracker.initialize().catch(err => {
-          this.logger.warn("Performance tracker initialization failed", { error: err.message });
+        this.performanceTracker.initialize().catch((err) => {
+          this.logger.warn("Performance tracker initialization failed", {
+            error: err.message,
+          });
           throw err;
         }),
-        this.manualTrading.initialize().catch(err => {
-          this.logger.warn("Manual trading initialization failed", { error: err.message });
+        this.manualTrading.initialize().catch((err) => {
+          this.logger.warn("Manual trading initialization failed", {
+            error: err.message,
+          });
           throw err;
         }),
-        this.autoSniping.initialize().catch(err => {
-          this.logger.warn("Auto sniping initialization failed", { error: err.message });
+        this.autoSniping.initialize().catch((err) => {
+          this.logger.warn("Auto sniping initialization failed", {
+            error: err.message,
+          });
           throw err;
         }),
       ]);
 
       // Check for critical module failures
       const failedModules = moduleInitResults
-        .map((result, index) => ({ result, module: ['strategyManager', 'positionManager', 'performanceTracker', 'manualTrading', 'autoSniping'][index] }))
-        .filter(({ result }) => result.status === 'rejected');
+        .map((result, index) => ({
+          result,
+          module: [
+            "strategyManager",
+            "positionManager",
+            "performanceTracker",
+            "manualTrading",
+            "autoSniping",
+          ][index],
+        }))
+        .filter(({ result }) => result.status === "rejected");
 
       if (failedModules.length > 0) {
-        const errorMessages = failedModules.map(({ module, result }) => 
-          `${module}: ${result.status === 'rejected' ? result.reason.message : 'Unknown error'}`
-        ).join(', ');
-        
+        const errorMessages = failedModules
+          .map(
+            ({ module, result }) =>
+              `${module}: ${result.status === "rejected" ? result.reason.message : "Unknown error"}`
+          )
+          .join(", ");
+
         this.logger.error("Critical module initialization failures", {
-          failedModules: failedModules.map(f => f.module),
-          errors: errorMessages
+          failedModules: failedModules.map((f) => f.module),
+          errors: errorMessages,
         });
 
         // For testing purposes, still mark as initialized but with degraded functionality
@@ -366,10 +420,16 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
           await this.autoSniping.start();
           this.logger.debug("Auto-sniping started successfully");
         } catch (autoSnipingError) {
-          this.logger.warn("Auto-sniping failed to start during initialization", {
-            error: autoSnipingError instanceof Error ? autoSnipingError.message : 'Unknown error',
-            autoSnipingEnabled: this.config.autoSnipingEnabled
-          });
+          this.logger.warn(
+            "Auto-sniping failed to start during initialization",
+            {
+              error:
+                autoSnipingError instanceof Error
+                  ? autoSnipingError.message
+                  : "Unknown error",
+              autoSnipingEnabled: this.config.autoSnipingEnabled,
+            }
+          );
           // Don't fail initialization if auto-sniping can't start
         }
       }
@@ -379,7 +439,7 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       this.logger.info("Core Trading Service initialized successfully", {
         safetyCoordinatorActive: !!this.safetyCoordinator,
         autoSnipingEnabled: this.config.autoSnipingEnabled,
-        circuitBreakerEnabled: this.config.enableCircuitBreaker
+        circuitBreakerEnabled: this.config.enableCircuitBreaker,
       });
 
       return {
@@ -463,7 +523,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Execute a multi-phase trading strategy
    */
-  async executeMultiPhaseStrategy(config: MultiPhaseConfig): Promise<MultiPhaseResult> {
+  async executeMultiPhaseStrategy(
+    config: MultiPhaseConfig
+  ): Promise<MultiPhaseResult> {
     this.ensureInitialized();
     return this.manualTrading.executeMultiPhaseStrategy(config);
   }
@@ -504,15 +566,17 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Close all positions
    */
-  async closeAllPositions(reason: string): Promise<ServiceResponse<{ closedCount: number }>> {
+  async closeAllPositions(
+    reason: string
+  ): Promise<ServiceResponse<{ closedCount: number }>> {
     this.ensureInitialized();
     const result = await this.positionManager.closeAllPositions(reason);
-    
+
     return {
       success: result.success,
       data: { closedCount: result.closedCount },
-      error: result.errors?.join('; '),
-      timestamp: new Date().toISOString()
+      error: result.errors?.join("; "),
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -531,7 +595,8 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
     this.ensureInitialized();
 
     const positionStats = await this.positionManager.getPositionStats();
-    const performanceMetrics = await this.performanceTracker.getPerformanceMetrics();
+    const performanceMetrics =
+      await this.performanceTracker.getPerformanceMetrics();
     const manualTradingStatus = this.manualTrading.getStatus();
     const autoSnipingStatus = this.autoSniping.getStatus();
 
@@ -559,7 +624,8 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       circuitBreakerResetTime: manualTradingStatus.circuitBreakerResetTime,
 
       // Performance Status
-      lastTradeTime: performanceMetrics.totalTrades > 0 ? new Date() : undefined,
+      lastTradeTime:
+        performanceMetrics.totalTrades > 0 ? new Date() : undefined,
       averageResponseTime: performanceMetrics.averageExecutionTime,
       cacheHitRate: 0, // Would get from MEXC service
 
@@ -583,7 +649,8 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   async getExtendedServiceStatus(): Promise<ExtendedServiceStatus> {
     const baseStatus = await this.getServiceStatus();
     const autoSnipingStatus = this.autoSniping.getStatus();
-    const performanceMetrics = await this.performanceTracker.getPerformanceMetrics();
+    const performanceMetrics =
+      await this.performanceTracker.getPerformanceMetrics();
 
     // Map base status to extended status with frontend-expected fields
     const extendedStatus: ExtendedServiceStatus = {
@@ -607,8 +674,11 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
       executedToday: performanceMetrics.totalTrades,
       successRate: performanceMetrics.successRate,
       totalProfit: performanceMetrics.totalPnL,
-      lastExecution: baseStatus.lastTradeTime?.toISOString() || new Date().toISOString(),
-      safetyStatus: this.mapRiskLevelToSafetyStatus(baseStatus.currentRiskLevel),
+      lastExecution:
+        baseStatus.lastTradeTime?.toISOString() || new Date().toISOString(),
+      safetyStatus: this.mapRiskLevelToSafetyStatus(
+        baseStatus.currentRiskLevel
+      ),
       patternDetectionActive: autoSnipingStatus.isActive,
       executionCount: performanceMetrics.totalTrades,
       successCount: performanceMetrics.successfulTrades,
@@ -642,7 +712,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Update configuration
    */
-  async updateConfig(updates: Partial<CoreTradingConfig>): Promise<ServiceResponse<void>> {
+  async updateConfig(
+    updates: Partial<CoreTradingConfig>
+  ): Promise<ServiceResponse<void>> {
     try {
       const newConfig = validateConfig({ ...this.config, ...updates });
       this.config = newConfig;
@@ -734,14 +806,20 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Close specific position
    */
-  async closePosition(positionId: string, reason?: string): Promise<ServiceResponse<void>> {
+  async closePosition(
+    positionId: string,
+    reason?: string
+  ): Promise<ServiceResponse<void>> {
     this.ensureInitialized();
-    const result = await this.positionManager.closePositionPublic(positionId, reason || "Manual close");
-    
+    const result = await this.positionManager.closePositionPublic(
+      positionId,
+      reason || "Manual close"
+    );
+
     return {
       success: result.success,
       error: result.error,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -750,13 +828,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    */
   async emergencyCloseAll(): Promise<ServiceResponse<{ closedCount: number }>> {
     this.ensureInitialized();
-    const result = await this.positionManager.closeAllPositions("Emergency stop");
-    
+    const result =
+      await this.positionManager.closeAllPositions("Emergency stop");
+
     return {
       success: result.success,
       data: { closedCount: result.closedCount },
-      error: result.errors?.join('; '),
-      timestamp: new Date().toISOString()
+      error: result.errors?.join("; "),
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -794,25 +873,36 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   private ensureInitialized(): void {
     if (!this.isInitialized) {
       // FIXED: Auto-initialization for critical operations to prevent test failures
-      this.logger.warn("Auto-initializing Core Trading Service for critical operation", {
-        component: 'CoreTradingService',
-        operation: 'ensureInitialized',
-        autoInitializing: true,
-        context: { stack: new Error().stack }
-      });
+      this.logger.warn(
+        "Auto-initializing Core Trading Service for critical operation",
+        {
+          component: "CoreTradingService",
+          operation: "ensureInitialized",
+          autoInitializing: true,
+          context: { stack: new Error().stack },
+        }
+      );
 
       // Attempt auto-initialization synchronously for backward compatibility
       try {
         this.autoInitializeSync();
       } catch (autoInitError) {
-        const error = new Error("Core Trading Service is not initialized. Call initialize() first.");
-        this.logger.error("Service not initialized and auto-initialization failed", {
-          component: 'CoreTradingService',
-          operation: 'ensureInitialized',
-          isInitialized: this.isInitialized,
-          autoInitError: autoInitError instanceof Error ? autoInitError.message : 'Unknown error',
-          context: { stack: new Error().stack }
-        });
+        const error = new Error(
+          "Core Trading Service is not initialized. Call initialize() first."
+        );
+        this.logger.error(
+          "Service not initialized and auto-initialization failed",
+          {
+            component: "CoreTradingService",
+            operation: "ensureInitialized",
+            isInitialized: this.isInitialized,
+            autoInitError:
+              autoInitError instanceof Error
+                ? autoInitError.message
+                : "Unknown error",
+            context: { stack: new Error().stack },
+          }
+        );
         throw error;
       }
     }
@@ -843,23 +933,30 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
           this.logger.debug("Safety coordinator initialized during auto-init");
         } catch (safetyError) {
           // Safety coordinator initialization failure shouldn't block the entire service
-          this.logger.warn("Safety coordinator auto-initialization failed, proceeding without it", {
-            error: safetyError instanceof Error ? safetyError.message : 'Unknown error'
-          });
+          this.logger.warn(
+            "Safety coordinator auto-initialization failed, proceeding without it",
+            {
+              error:
+                safetyError instanceof Error
+                  ? safetyError.message
+                  : "Unknown error",
+            }
+          );
         }
       }
 
-      this.logger.info("Synchronous auto-initialization completed successfully");
+      this.logger.info(
+        "Synchronous auto-initialization completed successfully"
+      );
 
       // Schedule async initialization for full functionality
       setImmediate(() => {
         this.initialize().catch((error) => {
           this.logger.warn("Full async initialization failed after auto-init", {
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         });
       });
-
     } catch (error) {
       this.isInitialized = false;
       throw error;
@@ -869,12 +966,14 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   /**
    * Calculate current risk level based on performance metrics
    */
-  private calculateRiskLevel(metrics: PerformanceMetrics): "low" | "medium" | "high" | "critical" {
+  private calculateRiskLevel(
+    metrics: PerformanceMetrics
+  ): "low" | "medium" | "high" | "critical" {
     // Handle initial state when no trades have been executed
     if (metrics.totalTrades === 0 || metrics.totalTrades === undefined) {
       return "low"; // Safe initial state
     }
-    
+
     // Simple risk calculation based on drawdown and success rate
     if (metrics.maxDrawdown > 25 || metrics.successRate < 30) {
       return "critical";
@@ -919,7 +1018,9 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
 // FIXED: Enhanced singleton factory functions with auto-initialization support
 let globalCoreTrading: CoreTradingService | null = null;
 
-export function getCoreTrading(config?: Partial<CoreTradingConfig>): CoreTradingService {
+export function getCoreTrading(
+  config?: Partial<CoreTradingConfig>
+): CoreTradingService {
   if (!globalCoreTrading) {
     globalCoreTrading = new CoreTradingService(config);
   }
@@ -930,25 +1031,33 @@ export function getCoreTrading(config?: Partial<CoreTradingConfig>): CoreTrading
  * FIXED: Get initialized Core Trading Service with auto-initialization guarantee
  * This function ensures the service is initialized before returning, preventing initialization errors
  */
-export async function getInitializedCoreTrading(config?: Partial<CoreTradingConfig>): Promise<CoreTradingService> {
+export async function getInitializedCoreTrading(
+  config?: Partial<CoreTradingConfig>
+): Promise<CoreTradingService> {
   const service = getCoreTrading(config);
-  
+
   // Ensure the service is initialized
   try {
     const initResult = await service.initialize();
     if (!initResult.success) {
-      console.warn("Core Trading Service initialization failed, but returning service anyway", {
-        error: initResult.error,
-        operation: 'getInitializedCoreTrading'
-      });
+      console.warn(
+        "Core Trading Service initialization failed, but returning service anyway",
+        {
+          error: initResult.error,
+          operation: "getInitializedCoreTrading",
+        }
+      );
     }
   } catch (error) {
-    console.warn("Failed to initialize Core Trading Service during getInitializedCoreTrading", {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      operation: 'getInitializedCoreTrading'
-    });
+    console.warn(
+      "Failed to initialize Core Trading Service during getInitializedCoreTrading",
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+        operation: "getInitializedCoreTrading",
+      }
+    );
   }
-  
+
   return service;
 }
 
@@ -961,8 +1070,8 @@ export async function resetCoreTrading(): Promise<void> {
       await globalCoreTrading.shutdown();
     } catch (error) {
       console.warn("Error during Core Trading Service shutdown", {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        operation: 'resetCoreTrading'
+        error: error instanceof Error ? error.message : "Unknown error",
+        operation: "resetCoreTrading",
       });
     }
   }
@@ -972,44 +1081,49 @@ export async function resetCoreTrading(): Promise<void> {
 /**
  * FIXED: Create new Core Trading Service instance with initialization option
  */
-export function createCoreTrading(config: Partial<CoreTradingConfig>, autoInitialize = false): CoreTradingService {
+export function createCoreTrading(
+  config: Partial<CoreTradingConfig>,
+  autoInitialize = false
+): CoreTradingService {
   const service = new CoreTradingService(config);
-  
+
   if (autoInitialize) {
     // Schedule initialization without blocking
     setImmediate(() => {
       service.initialize().catch((error) => {
         console.warn("Auto-initialization failed for createCoreTrading", {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          operation: 'createCoreTrading'
+          error: error instanceof Error ? error.message : "Unknown error",
+          operation: "createCoreTrading",
         });
       });
     });
   }
-  
+
   return service;
 }
 
 /**
  * FIXED: Create and initialize Core Trading Service instance
  */
-export async function createInitializedCoreTrading(config: Partial<CoreTradingConfig>): Promise<CoreTradingService> {
+export async function createInitializedCoreTrading(
+  config: Partial<CoreTradingConfig>
+): Promise<CoreTradingService> {
   const service = new CoreTradingService(config);
-  
+
   try {
     const initResult = await service.initialize();
     if (!initResult.success) {
       console.warn("Created Core Trading Service with initialization failure", {
         error: initResult.error,
-        operation: 'createInitializedCoreTrading'
+        operation: "createInitializedCoreTrading",
       });
     }
   } catch (error) {
     console.warn("Failed to initialize newly created Core Trading Service", {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      operation: 'createInitializedCoreTrading'
+      error: error instanceof Error ? error.message : "Unknown error",
+      operation: "createInitializedCoreTrading",
     });
   }
-  
+
   return service;
 }

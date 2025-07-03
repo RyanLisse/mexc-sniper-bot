@@ -55,7 +55,11 @@ export class BalancePersistenceService {
       // Validate input data
       const validatedData = BalanceDataSchema.parse(balanceData);
 
-      const { snapshotType = "periodic", dataSource = "api", priceSource = "mexc" } = options;
+      const {
+        snapshotType = "periodic",
+        dataSource = "api",
+        priceSource = "mexc",
+      } = options;
 
       console.info("Saving balance snapshot", {
         userId,
@@ -75,7 +79,9 @@ export class BalancePersistenceService {
         usdValue: balance.usdtValue || 0,
         priceSource,
         exchangeRate:
-          balance.usdtValue && balance.total > 0 ? balance.usdtValue / balance.total : null,
+          balance.usdtValue && balance.total > 0
+            ? balance.usdtValue / balance.total
+            : null,
         snapshotType,
         dataSource,
         timestamp: new Date(),
@@ -110,7 +116,10 @@ export class BalancePersistenceService {
   /**
    * Update portfolio summary with latest balance data
    */
-  private async updatePortfolioSummary(userId: string, balanceData: BalanceData): Promise<void> {
+  private async updatePortfolioSummary(
+    userId: string,
+    balanceData: BalanceData
+  ): Promise<void> {
     try {
       // Calculate top assets (top 5 by USD value)
       const sortedAssets = balanceData.balances
@@ -195,7 +204,10 @@ export class BalancePersistenceService {
   /**
    * Calculate percentage change between two values
    */
-  private calculatePerformanceChange(previousValue: number, currentValue: number): number {
+  private calculatePerformanceChange(
+    previousValue: number,
+    currentValue: number
+  ): number {
     if (previousValue === 0) return 0;
     return ((currentValue - previousValue) / previousValue) * 100;
   }
@@ -308,4 +320,5 @@ export class BalancePersistenceService {
 }
 
 // Export singleton instance
-export const balancePersistenceService = BalancePersistenceService.getInstance();
+export const balancePersistenceService =
+  BalancePersistenceService.getInstance();

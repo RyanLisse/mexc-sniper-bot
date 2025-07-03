@@ -14,7 +14,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Progress } from "../ui/progress";
 
 /**
@@ -56,8 +62,11 @@ interface SystemValidationCardProps {
   className?: string;
 }
 
-export function SystemValidationCard({ className = "" }: SystemValidationCardProps) {
-  const [validationData, setValidationData] = useState<SystemValidationData | null>(null);
+export function SystemValidationCard({
+  className = "",
+}: SystemValidationCardProps) {
+  const [validationData, setValidationData] =
+    useState<SystemValidationData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [showDetails, setShowDetails] = useState(false);
@@ -126,26 +135,30 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
   }, [fetchValidation]);
 
   const getStatusConfig = () => {
-    if (!validationData) return { color: "gray", icon: Loader2, bgClass: "bg-gray-50" };
+    if (!validationData)
+      return { color: "gray", icon: Loader2, bgClass: "bg-gray-50" };
 
     switch (validationData.overall) {
       case "ready":
         return {
           color: "green",
           icon: CheckCircle,
-          bgClass: "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800",
+          bgClass:
+            "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800",
         };
       case "issues":
         return {
           color: "yellow",
           icon: AlertTriangle,
-          bgClass: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800",
+          bgClass:
+            "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800",
         };
       case "critical_failure":
         return {
           color: "red",
           icon: XCircle,
-          bgClass: "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800",
+          bgClass:
+            "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800",
         };
       default:
         return { color: "gray", icon: Clock, bgClass: "bg-gray-50" };
@@ -166,15 +179,28 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
           <div className="flex items-center space-x-2">
             {validationData && (
               <Badge
-                variant={validationData.readyForAutoSniping ? "default" : "destructive"}
+                variant={
+                  validationData.readyForAutoSniping ? "default" : "destructive"
+                }
                 className="flex items-center space-x-1"
               >
-                <StatusIcon className={`h-3 w-3 text-${statusConfig.color}-500`} />
-                <span>{validationData.readyForAutoSniping ? "Ready" : "Not Ready"}</span>
+                <StatusIcon
+                  className={`h-3 w-3 text-${statusConfig.color}-500`}
+                />
+                <span>
+                  {validationData.readyForAutoSniping ? "Ready" : "Not Ready"}
+                </span>
               </Badge>
             )}
-            <Button variant="ghost" size="sm" onClick={fetchValidation} disabled={isLoading}>
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchValidation}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </div>
@@ -190,7 +216,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
         {isLoading && !validationData && (
           <div className="flex items-center space-x-3 p-4">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            <span className="text-muted-foreground">Running system validation...</span>
+            <span className="text-muted-foreground">
+              Running system validation...
+            </span>
           </div>
         )}
 
@@ -215,7 +243,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
                   <div
                     className={`w-3 h-3 rounded-full bg-${statusConfig.color}-500 animate-pulse`}
                   />
-                  <span className={`font-medium text-${statusConfig.color}-600`}>
+                  <span
+                    className={`font-medium text-${statusConfig.color}-600`}
+                  >
                     {validationData.readyForAutoSniping
                       ? "System Ready for Auto-Sniping"
                       : validationData.overall === "critical_failure"
@@ -234,20 +264,27 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
             {/* Summary Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <div className="text-center">
-                <div className="font-medium text-green-600">{validationData.summary.passed}</div>
+                <div className="font-medium text-green-600">
+                  {validationData.summary.passed}
+                </div>
                 <div className="text-muted-foreground">Passed</div>
               </div>
               <div className="text-center">
-                <div className="font-medium text-yellow-600">{validationData.summary.warnings}</div>
+                <div className="font-medium text-yellow-600">
+                  {validationData.summary.warnings}
+                </div>
                 <div className="text-muted-foreground">Warnings</div>
               </div>
               <div className="text-center">
-                <div className="font-medium text-red-600">{validationData.summary.failures}</div>
+                <div className="font-medium text-red-600">
+                  {validationData.summary.failures}
+                </div>
                 <div className="text-muted-foreground">Failures</div>
               </div>
               <div className="text-center">
                 <div className="font-medium text-blue-600">
-                  {validationData.summary.requiredPassed}/{validationData.summary.requiredTotal}
+                  {validationData.summary.requiredPassed}/
+                  {validationData.summary.requiredTotal}
                 </div>
                 <div className="text-muted-foreground">Critical</div>
               </div>
@@ -259,7 +296,8 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   <div className="font-medium">
-                    {validationData.summary.failures} critical issue(s) preventing auto-sniping
+                    {validationData.summary.failures} critical issue(s)
+                    preventing auto-sniping
                   </div>
                   <div className="text-sm mt-1">
                     Fix these issues before enabling automated trading
@@ -284,7 +322,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
                 </div>
               </div>
               <Button
-                variant={validationData.readyForAutoSniping ? "default" : "outline"}
+                variant={
+                  validationData.readyForAutoSniping ? "default" : "outline"
+                }
                 size="sm"
                 disabled={!validationData.readyForAutoSniping}
                 onClick={() => {
@@ -327,7 +367,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
                         {check.status === "warning" && (
                           <AlertTriangle className="h-4 w-4 text-yellow-500" />
                         )}
-                        {check.status === "fail" && <XCircle className="h-4 w-4 text-red-500" />}
+                        {check.status === "fail" && (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium flex items-center space-x-2">
@@ -338,12 +380,18 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
                             </Badge>
                           )}
                         </div>
-                        <div className="text-muted-foreground">{check.message}</div>
+                        <div className="text-muted-foreground">
+                          {check.message}
+                        </div>
                         {check.details && (
-                          <div className="text-xs text-muted-foreground mt-1">{check.details}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {check.details}
+                          </div>
                         )}
                         {check.status !== "pass" && check.fix && (
-                          <div className="text-xs text-blue-600 mt-1">💡 {check.fix}</div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            💡 {check.fix}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -355,16 +403,20 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
             {/* Recommendations */}
             {validationData.recommendations.length > 0 && (
               <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">Recommendations</div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Recommendations
+                </div>
                 <div className="space-y-1">
-                  {validationData.recommendations.slice(0, 3).map((rec, index) => (
-                    <div
-                      key={index}
-                      className="text-sm p-2 bg-blue-50 rounded border-l-2 border-blue-200"
-                    >
-                      {rec}
-                    </div>
-                  ))}
+                  {validationData.recommendations
+                    .slice(0, 3)
+                    .map((rec, index) => (
+                      <div
+                        key={index}
+                        className="text-sm p-2 bg-blue-50 rounded border-l-2 border-blue-200"
+                      >
+                        {rec}
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -372,7 +424,9 @@ export function SystemValidationCard({ className = "" }: SystemValidationCardPro
             {/* Next Steps */}
             {validationData.nextSteps.length > 0 && (
               <div className="space-y-2">
-                <div className="text-sm font-medium text-muted-foreground">Next Steps</div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Next Steps
+                </div>
                 <div className="space-y-1">
                   {validationData.nextSteps.slice(0, 3).map((step, index) => (
                     <div

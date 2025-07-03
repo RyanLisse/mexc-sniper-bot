@@ -1,6 +1,6 @@
 /**
  * Response Enhancer
- * 
+ *
  * Enhances API responses with AI analysis and additional metadata
  */
 
@@ -11,7 +11,12 @@ import type { AgentResponse } from "../../base-agent";
 import { CalendarAnalyzer } from "../analyzers/calendar-analyzer";
 import { DataQualityAnalyzer } from "../analyzers/data-quality-analyzer";
 import { SymbolAnalyzer } from "../analyzers/symbol-analyzer";
-import type { EnhancedApiResponse, MexcApiResponseData, MexcCalendarEntry, MexcSymbolData } from "../types";
+import type {
+  EnhancedApiResponse,
+  MexcApiResponseData,
+  MexcCalendarEntry,
+  MexcSymbolData,
+} from "../types";
 
 export class ResponseEnhancer {
   private symbolAnalyzer: SymbolAnalyzer;
@@ -30,7 +35,9 @@ export class ResponseEnhancer {
   async enhanceServiceResponseWithAI(
     serviceResponse: ServiceResponse<unknown>,
     endpoint: string,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<EnhancedApiResponse> {
     try {
       if (!serviceResponse.success || !serviceResponse.data) {
@@ -41,22 +48,45 @@ export class ResponseEnhancer {
       let aiAnalysis: AgentResponse;
 
       if (endpoint.includes("calendar")) {
-        const calendarData = this.convertToCalendarData(serviceResponse.data as CalendarEntry[]);
-        aiAnalysis = await this.calendarAnalyzer.analyzeCalendarData(calendarData, callOpenAI);
+        const calendarData = this.convertToCalendarData(
+          serviceResponse.data as CalendarEntry[]
+        );
+        aiAnalysis = await this.calendarAnalyzer.analyzeCalendarData(
+          calendarData,
+          callOpenAI
+        );
       } else if (endpoint.includes("symbols")) {
-        const symbolData = this.convertToSymbolData(serviceResponse.data as SymbolEntry[]);
-        aiAnalysis = await this.symbolAnalyzer.analyzeSymbolData(symbolData, callOpenAI);
+        const symbolData = this.convertToSymbolData(
+          serviceResponse.data as SymbolEntry[]
+        );
+        aiAnalysis = await this.symbolAnalyzer.analyzeSymbolData(
+          symbolData,
+          callOpenAI
+        );
       } else if (endpoint.includes("market-overview")) {
-        aiAnalysis = await this.analyzeMarketOverview(serviceResponse.data, callOpenAI);
+        aiAnalysis = await this.analyzeMarketOverview(
+          serviceResponse.data,
+          callOpenAI
+        );
       } else if (endpoint.includes("health")) {
-        aiAnalysis = await this.analyzeHealthData(serviceResponse.data, callOpenAI);
+        aiAnalysis = await this.analyzeHealthData(
+          serviceResponse.data,
+          callOpenAI
+        );
       } else {
-        aiAnalysis = await this.dataQualityAnalyzer.assessServiceResponseQuality(serviceResponse, callOpenAI);
+        aiAnalysis =
+          await this.dataQualityAnalyzer.assessServiceResponseQuality(
+            serviceResponse,
+            callOpenAI
+          );
       }
 
       return this.createEnhancedResponse(serviceResponse, endpoint, aiAnalysis);
     } catch (error) {
-      console.warn(`[ResponseEnhancer] AI analysis failed, returning raw response:`, error);
+      console.warn(
+        `[ResponseEnhancer] AI analysis failed, returning raw response:`,
+        error
+      );
       return this.createEnhancedResponse(serviceResponse, endpoint);
     }
   }
@@ -67,7 +97,9 @@ export class ResponseEnhancer {
   async enhanceResponseWithAI(
     apiResponse: unknown,
     endpoint: string,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<EnhancedApiResponse> {
     try {
       if (!this.dataQualityAnalyzer.isValidResponseStructure(apiResponse)) {
@@ -82,17 +114,17 @@ export class ResponseEnhancer {
 
       if (endpoint.includes("calendar")) {
         aiAnalysis = await this.calendarAnalyzer.analyzeCalendarData(
-          apiResponse.data as MexcCalendarEntry[], 
+          apiResponse.data as MexcCalendarEntry[],
           callOpenAI
         );
       } else if (endpoint.includes("symbols")) {
         aiAnalysis = await this.symbolAnalyzer.analyzeSymbolData(
-          apiResponse.data as MexcSymbolData[], 
+          apiResponse.data as MexcSymbolData[],
           callOpenAI
         );
       } else {
         aiAnalysis = await this.dataQualityAnalyzer.assessDataQuality(
-          apiResponse as MexcApiResponseData, 
+          apiResponse as MexcApiResponseData,
           callOpenAI
         );
       }
@@ -106,7 +138,10 @@ export class ResponseEnhancer {
         },
       } as EnhancedApiResponse;
     } catch (error) {
-      console.warn(`[ResponseEnhancer] AI analysis failed, returning raw response:`, error);
+      console.warn(
+        `[ResponseEnhancer] AI analysis failed, returning raw response:`,
+        error
+      );
       return apiResponse as EnhancedApiResponse;
     }
   }
@@ -135,7 +170,10 @@ export class ResponseEnhancer {
       status: entry.sts === 2 ? "ready" : "pending",
       isTrading: entry.sts === 2 && entry.st === 2 && entry.tt === 4,
       hasCompleteData: Boolean(
-        entry.cd && entry.sts !== undefined && entry.st !== undefined && entry.tt !== undefined
+        entry.cd &&
+          entry.sts !== undefined &&
+          entry.st !== undefined &&
+          entry.tt !== undefined
       ),
     }));
   }
@@ -154,10 +192,12 @@ export class ResponseEnhancer {
       timestamp: serviceResponse.timestamp,
       endpoint,
       error: serviceResponse.error,
-      metadata: serviceResponse.metadata ? {
-        operation: String(serviceResponse.metadata),
-        errorType: serviceResponse.error ? "ServiceError" : undefined,
-      } : undefined,
+      metadata: serviceResponse.metadata
+        ? {
+            operation: String(serviceResponse.metadata),
+            errorType: serviceResponse.error ? "ServiceError" : undefined,
+          }
+        : undefined,
     };
 
     if (aiAnalysis) {
@@ -181,7 +221,9 @@ export class ResponseEnhancer {
    */
   private async analyzeMarketOverview(
     data: unknown,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(data, null, 2);
 
@@ -228,7 +270,9 @@ Focus on actionable insights for trading decision-making.
    */
   private async analyzeHealthData(
     data: unknown,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(data, null, 2);
 

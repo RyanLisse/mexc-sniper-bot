@@ -37,16 +37,16 @@ export function useAutoSnipingExecution() {
 
   // Load execution data from status endpoint
   const loadData = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/control");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to load execution data");
       }
-      
+
       const statusData = result.data.status;
       const executionData: ExecutionData = {
         isActive: statusData.autoSnipingEnabled || false,
@@ -61,14 +61,14 @@ export function useAutoSnipingExecution() {
         lastExecution: statusData.lastExecution,
         status: statusData.autoSnipingEnabled ? "active" : "inactive",
       };
-      
+
       setState({
         data: executionData,
         isLoading: false,
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : "Failed to load data",
@@ -78,30 +78,32 @@ export function useAutoSnipingExecution() {
 
   // Start execution using control endpoint
   const startExecution = async (): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/control", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "start" }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // Update state immediately for better UX
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          data: prev.data ? { ...prev.data, isActive: true, status: "active" } : null,
+          data: prev.data
+            ? { ...prev.data, isActive: true, status: "active" }
+            : null,
           isLoading: false,
         }));
-        
+
         // Refresh full data after a delay
         setTimeout(loadData, 1000);
         return true;
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
           error: result.error || "Failed to start execution",
@@ -109,10 +111,11 @@ export function useAutoSnipingExecution() {
         return false;
       }
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to start execution",
+        error:
+          error instanceof Error ? error.message : "Failed to start execution",
       }));
       return false;
     }
@@ -120,30 +123,32 @@ export function useAutoSnipingExecution() {
 
   // Stop execution using control endpoint
   const stopExecution = async (): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/control", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "stop" }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         // Update state immediately for better UX
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          data: prev.data ? { ...prev.data, isActive: false, status: "inactive" } : null,
+          data: prev.data
+            ? { ...prev.data, isActive: false, status: "inactive" }
+            : null,
           isLoading: false,
         }));
-        
+
         // Refresh full data after a delay
         setTimeout(loadData, 1000);
         return true;
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
           error: result.error || "Failed to stop execution",
@@ -151,10 +156,11 @@ export function useAutoSnipingExecution() {
         return false;
       }
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to stop execution",
+        error:
+          error instanceof Error ? error.message : "Failed to stop execution",
       }));
       return false;
     }
@@ -162,28 +168,28 @@ export function useAutoSnipingExecution() {
 
   // Pause execution
   const pauseExecution = async (): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/execution", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "pause_execution" }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           data: prev.data ? { ...prev.data, status: "paused" } : null,
           isLoading: false,
         }));
-        
+
         setTimeout(loadData, 1000);
         return true;
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
           error: result.error || "Failed to pause execution",
@@ -191,10 +197,11 @@ export function useAutoSnipingExecution() {
         return false;
       }
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to pause execution",
+        error:
+          error instanceof Error ? error.message : "Failed to pause execution",
       }));
       return false;
     }
@@ -202,28 +209,28 @@ export function useAutoSnipingExecution() {
 
   // Resume execution
   const resumeExecution = async (): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/execution", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "resume_execution" }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           data: prev.data ? { ...prev.data, status: "active" } : null,
           isLoading: false,
         }));
-        
+
         setTimeout(loadData, 1000);
         return true;
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
           error: result.error || "Failed to resume execution",
@@ -231,10 +238,11 @@ export function useAutoSnipingExecution() {
         return false;
       }
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to resume execution",
+        error:
+          error instanceof Error ? error.message : "Failed to resume execution",
       }));
       return false;
     }
@@ -242,36 +250,38 @@ export function useAutoSnipingExecution() {
 
   // Emergency stop all
   const emergencyStop = async (): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/control", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: "emergency_stop",
-          reason: "User requested emergency stop" 
+          reason: "User requested emergency stop",
         }),
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
-          data: prev.data ? { 
-            ...prev.data, 
-            isActive: false, 
-            status: "inactive",
-            activePositions: 0 
-          } : null,
+          data: prev.data
+            ? {
+                ...prev.data,
+                isActive: false,
+                status: "inactive",
+                activePositions: 0,
+              }
+            : null,
           isLoading: false,
         }));
-        
+
         setTimeout(loadData, 1000);
         return true;
       } else {
-        setState(prev => ({
+        setState((prev) => ({
           ...prev,
           isLoading: false,
           error: result.error || "Failed to execute emergency stop",
@@ -279,10 +289,13 @@ export function useAutoSnipingExecution() {
         return false;
       }
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : "Failed to execute emergency stop",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to execute emergency stop",
       }));
       return false;
     }
@@ -290,20 +303,20 @@ export function useAutoSnipingExecution() {
 
   // Clear error
   const clearError = useCallback(() => {
-    setState(prev => ({ ...prev, error: null }));
+    setState((prev) => ({ ...prev, error: null }));
   }, []);
 
   // Load data on mount and set up periodic refresh
   useEffect(() => {
     loadData();
-    
+
     // Set up periodic refresh when active
     const interval = setInterval(() => {
       if (state.data?.isActive) {
         loadData();
       }
     }, 30000); // Refresh every 30 seconds when active
-    
+
     return () => clearInterval(interval);
   }, [loadData, state.data?.isActive]);
 

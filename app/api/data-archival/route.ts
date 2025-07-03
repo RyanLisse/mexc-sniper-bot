@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { dataArchivalService } from "@/src/services/data/data-archival-service";
 
 export async function GET() {
   try {
     const [status, stats] = await Promise.all([
       dataArchivalService.getStatus(),
-      dataArchivalService.getArchivalStats()
+      dataArchivalService.getArchivalStats(),
     ]);
-    
+
     return NextResponse.json({
       success: true,
       data: {
         status,
-        stats
+        stats,
       },
     });
   } catch (error) {
@@ -49,37 +49,42 @@ export async function POST(request: NextRequest) {
           data: dataArchivalService.getStatus(),
         });
 
-      case "manual-archive":
+      case "manual-archive": {
         const result = await dataArchivalService.triggerManualArchival();
         return NextResponse.json({
           success: result.success,
-          message: result.success 
+          message: result.success
             ? `Manual archival completed. ${result.recordsArchived} records archived.`
             : `Manual archival failed: ${result.error}`,
           data: {
             recordsArchived: result.recordsArchived,
-            error: result.error
+            error: result.error,
           },
         });
+      }
 
-      case "stats":
+      case "stats": {
         const stats = await dataArchivalService.getArchivalStats();
         return NextResponse.json({
           success: true,
           data: stats,
         });
+      }
 
       default:
         return NextResponse.json(
           {
             success: false,
-            error: "Invalid action. Use 'start', 'stop', 'manual-archive', or 'stats'",
+            error:
+              "Invalid action. Use 'start', 'stop', 'manual-archive', or 'stats'",
           },
           { status: 400 }
         );
     }
   } catch (error) {
-    console.error("❌ Error controlling data archival service:", { error: error });
+    console.error("❌ Error controlling data archival service:", {
+      error: error,
+    });
     return NextResponse.json(
       {
         success: false,

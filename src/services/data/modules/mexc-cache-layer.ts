@@ -118,7 +118,11 @@ export class MexcCacheLayer {
   /**
    * Set data in cache with appropriate TTL
    */
-  set<T>(key: string, data: T, ttlType: keyof typeof CACHE_TTL_PROFILES = "semiStatic"): void {
+  set<T>(
+    key: string,
+    data: T,
+    ttlType: keyof typeof CACHE_TTL_PROFILES = "semiStatic"
+  ): void {
     const ttl = CACHE_TTL_PROFILES[ttlType];
 
     const entry: CacheEntry<T> = {
@@ -136,7 +140,8 @@ export class MexcCacheLayer {
    * Set data in cache with custom TTL
    */
   setWithCustomTTL<T>(key: string, data: T, customTTL?: number): void {
-    const ttl = customTTL ?? this.config.cacheTTL ?? CACHE_TTL_PROFILES.semiStatic;
+    const ttl =
+      customTTL ?? this.config.cacheTTL ?? CACHE_TTL_PROFILES.semiStatic;
 
     const entry: CacheEntry<T> = {
       data,
@@ -340,7 +345,9 @@ export class MexcCacheLayer {
    */
   getMetrics(): CacheMetrics & { hitRate: number; size: number } {
     const hitRate =
-      this.metrics.totalRequests > 0 ? (this.metrics.hits / this.metrics.totalRequests) * 100 : 0;
+      this.metrics.totalRequests > 0
+        ? (this.metrics.hits / this.metrics.totalRequests) * 100
+        : 0;
 
     return {
       ...this.metrics,

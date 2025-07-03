@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { WorkflowManager } from "@/src/components/workflow-manager";
 
@@ -14,7 +13,7 @@ export default function WorkflowsPage() {
             Control and monitor Inngest workflows and automation
           </p>
         </div>
-        
+
         <WorkflowManager />
       </div>
     </DashboardLayout>

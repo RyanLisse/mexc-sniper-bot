@@ -39,7 +39,12 @@ export class QueryPerformanceMonitor {
     warn: (message: string, context?: any) =>
       console.warn("[query-performance-monitor]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[query-performance-monitor]", message, context || "", error || ""),
+      console.error(
+        "[query-performance-monitor]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[query-performance-monitor]", message, context || ""),
   };
@@ -110,7 +115,8 @@ export class QueryPerformanceMonitor {
 
         // Log slow queries immediately
         if (duration > this.slowQueryThreshold) {
-          const level = duration > this.verySlowQueryThreshold ? "ERROR" : "WARN";
+          const level =
+            duration > this.verySlowQueryThreshold ? "ERROR" : "WARN";
           console.info(
             `[${level}] Slow query detected: ${queryName} took ${duration.toFixed(2)}ms`
           );
@@ -138,7 +144,10 @@ export class QueryPerformanceMonitor {
           userId: options?.userId,
         });
 
-        console.error(`❌ Query failed: ${queryName} took ${duration.toFixed(2)}ms`, error);
+        console.error(
+          `❌ Query failed: ${queryName} took ${duration.toFixed(2)}ms`,
+          error
+        );
         throw error;
       });
   }
@@ -174,9 +183,15 @@ export class QueryPerformanceMonitor {
     }
 
     const totalDuration = recentMetrics.reduce((sum, m) => sum + m.duration, 0);
-    const slowQueries = recentMetrics.filter((m) => m.duration > this.slowQueryThreshold);
-    const fastQueries = recentMetrics.filter((m) => m.duration <= this.slowQueryThreshold);
-    const errorQueries = recentMetrics.filter((m) => m.queryName.endsWith("_ERROR"));
+    const slowQueries = recentMetrics.filter(
+      (m) => m.duration > this.slowQueryThreshold
+    );
+    const fastQueries = recentMetrics.filter(
+      (m) => m.duration <= this.slowQueryThreshold
+    );
+    const errorQueries = recentMetrics.filter((m) =>
+      m.queryName.endsWith("_ERROR")
+    );
 
     return {
       totalQueries: recentMetrics.length,
@@ -184,7 +199,9 @@ export class QueryPerformanceMonitor {
       slowQueries: slowQueries.length,
       fastQueries: fastQueries.length,
       errorQueries: errorQueries.length,
-      recentSlowQueries: slowQueries.sort((a, b) => b.duration - a.duration).slice(0, 10), // Top 10 slowest
+      recentSlowQueries: slowQueries
+        .sort((a, b) => b.duration - a.duration)
+        .slice(0, 10), // Top 10 slowest
     };
   }
 
@@ -216,9 +233,14 @@ export class QueryPerformanceMonitor {
       if (!patternData) continue;
       patternData.count++;
       patternData.totalDuration += metric.duration;
-      patternData.slowestDuration = Math.max(patternData.slowestDuration, metric.duration);
+      patternData.slowestDuration = Math.max(
+        patternData.slowestDuration,
+        metric.duration
+      );
       patternData.lastExecuted =
-        metric.timestamp > patternData.lastExecuted ? metric.timestamp : patternData.lastExecuted;
+        metric.timestamp > patternData.lastExecuted
+          ? metric.timestamp
+          : patternData.lastExecuted;
     }
 
     // Calculate averages
@@ -226,7 +248,9 @@ export class QueryPerformanceMonitor {
       pattern.averageDuration = pattern.totalDuration / pattern.count;
     }
 
-    return Array.from(patterns.values()).sort((a, b) => b.totalDuration - a.totalDuration); // Sort by total time spent
+    return Array.from(patterns.values()).sort(
+      (a, b) => b.totalDuration - a.totalDuration
+    ); // Sort by total time spent
   }
 
   /**
@@ -255,18 +279,29 @@ export class QueryPerformanceMonitor {
         let impact: "high" | "medium" | "low" = "low";
 
         // Analyze query pattern and suggest optimizations
-        if (pattern.pattern.includes("execution_history") && pattern.count > 50) {
+        if (
+          pattern.pattern.includes("execution_history") &&
+          pattern.count > 50
+        ) {
           recommendation =
             "Consider adding indexes on execution_history table for frequent queries";
           impact = "high";
-        } else if (pattern.pattern.includes("snipe_targets") && pattern.averageDuration > 2000) {
-          recommendation = "Optimize snipe_targets queries with compound indexes";
+        } else if (
+          pattern.pattern.includes("snipe_targets") &&
+          pattern.averageDuration > 2000
+        ) {
+          recommendation =
+            "Optimize snipe_targets queries with compound indexes";
           impact = "high";
-        } else if (pattern.pattern.includes("user_preferences") && pattern.count > 100) {
+        } else if (
+          pattern.pattern.includes("user_preferences") &&
+          pattern.count > 100
+        ) {
           recommendation = "Cache user preferences to reduce database load";
           impact = "medium";
         } else if (pattern.averageDuration > this.verySlowQueryThreshold) {
-          recommendation = "Query is very slow and needs immediate optimization";
+          recommendation =
+            "Query is very slow and needs immediate optimization";
           impact = "high";
         } else {
           recommendation = "Consider query optimization or caching";
@@ -285,7 +320,11 @@ export class QueryPerformanceMonitor {
 
     return recommendations.sort((a, b) => {
       // Sort by impact first, then by frequency
-      const impactOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
+      const impactOrder: Record<string, number> = {
+        high: 3,
+        medium: 2,
+        low: 1,
+      };
       const aImpact = impactOrder[a.impact] || 1;
       const bImpact = impactOrder[b.impact] || 1;
       if (aImpact !== bImpact) {

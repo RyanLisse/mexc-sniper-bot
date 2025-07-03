@@ -97,7 +97,8 @@ export class PatternToDatabaseBridge {
       PatternToDatabaseBridge.instance = new PatternToDatabaseBridge(config);
     } else if (config) {
       // Update configuration if provided (useful for testing)
-      PatternToDatabaseBridge.instance.config = BridgeConfigSchema.parse(config);
+      PatternToDatabaseBridge.instance.config =
+        BridgeConfigSchema.parse(config);
       PatternToDatabaseBridge.instance.logger.info(
         "PatternToDatabaseBridge configuration updated",
         {
@@ -124,19 +125,34 @@ export class PatternToDatabaseBridge {
 
     try {
       // Subscribe to pattern detection events
-      this.patternDetectionCore.on("patterns_detected", this.handlePatternEvent.bind(this));
+      this.patternDetectionCore.on(
+        "patterns_detected",
+        this.handlePatternEvent.bind(this)
+      );
 
       // Subscribe to specific pattern type events
-      this.patternDetectionCore.on("ready_state", this.handlePatternEvent.bind(this));
-      this.patternDetectionCore.on("pre_ready", this.handlePatternEvent.bind(this));
-      this.patternDetectionCore.on("advance_opportunities", this.handlePatternEvent.bind(this));
+      this.patternDetectionCore.on(
+        "ready_state",
+        this.handlePatternEvent.bind(this)
+      );
+      this.patternDetectionCore.on(
+        "pre_ready",
+        this.handlePatternEvent.bind(this)
+      );
+      this.patternDetectionCore.on(
+        "advance_opportunities",
+        this.handlePatternEvent.bind(this)
+      );
 
       this.isListening = true;
 
-      this.logger.info("✅ PatternToDatabaseBridge started listening for pattern events", {
-        supportedTypes: this.config.supportedPatternTypes,
-        minConfidence: this.config.minConfidenceThreshold,
-      });
+      this.logger.info(
+        "✅ PatternToDatabaseBridge started listening for pattern events",
+        {
+          supportedTypes: this.config.supportedPatternTypes,
+          minConfidence: this.config.minConfidenceThreshold,
+        }
+      );
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(
@@ -167,7 +183,9 @@ export class PatternToDatabaseBridge {
       this.isListening = false;
       this.processedPatterns.clear();
 
-      this.logger.info("🔻 PatternToDatabaseBridge stopped listening for events");
+      this.logger.info(
+        "🔻 PatternToDatabaseBridge stopped listening for events"
+      );
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error(
@@ -183,7 +201,9 @@ export class PatternToDatabaseBridge {
   /**
    * Handle incoming pattern detection events
    */
-  private async handlePatternEvent(eventData: PatternDetectionEventData): Promise<void> {
+  private async handlePatternEvent(
+    eventData: PatternDetectionEventData
+  ): Promise<void> {
     try {
       // Extra logging for debugging
       console.log("🔍 PatternToDatabaseBridge: handlePatternEvent called", {
@@ -226,7 +246,8 @@ export class PatternToDatabaseBridge {
       }
 
       // Convert pattern matches to database records
-      const snipeTargetRecords = await this.convertPatternsToRecords(filteredMatches);
+      const snipeTargetRecords =
+        await this.convertPatternsToRecords(filteredMatches);
 
       console.log("🔍 PatternToDatabaseBridge: After conversion", {
         filteredMatchesCount: filteredMatches.length,
@@ -297,7 +318,10 @@ export class PatternToDatabaseBridge {
       }
 
       // Check for duplicates (deduplication)
-      const timestamp = typeof match.detectedAt === 'number' ? match.detectedAt : match.detectedAt.getTime();
+      const timestamp =
+        typeof match.detectedAt === "number"
+          ? match.detectedAt
+          : match.detectedAt.getTime();
       const patternKey = `${match.symbol}_${match.patternType}_${timestamp}`;
       if (this.processedPatterns.has(patternKey)) {
         return false;
@@ -321,16 +345,21 @@ export class PatternToDatabaseBridge {
   /**
    * Convert PatternMatch objects to database records
    */
-  private async convertPatternsToRecords(matches: PatternMatch[]): Promise<SnipeTargetRecord[]> {
+  private async convertPatternsToRecords(
+    matches: PatternMatch[]
+  ): Promise<SnipeTargetRecord[]> {
     const records: SnipeTargetRecord[] = [];
 
     for (const match of matches) {
       try {
-        console.log(`🔍 PatternToDatabaseBridge: Converting pattern to record`, {
-          symbol: match.symbol,
-          patternType: match.patternType,
-          confidence: match.confidence,
-        });
+        console.log(
+          `🔍 PatternToDatabaseBridge: Converting pattern to record`,
+          {
+            symbol: match.symbol,
+            patternType: match.patternType,
+            confidence: match.confidence,
+          }
+        );
 
         // Determine user ID (could be from config mapping or default)
         const userId = this.getUserIdForPattern(match);
@@ -338,25 +367,38 @@ export class PatternToDatabaseBridge {
 
         // Get user preferences for position sizing and risk management
         const userPrefs = await this.getUserPreferences(userId);
-        console.log(`🔍 PatternToDatabaseBridge: Got user preferences:`, userPrefs);
+        console.log(
+          `🔍 PatternToDatabaseBridge: Got user preferences:`,
+          userPrefs
+        );
 
         // Calculate priority based on confidence and pattern type
         const priority = this.calculatePriority(match);
-        console.log(`🔍 PatternToDatabaseBridge: Calculated priority: ${priority}`);
+        console.log(
+          `🔍 PatternToDatabaseBridge: Calculated priority: ${priority}`
+        );
 
         // Determine execution time based on pattern type
         const targetExecutionTime = this.calculateExecutionTime(match);
-        console.log(`🔍 PatternToDatabaseBridge: Target execution time:`, targetExecutionTime);
+        console.log(
+          `🔍 PatternToDatabaseBridge: Target execution time:`,
+          targetExecutionTime
+        );
 
         const record: SnipeTargetRecord = {
           userId,
-          vcoinId: match.vcoinId || match.symbol, // Fallback to symbol if vcoinId missing
+          vcoinId: match.vcoinId ?? match.symbol, // Proper fallback with nullish coalescing
           symbolName: match.symbol,
           entryStrategy: "market", // Default to market orders for auto-detected patterns
-          positionSizeUsdt: userPrefs?.defaultBuyAmountUsdt || this.config.defaultPositionSizeUsdt,
-          takeProfitLevel: userPrefs?.defaultTakeProfitLevel || this.config.defaultTakeProfitLevel,
+          positionSizeUsdt:
+            userPrefs?.defaultBuyAmountUsdt ||
+            this.config.defaultPositionSizeUsdt,
+          takeProfitLevel:
+            userPrefs?.defaultTakeProfitLevel ||
+            this.config.defaultTakeProfitLevel,
           takeProfitCustom: userPrefs?.takeProfitCustom ?? undefined, // Convert null to undefined
-          stopLossPercent: userPrefs?.stopLossPercent || this.config.defaultStopLossPercent,
+          stopLossPercent:
+            userPrefs?.stopLossPercent || this.config.defaultStopLossPercent,
           status: match.patternType === "ready_state" ? "ready" : "pending",
           priority,
           targetExecutionTime,
@@ -364,11 +406,17 @@ export class PatternToDatabaseBridge {
           riskLevel: match.riskLevel,
         };
 
-        console.log(`🔍 PatternToDatabaseBridge: Created record before validation:`, record);
+        console.log(
+          `🔍 PatternToDatabaseBridge: Created record before validation:`,
+          record
+        );
 
         // Validate the record
         const validatedRecord = SnipeTargetRecordSchema.parse(record);
-        console.log(`🔍 PatternToDatabaseBridge: Record validation successful:`, validatedRecord);
+        console.log(
+          `🔍 PatternToDatabaseBridge: Record validation successful:`,
+          validatedRecord
+        );
 
         records.push(validatedRecord);
         console.log(
@@ -376,12 +424,15 @@ export class PatternToDatabaseBridge {
         );
       } catch (error) {
         const safeError = toSafeError(error);
-        console.error(`❌ PatternToDatabaseBridge: Failed to convert pattern match to record`, {
-          symbol: match.symbol,
-          patternType: match.patternType,
-          error: safeError.message,
-          fullError: safeError,
-        });
+        console.error(
+          `❌ PatternToDatabaseBridge: Failed to convert pattern match to record`,
+          {
+            symbol: match.symbol,
+            patternType: match.patternType,
+            error: safeError.message,
+            fullError: safeError,
+          }
+        );
         this.logger.warn("Failed to convert pattern match to record", {
           symbol: match.symbol,
           patternType: match.patternType,
@@ -459,8 +510,10 @@ export class PatternToDatabaseBridge {
     else if (match.confidence >= 70) priority = 4;
 
     // Pattern type adjustment
-    if (match.patternType === "ready_state") priority = Math.max(1, priority - 1);
-    if (match.patternType === "launch_sequence") priority = Math.max(1, priority - 1);
+    if (match.patternType === "ready_state")
+      priority = Math.max(1, priority - 1);
+    if (match.patternType === "launch_sequence")
+      priority = Math.max(1, priority - 1);
 
     // Risk level adjustment
     if (match.riskLevel === "low") priority = Math.max(1, priority - 1);
@@ -481,7 +534,9 @@ export class PatternToDatabaseBridge {
     // For advance opportunities, use the advance notice
     if (match.patternType === "launch_sequence" && match.advanceNoticeHours) {
       const executionTime = new Date();
-      executionTime.setHours(executionTime.getHours() + match.advanceNoticeHours);
+      executionTime.setHours(
+        executionTime.getHours() + match.advanceNoticeHours
+      );
       return executionTime;
     }
 
@@ -498,7 +553,9 @@ export class PatternToDatabaseBridge {
   /**
    * Insert snipe target records into database with deduplication (OPTIMIZED - Fixed N+1 Query)
    */
-  private async insertSnipeTargets(records: SnipeTargetRecord[]): Promise<number> {
+  private async insertSnipeTargets(
+    records: SnipeTargetRecord[]
+  ): Promise<number> {
     if (records.length === 0) return 0;
 
     try {
@@ -542,7 +599,9 @@ export class PatternToDatabaseBridge {
 
         // Create lookup set for O(1) duplicate checking
         const existingCombinations = new Set(
-          existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
+          existingTargets.map(
+            (target: any) => `${target.userId}:${target.symbolName}`
+          )
         );
 
         // Filter out duplicates in O(n) time
@@ -568,7 +627,10 @@ export class PatternToDatabaseBridge {
       const limitedRecords = await this.enforceUserLimits(deduplicatedRecords);
 
       // Batch insert
-      if (this.config.batchProcessing && limitedRecords.length > this.config.batchSize) {
+      if (
+        this.config.batchProcessing &&
+        limitedRecords.length > this.config.batchSize
+      ) {
         let insertedCount = 0;
         for (let i = 0; i < limitedRecords.length; i += this.config.batchSize) {
           const batch = limitedRecords.slice(i, i + this.config.batchSize);
@@ -597,7 +659,9 @@ export class PatternToDatabaseBridge {
   /**
    * Enforce per-user target limits (OPTIMIZED - Fixed N+1 Query)
    */
-  private async enforceUserLimits(records: SnipeTargetRecord[]): Promise<SnipeTargetRecord[]> {
+  private async enforceUserLimits(
+    records: SnipeTargetRecord[]
+  ): Promise<SnipeTargetRecord[]> {
     const userCounts = new Map<string, number>();
     const uniqueUserIds = [...new Set(records.map((r) => r.userId))];
 
@@ -608,7 +672,12 @@ export class PatternToDatabaseBridge {
       const existingTargets = await db
         .select()
         .from(snipeTargets)
-        .where(and(eq(snipeTargets.userId, userId), eq(snipeTargets.status, "pending")));
+        .where(
+          and(
+            eq(snipeTargets.userId, userId),
+            eq(snipeTargets.status, "pending")
+          )
+        );
 
       userCounts.set(userId, existingTargets.length);
     } else {
@@ -620,7 +689,10 @@ export class PatternToDatabaseBridge {
         })
         .from(snipeTargets)
         .where(
-          and(inArray(snipeTargets.userId, uniqueUserIds), eq(snipeTargets.status, "pending"))
+          and(
+            inArray(snipeTargets.userId, uniqueUserIds),
+            eq(snipeTargets.status, "pending")
+          )
         );
 
       // Count targets per user in memory (O(n) complexity)

@@ -9,8 +9,8 @@ interface AutoSnipingExecutionDashboardProps {
   className?: string;
 }
 
-export function AutoSnipingExecutionDashboard({ 
-  className 
+export function AutoSnipingExecutionDashboard({
+  className,
 }: AutoSnipingExecutionDashboardProps) {
   const [isActive, setIsActive] = useState(false);
 
@@ -27,7 +27,7 @@ export function AutoSnipingExecutionDashboard({
                 {isActive ? "Active" : "Inactive"}
               </Badge>
             </div>
-            <Button 
+            <Button
               onClick={() => setIsActive(!isActive)}
               variant={isActive ? "destructive" : "default"}
             >

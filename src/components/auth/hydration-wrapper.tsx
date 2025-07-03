@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 interface HydrationWrapperProps {
   children: React.ReactNode;
@@ -11,7 +11,10 @@ interface HydrationWrapperProps {
  * Wrapper component to prevent hydration mismatches
  * Only renders children after client-side hydration is complete
  */
-export function HydrationWrapper({ children, fallback = null }: HydrationWrapperProps) {
+export function HydrationWrapper({
+  children,
+  fallback = null,
+}: HydrationWrapperProps) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 /**
  * Safety Domain Entities
- * 
+ *
  * Export all safety-related domain entities for clean architecture implementation
  */
 

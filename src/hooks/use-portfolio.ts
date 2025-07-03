@@ -54,13 +54,19 @@ export function usePortfolio(userId: string) {
   return useQuery({
     queryKey: ["portfolio", userId, "active"],
     queryFn: async (): Promise<Portfolio> => {
-      const response = await fetch(`/api/portfolio?userId=${encodeURIComponent(userId)}`, {
-        credentials: "include", // Include authentication cookies
-      });
+      const response = await fetch(
+        `/api/portfolio?userId=${encodeURIComponent(userId)}`,
+        {
+          credentials: "include", // Include authentication cookies
+        }
+      );
 
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated
-        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+        if (
+          !isAuthenticated &&
+          (response.status === 403 || response.status === 401)
+        ) {
           return {
             activePositions: [],
             metrics: {
@@ -117,7 +123,11 @@ export function usePortfolio(userId: string) {
       // No retries to prevent storms
       return false;
     },
-    enabled: !!userId && userId !== "anonymous" && isAuthenticated && user?.id === userId,
+    enabled:
+      !!userId &&
+      userId !== "anonymous" &&
+      isAuthenticated &&
+      user?.id === userId,
   });
 }
 
@@ -137,10 +147,15 @@ export function useSnipeTargets(userId: string, status?: string) {
 
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated
-        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+        if (
+          !isAuthenticated &&
+          (response.status === 403 || response.status === 401)
+        ) {
           return [];
         }
-        throw new Error(`Failed to fetch snipe targets: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch snipe targets: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -171,7 +186,11 @@ export function useSnipeTargets(userId: string, status?: string) {
       // No retries to prevent storms
       return false;
     },
-    enabled: !!userId && userId !== "anonymous" && isAuthenticated && user?.id === userId,
+    enabled:
+      !!userId &&
+      userId !== "anonymous" &&
+      isAuthenticated &&
+      user?.id === userId,
   });
 }
 
@@ -206,7 +225,9 @@ export function useCreateSnipeTarget() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create snipe target: ${response.statusText}`);
+        throw new Error(
+          `Failed to create snipe target: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -218,7 +239,9 @@ export function useCreateSnipeTarget() {
     },
     onSuccess: (data) => {
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["snipeTargets", data.userId] });
+      queryClient.invalidateQueries({
+        queryKey: ["snipeTargets", data.userId],
+      });
       queryClient.invalidateQueries({ queryKey: ["portfolio", data.userId] });
     },
   });
@@ -261,7 +284,9 @@ export function useUpdateSnipeTarget() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update snipe target: ${response.statusText}`);
+        throw new Error(
+          `Failed to update snipe target: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -291,7 +316,9 @@ export function useDeleteSnipeTarget() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to delete snipe target: ${response.statusText}`);
+        throw new Error(
+          `Failed to delete snipe target: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -321,7 +348,9 @@ export function useAutoExitManager() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to get auto exit manager status: ${response.statusText}`);
+        throw new Error(
+          `Failed to get auto exit manager status: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -358,7 +387,9 @@ export function useAutoExitManager() {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${action} auto exit manager: ${response.statusText}`);
+        throw new Error(
+          `Failed to ${action} auto exit manager: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -370,7 +401,9 @@ export function useAutoExitManager() {
     },
     onSuccess: () => {
       // Refetch status after control action
-      queryClient.invalidateQueries({ queryKey: ["autoExitManager", "status"] });
+      queryClient.invalidateQueries({
+        queryKey: ["autoExitManager", "status"],
+      });
     },
   });
 

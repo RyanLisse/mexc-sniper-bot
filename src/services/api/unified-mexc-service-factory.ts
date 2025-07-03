@@ -43,7 +43,12 @@ class CredentialCache {
     warn: (message: string, context?: any) =>
       console.warn("[unified-mexc-service-factory]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[unified-mexc-service-factory]", message, context || "", error || ""),
+      console.error(
+        "[unified-mexc-service-factory]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[unified-mexc-service-factory]", message, context || ""),
   };
@@ -104,7 +109,7 @@ class ServiceInstanceCache {
 
   private createCacheKey(apiKey: string, secretKey: string): string {
     // Create a hash to avoid storing credentials in cache key
-    const crypto = require("crypto");
+    const crypto = require("node:crypto");
     return crypto
       .createHash("sha256")
       .update(`${apiKey}:${secretKey}`)
@@ -112,7 +117,12 @@ class ServiceInstanceCache {
       .substring(0, 16);
   }
 
-  set(apiKey: string, secretKey: string, instance: UnifiedMexcClient, ttl?: number): void {
+  set(
+    apiKey: string,
+    secretKey: string,
+    instance: UnifiedMexcClient,
+    ttl?: number
+  ): void {
     const key = this.createCacheKey(apiKey, secretKey);
     this.cache.set(key, {
       instance,
@@ -160,7 +170,12 @@ export class UnifiedMexcServiceFactory {
     warn: (message: string, context?: any) =>
       console.warn("[unified-mexc-service-factory]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[unified-mexc-service-factory]", message, context || "", error || ""),
+      console.error(
+        "[unified-mexc-service-factory]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[unified-mexc-service-factory]", message, context || ""),
   };
@@ -202,7 +217,13 @@ export class UnifiedMexcServiceFactory {
     skipCache?: boolean;
     source?: "database" | "environment" | "explicit";
   }): Promise<UnifiedMexcClient> {
-    const { userId, apiKey, secretKey, skipCache = false, source } = options || {};
+    const {
+      userId,
+      apiKey,
+      secretKey,
+      skipCache = false,
+      source,
+    } = options || {};
 
     try {
       // 1. Resolve credentials based on priority
@@ -223,19 +244,29 @@ export class UnifiedMexcServiceFactory {
         const envApiKey = process.env.MEXC_API_KEY?.trim();
         const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
 
-        if (!envApiKey || !envSecretKey || envApiKey.length < 10 || envSecretKey.length < 10) {
-          console.error("[UnifiedMexcServiceFactory] Invalid or missing environment credentials", {
-            hasApiKey: !!envApiKey,
-            hasSecretKey: !!envSecretKey,
-            apiKeyLength: envApiKey?.length || 0,
-            secretKeyLength: envSecretKey?.length || 0,
-          });
+        if (
+          !envApiKey ||
+          !envSecretKey ||
+          envApiKey.length < 10 ||
+          envSecretKey.length < 10
+        ) {
+          console.error(
+            "[UnifiedMexcServiceFactory] Invalid or missing environment credentials",
+            {
+              hasApiKey: !!envApiKey,
+              hasSecretKey: !!envSecretKey,
+              apiKeyLength: envApiKey?.length || 0,
+              secretKeyLength: envSecretKey?.length || 0,
+            }
+          );
           throw new Error(
             "No valid MEXC API credentials configured - please verify MEXC_API_KEY and MEXC_SECRET_KEY environment variables"
           );
         }
 
-        console.info("[UnifiedMexcServiceFactory] Using environment credentials as fallback");
+        console.info(
+          "[UnifiedMexcServiceFactory] Using environment credentials as fallback"
+        );
         return this.createServiceInstance({
           apiKey: envApiKey,
           secretKey: envSecretKey,
@@ -245,9 +276,14 @@ export class UnifiedMexcServiceFactory {
 
       // 2. Check service instance cache
       if (this.config.enableGlobalCache && !skipCache) {
-        const cachedService = this.serviceCache.get(credentials.apiKey, credentials.secretKey);
+        const cachedService = this.serviceCache.get(
+          credentials.apiKey,
+          credentials.secretKey
+        );
         if (cachedService) {
-          console.info("[UnifiedMexcServiceFactory] Using cached service instance");
+          console.info(
+            "[UnifiedMexcServiceFactory] Using cached service instance"
+          );
           return cachedService;
         }
       }
@@ -257,7 +293,9 @@ export class UnifiedMexcServiceFactory {
 
       // 4. Test credentials if they're from database to ensure they work
       if (credentials.source === "database") {
-        console.info("[UnifiedMexcServiceFactory] Testing database credentials...");
+        console.info(
+          "[UnifiedMexcServiceFactory] Testing database credentials..."
+        );
         const testResult = await this.testService(service);
 
         if (!testResult.authentication) {
@@ -273,8 +311,15 @@ export class UnifiedMexcServiceFactory {
           const envApiKey = process.env.MEXC_API_KEY?.trim();
           const envSecretKey = process.env.MEXC_SECRET_KEY?.trim();
 
-          if (envApiKey && envSecretKey && envApiKey.length >= 10 && envSecretKey.length >= 10) {
-            console.info("[UnifiedMexcServiceFactory] Falling back to environment credentials");
+          if (
+            envApiKey &&
+            envSecretKey &&
+            envApiKey.length >= 10 &&
+            envSecretKey.length >= 10
+          ) {
+            console.info(
+              "[UnifiedMexcServiceFactory] Falling back to environment credentials"
+            );
             const envService = this.createServiceInstance({
               apiKey: envApiKey,
               secretKey: envSecretKey,
@@ -300,9 +345,12 @@ export class UnifiedMexcServiceFactory {
 
               return envService;
             } else {
-              console.error("[UnifiedMexcServiceFactory] Environment credentials also failed", {
-                error: envTestResult.error,
-              });
+              console.error(
+                "[UnifiedMexcServiceFactory] Environment credentials also failed",
+                {
+                  error: envTestResult.error,
+                }
+              );
             }
           }
 
@@ -312,7 +360,9 @@ export class UnifiedMexcServiceFactory {
           );
         }
 
-        console.info("[UnifiedMexcServiceFactory] Database credentials authenticated successfully");
+        console.info(
+          "[UnifiedMexcServiceFactory] Database credentials authenticated successfully"
+        );
       }
 
       // 5. Cache the service instance
@@ -325,16 +375,22 @@ export class UnifiedMexcServiceFactory {
         );
       }
 
-      console.info("[UnifiedMexcServiceFactory] Created new service instance:", {
-        hasApiKey: Boolean(credentials.apiKey),
-        hasSecretKey: Boolean(credentials.secretKey),
-        source: credentials.source,
-        cached: !skipCache && this.config.enableGlobalCache,
-      });
+      console.info(
+        "[UnifiedMexcServiceFactory] Created new service instance:",
+        {
+          hasApiKey: Boolean(credentials.apiKey),
+          hasSecretKey: Boolean(credentials.secretKey),
+          source: credentials.source,
+          cached: !skipCache && this.config.enableGlobalCache,
+        }
+      );
 
       return service;
     } catch (error) {
-      console.error("[UnifiedMexcServiceFactory] Failed to get service:", error);
+      console.error(
+        "[UnifiedMexcServiceFactory] Failed to get service:",
+        error
+      );
 
       // Improved fallback to environment credentials
       if (this.config.fallbackToEnvironment) {
@@ -349,7 +405,9 @@ export class UnifiedMexcServiceFactory {
           console.error(
             "[UnifiedMexcServiceFactory] Environment fallback failed - no credentials available"
           );
-          throw new Error("All credential sources failed - no valid MEXC API credentials found");
+          throw new Error(
+            "All credential sources failed - no valid MEXC API credentials found"
+          );
         }
 
         return this.createServiceInstance({
@@ -378,7 +436,13 @@ export class UnifiedMexcServiceFactory {
     secretKey: string;
     source: "database" | "environment" | "explicit";
   } | null> {
-    const { userId, explicitApiKey, explicitSecretKey, skipCache, preferredSource } = options;
+    const {
+      userId,
+      explicitApiKey,
+      explicitSecretKey,
+      skipCache,
+      preferredSource,
+    } = options;
 
     // Priority 1: Explicit credentials
     if (explicitApiKey && explicitSecretKey) {
@@ -421,7 +485,9 @@ export class UnifiedMexcServiceFactory {
       if (!skipCache && this.config.enableGlobalCache) {
         const cached = this.credentialCache.get(userId);
         if (cached && cached.source === "database") {
-          console.info("[UnifiedMexcServiceFactory] Using cached user credentials");
+          console.info(
+            "[UnifiedMexcServiceFactory] Using cached user credentials"
+          );
           return {
             apiKey: cached.apiKey,
             secretKey: cached.secretKey,
@@ -431,8 +497,16 @@ export class UnifiedMexcServiceFactory {
       }
 
       // Validate userId before database query
-      if (!userId || userId.trim() === "" || userId === "undefined" || userId === "null") {
-        console.warn("[UnifiedMexcServiceFactory] Invalid userId provided:", userId);
+      if (
+        !userId ||
+        userId.trim() === "" ||
+        userId === "undefined" ||
+        userId === "null"
+      ) {
+        console.warn(
+          "[UnifiedMexcServiceFactory] Invalid userId provided:",
+          userId
+        );
         return null;
       }
 
@@ -450,23 +524,34 @@ export class UnifiedMexcServiceFactory {
           )
           .limit(1),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Database query timeout after 3 seconds")), 3000)
+          setTimeout(
+            () => reject(new Error("Database query timeout after 3 seconds")),
+            3000
+          )
         ),
       ]);
 
       if (!credentials || !credentials[0]) {
-        console.info(`[UnifiedMexcServiceFactory] No credentials found for user: ${userId}`);
+        console.info(
+          `[UnifiedMexcServiceFactory] No credentials found for user: ${userId}`
+        );
         return null;
       }
 
       // Decrypt credentials with error handling
       try {
-        const apiKey = this.encryptionService.decrypt(credentials[0].encryptedApiKey);
-        const secretKey = this.encryptionService.decrypt(credentials[0].encryptedSecretKey);
+        const apiKey = this.encryptionService.decrypt(
+          credentials[0].encryptedApiKey
+        );
+        const secretKey = this.encryptionService.decrypt(
+          credentials[0].encryptedSecretKey
+        );
 
         // Validate decrypted credentials
         if (!apiKey || !secretKey) {
-          console.warn("[UnifiedMexcServiceFactory] Failed to decrypt credentials - empty result");
+          console.warn(
+            "[UnifiedMexcServiceFactory] Failed to decrypt credentials - empty result"
+          );
           return null;
         }
 
@@ -481,7 +566,9 @@ export class UnifiedMexcServiceFactory {
           });
         }
 
-        console.info("[UnifiedMexcServiceFactory] Retrieved user credentials from database");
+        console.info(
+          "[UnifiedMexcServiceFactory] Retrieved user credentials from database"
+        );
 
         return {
           apiKey,
@@ -489,11 +576,17 @@ export class UnifiedMexcServiceFactory {
           source: "database",
         };
       } catch (decryptError) {
-        console.error("[UnifiedMexcServiceFactory] Failed to decrypt credentials:", decryptError);
+        console.error(
+          "[UnifiedMexcServiceFactory] Failed to decrypt credentials:",
+          decryptError
+        );
         return null;
       }
     } catch (error) {
-      console.error("[UnifiedMexcServiceFactory] Failed to get user credentials:", error);
+      console.error(
+        "[UnifiedMexcServiceFactory] Failed to get user credentials:",
+        error
+      );
       // Don't throw - gracefully fallback to environment credentials
       return null;
     }
@@ -532,7 +625,9 @@ export class UnifiedMexcServiceFactory {
    */
   invalidateUserCredentials(userId: string): void {
     this.credentialCache.invalidate(userId);
-    console.info(`[UnifiedMexcServiceFactory] Invalidated credentials cache for user: ${userId}`);
+    console.info(
+      `[UnifiedMexcServiceFactory] Invalidated credentials cache for user: ${userId}`
+    );
   }
 
   /**
@@ -572,7 +667,9 @@ export class UnifiedMexcServiceFactory {
 
     // Implement status synchronization callbacks
     this.triggerStatusSynchronization(userId);
-    console.info(`[UnifiedMexcServiceFactory] Credential operation success - invalidated caches`);
+    console.info(
+      `[UnifiedMexcServiceFactory] Credential operation success - invalidated caches`
+    );
   }
 
   /**
@@ -625,41 +722,49 @@ export class UnifiedMexcServiceFactory {
   private triggerStatusSynchronization(userId?: string): void {
     try {
       // Emit events for React Query invalidation
-      if (typeof globalThis !== 'undefined') {
-        const event = new CustomEvent('mexc-credentials-updated', {
-          detail: { userId, timestamp: Date.now() }
+      if (typeof globalThis !== "undefined") {
+        const event = new CustomEvent("mexc-credentials-updated", {
+          detail: { userId, timestamp: Date.now() },
         });
-        
+
         // Trigger custom event handlers
         if ((globalThis as any).dispatchEvent) {
           (globalThis as any).dispatchEvent(event);
         }
-        
+
         // Set global flag for React Query to detect
         (globalThis as any).mexcCredentialsUpdated = {
           userId,
           timestamp: Date.now(),
-          cacheInvalidated: true
+          cacheInvalidated: true,
         };
       }
 
       // If running in browser environment, trigger React Query invalidation
-      if (typeof window !== 'undefined' && (window as any).queryClient) {
+      if (typeof window !== "undefined" && (window as any).queryClient) {
         const queryClient = (window as any).queryClient;
-        
+
         // Invalidate specific queries related to MEXC status
-        queryClient.invalidateQueries({ queryKey: ['mexc-status'] });
-        queryClient.invalidateQueries({ queryKey: ['mexc-connectivity'] });
-        queryClient.invalidateQueries({ queryKey: ['user-credentials'] });
-        
+        queryClient.invalidateQueries({ queryKey: ["mexc-status"] });
+        queryClient.invalidateQueries({ queryKey: ["mexc-connectivity"] });
+        queryClient.invalidateQueries({ queryKey: ["user-credentials"] });
+
         if (userId) {
-          queryClient.invalidateQueries({ queryKey: ['user-credentials', userId] });
+          queryClient.invalidateQueries({
+            queryKey: ["user-credentials", userId],
+          });
         }
       }
 
-      console.info('[UnifiedMexcServiceFactory] Status synchronization triggered', { userId });
+      console.info(
+        "[UnifiedMexcServiceFactory] Status synchronization triggered",
+        { userId }
+      );
     } catch (error) {
-      console.warn('[UnifiedMexcServiceFactory] Failed to trigger status synchronization:', error);
+      console.warn(
+        "[UnifiedMexcServiceFactory] Failed to trigger status synchronization:",
+        error
+      );
     }
   }
 }

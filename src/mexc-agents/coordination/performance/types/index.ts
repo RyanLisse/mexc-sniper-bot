@@ -88,9 +88,18 @@ export interface PerformanceReport {
   system: {
     snapshots: SystemPerformanceSnapshot[];
     trends: {
-      responseTime: { trend: "improving" | "degrading" | "stable"; change: number };
-      throughput: { trend: "improving" | "degrading" | "stable"; change: number };
-      errorRate: { trend: "improving" | "degrading" | "stable"; change: number };
+      responseTime: {
+        trend: "improving" | "degrading" | "stable";
+        change: number;
+      };
+      throughput: {
+        trend: "improving" | "degrading" | "stable";
+        change: number;
+      };
+      errorRate: {
+        trend: "improving" | "degrading" | "stable";
+        change: number;
+      };
     };
   };
   recommendations: string[];

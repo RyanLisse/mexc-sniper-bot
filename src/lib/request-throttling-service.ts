@@ -33,12 +33,12 @@ export class RequestThrottlingService {
         priority,
         callback,
         resolve,
-        reject
+        reject,
       };
 
       this.queue.push(request);
       this.queue.sort((a, b) => b.priority - a.priority);
-      
+
       this.processQueue();
     });
   }
@@ -62,7 +62,7 @@ export class RequestThrottlingService {
       }
 
       if (this.delayMs > 0) {
-        await new Promise(resolve => setTimeout(resolve, this.delayMs));
+        await new Promise((resolve) => setTimeout(resolve, this.delayMs));
       }
     }
 
@@ -74,8 +74,8 @@ export class RequestThrottlingService {
   }
 
   clearQueue(): void {
-    this.queue.forEach(request => {
-      request.reject(new Error('Queue cleared'));
+    this.queue.forEach((request) => {
+      request.reject(new Error("Queue cleared"));
     });
     this.queue = [];
   }

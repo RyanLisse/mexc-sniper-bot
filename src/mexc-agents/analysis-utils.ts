@@ -46,7 +46,9 @@ export function extractConfidencePercentage(text: string): number {
     return Math.min(Math.max(confidence, 0), 100);
   }
 
-  const ratingMatch = text.match(/(?:score|rating|level)[:\s]*(\d+(?:\.\d+)?)/i);
+  const ratingMatch = text.match(
+    /(?:score|rating|level)[:\s]*(\d+(?:\.\d+)?)/i
+  );
   if (ratingMatch) {
     const rating = Number.parseFloat(ratingMatch[1]);
     return Math.min(rating * 10, 100);
@@ -120,7 +122,10 @@ export function extractReadinessIndicators(text: string): {
   };
 }
 
-export function categorizeOpportunity(data: CalendarEntry, confidence: number): string {
+export function categorizeOpportunity(
+  data: CalendarEntry,
+  confidence: number
+): string {
   const urgency = calculateUrgencyLevel(data);
 
   if (confidence >= 80 && urgency === "high") return "prime";
@@ -130,7 +135,10 @@ export function categorizeOpportunity(data: CalendarEntry, confidence: number): 
   return "poor";
 }
 
-export function generateRecommendation(data: CalendarEntry, confidence: number): string {
+export function generateRecommendation(
+  data: CalendarEntry,
+  confidence: number
+): string {
   const category = categorizeOpportunity(data, confidence);
   const urgency = calculateUrgencyLevel(data);
 
@@ -172,7 +180,11 @@ export function formatTimestamp(date?: string | Date): string {
   return d.toISOString().replace("T", " ").substring(0, 19);
 }
 
-export function extractNumberFromText(text: string, pattern: RegExp, defaultValue = 0): number {
+export function extractNumberFromText(
+  text: string,
+  pattern: RegExp,
+  defaultValue = 0
+): number {
   const match = text.match(pattern);
   return match ? Number.parseFloat(match[1]) || defaultValue : defaultValue;
 }

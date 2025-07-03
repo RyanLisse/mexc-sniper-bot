@@ -1,15 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { createApiResponse } from "@/src/lib/api-response";
 import { getAiIntelligenceService } from "@/src/services/ai/ai-intelligence-service";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check AI service health and configuration
     const cohereStatus = await checkCohereStatus();
     const perplexityStatus = await checkPerplexityStatus();
     const openaiStatus = await checkOpenAIStatus();
 
-    const overallStatus = determineOverallStatus([cohereStatus, perplexityStatus, openaiStatus]);
+    const overallStatus = determineOverallStatus([
+      cohereStatus,
+      perplexityStatus,
+      openaiStatus,
+    ]);
 
     return createApiResponse({
       success: true,
@@ -34,7 +38,9 @@ export async function GET(request: NextRequest) {
       {
         success: false,
         error: "Failed to check AI services status",
-        details: { error: error instanceof Error ? error.message : "Unknown error" },
+        details: {
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       },
       500
     );
@@ -57,13 +63,14 @@ async function checkCohereStatus() {
     }
 
     // Test Cohere API with a simple embedding request
-    const testResult = await getAiIntelligenceService().generatePatternEmbedding({
-      id: "test-pattern",
-      type: "technical",
-      timestamp: Date.now(),
-      data: { sts: 2, st: 2, tt: 4 },
-      confidence: 0.85,
-    });
+    const testResult =
+      await getAiIntelligenceService().generatePatternEmbedding({
+        id: "test-pattern",
+        type: "technical",
+        timestamp: Date.now(),
+        data: { sts: 2, st: 2, tt: 4 },
+        confidence: 0.85,
+      });
 
     return {
       name: "Cohere",
@@ -105,7 +112,10 @@ async function checkPerplexityStatus() {
     }
 
     // Test Perplexity API with a simple research request
-    const testResult = await getAiIntelligenceService().conductMarketResearch("BTC", "technical");
+    const testResult = await getAiIntelligenceService().conductMarketResearch(
+      "BTC",
+      "technical"
+    );
 
     return {
       name: "Perplexity",
@@ -115,7 +125,9 @@ async function checkPerplexityStatus() {
       capabilities: ["market-research", "sentiment-analysis", "news-analysis"],
       lastCheck: new Date().toISOString(),
       metrics: {
-        researchQuality: testResult ? Math.min(testResult.confidence * 10, 15) : 0,
+        researchQuality: testResult
+          ? Math.min(testResult.confidence * 10, 15)
+          : 0,
         responseTime: "< 5s",
       },
     };
@@ -160,7 +172,7 @@ async function checkOpenAIStatus() {
 }
 
 function determineOverallStatus(services: any[]) {
-  const availableServices = services.filter(s => s.available).length;
+  const availableServices = services.filter((s) => s.available).length;
   const totalServices = services.length;
 
   if (availableServices === 0) {

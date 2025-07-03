@@ -3,7 +3,12 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { EndpointMetrics, RateLimitConfig, RateLimitResult, SlidingWindow } from "./types";
+import type {
+  EndpointMetrics,
+  RateLimitConfig,
+  RateLimitResult,
+  SlidingWindow,
+} from "./types";
 
 const logger = createLogger("sliding-window", {
   enableStructuredLogging: process.env.NODE_ENV === "production",
@@ -35,10 +40,14 @@ export class SlidingWindowManager {
     }
 
     // Remove old requests
-    window.requests = window.requests.filter((timestamp) => timestamp > windowStart);
+    window.requests = window.requests.filter(
+      (timestamp) => timestamp > windowStart
+    );
 
     // Apply adaptation factor to max requests
-    const adaptedMaxRequests = Math.floor(config.maxRequests * metrics.adaptationFactor);
+    const adaptedMaxRequests = Math.floor(
+      config.maxRequests * metrics.adaptationFactor
+    );
     const maxWithBurst = adaptedMaxRequests + config.burstAllowance;
 
     if (window.requests.length < maxWithBurst) {

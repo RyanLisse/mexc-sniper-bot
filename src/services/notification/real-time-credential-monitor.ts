@@ -49,7 +49,11 @@ export interface RealTimeCredentialStatus {
 }
 
 export interface StatusChangeEvent {
-  type: "credential_change" | "connection_change" | "health_change" | "error_change";
+  type:
+    | "credential_change"
+    | "connection_change"
+    | "health_change"
+    | "error_change";
   previous: Partial<RealTimeCredentialStatus>;
   current: RealTimeCredentialStatus;
   timestamp: Date;
@@ -77,7 +81,12 @@ export class RealTimeCredentialMonitor {
     warn: (message: string, context?: any) =>
       console.warn("[real-time-credential-monitor]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[real-time-credential-monitor]", message, context || "", error || ""),
+      console.error(
+        "[real-time-credential-monitor]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[real-time-credential-monitor]", message, context || ""),
   };
@@ -110,7 +119,8 @@ export class RealTimeCredentialMonitor {
       ...config,
     };
 
-    this.credentialValidator = credentialValidator || getGlobalCredentialValidator();
+    this.credentialValidator =
+      credentialValidator || getGlobalCredentialValidator();
     this.healthMonitor = healthMonitor || getGlobalHealthMonitor();
 
     // Register for credential validator status changes
@@ -174,7 +184,8 @@ export class RealTimeCredentialMonitor {
   async checkStatus(): Promise<RealTimeCredentialStatus> {
     try {
       // Get credential validation result
-      const validationResult = await this.credentialValidator.validateCredentials();
+      const validationResult =
+        await this.credentialValidator.validateCredentials();
 
       // Get health metrics
       const healthMetrics = this.config.enableHealthMonitoring
@@ -273,7 +284,9 @@ export class RealTimeCredentialMonitor {
   /**
    * Remove status change callback
    */
-  removeStatusChangeCallback(callback: (event: StatusChangeEvent) => void): void {
+  removeStatusChangeCallback(
+    callback: (event: StatusChangeEvent) => void
+  ): void {
     const index = this.statusChangeCallbacks.indexOf(callback);
     if (index > -1) {
       this.statusChangeCallbacks.splice(index, 1);
@@ -296,7 +309,9 @@ export class RealTimeCredentialMonitor {
     healthTrend: "improving" | "stable" | "degrading";
   } {
     const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000);
-    const recentHistory = this.statusHistory.filter((status) => status.lastChecked > cutoffTime);
+    const recentHistory = this.statusHistory.filter(
+      (status) => status.lastChecked > cutoffTime
+    );
 
     if (recentHistory.length === 0) {
       return {
@@ -310,15 +325,19 @@ export class RealTimeCredentialMonitor {
 
     // Calculate averages
     const averageUptime =
-      recentHistory.reduce((sum, status) => sum + status.metrics.uptime, 0) / recentHistory.length;
-    const totalChecks = Math.max(...recentHistory.map((status) => status.metrics.totalChecks));
+      recentHistory.reduce((sum, status) => sum + status.metrics.uptime, 0) /
+      recentHistory.length;
+    const totalChecks = Math.max(
+      ...recentHistory.map((status) => status.metrics.totalChecks)
+    );
 
     const responseTimes = recentHistory
       .map((status) => status.responseTime)
       .filter((time): time is number => time !== undefined);
     const averageResponseTime =
       responseTimes.length > 0
-        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        ? responseTimes.reduce((sum, time) => sum + time, 0) /
+          responseTimes.length
         : 0;
 
     // Find most common issue
@@ -342,7 +361,10 @@ export class RealTimeCredentialMonitor {
     for (let i = 1; i < recentHistory.length; i++) {
       const prev = recentHistory[i - 1];
       const curr = recentHistory[i];
-      if (prev.isValid !== curr.isValid || prev.hasCredentials !== curr.hasCredentials) {
+      if (
+        prev.isValid !== curr.isValid ||
+        prev.hasCredentials !== curr.hasCredentials
+      ) {
         statusChanges++;
       }
     }
@@ -397,7 +419,9 @@ export class RealTimeCredentialMonitor {
     const actions: string[] = [];
 
     if (!this.currentStatus.hasCredentials) {
-      actions.push("Configure MEXC API credentials in environment variables or database");
+      actions.push(
+        "Configure MEXC API credentials in environment variables or database"
+      );
     } else if (this.currentStatus.isTestCredentials) {
       // FIXED: Allow test credentials to work in demo mode - auto-sniping always enabled
       actions.push("Test credentials detected - system running in demo mode");
@@ -445,7 +469,10 @@ export class RealTimeCredentialMonitor {
     }
 
     // Check for significant changes and notify
-    if (previousStatus && this.hasSignificantChange(previousStatus, newStatus)) {
+    if (
+      previousStatus &&
+      this.hasSignificantChange(previousStatus, newStatus)
+    ) {
       this.notifyStatusChange(previousStatus, newStatus);
     }
   }
@@ -470,7 +497,10 @@ export class RealTimeCredentialMonitor {
   ): void {
     // Implement debouncing to avoid too many notifications
     const now = Date.now();
-    if (now - this.lastChangeNotification < this.config.statusChangeNotificationDelay) {
+    if (
+      now - this.lastChangeNotification <
+      this.config.statusChangeNotificationDelay
+    ) {
       return;
     }
     this.lastChangeNotification = now;
@@ -481,10 +511,14 @@ export class RealTimeCredentialMonitor {
 
     if (previous.hasCredentials !== current.hasCredentials) {
       changeType = "credential_change";
-      description = current.hasCredentials ? "Credentials detected" : "Credentials removed";
+      description = current.hasCredentials
+        ? "Credentials detected"
+        : "Credentials removed";
     } else if (previous.isValid !== current.isValid) {
       changeType = "credential_change";
-      description = current.isValid ? "Credentials validated" : "Credentials invalid";
+      description = current.isValid
+        ? "Credentials validated"
+        : "Credentials invalid";
     } else if (previous.connectionHealth !== current.connectionHealth) {
       changeType = "connection_change";
       description = `Connection health changed to ${current.connectionHealth}`;
@@ -511,7 +545,9 @@ export class RealTimeCredentialMonitor {
     });
   }
 
-  private handleCredentialStatusChange(_result: CredentialValidationResult): void {
+  private handleCredentialStatusChange(
+    _result: CredentialValidationResult
+  ): void {
     // This method is called when the credential validator detects changes
     // We can use this to trigger immediate status updates
     if (this.isMonitoring) {
@@ -545,8 +581,12 @@ export class RealTimeCredentialMonitor {
     }
 
     const latestAlert = alerts[0];
-    const criticalCount = alerts.filter((alert) => alert.severity === "critical").length;
-    const warningCount = alerts.filter((alert) => alert.severity === "warning").length;
+    const criticalCount = alerts.filter(
+      (alert) => alert.severity === "critical"
+    ).length;
+    const warningCount = alerts.filter(
+      (alert) => alert.severity === "warning"
+    ).length;
 
     let severity: "none" | "info" | "warning" | "critical" = "none";
     if (criticalCount > 0) {

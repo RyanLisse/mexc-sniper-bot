@@ -142,7 +142,10 @@ export class AgentMonitoringService extends BaseService {
     logger?: ILogger
   ): AgentMonitoringService {
     if (!AgentMonitoringService.instance) {
-      AgentMonitoringService.instance = new AgentMonitoringService(config, logger);
+      AgentMonitoringService.instance = new AgentMonitoringService(
+        config,
+        logger
+      );
     }
     return AgentMonitoringService.instance;
   }
@@ -168,7 +171,10 @@ export class AgentMonitoringService extends BaseService {
       try {
         await this.performHealthCheck();
       } catch (error) {
-        this.logger.error("[AgentMonitoringService] Health check failed:", error);
+        this.logger.error(
+          "[AgentMonitoringService] Health check failed:",
+          error
+        );
         await this.errorLoggingService.logError(error as Error, {
           service: "AgentMonitoringService",
           operation: "performHealthCheck",
@@ -182,7 +188,10 @@ export class AgentMonitoringService extends BaseService {
         try {
           await this.generateReport();
         } catch (error) {
-          this.logger.error("[AgentMonitoringService] Report generation failed:", error);
+          this.logger.error(
+            "[AgentMonitoringService] Report generation failed:",
+            error
+          );
           await this.errorLoggingService.logError(error as Error, {
             service: "AgentMonitoringService",
             operation: "generateReport",
@@ -268,10 +277,13 @@ export class AgentMonitoringService extends BaseService {
    * Check system-wide health metrics
    */
   private async checkSystemHealth(stats: AgentRegistryStats): Promise<void> {
-    const unhealthyPercentage = (stats.unhealthyAgents / stats.totalAgents) * 100;
+    const unhealthyPercentage =
+      (stats.unhealthyAgents / stats.totalAgents) * 100;
 
     // Check unhealthy agent percentage
-    if (unhealthyPercentage > this.config.alertThresholds.unhealthyAgentPercentage) {
+    if (
+      unhealthyPercentage > this.config.alertThresholds.unhealthyAgentPercentage
+    ) {
       await this.generateAlert({
         type: "system",
         severity: unhealthyPercentage > 40 ? "critical" : "warning",
@@ -288,7 +300,9 @@ export class AgentMonitoringService extends BaseService {
     }
 
     // Check system response time
-    if (stats.averageResponseTime > this.config.alertThresholds.systemResponseTime) {
+    if (
+      stats.averageResponseTime > this.config.alertThresholds.systemResponseTime
+    ) {
       await this.generateAlert({
         type: "performance",
         severity: stats.averageResponseTime > 10000 ? "critical" : "warning",
@@ -390,7 +404,10 @@ export class AgentMonitoringService extends BaseService {
    * Generate and process alert
    */
   private async generateAlert(
-    alertData: Omit<MonitoringAlert, "id" | "resolved" | "resolvedAt" | "timestamp">
+    alertData: Omit<
+      MonitoringAlert,
+      "id" | "resolved" | "resolvedAt" | "timestamp"
+    >
   ): Promise<string> {
     const alertId = `alert-${Date.now()}-${++this.alertIdCounter}`;
 
@@ -442,14 +459,20 @@ export class AgentMonitoringService extends BaseService {
     // Console notification
     if (channels.includes("console")) {
       const prefix =
-        alert.severity === "critical" ? "🚨" : alert.severity === "warning" ? "⚠️" : "ℹ️";
+        alert.severity === "critical"
+          ? "🚨"
+          : alert.severity === "warning"
+            ? "⚠️"
+            : "ℹ️";
       this.logger.info(
         `${prefix} [${alert.severity.toUpperCase()}] ${alert.title}: ${alert.message}`
       );
 
       if (alert.suggestedActions && alert.suggestedActions.length > 0) {
         this.logger.info("   Suggested actions:");
-        alert.suggestedActions.forEach((action) => this.logger.info(`   - ${action}`));
+        alert.suggestedActions.forEach((action) =>
+          this.logger.info(`   - ${action}`)
+        );
       }
     }
 
@@ -466,7 +489,10 @@ export class AgentMonitoringService extends BaseService {
           }),
         });
       } catch (error) {
-        this.logger.error("[AgentMonitoringService] Webhook notification failed:", error);
+        this.logger.error(
+          "[AgentMonitoringService] Webhook notification failed:",
+          error
+        );
       }
     }
 
@@ -488,7 +514,9 @@ export class AgentMonitoringService extends BaseService {
   public async generateReport(): Promise<MonitoringReport> {
     const reportId = `report-${Date.now()}-${++this.reportIdCounter}`;
     const endTime = new Date();
-    const startTime = new Date(endTime.getTime() - this.config.reporting.interval);
+    const startTime = new Date(
+      endTime.getTime() - this.config.reporting.interval
+    );
 
     const registry = getGlobalAgentRegistry();
     const stats = registry.getStats();
@@ -501,12 +529,18 @@ export class AgentMonitoringService extends BaseService {
       degradedAgents: stats.degradedAgents,
       unhealthyAgents: stats.unhealthyAgents,
       averageHealthScore:
-        allAgents.reduce((sum, a) => sum + a.health.healthScore, 0) / allAgents.length || 0,
-      systemUptime: allAgents.reduce((sum, a) => sum + a.health.uptime, 0) / allAgents.length || 0,
+        allAgents.reduce((sum, a) => sum + a.health.healthScore, 0) /
+          allAgents.length || 0,
+      systemUptime:
+        allAgents.reduce((sum, a) => sum + a.health.uptime, 0) /
+          allAgents.length || 0,
       alertsGenerated: Array.from(this.alerts.values()).filter(
         (a) => a.timestamp >= startTime && a.timestamp <= endTime
       ).length,
-      recoveriesPerformed: allAgents.reduce((sum, a) => sum + a.health.recoveryAttempts, 0),
+      recoveriesPerformed: allAgents.reduce(
+        (sum, a) => sum + a.health.recoveryAttempts,
+        0
+      ),
     };
 
     // Generate agent reports
@@ -529,7 +563,10 @@ export class AgentMonitoringService extends BaseService {
     const trends = this.calculateSystemTrends(allAgents);
 
     // Generate recommendations
-    const recommendations = this.generateSystemRecommendations(systemOverview, agentReports);
+    const recommendations = this.generateSystemRecommendations(
+      systemOverview,
+      agentReports
+    );
 
     const report: MonitoringReport = {
       id: reportId,
@@ -546,7 +583,9 @@ export class AgentMonitoringService extends BaseService {
     // Clean up old reports
     this.cleanupOldReports();
 
-    this.logger.info(`[AgentMonitoringService] Generated monitoring report: ${reportId}`);
+    this.logger.info(
+      `[AgentMonitoringService] Generated monitoring report: ${reportId}`
+    );
     return report;
   }
 
@@ -611,11 +650,15 @@ export class AgentMonitoringService extends BaseService {
       totalAlerts: alerts.length,
       unresolvedAlerts: alerts.filter((a) => !a.resolved).length,
       criticalAlerts: alerts.filter(
-        (a) => !a.resolved && (a.severity === "critical" || a.severity === "emergency")
+        (a) =>
+          !a.resolved &&
+          (a.severity === "critical" || a.severity === "emergency")
       ).length,
       totalReports: this.reports.length,
       lastReportTime:
-        this.reports.length > 0 ? this.reports[this.reports.length - 1].timestamp : null,
+        this.reports.length > 0
+          ? this.reports[this.reports.length - 1].timestamp
+          : null,
     };
   }
 
@@ -629,7 +672,11 @@ export class AgentMonitoringService extends BaseService {
       ];
     }
     if (message.includes("response time")) {
-      return ["Check system load", "Review API rate limits", "Optimize caching"];
+      return [
+        "Check system load",
+        "Review API rate limits",
+        "Optimize caching",
+      ];
     }
     return ["Monitor system health", "Check logs for issues"];
   }
@@ -639,19 +686,25 @@ export class AgentMonitoringService extends BaseService {
     const health = agent.health;
     const thresholds = agent.thresholds;
 
-    if (health.responseTime > thresholds.responseTime.warning) issues.push("Slow response time");
-    if (health.errorRate > thresholds.errorRate.warning) issues.push("High error rate");
+    if (health.responseTime > thresholds.responseTime.warning)
+      issues.push("Slow response time");
+    if (health.errorRate > thresholds.errorRate.warning)
+      issues.push("High error rate");
     if (health.consecutiveErrors > thresholds.consecutiveErrors.warning)
       issues.push("Consecutive errors");
-    if (health.memoryUsage > thresholds.memoryUsage.warning) issues.push("High memory usage");
-    if (health.cpuUsage > thresholds.cpuUsage.warning) issues.push("High CPU usage");
+    if (health.memoryUsage > thresholds.memoryUsage.warning)
+      issues.push("High memory usage");
+    if (health.cpuUsage > thresholds.cpuUsage.warning)
+      issues.push("High CPU usage");
     if (health.uptime < thresholds.uptime.warning) issues.push("Low uptime");
     if (health.recoveryAttempts > 3) issues.push("Multiple recovery attempts");
 
     return issues;
   }
 
-  private calculateSystemTrends(agents: RegisteredAgent[]): MonitoringReport["trends"] {
+  private calculateSystemTrends(
+    agents: RegisteredAgent[]
+  ): MonitoringReport["trends"] {
     const trends = {
       responseTime: { improving: 0, degrading: 0, stable: 0 },
       errorRate: { improving: 0, degrading: 0, stable: 0 },
@@ -705,7 +758,9 @@ export class AgentMonitoringService extends BaseService {
       );
     }
 
-    const highErrorAgents = agentReports.filter((a) => a.errorRate > 0.1).length;
+    const highErrorAgents = agentReports.filter(
+      (a) => a.errorRate > 0.1
+    ).length;
     if (highErrorAgents > 0) {
       recommendations.push(
         `${highErrorAgents} agents have high error rates. Investigate common causes.`
@@ -713,7 +768,9 @@ export class AgentMonitoringService extends BaseService {
     }
 
     if (systemOverview.recoveriesPerformed > systemOverview.totalAgents * 2) {
-      recommendations.push("High number of recovery attempts. Consider addressing root causes.");
+      recommendations.push(
+        "High number of recovery attempts. Consider addressing root causes."
+      );
     }
 
     return recommendations;
@@ -732,7 +789,9 @@ export class AgentMonitoringService extends BaseService {
     const cutoffDate = new Date(
       Date.now() - this.config.reporting.retentionPeriod * 24 * 60 * 60 * 1000
     );
-    this.reports = this.reports.filter((report) => report.timestamp > cutoffDate);
+    this.reports = this.reports.filter(
+      (report) => report.timestamp > cutoffDate
+    );
   }
 
   /**

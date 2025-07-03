@@ -1,4 +1,7 @@
-import type { AgentOrchestrationMetrics, MexcWorkflowResult } from "./orchestrator-types";
+import type {
+  AgentOrchestrationMetrics,
+  MexcWorkflowResult,
+} from "./orchestrator-types";
 
 /**
  * Manages orchestration metrics and performance tracking
@@ -29,16 +32,19 @@ export class OrchestrationMetricsManager {
       const previousSuccessCount = Math.round(
         this.metrics.successRate * (this.metrics.totalExecutions - 1)
       );
-      this.metrics.successRate = (previousSuccessCount + 1) / this.metrics.totalExecutions;
+      this.metrics.successRate =
+        (previousSuccessCount + 1) / this.metrics.totalExecutions;
     } else {
       const previousErrorCount = Math.round(
         this.metrics.errorRate * (this.metrics.totalExecutions - 1)
       );
-      this.metrics.errorRate = (previousErrorCount + 1) / this.metrics.totalExecutions;
+      this.metrics.errorRate =
+        (previousErrorCount + 1) / this.metrics.totalExecutions;
     }
 
     // Update average duration using running average formula
-    const previousTotalDuration = this.metrics.averageDuration * (this.metrics.totalExecutions - 1);
+    const previousTotalDuration =
+      this.metrics.averageDuration * (this.metrics.totalExecutions - 1);
     this.metrics.averageDuration =
       (previousTotalDuration + duration) / this.metrics.totalExecutions;
 
@@ -76,7 +82,8 @@ export class OrchestrationMetricsManager {
     errorRate: number;
     isHealthy: boolean;
   } {
-    const isHealthy = this.metrics.successRate >= 0.95 && this.metrics.errorRate <= 0.05;
+    const isHealthy =
+      this.metrics.successRate >= 0.95 && this.metrics.errorRate <= 0.05;
 
     return {
       totalExecutions: this.metrics.totalExecutions,

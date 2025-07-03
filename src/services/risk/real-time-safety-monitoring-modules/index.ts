@@ -162,7 +162,12 @@ export class RealTimeSafetyMonitoringService {
         warn: (message: string, context?: any) =>
           console.warn("[safety-monitoring]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[safety-monitoring]", message, context || "", error || ""),
+          console.error(
+            "[safety-monitoring]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[safety-monitoring]", message, context || ""),
       };
@@ -180,10 +185,13 @@ export class RealTimeSafetyMonitoringService {
 
     // FIXED: Initialize the Core Trading Service
     this.executionService.initialize().catch((error) => {
-      console.warn("Failed to initialize Core Trading Service during safety monitoring setup", {
-        operation: "safety_monitoring_initialization",
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
+      console.warn(
+        "Failed to initialize Core Trading Service during safety monitoring setup",
+        {
+          operation: "safety_monitoring_initialization",
+          error: error instanceof Error ? error.message : "Unknown error",
+        }
+      );
     });
 
     // Register this service with the emergency stop coordinator
@@ -192,16 +200,20 @@ export class RealTimeSafetyMonitoringService {
     // Initialize modules
     this.initializeModules();
 
-    console.info("Real-time safety monitoring service initialized with modular architecture", {
-      operation: "initialization",
-      moduleCount: 5,
-      hasBackwardCompatibility: true,
-    });
+    console.info(
+      "Real-time safety monitoring service initialized with modular architecture",
+      {
+        operation: "initialization",
+        moduleCount: 5,
+        hasBackwardCompatibility: true,
+      }
+    );
   }
 
   public static getInstance(): RealTimeSafetyMonitoringService {
     if (!RealTimeSafetyMonitoringService.instance) {
-      RealTimeSafetyMonitoringService.instance = new RealTimeSafetyMonitoringService();
+      RealTimeSafetyMonitoringService.instance =
+        new RealTimeSafetyMonitoringService();
     }
     return RealTimeSafetyMonitoringService.instance;
   }
@@ -418,17 +430,19 @@ export class RealTimeSafetyMonitoringService {
   public async getSafetyReport(): Promise<SafetyMonitoringReport> {
     // FIXED: Ensure execution service is ready before generating report
     await this.ensureExecutionServiceReady();
-    
+
     // Get data from all modules
-    const [riskMetrics, systemRiskAssessment, alertStats, timerStats] = await Promise.all([
-      this.coreSafetyMonitoring.updateRiskMetrics(),
-      this.riskAssessment.assessSystemRisk(),
-      this.alertManagement.getAlertStatistics(),
-      Promise.resolve(this.eventHandling.getStats()),
-    ]);
+    const [riskMetrics, systemRiskAssessment, alertStats, timerStats] =
+      await Promise.all([
+        this.coreSafetyMonitoring.updateRiskMetrics(),
+        this.riskAssessment.assessSystemRisk(),
+        this.alertManagement.getAlertStatistics(),
+        Promise.resolve(this.eventHandling.getStats()),
+      ]);
 
     const configuration = this.configurationManagement.getConfiguration();
-    const overallRiskScore = this.coreSafetyMonitoring.calculateOverallRiskScore();
+    const overallRiskScore =
+      this.coreSafetyMonitoring.calculateOverallRiskScore();
     const status = this.determineOverallStatus(overallRiskScore);
 
     return {
@@ -442,7 +456,8 @@ export class RealTimeSafetyMonitoringService {
       recommendations: await this.generateSafetyRecommendations(),
       monitoringStats: {
         alertsGenerated: alertStats.total,
-        actionsExecuted: this.alertManagement.getInternalStats().actionsExecuted,
+        actionsExecuted:
+          this.alertManagement.getInternalStats().actionsExecuted,
         riskEventsDetected: timerStats.totalExecutions,
         systemUptime: timerStats.uptime,
         lastRiskCheck: new Date().toISOString(),
@@ -467,9 +482,12 @@ export class RealTimeSafetyMonitoringService {
       // Check if the service is already initialized by trying to get status
       await this.executionService.getServiceStatus();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       if (errorMessage.includes("not initialized")) {
-        console.info("Initializing Core Trading Service for safety monitoring...");
+        console.info(
+          "Initializing Core Trading Service for safety monitoring..."
+        );
         await this.executionService.initialize();
       } else {
         // If it's a different error, re-throw it
@@ -482,7 +500,9 @@ export class RealTimeSafetyMonitoringService {
    * FIXED: Trigger coordinated emergency safety response using EmergencyStopCoordinator
    * Addresses Agent 4/15 objectives: Emergency stop system synchronization
    */
-  public async triggerEmergencyResponse(reason: string): Promise<SafetyAction[]> {
+  public async triggerEmergencyResponse(
+    reason: string
+  ): Promise<SafetyAction[]> {
     await this.ensureExecutionServiceReady();
     const activePositions = await this.executionService.getActivePositions();
     console.warn("🚨 Triggering coordinated emergency response", {
@@ -505,7 +525,8 @@ export class RealTimeSafetyMonitoringService {
         timestamp: Date.now(),
         context: {
           activePositions: activePositions.length,
-          currentRiskScore: this.coreSafetyMonitoring.calculateOverallRiskScore(),
+          currentRiskScore:
+            this.coreSafetyMonitoring.calculateOverallRiskScore(),
           monitoringActive: this.isMonitoringActive,
         },
         reason,
@@ -513,7 +534,9 @@ export class RealTimeSafetyMonitoringService {
 
       // FIXED: Use EmergencyStopCoordinator for coordinated emergency stop
       const coordinatedResult =
-        await this.emergencyStopCoordinator.triggerEmergencyStop(emergencyEvent);
+        await this.emergencyStopCoordinator.triggerEmergencyStop(
+          emergencyEvent
+        );
 
       // Convert coordinated result to SafetyAction format for backward compatibility
       actions.push({
@@ -571,16 +594,21 @@ export class RealTimeSafetyMonitoringService {
 
       try {
         const emergencyResult = await this.executionService.emergencyCloseAll();
-        const closedCount = typeof emergencyResult === 'object' && emergencyResult !== null && 'data' in emergencyResult 
-          ? (emergencyResult as any).data?.closedCount || 0 
-          : typeof emergencyResult === 'number' 
-          ? emergencyResult 
-          : 0;
-          
+        const closedCount =
+          typeof emergencyResult === "object" &&
+          emergencyResult !== null &&
+          "data" in emergencyResult
+            ? (emergencyResult as any).data?.closedCount || 0
+            : typeof emergencyResult === "number"
+              ? emergencyResult
+              : 0;
+
         closeAction.executed = true;
         closeAction.executedAt = new Date().toISOString();
         closeAction.result =
-          positions.length === 0 || closedCount === positions.length ? "success" : "partial";
+          positions.length === 0 || closedCount === positions.length
+            ? "success"
+            : "partial";
         closeAction.details =
           positions.length > 0
             ? `Local close: ${closedCount}/${positions.length} positions`
@@ -665,9 +693,12 @@ export class RealTimeSafetyMonitoringService {
   /**
    * FIXED: Determine emergency severity for proper coordination
    */
-  private determineEmergencySeverity(reason: string): EmergencyStopEvent["severity"] {
+  private determineEmergencySeverity(
+    reason: string
+  ): EmergencyStopEvent["severity"] {
     const lowerReason = reason.toLowerCase();
-    const currentRiskScore = this.coreSafetyMonitoring.calculateOverallRiskScore();
+    const currentRiskScore =
+      this.coreSafetyMonitoring.calculateOverallRiskScore();
 
     if (
       currentRiskScore > 90 ||
@@ -676,7 +707,11 @@ export class RealTimeSafetyMonitoringService {
     ) {
       return "CRITICAL";
     }
-    if (currentRiskScore > 70 || lowerReason.includes("high") || lowerReason.includes("major")) {
+    if (
+      currentRiskScore > 70 ||
+      lowerReason.includes("high") ||
+      lowerReason.includes("major")
+    ) {
       return "HIGH";
     }
     if (
@@ -694,7 +729,9 @@ export class RealTimeSafetyMonitoringService {
    * Called by EmergencyStopCoordinator during coordinated emergency stops
    */
   public async emergencyStop(event: EmergencyStopEvent): Promise<void> {
-    console.log(`🚨 Safety monitoring emergency stop triggered by coordinator: ${event.reason}`);
+    console.log(
+      `🚨 Safety monitoring emergency stop triggered by coordinator: ${event.reason}`
+    );
 
     try {
       // Stop monitoring to prevent conflicts during emergency
@@ -859,7 +896,9 @@ export class RealTimeSafetyMonitoringService {
   // Private Helper Methods
   // ============================================================================
 
-  private determineOverallStatus(riskScore: number): "safe" | "warning" | "critical" | "emergency" {
+  private determineOverallStatus(
+    riskScore: number
+  ): "safe" | "warning" | "critical" | "emergency" {
     if (riskScore < 25) return "safe";
     if (riskScore < 50) return "warning";
     if (riskScore < 75) return "critical";
@@ -868,7 +907,8 @@ export class RealTimeSafetyMonitoringService {
 
   private async generateSafetyRecommendations(): Promise<string[]> {
     try {
-      const comprehensiveAssessment = await this.riskAssessment.performComprehensiveAssessment();
+      const comprehensiveAssessment =
+        await this.riskAssessment.performComprehensiveAssessment();
       return comprehensiveAssessment.priorityRecommendations;
     } catch (error) {
       console.error(

@@ -104,9 +104,13 @@ export function useSystemHealth(options: { refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ["safety", "system-health"],
     queryFn: async (): Promise<SystemHealth> => {
-      const response = await fetch("/api/triggers/safety?action=system-health-check");
+      const response = await fetch(
+        "/api/triggers/safety?action=system-health-check"
+      );
       if (!response.ok) {
-        throw new Error(`Failed to fetch system health: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch system health: ${response.statusText}`
+        );
       }
       const result = await response.json();
 
@@ -132,7 +136,9 @@ export function useRiskMetrics(options: { refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ["safety", "risk-metrics"],
     queryFn: async (): Promise<RiskMetrics> => {
-      const response = await fetch("/api/triggers/safety?action=risk-assessment");
+      const response = await fetch(
+        "/api/triggers/safety?action=risk-assessment"
+      );
       if (!response.ok) {
         throw new Error(`Failed to fetch risk metrics: ${response.statusText}`);
       }
@@ -160,13 +166,19 @@ export function useRiskMetrics(options: { refetchInterval?: number } = {}) {
 }
 
 // Fetch simulation status
-export function useSimulationStatus(options: { refetchInterval?: number } = {}) {
+export function useSimulationStatus(
+  options: { refetchInterval?: number } = {}
+) {
   return useQuery({
     queryKey: ["safety", "simulation-status"],
     queryFn: async (): Promise<SimulationStatus> => {
-      const response = await fetch("/api/triggers/safety?action=simulation-status");
+      const response = await fetch(
+        "/api/triggers/safety?action=simulation-status"
+      );
       if (!response.ok) {
-        throw new Error(`Failed to fetch simulation status: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch simulation status: ${response.statusText}`
+        );
       }
       const result = await response.json();
 
@@ -193,13 +205,19 @@ export function useSimulationStatus(options: { refetchInterval?: number } = {}) 
 }
 
 // Fetch reconciliation status
-export function useReconciliationStatus(options: { refetchInterval?: number } = {}) {
+export function useReconciliationStatus(
+  options: { refetchInterval?: number } = {}
+) {
   return useQuery({
     queryKey: ["safety", "reconciliation-status"],
     queryFn: async (): Promise<ReconciliationStatus> => {
-      const response = await fetch("/api/triggers/safety?action=position-reconciliation");
+      const response = await fetch(
+        "/api/triggers/safety?action=position-reconciliation"
+      );
       if (!response.ok) {
-        throw new Error(`Failed to fetch reconciliation status: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch reconciliation status: ${response.statusText}`
+        );
       }
       const result = await response.json();
 
@@ -212,7 +230,8 @@ export function useReconciliationStatus(options: { refetchInterval?: number } = 
         manualResolutionRequired: result.manualResolutionRequired || 0,
         status: result.status || "completed",
         nextScheduledCheck:
-          result.nextScheduledCheck || new Date(Date.now() + 3600000).toISOString(),
+          result.nextScheduledCheck ||
+          new Date(Date.now() + 3600000).toISOString(),
         criticalDiscrepancies: result.criticalDiscrepancies || [],
       };
     },
@@ -276,9 +295,13 @@ export function useToggleSimulation() {
       return response.json();
     },
     onSuccess: (_, variables) => {
-      toast.success(`Simulation ${variables.enable ? "enabled" : "disabled"} successfully`);
+      toast.success(
+        `Simulation ${variables.enable ? "enabled" : "disabled"} successfully`
+      );
       // Invalidate simulation status
-      queryClient.invalidateQueries({ queryKey: ["safety", "simulation-status"] });
+      queryClient.invalidateQueries({
+        queryKey: ["safety", "simulation-status"],
+      });
     },
     onError: (error) => {
       toast.error(`Simulation toggle failed: ${error.message}`);
@@ -292,7 +315,9 @@ export function useComprehensiveSafetyCheck() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/triggers/safety?action=comprehensive-safety-check");
+      const response = await fetch(
+        "/api/triggers/safety?action=comprehensive-safety-check"
+      );
       if (!response.ok) {
         throw new Error(`Safety check failed: ${response.statusText}`);
       }
@@ -314,7 +339,9 @@ export function useSafetyMonitoring() {
   const systemHealth = useSystemHealth({ refetchInterval: 10000 });
   const riskMetrics = useRiskMetrics({ refetchInterval: 5000 });
   const simulationStatus = useSimulationStatus({ refetchInterval: 15000 });
-  const reconciliationStatus = useReconciliationStatus({ refetchInterval: 30000 });
+  const reconciliationStatus = useReconciliationStatus({
+    refetchInterval: 30000,
+  });
 
   const emergencyHalt = useEmergencyHalt();
   const toggleSimulation = useToggleSimulation();
@@ -327,14 +354,23 @@ export function useSafetyMonitoring() {
     reconciliationStatus.isLoading;
 
   const hasError =
-    systemHealth.error || riskMetrics.error || simulationStatus.error || reconciliationStatus.error;
+    systemHealth.error ||
+    riskMetrics.error ||
+    simulationStatus.error ||
+    reconciliationStatus.error;
 
   const overallHealth = (() => {
     if (hasError) return "critical";
-    if (systemHealth.data?.overall === "critical" || riskMetrics.data?.currentRisk === "critical") {
+    if (
+      systemHealth.data?.overall === "critical" ||
+      riskMetrics.data?.currentRisk === "critical"
+    ) {
       return "critical";
     }
-    if (systemHealth.data?.overall === "warning" || riskMetrics.data?.currentRisk === "high") {
+    if (
+      systemHealth.data?.overall === "warning" ||
+      riskMetrics.data?.currentRisk === "high"
+    ) {
       return "warning";
     }
     return "healthy";

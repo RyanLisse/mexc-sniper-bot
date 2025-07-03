@@ -7,7 +7,10 @@
  */
 
 import { EventEmitter } from "node:events";
-import { getParameterManager, type ParameterManager } from "@/src/lib/parameter-management";
+import {
+  getParameterManager,
+  type ParameterManager,
+} from "@/src/lib/parameter-management";
 import { logger } from "@/src/lib/utils";
 
 export interface OptimizationObjective {
@@ -79,7 +82,9 @@ export class ParameterOptimizationEngine extends EventEmitter {
 
     // Skip initialization during build time
     if (!this.isBuildEnvironment()) {
-      logger.info("Parameter Optimization Engine initialized (simplified mode)");
+      logger.info(
+        "Parameter Optimization Engine initialized (simplified mode)"
+      );
     }
   }
 
@@ -105,7 +110,8 @@ export class ParameterOptimizationEngine extends EventEmitter {
       // Check if we're in webpack/module bundling context
       (typeof window === "undefined" &&
         typeof process !== "undefined" &&
-        (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") &&
+        (process.env.NODE_ENV === "production" ||
+          process.env.NODE_ENV === "development") &&
         !global.setImmediate) // Node.js runtime check
     );
   }
@@ -132,7 +138,10 @@ export class ParameterOptimizationEngine extends EventEmitter {
     // Start simplified optimization process
     this.runSimplifiedOptimization(optimizationId);
 
-    logger.info("Optimization started", { optimizationId, algorithm: request.strategy.algorithm });
+    logger.info("Optimization started", {
+      optimizationId,
+      algorithm: request.strategy.algorithm,
+    });
     return optimizationId;
   }
 
@@ -181,7 +190,9 @@ export class ParameterOptimizationEngine extends EventEmitter {
   /**
    * Simplified optimization implementation
    */
-  private async runSimplifiedOptimization(optimizationId: string): Promise<void> {
+  private async runSimplifiedOptimization(
+    optimizationId: string
+  ): Promise<void> {
     const optimization = this.activeOptimizations.get(optimizationId);
     if (!optimization) return;
 
@@ -234,8 +245,14 @@ export class ParameterOptimizationEngine extends EventEmitter {
         },
       });
 
-      this.emit("optimizationCompleted", { optimizationId, result: optimization });
-      logger.info("Optimization completed", { optimizationId, score: optimization.bestScore });
+      this.emit("optimizationCompleted", {
+        optimizationId,
+        result: optimization,
+      });
+      logger.info("Optimization completed", {
+        optimizationId,
+        score: optimization.bestScore,
+      });
     } catch (error) {
       optimization.status = "failed";
       optimization.error = error;
@@ -263,14 +280,16 @@ export class ParameterOptimizationEngine extends EventEmitter {
 // Singleton Instance Management
 // ============================================================================
 
-let globalParameterOptimizationEngineInstance: ParameterOptimizationEngine | null = null;
+let globalParameterOptimizationEngineInstance: ParameterOptimizationEngine | null =
+  null;
 
 /**
  * Get global parameter optimization engine instance with lazy initialization
  */
 export function getParameterOptimizationEngine(): ParameterOptimizationEngine {
   if (!globalParameterOptimizationEngineInstance) {
-    globalParameterOptimizationEngineInstance = new ParameterOptimizationEngine();
+    globalParameterOptimizationEngineInstance =
+      new ParameterOptimizationEngine();
   }
   return globalParameterOptimizationEngineInstance;
 }

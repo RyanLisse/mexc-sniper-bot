@@ -82,7 +82,9 @@ export const userPreferences = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
 
     // Trading Configuration
-    defaultBuyAmountUsdt: real("default_buy_amount_usdt").notNull().default(100.0),
+    defaultBuyAmountUsdt: real("default_buy_amount_usdt")
+      .notNull()
+      .default(100.0),
     maxConcurrentSnipes: integer("max_concurrent_snipes").notNull().default(3),
 
     // Take Profit Configuration (user configurable)
@@ -91,10 +93,14 @@ export const userPreferences = pgTable(
     takeProfitLevel3: real("take_profit_level_3").notNull().default(15.0), // 15%
     takeProfitLevel4: real("take_profit_level_4").notNull().default(25.0), // 25%
     takeProfitCustom: real("take_profit_custom"), // Custom %
-    defaultTakeProfitLevel: integer("default_take_profit_level").notNull().default(2), // Use level 2 (10%) by default
+    defaultTakeProfitLevel: integer("default_take_profit_level")
+      .notNull()
+      .default(2), // Use level 2 (10%) by default
 
     // Enhanced Take Profit Strategy Configuration
-    takeProfitStrategy: text("take_profit_strategy").notNull().default("balanced"), // "conservative", "balanced", "aggressive", "custom"
+    takeProfitStrategy: text("take_profit_strategy")
+      .notNull()
+      .default("balanced"), // "conservative", "balanced", "aggressive", "custom"
     takeProfitLevelsConfig: text("take_profit_levels_config"), // JSON string for multi-level configuration
 
     // Sell Quantity Configuration for each level (percentage of position to sell)
@@ -114,18 +120,28 @@ export const userPreferences = pgTable(
     autoSnipeEnabled: boolean("auto_snipe_enabled").notNull().default(true), // Auto-snipe by default
 
     // Exit Strategy Settings
-    selectedExitStrategy: text("selected_exit_strategy").notNull().default("balanced"), // "conservative", "balanced", "aggressive", "custom"
+    selectedExitStrategy: text("selected_exit_strategy")
+      .notNull()
+      .default("balanced"), // "conservative", "balanced", "aggressive", "custom"
     customExitStrategy: text("custom_exit_strategy"), // JSON string of custom strategy levels
     autoBuyEnabled: boolean("auto_buy_enabled").notNull().default(true), // Auto-buy on ready state
     autoSellEnabled: boolean("auto_sell_enabled").notNull().default(true), // Auto-sell at targets
 
     // Monitoring Intervals
-    calendarPollIntervalSeconds: integer("calendar_poll_interval_seconds").notNull().default(300),
-    symbolsPollIntervalSeconds: integer("symbols_poll_interval_seconds").notNull().default(30),
+    calendarPollIntervalSeconds: integer("calendar_poll_interval_seconds")
+      .notNull()
+      .default(300),
+    symbolsPollIntervalSeconds: integer("symbols_poll_interval_seconds")
+      .notNull()
+      .default(30),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("user_preferences_user_id_idx").on(table.userId),

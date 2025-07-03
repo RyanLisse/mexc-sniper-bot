@@ -5,7 +5,7 @@
  * These helpers work with both real databases and mocked databases.
  */
 
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // Use dynamic imports to avoid initialization issues with mocks
 let dbModule: any = null;
@@ -17,9 +17,11 @@ let schemaModule: any = null;
 async function getDbModule() {
   if (!dbModule) {
     try {
-      dbModule = await import('../db');
-    } catch (error) {
-      console.warn('[Database Helpers] Failed to import db module, using mock fallback');
+      dbModule = await import("../db");
+    } catch (_error) {
+      console.warn(
+        "[Database Helpers] Failed to import db module, using mock fallback"
+      );
       // Return a mock database interface
       dbModule = {
         db: {
@@ -56,17 +58,19 @@ async function getDbModule() {
 async function getSchemaModule() {
   if (!schemaModule) {
     try {
-      schemaModule = await import('../db/schema');
-    } catch (error) {
-      console.warn('[Database Helpers] Failed to import schema module, using mock fallback');
+      schemaModule = await import("../db/schema");
+    } catch (_error) {
+      console.warn(
+        "[Database Helpers] Failed to import schema module, using mock fallback"
+      );
       // Return mock schema objects
       schemaModule = {
-        user: { _: { name: 'user' } },
-        users: { _: { name: 'users' } },
-        snipeTargets: { _: { name: 'snipe_targets' } },
-        userPreferences: { _: { name: 'user_preferences' } },
-        transactions: { _: { name: 'transactions' } },
-        executionHistory: { _: { name: 'execution_history' } },
+        user: { _: { name: "user" } },
+        users: { _: { name: "users" } },
+        snipeTargets: { _: { name: "snipe_targets" } },
+        userPreferences: { _: { name: "user_preferences" } },
+        transactions: { _: { name: "transactions" } },
+        executionHistory: { _: { name: "execution_history" } },
       };
     }
   }
@@ -78,11 +82,17 @@ async function getSchemaModule() {
  */
 async function getEqFunction() {
   try {
-    const { eq } = await import('drizzle-orm');
+    const { eq } = await import("drizzle-orm");
     return eq;
-  } catch (error) {
-    console.warn('[Database Helpers] Failed to import eq function, using mock fallback');
-    return vi.fn().mockImplementation((column: any, value: any) => ({ _type: 'eq', column, value }));
+  } catch (_error) {
+    console.warn(
+      "[Database Helpers] Failed to import eq function, using mock fallback"
+    );
+    return vi.fn().mockImplementation((column: any, value: any) => ({
+      _type: "eq",
+      column,
+      value,
+    }));
   }
 }
 
@@ -96,16 +106,20 @@ export async function createTestUser(userId: string): Promise<void> {
     const dbModule = await getDbModule();
     const schemaModule = await getSchemaModule();
     const eq = await getEqFunction();
-    
+
     const { db } = dbModule;
     const { user, users } = schemaModule;
 
     // Check if user already exists (try both user and users tables for compatibility)
-    const existingUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+    const existingUser = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
 
     if (existingUser.length === 0) {
       console.log(`🔧 Creating new user: ${userId}`);
-      
+
       const userData = {
         id: userId,
         email: `${userId}@test.example.com`,
@@ -115,10 +129,7 @@ export async function createTestUser(userId: string): Promise<void> {
       };
 
       // Try to insert into user table
-      const newUser = await db
-        .insert(user)
-        .values(userData)
-        .returning();
+      const newUser = await db.insert(user).values(userData).returning();
 
       console.log(`✅ Successfully created test user: ${userId}`, newUser[0]);
 
@@ -133,8 +144,10 @@ export async function createTestUser(userId: string): Promise<void> {
               legacyKindeId: `kinde-${userId}`,
             })
             .returning();
-        } catch (error) {
-          console.log(`ℹ️ Users table not available or user already exists in users table`);
+        } catch (_error) {
+          console.log(
+            `ℹ️ Users table not available or user already exists in users table`
+          );
         }
       }
     } else {
@@ -143,10 +156,17 @@ export async function createTestUser(userId: string): Promise<void> {
 
     // Verify user was created/exists
     try {
-      const verifyUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+      const verifyUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, userId))
+        .limit(1);
       if (verifyUser.length === 0) {
         // In test mode, mock the user verification
-        if (process.env.NODE_ENV === 'test' || (globalThis as any).__TEST_ENV__) {
+        if (
+          process.env.NODE_ENV === "test" ||
+          (globalThis as any).__TEST_ENV__
+        ) {
           console.log(`🧪 Mock user verification for test: ${userId}`);
           return;
         }
@@ -154,8 +174,10 @@ export async function createTestUser(userId: string): Promise<void> {
       }
     } catch (dbError) {
       // If database verification fails in test mode, skip it
-      if (process.env.NODE_ENV === 'test' || (globalThis as any).__TEST_ENV__) {
-        console.log(`🧪 Skipping user verification in test mode for: ${userId}`);
+      if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+        console.log(
+          `🧪 Skipping user verification in test mode for: ${userId}`
+        );
         return;
       }
       throw dbError;
@@ -164,8 +186,10 @@ export async function createTestUser(userId: string): Promise<void> {
   } catch (error) {
     console.error(`❌ Test user creation failed for ${userId}:`, error);
     // In test mode, don't fail hard - just log and continue
-    if (process.env.NODE_ENV === 'test' || (globalThis as any).__TEST_ENV__) {
-      console.warn(`🧪 Test user creation failed in test mode, continuing: ${userId}`);
+    if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+      console.warn(
+        `🧪 Test user creation failed in test mode, continuing: ${userId}`
+      );
       return;
     }
     throw error;
@@ -190,7 +214,7 @@ export async function createTestUserPreferences(
     const dbModule = await getDbModule();
     const schemaModule = await getSchemaModule();
     const eq = await getEqFunction();
-    
+
     const { db } = dbModule;
     const { userPreferences } = schemaModule;
 
@@ -211,12 +235,20 @@ export async function createTestUserPreferences(
       })
       .returning();
 
-    console.log(`✅ Successfully created user preferences for: ${userId}`, newPrefs[0]);
+    console.log(
+      `✅ Successfully created user preferences for: ${userId}`,
+      newPrefs[0]
+    );
   } catch (error) {
-    console.error(`❌ Test user preferences creation failed for ${userId}:`, error);
+    console.error(
+      `❌ Test user preferences creation failed for ${userId}:`,
+      error
+    );
     // In test mode, don't fail hard
-    if (process.env.NODE_ENV === 'test' || (globalThis as any).__TEST_ENV__) {
-      console.warn(`🧪 Test user preferences creation failed in test mode, continuing: ${userId}`);
+    if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+      console.warn(
+        `🧪 Test user preferences creation failed in test mode, continuing: ${userId}`
+      );
       return;
     }
     throw error;
@@ -231,7 +263,7 @@ export async function cleanupTestData(userId: string): Promise<void> {
     const dbModule = await getDbModule();
     const schemaModule = await getSchemaModule();
     const eq = await getEqFunction();
-    
+
     const { db } = dbModule;
     const { snipeTargets, userPreferences, user, users } = schemaModule;
 
@@ -242,7 +274,9 @@ export async function cleanupTestData(userId: string): Promise<void> {
 
     // Clean up user preferences
     if (userPreferences) {
-      await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
+      await db
+        .delete(userPreferences)
+        .where(eq(userPreferences.userId, userId));
     }
 
     // Clean up user (if exists)
@@ -264,7 +298,7 @@ export async function cleanupTestData(userId: string): Promise<void> {
     }
   } catch (error) {
     console.warn(
-      `Test cleanup warning: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Test cleanup warning: ${error instanceof Error ? error.message : "Unknown error"}`
     );
   }
 }
@@ -277,14 +311,17 @@ export async function getTestUserSnipeTargets(userId: string) {
     const dbModule = await getDbModule();
     const schemaModule = await getSchemaModule();
     const eq = await getEqFunction();
-    
+
     const { db } = dbModule;
     const { snipeTargets } = schemaModule;
 
-    return await db.select().from(snipeTargets).where(eq(snipeTargets.userId, userId));
+    return await db
+      .select()
+      .from(snipeTargets)
+      .where(eq(snipeTargets.userId, userId));
   } catch (error) {
     console.warn(
-      `Get test targets warning: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Get test targets warning: ${error instanceof Error ? error.message : "Unknown error"}`
     );
     return [];
   }
@@ -308,7 +345,7 @@ export async function createTestSnipeTarget(
   try {
     const dbModule = await getDbModule();
     const schemaModule = await getSchemaModule();
-    
+
     const { db } = dbModule;
     const { snipeTargets } = schemaModule;
 
@@ -318,21 +355,21 @@ export async function createTestSnipeTarget(
         userId,
         vcoinId: targetData.vcoinId,
         symbolName: targetData.symbolName,
-        entryStrategy: 'market',
+        entryStrategy: "market",
         positionSizeUsdt: targetData.positionSizeUsdt ?? 100,
         takeProfitLevel: 2,
         stopLossPercent: 15,
-        status: targetData.status ?? 'pending',
+        status: targetData.status ?? "pending",
         priority: targetData.priority ?? 5,
         confidenceScore: targetData.confidenceScore,
-        riskLevel: targetData.riskLevel ?? 'medium',
+        riskLevel: targetData.riskLevel ?? "medium",
       })
       .returning();
 
     return target[0];
   } catch (error) {
     console.warn(
-      `Create test target warning: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Create test target warning: ${error instanceof Error ? error.message : "Unknown error"}`
     );
     return null;
   }
@@ -349,26 +386,26 @@ export async function waitForDatabase(ms: number = 100): Promise<void> {
  * Counts records in a table with optional where clause (works with both real and mock databases)
  */
 export async function countRecords(
-  tableName: 'snipe_targets' | 'user_preferences' | 'user',
+  tableName: "snipe_targets" | "user_preferences" | "user",
   whereClause?: any
 ): Promise<number> {
   try {
     const dbModule = await getDbModule();
     const schemaModule = await getSchemaModule();
-    
+
     const { db } = dbModule;
     const { snipeTargets, userPreferences, user } = schemaModule;
 
     let query;
 
     switch (tableName) {
-      case 'snipe_targets':
+      case "snipe_targets":
         query = db.select().from(snipeTargets);
         break;
-      case 'user_preferences':
+      case "user_preferences":
         query = db.select().from(userPreferences);
         break;
-      case 'user':
+      case "user":
         query = db.select().from(user);
         break;
       default:
@@ -383,7 +420,7 @@ export async function countRecords(
     return results.length;
   } catch (error) {
     console.warn(
-      `Count records warning: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Count records warning: ${error instanceof Error ? error.message : "Unknown error"}`
     );
     return 0;
   }
@@ -408,9 +445,9 @@ export async function teardownTestEnvironment(): Promise<void> {
 /**
  * Creates multiple test patterns for bulk testing
  */
-export function createTestPatterns(count: number, baseSymbol: string = 'TEST') {
+export function createTestPatterns(count: number, baseSymbol: string = "TEST") {
   return Array.from({ length: count }, (_, i) => ({
-    patternType: 'ready_state' as const,
+    patternType: "ready_state" as const,
     confidence: 75 + i * 5, // Varying confidence scores
     symbol: `${baseSymbol}${i + 1}USDT`,
     vcoinId: `test-${baseSymbol.toLowerCase()}-${i + 1}`,
@@ -419,12 +456,12 @@ export function createTestPatterns(count: number, baseSymbol: string = 'TEST') {
       activities: [],
       activityBoost: 1.0,
       hasHighPriorityActivity: false,
-      activityTypes: ['test_source'],
+      activityTypes: ["test_source"],
     },
     detectedAt: new Date(),
     advanceNoticeHours: 0,
-    riskLevel: (['low', 'medium', 'high'] as const)[i % 3],
-    recommendation: 'immediate_action' as const,
+    riskLevel: (["low", "medium", "high"] as const)[i % 3],
+    recommendation: "immediate_action" as const,
   }));
 }
 
@@ -444,20 +481,23 @@ export function verifyPatternToRecordConversion(
     if (record.riskLevel !== pattern.riskLevel) return false;
 
     // Check status mapping
-    const expectedStatus = pattern.patternType === 'ready_state' ? 'ready' : 'pending';
+    const expectedStatus =
+      pattern.patternType === "ready_state" ? "ready" : "pending";
     if (record.status !== expectedStatus) return false;
 
     // Check user preferences integration
     if (userPrefs) {
-      if (record.positionSizeUsdt !== userPrefs.defaultBuyAmountUsdt) return false;
-      if (record.takeProfitLevel !== userPrefs.defaultTakeProfitLevel) return false;
+      if (record.positionSizeUsdt !== userPrefs.defaultBuyAmountUsdt)
+        return false;
+      if (record.takeProfitLevel !== userPrefs.defaultTakeProfitLevel)
+        return false;
       if (record.stopLossPercent !== userPrefs.stopLossPercent) return false;
     }
 
     return true;
   } catch (error) {
     console.warn(
-      `Pattern verification warning: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Pattern verification warning: ${error instanceof Error ? error.message : "Unknown error"}`
     );
     return false;
   }
@@ -475,7 +515,7 @@ export function getMockDataStore() {
  */
 export function resetMockData() {
   const store = getMockDataStore();
-  if (store && store.reset) {
+  if (store?.reset) {
     store.reset();
   }
 }
@@ -484,5 +524,5 @@ export function resetMockData() {
  * Check if we're using mocked database
  */
 export function isUsingMockDatabase(): boolean {
-  return !!(globalThis as any).__TEST_ENV__ || process.env.NODE_ENV === 'test';
+  return !!(globalThis as any).__TEST_ENV__ || process.env.NODE_ENV === "test";
 }

@@ -1,6 +1,6 @@
 /**
  * Enhanced MEXC Configuration Service
- * 
+ *
  * This service provides:
  * 1. Secure credential management
  * 2. Real MEXC API endpoint configuration
@@ -9,8 +9,8 @@
  * 5. Credential testing and validation
  */
 
-import { toSafeError } from '@/src/lib/error-type-utils';
-import { UnifiedMexcServiceV2 } from '../api/unified-mexc-service-v2';
+import { toSafeError } from "@/src/lib/error-type-utils";
+import { UnifiedMexcServiceV2 } from "../api/unified-mexc-service-v2";
 
 // Enhanced configuration interfaces
 export interface MexcCredentials {
@@ -25,33 +25,33 @@ export interface MexcTradingConfig {
   credentials: MexcCredentials;
   baseUrl: string;
   websocketUrl: string;
-  
+
   // Trading Parameters
   defaultPositionSize: number; // USDT
   maxPositionSize: number; // USDT
   minPositionSize: number; // USDT
   maxDailyTrades: number;
   maxConcurrentPositions: number;
-  
+
   // Risk Management
   globalStopLoss: number; // %
   globalTakeProfit: number; // %
   maxDrawdownPercent: number; // %
   riskPerTrade: number; // % of account
-  
+
   // Execution Settings
   orderTimeout: number; // ms
   maxSlippage: number; // %
   retryAttempts: number;
   paperTradingMode: boolean;
-  
+
   // Rate Limiting
   requestsPerSecond: number;
   burstAllowance: number;
-  
+
   // Monitoring
   enableLogging: boolean;
-  logLevel: 'debug' | 'info' | 'warn' | 'error';
+  logLevel: "debug" | "info" | "warn" | "error";
   enableMetrics: boolean;
 }
 
@@ -76,15 +76,19 @@ export interface TradingLimits {
 
 /**
  * Enhanced MEXC Configuration Service
- * 
+ *
  * Manages all MEXC-related configuration and credential validation
  */
 export class EnhancedMexcConfig {
   private logger = {
-    info: (message: string, context?: any) => console.info('[enhanced-mexc-config]', message, context || ''),
-    warn: (message: string, context?: any) => console.warn('[enhanced-mexc-config]', message, context || ''),
-    error: (message: string, context?: any) => console.error('[enhanced-mexc-config]', message, context || ''),
-    debug: (message: string, context?: any) => console.debug('[enhanced-mexc-config]', message, context || ''),
+    info: (message: string, context?: any) =>
+      console.info("[enhanced-mexc-config]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[enhanced-mexc-config]", message, context || ""),
+    error: (message: string, context?: any) =>
+      console.error("[enhanced-mexc-config]", message, context || ""),
+    debug: (message: string, context?: any) =>
+      console.debug("[enhanced-mexc-config]", message, context || ""),
   };
 
   private config: MexcTradingConfig;
@@ -94,7 +98,7 @@ export class EnhancedMexcConfig {
 
   constructor(config?: Partial<MexcTradingConfig>) {
     this.config = this.createDefaultConfig(config);
-    this.logger.info('Enhanced MEXC Configuration initialized', {
+    this.logger.info("Enhanced MEXC Configuration initialized", {
       paperTrading: this.config.paperTradingMode,
       baseUrl: this.config.baseUrl,
       hasCredentials: !!this.config.credentials.apiKey,
@@ -104,47 +108,54 @@ export class EnhancedMexcConfig {
   /**
    * Create default configuration
    */
-  private createDefaultConfig(overrides?: Partial<MexcTradingConfig>): MexcTradingConfig {
+  private createDefaultConfig(
+    overrides?: Partial<MexcTradingConfig>
+  ): MexcTradingConfig {
     const baseConfig: MexcTradingConfig = {
       credentials: {
-        apiKey: process.env.MEXC_API_KEY || '',
-        secretKey: process.env.MEXC_SECRET_KEY || '',
-        passphrase: process.env.MEXC_PASSPHRASE || '',
-        sandbox: process.env.MEXC_SANDBOX === 'true',
+        apiKey: process.env.MEXC_API_KEY || "",
+        secretKey: process.env.MEXC_SECRET_KEY || "",
+        passphrase: process.env.MEXC_PASSPHRASE || "",
+        sandbox: process.env.MEXC_SANDBOX === "true",
       },
-      baseUrl: process.env.MEXC_BASE_URL || 
-        (process.env.MEXC_SANDBOX === 'true' 
-          ? 'https://api.mexc.com' // MEXC doesn't have separate sandbox, using main API
-          : 'https://api.mexc.com'),
-      websocketUrl: process.env.MEXC_WEBSOCKET_URL || 'wss://wbs.mexc.com/ws',
-      
+      baseUrl:
+        process.env.MEXC_BASE_URL ||
+        (process.env.MEXC_SANDBOX === "true"
+          ? "https://api.mexc.com" // MEXC doesn't have separate sandbox, using main API
+          : "https://api.mexc.com"),
+      websocketUrl: process.env.MEXC_WEBSOCKET_URL || "wss://wbs.mexc.com/ws",
+
       // Trading Parameters
-      defaultPositionSize: parseFloat(process.env.MEXC_DEFAULT_POSITION_SIZE || '50'),
-      maxPositionSize: parseFloat(process.env.MEXC_MAX_POSITION_SIZE || '500'),
-      minPositionSize: parseFloat(process.env.MEXC_MIN_POSITION_SIZE || '10'),
-      maxDailyTrades: parseInt(process.env.MEXC_MAX_DAILY_TRADES || '20'),
-      maxConcurrentPositions: parseInt(process.env.MEXC_MAX_CONCURRENT_POSITIONS || '5'),
-      
+      defaultPositionSize: parseFloat(
+        process.env.MEXC_DEFAULT_POSITION_SIZE || "50"
+      ),
+      maxPositionSize: parseFloat(process.env.MEXC_MAX_POSITION_SIZE || "500"),
+      minPositionSize: parseFloat(process.env.MEXC_MIN_POSITION_SIZE || "10"),
+      maxDailyTrades: parseInt(process.env.MEXC_MAX_DAILY_TRADES || "20"),
+      maxConcurrentPositions: parseInt(
+        process.env.MEXC_MAX_CONCURRENT_POSITIONS || "5"
+      ),
+
       // Risk Management
-      globalStopLoss: parseFloat(process.env.MEXC_GLOBAL_STOP_LOSS || '5'),
-      globalTakeProfit: parseFloat(process.env.MEXC_GLOBAL_TAKE_PROFIT || '10'),
-      maxDrawdownPercent: parseFloat(process.env.MEXC_MAX_DRAWDOWN || '15'),
-      riskPerTrade: parseFloat(process.env.MEXC_RISK_PER_TRADE || '2'),
-      
+      globalStopLoss: parseFloat(process.env.MEXC_GLOBAL_STOP_LOSS || "5"),
+      globalTakeProfit: parseFloat(process.env.MEXC_GLOBAL_TAKE_PROFIT || "10"),
+      maxDrawdownPercent: parseFloat(process.env.MEXC_MAX_DRAWDOWN || "15"),
+      riskPerTrade: parseFloat(process.env.MEXC_RISK_PER_TRADE || "2"),
+
       // Execution Settings
-      orderTimeout: parseInt(process.env.MEXC_ORDER_TIMEOUT || '30000'),
-      maxSlippage: parseFloat(process.env.MEXC_MAX_SLIPPAGE || '2'),
-      retryAttempts: parseInt(process.env.MEXC_RETRY_ATTEMPTS || '3'),
-      paperTradingMode: process.env.MEXC_PAPER_TRADING === 'true',
-      
+      orderTimeout: parseInt(process.env.MEXC_ORDER_TIMEOUT || "30000"),
+      maxSlippage: parseFloat(process.env.MEXC_MAX_SLIPPAGE || "2"),
+      retryAttempts: parseInt(process.env.MEXC_RETRY_ATTEMPTS || "3"),
+      paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+
       // Rate Limiting
-      requestsPerSecond: parseInt(process.env.MEXC_REQUESTS_PER_SECOND || '10'),
-      burstAllowance: parseInt(process.env.MEXC_BURST_ALLOWANCE || '20'),
-      
+      requestsPerSecond: parseInt(process.env.MEXC_REQUESTS_PER_SECOND || "10"),
+      burstAllowance: parseInt(process.env.MEXC_BURST_ALLOWANCE || "20"),
+
       // Monitoring
-      enableLogging: process.env.MEXC_ENABLE_LOGGING !== 'false',
-      logLevel: (process.env.MEXC_LOG_LEVEL as any) || 'info',
-      enableMetrics: process.env.MEXC_ENABLE_METRICS !== 'false',
+      enableLogging: process.env.MEXC_ENABLE_LOGGING !== "false",
+      logLevel: (process.env.MEXC_LOG_LEVEL as any) || "info",
+      enableMetrics: process.env.MEXC_ENABLE_METRICS !== "false",
     };
 
     return { ...baseConfig, ...overrides };
@@ -155,7 +166,7 @@ export class EnhancedMexcConfig {
    */
   async initialize(): Promise<void> {
     try {
-      this.logger.info('Initializing MEXC service with enhanced configuration');
+      this.logger.info("Initializing MEXC service with enhanced configuration");
 
       // Validate configuration
       this.validateConfig();
@@ -177,7 +188,7 @@ export class EnhancedMexcConfig {
         if (!validation.isValid) {
           throw new Error(`Credential validation failed: ${validation.error}`);
         }
-        this.logger.info('MEXC credentials validated successfully', {
+        this.logger.info("MEXC credentials validated successfully", {
           canTrade: validation.canTrade,
           accountType: validation.accountType,
           balanceUSDT: validation.balanceUSDT,
@@ -187,11 +198,10 @@ export class EnhancedMexcConfig {
       // Load trading limits for common symbols
       await this.loadTradingLimits();
 
-      this.logger.info('Enhanced MEXC configuration initialized successfully');
-
+      this.logger.info("Enhanced MEXC configuration initialized successfully");
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error('Failed to initialize MEXC configuration', safeError);
+      this.logger.error("Failed to initialize MEXC configuration", safeError);
       throw safeError;
     }
   }
@@ -204,17 +214,17 @@ export class EnhancedMexcConfig {
 
     try {
       if (!this.mexcService) {
-        throw new Error('MEXC service not initialized');
+        throw new Error("MEXC service not initialized");
       }
 
       if (!this.hasCredentials()) {
         return {
           isValid: false,
           canTrade: false,
-          accountType: 'none',
+          accountType: "none",
           permissions: [],
           balanceUSDT: 0,
-          error: 'No API credentials configured',
+          error: "No API credentials configured",
           responseTime: Date.now() - startTime,
           timestamp: new Date(),
         };
@@ -223,13 +233,13 @@ export class EnhancedMexcConfig {
       // Create cache key
       const cacheKey = this.createCredentialCacheKey();
       const cached = this.validationCache.get(cacheKey);
-      
+
       // Use cache if valid (within 5 minutes)
-      if (cached && (Date.now() - cached.timestamp.getTime()) < 300000) {
+      if (cached && Date.now() - cached.timestamp.getTime() < 300000) {
         return cached;
       }
 
-      this.logger.info('Validating MEXC credentials');
+      this.logger.info("Validating MEXC credentials");
 
       // Test connection with ping
       const pingResult = await this.mexcService.ping();
@@ -246,14 +256,16 @@ export class EnhancedMexcConfig {
       const accountInfo = accountResult.data!;
 
       // Get USDT balance
-      const usdtBalance = accountInfo.balances.find(b => b.asset === 'USDT');
-      const balanceUSDT = usdtBalance ? parseFloat(usdtBalance.free) + parseFloat(usdtBalance.locked) : 0;
+      const usdtBalance = accountInfo.balances.find((b) => b.asset === "USDT");
+      const balanceUSDT = usdtBalance
+        ? parseFloat(usdtBalance.free) + parseFloat(usdtBalance.locked)
+        : 0;
 
       const result: CredentialValidationResult = {
         isValid: true,
         canTrade: accountInfo.canTrade,
         accountType: accountInfo.accountType,
-        permissions: ['SPOT'], // Default permissions since not available in AccountInfo
+        permissions: ["SPOT"], // Default permissions since not available in AccountInfo
         balanceUSDT,
         responseTime: Date.now() - startTime,
         timestamp: new Date(),
@@ -262,7 +274,7 @@ export class EnhancedMexcConfig {
       // Cache the result
       this.validationCache.set(cacheKey, result);
 
-      this.logger.info('Credential validation successful', {
+      this.logger.info("Credential validation successful", {
         canTrade: result.canTrade,
         accountType: result.accountType,
         balanceUSDT: result.balanceUSDT,
@@ -270,14 +282,13 @@ export class EnhancedMexcConfig {
       });
 
       return result;
-
     } catch (error) {
       const safeError = toSafeError(error);
-      
+
       const result: CredentialValidationResult = {
         isValid: false,
         canTrade: false,
-        accountType: 'error',
+        accountType: "error",
         permissions: [],
         balanceUSDT: 0,
         error: safeError.message,
@@ -285,7 +296,7 @@ export class EnhancedMexcConfig {
         timestamp: new Date(),
       };
 
-      this.logger.error('Credential validation failed', {
+      this.logger.error("Credential validation failed", {
         error: safeError.message,
         responseTime: result.responseTime,
       });
@@ -305,17 +316,19 @@ export class EnhancedMexcConfig {
       }
 
       if (!this.mexcService) {
-        throw new Error('MEXC service not initialized');
+        throw new Error("MEXC service not initialized");
       }
 
       // Get exchange info for the symbol
       const exchangeInfo = await this.mexcService.getExchangeInfo();
       if (!exchangeInfo.success || !exchangeInfo.data) {
-        throw new Error('Failed to get exchange info');
+        throw new Error("Failed to get exchange info");
       }
 
       // Find symbol info
-      const symbolInfo = exchangeInfo.data.symbols?.find((s: any) => s.symbol === symbol);
+      const symbolInfo = exchangeInfo.data.symbols?.find(
+        (s: any) => s.symbol === symbol
+      );
       if (!symbolInfo) {
         this.logger.warn(`Symbol ${symbol} not found in exchange info`);
         return null;
@@ -323,12 +336,20 @@ export class EnhancedMexcConfig {
 
       // Extract filters (using fallback since filters may not be available)
       const filters = (symbolInfo as any).filters || [];
-      const lotSizeFilter = filters.find((f: any) => f.filterType === 'LOT_SIZE');
-      const minNotionalFilter = filters.find((f: any) => f.filterType === 'MIN_NOTIONAL');
-      const priceFilter = filters.find((f: any) => f.filterType === 'PRICE_FILTER');
+      const lotSizeFilter = filters.find(
+        (f: any) => f.filterType === "LOT_SIZE"
+      );
+      const minNotionalFilter = filters.find(
+        (f: any) => f.filterType === "MIN_NOTIONAL"
+      );
+      const priceFilter = filters.find(
+        (f: any) => f.filterType === "PRICE_FILTER"
+      );
 
       const limits: TradingLimits = {
-        minTradeAmount: minNotionalFilter ? parseFloat(minNotionalFilter.minNotional) : 10,
+        minTradeAmount: minNotionalFilter
+          ? parseFloat(minNotionalFilter.minNotional)
+          : 10,
         maxTradeAmount: 1000000, // Default max
         tickSize: priceFilter ? parseFloat(priceFilter.tickSize) : 0.01,
         stepSize: lotSizeFilter ? parseFloat(lotSizeFilter.stepSize) : 0.001,
@@ -339,7 +360,6 @@ export class EnhancedMexcConfig {
       this.symbolLimits.set(symbol, limits);
 
       return limits;
-
     } catch (error) {
       this.logger.error(`Failed to get trading limits for ${symbol}`, error);
       return null;
@@ -351,7 +371,7 @@ export class EnhancedMexcConfig {
    */
   validateTradeOrder(order: {
     symbol: string;
-    side: 'BUY' | 'SELL';
+    side: "BUY" | "SELL";
     quantity: number;
     price?: number;
     type: string;
@@ -362,47 +382,62 @@ export class EnhancedMexcConfig {
     try {
       // Check if trading is enabled
       if (!this.config.credentials.apiKey && !this.config.paperTradingMode) {
-        errors.push('No API credentials configured and not in paper trading mode');
+        errors.push(
+          "No API credentials configured and not in paper trading mode"
+        );
       }
 
       // Validate position size
-      const positionValue = order.quoteOrderQty || (order.quantity * (order.price || 0));
-      
+      const positionValue =
+        order.quoteOrderQty || order.quantity * (order.price || 0);
+
       if (positionValue < this.config.minPositionSize) {
-        errors.push(`Position size ${positionValue} below minimum ${this.config.minPositionSize}`);
+        errors.push(
+          `Position size ${positionValue} below minimum ${this.config.minPositionSize}`
+        );
       }
 
       if (positionValue > this.config.maxPositionSize) {
-        errors.push(`Position size ${positionValue} above maximum ${this.config.maxPositionSize}`);
+        errors.push(
+          `Position size ${positionValue} above maximum ${this.config.maxPositionSize}`
+        );
       }
 
       // Validate symbol format
-      if (!order.symbol || typeof order.symbol !== 'string') {
-        errors.push('Invalid symbol');
+      if (!order.symbol || typeof order.symbol !== "string") {
+        errors.push("Invalid symbol");
       }
 
       // Validate side
-      if (!['BUY', 'SELL'].includes(order.side)) {
-        errors.push('Invalid order side');
+      if (!["BUY", "SELL"].includes(order.side)) {
+        errors.push("Invalid order side");
       }
 
       // Validate quantity
-      if (order.quantity !== undefined && (order.quantity <= 0 || !isFinite(order.quantity))) {
-        errors.push('Invalid quantity');
+      if (
+        order.quantity !== undefined &&
+        (order.quantity <= 0 || !Number.isFinite(order.quantity))
+      ) {
+        errors.push("Invalid quantity");
       }
 
       // Validate price for limit orders
-      if (order.type === 'LIMIT' && order.price !== undefined && (order.price <= 0 || !isFinite(order.price))) {
-        errors.push('Invalid price for limit order');
+      if (
+        order.type === "LIMIT" &&
+        order.price !== undefined &&
+        (order.price <= 0 || !Number.isFinite(order.price))
+      ) {
+        errors.push("Invalid price for limit order");
       }
 
       return {
         valid: errors.length === 0,
         errors,
       };
-
     } catch (error) {
-      errors.push(`Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Validation error: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
       return { valid: false, errors };
     }
   }
@@ -411,7 +446,9 @@ export class EnhancedMexcConfig {
    * Check if credentials are configured
    */
   hasCredentials(): boolean {
-    return !!(this.config.credentials.apiKey && this.config.credentials.secretKey);
+    return !!(
+      this.config.credentials.apiKey && this.config.credentials.secretKey
+    );
   }
 
   /**
@@ -433,13 +470,13 @@ export class EnhancedMexcConfig {
    */
   updateConfig(updates: Partial<MexcTradingConfig>): void {
     this.config = { ...this.config, ...updates };
-    
+
     // Clear validation cache if credentials changed
     if (updates.credentials) {
       this.validationCache.clear();
     }
 
-    this.logger.info('Configuration updated', { 
+    this.logger.info("Configuration updated", {
       updatedFields: Object.keys(updates),
     });
   }
@@ -450,8 +487,8 @@ export class EnhancedMexcConfig {
   updateCredentials(credentials: Partial<MexcCredentials>): void {
     this.config.credentials = { ...this.config.credentials, ...credentials };
     this.validationCache.clear();
-    
-    this.logger.info('Credentials updated');
+
+    this.logger.info("Credentials updated");
   }
 
   /**
@@ -484,29 +521,32 @@ export class EnhancedMexcConfig {
     const errors: string[] = [];
 
     // Validate URLs
-    if (!this.config.baseUrl || !this.config.baseUrl.startsWith('http')) {
-      errors.push('Invalid base URL');
+    if (!this.config.baseUrl || !this.config.baseUrl.startsWith("http")) {
+      errors.push("Invalid base URL");
     }
 
-    if (!this.config.websocketUrl || !this.config.websocketUrl.startsWith('ws')) {
-      errors.push('Invalid websocket URL');
+    if (
+      !this.config.websocketUrl ||
+      !this.config.websocketUrl.startsWith("ws")
+    ) {
+      errors.push("Invalid websocket URL");
     }
 
     // Validate trading parameters
     if (this.config.maxPositionSize <= this.config.minPositionSize) {
-      errors.push('Max position size must be greater than min position size');
+      errors.push("Max position size must be greater than min position size");
     }
 
     if (this.config.globalStopLoss <= 0 || this.config.globalStopLoss > 50) {
-      errors.push('Invalid global stop loss percentage');
+      errors.push("Invalid global stop loss percentage");
     }
 
     if (this.config.riskPerTrade <= 0 || this.config.riskPerTrade > 10) {
-      errors.push('Risk per trade should be between 0-10%');
+      errors.push("Risk per trade should be between 0-10%");
     }
 
     if (errors.length > 0) {
-      throw new Error(`Configuration validation failed: ${errors.join(', ')}`);
+      throw new Error(`Configuration validation failed: ${errors.join(", ")}`);
     }
   }
 
@@ -514,9 +554,15 @@ export class EnhancedMexcConfig {
    * Load trading limits for common symbols
    */
   private async loadTradingLimits(): Promise<void> {
-    const commonSymbols = ['BTCUSDT', 'ETHUSDT', 'ADAUSDT', 'SOLUSDT', 'DOTUSDT'];
-    
-    this.logger.info('Loading trading limits for common symbols');
+    const commonSymbols = [
+      "BTCUSDT",
+      "ETHUSDT",
+      "ADAUSDT",
+      "SOLUSDT",
+      "DOTUSDT",
+    ];
+
+    this.logger.info("Loading trading limits for common symbols");
 
     for (const symbol of commonSymbols) {
       try {
@@ -526,7 +572,9 @@ export class EnhancedMexcConfig {
       }
     }
 
-    this.logger.info(`Loaded trading limits for ${this.symbolLimits.size} symbols`);
+    this.logger.info(
+      `Loaded trading limits for ${this.symbolLimits.size} symbols`
+    );
   }
 
   /**
@@ -534,7 +582,7 @@ export class EnhancedMexcConfig {
    */
   private createCredentialCacheKey(): string {
     const key = `${this.config.credentials.apiKey}:${this.config.credentials.secretKey}`;
-    return Buffer.from(key).toString('base64').substring(0, 32);
+    return Buffer.from(key).toString("base64").substring(0, 32);
   }
 
   /**
@@ -549,7 +597,9 @@ export class EnhancedMexcConfig {
 // Export singleton instance
 let enhancedMexcConfig: EnhancedMexcConfig | null = null;
 
-export function getEnhancedMexcConfig(config?: Partial<MexcTradingConfig>): EnhancedMexcConfig {
+export function getEnhancedMexcConfig(
+  config?: Partial<MexcTradingConfig>
+): EnhancedMexcConfig {
   if (!enhancedMexcConfig) {
     enhancedMexcConfig = new EnhancedMexcConfig(config);
   }
@@ -561,13 +611,13 @@ export function resetEnhancedMexcConfig(): void {
 }
 
 // Helper functions for environment setup
-export function validateEnvironmentVariables(): { valid: boolean; missing: string[] } {
-  const required = [
-    'MEXC_API_KEY',
-    'MEXC_SECRET_KEY',
-  ];
+export function validateEnvironmentVariables(): {
+  valid: boolean;
+  missing: string[];
+} {
+  const required = ["MEXC_API_KEY", "MEXC_SECRET_KEY"];
 
-  const missing = required.filter(key => !process.env[key]);
+  const missing = required.filter((key) => !process.env[key]);
 
   return {
     valid: missing.length === 0,
@@ -578,13 +628,17 @@ export function validateEnvironmentVariables(): { valid: boolean; missing: strin
 export function getEnvironmentConfig(): Partial<MexcTradingConfig> {
   return {
     credentials: {
-      apiKey: process.env.MEXC_API_KEY || '',
-      secretKey: process.env.MEXC_SECRET_KEY || '',
-      passphrase: process.env.MEXC_PASSPHRASE || '',
-      sandbox: process.env.MEXC_SANDBOX === 'true',
+      apiKey: process.env.MEXC_API_KEY || "",
+      secretKey: process.env.MEXC_SECRET_KEY || "",
+      passphrase: process.env.MEXC_PASSPHRASE || "",
+      sandbox: process.env.MEXC_SANDBOX === "true",
     },
-    paperTradingMode: process.env.MEXC_PAPER_TRADING === 'true',
-    defaultPositionSize: parseFloat(process.env.MEXC_DEFAULT_POSITION_SIZE || '50'),
-    maxConcurrentPositions: parseInt(process.env.MEXC_MAX_CONCURRENT_POSITIONS || '5'),
+    paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+    defaultPositionSize: parseFloat(
+      process.env.MEXC_DEFAULT_POSITION_SIZE || "50"
+    ),
+    maxConcurrentPositions: parseInt(
+      process.env.MEXC_MAX_CONCURRENT_POSITIONS || "5"
+    ),
   };
 }

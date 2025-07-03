@@ -1,4 +1,11 @@
-import { boolean, integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgTable,
+  real,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // ==========================================
 // ALERT SYSTEM SCHEMAS

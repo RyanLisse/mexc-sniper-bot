@@ -7,7 +7,10 @@
 
 import type { PatternEmbedding } from "@/src/db/schemas/patterns";
 import type { ActivityData } from "@/src/schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
 
 // ============================================================================
 // Core Pattern Types - Preserving System Architecture
@@ -46,7 +49,12 @@ export interface PatternMatch {
   detectedAt: Date;
   advanceNoticeHours: number;
   riskLevel: "low" | "medium" | "high";
-  recommendation: "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid";
+  recommendation:
+    | "immediate_action"
+    | "monitor_closely"
+    | "prepare_entry"
+    | "wait"
+    | "avoid";
 
   // Historical context
   similarPatterns?: PatternEmbedding[];
@@ -108,12 +116,23 @@ export const PATTERN_CONSTANTS = {
 // ============================================================================
 
 export type RiskLevel = "low" | "medium" | "high";
-export type PatternType = "ready_state" | "pre_ready" | "launch_sequence" | "risk_warning";
+export type PatternType =
+  | "ready_state"
+  | "pre_ready"
+  | "launch_sequence"
+  | "risk_warning";
 export type Recommendation =
   | "immediate_action"
   | "monitor_closely"
   | "prepare_entry"
   | "wait"
   | "avoid";
-export type AnalysisType = "discovery" | "monitoring" | "validation" | "correlation";
-export type CorrelationType = "launch_timing" | "market_sector" | "pattern_similarity";
+export type AnalysisType =
+  | "discovery"
+  | "monitoring"
+  | "validation"
+  | "correlation";
+export type CorrelationType =
+  | "launch_timing"
+  | "market_sector"
+  | "pattern_similarity";

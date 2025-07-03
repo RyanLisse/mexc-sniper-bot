@@ -1,5 +1,13 @@
 import { sql } from "drizzle-orm";
-import { index, integer, pgTable, real, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  index,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 // ===========================================
 // WORKFLOW ORCHESTRATION SCHEMA MODULE
@@ -14,7 +22,9 @@ export const workflowSystemStatus = pgTable(
 
     // System Status
     systemStatus: text("system_status").notNull().default("stopped"), // "running", "stopped", "error"
-    lastUpdate: timestamp("last_update").notNull().default(sql`CURRENT_TIMESTAMP`),
+    lastUpdate: timestamp("last_update")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
 
     // Active Workflows
     activeWorkflows: text("active_workflows").notNull().default("[]"), // JSON array of workflow IDs
@@ -29,8 +39,12 @@ export const workflowSystemStatus = pgTable(
     bestTrade: real("best_trade").notNull().default(0),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("workflow_system_status_user_id_idx").on(table.userId),
@@ -59,11 +73,15 @@ export const workflowActivity = pgTable(
 
     // Timestamps
     timestamp: timestamp("timestamp").notNull().default(sql`CURRENT_TIMESTAMP`),
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdIdx: index("workflow_activity_user_id_idx").on(table.userId),
-    activityIdIdx: index("workflow_activity_activity_id_idx").on(table.activityId),
+    activityIdIdx: index("workflow_activity_activity_id_idx").on(
+      table.activityId
+    ),
     typeIdx: index("workflow_activity_type_idx").on(table.type),
     timestampIdx: index("workflow_activity_timestamp_idx").on(table.timestamp),
   })

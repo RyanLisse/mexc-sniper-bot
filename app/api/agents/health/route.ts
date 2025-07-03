@@ -1,9 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import type { 
-  AgentRegistryStats, 
-  AgentStatus, 
-  HealthCheckResult,
-  RegisteredAgent 
+import { type NextRequest, NextResponse } from "next/server";
+import type {
+  AgentStatus,
+  RegisteredAgent,
 } from "@/src/mexc-agents/coordination/agent-registry";
 import { getGlobalAgentRegistry } from "@/src/mexc-agents/coordination/agent-registry";
 
@@ -17,7 +15,8 @@ export async function GET(request: NextRequest) {
     const agentId = url.searchParams.get("agentId");
     const includeHistory = url.searchParams.get("includeHistory") === "true";
     const includeAlerts = url.searchParams.get("includeAlerts") === "true";
-    const includeRecommendations = url.searchParams.get("includeRecommendations") === "true";
+    const includeRecommendations =
+      url.searchParams.get("includeRecommendations") === "true";
     const historyLimit = parseInt(url.searchParams.get("historyLimit") || "50");
 
     const registry = getGlobalAgentRegistry();
@@ -32,11 +31,11 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      const healthHistory = includeHistory 
+      const healthHistory = includeHistory
         ? registry.getAgentHealthHistory(agentId, historyLimit)
         : [];
 
-      const report = includeRecommendations 
+      const report = includeRecommendations
         ? registry.getAgentHealthReport(agentId)
         : null;
 
@@ -89,35 +88,62 @@ export async function GET(request: NextRequest) {
       unhealthyAgents: stats.unhealthyAgents,
       unknownAgents: stats.unknownAgents,
       averageResponseTime: stats.averageResponseTime,
-      averageHealthScore: allAgents.reduce((sum, agent) => sum + agent.health.healthScore, 0) / allAgents.length || 0,
-      systemUptime: allAgents.reduce((sum, agent) => sum + agent.health.uptime, 0) / allAgents.length || 0,
-      totalRecoveryAttempts: allAgents.reduce((sum, agent) => sum + agent.health.recoveryAttempts, 0),
-      agentsWithErrors: allAgents.filter(agent => agent.health.consecutiveErrors > 0).length,
+      averageHealthScore:
+        allAgents.reduce((sum, agent) => sum + agent.health.healthScore, 0) /
+          allAgents.length || 0,
+      systemUptime:
+        allAgents.reduce((sum, agent) => sum + agent.health.uptime, 0) /
+          allAgents.length || 0,
+      totalRecoveryAttempts: allAgents.reduce(
+        (sum, agent) => sum + agent.health.recoveryAttempts,
+        0
+      ),
+      agentsWithErrors: allAgents.filter(
+        (agent) => agent.health.consecutiveErrors > 0
+      ).length,
       lastFullHealthCheck: stats.lastFullHealthCheck,
     };
 
     // Calculate trend analysis
     const trendAnalysis = {
       responseTime: {
-        improving: allAgents.filter(a => a.health.trends.responseTime === "improving").length,
-        degrading: allAgents.filter(a => a.health.trends.responseTime === "degrading").length,
-        stable: allAgents.filter(a => a.health.trends.responseTime === "stable").length,
+        improving: allAgents.filter(
+          (a) => a.health.trends.responseTime === "improving"
+        ).length,
+        degrading: allAgents.filter(
+          (a) => a.health.trends.responseTime === "degrading"
+        ).length,
+        stable: allAgents.filter(
+          (a) => a.health.trends.responseTime === "stable"
+        ).length,
       },
       errorRate: {
-        improving: allAgents.filter(a => a.health.trends.errorRate === "improving").length,
-        degrading: allAgents.filter(a => a.health.trends.errorRate === "degrading").length,
-        stable: allAgents.filter(a => a.health.trends.errorRate === "stable").length,
+        improving: allAgents.filter(
+          (a) => a.health.trends.errorRate === "improving"
+        ).length,
+        degrading: allAgents.filter(
+          (a) => a.health.trends.errorRate === "degrading"
+        ).length,
+        stable: allAgents.filter((a) => a.health.trends.errorRate === "stable")
+          .length,
       },
       throughput: {
-        improving: allAgents.filter(a => a.health.trends.throughput === "improving").length,
-        degrading: allAgents.filter(a => a.health.trends.throughput === "degrading").length,
-        stable: allAgents.filter(a => a.health.trends.throughput === "stable").length,
+        improving: allAgents.filter(
+          (a) => a.health.trends.throughput === "improving"
+        ).length,
+        degrading: allAgents.filter(
+          (a) => a.health.trends.throughput === "degrading"
+        ).length,
+        stable: allAgents.filter((a) => a.health.trends.throughput === "stable")
+          .length,
       },
     };
 
     // Top performing and struggling agents
-    const sortedByHealth = [...allAgents].sort((a, b) => b.health.healthScore - a.health.healthScore);
-    const topPerformers = sortedByHealth.slice(0, 5).map(agent => ({
+    const sortedByHealth = [...allAgents].sort(
+      (a, b) => b.health.healthScore - a.health.healthScore
+    );
+    const topPerformers = sortedByHealth.slice(0, 5).map((agent) => ({
       id: agent.id,
       name: agent.name,
       healthScore: agent.health.healthScore,
@@ -126,27 +152,51 @@ export async function GET(request: NextRequest) {
       uptime: agent.health.uptime,
     }));
 
-    const strugglingAgents = sortedByHealth.slice(-5).reverse().map(agent => ({
-      id: agent.id,
-      name: agent.name,
-      healthScore: agent.health.healthScore,
-      status: agent.health.status,
-      responseTime: agent.health.responseTime,
-      errorRate: agent.health.errorRate,
-      consecutiveErrors: agent.health.consecutiveErrors,
-      recoveryAttempts: agent.health.recoveryAttempts,
-    }));
+    const strugglingAgents = sortedByHealth
+      .slice(-5)
+      .reverse()
+      .map((agent) => ({
+        id: agent.id,
+        name: agent.name,
+        healthScore: agent.health.healthScore,
+        status: agent.health.status,
+        responseTime: agent.health.responseTime,
+        errorRate: agent.health.errorRate,
+        consecutiveErrors: agent.health.consecutiveErrors,
+        recoveryAttempts: agent.health.recoveryAttempts,
+      }));
 
     return NextResponse.json({
       success: true,
       data: {
         systemMetrics,
         agentsByStatus: {
-          healthy: agentsByStatus.healthy.map(a => ({ id: a.id, name: a.name, healthScore: a.health.healthScore })),
-          degraded: agentsByStatus.degraded.map(a => ({ id: a.id, name: a.name, healthScore: a.health.healthScore, issues: getHealthIssues(a) })),
-          unhealthy: agentsByStatus.unhealthy.map(a => ({ id: a.id, name: a.name, healthScore: a.health.healthScore, issues: getHealthIssues(a) })),
-          unknown: agentsByStatus.unknown.map(a => ({ id: a.id, name: a.name })),
-          recovering: agentsByStatus.recovering.map(a => ({ id: a.id, name: a.name, recoveryAttempts: a.health.recoveryAttempts })),
+          healthy: agentsByStatus.healthy.map((a) => ({
+            id: a.id,
+            name: a.name,
+            healthScore: a.health.healthScore,
+          })),
+          degraded: agentsByStatus.degraded.map((a) => ({
+            id: a.id,
+            name: a.name,
+            healthScore: a.health.healthScore,
+            issues: getHealthIssues(a),
+          })),
+          unhealthy: agentsByStatus.unhealthy.map((a) => ({
+            id: a.id,
+            name: a.name,
+            healthScore: a.health.healthScore,
+            issues: getHealthIssues(a),
+          })),
+          unknown: agentsByStatus.unknown.map((a) => ({
+            id: a.id,
+            name: a.name,
+          })),
+          recovering: agentsByStatus.recovering.map((a) => ({
+            id: a.id,
+            name: a.name,
+            recoveryAttempts: a.health.recoveryAttempts,
+          })),
         },
         trendAnalysis,
         topPerformers,
@@ -155,14 +205,13 @@ export async function GET(request: NextRequest) {
         lastUpdated: new Date(),
       },
     });
-
   } catch (error) {
     console.error("[API] Agent health check failed:", { error: error });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to retrieve agent health status",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -188,7 +237,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await registry.checkAgentHealth(agentId);
-      
+
       return NextResponse.json({
         success: true,
         data: {
@@ -204,7 +253,7 @@ export async function POST(request: NextRequest) {
       // Check all agents
       const results = await registry.checkAllAgentsHealth();
       const stats = registry.getStats();
-      
+
       return NextResponse.json({
         success: true,
         data: {
@@ -215,14 +264,13 @@ export async function POST(request: NextRequest) {
         },
       });
     }
-
   } catch (error) {
     console.error("[API] Agent health check trigger failed:", { error: error });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to trigger health check",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -244,7 +292,7 @@ export async function PATCH(request: NextRequest) {
 
     const registry = getGlobalAgentRegistry();
     const agent = registry.getAgent(agentId);
-    
+
     if (!agent) {
       return NextResponse.json(
         { success: false, error: "Agent not found" },
@@ -272,14 +320,15 @@ export async function PATCH(request: NextRequest) {
         timestamp: new Date(),
       },
     });
-
   } catch (error) {
-    console.error("[API] Agent health configuration update failed:", { error: error });
+    console.error("[API] Agent health configuration update failed:", {
+      error: error,
+    });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to update agent health configuration",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

@@ -9,9 +9,18 @@ import { memo, Suspense, useMemo } from "react";
 // Import Recharts components directly to avoid complex dynamic import typing issues
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { generateChartCellKey, generateListKey } from "../../lib/react-utilities";
+import {
+  generateChartCellKey,
+  generateListKey,
+} from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 import { ErrorBoundary } from "../error-boundary";
 
@@ -26,7 +35,10 @@ export const ExecutionTab = memo(function ExecutionTab({
     if (!data?.executionAnalytics?.fillRates) return [];
     return [
       { name: "Full Fill", value: data.executionAnalytics.fillRates.fullFill },
-      { name: "Partial Fill", value: data.executionAnalytics.fillRates.partialFill },
+      {
+        name: "Partial Fill",
+        value: data.executionAnalytics.fillRates.partialFill,
+      },
       { name: "No Fill", value: data.executionAnalytics.fillRates.noFill },
     ];
   }, [data?.executionAnalytics?.fillRates]);
@@ -44,7 +56,10 @@ export const ExecutionTab = memo(function ExecutionTab({
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {data.executionAnalytics.orderExecutionSpeed.average.toFixed(0)}ms
+                  {data.executionAnalytics.orderExecutionSpeed.average.toFixed(
+                    0
+                  )}
+                  ms
                 </div>
                 <p className="text-xs text-muted-foreground">Average</p>
               </div>
@@ -97,7 +112,10 @@ export const ExecutionTab = memo(function ExecutionTab({
                       label={({ name, value }: any) => `${name}: ${value}%`}
                     >
                       {["#8884d8", "#82ca9d", "#ffc658"].map((color, index) => (
-                        <Cell key={generateChartCellKey(index, `fill-${color}`)} fill={color} />
+                        <Cell
+                          key={generateChartCellKey(index, `fill-${color}`)}
+                          fill={color}
+                        />
                       ))}
                     </Pie>
                     <Tooltip />
@@ -121,27 +139,35 @@ export const ExecutionTab = memo(function ExecutionTab({
               <div>
                 <p className="text-sm text-muted-foreground">Average</p>
                 <p className="text-2xl font-bold">
-                  {data.executionAnalytics.slippageMetrics.averageSlippage.toFixed(3)}%
+                  {data.executionAnalytics.slippageMetrics.averageSlippage.toFixed(
+                    3
+                  )}
+                  %
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Maximum</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {data.executionAnalytics.slippageMetrics.maxSlippage.toFixed(3)}%
+                  {data.executionAnalytics.slippageMetrics.maxSlippage.toFixed(
+                    3
+                  )}
+                  %
                 </p>
               </div>
             </div>
 
             <div className="space-y-2">
-              {data.executionAnalytics.slippageMetrics.slippageDistribution.map((dist, index) => (
-                <div
-                  key={generateListKey(dist, index, "range")}
-                  className="flex justify-between items-center"
-                >
-                  <span className="text-sm">{dist.range}</span>
-                  <Badge variant="outline">{dist.count}</Badge>
-                </div>
-              ))}
+              {data.executionAnalytics.slippageMetrics.slippageDistribution.map(
+                (dist, index) => (
+                  <div
+                    key={generateListKey(dist, index, "range")}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="text-sm">{dist.range}</span>
+                    <Badge variant="outline">{dist.count}</Badge>
+                  </div>
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -156,19 +182,25 @@ export const ExecutionTab = memo(function ExecutionTab({
               <div className="flex justify-between">
                 <span className="text-sm">Trading Fees</span>
                 <span className="font-medium">
-                  {formatCurrency(data.executionAnalytics.executionCosts.tradingFees)}
+                  {formatCurrency(
+                    data.executionAnalytics.executionCosts.tradingFees
+                  )}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Slippage Costs</span>
                 <span className="font-medium">
-                  {formatCurrency(data.executionAnalytics.executionCosts.slippageCosts)}
+                  {formatCurrency(
+                    data.executionAnalytics.executionCosts.slippageCosts
+                  )}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Market Impact</span>
                 <span className="font-medium">
-                  {formatCurrency(data.executionAnalytics.executionCosts.marketImpactCosts)}
+                  {formatCurrency(
+                    data.executionAnalytics.executionCosts.marketImpactCosts
+                  )}
                 </span>
               </div>
             </div>
@@ -185,7 +217,12 @@ export const ExecutionTab = memo(function ExecutionTab({
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Order to Exchange</span>
-                  <span>{data.executionAnalytics.latencyMetrics.orderToExchange.toFixed(1)}ms</span>
+                  <span>
+                    {data.executionAnalytics.latencyMetrics.orderToExchange.toFixed(
+                      1
+                    )}
+                    ms
+                  </span>
                 </div>
                 <Progress
                   value={data.executionAnalytics.latencyMetrics.orderToExchange}
@@ -197,11 +234,16 @@ export const ExecutionTab = memo(function ExecutionTab({
                 <div className="flex justify-between text-sm mb-1">
                   <span>Market Data</span>
                   <span>
-                    {data.executionAnalytics.latencyMetrics.marketDataLatency.toFixed(1)}ms
+                    {data.executionAnalytics.latencyMetrics.marketDataLatency.toFixed(
+                      1
+                    )}
+                    ms
                   </span>
                 </div>
                 <Progress
-                  value={data.executionAnalytics.latencyMetrics.marketDataLatency * 2}
+                  value={
+                    data.executionAnalytics.latencyMetrics.marketDataLatency * 2
+                  }
                   className="h-2"
                 />
               </div>
@@ -209,10 +251,17 @@ export const ExecutionTab = memo(function ExecutionTab({
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>System Latency</span>
-                  <span>{data.executionAnalytics.latencyMetrics.systemLatency.toFixed(1)}ms</span>
+                  <span>
+                    {data.executionAnalytics.latencyMetrics.systemLatency.toFixed(
+                      1
+                    )}
+                    ms
+                  </span>
                 </div>
                 <Progress
-                  value={data.executionAnalytics.latencyMetrics.systemLatency * 5}
+                  value={
+                    data.executionAnalytics.latencyMetrics.systemLatency * 5
+                  }
                   className="h-2"
                 />
               </div>

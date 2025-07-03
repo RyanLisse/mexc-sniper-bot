@@ -87,7 +87,10 @@ Always maintain the virtual environment integrity while providing realistic mark
     };
   }
 
-  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+  async process(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
     const userMessage = `
 Simulation Analysis Request:
 Current Session: ${this.currentSession ? this.currentSession.id : "None"}
@@ -135,10 +138,15 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     this.currentSession = session;
 
-    await this.emitSafetyEvent("simulation", "low", "Simulation session started", {
-      sessionId: session.id,
-      virtualBalance: session.virtualBalance,
-    });
+    await this.emitSafetyEvent(
+      "simulation",
+      "low",
+      "Simulation session started",
+      {
+        sessionId: session.id,
+        virtualBalance: session.virtualBalance,
+      }
+    );
 
     return session;
   }
@@ -155,13 +163,20 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     const completedSession = { ...this.currentSession };
 
-    await this.emitSafetyEvent("simulation", "low", "Simulation session ended", {
-      sessionId: completedSession.id,
-      duration: Date.parse(completedSession.endTime!) - Date.parse(completedSession.startTime),
-      totalTrades: completedSession.totalTrades,
-      finalPnL: completedSession.profitLoss,
-      winRate: completedSession.winRate,
-    });
+    await this.emitSafetyEvent(
+      "simulation",
+      "low",
+      "Simulation session ended",
+      {
+        sessionId: completedSession.id,
+        duration:
+          Date.parse(completedSession.endTime!) -
+          Date.parse(completedSession.startTime),
+        totalTrades: completedSession.totalTrades,
+        finalPnL: completedSession.profitLoss,
+        winRate: completedSession.winRate,
+      }
+    );
 
     this.currentSession = null;
     return completedSession;
@@ -201,7 +216,9 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     // Simulate execution delay
     if (this.simulationConfig.delaySimulation) {
-      await new Promise((resolve) => setTimeout(resolve, Math.random() * 1000 + 500));
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.random() * 1000 + 500)
+      );
     }
 
     const trade: SimulatedTrade = {
@@ -230,14 +247,19 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     this.updateSessionMetrics();
 
-    await this.emitSafetyEvent("simulation", "low", `Simulated ${type} trade executed`, {
-      symbol,
-      quantity,
-      price: adjustedPrice,
-      value,
-      fees,
-      strategy,
-    });
+    await this.emitSafetyEvent(
+      "simulation",
+      "low",
+      `Simulated ${type} trade executed`,
+      {
+        symbol,
+        quantity,
+        price: adjustedPrice,
+        value,
+        fees,
+        strategy,
+      }
+    );
 
     return {
       success: true,
@@ -245,7 +267,11 @@ Please analyze this simulation scenario and provide detailed insights about trad
     };
   }
 
-  private applyMarketConditions(price: number, quantity: number, type: "buy" | "sell"): number {
+  private applyMarketConditions(
+    price: number,
+    quantity: number,
+    type: "buy" | "sell"
+  ): number {
     let adjustedPrice = price;
 
     // Apply slippage
@@ -270,13 +296,17 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     // Calculate P&L
     const initialBalance = this.currentSession.virtualBalance;
-    this.currentSession.profitLoss = this.currentSession.currentBalance - initialBalance;
+    this.currentSession.profitLoss =
+      this.currentSession.currentBalance - initialBalance;
 
     // Calculate win rate (simplified - assumes trades are closed)
-    const realizedTrades = trades.filter((t) => t.realized && t.profitLoss !== undefined);
+    const realizedTrades = trades.filter(
+      (t) => t.realized && t.profitLoss !== undefined
+    );
     if (realizedTrades.length > 0) {
       const winners = realizedTrades.filter((t) => (t.profitLoss || 0) > 0);
-      this.currentSession.winRate = (winners.length / realizedTrades.length) * 100;
+      this.currentSession.winRate =
+        (winners.length / realizedTrades.length) * 100;
 
       // Best and worst trades
       const pnls = realizedTrades.map((t) => t.profitLoss || 0);
@@ -326,8 +356,12 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
     // Check for unrealistic virtual balance
     if (this.currentSession && this.currentSession.virtualBalance > 100000) {
-      issues.push("Virtual balance extremely high - may not reflect realistic conditions");
-      recommendations.push("Consider using more realistic virtual balance amounts");
+      issues.push(
+        "Virtual balance extremely high - may not reflect realistic conditions"
+      );
+      recommendations.push(
+        "Consider using more realistic virtual balance amounts"
+      );
     }
 
     // Check for too many trades in session
@@ -363,7 +397,9 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
       // Check for memory issues with large session
       if (this.currentSession && this.currentSession.trades.length > 10000) {
-        issues.push("Current session has excessive trades - potential memory issue");
+        issues.push(
+          "Current session has excessive trades - potential memory issue"
+        );
       }
     } catch (error) {
       issues.push(`Agent health check failed: ${error}`);
@@ -392,9 +428,14 @@ Please analyze this simulation scenario and provide detailed insights about trad
 
   updateSimulationConfig(config: Partial<SimulationConfig>): void {
     this.simulationConfig = { ...this.simulationConfig, ...config };
-    this.emitSafetyEvent("simulation", "low", "Simulation configuration updated", {
-      newConfig: this.simulationConfig,
-    });
+    this.emitSafetyEvent(
+      "simulation",
+      "low",
+      "Simulation configuration updated",
+      {
+        newConfig: this.simulationConfig,
+      }
+    );
   }
 
   getSimulationConfig(): SimulationConfig {

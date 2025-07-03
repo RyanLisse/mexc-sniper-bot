@@ -32,7 +32,12 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
         warn: (message: string, context?: any) =>
           console.warn("[mexc-client-factory]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[mexc-client-factory]", message, context || "", error || ""),
+          console.error(
+            "[mexc-client-factory]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[mexc-client-factory]", message, context || ""),
       };
@@ -69,7 +74,12 @@ export class UnifiedMexcClient extends MexcTradingApiClient {
    * Get extended cache statistics with exchange data
    */
   getExtendedCacheStats(): {
-    requestCache: { size: number; maxSize: number; hitRate?: number; missRate?: number };
+    requestCache: {
+      size: number;
+      maxSize: number;
+      hitRate?: number;
+      missRate?: number;
+    };
     exchangeSymbolsCount: number;
     exchangeCacheValid: boolean;
   } {
@@ -185,7 +195,9 @@ let globalUnifiedMexcClient: UnifiedMexcClient | null = null;
 /**
  * Get the global MEXC client instance (singleton pattern)
  */
-export function getUnifiedMexcClient(config?: UnifiedMexcConfig): UnifiedMexcClient {
+export function getUnifiedMexcClient(
+  config?: UnifiedMexcConfig
+): UnifiedMexcClient {
   if (!globalUnifiedMexcClient) {
     globalUnifiedMexcClient = new UnifiedMexcClient(config);
     // Note: Global MEXC client created
@@ -295,7 +307,10 @@ export function createMexcClientBuilder(): MexcClientBuilder {
 /**
  * Create a client optimized for trading
  */
-export function createTradingClient(apiKey: string, secretKey: string): UnifiedMexcClient {
+export function createTradingClient(
+  apiKey: string,
+  secretKey: string
+): UnifiedMexcClient {
   return new UnifiedMexcClient({
     apiKey,
     secretKey,

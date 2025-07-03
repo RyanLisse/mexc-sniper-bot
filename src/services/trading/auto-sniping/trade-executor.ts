@@ -1,6 +1,6 @@
 /**
  * Trade Executor Module
- * 
+ *
  * Handles actual trade execution with retries and validation.
  * Extracted from large auto-sniping.ts for better maintainability.
  */
@@ -19,11 +19,11 @@ export class TradeExecutor {
   }
 
   async initialize(): Promise<void> {
-    console.log('TradeExecutor initialized');
+    console.log("TradeExecutor initialized");
   }
 
   async shutdown(): Promise<void> {
-    console.log('TradeExecutor shutdown complete');
+    console.log("TradeExecutor shutdown complete");
   }
 
   async executeTrade(params: TradeParameters): Promise<TradeResult> {
@@ -33,7 +33,7 @@ export class TradeExecutor {
     // - Order execution with retries
     // - Error handling and recovery
     // - Position tracking
-    
+
     try {
       // Validate parameters
       await this.validateTradeParameters(params);
@@ -50,11 +50,12 @@ export class TradeExecutor {
         metadata: params.metadata,
       };
 
-      console.log('Trade executed successfully:', result);
+      console.log("Trade executed successfully:", result);
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown trade error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown trade error";
+
       return {
         success: false,
         symbol: params.symbol,
@@ -67,17 +68,19 @@ export class TradeExecutor {
     }
   }
 
-  private async validateTradeParameters(params: TradeParameters): Promise<void> {
+  private async validateTradeParameters(
+    params: TradeParameters
+  ): Promise<void> {
     if (!params.symbol) {
-      throw new Error('Symbol is required');
+      throw new Error("Symbol is required");
     }
 
     if (!params.quantity || params.quantity <= 0) {
-      throw new Error('Valid quantity is required');
+      throw new Error("Valid quantity is required");
     }
 
-    if (!params.side || !['buy', 'sell'].includes(params.side)) {
-      throw new Error('Valid side (buy/sell) is required');
+    if (!params.side || !["buy", "sell"].includes(params.side)) {
+      throw new Error("Valid side (buy/sell) is required");
     }
 
     // Additional validation logic would go here

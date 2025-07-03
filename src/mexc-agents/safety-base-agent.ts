@@ -57,7 +57,9 @@ export abstract class SafetyBaseAgent extends BaseAgent {
     this.safetyConfig = this.mergeWithDefaultConfig(safetyConfig);
   }
 
-  private mergeWithDefaultConfig(partial?: Partial<SafetyConfig>): SafetyConfig {
+  private mergeWithDefaultConfig(
+    partial?: Partial<SafetyConfig>
+  ): SafetyConfig {
     const defaultConfig: SafetyConfig = {
       simulation: {
         enabled: false,
@@ -84,9 +86,18 @@ export abstract class SafetyBaseAgent extends BaseAgent {
 
     return {
       simulation: { ...defaultConfig.simulation, ...partial?.simulation },
-      riskManagement: { ...defaultConfig.riskManagement, ...partial?.riskManagement },
-      reconciliation: { ...defaultConfig.reconciliation, ...partial?.reconciliation },
-      errorRecovery: { ...defaultConfig.errorRecovery, ...partial?.errorRecovery },
+      riskManagement: {
+        ...defaultConfig.riskManagement,
+        ...partial?.riskManagement,
+      },
+      reconciliation: {
+        ...defaultConfig.reconciliation,
+        ...partial?.reconciliation,
+      },
+      errorRecovery: {
+        ...defaultConfig.errorRecovery,
+        ...partial?.errorRecovery,
+      },
     };
   }
 
@@ -127,9 +138,15 @@ export abstract class SafetyBaseAgent extends BaseAgent {
 
     // Log critical events
     if (severity === "critical") {
-      logger.error(`[${this.config.name}] CRITICAL SAFETY EVENT: ${message}`, data);
+      logger.error(
+        `[${this.config.name}] CRITICAL SAFETY EVENT: ${message}`,
+        data
+      );
     } else if (severity === "high") {
-      logger.warn(`[${this.config.name}] HIGH SEVERITY EVENT: ${message}`, data);
+      logger.warn(
+        `[${this.config.name}] HIGH SEVERITY EVENT: ${message}`,
+        data
+      );
     } else {
       logger.info(`[${this.config.name}] Safety event:`, message);
     }
@@ -179,7 +196,10 @@ export abstract class SafetyBaseAgent extends BaseAgent {
     return {
       totalEvents: this.events.length,
       criticalEvents: this.getCriticalEvents().length,
-      lastEventTime: this.events.length > 0 ? this.events[this.events.length - 1].timestamp : null,
+      lastEventTime:
+        this.events.length > 0
+          ? this.events[this.events.length - 1].timestamp
+          : null,
       uptime,
       averageResponseTime: 0, // Would track actual response times
     };

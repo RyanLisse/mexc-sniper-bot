@@ -6,7 +6,10 @@
  */
 
 import { EventEmitter } from "node:events";
-import { type DomainEvent, eventStoreManager } from "../event-sourcing/event-store";
+import {
+  type DomainEvent,
+  eventStoreManager,
+} from "../event-sourcing/event-store";
 
 // Base Query Interface
 export interface Query {
@@ -339,7 +342,9 @@ export abstract class BaseReadModelProjection implements ReadModelProjection {
     await this.store.clear(this.projectionName);
 
     // Replay all events
-    await eventStoreManager.replayEvents(undefined, (event) => this.handle(event));
+    await eventStoreManager.replayEvents(undefined, (event) =>
+      this.handle(event)
+    );
   }
 
   async getModel(id: string): Promise<ReadModel | null> {

@@ -3,7 +3,7 @@
  * Minimal implementation to eliminate import errors
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 // Mock workflow definitions for frontend component compatibility
 interface WorkflowDefinition {
@@ -33,7 +33,8 @@ const WORKFLOW_DEFINITIONS: WorkflowDefinition[] = [
     successCount: 23,
     errorCount: 1,
     avgDuration: 1500,
-    description: "Monitors MEXC calendar for new token listings and trading opportunities",
+    description:
+      "Monitors MEXC calendar for new token listings and trading opportunities",
     trigger: "mexc.calendar.updated",
   },
   {
@@ -46,7 +47,8 @@ const WORKFLOW_DEFINITIONS: WorkflowDefinition[] = [
     successCount: 154,
     errorCount: 2,
     avgDuration: 800,
-    description: "Monitors specific symbols for trading signals and pattern detection",
+    description:
+      "Monitors specific symbols for trading signals and pattern detection",
     trigger: "mexc.symbol.ready",
   },
   {
@@ -72,7 +74,8 @@ const WORKFLOW_DEFINITIONS: WorkflowDefinition[] = [
     successCount: 11,
     errorCount: 1,
     avgDuration: 3200,
-    description: "Creates and validates trading strategies based on market analysis",
+    description:
+      "Creates and validates trading strategies based on market analysis",
     trigger: "strategy.create",
   },
   {
@@ -96,47 +99,59 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const workflowId = searchParams.get("workflowId");
     const includeMetrics = searchParams.get("includeMetrics") === "true";
-    const format = searchParams.get("format") || "workflows";
+    const _format = searchParams.get("format") || "workflows";
 
     let workflows = [...WORKFLOW_DEFINITIONS];
-    
+
     // Filter by specific workflow if requested
     if (workflowId) {
-      workflows = workflows.filter(w => w.id === workflowId);
+      workflows = workflows.filter((w) => w.id === workflowId);
       if (workflows.length === 0) {
-        return NextResponse.json({
-          success: false,
-          error: "Workflow not found",
-          timestamp: new Date().toISOString()
-        }, { status: 404 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Workflow not found",
+            timestamp: new Date().toISOString(),
+          },
+          { status: 404 }
+        );
       }
     }
 
     // Add runtime metrics if requested
-    const workflowsWithMetrics = workflows.map(workflow => {
+    const workflowsWithMetrics = workflows.map((workflow) => {
       const baseWorkflow = { ...workflow };
-      
+
       if (includeMetrics) {
         return {
           ...baseWorkflow,
           metrics: {
-            successRate: workflow.executionCount > 0 
-              ? (workflow.successCount / workflow.executionCount * 100).toFixed(1)
-              : "0.0",
-            errorRate: workflow.executionCount > 0 
-              ? (workflow.errorCount / workflow.executionCount * 100).toFixed(1)
-              : "0.0",
+            successRate:
+              workflow.executionCount > 0
+                ? (
+                    (workflow.successCount / workflow.executionCount) *
+                    100
+                  ).toFixed(1)
+                : "0.0",
+            errorRate:
+              workflow.executionCount > 0
+                ? (
+                    (workflow.errorCount / workflow.executionCount) *
+                    100
+                  ).toFixed(1)
+                : "0.0",
             avgDurationFormatted: `${(workflow.avgDuration / 1000).toFixed(1)}s`,
-            lastRunFormatted: workflow.lastRun 
+            lastRunFormatted: workflow.lastRun
               ? new Date(workflow.lastRun).toLocaleString()
               : "Never",
-            nextRunFormatted: "nextRun" in workflow && workflow.nextRun
-              ? new Date(workflow.nextRun).toLocaleString()
-              : "Not scheduled",
-          }
+            nextRunFormatted:
+              "nextRun" in workflow && workflow.nextRun
+                ? new Date(workflow.nextRun).toLocaleString()
+                : "Not scheduled",
+          },
         };
       }
-      
+
       return baseWorkflow;
     });
 
@@ -145,36 +160,42 @@ export async function GET(request: NextRequest) {
       data: workflowsWithMetrics,
       summary: {
         totalWorkflows: workflows.length,
-        runningWorkflows: workflows.filter(w => w.status === "running").length,
-        stoppedWorkflows: workflows.filter(w => w.status === "stopped").length,
-        errorWorkflows: workflows.filter(w => w.status === "error").length,
-        eventWorkflows: workflows.filter(w => w.type === "event").length,
-        scheduledWorkflows: workflows.filter(w => w.type === "scheduled").length,
+        runningWorkflows: workflows.filter((w) => w.status === "running")
+          .length,
+        stoppedWorkflows: workflows.filter((w) => w.status === "stopped")
+          .length,
+        errorWorkflows: workflows.filter((w) => w.status === "error").length,
+        eventWorkflows: workflows.filter((w) => w.type === "event").length,
+        scheduledWorkflows: workflows.filter((w) => w.type === "scheduled")
+          .length,
         lastUpdated: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     return NextResponse.json(response);
   } catch (error) {
     console.error("Failed to get workflow status:", { error: error });
-    
-    return NextResponse.json({
-      success: false,
-      error: "Failed to get workflow status",
-      fallbackData: {
-        systemStatus: "error",
-        lastUpdate: new Date().toISOString(),
-        activeWorkflows: [],
-        metrics: {
-          readyTokens: 0,
-          totalDetections: 0,
-          successfulSnipes: 0,
-          totalProfit: 0
-        }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to get workflow status",
+        fallbackData: {
+          systemStatus: "error",
+          lastUpdate: new Date().toISOString(),
+          activeWorkflows: [],
+          metrics: {
+            readyTokens: 0,
+            totalDetections: 0,
+            successfulSnipes: 0,
+            totalProfit: 0,
+          },
+        },
+        timestamp: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+      { status: 500 }
+    );
   }
 }
 
@@ -184,13 +205,16 @@ export async function POST(request: NextRequest) {
     const { action, workflowId } = body;
 
     if (workflowId && action) {
-      const workflow = WORKFLOW_DEFINITIONS.find(w => w.id === workflowId);
+      const workflow = WORKFLOW_DEFINITIONS.find((w) => w.id === workflowId);
       if (!workflow) {
-        return NextResponse.json({
-          success: false,
-          error: "Workflow not found",
-          timestamp: new Date().toISOString()
-        }, { status: 404 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Workflow not found",
+            timestamp: new Date().toISOString(),
+          },
+          { status: 404 }
+        );
       }
 
       // Update workflow status
@@ -206,11 +230,14 @@ export async function POST(request: NextRequest) {
           workflow.lastRun = new Date().toISOString();
           break;
         default:
-          return NextResponse.json({
-            success: false,
-            error: "Invalid action for workflow",
-            timestamp: new Date().toISOString()
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              success: false,
+              error: "Invalid action for workflow",
+              timestamp: new Date().toISOString(),
+            },
+            { status: 400 }
+          );
       }
 
       return NextResponse.json({
@@ -220,21 +247,27 @@ export async function POST(request: NextRequest) {
           newStatus: workflow.status,
           message: `Workflow ${workflowId} ${action} successfully`,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
-    return NextResponse.json({
-      success: false,
-      error: "Invalid request - specify workflowId and action",
-      timestamp: new Date().toISOString()
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Invalid request - specify workflowId and action",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Failed to update workflow status:", { error: error });
-    return NextResponse.json({
-      success: false,
-      error: "Failed to update workflow status",
-      timestamp: new Date().toISOString()
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to update workflow status",
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
   }
 }

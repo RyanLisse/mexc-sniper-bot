@@ -70,9 +70,18 @@ export class PerformanceTracker {
     };
 
     // Listen for events to track performance
-    this.context.eventEmitter.on("trade_executed", this.handleTradeExecuted.bind(this));
-    this.context.eventEmitter.on("position_closed", this.handlePositionClosed.bind(this));
-    this.context.eventEmitter.on("auto_snipe_executed", this.handleAutoSnipeExecuted.bind(this));
+    this.context.eventEmitter.on(
+      "trade_executed",
+      this.handleTradeExecuted.bind(this)
+    );
+    this.context.eventEmitter.on(
+      "position_closed",
+      this.handlePositionClosed.bind(this)
+    );
+    this.context.eventEmitter.on(
+      "auto_snipe_executed",
+      this.handleAutoSnipeExecuted.bind(this)
+    );
   }
 
   /**
@@ -82,7 +91,9 @@ export class PerformanceTracker {
     this.context.logger.info("Initializing Performance Tracker Module");
     this.startTime = new Date();
     this.state.isInitialized = true;
-    this.context.logger.info("Performance Tracker Module initialized successfully");
+    this.context.logger.info(
+      "Performance Tracker Module initialized successfully"
+    );
   }
 
   /**
@@ -98,7 +109,9 @@ export class PerformanceTracker {
    */
   async updateConfig(config: any): Promise<void> {
     this.context.config = config;
-    this.context.logger.info("Performance Tracker Module configuration updated");
+    this.context.logger.info(
+      "Performance Tracker Module configuration updated"
+    );
   }
 
   /**
@@ -117,14 +130,18 @@ export class PerformanceTracker {
       totalTrades: this.totalTrades,
       successfulTrades: this.successfulTrades,
       failedTrades: this.failedTrades,
-      successRate: this.totalTrades > 0 ? (this.successfulTrades / this.totalTrades) * 100 : 0,
+      successRate:
+        this.totalTrades > 0
+          ? (this.successfulTrades / this.totalTrades) * 100
+          : 0,
 
       // Financial Performance
       totalPnL: this.totalPnL,
       realizedPnL: this.totalPnL, // For now, same as total
       unrealizedPnL: 0, // Would calculate from open positions
       totalVolume: this.totalVolume,
-      averageTradeSize: this.totalTrades > 0 ? this.totalVolume / this.totalTrades : 0,
+      averageTradeSize:
+        this.totalTrades > 0 ? this.totalVolume / this.totalTrades : 0,
 
       // Risk Metrics
       maxDrawdown: this.maxDrawdown,
@@ -135,16 +152,24 @@ export class PerformanceTracker {
       maxConsecutiveWins: this.maxConsecutiveWins,
 
       // Execution Metrics
-      averageExecutionTime: this.totalTrades > 0 ? this.totalExecutionTime / this.totalTrades : 0,
+      averageExecutionTime:
+        this.totalTrades > 0 ? this.totalExecutionTime / this.totalTrades : 0,
       slippageAverage: 0, // Would calculate from actual vs expected prices
-      fillRate: this.totalTrades > 0 ? (this.successfulTrades / this.totalTrades) * 100 : 0,
+      fillRate:
+        this.totalTrades > 0
+          ? (this.successfulTrades / this.totalTrades) * 100
+          : 0,
 
       // Auto-Sniping Metrics
       autoSnipeCount: this.autoSnipeCount,
       autoSnipeSuccessRate:
-        this.autoSnipeCount > 0 ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100 : 0,
+        this.autoSnipeCount > 0
+          ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100
+          : 0,
       averageConfidenceScore:
-        this.autoSnipeCount > 0 ? this.totalConfidenceScore / this.autoSnipeCount : 0,
+        this.autoSnipeCount > 0
+          ? this.totalConfidenceScore / this.autoSnipeCount
+          : 0,
 
       // Time-based Metrics
       timeframe,
@@ -217,15 +242,22 @@ export class PerformanceTracker {
   getCurrentSummary() {
     return {
       totalTrades: this.totalTrades,
-      successRate: this.totalTrades > 0 ? (this.successfulTrades / this.totalTrades) * 100 : 0,
+      successRate:
+        this.totalTrades > 0
+          ? (this.successfulTrades / this.totalTrades) * 100
+          : 0,
       totalPnL: this.totalPnL,
       maxDrawdown: this.maxDrawdown,
       autoSnipeStats: {
         count: this.autoSnipeCount,
         successRate:
-          this.autoSnipeCount > 0 ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100 : 0,
+          this.autoSnipeCount > 0
+            ? (this.autoSnipeSuccessful / this.autoSnipeCount) * 100
+            : 0,
         averageConfidence:
-          this.autoSnipeCount > 0 ? this.totalConfidenceScore / this.autoSnipeCount : 0,
+          this.autoSnipeCount > 0
+            ? this.totalConfidenceScore / this.autoSnipeCount
+            : 0,
       },
       uptime: Date.now() - this.startTime.getTime(),
     };
@@ -251,7 +283,8 @@ export class PerformanceTracker {
 
       // Track volume
       if (result.data?.quantity && result.data?.price) {
-        const volume = parseFloat(result.data.quantity) * parseFloat(result.data.price);
+        const volume =
+          parseFloat(result.data.quantity) * parseFloat(result.data.price);
         this.totalVolume += volume;
       }
 
@@ -262,12 +295,18 @@ export class PerformanceTracker {
 
       this.consecutiveWins++;
       this.consecutiveLosses = 0;
-      this.maxConsecutiveWins = Math.max(this.maxConsecutiveWins, this.consecutiveWins);
+      this.maxConsecutiveWins = Math.max(
+        this.maxConsecutiveWins,
+        this.consecutiveWins
+      );
     } else {
       this.failedTrades++;
       this.consecutiveLosses++;
       this.consecutiveWins = 0;
-      this.maxConsecutiveLosses = Math.max(this.maxConsecutiveLosses, this.consecutiveLosses);
+      this.maxConsecutiveLosses = Math.max(
+        this.maxConsecutiveLosses,
+        this.consecutiveLosses
+      );
 
       // Track strategy performance
       if (result.data?.autoSnipe) {
@@ -304,7 +343,10 @@ export class PerformanceTracker {
   /**
    * Handle auto-snipe executed event
    */
-  private handleAutoSnipeExecuted(data: { target: any; result: TradeResult }): void {
+  private handleAutoSnipeExecuted(data: {
+    target: any;
+    result: TradeResult;
+  }): void {
     this.autoSnipeCount++;
 
     if (data.result.success) {
@@ -325,7 +367,11 @@ export class PerformanceTracker {
   /**
    * Update strategy performance tracking
    */
-  private updateStrategyPerformance(strategyName: string, success: boolean, pnl?: number): void {
+  private updateStrategyPerformance(
+    strategyName: string,
+    success: boolean,
+    pnl?: number
+  ): void {
     if (!this.strategyPerformance[strategyName]) {
       this.strategyPerformance[strategyName] = {
         trades: 0,
@@ -339,9 +385,11 @@ export class PerformanceTracker {
     strategy.trades++;
 
     if (success) {
-      strategy.successRate = (strategy.successRate * (strategy.trades - 1) + 100) / strategy.trades;
+      strategy.successRate =
+        (strategy.successRate * (strategy.trades - 1) + 100) / strategy.trades;
     } else {
-      strategy.successRate = (strategy.successRate * (strategy.trades - 1)) / strategy.trades;
+      strategy.successRate =
+        (strategy.successRate * (strategy.trades - 1)) / strategy.trades;
     }
 
     if (pnl !== undefined) {

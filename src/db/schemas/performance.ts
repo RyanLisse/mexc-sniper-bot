@@ -1,5 +1,13 @@
 import { sql } from "drizzle-orm";
-import { boolean, integer, pgTable, real, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgTable,
+  real,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { z } from "zod";
 
 // Agent Performance Metrics Table
@@ -26,53 +34,63 @@ export const agentPerformanceMetrics = pgTable("agent_performance_metrics", {
 });
 
 // Workflow Performance Metrics Table
-export const workflowPerformanceMetrics = pgTable("workflow_performance_metrics", {
-  id: serial("id").primaryKey(),
-  workflowId: text("workflow_id").notNull(),
-  executionId: text("execution_id").notNull(),
-  timestamp: timestamp("timestamp").notNull(),
-  duration: integer("duration").notNull(),
-  status: text("status").notNull(), // "completed" | "failed" | "timeout" | "cancelled"
-  stepsExecuted: integer("steps_executed").notNull(),
-  stepsSkipped: integer("steps_skipped").notNull(),
-  stepsFailed: integer("steps_failed").notNull(),
-  agentsUsed: text("agents_used").notNull(), // JSON array
-  retriesPerformed: integer("retries_performed").notNull(),
-  fallbacksUsed: integer("fallbacks_used").notNull(),
-  totalResponseTime: real("total_response_time").notNull(),
-  averageStepTime: real("average_step_time").notNull(),
-  bottleneckStep: text("bottleneck_step"),
-  bottleneckDuration: real("bottleneck_duration"),
-  peakMemory: real("peak_memory").notNull(),
-  averageMemory: real("average_memory").notNull(),
-  peakCpu: real("peak_cpu").notNull(),
-  averageCpu: real("average_cpu").notNull(),
-  metadata: text("metadata"), // JSON string
-  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+export const workflowPerformanceMetrics = pgTable(
+  "workflow_performance_metrics",
+  {
+    id: serial("id").primaryKey(),
+    workflowId: text("workflow_id").notNull(),
+    executionId: text("execution_id").notNull(),
+    timestamp: timestamp("timestamp").notNull(),
+    duration: integer("duration").notNull(),
+    status: text("status").notNull(), // "completed" | "failed" | "timeout" | "cancelled"
+    stepsExecuted: integer("steps_executed").notNull(),
+    stepsSkipped: integer("steps_skipped").notNull(),
+    stepsFailed: integer("steps_failed").notNull(),
+    agentsUsed: text("agents_used").notNull(), // JSON array
+    retriesPerformed: integer("retries_performed").notNull(),
+    fallbacksUsed: integer("fallbacks_used").notNull(),
+    totalResponseTime: real("total_response_time").notNull(),
+    averageStepTime: real("average_step_time").notNull(),
+    bottleneckStep: text("bottleneck_step"),
+    bottleneckDuration: real("bottleneck_duration"),
+    peakMemory: real("peak_memory").notNull(),
+    averageMemory: real("average_memory").notNull(),
+    peakCpu: real("peak_cpu").notNull(),
+    averageCpu: real("average_cpu").notNull(),
+    metadata: text("metadata"), // JSON string
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  }
+);
 
 // System Performance Snapshots Table
-export const systemPerformanceSnapshots = pgTable("system_performance_snapshots", {
-  id: serial("id").primaryKey(),
-  timestamp: timestamp("timestamp").notNull(),
-  totalAgents: integer("total_agents").notNull(),
-  healthyAgents: integer("healthy_agents").notNull(),
-  degradedAgents: integer("degraded_agents").notNull(),
-  unhealthyAgents: integer("unhealthy_agents").notNull(),
-  totalWorkflows: integer("total_workflows").notNull(),
-  runningWorkflows: integer("running_workflows").notNull(),
-  completedWorkflows: integer("completed_workflows").notNull(),
-  failedWorkflows: integer("failed_workflows").notNull(),
-  systemMemoryUsage: real("system_memory_usage").notNull(),
-  systemCpuUsage: real("system_cpu_usage").notNull(),
-  databaseConnections: integer("database_connections").notNull(),
-  averageResponseTime: real("average_response_time").notNull(),
-  throughput: real("throughput").notNull(),
-  errorRate: real("error_rate").notNull(),
-  uptime: integer("uptime").notNull(),
-  metadata: text("metadata"), // JSON string
-  createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+export const systemPerformanceSnapshots = pgTable(
+  "system_performance_snapshots",
+  {
+    id: serial("id").primaryKey(),
+    timestamp: timestamp("timestamp").notNull(),
+    totalAgents: integer("total_agents").notNull(),
+    healthyAgents: integer("healthy_agents").notNull(),
+    degradedAgents: integer("degraded_agents").notNull(),
+    unhealthyAgents: integer("unhealthy_agents").notNull(),
+    totalWorkflows: integer("total_workflows").notNull(),
+    runningWorkflows: integer("running_workflows").notNull(),
+    completedWorkflows: integer("completed_workflows").notNull(),
+    failedWorkflows: integer("failed_workflows").notNull(),
+    systemMemoryUsage: real("system_memory_usage").notNull(),
+    systemCpuUsage: real("system_cpu_usage").notNull(),
+    databaseConnections: integer("database_connections").notNull(),
+    averageResponseTime: real("average_response_time").notNull(),
+    throughput: real("throughput").notNull(),
+    errorRate: real("error_rate").notNull(),
+    uptime: integer("uptime").notNull(),
+    metadata: text("metadata"), // JSON string
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+  }
+);
 
 // Performance Alerts Table
 export const performanceAlerts = pgTable("performance_alerts", {
@@ -174,14 +192,20 @@ export const insertSystemPerformanceSnapshotSchema = z.object({
 });
 
 // Type exports for TypeScript
-export type AgentPerformanceMetric = typeof agentPerformanceMetrics.$inferSelect;
-export type NewAgentPerformanceMetric = typeof agentPerformanceMetrics.$inferInsert;
+export type AgentPerformanceMetric =
+  typeof agentPerformanceMetrics.$inferSelect;
+export type NewAgentPerformanceMetric =
+  typeof agentPerformanceMetrics.$inferInsert;
 
-export type WorkflowPerformanceMetric = typeof workflowPerformanceMetrics.$inferSelect;
-export type NewWorkflowPerformanceMetric = typeof workflowPerformanceMetrics.$inferInsert;
+export type WorkflowPerformanceMetric =
+  typeof workflowPerformanceMetrics.$inferSelect;
+export type NewWorkflowPerformanceMetric =
+  typeof workflowPerformanceMetrics.$inferInsert;
 
-export type SystemPerformanceSnapshot = typeof systemPerformanceSnapshots.$inferSelect;
-export type NewSystemPerformanceSnapshot = typeof systemPerformanceSnapshots.$inferInsert;
+export type SystemPerformanceSnapshot =
+  typeof systemPerformanceSnapshots.$inferSelect;
+export type NewSystemPerformanceSnapshot =
+  typeof systemPerformanceSnapshots.$inferInsert;
 
 export type PerformanceAlert = typeof performanceAlerts.$inferSelect;
 export type NewPerformanceAlert = typeof performanceAlerts.$inferInsert;

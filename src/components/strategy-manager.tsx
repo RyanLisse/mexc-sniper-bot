@@ -19,7 +19,13 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -63,7 +69,11 @@ export function StrategyManager() {
   } = useStrategyManagement();
 
   // Use positions monitoring hook
-  const { positions: activePositions, totalPnL, positionCount } = useActivePositionsMonitor();
+  const {
+    positions: activePositions,
+    totalPnL,
+    positionCount,
+  } = useActivePositionsMonitor();
 
   const selectedStrategyId = activeStrategy?.id || "normal";
 
@@ -80,7 +90,8 @@ export function StrategyManager() {
       console.error("Failed to switch strategy:", error);
       toast({
         title: "Strategy Switch Failed",
-        description: error instanceof Error ? error.message : "Failed to switch strategy",
+        description:
+          error instanceof Error ? error.message : "Failed to switch strategy",
         variant: "destructive",
       });
     } finally {
@@ -102,7 +113,8 @@ export function StrategyManager() {
       console.error("Failed to toggle trading:", error);
       toast({
         title: "Trading Toggle Failed",
-        description: error instanceof Error ? error.message : "Failed to toggle trading",
+        description:
+          error instanceof Error ? error.message : "Failed to toggle trading",
         variant: "destructive",
       });
     }
@@ -114,7 +126,9 @@ export function StrategyManager() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Strategy Manager
+            </h1>
             <p className="text-muted-foreground">Loading strategy data...</p>
           </div>
         </div>
@@ -138,8 +152,12 @@ export function StrategyManager() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
-            <p className="text-muted-foreground">Failed to load strategy data</p>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Strategy Manager
+            </h1>
+            <p className="text-muted-foreground">
+              Failed to load strategy data
+            </p>
           </div>
           <Button onClick={forceRefresh} variant="outline">
             <RotateCcw className="h-4 w-4 mr-2" />
@@ -149,7 +167,9 @@ export function StrategyManager() {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            {error instanceof Error ? error.message : "Failed to load strategy data"}
+            {error instanceof Error
+              ? error.message
+              : "Failed to load strategy data"}
           </AlertDescription>
         </Alert>
       </div>
@@ -162,7 +182,9 @@ export function StrategyManager() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Strategy Manager
+            </h1>
             <p className="text-muted-foreground">No strategy data available</p>
           </div>
         </div>
@@ -197,7 +219,9 @@ export function StrategyManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Strategy Manager</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Strategy Manager
+          </h1>
           <p className="text-muted-foreground">
             Manage and optimize your multi-phase trading strategies
           </p>
@@ -213,7 +237,9 @@ export function StrategyManager() {
                 {isRealTimeEnabled ? "Live Updates" : "Static Data"}
               </span>
             </div>
-            {updateError && <span className="text-xs text-red-500">Update Failed</span>}
+            {updateError && (
+              <span className="text-xs text-red-500">Update Failed</span>
+            )}
           </div>
         </div>
         <div className="flex items-center space-x-2">
@@ -223,16 +249,29 @@ export function StrategyManager() {
             variant="outline"
             size="sm"
           >
-            {isRealTimeEnabled ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
+            {isRealTimeEnabled ? (
+              <WifiOff className="h-4 w-4" />
+            ) : (
+              <Wifi className="h-4 w-4" />
+            )}
           </Button>
 
           {/* Refresh button */}
-          <Button onClick={forceRefresh} variant="outline" size="sm" disabled={isLoading}>
-            <RotateCcw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          <Button
+            onClick={forceRefresh}
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+          >
+            <RotateCcw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+            />
           </Button>
 
           {/* Health status badge */}
-          <Badge variant={tradingStatus.healthStatus ? "default" : "destructive"}>
+          <Badge
+            variant={tradingStatus.healthStatus ? "default" : "destructive"}
+          >
             {tradingStatus.healthStatus ? "Healthy" : "Unhealthy"}
           </Badge>
 
@@ -242,7 +281,9 @@ export function StrategyManager() {
           </Badge>
 
           {/* Paper trading indicator */}
-          {tradingStatus.paperTradingMode && <Badge variant="outline">Paper Trading</Badge>}
+          {tradingStatus.paperTradingMode && (
+            <Badge variant="outline">Paper Trading</Badge>
+          )}
 
           {/* Main trading toggle */}
           <Button
@@ -264,7 +305,9 @@ export function StrategyManager() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Strategy</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Strategy
+            </CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -277,12 +320,16 @@ export function StrategyManager() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Positions</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Active Positions
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{positionCount}</div>
-            <p className="text-xs text-muted-foreground">{formatCurrency(totalPnL)} total PnL</p>
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(totalPnL)} total PnL
+            </p>
           </CardContent>
         </Card>
 
@@ -310,7 +357,9 @@ export function StrategyManager() {
             >
               {formatCurrency(metrics.totalPnL)}
             </div>
-            <p className="text-xs text-muted-foreground">{metrics.totalTrades} total trades</p>
+            <p className="text-xs text-muted-foreground">
+              {metrics.totalTrades} total trades
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -337,7 +386,9 @@ export function StrategyManager() {
                   className={`cursor-pointer transition-colors ${
                     isSelected ? "ring-2 ring-primary" : "hover:bg-muted/50"
                   } ${loading || isUpdating ? "opacity-50 pointer-events-none" : ""}`}
-                  onClick={() => !loading && !isUpdating && handleStrategySwitch(strategy.id)}
+                  onClick={() =>
+                    !loading && !isUpdating && handleStrategySwitch(strategy.id)
+                  }
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -357,14 +408,18 @@ export function StrategyManager() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Profit Levels:</span>
-                        <span className="font-medium">{strategy.levels.length}</span>
+                        <span className="font-medium">
+                          {strategy.levels.length}
+                        </span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Max Target:</span>
                         <span className="font-medium">
                           {formatPercentage(
                             Math.max(
-                              ...strategy.levels.map((l: { percentage: number }) => l.percentage)
+                              ...strategy.levels.map(
+                                (l: { percentage: number }) => l.percentage
+                              )
                             )
                           )}
                         </span>
@@ -385,7 +440,9 @@ export function StrategyManager() {
                           </div>
                           <div className="flex justify-between text-sm">
                             <span>Total Trades:</span>
-                            <span className="font-medium">{performance.totalTrades}</span>
+                            <span className="font-medium">
+                              {performance.totalTrades}
+                            </span>
                           </div>
                         </>
                       )}
@@ -399,25 +456,26 @@ export function StrategyManager() {
                     {/* Strategy Levels Preview */}
                     <div className="space-y-1">
                       <h4 className="text-sm font-medium">Profit Levels:</h4>
-                      {strategy.levels
-                        .slice(0, 3)
-                        .map(
-                          (
-                            level: { percentage: number; sellPercentage: number },
-                            index: number
-                          ) => (
-                            <div
-                              key={index}
-                              className="flex justify-between text-xs text-muted-foreground"
-                            >
-                              <span>Level {index + 1}:</span>
-                              <span>
-                                {formatPercentage(level.sellPercentage)} @ +
-                                {formatPercentage(level.percentage)}
-                              </span>
-                            </div>
-                          )
-                        )}
+                      {strategy.levels.slice(0, 3).map(
+                        (
+                          level: {
+                            percentage: number;
+                            sellPercentage: number;
+                          },
+                          index: number
+                        ) => (
+                          <div
+                            key={index}
+                            className="flex justify-between text-xs text-muted-foreground"
+                          >
+                            <span>Level {index + 1}:</span>
+                            <span>
+                              {formatPercentage(level.sellPercentage)} @ +
+                              {formatPercentage(level.percentage)}
+                            </span>
+                          </div>
+                        )
+                      )}
                       {strategy.levels.length > 3 && (
                         <div className="text-xs text-muted-foreground">
                           +{strategy.levels.length - 3} more levels...
@@ -452,12 +510,20 @@ export function StrategyManager() {
                 <TableBody>
                   {activeStrategy.levels.map((level, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">Level {index + 1}</TableCell>
-                      <TableCell>{formatPercentage(level.percentage)}</TableCell>
+                      <TableCell className="font-medium">
+                        Level {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        {formatPercentage(level.percentage)}
+                      </TableCell>
                       <TableCell>{level.multiplier.toFixed(2)}x</TableCell>
-                      <TableCell>{formatPercentage(level.sellPercentage)}</TableCell>
+                      <TableCell>
+                        {formatPercentage(level.sellPercentage)}
+                      </TableCell>
                       <TableCell className="text-green-600">
-                        {formatPercentage(level.percentage * (level.sellPercentage / 100))}
+                        {formatPercentage(
+                          level.percentage * (level.sellPercentage / 100)
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -492,9 +558,15 @@ export function StrategyManager() {
                 <TableBody>
                   {activePositions.map((position, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{position.symbol}</TableCell>
-                      <TableCell>{formatCurrency(position.entryPrice)}</TableCell>
-                      <TableCell>{formatCurrency(position.currentPrice)}</TableCell>
+                      <TableCell className="font-medium">
+                        {position.symbol}
+                      </TableCell>
+                      <TableCell>
+                        {formatCurrency(position.entryPrice)}
+                      </TableCell>
+                      <TableCell>
+                        {formatCurrency(position.currentPrice)}
+                      </TableCell>
                       <TableCell>{position.quantity}</TableCell>
                       <TableCell>
                         <div className="flex flex-col">
@@ -514,16 +586,23 @@ export function StrategyManager() {
                         <div className="space-y-1">
                           <div className="flex justify-between text-xs">
                             <span>
-                              Levels: {position.triggeredLevels}/{activeStrategy.levels.length}
+                              Levels: {position.triggeredLevels}/
+                              {activeStrategy.levels.length}
                             </span>
                           </div>
                           <Progress
-                            value={(position.triggeredLevels / activeStrategy.levels.length) * 100}
+                            value={
+                              (position.triggeredLevels /
+                                activeStrategy.levels.length) *
+                              100
+                            }
                             className="h-2"
                           />
                         </div>
                       </TableCell>
-                      <TableCell>{formatCurrency(position.nextTarget)}</TableCell>
+                      <TableCell>
+                        {formatCurrency(position.nextTarget)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -551,12 +630,20 @@ export function StrategyManager() {
                   <div className="text-sm text-muted-foreground">Total PnL</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{formatPercentage(metrics.successRate)}</div>
-                  <div className="text-sm text-muted-foreground">Success Rate</div>
+                  <div className="text-2xl font-bold">
+                    {formatPercentage(metrics.successRate)}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Success Rate
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{metrics.totalTrades}</div>
-                  <div className="text-sm text-muted-foreground">Total Trades</div>
+                  <div className="text-2xl font-bold">
+                    {metrics.totalTrades}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Total Trades
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold">
@@ -571,7 +658,9 @@ export function StrategyManager() {
           {/* Individual Strategy Performance */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Object.values(strategyPerformance).map((perf) => {
-              const strategy = availableStrategies.find((s) => s.id === perf.strategyId);
+              const strategy = availableStrategies.find(
+                (s) => s.id === perf.strategyId
+              );
               const isActiveStrategy = perf.strategyId === selectedStrategyId;
 
               return (
@@ -581,8 +670,12 @@ export function StrategyManager() {
                 >
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{strategy?.name || perf.strategyId}</CardTitle>
-                      {isActiveStrategy && <Badge variant="default">Active</Badge>}
+                      <CardTitle className="text-lg">
+                        {strategy?.name || perf.strategyId}
+                      </CardTitle>
+                      {isActiveStrategy && (
+                        <Badge variant="default">Active</Badge>
+                      )}
                     </div>
                     <CardDescription>Performance Metrics</CardDescription>
                   </CardHeader>
@@ -600,7 +693,9 @@ export function StrategyManager() {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm">Win Rate:</span>
-                        <span className="font-medium">{formatPercentage(perf.winRate)}</span>
+                        <span className="font-medium">
+                          {formatPercentage(perf.winRate)}
+                        </span>
                       </div>
                       <Progress value={perf.winRate} className="h-2" />
                     </div>
@@ -615,18 +710,26 @@ export function StrategyManager() {
                         </div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Total Trades</div>
+                        <div className="text-muted-foreground">
+                          Total Trades
+                        </div>
                         <div className="font-medium">{perf.totalTrades}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Max Drawdown</div>
+                        <div className="text-muted-foreground">
+                          Max Drawdown
+                        </div>
                         <div className="font-medium text-red-600">
                           {formatPercentage(perf.maxDrawdown)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground">Sharpe Ratio</div>
-                        <div className="font-medium">{perf.sharpeRatio.toFixed(2)}</div>
+                        <div className="text-muted-foreground">
+                          Sharpe Ratio
+                        </div>
+                        <div className="font-medium">
+                          {perf.sharpeRatio.toFixed(2)}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -640,14 +743,18 @@ export function StrategyManager() {
             <Card>
               <CardContent className="text-center py-8">
                 <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No Performance Data Yet</h3>
+                <h3 className="text-lg font-medium mb-2">
+                  No Performance Data Yet
+                </h3>
                 <p className="text-muted-foreground mb-4">
-                  Performance metrics will appear here once trading strategies start executing
-                  trades.
+                  Performance metrics will appear here once trading strategies
+                  start executing trades.
                 </p>
                 <Button
                   onClick={handleToggleTrading}
-                  disabled={tradingStatus.isActive || !tradingStatus.tradingEnabled}
+                  disabled={
+                    tradingStatus.isActive || !tradingStatus.tradingEnabled
+                  }
                 >
                   {tradingStatus.isActive ? "Trading Active" : "Start Trading"}
                 </Button>
@@ -662,7 +769,9 @@ export function StrategyManager() {
             <Card>
               <CardHeader>
                 <CardTitle>Strategy Import/Export</CardTitle>
-                <CardDescription>Manage your strategy configurations</CardDescription>
+                <CardDescription>
+                  Manage your strategy configurations
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex space-x-2">
@@ -679,7 +788,8 @@ export function StrategyManager() {
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    Always test imported strategies with small amounts before full deployment.
+                    Always test imported strategies with small amounts before
+                    full deployment.
                   </AlertDescription>
                 </Alert>
               </CardContent>
@@ -688,7 +798,9 @@ export function StrategyManager() {
             <Card>
               <CardHeader>
                 <CardTitle>Risk Management</CardTitle>
-                <CardDescription>Configure risk parameters and safety limits</CardDescription>
+                <CardDescription>
+                  Configure risk parameters and safety limits
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">

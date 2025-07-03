@@ -3,7 +3,11 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { AgentConsensusRequest, AgentConsensusResponse, SafetyMonitorConfig } from "./types";
+import type {
+  AgentConsensusRequest,
+  AgentConsensusResponse,
+  SafetyMonitorConfig,
+} from "./types";
 
 const logger = createLogger("consensus-manager", {
   enableStructuredLogging: process.env.NODE_ENV === "production",
@@ -21,7 +25,9 @@ export class ConsensusManager {
   /**
    * Request multi-agent consensus for high-risk decisions
    */
-  async requestAgentConsensus(request: AgentConsensusRequest): Promise<AgentConsensusResponse> {
+  async requestAgentConsensus(
+    request: AgentConsensusRequest
+  ): Promise<AgentConsensusResponse> {
     const startTime = Date.now();
     this.consensusRequests.set(request.requestId, request);
 
@@ -42,14 +48,17 @@ export class ConsensusManager {
     }
 
     // Calculate consensus
-    const approvals = agentResponses.filter((r) => r.response === "approve").length;
+    const approvals = agentResponses.filter(
+      (r) => r.response === "approve"
+    ).length;
     const total = agentResponses.filter((r) => r.response !== "abstain").length;
     const approvalRate = total > 0 ? (approvals / total) * 100 : 0;
 
     const consensusAchieved = approvalRate >= request.consensusThreshold;
     const averageConfidence =
       agentResponses.length > 0
-        ? agentResponses.reduce((sum, r) => sum + r.confidence, 0) / agentResponses.length
+        ? agentResponses.reduce((sum, r) => sum + r.confidence, 0) /
+          agentResponses.length
         : 0;
 
     // Generate warnings
@@ -63,9 +72,13 @@ export class ConsensusManager {
       warnings.push(`Low average confidence: ${averageConfidence.toFixed(1)}%`);
     }
 
-    const dissentingAgents = agentResponses.filter((r) => r.response === "reject");
+    const dissentingAgents = agentResponses.filter(
+      (r) => r.response === "reject"
+    );
     if (dissentingAgents.length > 0) {
-      warnings.push(`Dissenting agents: ${dissentingAgents.map((a) => a.agentId).join(", ")}`);
+      warnings.push(
+        `Dissenting agents: ${dissentingAgents.map((a) => a.agentId).join(", ")}`
+      );
     }
 
     const response: AgentConsensusResponse = {
@@ -84,18 +97,23 @@ export class ConsensusManager {
     // Clean up request
     this.consensusRequests.delete(request.requestId);
 
-    logger.info(`Consensus ${response.consensus.finalDecision}: ${request.type}`, {
-      requestId: request.requestId,
-      approvalRate,
-      confidence: averageConfidence,
-      processingTime: response.processingTime,
-    });
+    logger.info(
+      `Consensus ${response.consensus.finalDecision}: ${request.type}`,
+      {
+        requestId: request.requestId,
+        approvalRate,
+        confidence: averageConfidence,
+        processingTime: response.processingTime,
+      }
+    );
 
     return response;
   } /**
    * Analyze consensus request for risk level and complexity
    */
-  private async analyzeConsensusRequest(request: AgentConsensusRequest): Promise<{
+  private async analyzeConsensusRequest(
+    request: AgentConsensusRequest
+  ): Promise<{
     riskLevel: "low" | "medium" | "high" | "critical";
     complexity: number;
     recommendations: string[];

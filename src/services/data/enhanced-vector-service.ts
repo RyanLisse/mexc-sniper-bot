@@ -73,7 +73,12 @@ export class EnhancedVectorService {
     warn: (message: string, context?: unknown) =>
       console.warn("[enhanced-vector-service]", message, context || ""),
     error: (message: string, context?: unknown, error?: Error) =>
-      console.error("[enhanced-vector-service]", message, context || "", error || ""),
+      console.error(
+        "[enhanced-vector-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: unknown) =>
       console.debug("[enhanced-vector-service]", message, context || ""),
   };
@@ -95,7 +100,9 @@ export class EnhancedVectorService {
 
       // Verify the extension is available
       const extensionCheck = await executeWithRetry(async () => {
-        return await db.execute(sql`SELECT 1 FROM pg_extension WHERE extname = 'vector'`);
+        return await db.execute(
+          sql`SELECT 1 FROM pg_extension WHERE extname = 'vector'`
+        );
       });
 
       this.pgvectorAvailable = extensionCheck.length > 0;
@@ -104,13 +111,18 @@ export class EnhancedVectorService {
         this.logger.info("✅ pgvector extension initialized successfully");
         await this.createOptimizedIndexes();
       } else {
-        this.logger.warn("⚠️ pgvector extension not available, using JavaScript fallback");
+        this.logger.warn(
+          "⚠️ pgvector extension not available, using JavaScript fallback"
+        );
       }
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.warn("pgvector initialization failed, using JavaScript fallback", {
-        error: safeError.message,
-      });
+      this.logger.warn(
+        "pgvector initialization failed, using JavaScript fallback",
+        {
+          error: safeError.message,
+        }
+      );
       this.pgvectorAvailable = false;
     }
   }
@@ -125,7 +137,9 @@ export class EnhancedVectorService {
 
     try {
       const result = await executeWithRetry(async () => {
-        return await db.execute(sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`);
+        return await db.execute(
+          sql`SELECT 1 FROM pg_available_extensions WHERE name = 'vector'`
+        );
       });
 
       this.pgvectorAvailable = result.length > 0;
@@ -144,15 +158,25 @@ export class EnhancedVectorService {
     options: Partial<VectorSearchOptions> = {}
   ): Promise<VectorSearchResult[]> {
     const validatedOptions = VectorSearchOptionsSchema.parse(options);
-    const { threshold, limit, useNativeOps, patternType, symbolName, minConfidence, maxResults } =
-      validatedOptions;
+    const {
+      threshold,
+      limit,
+      useNativeOps,
+      patternType,
+      symbolName,
+      minConfidence,
+      maxResults,
+    } = validatedOptions;
 
     const isVectorSupported = await this.checkVectorSupport();
 
     if (useNativeOps && isVectorSupported) {
       return this.performNativeVectorSearch(queryEmbedding, validatedOptions);
     } else {
-      return this.performJavaScriptVectorSearch(queryEmbedding, validatedOptions);
+      return this.performJavaScriptVectorSearch(
+        queryEmbedding,
+        validatedOptions
+      );
     }
   }
 
@@ -163,7 +187,14 @@ export class EnhancedVectorService {
     queryEmbedding: number[],
     options: VectorSearchOptions
   ): Promise<VectorSearchResult[]> {
-    const { threshold, limit, patternType, symbolName, minConfidence, maxResults } = options;
+    const {
+      threshold,
+      limit,
+      patternType,
+      symbolName,
+      minConfidence,
+      maxResults,
+    } = options;
 
     const startTime = performance.now();
 
@@ -218,7 +249,10 @@ export class EnhancedVectorService {
             let queryWithParams = query;
             parameters.forEach((param, index) => {
               const _placeholder = `$${index + 1}`;
-              const value = typeof param === "string" ? `'${param.replace(/'/g, "''")}'` : param;
+              const value =
+                typeof param === "string"
+                  ? `'${param.replace(/'/g, "''")}'`
+                  : param;
               queryWithParams = queryWithParams.replace(
                 new RegExp(`\\$${index + 1}`, "g"),
                 String(value)
@@ -256,10 +290,13 @@ export class EnhancedVectorService {
       }));
     } catch (error) {
       const safeError = toSafeError(error);
-      this.logger.error("Native vector search failed, falling back to JavaScript", {
-        error: safeError.message,
-        queryDimension: queryEmbedding.length,
-      });
+      this.logger.error(
+        "Native vector search failed, falling back to JavaScript",
+        {
+          error: safeError.message,
+          queryDimension: queryEmbedding.length,
+        }
+      );
 
       // Fallback to JavaScript implementation
       return this.performJavaScriptVectorSearch(queryEmbedding, options);
@@ -273,7 +310,14 @@ export class EnhancedVectorService {
     queryEmbedding: number[],
     options: VectorSearchOptions
   ): Promise<VectorSearchResult[]> {
-    const { threshold, limit, patternType, symbolName, minConfidence, maxResults } = options;
+    const {
+      threshold,
+      limit,
+      patternType,
+      symbolName,
+      minConfidence,
+      maxResults,
+    } = options;
 
     const startTime = performance.now();
 
@@ -325,9 +369,17 @@ export class EnhancedVectorService {
 
       for (const candidate of candidates) {
         try {
-          const candidateEmbedding = JSON.parse(candidate.embedding) as number[];
-          const similarity = this.calculateCosineSimilarity(queryEmbedding, candidateEmbedding);
-          const distance = this.calculateEuclideanDistance(queryEmbedding, candidateEmbedding);
+          const candidateEmbedding = JSON.parse(
+            candidate.embedding
+          ) as number[];
+          const similarity = this.calculateCosineSimilarity(
+            queryEmbedding,
+            candidateEmbedding
+          );
+          const distance = this.calculateEuclideanDistance(
+            queryEmbedding,
+            candidateEmbedding
+          );
 
           if (similarity >= threshold) {
             results.push({
@@ -418,18 +470,24 @@ export class EnhancedVectorService {
       } else {
         // Sequential processing
         for (let i = 0; i < queryEmbeddings.length; i++) {
-          const searchResults = await this.nativeSimilaritySearch(queryEmbeddings[i], {
-            threshold,
-            limit,
-            useNativeOps: true,
-            maxResults: limit,
-          });
+          const searchResults = await this.nativeSimilaritySearch(
+            queryEmbeddings[i],
+            {
+              threshold,
+              limit,
+              useNativeOps: true,
+              maxResults: limit,
+            }
+          );
           results[i] = searchResults;
         }
       }
 
       const totalTime = performance.now() - startTime;
-      const totalResults = Object.values(results).reduce((sum, res) => sum + res.length, 0);
+      const totalResults = Object.values(results).reduce(
+        (sum, res) => sum + res.length,
+        0
+      );
 
       this.logger.info("Batch similarity search completed", {
         queryCount: queryEmbeddings.length,

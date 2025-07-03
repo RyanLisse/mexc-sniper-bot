@@ -172,7 +172,9 @@ export function validateTakeProfitLevel(level: TakeProfitLevel): string[] {
   return errors;
 }
 
-export function validateTakeProfitStrategy(strategy: TakeProfitStrategy): string[] {
+export function validateTakeProfitStrategy(
+  strategy: TakeProfitStrategy
+): string[] {
   const errors: string[] = [];
 
   if (strategy.levels.length === 0) {
@@ -193,8 +195,13 @@ export function validateTakeProfitStrategy(strategy: TakeProfitStrategy): string
 
   // Check for ascending profit percentages
   for (let i = 1; i < strategy.levels.length; i++) {
-    if (strategy.levels[i].profitPercentage <= strategy.levels[i - 1].profitPercentage) {
-      errors.push(`Level ${i + 1} profit percentage must be higher than level ${i}`);
+    if (
+      strategy.levels[i].profitPercentage <=
+      strategy.levels[i - 1].profitPercentage
+    ) {
+      errors.push(
+        `Level ${i + 1} profit percentage must be higher than level ${i}`
+      );
     }
   }
 
@@ -211,7 +218,9 @@ export function validateTakeProfitStrategy(strategy: TakeProfitStrategy): string
 }
 
 // Helper functions
-export function getTakeProfitStrategyById(id: string): TakeProfitStrategy | undefined {
+export function getTakeProfitStrategyById(
+  id: string
+): TakeProfitStrategy | undefined {
   return TAKE_PROFIT_STRATEGIES.find((strategy) => strategy.id === id);
 }
 
@@ -234,7 +243,11 @@ export function calculatePotentialProfit(
   investmentAmount: number
 ): { level: TakeProfitLevel; profit: number; remaining: number }[] {
   let remainingPosition = 100; // Start with 100% of position
-  const results: { level: TakeProfitLevel; profit: number; remaining: number }[] = [];
+  const results: {
+    level: TakeProfitLevel;
+    profit: number;
+    remaining: number;
+  }[] = [];
 
   strategy.levels
     .filter((level) => level.isActive)
@@ -242,7 +255,9 @@ export function calculatePotentialProfit(
       // Calculate the amount to sell based on the sell quantity percentage
       const sellAmount = level.sellQuantity;
       // Calculate profit based on the investment amount and profit percentage
-      const profit = ((investmentAmount * sellAmount) / 100) * (level.profitPercentage / 100);
+      const profit =
+        ((investmentAmount * sellAmount) / 100) *
+        (level.profitPercentage / 100);
       // Update remaining position
       remainingPosition -= sellAmount;
 

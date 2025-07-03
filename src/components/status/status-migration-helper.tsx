@@ -2,7 +2,13 @@
 import { AlertTriangle, ArrowRight, CheckCircle, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 /**
  * Status Migration Helper Component
@@ -15,7 +21,8 @@ export function StatusMigrationHelper() {
   const migrationSteps = [
     {
       title: "Wrap your app with StatusProvider",
-      description: "Add StatusProviderWrapper to your root layout or main app component",
+      description:
+        "Add StatusProviderWrapper to your root layout or main app component",
       code: `import { StatusProviderWrapper } from '@/src/components/providers/status-provider-wrapper';
 
 export default function RootLayout({ children }) {
@@ -29,7 +36,8 @@ export default function RootLayout({ children }) {
     },
     {
       title: "Replace EnhancedCredentialStatus",
-      description: "Upgrade to the latest V3 version with enhanced connectivity features",
+      description:
+        "Upgrade to the latest V3 version with enhanced connectivity features",
       code: `// Old way (basic status)
 import { EnhancedCredentialStatus } from '@/src/components/enhanced-credential-status';
 
@@ -46,7 +54,8 @@ import { EnhancedCredentialStatusV3 } from '@/src/components/enhanced-credential
     },
     {
       title: "Replace WorkflowStatusCard",
-      description: "Update workflow status components to use centralized status",
+      description:
+        "Update workflow status components to use centralized status",
       code: `// Old way
 import { WorkflowStatusCard } from '@/src/components/dashboard/workflow-status-card';
 
@@ -90,7 +99,8 @@ const credentials = useCredentialStatus();`,
     },
     {
       title: "Update custom status components",
-      description: "Modify any custom status components to use the centralized context",
+      description:
+        "Modify any custom status components to use the centralized context",
       code: `// In your custom component
 import { useStatus } from '@/src/contexts/status-context-v2';
 
@@ -133,8 +143,8 @@ function MyCustomStatus() {
             <span>Status System Migration Guide</span>
           </CardTitle>
           <CardDescription>
-            Follow these steps to eliminate contradictory status messages and implement centralized
-            status management throughout your application.
+            Follow these steps to eliminate contradictory status messages and
+            implement centralized status management throughout your application.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -187,8 +197,9 @@ function MyCustomStatus() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Breaking Changes</AlertTitle>
             <AlertDescription>
-              The V2 components are not drop-in replacements. You'll need to update imports and
-              remove any custom status logic that conflicts with the centralized system.
+              The V2 components are not drop-in replacements. You'll need to
+              update imports and remove any custom status logic that conflicts
+              with the centralized system.
             </AlertDescription>
           </Alert>
 
@@ -196,8 +207,9 @@ function MyCustomStatus() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Testing</AlertTitle>
             <AlertDescription>
-              After migration, test all status displays to ensure they show consistent information.
-              Pay special attention to error states and loading conditions.
+              After migration, test all status displays to ensure they show
+              consistent information. Pay special attention to error states and
+              loading conditions.
             </AlertDescription>
           </Alert>
 
@@ -205,8 +217,9 @@ function MyCustomStatus() {
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Performance</AlertTitle>
             <AlertDescription>
-              The centralized system includes automatic refresh and caching. You may need to adjust
-              refresh intervals based on your application's performance requirements.
+              The centralized system includes automatic refresh and caching. You
+              may need to adjust refresh intervals based on your application's
+              performance requirements.
             </AlertDescription>
           </Alert>
         </CardContent>

@@ -16,7 +16,13 @@ import { TakeProfitHelp } from "./take-profit-help";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { UnifiedTakeProfitLevels } from "./unified-take-profit-levels";
 
@@ -32,7 +38,9 @@ interface TakeProfitLevels {
 interface EnhancedProfitSettingsProps {
   // Take Profit Props
   levels: TakeProfitLevels;
-  onLevelsChange: (updater: (prev: TakeProfitLevels) => TakeProfitLevels) => void;
+  onLevelsChange: (
+    updater: (prev: TakeProfitLevels) => TakeProfitLevels
+  ) => void;
 
   // Exit Strategy Props
   selectedStrategy: string;
@@ -94,8 +102,8 @@ export function EnhancedProfitSettings({
             </Badge>
           </CardTitle>
           <CardDescription>
-            Configure when and how to take profits automatically. Complete all sections for optimal
-            trading.
+            Configure when and how to take profits automatically. Complete all
+            sections for optimal trading.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -121,7 +129,11 @@ export function EnhancedProfitSettings({
       </Card>
 
       {/* Main Configuration Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="basic" className="flex items-center gap-2">
             <Target className="h-4 w-4" />
@@ -148,7 +160,10 @@ export function EnhancedProfitSettings({
 
         {/* Advanced Exit Strategies Tab */}
         <TabsContent value="advanced" className="space-y-6">
-          <ExitStrategySelector value={customStrategy} onChange={onCustomStrategyChange} />
+          <ExitStrategySelector
+            value={customStrategy}
+            onChange={onCustomStrategyChange}
+          />
         </TabsContent>
 
         {/* Help & Guide Tab */}
@@ -175,7 +190,8 @@ export function EnhancedProfitSettings({
                   <div>
                     <div className="font-medium">Set Your Risk Level</div>
                     <div className="text-muted-foreground">
-                      Choose Level 2 (Moderate) for balanced risk/reward as your default
+                      Choose Level 2 (Moderate) for balanced risk/reward as your
+                      default
                     </div>
                   </div>
                 </div>
@@ -223,7 +239,9 @@ export function EnhancedProfitSettings({
         <Alert className="border-blue-200 bg-blue-50">
           <AlertTriangle className="h-4 w-4 text-blue-600" />
           <AlertDescription className="flex items-center justify-between w-full">
-            <span className="text-blue-800">You have unsaved changes to your profit settings.</span>
+            <span className="text-blue-800">
+              You have unsaved changes to your profit settings.
+            </span>
             <Button
               onClick={onSave}
               disabled={isSaving}

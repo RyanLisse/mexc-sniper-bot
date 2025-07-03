@@ -1,20 +1,20 @@
 /**
  * React Hooks for Supabase Real-time Subscriptions
- * 
+ *
  * This module provides React hooks that make it easy to subscribe to
  * real-time trading data updates in components.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/src/lib/supabase-auth-client';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/src/lib/supabase-auth-client";
 import {
-  PortfolioUpdate,
-  PriceUpdate,
+  type PortfolioUpdate,
+  type PriceUpdate,
   realtimeManager,
-  SnipeTargetUpdate,
-  SystemAlert, 
-  TradingDataUpdate
-} from '@/src/lib/supabase-realtime';
+  type SnipeTargetUpdate,
+  type SystemAlert,
+  type TradingDataUpdate,
+} from "@/src/lib/supabase-realtime";
 
 /**
  * Hook to subscribe to trading transactions in real-time
@@ -31,7 +31,7 @@ export function useRealtimeTransactions() {
     const unsubscribe = realtimeManager.subscribeToTransactions(
       user.id,
       (update) => {
-        setTransactions(prev => [update, ...prev.slice(0, 99)]); // Keep last 100
+        setTransactions((prev) => [update, ...prev.slice(0, 99)]); // Keep last 100
         setLastUpdate(new Date());
       }
     );
@@ -48,7 +48,7 @@ export function useRealtimeTransactions() {
     transactions,
     lastUpdate,
     isConnected,
-    clearTransactions: () => setTransactions([])
+    clearTransactions: () => setTransactions([]),
   };
 }
 
@@ -83,7 +83,7 @@ export function useRealtimePortfolio() {
   return {
     portfolio,
     lastUpdate,
-    isConnected
+    isConnected,
   };
 }
 
@@ -92,7 +92,9 @@ export function useRealtimePortfolio() {
  */
 export function useRealtimeSnipeTargets() {
   const { user } = useAuth();
-  const [snipeTargets, setSnipeTargets] = useState<Map<string, SnipeTargetUpdate>>(new Map());
+  const [snipeTargets, setSnipeTargets] = useState<
+    Map<string, SnipeTargetUpdate>
+  >(new Map());
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -102,7 +104,7 @@ export function useRealtimeSnipeTargets() {
     const unsubscribe = realtimeManager.subscribeToSnipeTargets(
       user.id,
       (update) => {
-        setSnipeTargets(prev => {
+        setSnipeTargets((prev) => {
           const newMap = new Map(prev);
           newMap.set(update.id, update);
           return newMap;
@@ -124,10 +126,10 @@ export function useRealtimeSnipeTargets() {
   return {
     snipeTargets: snipeTargetsArray,
     snipeTargetsMap: snipeTargets,
-    activeTargets: snipeTargetsArray.filter(t => t.status === 'active'),
-    triggeredTargets: snipeTargetsArray.filter(t => t.status === 'triggered'),
+    activeTargets: snipeTargetsArray.filter((t) => t.status === "active"),
+    triggeredTargets: snipeTargetsArray.filter((t) => t.status === "triggered"),
     lastUpdate,
-    isConnected
+    isConnected,
   };
 }
 
@@ -146,7 +148,7 @@ export function useRealtimeExecutionHistory() {
     const unsubscribe = realtimeManager.subscribeToExecutionHistory(
       user.id,
       (update) => {
-        setExecutions(prev => [update, ...prev.slice(0, 49)]); // Keep last 50
+        setExecutions((prev) => [update, ...prev.slice(0, 49)]); // Keep last 50
         setLastUpdate(new Date());
       }
     );
@@ -163,7 +165,7 @@ export function useRealtimeExecutionHistory() {
     executions,
     lastUpdate,
     isConnected,
-    clearExecutions: () => setExecutions([])
+    clearExecutions: () => setExecutions([]),
   };
 }
 
@@ -181,7 +183,7 @@ export function useRealtimePrices(symbols: string[] = []) {
     const unsubscribe = realtimeManager.subscribeToPriceUpdates(
       symbols,
       (update) => {
-        setPrices(prev => {
+        setPrices((prev) => {
           const newMap = new Map(prev);
           newMap.set(update.symbol, update);
           return newMap;
@@ -196,18 +198,21 @@ export function useRealtimePrices(symbols: string[] = []) {
       unsubscribe();
       setIsConnected(false);
     };
-  }, [symbols.join(',')]); // Re-subscribe when symbols change
+  }, [symbols]); // Re-subscribe when symbols change
 
-  const getPrice = useCallback((symbol: string) => {
-    return prices.get(symbol);
-  }, [prices]);
+  const getPrice = useCallback(
+    (symbol: string) => {
+      return prices.get(symbol);
+    },
+    [prices]
+  );
 
   return {
     prices: Array.from(prices.values()),
     pricesMap: prices,
     getPrice,
     lastUpdate,
-    isConnected
+    isConnected,
   };
 }
 
@@ -227,8 +232,8 @@ export function useRealtimeAlerts() {
     const unsubscribe = realtimeManager.subscribeToSystemAlerts(
       user.id,
       (alert) => {
-        setAlerts(prev => [alert, ...prev.slice(0, 99)]); // Keep last 100
-        setUnreadCount(prev => prev + 1);
+        setAlerts((prev) => [alert, ...prev.slice(0, 99)]); // Keep last 100
+        setUnreadCount((prev) => prev + 1);
         setLastUpdate(new Date());
       }
     );
@@ -256,7 +261,7 @@ export function useRealtimeAlerts() {
     lastUpdate,
     isConnected,
     markAllAsRead,
-    clearAlerts
+    clearAlerts,
   };
 }
 
@@ -269,7 +274,7 @@ export function useRealtimeTradingData() {
   const [connectionStatus, setConnectionStatus] = useState({
     connected: false,
     channels: 0,
-    reconnectAttempts: 0
+    reconnectAttempts: 0,
   });
 
   // Individual hooks
@@ -290,13 +295,16 @@ export function useRealtimeTradingData() {
     return () => clearInterval(interval);
   }, []);
 
-  const lastUpdate = [
-    transactions.lastUpdate,
-    portfolio.lastUpdate,
-    snipeTargets.lastUpdate,
-    executions.lastUpdate,
-    alerts.lastUpdate
-  ].filter(Boolean).sort((a, b) => b!.getTime() - a!.getTime())[0] || null;
+  const lastUpdate =
+    [
+      transactions.lastUpdate,
+      portfolio.lastUpdate,
+      snipeTargets.lastUpdate,
+      executions.lastUpdate,
+      alerts.lastUpdate,
+    ]
+      .filter(Boolean)
+      .sort((a, b) => b?.getTime() - a?.getTime())[0] || null;
 
   return {
     // Connection status
@@ -318,7 +326,7 @@ export function useRealtimeTradingData() {
     clearTransactions: transactions.clearTransactions,
     clearExecutions: executions.clearExecutions,
     markAlertsAsRead: alerts.markAllAsRead,
-    clearAlerts: alerts.clearAlerts
+    clearAlerts: alerts.clearAlerts,
   };
 }
 
@@ -330,7 +338,7 @@ export function useRealtimeConnection() {
   const [status, setStatus] = useState({
     connected: false,
     channels: 0,
-    reconnectAttempts: 0
+    reconnectAttempts: 0,
   });
 
   useEffect(() => {
@@ -349,7 +357,7 @@ export function useRealtimeConnection() {
 
   return {
     ...status,
-    disconnect
+    disconnect,
   };
 }
 
@@ -359,17 +367,20 @@ export function useRealtimeConnection() {
 export function useRealtimeBroadcast() {
   const { user } = useAuth();
 
-  const broadcastAlert = useCallback(async (alert: Omit<SystemAlert, 'id' | 'timestamp'>) => {
-    if (!user?.id) return;
+  const broadcastAlert = useCallback(
+    async (alert: Omit<SystemAlert, "id" | "timestamp">) => {
+      if (!user?.id) return;
 
-    const fullAlert: SystemAlert = {
-      ...alert,
-      id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString()
-    };
+      const fullAlert: SystemAlert = {
+        ...alert,
+        id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+      };
 
-    await realtimeManager.broadcastSystemAlert(fullAlert);
-  }, [user?.id]);
+      await realtimeManager.broadcastSystemAlert(fullAlert);
+    },
+    [user?.id]
+  );
 
   const broadcastPrice = useCallback(async (priceUpdate: PriceUpdate) => {
     await realtimeManager.broadcastPriceUpdate(priceUpdate);
@@ -377,6 +388,6 @@ export function useRealtimeBroadcast() {
 
   return {
     broadcastAlert,
-    broadcastPrice
+    broadcastPrice,
   };
 }

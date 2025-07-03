@@ -16,7 +16,12 @@ import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 // Emergency System Interfaces
 export interface EmergencyCondition {
   id: string;
-  type: "market_crash" | "liquidity_crisis" | "system_failure" | "risk_breach" | "agent_failure";
+  type:
+    | "market_crash"
+    | "liquidity_crisis"
+    | "system_failure"
+    | "risk_breach"
+    | "agent_failure";
   severity: "medium" | "high" | "critical" | "catastrophic";
   description: string;
   triggers: string[];
@@ -154,7 +159,12 @@ export class EmergencySafetySystem extends EventEmitter {
         warn: (message: string, context?: any) =>
           console.warn("[emergency-safety-system]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[emergency-safety-system]", message, context || "", error || ""),
+          console.error(
+            "[emergency-safety-system]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
           console.debug("[emergency-safety-system]", message, context || ""),
       };
@@ -176,18 +186,27 @@ export class EmergencySafetySystem extends EventEmitter {
   private agentsShutdown: string[] = [];
   private lastEmergencyResponse = 0;
   private consecutiveLossCount = 0;
-  private tradeResults: Array<{ success: boolean; timestamp: string; amount: number }> = [];
+  private tradeResults: Array<{
+    success: boolean;
+    timestamp: string;
+    amount: number;
+  }> = [];
 
   constructor(config?: Partial<EmergencyConfig>) {
     super();
     this.config = this.mergeWithDefaultConfig(config);
-    this.circuitBreaker = circuitBreakerRegistry.getBreaker("emergency-safety-system", {
-      failureThreshold: 2,
-      recoveryTimeout: 60000,
-      expectedFailureRate: 0.05,
-    });
+    this.circuitBreaker = circuitBreakerRegistry.getBreaker(
+      "emergency-safety-system",
+      {
+        failureThreshold: 2,
+        recoveryTimeout: 60000,
+        expectedFailureRate: 0.05,
+      }
+    );
 
-    console.info("[EmergencySafetySystem] Initialized with automated emergency response");
+    console.info(
+      "[EmergencySafetySystem] Initialized with automated emergency response"
+    );
   }
 
   /**
@@ -223,11 +242,15 @@ export class EmergencySafetySystem extends EventEmitter {
       if (this.riskEngine) {
         const riskHealth = this.riskEngine.getHealthStatus();
         if (!riskHealth.healthy) {
-          healthCheck.components.riskEngine = riskHealth.issues.some((i) => i.includes("critical"))
+          healthCheck.components.riskEngine = riskHealth.issues.some((i) =>
+            i.includes("critical")
+          )
             ? "critical"
             : "degraded";
           if (healthCheck.components.riskEngine === "critical") {
-            healthCheck.criticalIssues.push(`Risk engine: ${riskHealth.issues.join(", ")}`);
+            healthCheck.criticalIssues.push(
+              `Risk engine: ${riskHealth.issues.join(", ")}`
+            );
           } else {
             healthCheck.degradedComponents.push("Risk engine");
           }
@@ -259,7 +282,8 @@ export class EmergencySafetySystem extends EventEmitter {
 
       // Determine overall health
       if (healthCheck.criticalIssues.length > 0) {
-        healthCheck.overall = healthCheck.overall === "emergency" ? "emergency" : "critical";
+        healthCheck.overall =
+          healthCheck.overall === "emergency" ? "emergency" : "critical";
       } else if (healthCheck.degradedComponents.length > 2) {
         healthCheck.overall = "degraded";
       }
@@ -300,7 +324,7 @@ export class EmergencySafetySystem extends EventEmitter {
       for (const symbol of symbols) {
         // Price anomaly detection using real market data
         const deviation = Math.abs(priceChange * 100); // Convert to percentage
-        
+
         if (deviation > this.config.priceDeviationThreshold) {
           let severity: "low" | "medium" | "high" | "critical" = "low";
           if (deviation > 15) severity = "critical";
@@ -315,7 +339,6 @@ export class EmergencySafetySystem extends EventEmitter {
             severity,
           });
         }
-
 
         // Volume anomaly detection using real market data
         const currentVolume = volume || Math.random() * 1000000 + 100000;
@@ -342,7 +365,8 @@ export class EmergencySafetySystem extends EventEmitter {
 
         // Liquidity gap detection
         // In extreme conditions, spread can widen significantly
-        const bidAskSpread = volatility > 0.5 ? volatility * 5 : Math.random() * 2; // Higher spread during volatility
+        const bidAskSpread =
+          volatility > 0.5 ? volatility * 5 : Math.random() * 2; // Higher spread during volatility
         const normalSpread = 0.1; // Normal spread
         const spreadRatio = bidAskSpread / normalSpread;
 
@@ -389,7 +413,10 @@ export class EmergencySafetySystem extends EventEmitter {
     const startTime = Date.now();
 
     // Check if we're in cooldown period
-    if (Date.now() - this.lastEmergencyResponse < this.config.cooldownPeriod * 60000) {
+    if (
+      Date.now() - this.lastEmergencyResponse <
+      this.config.cooldownPeriod * 60000
+    ) {
       throw new Error("Emergency system in cooldown period");
     }
 
@@ -414,7 +441,9 @@ export class EmergencySafetySystem extends EventEmitter {
     this.emergencyActive = true;
     this.activeEmergencies++;
 
-    console.info(`[EmergencySafetySystem] Emergency activated: ${condition.id} - ${description}`);
+    console.info(
+      `[EmergencySafetySystem] Emergency activated: ${condition.id} - ${description}`
+    );
 
     // Execute response actions
     const executedActions: EmergencyAction[] = [];
@@ -440,7 +469,10 @@ export class EmergencySafetySystem extends EventEmitter {
         action.executedAt = new Date().toISOString();
         executedActions.push(action);
         success = false;
-        console.error(`[EmergencySafetySystem] Action execution error: ${action.id}`, error);
+        console.error(
+          `[EmergencySafetySystem] Action execution error: ${action.id}`,
+          error
+        );
       }
     }
 
@@ -480,7 +512,10 @@ export class EmergencySafetySystem extends EventEmitter {
   /**
    * Deactivate emergency condition and begin recovery
    */
-  async deactivateEmergency(conditionId: string, reason: string): Promise<boolean> {
+  async deactivateEmergency(
+    conditionId: string,
+    reason: string
+  ): Promise<boolean> {
     const condition = this.emergencyConditions.get(conditionId);
     if (!condition) {
       throw new Error(`Emergency condition not found: ${conditionId}`);
@@ -497,7 +532,9 @@ export class EmergencySafetySystem extends EventEmitter {
         this.emergencyActive = false;
       }
 
-      console.info(`[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`);
+      console.info(
+        `[EmergencySafetySystem] Emergency deactivated: ${conditionId} - ${reason}`
+      );
       return true;
     } catch (error) {
       console.error(
@@ -525,7 +562,9 @@ export class EmergencySafetySystem extends EventEmitter {
     // Stop risk engine operations if available
     if (this.riskEngine) {
       // Risk engine doesn't have explicit stop method, but circuit breaker will protect it
-      console.info("[EmergencySafetySystem] Risk engine operations halted via circuit breaker");
+      console.info(
+        "[EmergencySafetySystem] Risk engine operations halted via circuit breaker"
+      );
     }
 
     // This would integrate with actual trading system
@@ -543,8 +582,13 @@ export class EmergencySafetySystem extends EventEmitter {
     try {
       // Perform health check before resuming
       const healthCheck = await this.performSystemHealthCheck();
-      if (healthCheck.overall === "critical" || healthCheck.overall === "emergency") {
-        throw new Error("System health check failed - cannot resume operations");
+      if (
+        healthCheck.overall === "critical" ||
+        healthCheck.overall === "emergency"
+      ) {
+        throw new Error(
+          "System health check failed - cannot resume operations"
+        );
       }
 
       // Reset circuit breakers
@@ -562,7 +606,10 @@ export class EmergencySafetySystem extends EventEmitter {
       console.info("[EmergencySafetySystem] Normal operations resumed");
       return true;
     } catch (error) {
-      console.error("[EmergencySafetySystem] Failed to resume operations:", error);
+      console.error(
+        "[EmergencySafetySystem] Failed to resume operations:",
+        error
+      );
       return false;
     }
   }
@@ -579,9 +626,11 @@ export class EmergencySafetySystem extends EventEmitter {
     systemHealth: "healthy" | "degraded" | "critical" | "emergency";
   } {
     const conditions = Array.from(this.emergencyConditions.values());
-    const lastResponse = this.emergencyResponses[this.emergencyResponses.length - 1];
+    const lastResponse =
+      this.emergencyResponses[this.emergencyResponses.length - 1];
 
-    let systemHealth: "healthy" | "degraded" | "critical" | "emergency" = "healthy";
+    let systemHealth: "healthy" | "degraded" | "critical" | "emergency" =
+      "healthy";
     if (this.emergencyActive) {
       systemHealth = "emergency";
     } else if (this.tradingHalted) {
@@ -608,7 +657,9 @@ export class EmergencySafetySystem extends EventEmitter {
   }
 
   // Private helper methods
-  private mergeWithDefaultConfig(partial?: Partial<EmergencyConfig>): EmergencyConfig {
+  private mergeWithDefaultConfig(
+    partial?: Partial<EmergencyConfig>
+  ): EmergencyConfig {
     const defaultConfig: EmergencyConfig = {
       priceDeviationThreshold: 5,
       volumeAnomalyThreshold: 3,
@@ -649,7 +700,9 @@ export class EmergencySafetySystem extends EventEmitter {
         type: "shutdown_agents",
         priority: 2,
         description: "Shutdown all trading agents",
-        parameters: { agentTypes: ["trading", "strategy", "pattern-discovery"] },
+        parameters: {
+          agentTypes: ["trading", "strategy", "pattern-discovery"],
+        },
       });
 
       actions.push({
@@ -657,7 +710,10 @@ export class EmergencySafetySystem extends EventEmitter {
         type: "notify_operators",
         priority: 3,
         description: "Send critical emergency notifications",
-        parameters: { urgency: "critical", channels: ["email", "sms", "webhook"] },
+        parameters: {
+          urgency: "critical",
+          channels: ["email", "sms", "webhook"],
+        },
       });
     } else if (severity === "critical") {
       actions.push({
@@ -720,7 +776,10 @@ export class EmergencySafetySystem extends EventEmitter {
         case "notify_operators":
           return await this.executeNotifyOperators(action.parameters);
         default:
-          return { success: false, error: `Unknown action type: ${action.type}` };
+          return {
+            success: false,
+            error: `Unknown action type: ${action.type}`,
+          };
       }
     } catch (error) {
       return {
@@ -744,7 +803,8 @@ export class EmergencySafetySystem extends EventEmitter {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to halt trading",
+        error:
+          error instanceof Error ? error.message : "Failed to halt trading",
       };
     }
   }
@@ -754,13 +814,17 @@ export class EmergencySafetySystem extends EventEmitter {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // This would integrate with actual position management
-      const maxSize = (parameters.maxSize as number) || this.config.maxLiquidationSize;
-      console.info(`[EmergencySafetySystem] Closing positions up to ${maxSize} USDT`);
+      const maxSize =
+        (parameters.maxSize as number) || this.config.maxLiquidationSize;
+      console.info(
+        `[EmergencySafetySystem] Closing positions up to ${maxSize} USDT`
+      );
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to close positions",
+        error:
+          error instanceof Error ? error.message : "Failed to close positions",
       };
     }
   }
@@ -770,12 +834,15 @@ export class EmergencySafetySystem extends EventEmitter {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const reductionPercent = (parameters.reductionPercent as number) || 50;
-      console.info(`[EmergencySafetySystem] Reducing exposure by ${reductionPercent}%`);
+      console.info(
+        `[EmergencySafetySystem] Reducing exposure by ${reductionPercent}%`
+      );
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to reduce exposure",
+        error:
+          error instanceof Error ? error.message : "Failed to reduce exposure",
       };
     }
   }
@@ -786,12 +853,15 @@ export class EmergencySafetySystem extends EventEmitter {
     try {
       const agentTypes = (parameters.agentTypes as string[]) || [];
       this.agentsShutdown.push(...agentTypes);
-      console.info(`[EmergencySafetySystem] Shutdown agents: ${agentTypes.join(", ")}`);
+      console.info(
+        `[EmergencySafetySystem] Shutdown agents: ${agentTypes.join(", ")}`
+      );
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to shutdown agents",
+        error:
+          error instanceof Error ? error.message : "Failed to shutdown agents",
       };
     }
   }
@@ -809,13 +879,18 @@ export class EmergencySafetySystem extends EventEmitter {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to notify operators",
+        error:
+          error instanceof Error ? error.message : "Failed to notify operators",
       };
     }
   }
 
-  private async handleCriticalMarketAnomalies(anomalies: unknown[]): Promise<void> {
-    console.info(`[EmergencySafetySystem] Critical market anomalies detected: ${anomalies.length}`);
+  private async handleCriticalMarketAnomalies(
+    anomalies: unknown[]
+  ): Promise<void> {
+    console.info(
+      `[EmergencySafetySystem] Critical market anomalies detected: ${anomalies.length}`
+    );
 
     await this.activateEmergencyResponse(
       "market_crash",
@@ -826,10 +901,13 @@ export class EmergencySafetySystem extends EventEmitter {
   }
 
   private countLiquidatedPositions(actions: EmergencyAction[]): number {
-    return actions.filter((a) => a.type === "close_positions" && a.success).length;
+    return actions.filter((a) => a.type === "close_positions" && a.success)
+      .length;
   }
 
-  private estimateRecoveryTime(severity: EmergencyCondition["severity"]): number {
+  private estimateRecoveryTime(
+    severity: EmergencyCondition["severity"]
+  ): number {
     switch (severity) {
       case "catastrophic":
         return 240; // 4 hours
@@ -863,12 +941,22 @@ export class EmergencySafetySystem extends EventEmitter {
     return steps;
   }
 
-  private async initiateRecovery(condition: EmergencyCondition, reason: string): Promise<void> {
-    console.info(`[EmergencySafetySystem] Initiating recovery for ${condition.id}: ${reason}`);
+  private async initiateRecovery(
+    condition: EmergencyCondition,
+    reason: string
+  ): Promise<void> {
+    console.info(
+      `[EmergencySafetySystem] Initiating recovery for ${condition.id}: ${reason}`
+    );
 
-    if (this.config.autoRecoveryEnabled && condition.severity !== "catastrophic") {
+    if (
+      this.config.autoRecoveryEnabled &&
+      condition.severity !== "catastrophic"
+    ) {
       // Automated recovery steps
-      console.info("[EmergencySafetySystem] Starting automated recovery process");
+      console.info(
+        "[EmergencySafetySystem] Starting automated recovery process"
+      );
 
       // This would implement actual recovery logic
       // For now, just log the steps
@@ -901,7 +989,8 @@ export class EmergencySafetySystem extends EventEmitter {
     if (portfolioData.riskMetrics.totalExposure > 0.8) {
       issues.push("High portfolio exposure detected");
       recommendations.push("Reduce position sizes");
-      status = portfolioData.riskMetrics.totalExposure > 0.95 ? "critical" : "warning";
+      status =
+        portfolioData.riskMetrics.totalExposure > 0.95 ? "critical" : "warning";
     }
 
     // Check for significant drawdown
@@ -912,7 +1001,9 @@ export class EmergencySafetySystem extends EventEmitter {
     }
 
     // Check individual positions
-    const largeLosses = portfolioData.positions.filter((p) => p.pnl < -p.value * 0.1);
+    const largeLosses = portfolioData.positions.filter(
+      (p) => p.pnl < -p.value * 0.1
+    );
     if (largeLosses.length > 0) {
       issues.push(`${largeLosses.length} positions with significant losses`);
       recommendations.push("Consider stop-loss adjustments");

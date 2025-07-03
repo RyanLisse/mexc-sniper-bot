@@ -1,15 +1,13 @@
 /**
  * Unified Trading Target Types
- * 
+ *
  * This file resolves the core TypeScript compilation issue by creating
- * a unified interface that combines Calendar/Symbol data (UI layer) 
+ * a unified interface that combines Calendar/Symbol data (UI layer)
  * with Database SnipeTarget data (service layer).
- * 
+ *
  * Root Cause: Components expect Calendar/Symbol properties but services
  * return Database SnipeTarget properties, causing 400+ TypeScript errors.
  */
-
-import type { z } from 'zod';
 
 /**
  * Unified interface for trading targets that combines:
@@ -19,33 +17,39 @@ import type { z } from 'zod';
 export interface TradingTargetDisplay {
   // Core identification
   vcoinId: string | number; // Support both string (calendar) and number (database)
-  
+
   // Symbol information
   symbol: string;
   symbolName?: string; // Alias for backward compatibility
   projectName: string;
-  
+
   // Timing information
   launchTime: Date;
   discoveredAt: Date;
-  
+
   // Trading parameters
   confidence: number;
   hoursAdvanceNotice: number;
   priceDecimalPlaces: number;
   quantityDecimalPlaces: number;
-  
+
   // Order configuration
   orderParameters?: Record<string, unknown>;
-  
+
   // Database fields (when available)
   id?: number;
   createdAt?: Date;
   updatedAt?: Date;
   positionSizeUsdt?: number;
   stopLossPercent?: number;
-  status?: "pending" | "ready" | "executing" | "completed" | "failed" | "cancelled";
-  
+  status?:
+    | "pending"
+    | "ready"
+    | "executing"
+    | "completed"
+    | "failed"
+    | "cancelled";
+
   // Additional fields for flexibility
   [key: string]: unknown;
 }
@@ -87,7 +91,13 @@ export interface AutoSnipeTarget {
   symbolName: string;
   positionSizeUsdt: number;
   stopLossPercent: number;
-  status: "pending" | "ready" | "executing" | "completed" | "failed" | "cancelled";
+  status:
+    | "pending"
+    | "ready"
+    | "executing"
+    | "completed"
+    | "failed"
+    | "cancelled";
   [key: string]: unknown;
 }
 
@@ -95,8 +105,8 @@ export interface AutoSnipeTarget {
  * Order parameters for trading execution
  */
 export interface OrderParameters {
-  orderType: 'market' | 'limit';
-  timeInForce?: 'IOC' | 'FOK' | 'GTC';
+  orderType: "market" | "limit";
+  timeInForce?: "IOC" | "FOK" | "GTC";
   reduceOnly?: boolean;
   [key: string]: unknown;
 }
@@ -106,30 +116,32 @@ export interface OrderParameters {
  */
 export function isCalendarEntry(data: unknown): data is CalendarEntry {
   return (
-    typeof data === 'object' &&
+    typeof data === "object" &&
     data !== null &&
-    'vcoinId' in data &&
-    'symbol' in data &&
-    'projectName' in data &&
-    'firstOpenTime' in data
+    "vcoinId" in data &&
+    "symbol" in data &&
+    "projectName" in data &&
+    "firstOpenTime" in data
   );
 }
 
 export function isAutoSnipeTarget(data: unknown): data is AutoSnipeTarget {
   return (
-    typeof data === 'object' &&
+    typeof data === "object" &&
     data !== null &&
-    'id' in data &&
-    'symbolName' in data &&
-    'status' in data
+    "id" in data &&
+    "symbolName" in data &&
+    "status" in data
   );
 }
 
-export function isTradingTargetDisplay(data: unknown): data is TradingTargetDisplay {
+export function isTradingTargetDisplay(
+  data: unknown
+): data is TradingTargetDisplay {
   return (
-    typeof data === 'object' &&
+    typeof data === "object" &&
     data !== null &&
-    ('vcoinId' in data) &&
-    ('symbol' in data || 'symbolName' in data)
+    "vcoinId" in data &&
+    ("symbol" in data || "symbolName" in data)
   );
 }

@@ -21,7 +21,12 @@ export class StrategyPerformanceOptimizer {
     warn: (message: string, context?: any) =>
       console.warn("[strategy-performance-optimizer]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[strategy-performance-optimizer]", message, context || "", error || ""),
+      console.error(
+        "[strategy-performance-optimizer]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[strategy-performance-optimizer]", message, context || ""),
   };
@@ -40,7 +45,8 @@ export class StrategyPerformanceOptimizer {
 
   static getInstance(): StrategyPerformanceOptimizer {
     if (!StrategyPerformanceOptimizer.instance) {
-      StrategyPerformanceOptimizer.instance = new StrategyPerformanceOptimizer();
+      StrategyPerformanceOptimizer.instance =
+        new StrategyPerformanceOptimizer();
     }
     return StrategyPerformanceOptimizer.instance;
   }
@@ -159,15 +165,22 @@ export class StrategyPerformanceOptimizer {
   /**
    * Memory-optimized strategy metrics calculation
    */
-  private calculateStrategyMetricsOptimized(strategy: TradingStrategy, currentPrice: number): any {
+  private calculateStrategyMetricsOptimized(
+    strategy: TradingStrategy,
+    currentPrice: number
+  ): any {
     try {
       const levels = JSON.parse(strategy.levels);
       const entryPrice = strategy.entryPrice;
       const priceIncrease = ((currentPrice - entryPrice) / entryPrice) * 100;
 
       // Calculate only essential metrics to save memory
-      const triggeredPhases = levels.filter((level: any) => priceIncrease >= level.percentage);
-      const nextPhase = levels.find((level: any) => priceIncrease < level.percentage);
+      const triggeredPhases = levels.filter(
+        (level: any) => priceIncrease >= level.percentage
+      );
+      const nextPhase = levels.find(
+        (level: any) => priceIncrease < level.percentage
+      );
 
       return {
         strategyId: strategy.id,
@@ -177,10 +190,17 @@ export class StrategyPerformanceOptimizer {
         triggeredPhases: triggeredPhases.length,
         totalPhases: levels.length,
         nextTarget: nextPhase ? entryPrice * nextPhase.multiplier : null,
-        estimatedProfit: this.calculateEstimatedProfitOptimized(strategy, currentPrice, levels),
+        estimatedProfit: this.calculateEstimatedProfitOptimized(
+          strategy,
+          currentPrice,
+          levels
+        ),
       };
     } catch (error) {
-      console.error(`Error calculating metrics for strategy ${strategy.id}:`, error);
+      console.error(
+        `Error calculating metrics for strategy ${strategy.id}:`,
+        error
+      );
       return null;
     }
   }
@@ -268,7 +288,10 @@ export class StrategyPerformanceOptimizer {
     if (process.memoryUsage) {
       const heapUsedMB = process.memoryUsage().heapUsed / 1024 / 1024;
       if (heapUsedMB < this.config.memoryThresholdMB * 0.7) {
-        this.config.maxConcurrentExecutions = Math.min(50, this.config.maxConcurrentExecutions + 5);
+        this.config.maxConcurrentExecutions = Math.min(
+          50,
+          this.config.maxConcurrentExecutions + 5
+        );
       }
     }
   }
@@ -277,10 +300,14 @@ export class StrategyPerformanceOptimizer {
    * Get current performance metrics
    */
   getPerformanceMetrics(): PerformanceMetrics {
-    const memoryUsage = process.memoryUsage ? process.memoryUsage().heapUsed / 1024 / 1024 : 0;
+    const memoryUsage = process.memoryUsage
+      ? process.memoryUsage().heapUsed / 1024 / 1024
+      : 0;
     const cacheHitRate =
       this.executionCache.size > 0
-        ? (this.executionCache.size / (this.executionCache.size + this.activeExecutions.size)) * 100
+        ? (this.executionCache.size /
+            (this.executionCache.size + this.activeExecutions.size)) *
+          100
         : 0;
 
     return {
@@ -314,4 +341,5 @@ export class StrategyPerformanceOptimizer {
 }
 
 // Export singleton instance
-export const strategyPerformanceOptimizer = StrategyPerformanceOptimizer.getInstance();
+export const strategyPerformanceOptimizer =
+  StrategyPerformanceOptimizer.getInstance();

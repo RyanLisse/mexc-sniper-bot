@@ -164,14 +164,18 @@ export function useOrientation(): Orientation {
 
     const updateOrientation = () => {
       if (typeof window === "undefined") return;
-      setOrientation(window.innerHeight > window.innerWidth ? "portrait" : "landscape");
+      setOrientation(
+        window.innerHeight > window.innerWidth ? "portrait" : "landscape"
+      );
     };
 
     updateOrientation();
 
     if (typeof window !== "undefined") {
       window.addEventListener("resize", updateOrientation, { passive: true });
-      window.addEventListener("orientationchange", updateOrientation, { passive: true });
+      window.addEventListener("orientationchange", updateOrientation, {
+        passive: true,
+      });
 
       return () => {
         window.removeEventListener("resize", updateOrientation);
@@ -270,11 +274,15 @@ export function useTouchGestures(): TouchGesture {
         document.removeEventListener("touchend", handleTouchEnd);
       };
 
-      document.addEventListener("touchmove", handleTouchMove, { passive: true });
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: true,
+      });
       document.addEventListener("touchend", handleTouchEnd, { passive: true });
     };
 
-    document.addEventListener("touchstart", handleTouchStart, { passive: true });
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
 
     return () => {
       document.removeEventListener("touchstart", handleTouchStart);
@@ -307,7 +315,10 @@ export function useViewportHeight(): number {
 
       // Set CSS custom property safely
       if (typeof document !== "undefined") {
-        document.documentElement.style.setProperty("--vh", `${height * 0.01}px`);
+        document.documentElement.style.setProperty(
+          "--vh",
+          `${height * 0.01}px`
+        );
       }
     };
 
@@ -315,9 +326,13 @@ export function useViewportHeight(): number {
 
     if (typeof window !== "undefined") {
       if (window.visualViewport) {
-        window.visualViewport.addEventListener("resize", updateViewportHeight, { passive: true });
+        window.visualViewport.addEventListener("resize", updateViewportHeight, {
+          passive: true,
+        });
       } else {
-        window.addEventListener("resize", updateViewportHeight, { passive: true });
+        window.addEventListener("resize", updateViewportHeight, {
+          passive: true,
+        });
       }
 
       window.addEventListener(
@@ -330,7 +345,10 @@ export function useViewportHeight(): number {
 
       return () => {
         if (window.visualViewport) {
-          window.visualViewport.removeEventListener("resize", updateViewportHeight);
+          window.visualViewport.removeEventListener(
+            "resize",
+            updateViewportHeight
+          );
         } else {
           window.removeEventListener("resize", updateViewportHeight);
         }

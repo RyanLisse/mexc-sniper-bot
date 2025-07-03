@@ -102,7 +102,9 @@ export class Order extends ValueObject<OrderProps> {
     super(props);
   }
 
-  static create(props: Omit<OrderProps, "id" | "createdAt" | "updatedAt">): Order {
+  static create(
+    props: Omit<OrderProps, "id" | "createdAt" | "updatedAt">
+  ): Order {
     const id = `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date();
 
@@ -150,7 +152,11 @@ export class Order extends ValueObject<OrderProps> {
 
     // Price validation for limit orders
     if (props.type === OrderType.LIMIT && !props.price) {
-      throw new DomainValidationError("price", "undefined", "Price is required for LIMIT orders");
+      throw new DomainValidationError(
+        "price",
+        "undefined",
+        "Price is required for LIMIT orders"
+      );
     }
 
     // Stop price validation for stop limit orders
@@ -163,7 +169,11 @@ export class Order extends ValueObject<OrderProps> {
     }
 
     // Execution validation
-    if (props.executedQuantity && props.quantity && props.executedQuantity > props.quantity) {
+    if (
+      props.executedQuantity &&
+      props.quantity &&
+      props.executedQuantity > props.quantity
+    ) {
       throw new DomainValidationError(
         "executedQuantity",
         props.executedQuantity,
@@ -321,9 +331,11 @@ export class Order extends ValueObject<OrderProps> {
   }
 
   isActive(): boolean {
-    return [OrderStatus.PENDING, OrderStatus.SUBMITTED, OrderStatus.PARTIALLY_FILLED].includes(
-      this.props.status
-    );
+    return [
+      OrderStatus.PENDING,
+      OrderStatus.SUBMITTED,
+      OrderStatus.PARTIALLY_FILLED,
+    ].includes(this.props.status);
   }
 
   isFinalized(): boolean {
@@ -364,7 +376,11 @@ export class Order extends ValueObject<OrderProps> {
     });
   }
 
-  markAsPartiallyFilled(executedQuantity: number, executedPrice: number, fees?: number): Order {
+  markAsPartiallyFilled(
+    executedQuantity: number,
+    executedPrice: number,
+    fees?: number
+  ): Order {
     return Order.fromExisting({
       ...this.props,
       status: OrderStatus.PARTIALLY_FILLED,

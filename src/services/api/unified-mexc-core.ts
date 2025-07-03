@@ -24,7 +24,10 @@ import type { MexcCoreClient } from "../data/modules/mexc-core-client";
 // ============================================================================
 
 const ActivityInputSchema = z.object({
-  currency: z.string().min(1, "Currency cannot be empty").max(20, "Currency too long"),
+  currency: z
+    .string()
+    .min(1, "Currency cannot be empty")
+    .max(20, "Currency too long"),
 });
 
 const BulkActivityInputSchema = z.object({
@@ -90,10 +93,13 @@ export class UnifiedMexcCoreModule {
         error: error instanceof Error ? error.message : String(error),
         operationType: "calendar-fetch",
       });
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Calendar listings fetch failed",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Calendar listings fetch failed",
         timestamp: Date.now(),
         source: "unified-mexc-core",
       };
@@ -107,7 +113,9 @@ export class UnifiedMexcCoreModule {
   /**
    * Get symbols for a specific coin
    */
-  async getSymbolsByVcoinId(vcoinId: string): Promise<MexcServiceResponse<SymbolEntry[]>> {
+  async getSymbolsByVcoinId(
+    vcoinId: string
+  ): Promise<MexcServiceResponse<SymbolEntry[]>> {
     return this.cacheLayer.getOrSet(
       `symbols:${vcoinId}`,
       () => this.coreClient.getSymbolsByVcoinId(vcoinId),
@@ -147,17 +155,18 @@ export class UnifiedMexcCoreModule {
         },
         "realTime" // 15 second cache for server time
       );
-      
+
       return result;
     } catch (error) {
       this.logger.error("Server time fetch error:", {
         error: error instanceof Error ? error.message : String(error),
         operationType: "server-time-fetch",
       });
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Server time fetch failed",
+        error:
+          error instanceof Error ? error.message : "Server time fetch failed",
         timestamp: Date.now(),
         source: "unified-mexc-core",
       };
@@ -180,7 +189,9 @@ export class UnifiedMexcCoreModule {
   /**
    * Get activity data for a currency - ENHANCED with proper error handling
    */
-  async getActivityData(currency: string): Promise<MexcServiceResponse<ActivityData[]>> {
+  async getActivityData(
+    currency: string
+  ): Promise<MexcServiceResponse<ActivityData[]>> {
     const startTime = Date.now();
 
     try {
@@ -195,7 +206,8 @@ export class UnifiedMexcCoreModule {
         cacheKey,
         async () => {
           try {
-            const result = await this.coreClient.getActivityData(normalizedCurrency);
+            const result =
+              await this.coreClient.getActivityData(normalizedCurrency);
 
             // Enhanced response handling
             if (result.success && result.data) {
@@ -257,7 +269,8 @@ export class UnifiedMexcCoreModule {
       });
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown validation error",
+        error:
+          error instanceof Error ? error.message : "Unknown validation error",
         timestamp: Date.now(),
         executionTimeMs: Date.now() - startTime,
         source: "unified-mexc-core",
@@ -268,7 +281,9 @@ export class UnifiedMexcCoreModule {
   /**
    * Get symbol data for analysis
    */
-  async getSymbolData(symbol: string): Promise<MexcServiceResponse<Record<string, unknown>>> {
+  async getSymbolData(
+    symbol: string
+  ): Promise<MexcServiceResponse<Record<string, unknown>>> {
     return this.cacheLayer.getOrSet(
       `symbol:data:${symbol}`,
       () => this.coreClient.getSymbolInfoBasic(symbol),
@@ -283,9 +298,13 @@ export class UnifiedMexcCoreModule {
   /**
    * Get symbols for multiple vcoins
    */
-  async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {
+  async getSymbolsForVcoins(
+    vcoinIds: string[]
+  ): Promise<MexcServiceResponse<SymbolEntry[]>> {
     // For multiple vcoins, we'll fetch each one and combine results
-    const promises = vcoinIds.map((vcoinId) => this.getSymbolsByVcoinId(vcoinId));
+    const promises = vcoinIds.map((vcoinId) =>
+      this.getSymbolsByVcoinId(vcoinId)
+    );
     const responses = await Promise.all(promises);
 
     const allSymbols: SymbolEntry[] = [];
@@ -341,7 +360,9 @@ export class UnifiedMexcCoreModule {
         options: options || {},
       });
 
-      const normalizedCurrencies = validatedInput.currencies.map((c) => c.toUpperCase().trim());
+      const normalizedCurrencies = validatedInput.currencies.map((c) =>
+        c.toUpperCase().trim()
+      );
       const batchOptions = validatedInput.options || {
         batchSize: 10, // Increased batch size for better performance in tests
         maxRetries: 1, // Reduced retries for faster processing
@@ -361,13 +382,20 @@ export class UnifiedMexcCoreModule {
         // Use controlled concurrency to prevent overwhelming the system
         const concurrencyLimit = 10;
         const allResponses: MexcServiceResponse<ActivityData[]>[] = [];
-        
-        for (let i = 0; i < normalizedCurrencies.length; i += concurrencyLimit) {
+
+        for (
+          let i = 0;
+          i < normalizedCurrencies.length;
+          i += concurrencyLimit
+        ) {
           const batch = normalizedCurrencies.slice(i, i + concurrencyLimit);
           const batchPromises = batch.map((currency) =>
             this.getActivityData(currency).catch((error) => ({
               success: false,
-              error: error instanceof Error ? error.message : "Bulk processing error",
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Bulk processing error",
               timestamp: Date.now(),
               source: "unified-mexc-core",
             }))
@@ -375,13 +403,13 @@ export class UnifiedMexcCoreModule {
 
           const batchResponses = await Promise.all(batchPromises);
           allResponses.push(...batchResponses);
-          
+
           // Add small delay between batches to prevent rate limiting
           if (i + concurrencyLimit < normalizedCurrencies.length) {
             await this.delay(50);
           }
         }
-        
+
         const successCount = allResponses.filter((r) => r.success).length;
 
         return {
@@ -394,7 +422,9 @@ export class UnifiedMexcCoreModule {
             totalRequests: allResponses.length,
             successCount,
             failureCount: allResponses.length - successCount,
-            batchCount: Math.ceil(normalizedCurrencies.length / concurrencyLimit),
+            batchCount: Math.ceil(
+              normalizedCurrencies.length / concurrencyLimit
+            ),
             batchSize: concurrencyLimit,
             optimizedProcessing: true,
           },
@@ -402,7 +432,10 @@ export class UnifiedMexcCoreModule {
       }
 
       // Process in batches to handle large requests
-      const batches = this.chunkArray(normalizedCurrencies, batchOptions.batchSize);
+      const batches = this.chunkArray(
+        normalizedCurrencies,
+        batchOptions.batchSize
+      );
       const allResponses: MexcServiceResponse<ActivityData[]>[] = [];
 
       for (let i = 0; i < batches.length; i++) {
@@ -418,7 +451,10 @@ export class UnifiedMexcCoreModule {
             await this.delay(batchOptions.rateLimitDelay);
           }
 
-          return this.getActivityDataWithRetry(currency, batchOptions.maxRetries);
+          return this.getActivityDataWithRetry(
+            currency,
+            batchOptions.maxRetries
+          );
         });
 
         const batchResponses = await Promise.all(batchPromises);
@@ -469,7 +505,10 @@ export class UnifiedMexcCoreModule {
       });
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown bulk processing error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown bulk processing error",
         timestamp: Date.now(),
         executionTimeMs: Date.now() - startTime,
         source: "unified-mexc-core",
@@ -498,7 +537,8 @@ export class UnifiedMexcCoreModule {
 
       // Check if the response timestamp is within the timeframe
       // This represents when the activity data was last updated/fetched
-      const hasRecent = new Date(activityResponse.timestamp).getTime() > cutoffTime;
+      const hasRecent =
+        new Date(activityResponse.timestamp).getTime() > cutoffTime;
 
       return hasRecent;
     } catch (error) {
@@ -517,19 +557,24 @@ export class UnifiedMexcCoreModule {
   /**
    * Test API connectivity with enhanced error handling and timeout
    */
-  async testConnectivity(): Promise<MexcServiceResponse<{ serverTime: number; latency: number }>> {
+  async testConnectivity(): Promise<
+    MexcServiceResponse<{ serverTime: number; latency: number }>
+  > {
     const startTime = Date.now();
     const maxLatency = 30000; // 30 second timeout
 
     try {
       // Add timeout to prevent hanging tests
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error("Connectivity test timeout")), maxLatency);
+        setTimeout(
+          () => reject(new Error("Connectivity test timeout")),
+          maxLatency
+        );
       });
-      
+
       const serverTimeResponse = await Promise.race([
         this.getServerTime(),
-        timeoutPromise
+        timeoutPromise,
       ]);
 
       if (!serverTimeResponse.success) {
@@ -537,10 +582,12 @@ export class UnifiedMexcCoreModule {
           error: serverTimeResponse.error,
           operationType: "connectivity-test",
         });
-        
+
         return {
           success: false,
-          error: "Failed to connect to MEXC API - " + (serverTimeResponse.error || "Unknown error"),
+          error:
+            "Failed to connect to MEXC API - " +
+            (serverTimeResponse.error || "Unknown error"),
           timestamp: Date.now(),
           source: "unified-mexc-core",
           executionTimeMs: Date.now() - startTime,
@@ -548,7 +595,7 @@ export class UnifiedMexcCoreModule {
       }
 
       const latency = Date.now() - startTime;
-      
+
       this.logger.info("Connectivity test successful", {
         latency,
         serverTime: serverTimeResponse.data,
@@ -572,10 +619,11 @@ export class UnifiedMexcCoreModule {
         latency,
         operationType: "connectivity-test",
       });
-      
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown connectivity error",
+        error:
+          error instanceof Error ? error.message : "Unknown connectivity error",
         timestamp: Date.now(),
         source: "unified-mexc-core",
         executionTimeMs: latency,
@@ -626,7 +674,8 @@ export class UnifiedMexcCoreModule {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown connectivity error",
+        error:
+          error instanceof Error ? error.message : "Unknown connectivity error",
         timestamp: Date.now(),
         source: "unified-mexc-core",
       };
@@ -675,7 +724,10 @@ export class UnifiedMexcCoreModule {
       const entryRecord = entry as Record<string, unknown>;
 
       // Safely extract properties with proper type checking
-      const getStringProperty = (key: string, fallback: string = ""): string => {
+      const getStringProperty = (
+        key: string,
+        fallback: string = ""
+      ): string => {
         const value = entryRecord[key];
         return typeof value === "string" ? value : fallback;
       };
@@ -688,10 +740,17 @@ export class UnifiedMexcCoreModule {
       // Build ActivityData with safe property access
       const activityData: ActivityData = {
         activityId:
-          getStringProperty("activityId") || getStringProperty("id") || `activity_${Date.now()}`,
-        currency: getStringProperty("currency") || getStringProperty("currencyCode"),
-        currencyId: getStringProperty("currencyId") || getStringProperty("vcoinId"),
-        activityType: getStringProperty("activityType") || getStringProperty("type") || "UNKNOWN",
+          getStringProperty("activityId") ||
+          getStringProperty("id") ||
+          `activity_${Date.now()}`,
+        currency:
+          getStringProperty("currency") || getStringProperty("currencyCode"),
+        currencyId:
+          getStringProperty("currencyId") || getStringProperty("vcoinId"),
+        activityType:
+          getStringProperty("activityType") ||
+          getStringProperty("type") ||
+          "UNKNOWN",
         timestamp: getNumberProperty("timestamp", Date.now()),
         amount: getNumberProperty("amount"),
         price: getNumberProperty("price"),
@@ -700,7 +759,12 @@ export class UnifiedMexcCoreModule {
       };
 
       // Only add additional properties if they exist and are safe to add
-      const additionalFields = ["description", "status", "transactionId", "blockNumber"];
+      const additionalFields = [
+        "description",
+        "status",
+        "transactionId",
+        "blockNumber",
+      ];
       additionalFields.forEach((field) => {
         const value = entryRecord[field];
         if (value !== undefined && value !== null) {
@@ -747,7 +811,10 @@ export class UnifiedMexcCoreModule {
         // Last attempt failed, return the failed result
         return result;
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error(`Retry attempt ${attempt} failed`);
+        lastError =
+          error instanceof Error
+            ? error
+            : new Error(`Retry attempt ${attempt} failed`);
 
         if (attempt < maxRetries) {
           // Add exponential backoff delay

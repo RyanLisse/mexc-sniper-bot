@@ -9,7 +9,14 @@ export interface ApiResponse<T = unknown> {
   /** Indicates if the request was successful */
   success: boolean;
   /** Response status (healthy, warning, unhealthy, error) */
-  status?: "healthy" | "warning" | "unhealthy" | "error" | "pending" | "active" | "inactive";
+  status?:
+    | "healthy"
+    | "warning"
+    | "unhealthy"
+    | "error"
+    | "pending"
+    | "active"
+    | "inactive";
   /** Human-readable message */
   message?: string;
   /** The actual response data */
@@ -89,7 +96,10 @@ function getLogger(): {
   return _logger;
 }
 
-export function createSuccessResponse<T>(data: T, meta?: ApiResponse<T>["meta"]): ApiResponse<T> {
+export function createSuccessResponse<T>(
+  data: T,
+  meta?: ApiResponse<T>["meta"]
+): ApiResponse<T> {
   return {
     success: true,
     data,
@@ -103,7 +113,10 @@ export function createSuccessResponse<T>(data: T, meta?: ApiResponse<T>["meta"])
 /**
  * Creates an error API response
  */
-export function createErrorResponse(error: string, meta?: ApiResponse["meta"]): ApiResponse {
+export function createErrorResponse(
+  error: string,
+  meta?: ApiResponse["meta"]
+): ApiResponse {
   return {
     success: false,
     error,
@@ -165,7 +178,9 @@ apiResponse.error = (
 
 apiResponse.unauthorized = (message = "Unauthorized") => {
   const { NextResponse } = require("next/server");
-  return NextResponse.json(createAuthErrorResponse(message), { status: HTTP_STATUS.UNAUTHORIZED });
+  return NextResponse.json(createAuthErrorResponse(message), {
+    status: HTTP_STATUS.UNAUTHORIZED,
+  });
 };
 
 apiResponse.badRequest = (error: string, details?: Record<string, unknown>) => {
@@ -206,7 +221,10 @@ export const HTTP_STATUS = {
 /**
  * Validation error response helper
  */
-export function createValidationErrorResponse(field: string, message: string): ApiResponse {
+export function createValidationErrorResponse(
+  field: string,
+  message: string
+): ApiResponse {
   return createErrorResponse(`Validation error: ${field} - ${message}`, {
     validationError: true,
     field,
@@ -216,7 +234,9 @@ export function createValidationErrorResponse(field: string, message: string): A
 /**
  * Authentication error response helper
  */
-export function createAuthErrorResponse(message = "Authentication required"): ApiResponse {
+export function createAuthErrorResponse(
+  message = "Authentication required"
+): ApiResponse {
   return createErrorResponse(message, {
     authRequired: true,
   });
@@ -237,9 +257,13 @@ export function createRateLimitErrorResponse(resetTime: number): ApiResponse {
  * Generic API response creator that handles both success and error cases
  * This is the main function used by API routes
  */
-export function createApiResponse<T>(response: ApiResponse<T>, status?: number): Response {
+export function createApiResponse<T>(
+  response: ApiResponse<T>,
+  status?: number
+): Response {
   const statusCode =
-    status || (response.success ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR);
+    status ||
+    (response.success ? HTTP_STATUS.OK : HTTP_STATUS.INTERNAL_SERVER_ERROR);
 
   return new Response(JSON.stringify(response), {
     status: statusCode,
@@ -252,12 +276,18 @@ export function createApiResponse<T>(response: ApiResponse<T>, status?: number):
 /**
  * Handle API errors and return appropriate error response
  */
-export function handleApiError(error: unknown, defaultMessage = "An error occurred"): Response {
+export function handleApiError(
+  error: unknown,
+  defaultMessage = "An error occurred"
+): Response {
   const safeError = toSafeError(error);
   getLogger().error("API Error:", safeError);
 
   const errorMessage = safeError.message || defaultMessage;
-  return createApiResponse(createErrorResponse(errorMessage), HTTP_STATUS.INTERNAL_SERVER_ERROR);
+  return createApiResponse(
+    createErrorResponse(errorMessage),
+    HTTP_STATUS.INTERNAL_SERVER_ERROR
+  );
 }
 
 // ============================================================================
@@ -316,7 +346,9 @@ export function createApiRouteHandler<T = Record<string, unknown>>(
   return async (): Promise<Response> => {
     try {
       const result = await handler();
-      const statusCode = result.success ? HTTP_STATUS.OK : HTTP_STATUS.BAD_REQUEST;
+      const statusCode = result.success
+        ? HTTP_STATUS.OK
+        : HTTP_STATUS.BAD_REQUEST;
       return createApiResponse(result, statusCode);
     } catch (error) {
       getLogger().error(`[${serviceName}] API request failed:`, error);
@@ -446,13 +478,20 @@ export function createConfigResponse(
   result: ConfigValidationResult,
   configData?: Record<string, unknown>
 ): ApiResponse<Record<string, unknown>> {
-  const allValid = result.valid && !result.missingVars?.length && !result.invalidVars?.length;
-  const status = !result.valid ? "error" : result.warnings?.length ? "warning" : "healthy";
+  const allValid =
+    result.valid && !result.missingVars?.length && !result.invalidVars?.length;
+  const status = !result.valid
+    ? "error"
+    : result.warnings?.length
+      ? "warning"
+      : "healthy";
 
   return {
     success: allValid,
     status,
-    message: allValid ? "Configuration is valid" : "Configuration issues detected",
+    message: allValid
+      ? "Configuration is valid"
+      : "Configuration issues detected",
     data: configData,
     details: {
       missingVars: result.missingVars,
@@ -523,7 +562,9 @@ export interface OperationResult<T = Record<string, unknown>> {
   warnings?: string[];
 }
 
-export function createOperationResponse<T>(result: OperationResult<T>): ApiResponse<T> {
+export function createOperationResponse<T>(
+  result: OperationResult<T>
+): ApiResponse<T> {
   return {
     success: result.success,
     status: result.success ? "healthy" : "error",

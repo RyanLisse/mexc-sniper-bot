@@ -1,6 +1,6 @@
 /**
  * Response Validator
- * 
+ *
  * Validates API responses and data structures
  */
 
@@ -10,7 +10,9 @@ export class ResponseValidator {
   /**
    * Validate API response structure
    */
-  isValidApiResponseStructure(response: unknown): response is MexcApiResponseData {
+  isValidApiResponseStructure(
+    response: unknown
+  ): response is MexcApiResponseData {
     return (
       typeof response === "object" &&
       response !== null &&
@@ -100,7 +102,7 @@ export class ResponseValidator {
     const obj = response as Record<string, unknown>;
     if (typeof obj.error === "string") return obj.error;
     if (obj.success === false) return "Operation failed";
-    
+
     return "Unknown error";
   }
 
@@ -114,14 +116,18 @@ export class ResponseValidator {
     return (
       typeof obj.symbol === "string" &&
       typeof obj.confidence === "number" &&
-      obj.confidence >= 0 && obj.confidence <= 1
+      obj.confidence >= 0 &&
+      obj.confidence <= 1
     );
   }
 
   /**
    * Validate array of data items
    */
-  isValidDataArray(data: unknown, validator: (item: unknown) => boolean): boolean {
+  isValidDataArray(
+    data: unknown,
+    validator: (item: unknown) => boolean
+  ): boolean {
     if (!Array.isArray(data)) return false;
     return data.every(validator);
   }

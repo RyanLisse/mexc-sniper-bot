@@ -31,23 +31,23 @@ export function useRealTimeSafetyMonitoring() {
 
   // Load safety data
   const loadData = async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/auto-sniping/safety-monitoring");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to load safety data");
       }
-      
+
       setState({
         data: result.data,
         isLoading: false,
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : "Failed to load data",
@@ -63,7 +63,7 @@ export function useRealTimeSafetyMonitoring() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "start" }),
       });
-      
+
       const result = await response.json();
       if (result.success) {
         await loadData();
@@ -82,7 +82,7 @@ export function useRealTimeSafetyMonitoring() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "stop" }),
       });
-      
+
       const result = await response.json();
       if (result.success) {
         await loadData();
@@ -96,7 +96,7 @@ export function useRealTimeSafetyMonitoring() {
   // Load data on mount
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   return {
     ...state,

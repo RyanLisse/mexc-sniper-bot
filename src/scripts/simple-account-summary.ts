@@ -31,8 +31,20 @@ async function main() {
           total: 0.007732322,
           usdtValue: 1.1269859315,
         },
-        { asset: "YIEL", free: "0", locked: "1000", total: 1000, usdtValue: 0.1 },
-        { asset: "UPTOP", free: "3", locked: "0", total: 3, usdtValue: 0.09759000000000001 },
+        {
+          asset: "YIEL",
+          free: "0",
+          locked: "1000",
+          total: 1000,
+          usdtValue: 0.1,
+        },
+        {
+          asset: "UPTOP",
+          free: "3",
+          locked: "0",
+          total: 3,
+          usdtValue: 0.09759000000000001,
+        },
       ],
       totalUsdtValue: 23.1610919215,
       lastUpdated: "2025-06-28T07:49:48.045Z",
@@ -40,8 +52,12 @@ async function main() {
 
     console.log("💰 CURRENT ACCOUNT BALANCE:");
     console.log("============================");
-    console.log(`🏦 Total Account Value: $${balanceData.totalUsdtValue.toFixed(2)} USDT`);
-    console.log(`🕐 Last Updated: ${new Date(balanceData.lastUpdated).toLocaleString()}\n`);
+    console.log(
+      `🏦 Total Account Value: $${balanceData.totalUsdtValue.toFixed(2)} USDT`
+    );
+    console.log(
+      `🕐 Last Updated: ${new Date(balanceData.lastUpdated).toLocaleString()}\n`
+    );
 
     console.log("💱 Asset Breakdown:");
     balanceData.balances.forEach((balance, index) => {
@@ -65,9 +81,13 @@ async function main() {
     if (allTargets.length === 0) {
       console.log("❌ No snipe targets found");
     } else {
-      const pendingTargets = allTargets.filter((t: any) => t.status === "pending");
+      const pendingTargets = allTargets.filter(
+        (t: any) => t.status === "pending"
+      );
       const readyTargets = allTargets.filter((t: any) => t.status === "ready");
-      const completedTargets = allTargets.filter((t: any) => t.status === "completed");
+      const completedTargets = allTargets.filter(
+        (t: any) => t.status === "completed"
+      );
 
       console.log(`📋 Total Targets: ${allTargets.length}`);
       console.log(`⏳ Pending: ${pendingTargets.length}`);
@@ -107,8 +127,12 @@ async function main() {
 
       console.log("💹 ALLOCATION SUMMARY:");
       console.log("======================");
-      console.log(`🎯 Total Target Allocation: $${totalAllocation.toFixed(2)} USDT`);
-      console.log(`💰 Available Balance: $${balanceData.totalUsdtValue.toFixed(2)} USDT`);
+      console.log(
+        `🎯 Total Target Allocation: $${totalAllocation.toFixed(2)} USDT`
+      );
+      console.log(
+        `💰 Available Balance: $${balanceData.totalUsdtValue.toFixed(2)} USDT`
+      );
       console.log(
         `📊 Allocation vs Balance: ${((totalAllocation / balanceData.totalUsdtValue) * 100).toFixed(1)}%`
       );

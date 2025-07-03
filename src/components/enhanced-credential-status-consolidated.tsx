@@ -32,8 +32,8 @@ export function EnhancedCredentialStatusConsolidated() {
             <span>Trading Status:</span>
             <Badge variant="secondary">Inactive</Badge>
           </div>
-          <Button 
-            onClick={handleRefresh} 
+          <Button
+            onClick={handleRefresh}
             disabled={isLoading}
             className="w-full"
           >

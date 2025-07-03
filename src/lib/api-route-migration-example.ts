@@ -131,7 +131,8 @@ export const GET = createPublicApiRoute(
     });
 
     // Use modular service for connectivity testing
-    const testResult = await mexcConnectivityService.testConnectivity(connectivityRequest);
+    const testResult =
+      await mexcConnectivityService.testConnectivity(connectivityRequest);
 
     if (!testResult.success) {
       const errorResult = testResult as { success: false; error: string };

@@ -119,7 +119,11 @@ export class CircuitBreakerCoordinator {
   /**
    * Release lock for circuit breaker operation
    */
-  releaseLock(circuitBreakerId: string, operationType: string, serviceId: string): void {
+  releaseLock(
+    circuitBreakerId: string,
+    operationType: string,
+    serviceId: string
+  ): void {
     const lockKey = `${circuitBreakerId}:${operationType}`;
     const lock = this.locks.get(lockKey);
 
@@ -152,7 +156,9 @@ export class CircuitBreakerCoordinator {
       );
 
       if (!lockAcquired) {
-        throw new Error(`Failed to acquire lock for ${operationType} on ${circuitBreakerId}`);
+        throw new Error(
+          `Failed to acquire lock for ${operationType} on ${circuitBreakerId}`
+        );
       }
 
       try {
@@ -382,7 +388,9 @@ export class CoordinatedCircuitBreaker {
       halfOpenRequestCount: this.halfOpenRequestCount,
       totalRequests: this.failures + this.successes,
       failureRate:
-        this.failures + this.successes > 0 ? this.failures / (this.failures + this.successes) : 0,
+        this.failures + this.successes > 0
+          ? this.failures / (this.failures + this.successes)
+          : 0,
     };
   }
 
@@ -407,7 +415,9 @@ export class CoordinatedCircuitBreaker {
     // Check half-open request limit
     if (this.state === "HALF_OPEN") {
       if (this.halfOpenRequestCount >= 3) {
-        throw new Error(`Circuit breaker [${this.name}] is HALF_OPEN and at request limit`);
+        throw new Error(
+          `Circuit breaker [${this.name}] is HALF_OPEN and at request limit`
+        );
       }
       this.halfOpenRequestCount++;
     }
@@ -489,7 +499,8 @@ export class CoordinatedCircuitBreakerRegistry {
 
   public static getInstance(): CoordinatedCircuitBreakerRegistry {
     if (!CoordinatedCircuitBreakerRegistry.instance) {
-      CoordinatedCircuitBreakerRegistry.instance = new CoordinatedCircuitBreakerRegistry();
+      CoordinatedCircuitBreakerRegistry.instance =
+        new CoordinatedCircuitBreakerRegistry();
     }
     return CoordinatedCircuitBreakerRegistry.instance;
   }
@@ -512,7 +523,10 @@ export class CoordinatedCircuitBreakerRegistry {
         ...config,
       };
 
-      this.breakers.set(name, new CoordinatedCircuitBreaker(name, breakerConfig));
+      this.breakers.set(
+        name,
+        new CoordinatedCircuitBreaker(name, breakerConfig)
+      );
     }
     return this.breakers.get(name)!;
   }
@@ -526,7 +540,9 @@ export class CoordinatedCircuitBreakerRegistry {
       "reset_all",
       serviceId,
       async () => {
-        const resetPromises = Array.from(this.breakers.values()).map((breaker) => breaker.reset());
+        const resetPromises = Array.from(this.breakers.values()).map(
+          (breaker) => breaker.reset()
+        );
         await Promise.all(resetPromises);
       },
       "critical"
@@ -568,7 +584,9 @@ export class CoordinatedCircuitBreakerRegistry {
 /**
  * Create coordinated MEXC API circuit breaker
  */
-export function createCoordinatedMexcApiBreaker(serviceId: string): CoordinatedCircuitBreaker {
+export function createCoordinatedMexcApiBreaker(
+  serviceId: string
+): CoordinatedCircuitBreaker {
   const registry = CoordinatedCircuitBreakerRegistry.getInstance();
   return registry.getBreaker("mexc-api", serviceId, {
     failureThreshold: 3,
@@ -592,4 +610,5 @@ export function createCoordinatedMexcWebSocketBreaker(
 }
 
 // Export singleton registry
-export const coordinatedCircuitBreakerRegistry = CoordinatedCircuitBreakerRegistry.getInstance();
+export const coordinatedCircuitBreakerRegistry =
+  CoordinatedCircuitBreakerRegistry.getInstance();

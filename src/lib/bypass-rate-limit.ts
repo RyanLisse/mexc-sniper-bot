@@ -13,7 +13,7 @@ class BypassRateLimit {
   private config: BypassConfig = {
     apiKeys: [],
     userIds: [],
-    ipAddresses: []
+    ipAddresses: [],
   };
 
   setConfig(config: Partial<BypassConfig>): void {
@@ -33,26 +33,29 @@ class BypassRateLimit {
       return true;
     }
 
-    if (context.ipAddress && this.config.ipAddresses.includes(context.ipAddress)) {
+    if (
+      context.ipAddress &&
+      this.config.ipAddresses.includes(context.ipAddress)
+    ) {
       return true;
     }
 
     return false;
   }
 
-  addBypass(type: 'apiKey' | 'userId' | 'ipAddress', value: string): void {
+  addBypass(type: "apiKey" | "userId" | "ipAddress", value: string): void {
     switch (type) {
-      case 'apiKey':
+      case "apiKey":
         if (!this.config.apiKeys.includes(value)) {
           this.config.apiKeys.push(value);
         }
         break;
-      case 'userId':
+      case "userId":
         if (!this.config.userIds.includes(value)) {
           this.config.userIds.push(value);
         }
         break;
-      case 'ipAddress':
+      case "ipAddress":
         if (!this.config.ipAddresses.includes(value)) {
           this.config.ipAddresses.push(value);
         }
@@ -60,16 +63,20 @@ class BypassRateLimit {
     }
   }
 
-  removeBypass(type: 'apiKey' | 'userId' | 'ipAddress', value: string): void {
+  removeBypass(type: "apiKey" | "userId" | "ipAddress", value: string): void {
     switch (type) {
-      case 'apiKey':
-        this.config.apiKeys = this.config.apiKeys.filter(key => key !== value);
+      case "apiKey":
+        this.config.apiKeys = this.config.apiKeys.filter(
+          (key) => key !== value
+        );
         break;
-      case 'userId':
-        this.config.userIds = this.config.userIds.filter(id => id !== value);
+      case "userId":
+        this.config.userIds = this.config.userIds.filter((id) => id !== value);
         break;
-      case 'ipAddress':
-        this.config.ipAddresses = this.config.ipAddresses.filter(ip => ip !== value);
+      case "ipAddress":
+        this.config.ipAddresses = this.config.ipAddresses.filter(
+          (ip) => ip !== value
+        );
         break;
     }
   }

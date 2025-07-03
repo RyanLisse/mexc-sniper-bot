@@ -42,7 +42,12 @@ class LRUCache<K, V> {
     warn: (message: string, context?: any) =>
       console.warn("[websocket-price-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[websocket-price-service]", message, context || "", error || ""),
+      console.error(
+        "[websocket-price-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[websocket-price-service]", message, context || ""),
   };
@@ -192,8 +197,10 @@ export class WebSocketPriceService {
       // Check for memory leak (steady increase over time)
       if (this.memoryMetrics.length >= 10) {
         const recentMetrics = this.memoryMetrics.slice(-10);
-        const memoryGrowth = recentMetrics[9].heapUsed - recentMetrics[0].heapUsed;
-        const timeElapsed = recentMetrics[9].timestamp - recentMetrics[0].timestamp;
+        const memoryGrowth =
+          recentMetrics[9].heapUsed - recentMetrics[0].heapUsed;
+        const timeElapsed =
+          recentMetrics[9].timestamp - recentMetrics[0].timestamp;
         const growthRate = memoryGrowth / (timeElapsed / 1000 / 60 / 60); // bytes per hour
 
         if (growthRate > 50 * 1024 * 1024) {
@@ -268,7 +275,9 @@ export class WebSocketPriceService {
       global.gc();
     }
 
-    console.info(`✅ Cleanup complete. Removed ${emptySymbols.length} empty subscriptions`);
+    console.info(
+      `✅ Cleanup complete. Removed ${emptySymbols.length} empty subscriptions`
+    );
   }
 
   /**
@@ -298,7 +307,9 @@ export class WebSocketPriceService {
       } else {
         // For server-side, we'll create a mock connection
         // In production, you'd use the 'ws' package
-        console.info("⚠️ WebSocket not available in Node.js environment. Using polling fallback.");
+        console.info(
+          "⚠️ WebSocket not available in Node.js environment. Using polling fallback."
+        );
         this.isConnecting = false;
         return;
       }
@@ -407,7 +418,10 @@ export class WebSocketPriceService {
       }
 
       // Close WebSocket if still open
-      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+      if (
+        this.ws.readyState === WebSocket.OPEN ||
+        this.ws.readyState === WebSocket.CONNECTING
+      ) {
         this.ws.close(1000, "Cleanup");
       }
 
@@ -601,7 +615,10 @@ export class WebSocketPriceService {
    * Schedule reconnection attempt
    */
   private scheduleReconnect(): void {
-    if (this.isShuttingDown || this.reconnectAttempts >= this.maxReconnectAttempts) {
+    if (
+      this.isShuttingDown ||
+      this.reconnectAttempts >= this.maxReconnectAttempts
+    ) {
       console.error("❌ Max reconnection attempts reached. Giving up.");
       return;
     }
@@ -622,7 +639,10 @@ export class WebSocketPriceService {
     }, this.reconnectDelay);
 
     // Exponential backoff with jitter
-    this.reconnectDelay = Math.min(this.reconnectDelay * 2 + Math.random() * 1000, 30000);
+    this.reconnectDelay = Math.min(
+      this.reconnectDelay * 2 + Math.random() * 1000,
+      30000
+    );
   }
 
   /**
@@ -661,7 +681,8 @@ export class WebSocketPriceService {
 
     if (this.memoryMetrics.length >= 10) {
       const oldMetric = this.memoryMetrics[this.memoryMetrics.length - 10];
-      const timeElapsed = (current.timestamp - oldMetric.timestamp) / 1000 / 60 / 60; // hours
+      const timeElapsed =
+        (current.timestamp - oldMetric.timestamp) / 1000 / 60 / 60; // hours
       growthRate = (current.heapUsed - oldMetric.heapUsed) / timeElapsed; // bytes per hour
     }
 

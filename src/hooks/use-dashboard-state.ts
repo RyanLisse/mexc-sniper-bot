@@ -30,7 +30,9 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
   const { refreshInterval = 10000, userId: _userId } = options;
 
   // Core state
-  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(null);
+  const [workflowStatus, setWorkflowStatus] = useState<WorkflowStatus | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isDiscoveryRunning, setIsDiscoveryRunning] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -65,7 +67,9 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
       setIsLoading(true);
       setError(null);
 
-      const action = isDiscoveryRunning ? "stop_monitoring" : "start_monitoring";
+      const action = isDiscoveryRunning
+        ? "stop_monitoring"
+        : "start_monitoring";
 
       // Control scheduled monitoring
       const scheduleResponse = await fetch("/api/schedule/control", {
@@ -97,7 +101,9 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
       await fetchSystemStatus();
     } catch (error) {
       console.error("Failed to toggle pattern discovery:", error);
-      setError(error instanceof Error ? error.message : "Failed to toggle discovery");
+      setError(
+        error instanceof Error ? error.message : "Failed to toggle discovery"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -122,7 +128,9 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
       });
 
       if (!forceResponse.ok) {
-        throw new Error(`Failed to run discovery cycle: ${forceResponse.statusText}`);
+        throw new Error(
+          `Failed to run discovery cycle: ${forceResponse.statusText}`
+        );
       }
 
       // Add activity log
@@ -145,7 +153,9 @@ export function useDashboardState(options: UseDashboardStateOptions = {}) {
       await fetchSystemStatus();
     } catch (error) {
       console.error("Failed to run discovery cycle:", error);
-      setError(error instanceof Error ? error.message : "Failed to run discovery cycle");
+      setError(
+        error instanceof Error ? error.message : "Failed to run discovery cycle"
+      );
     } finally {
       setIsLoading(false);
     }

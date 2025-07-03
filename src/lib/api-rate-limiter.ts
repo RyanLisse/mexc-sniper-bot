@@ -17,7 +17,9 @@ export class ApiRateLimiter {
     this.config = config;
   }
 
-  async checkLimit(key: string): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+  async checkLimit(
+    key: string
+  ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
     const now = Date.now();
     const limit = rateLimitMap.get(key);
 
@@ -27,7 +29,7 @@ export class ApiRateLimiter {
       return {
         allowed: true,
         remaining: this.config.maxRequests - 1,
-        resetTime
+        resetTime,
       };
     }
 
@@ -35,7 +37,7 @@ export class ApiRateLimiter {
       return {
         allowed: false,
         remaining: 0,
-        resetTime: limit.resetTime
+        resetTime: limit.resetTime,
       };
     }
 
@@ -43,7 +45,7 @@ export class ApiRateLimiter {
     return {
       allowed: true,
       remaining: this.config.maxRequests - limit.count,
-      resetTime: limit.resetTime
+      resetTime: limit.resetTime,
     };
   }
 
@@ -72,15 +74,17 @@ export function withRateLimit<T extends (...args: any[]) => any>(
   config?: RateLimitConfig
 ): T {
   const rateLimiter = new ApiRateLimiter(config);
-  
+
   return (async (...args: any[]) => {
     const key = `fn_${fn.name}_${Date.now()}`;
     const result = await rateLimiter.checkLimit(key);
-    
+
     if (!result.allowed) {
-      throw new Error(`Rate limit exceeded. Try again in ${Math.ceil((result.resetTime - Date.now()) / 1000)} seconds`);
+      throw new Error(
+        `Rate limit exceeded. Try again in ${Math.ceil((result.resetTime - Date.now()) / 1000)} seconds`
+      );
     }
-    
+
     return fn(...args);
   }) as T;
 }

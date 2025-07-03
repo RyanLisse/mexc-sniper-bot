@@ -12,7 +12,15 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 // Import Recharts components directly to avoid complex dynamic import typing issues
 import {
   Area,
@@ -30,7 +38,13 @@ import {
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -185,7 +199,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
       eventSourceRef.current.close();
     }
 
-    const eventSource = new EventSource("/api/monitoring/real-time?type=system");
+    const eventSource = new EventSource(
+      "/api/monitoring/real-time?type=system"
+    );
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
@@ -262,9 +278,11 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {useSkeletonItems(4, "h-32 bg-gray-100 rounded animate-pulse").map((item) => (
-              <div key={item.key} className={item.className} />
-            ))}
+            {useSkeletonItems(4, "h-32 bg-gray-100 rounded animate-pulse").map(
+              (item) => (
+                <div key={item.key} className={item.className} />
+              )
+            )}
           </div>
         </CardContent>
       </Card>
@@ -328,44 +346,60 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <div className="text-2xl font-bold text-green-600">
               {(data.orchestrationMetrics.successRate * 100).toFixed(1)}%
             </div>
-            <Progress value={data.orchestrationMetrics.successRate * 100} className="mt-2" />
+            <Progress
+              value={data.orchestrationMetrics.successRate * 100}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Response Time</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Avg Response Time
+            </CardTitle>
             <Timer className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {data.agentPerformance.overall.averageResponseTime.toFixed(0)}ms
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Across all agents</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Across all agents
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Executions/Hour</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Executions/Hour
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.orchestrationMetrics.executionsPerHour}</div>
+            <div className="text-2xl font-bold">
+              {data.orchestrationMetrics.executionsPerHour}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Current rate</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cache Hit Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Cache Hit Rate
+            </CardTitle>
             <Database className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {data.agentPerformance.overall.totalCacheHitRate.toFixed(1)}%
             </div>
-            <Progress value={data.agentPerformance.overall.totalCacheHitRate} className="mt-2" />
+            <Progress
+              value={data.agentPerformance.overall.totalCacheHitRate}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
 
@@ -378,7 +412,10 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <div className="text-2xl font-bold">
               {data.systemPerformance.memoryUsage.usage.toFixed(1)}%
             </div>
-            <Progress value={data.systemPerformance.memoryUsage.usage} className="mt-2" />
+            <Progress
+              value={data.systemPerformance.memoryUsage.usage}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
       </div>
@@ -397,7 +434,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>System Performance</CardTitle>
-                <CardDescription>Real-time system metrics (last 50 data points)</CardDescription>
+                <CardDescription>
+                  Real-time system metrics (last 50 data points)
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ErrorBoundary
@@ -426,7 +465,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                         />
                         <YAxis />
                         <Tooltip
-                          labelFormatter={(time: number) => new Date(time).toLocaleTimeString()}
+                          labelFormatter={(time: number) =>
+                            new Date(time).toLocaleTimeString()
+                          }
                           formatter={durationTooltipFormatter}
                         />
                         <Line
@@ -451,7 +492,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Resource Utilization</CardTitle>
-                <CardDescription>CPU, memory, and network usage</CardDescription>
+                <CardDescription>
+                  CPU, memory, and network usage
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ErrorBoundary
@@ -480,7 +523,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                         />
                         <YAxis domain={[0, 100]} />
                         <Tooltip
-                          labelFormatter={(time: number) => new Date(time).toLocaleTimeString()}
+                          labelFormatter={(time: number) =>
+                            new Date(time).toLocaleTimeString()
+                          }
                           formatter={percentageTooltipFormatter}
                         />
                         <Area
@@ -519,42 +564,59 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(data.agentPerformance.core).map(([agent, metrics]) => (
-                    <div key={agent} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">
-                          {agent
-                            .replace(/Agent$/, "")
-                            .replace(/([A-Z])/g, " $1")
-                            .trim()}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            {(metrics.responseTime ?? 0).toFixed(0)}ms
-                          </Badge>
-                          <Badge variant={metrics.successRate > 90 ? "default" : "destructive"}>
-                            {metrics.successRate.toFixed(1)}%
-                          </Badge>
+                  {Object.entries(data.agentPerformance.core).map(
+                    ([agent, metrics]) => (
+                      <div key={agent} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">
+                            {agent
+                              .replace(/Agent$/, "")
+                              .replace(/([A-Z])/g, " $1")
+                              .trim()}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {(metrics.responseTime ?? 0).toFixed(0)}ms
+                            </Badge>
+                            <Badge
+                              variant={
+                                metrics.successRate > 90
+                                  ? "default"
+                                  : "destructive"
+                              }
+                            >
+                              {metrics.successRate.toFixed(1)}%
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Response Time
+                            </p>
+                            <Progress
+                              value={Math.min(
+                                ((metrics.responseTime ?? 0) / 1000) * 100,
+                                100
+                              )}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Success Rate
+                            </p>
+                            <Progress value={metrics.successRate} />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Cache Hit Rate
+                            </p>
+                            <Progress value={metrics.cacheHitRate} />
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-1">Response Time</p>
-                          <Progress
-                            value={Math.min(((metrics.responseTime ?? 0) / 1000) * 100, 100)}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-1">Success Rate</p>
-                          <Progress value={metrics.successRate} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-1">Cache Hit Rate</p>
-                          <Progress value={metrics.cacheHitRate} />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -568,41 +630,57 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {Object.entries(data.agentPerformance.safety).map(([agent, metrics]) => (
-                    <div key={agent} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm">
-                          {agent
-                            .replace(/Agent$/, "")
-                            .replace(/([A-Z])/g, " $1")
-                            .trim()}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
-                            {(metrics.responseTime ?? 0).toFixed(0)}ms
-                          </Badge>
-                          <Badge variant={metrics.successRate > 90 ? "default" : "destructive"}>
-                            {metrics.successRate.toFixed(1)}%
-                          </Badge>
+                  {Object.entries(data.agentPerformance.safety).map(
+                    ([agent, metrics]) => (
+                      <div key={agent} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm">
+                            {agent
+                              .replace(/Agent$/, "")
+                              .replace(/([A-Z])/g, " $1")
+                              .trim()}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline">
+                              {(metrics.responseTime ?? 0).toFixed(0)}ms
+                            </Badge>
+                            <Badge
+                              variant={
+                                metrics.successRate > 90
+                                  ? "default"
+                                  : "destructive"
+                              }
+                            >
+                              {metrics.successRate.toFixed(1)}%
+                            </Badge>
+                          </div>
                         </div>
+                        <div className="flex gap-2">
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Response Time
+                            </p>
+                            <Progress
+                              value={Math.min(
+                                ((metrics.responseTime ?? 0) / 1000) * 100,
+                                100
+                              )}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Success Rate
+                            </p>
+                            <Progress value={metrics.successRate} />
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Last Activity:{" "}
+                          {new Date(metrics.lastActivity).toLocaleTimeString()}
+                        </p>
                       </div>
-                      <div className="flex gap-2">
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-1">Response Time</p>
-                          <Progress
-                            value={Math.min(((metrics.responseTime ?? 0) / 1000) * 100, 100)}
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-1">Success Rate</p>
-                          <Progress value={metrics.successRate} />
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Last Activity: {new Date(metrics.lastActivity).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -614,14 +692,18 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Pattern Detection</CardTitle>
-                <CardDescription>Overall pattern discovery metrics</CardDescription>
+                <CardDescription>
+                  Overall pattern discovery metrics
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600">
                     {data.patternDiscoveryAnalytics.patternsDetected}
                   </div>
-                  <p className="text-sm text-muted-foreground">Patterns Detected Today</p>
+                  <p className="text-sm text-muted-foreground">
+                    Patterns Detected Today
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -633,9 +715,14 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-bold">
-                      {data.patternDiscoveryAnalytics.averageConfidence.toFixed(1)}%
+                      {data.patternDiscoveryAnalytics.averageConfidence.toFixed(
+                        1
+                      )}
+                      %
                     </div>
-                    <p className="text-xs text-muted-foreground">Avg Confidence</p>
+                    <p className="text-xs text-muted-foreground">
+                      Avg Confidence
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -644,7 +731,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Advance Detection</CardTitle>
-                <CardDescription>3.5+ hour advance detection metrics</CardDescription>
+                <CardDescription>
+                  3.5+ hour advance detection metrics
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -660,7 +749,8 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                     </div>
                     <Progress
                       value={
-                        (data.patternDiscoveryAnalytics.advanceDetectionMetrics.averageAdvanceTime /
+                        (data.patternDiscoveryAnalytics.advanceDetectionMetrics
+                          .averageAdvanceTime /
                           6) *
                         100
                       }
@@ -668,8 +758,11 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       Target:{" "}
-                      {data.patternDiscoveryAnalytics.advanceDetectionMetrics.optimalAdvanceTime}+
-                      hours
+                      {
+                        data.patternDiscoveryAnalytics.advanceDetectionMetrics
+                          .optimalAdvanceTime
+                      }
+                      + hours
                     </p>
                   </div>
 
@@ -685,7 +778,8 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                     </div>
                     <Progress
                       value={
-                        data.patternDiscoveryAnalytics.advanceDetectionMetrics.detectionAccuracy
+                        data.patternDiscoveryAnalytics.advanceDetectionMetrics
+                          .detectionAccuracy
                       }
                       className="h-2"
                     />
@@ -697,7 +791,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Pattern Types</CardTitle>
-                <CardDescription>Distribution of detected pattern types</CardDescription>
+                <CardDescription>
+                  Distribution of detected pattern types
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ErrorBoundary
@@ -727,12 +823,14 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                           dataKey="count"
                           nameKey="type"
                         >
-                          {data.patternDiscoveryAnalytics.patternTypes.map((entry, index) => (
-                            <Cell
-                              key={generateChartCellKey(index, entry.type)}
-                              fill={COLORS[index % COLORS.length]}
-                            />
-                          ))}
+                          {data.patternDiscoveryAnalytics.patternTypes.map(
+                            (entry, index) => (
+                              <Cell
+                                key={generateChartCellKey(index, entry.type)}
+                                fill={COLORS[index % COLORS.length]}
+                              />
+                            )
+                          )}
                         </Pie>
                         <Tooltip />
                       </PieChart>
@@ -740,17 +838,24 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                   </Suspense>
                 </ErrorBoundary>
                 <div className="mt-2 space-y-1">
-                  {data.patternDiscoveryAnalytics.patternTypes.map((type, index) => (
-                    <div key={type.type} className="flex items-center gap-2 text-sm">
+                  {data.patternDiscoveryAnalytics.patternTypes.map(
+                    (type, index) => (
                       <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                      />
-                      <span>
-                        {type.type}: {type.count}
-                      </span>
-                    </div>
-                  ))}
+                        key={type.type}
+                        className="flex items-center gap-2 text-sm"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor: COLORS[index % COLORS.length],
+                          }}
+                        />
+                        <span>
+                          {type.type}: {type.count}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -762,19 +867,29 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Database Performance</CardTitle>
-                <CardDescription>Query performance and connection metrics</CardDescription>
+                <CardDescription>
+                  Query performance and connection metrics
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {data.systemPerformance.databasePerformance.queryTime.toFixed(1)}ms
+                      {data.systemPerformance.databasePerformance.queryTime.toFixed(
+                        1
+                      )}
+                      ms
                     </div>
-                    <p className="text-xs text-muted-foreground">Avg Query Time</p>
+                    <p className="text-xs text-muted-foreground">
+                      Avg Query Time
+                    </p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {data.systemPerformance.databasePerformance.connectionPool.toFixed(1)}%
+                      {data.systemPerformance.databasePerformance.connectionPool.toFixed(
+                        1
+                      )}
+                      %
                     </div>
                     <p className="text-xs text-muted-foreground">Pool Usage</p>
                   </div>
@@ -782,7 +897,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                     <div className="text-2xl font-bold text-red-600">
                       {data.systemPerformance.databasePerformance.slowQueries}
                     </div>
-                    <p className="text-xs text-muted-foreground">Slow Queries</p>
+                    <p className="text-xs text-muted-foreground">
+                      Slow Queries
+                    </p>
                   </div>
                 </div>
 
@@ -791,10 +908,18 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                     <div className="flex justify-between text-sm mb-1">
                       <span>Connection Pool</span>
                       <span>
-                        {data.systemPerformance.databasePerformance.connectionPool.toFixed(1)}%
+                        {data.systemPerformance.databasePerformance.connectionPool.toFixed(
+                          1
+                        )}
+                        %
                       </span>
                     </div>
-                    <Progress value={data.systemPerformance.databasePerformance.connectionPool} />
+                    <Progress
+                      value={
+                        data.systemPerformance.databasePerformance
+                          .connectionPool
+                      }
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -803,27 +928,41 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Network Performance</CardTitle>
-                <CardDescription>API latency and WebSocket metrics</CardDescription>
+                <CardDescription>
+                  API latency and WebSocket metrics
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {data.systemPerformance.networkMetrics.apiLatency.toFixed(0)}ms
+                      {data.systemPerformance.networkMetrics.apiLatency.toFixed(
+                        0
+                      )}
+                      ms
                     </div>
                     <p className="text-xs text-muted-foreground">API Latency</p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {data.systemPerformance.networkMetrics.websocketConnections}
+                      {
+                        data.systemPerformance.networkMetrics
+                          .websocketConnections
+                      }
                     </div>
-                    <p className="text-xs text-muted-foreground">WS Connections</p>
+                    <p className="text-xs text-muted-foreground">
+                      WS Connections
+                    </p>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold">
-                      {data.systemPerformance.networkMetrics.throughput.toFixed(0)}
+                      {data.systemPerformance.networkMetrics.throughput.toFixed(
+                        0
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground">Throughput/s</p>
+                    <p className="text-xs text-muted-foreground">
+                      Throughput/s
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -836,7 +975,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Performance Trends</CardTitle>
-                <CardDescription>Recent performance trend analysis</CardDescription>
+                <CardDescription>
+                  Recent performance trend analysis
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -851,7 +992,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                           <p className="font-medium">
                             {trend.metric.replace(/([A-Z])/g, " $1").trim()}
                           </p>
-                          <p className="text-sm text-muted-foreground capitalize">{trend.trend}</p>
+                          <p className="text-sm text-muted-foreground capitalize">
+                            {trend.trend}
+                          </p>
                         </div>
                       </div>
                       <Badge
@@ -875,7 +1018,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
             <Card>
               <CardHeader>
                 <CardTitle>Performance Alerts</CardTitle>
-                <CardDescription>Recent performance-related alerts</CardDescription>
+                <CardDescription>
+                  Recent performance-related alerts
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -886,7 +1031,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                     >
                       <AlertTriangle
                         className={`h-4 w-4 mt-0.5 ${
-                          alert.level === "warning" ? "text-yellow-600" : "text-red-600"
+                          alert.level === "warning"
+                            ? "text-yellow-600"
+                            : "text-red-600"
                         }`}
                       />
                       <div className="flex-1">
@@ -895,7 +1042,13 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
                           {new Date(alert.timestamp).toLocaleString()}
                         </p>
                       </div>
-                      <Badge variant={alert.level === "warning" ? "secondary" : "destructive"}>
+                      <Badge
+                        variant={
+                          alert.level === "warning"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
                         {alert.level}
                       </Badge>
                     </div>

@@ -23,7 +23,13 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface OptimizationRun {
   id: string;
@@ -53,7 +59,10 @@ interface OptimizationRun {
 interface OptimizationHistoryProps {
   runs: OptimizationRun[];
   onRunSelect?: (runId: string) => void;
-  onRunAction?: (runId: string, action: "pause" | "resume" | "stop" | "restart") => void;
+  onRunAction?: (
+    runId: string,
+    action: "pause" | "resume" | "stop" | "restart"
+  ) => void;
   selectedRunId?: string;
 }
 
@@ -76,7 +85,9 @@ export function OptimizationHistory({
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case "startTime":
-          return new Date(b.startTime).getTime() - new Date(a.startTime).getTime();
+          return (
+            new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+          );
         case "bestScore":
           return b.bestScore - a.bestScore;
         case "improvement":
@@ -146,29 +157,43 @@ export function OptimizationHistory({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Runs</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Runs
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{runs.length}</div>
-            <p className="text-xs text-muted-foreground">{runningRuns.length} active</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{completedRuns.length}</div>
             <p className="text-xs text-muted-foreground">
-              {((completedRuns.length / Math.max(runs.length, 1)) * 100).toFixed(0)}% success rate
+              {runningRuns.length} active
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Best Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Completed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {completedRuns.length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {(
+                (completedRuns.length / Math.max(runs.length, 1)) *
+                100
+              ).toFixed(0)}
+              % success rate
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Best Score
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -191,8 +216,10 @@ export function OptimizationHistory({
               +
               {completedRuns.length > 0
                 ? (
-                    completedRuns.reduce((sum, r) => sum + r.improvementPercent, 0) /
-                    completedRuns.length
+                    completedRuns.reduce(
+                      (sum, r) => sum + r.improvementPercent,
+                      0
+                    ) / completedRuns.length
                   ).toFixed(1)
                 : 0}
               %
@@ -247,7 +274,9 @@ export function OptimizationHistory({
                 <div
                   key={run.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedRunId === run.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"
+                    selectedRunId === run.id
+                      ? "border-primary bg-primary/5"
+                      : "hover:bg-muted/50"
                   }`}
                   onClick={() => onRunSelect?.(run.id)}
                 >
@@ -256,7 +285,9 @@ export function OptimizationHistory({
                       {getStatusIcon(run.status)}
                       <h4 className="font-medium">{run.name}</h4>
                     </div>
-                    <Badge variant={getStatusBadgeVariant(run.status)}>{run.status}</Badge>
+                    <Badge variant={getStatusBadgeVariant(run.status)}>
+                      {run.status}
+                    </Badge>
                   </div>
 
                   <div className="space-y-2">
@@ -267,14 +298,20 @@ export function OptimizationHistory({
 
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">Best Score:</span>
-                      <span className="font-medium">{run.bestScore.toFixed(3)}</span>
+                      <span className="font-medium">
+                        {run.bestScore.toFixed(3)}
+                      </span>
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Improvement:</span>
+                      <span className="text-muted-foreground">
+                        Improvement:
+                      </span>
                       <span
                         className={`font-medium flex items-center gap-1 ${
-                          run.improvementPercent > 0 ? "text-green-600" : "text-red-600"
+                          run.improvementPercent > 0
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {run.improvementPercent > 0 ? (
@@ -376,17 +413,26 @@ export function OptimizationHistory({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Started:</span>
-                      <span>{new Date(selectedRun.startTime).toLocaleString()}</span>
+                      <span>
+                        {new Date(selectedRun.startTime).toLocaleString()}
+                      </span>
                     </div>
                     {selectedRun.endTime && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Ended:</span>
-                        <span>{new Date(selectedRun.endTime).toLocaleString()}</span>
+                        <span>
+                          {new Date(selectedRun.endTime).toLocaleString()}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Duration:</span>
-                      <span>{formatDuration(selectedRun.startTime, selectedRun.endTime)}</span>
+                      <span>
+                        {formatDuration(
+                          selectedRun.startTime,
+                          selectedRun.endTime
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -396,15 +442,23 @@ export function OptimizationHistory({
                   <h4 className="font-medium mb-3">Performance</h4>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Best Score:</span>
-                      <span className="text-lg font-bold">{selectedRun.bestScore.toFixed(4)}</span>
+                      <span className="text-sm text-muted-foreground">
+                        Best Score:
+                      </span>
+                      <span className="text-lg font-bold">
+                        {selectedRun.bestScore.toFixed(4)}
+                      </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Improvement:</span>
+                      <span className="text-sm text-muted-foreground">
+                        Improvement:
+                      </span>
                       <span
                         className={`text-lg font-bold flex items-center gap-1 ${
-                          selectedRun.improvementPercent > 0 ? "text-green-600" : "text-red-600"
+                          selectedRun.improvementPercent > 0
+                            ? "text-green-600"
+                            : "text-red-600"
                         }`}
                       >
                         {selectedRun.improvementPercent > 0 ? (
@@ -419,12 +473,18 @@ export function OptimizationHistory({
                     {selectedRun.status === "running" && (
                       <div>
                         <div className="flex justify-between text-sm mb-1">
-                          <span className="text-muted-foreground">Progress:</span>
+                          <span className="text-muted-foreground">
+                            Progress:
+                          </span>
                           <span>
-                            {selectedRun.currentIteration}/{selectedRun.maxIterations}
+                            {selectedRun.currentIteration}/
+                            {selectedRun.maxIterations}
                           </span>
                         </div>
-                        <Progress value={selectedRun.progress} className="h-2" />
+                        <Progress
+                          value={selectedRun.progress}
+                          className="h-2"
+                        />
                       </div>
                     )}
                   </div>
@@ -436,19 +496,34 @@ export function OptimizationHistory({
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">CPU Usage:</span>
-                      <span>{selectedRun.metadata.resourceUsage.cpu.toFixed(1)}%</span>
+                      <span>
+                        {selectedRun.metadata.resourceUsage.cpu.toFixed(1)}%
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Memory Usage:</span>
-                      <span>{selectedRun.metadata.resourceUsage.memory.toFixed(1)} MB</span>
+                      <span className="text-muted-foreground">
+                        Memory Usage:
+                      </span>
+                      <span>
+                        {selectedRun.metadata.resourceUsage.memory.toFixed(1)}{" "}
+                        MB
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Evaluations:</span>
-                      <span>{selectedRun.metadata.totalEvaluations.toLocaleString()}</span>
+                      <span className="text-muted-foreground">
+                        Total Evaluations:
+                      </span>
+                      <span>
+                        {selectedRun.metadata.totalEvaluations.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Execution Time:</span>
-                      <span>{selectedRun.metadata.executionTime.toFixed(2)}s</span>
+                      <span className="text-muted-foreground">
+                        Execution Time:
+                      </span>
+                      <span>
+                        {selectedRun.metadata.executionTime.toFixed(2)}s
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -457,12 +532,14 @@ export function OptimizationHistory({
                 <div>
                   <h4 className="font-medium mb-3">Best Parameters</h4>
                   <div className="space-y-1">
-                    {Object.entries(selectedRun.parameters).map(([key, value]) => (
-                      <div key={key} className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{key}:</span>
-                        <span className="font-mono">{String(value)}</span>
-                      </div>
-                    ))}
+                    {Object.entries(selectedRun.parameters).map(
+                      ([key, value]) => (
+                        <div key={key} className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">{key}:</span>
+                          <span className="font-mono">{String(value)}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
 
@@ -474,7 +551,9 @@ export function OptimizationHistory({
                     ) : (
                       <Target className="h-4 w-4 text-yellow-600" />
                     )}
-                    <span className="font-medium text-sm">Convergence Status</span>
+                    <span className="font-medium text-sm">
+                      Convergence Status
+                    </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {selectedRun.metadata.convergenceReached

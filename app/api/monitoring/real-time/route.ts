@@ -2,11 +2,11 @@
  * Real-time Monitoring API - Minimal Implementation
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type') || 'all';
+  const type = searchParams.get("type") || "all";
 
   return NextResponse.json({
     success: true,
@@ -15,10 +15,10 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       type,
       systemStatus: {
-        overall: 'healthy',
+        overall: "healthy",
         uptime: process.uptime(),
         memory: { usage: 45 },
-        cpu: { usage: 25 }
+        cpu: { usage: 25 },
       },
       activeWorkflows: [],
       transactionLocks: { activeLocks: 0, totalLocks: 0 },
@@ -28,10 +28,10 @@ export async function GET(request: NextRequest) {
         systemLoad: 30,
         responseTime: 120,
         throughput: 750,
-        errorRate: 0.5
+        errorRate: 0.5,
       },
-      alerts: []
-    }
+      alerts: [],
+    },
   });
 }
 
@@ -43,14 +43,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Action '${action}' completed successfully`,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: "Action failed",
-      details: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Action failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
+    );
   }
 }

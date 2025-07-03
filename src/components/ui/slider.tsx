@@ -7,7 +7,7 @@
  * tuning and optimization interfaces.
  */
 
-import { ChangeEvent, forwardRef } from "react";
+import { type ChangeEvent, forwardRef } from "react";
 
 interface SliderProps {
   value?: number[];
@@ -21,7 +21,15 @@ interface SliderProps {
 
 const Slider = forwardRef<HTMLInputElement, SliderProps>(
   (
-    { value = [0], onValueChange, min = 0, max = 100, step = 1, disabled = false, className = "" },
+    {
+      value = [0],
+      onValueChange,
+      min = 0,
+      max = 100,
+      step = 1,
+      disabled = false,
+      className = "",
+    },
     ref
   ) => {
     const currentValue = value[0] || 0;

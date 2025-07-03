@@ -43,7 +43,7 @@ export type {
 export { WorkflowEngine } from "./workflow-engine";
 
 // Utility function to create a fully configured coordination system
-export async function createCoordinationSystem(options?: {
+export function createCoordinationSystem(options?: {
   healthCheckInterval?: number;
   performanceCollectionInterval?: number;
   maxHistorySize?: number;
@@ -53,41 +53,44 @@ export async function createCoordinationSystem(options?: {
   performanceCollector: import("./performance-collector").PerformanceCollector;
   orchestrator: import("./enhanced-orchestrator").EnhancedMexcOrchestrator;
 }> {
-  // Create agent registry
-  const { initializeGlobalAgentRegistry } = await import("./agent-registry");
-  const agentRegistry = initializeGlobalAgentRegistry({
-    healthCheckInterval: options?.healthCheckInterval || 30000,
-    maxHealthHistorySize: options?.maxHistorySize || 100,
-  });
+  // Use static imports to avoid webpack build issues
+  return Promise.resolve().then(() => {
+    // Create agent registry
+    const { initializeGlobalAgentRegistry } = require("./agent-registry");
+    const agentRegistry = initializeGlobalAgentRegistry({
+      healthCheckInterval: options?.healthCheckInterval || 30000,
+      maxHealthHistorySize: options?.maxHistorySize || 100,
+    });
 
-  // Create workflow engine
-  const workflowEngine = new (await import("./workflow-engine")).WorkflowEngine(agentRegistry);
+    // Create workflow engine
+    const { WorkflowEngine } = require("./workflow-engine");
+    const workflowEngine = new WorkflowEngine(agentRegistry);
 
-  // Create performance collector
-  const performanceCollector = new (await import("./performance-collector")).PerformanceCollector(
-    agentRegistry,
-    {
+    // Create performance collector
+    const { PerformanceCollector } = require("./performance-collector");
+    const performanceCollector = new PerformanceCollector(agentRegistry, {
       collectionInterval: options?.performanceCollectionInterval || 60000,
       maxHistorySize: options?.maxHistorySize || 1000,
-    }
-  );
+    });
 
-  // Create enhanced orchestrator
-  const orchestrator = new (await import("./enhanced-orchestrator")).EnhancedMexcOrchestrator(
-    agentRegistry,
-    workflowEngine,
-    performanceCollector
-  );
+    // Create enhanced orchestrator
+    const { EnhancedMexcOrchestrator } = require("./enhanced-orchestrator");
+    const orchestrator = new EnhancedMexcOrchestrator(
+      agentRegistry,
+      workflowEngine,
+      performanceCollector
+    );
 
-  // Note: Orchestrator initialization is now handled by the coordination manager
-  // to ensure proper timing with agent registration (prevents workflow validation warnings)
+    // Note: Orchestrator initialization is now handled by the coordination manager
+    // to ensure proper timing with agent registration (prevents workflow validation warnings)
 
-  return {
-    agentRegistry,
-    workflowEngine,
-    performanceCollector,
-    orchestrator,
-  };
+    return {
+      agentRegistry,
+      workflowEngine,
+      performanceCollector,
+      orchestrator,
+    };
+  });
 }
 
 // Utility function to register common agent types
@@ -117,14 +120,22 @@ export function registerCommonAgents(
       capabilities: ["market_data", "trading", "account_info"],
     });
 
-    agentRegistry.registerAgent("pattern-discovery", agentManager.getPatternDiscoveryAgent(), {
-      name: "Pattern Discovery Agent",
-      type: "analysis",
-      dependencies: ["mexc-api"],
-      priority: 8,
-      tags: ["core", "analysis", "pattern"],
-      capabilities: ["pattern_detection", "market_analysis", "signal_generation"],
-    });
+    agentRegistry.registerAgent(
+      "pattern-discovery",
+      agentManager.getPatternDiscoveryAgent(),
+      {
+        name: "Pattern Discovery Agent",
+        type: "analysis",
+        dependencies: ["mexc-api"],
+        priority: 8,
+        tags: ["core", "analysis", "pattern"],
+        capabilities: [
+          "pattern_detection",
+          "market_analysis",
+          "signal_generation",
+        ],
+      }
+    );
 
     agentRegistry.registerAgent("calendar", agentManager.getCalendarAgent(), {
       name: "Calendar Agent",
@@ -135,14 +146,22 @@ export function registerCommonAgents(
       capabilities: ["listing_discovery", "launch_timing", "market_analysis"],
     });
 
-    agentRegistry.registerAgent("symbol-analysis", agentManager.getSymbolAnalysisAgent(), {
-      name: "Symbol Analysis Agent",
-      type: "analysis",
-      dependencies: ["mexc-api", "pattern-discovery"],
-      priority: 8,
-      tags: ["core", "analysis", "symbol"],
-      capabilities: ["readiness_assessment", "risk_evaluation", "confidence_scoring"],
-    });
+    agentRegistry.registerAgent(
+      "symbol-analysis",
+      agentManager.getSymbolAnalysisAgent(),
+      {
+        name: "Symbol Analysis Agent",
+        type: "analysis",
+        dependencies: ["mexc-api", "pattern-discovery"],
+        priority: 8,
+        tags: ["core", "analysis", "symbol"],
+        capabilities: [
+          "readiness_assessment",
+          "risk_evaluation",
+          "confidence_scoring",
+        ],
+      }
+    );
 
     agentRegistry.registerAgent("strategy", agentManager.getStrategyAgent(), {
       name: "Strategy Agent",
@@ -154,41 +173,65 @@ export function registerCommonAgents(
     });
 
     // Register safety agents
-    agentRegistry.registerAgent("simulation", agentManager.getSimulationAgent(), {
-      name: "Simulation Agent",
-      type: "safety",
-      dependencies: [],
-      priority: 9,
-      tags: ["safety", "simulation", "testing"],
-      capabilities: ["trade_simulation", "backtesting", "risk_assessment"],
-    });
+    agentRegistry.registerAgent(
+      "simulation",
+      agentManager.getSimulationAgent(),
+      {
+        name: "Simulation Agent",
+        type: "safety",
+        dependencies: [],
+        priority: 9,
+        tags: ["safety", "simulation", "testing"],
+        capabilities: ["trade_simulation", "backtesting", "risk_assessment"],
+      }
+    );
 
-    agentRegistry.registerAgent("risk-manager", agentManager.getRiskManagerAgent(), {
-      name: "Risk Manager Agent",
-      type: "safety",
-      dependencies: ["simulation"],
-      priority: 10,
-      tags: ["safety", "risk", "management"],
-      capabilities: ["risk_monitoring", "position_limits", "stop_loss"],
-    });
+    agentRegistry.registerAgent(
+      "risk-manager",
+      agentManager.getRiskManagerAgent(),
+      {
+        name: "Risk Manager Agent",
+        type: "safety",
+        dependencies: ["simulation"],
+        priority: 10,
+        tags: ["safety", "risk", "management"],
+        capabilities: ["risk_monitoring", "position_limits", "stop_loss"],
+      }
+    );
 
-    agentRegistry.registerAgent("reconciliation", agentManager.getReconciliationAgent(), {
-      name: "Reconciliation Agent",
-      type: "safety",
-      dependencies: [],
-      priority: 5,
-      tags: ["safety", "reconciliation", "audit"],
-      capabilities: ["data_reconciliation", "trade_verification", "audit_trail"],
-    });
+    agentRegistry.registerAgent(
+      "reconciliation",
+      agentManager.getReconciliationAgent(),
+      {
+        name: "Reconciliation Agent",
+        type: "safety",
+        dependencies: [],
+        priority: 5,
+        tags: ["safety", "reconciliation", "audit"],
+        capabilities: [
+          "data_reconciliation",
+          "trade_verification",
+          "audit_trail",
+        ],
+      }
+    );
 
-    agentRegistry.registerAgent("error-recovery", agentManager.getErrorRecoveryAgent(), {
-      name: "Error Recovery Agent",
-      type: "safety",
-      dependencies: [],
-      priority: 9,
-      tags: ["safety", "recovery", "monitoring"],
-      capabilities: ["error_detection", "system_recovery", "health_monitoring"],
-    });
+    agentRegistry.registerAgent(
+      "error-recovery",
+      agentManager.getErrorRecoveryAgent(),
+      {
+        name: "Error Recovery Agent",
+        type: "safety",
+        dependencies: [],
+        priority: 9,
+        tags: ["safety", "recovery", "monitoring"],
+        capabilities: [
+          "error_detection",
+          "system_recovery",
+          "health_monitoring",
+        ],
+      }
+    );
 
     console.info("[Coordination] Registered 9 agents successfully");
   } catch (error) {
@@ -275,12 +318,15 @@ export async function checkCoordinationSystemHealth(components: {
     const registryStats = components.agentRegistry.getStats();
     const runningWorkflows = components.workflowEngine.getRunningWorkflows();
     const workflowHistory = components.workflowEngine.getExecutionHistory(100);
-    const performanceSummary = components.performanceCollector.getCurrentSummary();
+    const performanceSummary =
+      components.performanceCollector.getCurrentSummary();
     const orchestratorHealth = await components.orchestrator.healthCheck();
 
     // Determine overall health
     const healthyRatio =
-      registryStats.totalAgents > 0 ? registryStats.healthyAgents / registryStats.totalAgents : 0;
+      registryStats.totalAgents > 0
+        ? registryStats.healthyAgents / registryStats.totalAgents
+        : 0;
 
     let overall: "healthy" | "degraded" | "unhealthy";
     if (healthyRatio >= 0.8 && orchestratorHealth) {

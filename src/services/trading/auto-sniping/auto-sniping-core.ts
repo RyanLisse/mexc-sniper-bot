@@ -1,6 +1,6 @@
 /**
  * Auto-Sniping Core Module
- * 
+ *
  * Core auto-sniping functionality: start, stop, pause, resume, execute.
  * Extracted from large auto-sniping.ts for better maintainability.
  */
@@ -63,7 +63,7 @@ export class AutoSnipingCore {
   async initialize(): Promise<void> {
     await this.targetProcessor.initialize();
     await this.configManager.initialize();
-    console.log('AutoSnipingCore initialized');
+    console.log("AutoSnipingCore initialized");
   }
 
   async shutdown(): Promise<void> {
@@ -76,12 +76,12 @@ export class AutoSnipingCore {
     this.state.isPaused = false;
 
     await this.targetProcessor.shutdown();
-    console.log('AutoSnipingCore shutdown complete');
+    console.log("AutoSnipingCore shutdown complete");
   }
 
   async updateConfig(config: Partial<CoreTradingConfig>): Promise<void> {
     await this.configManager.updateConfig(config);
-    
+
     if (this.state.isActive && !this.state.isPaused) {
       await this.stop();
       await this.start();
@@ -94,7 +94,7 @@ export class AutoSnipingCore {
         return {
           success: true,
           data: undefined,
-          message: 'Auto-sniping already active',
+          message: "Auto-sniping already active",
           timestamp: new Date().toISOString(),
         };
       }
@@ -103,7 +103,7 @@ export class AutoSnipingCore {
       if (!config.autoSnipingEnabled) {
         return {
           success: false,
-          error: 'Auto-sniping is disabled in configuration',
+          error: "Auto-sniping is disabled in configuration",
           timestamp: new Date().toISOString(),
         };
       }
@@ -116,7 +116,7 @@ export class AutoSnipingCore {
         config.snipeCheckInterval || 30000
       );
 
-      console.log('Auto-sniping started', {
+      console.log("Auto-sniping started", {
         interval: config.snipeCheckInterval,
         enabled: config.autoSnipingEnabled,
       });
@@ -124,7 +124,7 @@ export class AutoSnipingCore {
       return {
         success: true,
         data: undefined,
-        message: 'Auto-sniping started successfully',
+        message: "Auto-sniping started successfully",
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -147,12 +147,12 @@ export class AutoSnipingCore {
       this.state.isActive = false;
       this.state.isPaused = false;
 
-      console.log('Auto-sniping stopped');
+      console.log("Auto-sniping stopped");
 
       return {
         success: true,
         data: undefined,
-        message: 'Auto-sniping stopped successfully',
+        message: "Auto-sniping stopped successfully",
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -169,7 +169,7 @@ export class AutoSnipingCore {
       if (!this.state.isActive) {
         return {
           success: false,
-          error: 'Auto-sniping is not active',
+          error: "Auto-sniping is not active",
           timestamp: new Date().toISOString(),
         };
       }
@@ -181,12 +181,12 @@ export class AutoSnipingCore {
 
       this.state.isPaused = true;
 
-      console.log('Auto-sniping paused');
+      console.log("Auto-sniping paused");
 
       return {
         success: true,
         data: undefined,
-        message: 'Auto-sniping paused successfully',
+        message: "Auto-sniping paused successfully",
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -208,7 +208,7 @@ export class AutoSnipingCore {
         return {
           success: true,
           data: undefined,
-          message: 'Auto-sniping is already running',
+          message: "Auto-sniping is already running",
           timestamp: new Date().toISOString(),
         };
       }
@@ -221,12 +221,12 @@ export class AutoSnipingCore {
         config.snipeCheckInterval || 30000
       );
 
-      console.log('Auto-sniping resumed');
+      console.log("Auto-sniping resumed");
 
       return {
         success: true,
         data: undefined,
-        message: 'Auto-sniping resumed successfully',
+        message: "Auto-sniping resumed successfully",
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -249,11 +249,13 @@ export class AutoSnipingCore {
     };
   }
 
-  async execute(): Promise<ServiceResponse<{ processedCount: number; successCount: number }>> {
+  async execute(): Promise<
+    ServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     if (!this.configManager.isReadyForTrading()) {
       return {
         success: false,
-        error: 'Auto-sniping module not ready for trading',
+        error: "Auto-sniping module not ready for trading",
         timestamp: new Date().toISOString(),
       };
     }
@@ -263,7 +265,7 @@ export class AutoSnipingCore {
 
   private async executeInternal(): Promise<void> {
     if (this.isExecuting) {
-      console.log('Previous execution still running, skipping this interval');
+      console.log("Previous execution still running, skipping this interval");
       return;
     }
 
@@ -272,14 +274,14 @@ export class AutoSnipingCore {
       this.state.lastExecution = new Date();
 
       const result = await this.execute();
-      
+
       if (result.success) {
-        console.log('Auto-sniping execution completed', result.data);
+        console.log("Auto-sniping execution completed", result.data);
       } else {
-        console.error('Auto-sniping execution failed:', result.error);
+        console.error("Auto-sniping execution failed:", result.error);
       }
     } catch (error) {
-      console.error('Auto-sniping execution error:', error);
+      console.error("Auto-sniping execution error:", error);
     } finally {
       this.isExecuting = false;
     }
@@ -289,7 +291,9 @@ export class AutoSnipingCore {
     return this.isExecuting;
   }
 
-  async processTarget(target: AutoSnipeTarget): Promise<ServiceResponse<TradeResult>> {
+  async processTarget(
+    target: AutoSnipeTarget
+  ): Promise<ServiceResponse<TradeResult>> {
     return await this.targetProcessor.processTarget(target);
   }
 }

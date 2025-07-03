@@ -58,7 +58,9 @@ export class EmbeddingsService {
    * Generate pattern embedding
    */
   async generatePatternEmbedding(patternData: any): Promise<PatternEmbedding> {
-    const embedding = await this.generateCohereEmbedding(JSON.stringify(patternData));
+    const embedding = await this.generateCohereEmbedding(
+      JSON.stringify(patternData)
+    );
 
     return {
       patternId: patternData?.id || `pattern_${Date.now()}`,
@@ -80,7 +82,8 @@ export class EmbeddingsService {
       "data-driven",
     ];
 
-    const enhancement = enhancements[Math.floor(Math.random() * enhancements.length)];
+    const enhancement =
+      enhancements[Math.floor(Math.random() * enhancements.length)];
     return `${enhancement} ${description}`;
   }
 

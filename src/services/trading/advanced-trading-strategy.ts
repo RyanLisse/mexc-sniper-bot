@@ -1,8 +1,11 @@
-import { PriceMultiplier, TradingStrategy, TradingStrategyManager } from './trading-strategy-manager';
+import {
+  type TradingStrategy,
+  TradingStrategyManager,
+} from "./trading-strategy-manager";
 
 /**
  * ADVANCED TRADING STRATEGY
- * 
+ *
  * Extends the basic TradingStrategyManager with advanced features:
  * - Volatility-based strategy adjustments
  * - Trailing stop loss calculations
@@ -11,7 +14,7 @@ import { PriceMultiplier, TradingStrategy, TradingStrategyManager } from './trad
  * - Advanced risk tolerance management
  */
 
-export type RiskLevel = 'low' | 'medium' | 'high';
+export type RiskLevel = "low" | "medium" | "high";
 
 export interface RiskAssessment {
   riskLevel: RiskLevel;
@@ -42,14 +45,14 @@ export class AdvancedTradingStrategy {
   private baseStrategy: TradingStrategy;
   private adjustedStrategy: TradingStrategy;
 
-  // Risk tolerance percentages 
+  // Risk tolerance percentages
   private readonly RISK_TOLERANCES = {
-    low: 2,    // 2% risk  
-    medium: 5, // 5% risk  
-    high: 10   // 10% risk
+    low: 2, // 2% risk
+    medium: 5, // 5% risk
+    high: 10, // 10% risk
   };
 
-  constructor(initialStrategy = 'normal') {
+  constructor(initialStrategy = "normal") {
     this.strategyManager = new TradingStrategyManager(initialStrategy);
     this.baseStrategy = this.strategyManager.getActiveStrategy();
     this.adjustedStrategy = { ...this.baseStrategy };
@@ -69,7 +72,7 @@ export class AdvancedTradingStrategy {
   adjustStrategyForVolatility(volatilityIndex: number): void {
     // Clamp volatility index between 0 and 1
     const clampedVolatility = Math.max(0, Math.min(1, volatilityIndex));
-    
+
     // Don't adjust for normal volatility (exactly 0.5)
     if (clampedVolatility === 0.5) {
       this.adjustedStrategy = { ...this.baseStrategy };
@@ -89,11 +92,14 @@ export class AdvancedTradingStrategy {
     // Apply adjustment to strategy levels
     this.adjustedStrategy = {
       ...this.baseStrategy,
-      levels: this.baseStrategy.levels.map(level => ({
+      levels: this.baseStrategy.levels.map((level) => ({
         ...level,
         percentage: Math.max(5, level.percentage * this.volatilityAdjustment),
-        multiplier: Math.max(1.05, 1 + (level.multiplier - 1) * this.volatilityAdjustment)
-      }))
+        multiplier: Math.max(
+          1.05,
+          1 + (level.multiplier - 1) * this.volatilityAdjustment
+        ),
+      })),
     };
   }
 
@@ -104,8 +110,17 @@ export class AdvancedTradingStrategy {
    * @param trailPercentage - Trailing percentage (0-1)
    * @returns Stop loss price
    */
-  calculateTrailingStopLoss(currentPrice: number, entryPrice: number, trailPercentage: number): number {
-    if (currentPrice <= 0 || entryPrice <= 0 || trailPercentage < 0 || trailPercentage > 1) {
+  calculateTrailingStopLoss(
+    currentPrice: number,
+    entryPrice: number,
+    trailPercentage: number
+  ): number {
+    if (
+      currentPrice <= 0 ||
+      entryPrice <= 0 ||
+      trailPercentage < 0 ||
+      trailPercentage > 1
+    ) {
       return currentPrice;
     }
 
@@ -116,12 +131,12 @@ export class AdvancedTradingStrategy {
 
     // Calculate trailing stop loss
     const stopLoss = currentPrice * (1 - trailPercentage);
-    
+
     // Handle 100% trailing case
     if (trailPercentage === 1) {
       return 0;
     }
-    
+
     // Ensure stop loss is not below entry price
     return Math.max(stopLoss, entryPrice);
   }
@@ -133,12 +148,16 @@ export class AdvancedTradingStrategy {
    * @param amount - Position value in dollars (for test compatibility)
    * @returns Risk assessment
    */
-  assessRisk(capital: number, entryPrice: number, amount: number): RiskAssessment {
+  assessRisk(
+    capital: number,
+    _entryPrice: number,
+    amount: number
+  ): RiskAssessment {
     if (capital <= 0) {
       return {
-        riskLevel: 'high',
+        riskLevel: "high",
         positionRisk: Infinity,
-        recommendation: 'Invalid capital amount'
+        recommendation: "Invalid capital amount",
       };
     }
 
@@ -149,21 +168,26 @@ export class AdvancedTradingStrategy {
     let riskLevel: RiskLevel;
     let recommendation: string;
 
-    if (positionRisk <= 3) { // 3%
-      riskLevel = 'low';
-      recommendation = 'Low risk - position size is appropriate for conservative trading';
-    } else if (positionRisk <= 10) { // 10%  
-      riskLevel = 'medium';
-      recommendation = 'Medium risk - moderate risk level, monitor position closely';
+    if (positionRisk <= 3) {
+      // 3%
+      riskLevel = "low";
+      recommendation =
+        "Low risk - position size is appropriate for conservative trading";
+    } else if (positionRisk <= 10) {
+      // 10%
+      riskLevel = "medium";
+      recommendation =
+        "Medium risk - moderate risk level, monitor position closely";
     } else {
-      riskLevel = 'high';
-      recommendation = 'High risk - position size may be too large, consider reducing';
+      riskLevel = "high";
+      recommendation =
+        "High risk - position size may be too large, consider reducing";
     }
 
     return {
       riskLevel,
       positionRisk,
-      recommendation
+      recommendation,
     };
   }
 
@@ -175,29 +199,32 @@ export class AdvancedTradingStrategy {
    * @returns Position size recommendation
    */
   calculateOptimalPositionSize(
-    capital: number, 
-    riskTolerance: RiskLevel, 
+    capital: number,
+    riskTolerance: RiskLevel,
     entryPrice: number
   ): PositionSizeRecommendation {
     const riskPercentage = this.RISK_TOLERANCES[riskTolerance];
     const maxRiskAmount = capital * (riskPercentage / 100);
-    
+
     if (capital <= 0 || entryPrice <= 0) {
       return {
         recommendedAmount: 0,
         maxRiskAmount,
-        riskPercentage
+        riskPercentage,
       };
     }
 
     // Calculate based on test expectations (amount appears to be 10x the risk percentage)
-    const multiplier = riskTolerance === 'low' ? 10 : riskTolerance === 'medium' ? 10 : 10;
-    const recommendedAmount = Math.floor((maxRiskAmount * multiplier) / entryPrice);
+    const multiplier =
+      riskTolerance === "low" ? 10 : riskTolerance === "medium" ? 10 : 10;
+    const recommendedAmount = Math.floor(
+      (maxRiskAmount * multiplier) / entryPrice
+    );
 
     return {
       recommendedAmount,
       maxRiskAmount,
-      riskPercentage
+      riskPercentage,
     };
   }
 
@@ -207,12 +234,15 @@ export class AdvancedTradingStrategy {
    * @param entryPrice - Original entry price
    * @returns Sell recommendation
    */
-  getSellRecommendation(currentPrice: number, entryPrice: number): SellRecommendation {
+  getSellRecommendation(
+    currentPrice: number,
+    entryPrice: number
+  ): SellRecommendation {
     if (entryPrice <= 0 || currentPrice <= 0) {
       return {
         shouldSell: false,
         phases: [],
-        totalExpectedProfit: 0
+        totalExpectedProfit: 0,
       };
     }
 
@@ -226,13 +256,14 @@ export class AdvancedTradingStrategy {
 
     this.adjustedStrategy.levels.forEach((level, index) => {
       if (priceIncrease >= level.percentage) {
-        const expectedProfit = (currentPrice - entryPrice) * (level.sellPercentage / 100);
+        const expectedProfit =
+          (currentPrice - entryPrice) * (level.sellPercentage / 100);
 
         triggeredPhases.push({
           phase: index + 1,
           percentage: level.percentage,
           sellPercentage: level.sellPercentage,
-          expectedProfit
+          expectedProfit,
         });
       }
     });
@@ -245,7 +276,7 @@ export class AdvancedTradingStrategy {
     return {
       shouldSell: triggeredPhases.length > 0,
       phases: triggeredPhases,
-      totalExpectedProfit
+      totalExpectedProfit,
     };
   }
 
@@ -255,7 +286,7 @@ export class AdvancedTradingStrategy {
    * @returns Strategy configuration
    */
   exportStrategy(strategyId: string): TradingStrategy | null {
-    if (strategyId === 'normal') {
+    if (strategyId === "normal") {
       return this.adjustedStrategy;
     }
     return this.strategyManager.exportStrategy(strategyId);

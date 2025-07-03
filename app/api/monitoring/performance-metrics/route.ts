@@ -1,36 +1,55 @@
 import { desc, gte, sql } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { executionHistory, patternEmbeddings, workflowActivity } from "@/src/db/schema";
+import {
+  executionHistory,
+  patternEmbeddings,
+  workflowActivity,
+} from "@/src/db/schema";
 import { AgentManager } from "@/src/mexc-agents/agent-manager";
 // Build-safe imports
 import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 
 // Simple console logger to avoid webpack bundling issues
 const logger = {
-  info: (message: string, context?: any) => console.info('[performance-metrics]', message, context || ''),
-  warn: (message: string, context?: any) => console.warn('[performance-metrics]', message, context || ''),
-  error: (message: string, context?: any) => console.error('[performance-metrics]', message, context || ''),
-  debug: (message: string, context?: any) => console.debug('[performance-metrics]', message, context || ''),
+  info: (message: string, context?: any) =>
+    console.info("[performance-metrics]", message, context || ""),
+  warn: (message: string, context?: any) =>
+    console.warn("[performance-metrics]", message, context || ""),
+  error: (message: string, context?: any) =>
+    console.error("[performance-metrics]", message, context || ""),
+  debug: (message: string, context?: any) =>
+    console.debug("[performance-metrics]", message, context || ""),
 };
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Build-safe initialization with try-catch to prevent webpack issues
-    let orchestrator, agentManager;
+    let orchestrator, _agentManager;
     try {
       orchestrator = new MexcOrchestrator({ useEnhancedCoordination: true });
-      agentManager = new AgentManager();
+      _agentManager = new AgentManager();
     } catch (initError) {
-      logger.warn('Failed to initialize orchestrator/agent manager, using fallback', { initError });
+      logger.warn(
+        "Failed to initialize orchestrator/agent manager, using fallback",
+        { initError }
+      );
       // Return minimal response if initialization fails during build
       return NextResponse.json({
         timestamp: new Date().toISOString(),
-        orchestrationMetrics: { totalExecutions: 0, successRate: 0, errorRate: 0, averageDuration: 0 },
+        orchestrationMetrics: {
+          totalExecutions: 0,
+          successRate: 0,
+          errorRate: 0,
+          averageDuration: 0,
+        },
         agentPerformance: { core: {}, safety: {}, overall: { totalAgents: 0 } },
-        patternDiscoveryAnalytics: { patternsDetected: 0, averageConfidence: 0 },
+        patternDiscoveryAnalytics: {
+          patternsDetected: 0,
+          averageConfidence: 0,
+        },
         systemPerformance: { cpuUsage: {}, memoryUsage: {} },
-        recentActivity: { executions: [], trends: [], alerts: [] }
+        recentActivity: { executions: [], trends: [], alerts: [] },
       });
     }
 
@@ -41,90 +60,90 @@ export async function GET(request: NextRequest) {
       recentExecutions,
       patternStats,
       workflowStats,
-      systemMetrics
+      systemMetrics,
     ] = await Promise.all([
       Promise.resolve(orchestrator.getOrchestrationMetrics()),
       Promise.resolve(orchestrator.getAgentSummary()),
       getRecentExecutions(),
       getPatternAnalyticsMetrics(),
       getWorkflowMetrics(),
-      getSystemPerformanceMetrics()
+      getSystemPerformanceMetrics(),
     ]);
 
     // Calculate agent-specific performance metrics
     const agentPerformanceMetrics = {
       mexcApiAgent: {
-        responseTime: await calculateAgentResponseTime('mexc-api'),
-        successRate: await calculateAgentSuccessRate('mexc-api'),
-        cacheHitRate: await calculateCacheHitRate('mexc-api'),
-        apiCallsPerMinute: await calculateApiCallsPerMinute('mexc-api'),
-        errorRate: await calculateAgentErrorRate('mexc-api'),
-        lastActivity: await getLastAgentActivity('mexc-api')
+        responseTime: await calculateAgentResponseTime("mexc-api"),
+        successRate: await calculateAgentSuccessRate("mexc-api"),
+        cacheHitRate: await calculateCacheHitRate("mexc-api"),
+        apiCallsPerMinute: await calculateApiCallsPerMinute("mexc-api"),
+        errorRate: await calculateAgentErrorRate("mexc-api"),
+        lastActivity: await getLastAgentActivity("mexc-api"),
       },
       patternDiscoveryAgent: {
-        responseTime: await calculateAgentResponseTime('pattern-discovery'),
-        successRate: await calculateAgentSuccessRate('pattern-discovery'),
-        cacheHitRate: await calculateCacheHitRate('pattern-discovery'),
+        responseTime: await calculateAgentResponseTime("pattern-discovery"),
+        successRate: await calculateAgentSuccessRate("pattern-discovery"),
+        cacheHitRate: await calculateCacheHitRate("pattern-discovery"),
         patternsDiscovered: await getPatternsDiscoveredCount(),
         confidenceScore: await getAverageConfidenceScore(),
-        lastActivity: await getLastAgentActivity('pattern-discovery')
+        lastActivity: await getLastAgentActivity("pattern-discovery"),
       },
       calendarAgent: {
-        responseTime: await calculateAgentResponseTime('calendar'),
-        successRate: await calculateAgentSuccessRate('calendar'),
-        cacheHitRate: await calculateCacheHitRate('calendar'),
+        responseTime: await calculateAgentResponseTime("calendar"),
+        successRate: await calculateAgentSuccessRate("calendar"),
+        cacheHitRate: await calculateCacheHitRate("calendar"),
         coinsDiscovered: await getCoinsDiscoveredCount(),
         advanceDetectionTime: await getAverageAdvanceDetectionTime(),
-        lastActivity: await getLastAgentActivity('calendar')
+        lastActivity: await getLastAgentActivity("calendar"),
       },
       symbolAnalysisAgent: {
-        responseTime: await calculateAgentResponseTime('symbol-analysis'),
-        successRate: await calculateAgentSuccessRate('symbol-analysis'),
-        cacheHitRate: await calculateCacheHitRate('symbol-analysis'),
+        responseTime: await calculateAgentResponseTime("symbol-analysis"),
+        successRate: await calculateAgentSuccessRate("symbol-analysis"),
+        cacheHitRate: await calculateCacheHitRate("symbol-analysis"),
         symbolsAnalyzed: await getSymbolsAnalyzedCount(),
         readyStateDetections: await getReadyStateDetectionCount(),
-        lastActivity: await getLastAgentActivity('symbol-analysis')
+        lastActivity: await getLastAgentActivity("symbol-analysis"),
       },
       strategyAgent: {
-        responseTime: await calculateAgentResponseTime('strategy'),
-        successRate: await calculateAgentSuccessRate('strategy'),
-        cacheHitRate: await calculateCacheHitRate('strategy'),
+        responseTime: await calculateAgentResponseTime("strategy"),
+        successRate: await calculateAgentSuccessRate("strategy"),
+        cacheHitRate: await calculateCacheHitRate("strategy"),
         strategiesCreated: await getStrategiesCreatedCount(),
         averageRiskScore: await getAverageStrategyRiskScore(),
-        lastActivity: await getLastAgentActivity('strategy')
-      }
+        lastActivity: await getLastAgentActivity("strategy"),
+      },
     };
 
     // Calculate safety agent metrics
     const safetyAgentMetrics = {
       simulationAgent: {
-        responseTime: await calculateAgentResponseTime('simulation'),
-        successRate: await calculateAgentSuccessRate('simulation'),
+        responseTime: await calculateAgentResponseTime("simulation"),
+        successRate: await calculateAgentSuccessRate("simulation"),
         simulationsRun: await getSimulationsRunCount(),
         averageAccuracy: await getSimulationAccuracy(),
-        lastActivity: await getLastAgentActivity('simulation')
+        lastActivity: await getLastAgentActivity("simulation"),
       },
       riskManagerAgent: {
-        responseTime: await calculateAgentResponseTime('risk-manager'),
-        successRate: await calculateAgentSuccessRate('risk-manager'),
+        responseTime: await calculateAgentResponseTime("risk-manager"),
+        successRate: await calculateAgentSuccessRate("risk-manager"),
         riskAssessments: await getRiskAssessmentsCount(),
         circuitBreakerActivations: await getCircuitBreakerActivations(),
-        lastActivity: await getLastAgentActivity('risk-manager')
+        lastActivity: await getLastAgentActivity("risk-manager"),
       },
       reconciliationAgent: {
-        responseTime: await calculateAgentResponseTime('reconciliation'),
-        successRate: await calculateAgentSuccessRate('reconciliation'),
+        responseTime: await calculateAgentResponseTime("reconciliation"),
+        successRate: await calculateAgentSuccessRate("reconciliation"),
         reconciliationsPerformed: await getReconciliationsCount(),
         discrepanciesFound: await getDiscrepanciesFound(),
-        lastActivity: await getLastAgentActivity('reconciliation')
+        lastActivity: await getLastAgentActivity("reconciliation"),
       },
       errorRecoveryAgent: {
-        responseTime: await calculateAgentResponseTime('error-recovery'),
-        successRate: await calculateAgentSuccessRate('error-recovery'),
+        responseTime: await calculateAgentResponseTime("error-recovery"),
+        successRate: await calculateAgentSuccessRate("error-recovery"),
         errorsRecovered: await getErrorsRecoveredCount(),
         systemResets: await getSystemResetsCount(),
-        lastActivity: await getLastAgentActivity('error-recovery')
-      }
+        lastActivity: await getLastAgentActivity("error-recovery"),
+      },
     };
 
     const response = {
@@ -136,7 +155,7 @@ export async function GET(request: NextRequest) {
         averageDuration: orchestrationMetrics.averageDuration,
         executionsPerHour: await calculateExecutionsPerHour(),
         workflowDistribution: workflowStats.distribution,
-        peakPerformanceHours: await getPeakPerformanceHours()
+        peakPerformanceHours: await getPeakPerformanceHours(),
       },
       agentPerformance: {
         core: agentPerformanceMetrics,
@@ -146,8 +165,8 @@ export async function GET(request: NextRequest) {
           healthyAgents: await getHealthyAgentsCount(),
           averageResponseTime: await calculateOverallAverageResponseTime(),
           totalCacheHitRate: await calculateOverallCacheHitRate(),
-          totalApiCalls: await getTotalApiCallsCount()
-        }
+          totalApiCalls: await getTotalApiCallsCount(),
+        },
       },
       patternDiscoveryAnalytics: {
         patternsDetected: patternStats.total,
@@ -157,8 +176,8 @@ export async function GET(request: NextRequest) {
         advanceDetectionMetrics: {
           averageAdvanceTime: await getAverageAdvanceDetectionTime(),
           optimalAdvanceTime: 3.5, // 3.5+ hours target
-          detectionAccuracy: await getAdvanceDetectionAccuracy()
-        }
+          detectionAccuracy: await getAdvanceDetectionAccuracy(),
+        },
       },
       systemPerformance: {
         cpuUsage: systemMetrics.cpu,
@@ -166,28 +185,28 @@ export async function GET(request: NextRequest) {
         databasePerformance: {
           queryTime: systemMetrics.database.averageQueryTime,
           connectionPool: systemMetrics.database.connectionPoolUsage,
-          slowQueries: systemMetrics.database.slowQueries
+          slowQueries: systemMetrics.database.slowQueries,
         },
         networkMetrics: {
           apiLatency: systemMetrics.network.apiLatency,
           websocketConnections: systemMetrics.network.websocketConnections,
-          throughput: systemMetrics.network.throughput
-        }
+          throughput: systemMetrics.network.throughput,
+        },
       },
       recentActivity: {
         executions: recentExecutions,
         trends: await getPerformanceTrends(),
-        alerts: await getPerformanceAlerts()
-      }
+        alerts: await getPerformanceAlerts(),
+      },
     };
 
     return NextResponse.json(response);
   } catch (error) {
     logger.error("[Monitoring API] Performance metrics failed:", { error });
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch performance metrics",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -200,17 +219,22 @@ async function getRecentExecutions() {
     const executions = await db
       .select()
       .from(executionHistory)
-      .where(gte(executionHistory.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)))
+      .where(
+        gte(
+          executionHistory.createdAt,
+          new Date(Date.now() - 24 * 60 * 60 * 1000)
+        )
+      )
       .orderBy(desc(executionHistory.createdAt))
       .limit(50);
-    
+
     return executions.map((exec: any) => ({
       id: exec.id,
       type: (exec as any).executionType || exec.action,
       status: exec.status,
       duration: (exec as any).executionTime || 0,
       timestamp: exec.createdAt,
-      agentUsed: (exec as any).agentId || 'unknown'
+      agentUsed: (exec as any).agentId || "unknown",
     }));
   } catch (error) {
     logger.error("Error fetching recent executions:", { error });
@@ -227,22 +251,32 @@ async function getPatternAnalyticsMetrics() {
         successful: sql<number>`count(*) filter (where ${patternEmbeddings.isActive} = true)`,
       })
       .from(patternEmbeddings)
-      .where(gte(patternEmbeddings.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)));
+      .where(
+        gte(
+          patternEmbeddings.createdAt,
+          new Date(Date.now() - 24 * 60 * 60 * 1000)
+        )
+      );
 
     const types = await db
       .select({
         type: patternEmbeddings.patternType,
-        count: sql<number>`count(*)`
+        count: sql<number>`count(*)`,
       })
       .from(patternEmbeddings)
-      .where(gte(patternEmbeddings.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)))
+      .where(
+        gte(
+          patternEmbeddings.createdAt,
+          new Date(Date.now() - 24 * 60 * 60 * 1000)
+        )
+      )
       .groupBy(patternEmbeddings.patternType);
 
     return {
       total: result[0]?.total || 0,
       averageConfidence: result[0]?.averageConfidence || 0,
       successful: result[0]?.successful || 0,
-      types: types.map((t: any) => ({ type: t.type, count: t.count }))
+      types: types.map((t: any) => ({ type: t.type, count: t.count })),
     };
   } catch (error) {
     logger.error("Error fetching pattern analytics:", { error });
@@ -255,14 +289,22 @@ async function getWorkflowMetrics() {
     const distribution = await db
       .select({
         workflowType: workflowActivity.type,
-        count: sql<number>`count(*)`
+        count: sql<number>`count(*)`,
       })
       .from(workflowActivity)
-      .where(gte(workflowActivity.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)))
+      .where(
+        gte(
+          workflowActivity.createdAt,
+          new Date(Date.now() - 24 * 60 * 60 * 1000)
+        )
+      )
       .groupBy(workflowActivity.type);
 
     return {
-      distribution: distribution.map((d: any) => ({ type: d.workflowType, count: d.count }))
+      distribution: distribution.map((d: any) => ({
+        type: d.workflowType,
+        count: d.count,
+      })),
     };
   } catch (error) {
     logger.error("Error fetching workflow metrics:", { error });
@@ -272,52 +314,52 @@ async function getWorkflowMetrics() {
 
 async function getSystemPerformanceMetrics() {
   const memoryUsage = process.memoryUsage();
-  
+
   return {
     cpu: process.cpuUsage(),
     memory: {
       used: memoryUsage.heapUsed,
       total: memoryUsage.heapTotal,
-      usage: (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100
+      usage: (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100,
     },
     database: {
       averageQueryTime: Math.random() * 50 + 10, // Mock data - replace with real metrics
       connectionPoolUsage: Math.random() * 80 + 10,
-      slowQueries: Math.floor(Math.random() * 5)
+      slowQueries: Math.floor(Math.random() * 5),
     },
     network: {
       apiLatency: Math.random() * 200 + 50,
       websocketConnections: Math.floor(Math.random() * 100 + 50),
-      throughput: Math.random() * 1000 + 500
-    }
+      throughput: Math.random() * 1000 + 500,
+    },
   };
 }
 
 // Agent-specific metric calculation functions
-async function calculateAgentResponseTime(agentType: string): Promise<number> {
+async function calculateAgentResponseTime(_agentType: string): Promise<number> {
   // Mock implementation - replace with actual cache/metrics data
   return Math.random() * 1000 + 100;
 }
 
-async function calculateAgentSuccessRate(agentType: string): Promise<number> {
+async function calculateAgentSuccessRate(_agentType: string): Promise<number> {
   // Mock implementation - replace with actual metrics
   return Math.random() * 20 + 80;
 }
 
-async function calculateCacheHitRate(agentType: string): Promise<number> {
+async function calculateCacheHitRate(_agentType: string): Promise<number> {
   // Mock implementation - replace with actual cache metrics
   return Math.random() * 30 + 70;
 }
 
-async function calculateApiCallsPerMinute(agentType: string): Promise<number> {
+async function calculateApiCallsPerMinute(_agentType: string): Promise<number> {
   return Math.floor(Math.random() * 50 + 10);
 }
 
-async function calculateAgentErrorRate(agentType: string): Promise<number> {
+async function calculateAgentErrorRate(_agentType: string): Promise<number> {
   return Math.random() * 10;
 }
 
-async function getLastAgentActivity(agentType: string): Promise<string> {
+async function getLastAgentActivity(_agentType: string): Promise<string> {
   return new Date(Date.now() - Math.random() * 3600000).toISOString();
 }
 
@@ -327,7 +369,12 @@ async function getPatternsDiscoveredCount(): Promise<number> {
     const result = await db
       .select({ count: sql<number>`count(*)` })
       .from(patternEmbeddings)
-      .where(gte(patternEmbeddings.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)));
+      .where(
+        gte(
+          patternEmbeddings.createdAt,
+          new Date(Date.now() - 24 * 60 * 60 * 1000)
+        )
+      );
     return result[0]?.count || 0;
   } catch {
     return 0;
@@ -339,7 +386,12 @@ async function getAverageConfidenceScore(): Promise<number> {
     const result = await db
       .select({ avg: sql<number>`avg(${patternEmbeddings.confidence})` })
       .from(patternEmbeddings)
-      .where(gte(patternEmbeddings.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)));
+      .where(
+        gte(
+          patternEmbeddings.createdAt,
+          new Date(Date.now() - 24 * 60 * 60 * 1000)
+        )
+      );
     return result[0]?.avg || 0;
   } catch {
     return 0;
@@ -407,7 +459,7 @@ async function calculateExecutionsPerHour(): Promise<number> {
 }
 
 async function getPeakPerformanceHours(): Promise<string[]> {
-  return ['09:00-11:00', '14:00-16:00', '20:00-22:00'];
+  return ["09:00-11:00", "14:00-16:00", "20:00-22:00"];
 }
 
 async function getHealthyAgentsCount(): Promise<number> {
@@ -432,18 +484,18 @@ async function getAdvanceDetectionAccuracy(): Promise<number> {
 
 async function getPerformanceTrends(): Promise<any[]> {
   return [
-    { metric: 'responseTime', trend: 'improving', change: -5.2 },
-    { metric: 'successRate', trend: 'stable', change: 0.1 },
-    { metric: 'cacheHitRate', trend: 'improving', change: 3.1 }
+    { metric: "responseTime", trend: "improving", change: -5.2 },
+    { metric: "successRate", trend: "stable", change: 0.1 },
+    { metric: "cacheHitRate", trend: "improving", change: 3.1 },
   ];
 }
 
 async function getPerformanceAlerts(): Promise<any[]> {
   return [
-    { 
-      level: 'warning', 
-      message: 'Pattern discovery agent response time increased by 15%',
-      timestamp: new Date(Date.now() - 1800000).toISOString()
-    }
+    {
+      level: "warning",
+      message: "Pattern discovery agent response time increased by 15%",
+      timestamp: new Date(Date.now() - 1800000).toISOString(),
+    },
   ];
 }

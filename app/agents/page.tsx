@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { OptimizedAgentsDashboard } from "@/src/components/optimized-agents-dashboard";
 

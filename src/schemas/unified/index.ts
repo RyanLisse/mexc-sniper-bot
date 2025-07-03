@@ -307,7 +307,8 @@ export function validateData<T>(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown validation error",
+      error:
+        error instanceof Error ? error.message : "Unknown validation error",
     };
   }
 }

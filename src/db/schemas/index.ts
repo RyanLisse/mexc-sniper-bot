@@ -26,6 +26,11 @@ import * as strategiesTables from "./strategies";
 import * as tradingTables from "./trading";
 import * as workflowTables from "./workflows";
 
+// Common table aliases for backward compatibility
+// Note: For Supabase databases, 'users' is exported directly from supabase-auth schema
+// For non-Supabase databases, we create an alias to the 'user' table from auth schema
+export const users = authTables.user; // Plural alias for user table
+
 // Grouped exports by domain
 export const auth = authTables;
 export const trading = tradingTables;

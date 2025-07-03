@@ -9,7 +9,13 @@
 export { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 export { Badge } from "./badge";
 export { Button } from "./button";
-export { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
+export {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./card";
 // Dialog components
 export {
   Dialog,

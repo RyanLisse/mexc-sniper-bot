@@ -28,7 +28,13 @@ export interface EmergencyLevel {
 
 export interface EmergencyAction {
   id: string;
-  type: "halt_trading" | "close_positions" | "reduce_exposure" | "notify_operators" | "system_shutdown" | "market_maker_pause";
+  type:
+    | "halt_trading"
+    | "close_positions"
+    | "reduce_exposure"
+    | "notify_operators"
+    | "system_shutdown"
+    | "market_maker_pause";
   priority: number;
   description: string;
   timeout: number;
@@ -79,7 +85,13 @@ export interface EmergencySession {
     message: string;
     status: "sent" | "delivered" | "failed";
   }>;
-  status: "active" | "escalating" | "de-escalating" | "resolving" | "resolved" | "failed";
+  status:
+    | "active"
+    | "escalating"
+    | "de-escalating"
+    | "resolving"
+    | "resolved"
+    | "failed";
   resolution?: {
     timestamp: string;
     method: "automatic" | "manual";
@@ -141,11 +153,11 @@ class EmergencyOperationUtils {
 
     try {
       logger.info(`Starting ${operationName}`, context);
-      
+
       const result = await operation();
-      
+
       const duration = timer.end({ status: "success", ...context });
-      
+
       logger.info(`${operationName} completed`, {
         ...context,
         duration,
@@ -162,7 +174,7 @@ class EmergencyOperationUtils {
       return result;
     } catch (error) {
       const duration = timer.end({ status: "failed" });
-      
+
       logger.error(
         `${operationName} failed`,
         {
@@ -177,7 +189,10 @@ class EmergencyOperationUtils {
     }
   }
 
-  static validateSessionExists(sessionId: string, activeSessions: Map<string, EmergencySession>): EmergencySession {
+  static validateSessionExists(
+    sessionId: string,
+    activeSessions: Map<string, EmergencySession>
+  ): EmergencySession {
     const session = activeSessions.get(sessionId);
     if (!session) {
       throw new Error(`Emergency session not found: ${sessionId}`);
@@ -185,7 +200,10 @@ class EmergencyOperationUtils {
     return session;
   }
 
-  static validateProtocolExists(protocolId: string, protocols: Map<string, EmergencyProtocol>): EmergencyProtocol {
+  static validateProtocolExists(
+    protocolId: string,
+    protocols: Map<string, EmergencyProtocol>
+  ): EmergencyProtocol {
     const protocol = protocols.get(protocolId);
     if (!protocol) {
       throw new Error(`Emergency protocol not found: ${protocolId}`);
@@ -238,7 +256,9 @@ class EmergencySessionUtils {
     status: "pending" | "executing" | "completed" | "failed",
     error?: string
   ): void {
-    const existing = session.executedActions.find(a => a.actionId === actionId);
+    const existing = session.executedActions.find(
+      (a) => a.actionId === actionId
+    );
     if (existing) {
       existing.status = status;
       existing.endTime = new Date().toISOString();
@@ -248,7 +268,9 @@ class EmergencySessionUtils {
         actionId,
         startTime: new Date().toISOString(),
         status,
-        ...(status === "completed" || status === "failed" ? { endTime: new Date().toISOString() } : {}),
+        ...(status === "completed" || status === "failed"
+          ? { endTime: new Date().toISOString() }
+          : {}),
         ...(error ? { error } : {}),
       });
     }
@@ -277,7 +299,10 @@ class EmergencyProtocolUtils {
     };
   }
 
-  static validateProtocols(protocols: Map<string, EmergencyProtocol>, logger: any): void {
+  static validateProtocols(
+    protocols: Map<string, EmergencyProtocol>,
+    logger: any
+  ): void {
     logger.info("Validating emergency protocols", {
       protocolCount: protocols.size,
     });
@@ -300,7 +325,9 @@ class EmergencyProtocolUtils {
           for (const dep of action.dependencies) {
             const depExists =
               level.autoActions.some((a) => a.id === dep) ||
-              protocol.levels.some((l) => l.autoActions.some((a) => a.id === dep));
+              protocol.levels.some((l) =>
+                l.autoActions.some((a) => a.id === dep)
+              );
 
             if (!depExists) {
               logger.warn(`Action dependency not found`, {
@@ -317,16 +344,23 @@ class EmergencyProtocolUtils {
   }
 
   static async executeDrillTests(
-    protocolId: string,
+    _protocolId: string,
     scope: "full" | "partial" | "simulation",
     testFunctions: {
       testCommunicationSystems: () => Promise<any>;
-      testEmergencyActions: (protocol: EmergencyProtocol, simulation: boolean) => Promise<any>;
+      testEmergencyActions: (
+        protocol: EmergencyProtocol,
+        simulation: boolean
+      ) => Promise<any>;
       testRecoveryProcedures: (simulation: boolean) => Promise<any>;
       testSystemIntegration: () => Promise<any>;
     },
     protocol: EmergencyProtocol
-  ): Promise<{ success: boolean; results: Record<string, any>; issues: string[] }> {
+  ): Promise<{
+    success: boolean;
+    results: Record<string, any>;
+    issues: string[];
+  }> {
     const results: Record<string, any> = {};
     const issues: string[] = [];
 
@@ -338,14 +372,19 @@ class EmergencyProtocolUtils {
     }
 
     // Test emergency actions (simulation mode)
-    const actionResults = await testFunctions.testEmergencyActions(protocol, scope === "simulation");
+    const actionResults = await testFunctions.testEmergencyActions(
+      protocol,
+      scope === "simulation"
+    );
     results.actions = actionResults;
     if (actionResults.failures > 0) {
       issues.push(`${actionResults.failures} emergency actions failed`);
     }
 
     // Test recovery procedures
-    const recoveryResults = await testFunctions.testRecoveryProcedures(scope === "simulation");
+    const recoveryResults = await testFunctions.testRecoveryProcedures(
+      scope === "simulation"
+    );
     results.recovery = recoveryResults;
     if (!recoveryResults.success) {
       issues.push("Recovery procedure issues detected");
@@ -384,28 +423,47 @@ class EmergencyActionUtils {
     });
 
     // Execute actions based on priority
-    const sortedActions = level.autoActions.sort((a, b) => a.priority - b.priority);
+    const sortedActions = level.autoActions.sort(
+      (a, b) => a.priority - b.priority
+    );
 
     for (const action of sortedActions) {
       EmergencySessionUtils.addExecutedAction(session, action.id, "executing");
 
       try {
-        await this.executeEmergencyAction(action, emergencySystem, logger);
-        
-        EmergencySessionUtils.addExecutedAction(session, action.id, "completed");
-        
+        await EmergencyActionUtils.executeEmergencyAction(
+          action,
+          emergencySystem,
+          logger
+        );
+
+        EmergencySessionUtils.addExecutedAction(
+          session,
+          action.id,
+          "completed"
+        );
+
         logger.info("Emergency action completed", {
           sessionId,
           actionId: action.id,
         });
       } catch (error) {
-        EmergencySessionUtils.addExecutedAction(session, action.id, "failed", (error as Error)?.message);
-        
-        logger.error("Emergency action failed", {
-          sessionId,
-          actionId: action.id,
-          error: (error as Error)?.message,
-        }, error as Error);
+        EmergencySessionUtils.addExecutedAction(
+          session,
+          action.id,
+          "failed",
+          (error as Error)?.message
+        );
+
+        logger.error(
+          "Emergency action failed",
+          {
+            sessionId,
+            actionId: action.id,
+            error: (error as Error)?.message,
+          },
+          error as Error
+        );
 
         // Continue with other actions unless this is critical
         if (!action.rollbackPossible) {
@@ -422,7 +480,9 @@ class EmergencyActionUtils {
   ): Promise<void> {
     switch (action.type) {
       case "halt_trading":
-        await emergencySystem.forceEmergencyHalt(`Emergency action: ${action.description}`);
+        await emergencySystem.forceEmergencyHalt(
+          `Emergency action: ${action.description}`
+        );
         break;
       case "close_positions":
         logger.info(`Executing close positions: ${action.description}`);
@@ -452,13 +512,30 @@ class EmergencyActionUtils {
 export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
-      console.info("[advanced-emergency-coordinator-refactored]", message, context || ""),
+      console.info(
+        "[advanced-emergency-coordinator-refactored]",
+        message,
+        context || ""
+      ),
     warn: (message: string, context?: any) =>
-      console.warn("[advanced-emergency-coordinator-refactored]", message, context || ""),
+      console.warn(
+        "[advanced-emergency-coordinator-refactored]",
+        message,
+        context || ""
+      ),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[advanced-emergency-coordinator-refactored]", message, context || "", error || ""),
+      console.error(
+        "[advanced-emergency-coordinator-refactored]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
-      console.debug("[advanced-emergency-coordinator-refactored]", message, context || ""),
+      console.debug(
+        "[advanced-emergency-coordinator-refactored]",
+        message,
+        context || ""
+      ),
   };
 
   private config: AdvancedEmergencyConfig;
@@ -489,7 +566,10 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
   ) {
     super();
 
-    this.config = { ...EmergencyProtocolUtils.createDefaultConfig(), ...config };
+    this.config = {
+      ...EmergencyProtocolUtils.createDefaultConfig(),
+      ...config,
+    };
     this.emergencySystem = emergencySystem;
     this.safetyCoordinator = safetyCoordinator;
 
@@ -517,7 +597,10 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
       "emergency_coordinator_initialization",
       async () => {
         // Validate all protocols
-        EmergencyProtocolUtils.validateProtocols(this.emergencyProtocols, this.logger);
+        EmergencyProtocolUtils.validateProtocols(
+          this.emergencyProtocols,
+          this.logger
+        );
 
         // Initialize emergency system integration
         await this.setupSystemIntegration();
@@ -558,7 +641,10 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
       "activate_emergency_protocol",
       async () => {
         // Validate protocol exists
-        const protocol = EmergencyOperationUtils.validateProtocolExists(protocolId, this.emergencyProtocols);
+        const protocol = EmergencyOperationUtils.validateProtocolExists(
+          protocolId,
+          this.emergencyProtocols
+        );
 
         // Check concurrent emergency limit
         if (this.activeSessions.size >= this.config.maxConcurrentEmergencies) {
@@ -566,8 +652,13 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
         }
 
         // Create emergency session using utility
-        const session = EmergencySessionUtils.createSession(protocolId, triggeredBy, reason, protocol);
-        
+        const session = EmergencySessionUtils.createSession(
+          protocolId,
+          triggeredBy,
+          reason,
+          protocol
+        );
+
         this.activeSessions.set(session.id, session);
         this.coordinatorMetrics.totalEmergencies++;
 
@@ -593,7 +684,7 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
       },
       this.logger,
       this,
-      { 
+      {
         eventName: "emergency_activated",
         protocolId,
         triggeredBy,
@@ -605,20 +696,38 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
   /**
    * Escalate emergency to next level using utilities
    */
-  async escalateEmergency(sessionId: string, reason: string, forcedBy?: string): Promise<boolean> {
+  async escalateEmergency(
+    sessionId: string,
+    reason: string,
+    forcedBy?: string
+  ): Promise<boolean> {
     return EmergencyOperationUtils.executeWithFullHandling(
       "escalate_emergency",
       async () => {
-        const session = EmergencyOperationUtils.validateSessionExists(sessionId, this.activeSessions);
-        const protocol = EmergencyOperationUtils.validateProtocolExists(session.protocolId, this.emergencyProtocols);
+        const session = EmergencyOperationUtils.validateSessionExists(
+          sessionId,
+          this.activeSessions
+        );
+        const protocol = EmergencyOperationUtils.validateProtocolExists(
+          session.protocolId,
+          this.emergencyProtocols
+        );
 
         // Find current level and next level
-        const currentLevelIndex = protocol.levels.findIndex((l) => l.id === session.currentLevel);
-        if (currentLevelIndex === -1 || currentLevelIndex >= protocol.levels.length - 1) {
-          this.logger.warn("Cannot escalate emergency - already at highest level", {
-            sessionId,
-            currentLevel: session.currentLevel,
-          });
+        const currentLevelIndex = protocol.levels.findIndex(
+          (l) => l.id === session.currentLevel
+        );
+        if (
+          currentLevelIndex === -1 ||
+          currentLevelIndex >= protocol.levels.length - 1
+        ) {
+          this.logger.warn(
+            "Cannot escalate emergency - already at highest level",
+            {
+              sessionId,
+              currentLevel: session.currentLevel,
+            }
+          );
           return false;
         }
 
@@ -630,10 +739,19 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
         });
 
         // Execute next level actions
-        await EmergencyActionUtils.executeActions(sessionId, nextLevel, session, this.emergencySystem, this.logger);
+        await EmergencyActionUtils.executeActions(
+          sessionId,
+          nextLevel,
+          session,
+          this.emergencySystem,
+          this.logger
+        );
 
         // Send escalation notifications
-        await this.sendEmergencyNotifications(session, "escalated", { reason, forcedBy });
+        await this.sendEmergencyNotifications(session, "escalated", {
+          reason,
+          forcedBy,
+        });
 
         EmergencySessionUtils.updateSessionStatus(session, "active");
 
@@ -669,7 +787,10 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
     return EmergencyOperationUtils.executeWithFullHandling(
       "resolve_emergency",
       async () => {
-        const session = EmergencyOperationUtils.validateSessionExists(sessionId, this.activeSessions);
+        const session = EmergencyOperationUtils.validateSessionExists(
+          sessionId,
+          this.activeSessions
+        );
 
         // Update session status
         EmergencySessionUtils.updateSessionStatus(session, "resolving", {
@@ -731,7 +852,10 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
     results: Record<string, any>;
     issues: string[];
   }> {
-    const protocol = EmergencyOperationUtils.validateProtocolExists(protocolId, this.emergencyProtocols);
+    const protocol = EmergencyOperationUtils.validateProtocolExists(
+      protocolId,
+      this.emergencyProtocols
+    );
 
     return EmergencyOperationUtils.executeWithFullHandling(
       "emergency_drill",
@@ -805,7 +929,11 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
     this.emergencyProtocols.set("critical_system_failure", {
       id: "critical_system_failure",
       name: "Critical System Failure Response",
-      triggerConditions: ["system_health < 20%", "multiple_service_failures", "data_corruption_detected"],
+      triggerConditions: [
+        "system_health < 20%",
+        "multiple_service_failures",
+        "data_corruption_detected",
+      ],
       levels: [
         {
           id: "level_1_assessment",
@@ -831,8 +959,17 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
           maxDuration: 1800000,
         },
       ],
-      coordinationSteps: ["Assess system impact", "Notify stakeholders", "Execute containment", "Begin recovery"],
-      recoveryProcedures: ["system_health_verification", "data_integrity_check", "gradual_service_restoration"],
+      coordinationSteps: [
+        "Assess system impact",
+        "Notify stakeholders",
+        "Execute containment",
+        "Begin recovery",
+      ],
+      recoveryProcedures: [
+        "system_health_verification",
+        "data_integrity_check",
+        "gradual_service_restoration",
+      ],
       communicationPlan: {
         internal: ["operations_team", "engineering_team"],
         external: ["customers", "partners"],
@@ -857,14 +994,37 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
           id: "phase_1_verification",
           name: "System Verification",
           duration: 300000,
-          steps: ["Verify system health", "Check data integrity", "Validate configurations"],
-          verification: ["All systems report healthy", "Data consistency checks pass", "Configuration validation successful"],
-          rollbackSteps: ["Return to safe mode", "Re-engage emergency protocols"],
+          steps: [
+            "Verify system health",
+            "Check data integrity",
+            "Validate configurations",
+          ],
+          verification: [
+            "All systems report healthy",
+            "Data consistency checks pass",
+            "Configuration validation successful",
+          ],
+          rollbackSteps: [
+            "Return to safe mode",
+            "Re-engage emergency protocols",
+          ],
         },
       ],
-      prerequisites: ["Emergency fully resolved", "System health above 80%", "No active critical alerts"],
-      risks: ["Secondary failure during recovery", "Data inconsistency", "Performance degradation"],
-      successCriteria: ["All services operational", "Performance metrics normal", "No emergency conditions"],
+      prerequisites: [
+        "Emergency fully resolved",
+        "System health above 80%",
+        "No active critical alerts",
+      ],
+      risks: [
+        "Secondary failure during recovery",
+        "Data inconsistency",
+        "Performance degradation",
+      ],
+      successCriteria: [
+        "All services operational",
+        "Performance metrics normal",
+        "No emergency conditions",
+      ],
     });
   }
 
@@ -880,15 +1040,19 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
       }
     });
 
-    this.safetyCoordinator.on?.("emergency-triggered", async (procedure: any) => {
-      this.logger.info("Safety coordinator emergency detected", {
-        procedure: procedure.type,
-      });
-    });
+    this.safetyCoordinator.on?.(
+      "emergency-triggered",
+      async (procedure: any) => {
+        this.logger.info("Safety coordinator emergency detected", {
+          procedure: procedure.type,
+        });
+      }
+    );
   }
 
   private schedulePeriodicTesting(): void {
-    const testingInterval = this.config.testingFrequencyDays * 24 * 60 * 60 * 1000;
+    const testingInterval =
+      this.config.testingFrequencyDays * 24 * 60 * 60 * 1000;
 
     setInterval(async () => {
       try {
@@ -897,9 +1061,13 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
           await this.executeEmergencyDrill(protocolId, "simulation");
         }
       } catch (error) {
-        this.logger.error("Scheduled testing failed", {
-          error: (error as Error)?.message,
-        }, error as Error);
+        this.logger.error(
+          "Scheduled testing failed",
+          {
+            error: (error as Error)?.message,
+          },
+          error as Error
+        );
       }
     }, testingInterval);
   }
@@ -932,7 +1100,10 @@ export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
     return { success: true, channels: this.config.notificationChannels.length };
   }
 
-  private async testEmergencyActions(protocol: EmergencyProtocol, simulation: boolean): Promise<any> {
+  private async testEmergencyActions(
+    _protocol: EmergencyProtocol,
+    simulation: boolean
+  ): Promise<any> {
     return { success: true, failures: 0, simulation };
   }
 

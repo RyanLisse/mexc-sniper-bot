@@ -11,7 +11,13 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Separator } from "./ui/separator";
 
 export function TakeProfitHelp() {
@@ -23,7 +29,8 @@ export function TakeProfitHelp() {
           How Take Profit Works
         </CardTitle>
         <CardDescription>
-          Complete guide to understanding and configuring your profit-taking strategy
+          Complete guide to understanding and configuring your profit-taking
+          strategy
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -34,9 +41,10 @@ export function TakeProfitHelp() {
             Basic Concept
           </h3>
           <p className="text-sm text-muted-foreground">
-            Take profit is an automated selling mechanism that locks in your gains when a token
-            reaches your target price. Instead of manually watching prices 24/7, the bot sells your
-            position automatically when your profit target is hit.
+            Take profit is an automated selling mechanism that locks in your
+            gains when a token reaches your target price. Instead of manually
+            watching prices 24/7, the bot sells your position automatically when
+            your profit target is hit.
           </p>
         </div>
 
@@ -59,7 +67,9 @@ export function TakeProfitHelp() {
             </div>
             <div className="flex items-start gap-2">
               <span className="font-medium text-green-600">3.</span>
-              <span>When price reaches $1.20 (+20%), bot automatically sells</span>
+              <span>
+                When price reaches $1.20 (+20%), bot automatically sells
+              </span>
             </div>
             <div className="flex items-start gap-2">
               <span className="font-medium text-green-600">4.</span>
@@ -82,7 +92,9 @@ export function TakeProfitHelp() {
                 <Target className="h-4 w-4 text-green-600" />
                 <div>
                   <div className="font-medium">Conservative (Level 1)</div>
-                  <div className="text-xs text-muted-foreground">5-10% targets</div>
+                  <div className="text-xs text-muted-foreground">
+                    5-10% targets
+                  </div>
                 </div>
               </div>
               <Badge className="bg-green-100 text-green-800">Low Risk</Badge>
@@ -93,7 +105,9 @@ export function TakeProfitHelp() {
                 <TrendingUp className="h-4 w-4 text-blue-600" />
                 <div>
                   <div className="font-medium">Moderate (Level 2)</div>
-                  <div className="text-xs text-muted-foreground">10-20% targets</div>
+                  <div className="text-xs text-muted-foreground">
+                    10-20% targets
+                  </div>
                 </div>
               </div>
               <Badge className="bg-blue-100 text-blue-800">Medium Risk</Badge>
@@ -104,7 +118,9 @@ export function TakeProfitHelp() {
                 <DollarSign className="h-4 w-4 text-orange-600" />
                 <div>
                   <div className="font-medium">Aggressive (Level 3)</div>
-                  <div className="text-xs text-muted-foreground">20-50% targets</div>
+                  <div className="text-xs text-muted-foreground">
+                    20-50% targets
+                  </div>
                 </div>
               </div>
               <Badge className="bg-orange-100 text-orange-800">High Risk</Badge>
@@ -115,7 +131,9 @@ export function TakeProfitHelp() {
                 <AlertTriangle className="h-4 w-4 text-red-600" />
                 <div>
                   <div className="font-medium">Very Aggressive (Level 4)</div>
-                  <div className="text-xs text-muted-foreground">50%+ targets</div>
+                  <div className="text-xs text-muted-foreground">
+                    50%+ targets
+                  </div>
                 </div>
               </div>
               <Badge className="bg-red-100 text-red-800">Very High Risk</Badge>
@@ -133,7 +151,9 @@ export function TakeProfitHelp() {
           </h3>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="p-3 bg-gray-50 rounded-lg border">
-              <div className="font-medium text-sm mb-2">Example: 15% Take Profit</div>
+              <div className="font-medium text-sm mb-2">
+                Example: 15% Take Profit
+              </div>
               <div className="space-y-1 text-xs text-muted-foreground">
                 <div>Investment: $1,000</div>
                 <div>Buy Price: $1.00</div>
@@ -143,7 +163,9 @@ export function TakeProfitHelp() {
             </div>
 
             <div className="p-3 bg-gray-50 rounded-lg border">
-              <div className="font-medium text-sm mb-2">Example: 30% Take Profit</div>
+              <div className="font-medium text-sm mb-2">
+                Example: 30% Take Profit
+              </div>
               <div className="space-y-1 text-xs text-muted-foreground">
                 <div>Investment: $1,000</div>
                 <div>Buy Price: $1.00</div>
@@ -163,44 +185,57 @@ export function TakeProfitHelp() {
             <li className="flex items-start gap-2">
               <span className="text-green-600">✓</span>
               <span>
-                Start with conservative levels (5-10%) until you understand market behavior
+                Start with conservative levels (5-10%) until you understand
+                market behavior
               </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-600">✓</span>
-              <span>Use Level 2 (Moderate) as your default for balanced risk/reward</span>
+              <span>
+                Use Level 2 (Moderate) as your default for balanced risk/reward
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-600">✓</span>
-              <span>Set custom levels for specific tokens based on their volatility</span>
+              <span>
+                Set custom levels for specific tokens based on their volatility
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-600">✓</span>
-              <span>Consider market conditions - use lower targets in volatile markets</span>
+              <span>
+                Consider market conditions - use lower targets in volatile
+                markets
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-red-600">✗</span>
-              <span>Don't set targets too high - greed can lead to missed opportunities</span>
+              <span>
+                Don't set targets too high - greed can lead to missed
+                opportunities
+              </span>
             </li>
           </ul>
         </div>
 
         {/* Advanced Features */}
         <div className="space-y-3">
-          <h3 className="font-semibold text-purple-600">🚀 Advanced Features</h3>
+          <h3 className="font-semibold text-purple-600">
+            🚀 Advanced Features
+          </h3>
           <div className="space-y-2 text-sm text-muted-foreground">
             <p>
-              <strong>Exit Strategies:</strong> Use the Exit Strategy selector for partial selling
-              at multiple price levels. This allows you to take profits gradually instead of selling
-              everything at once.
+              <strong>Exit Strategies:</strong> Use the Exit Strategy selector
+              for partial selling at multiple price levels. This allows you to
+              take profits gradually instead of selling everything at once.
             </p>
             <p>
-              <strong>Custom Levels:</strong> Set unique percentages for specific opportunities that
-              don't fit preset levels.
+              <strong>Custom Levels:</strong> Set unique percentages for
+              specific opportunities that don't fit preset levels.
             </p>
             <p>
-              <strong>Auto-Sell Controls:</strong> Enable/disable automatic selling while keeping
-              profit monitoring active.
+              <strong>Auto-Sell Controls:</strong> Enable/disable automatic
+              selling while keeping profit monitoring active.
             </p>
           </div>
         </div>

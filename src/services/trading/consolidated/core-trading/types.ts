@@ -79,19 +79,21 @@ export const CoreTradingConfigSchema = z.object({
   globalStopLossPercent: z.number().positive().optional(),
   globalTakeProfitPercent: z.number().positive().optional(),
   maxDailyLoss: z.number().positive().optional(),
-  riskManagement: z.object({
-    stopLossEnabled: z.boolean().default(true),
-    takeProfitEnabled: z.boolean().default(true),
-    priceCheckInterval: z.number().positive().default(5000),
-    maxDailyLossPercent: z.number().positive().optional(),
-    maxPositionRiskPercent: z.number().positive().optional(),
-    emergencyStopEnabled: z.boolean().default(true),
-  }).default({
-    stopLossEnabled: true,
-    takeProfitEnabled: true,
-    priceCheckInterval: 5000,
-    emergencyStopEnabled: true,
-  }),
+  riskManagement: z
+    .object({
+      stopLossEnabled: z.boolean().default(true),
+      takeProfitEnabled: z.boolean().default(true),
+      priceCheckInterval: z.number().positive().default(5000),
+      maxDailyLossPercent: z.number().positive().optional(),
+      maxPositionRiskPercent: z.number().positive().optional(),
+      emergencyStopEnabled: z.boolean().default(true),
+    })
+    .default({
+      stopLossEnabled: true,
+      takeProfitEnabled: true,
+      priceCheckInterval: 5000,
+      emergencyStopEnabled: true,
+    }),
   enableCaching: z.boolean().default(true),
   cacheTTL: z.number().positive().default(60000), // 1 minute
 });
@@ -432,30 +434,30 @@ export const ServiceStatusSchema = z.object({
 // ============================================================================
 
 // Use the database schema for AutoSnipeTarget with extended properties for processing
-import type { SnipeTarget } from '@/src/db/schemas/trading';
+import type { SnipeTarget } from "@/src/db/schemas/trading";
 
 export interface AutoSnipeTarget extends SnipeTarget {
   // Mapped properties for trading processing
-  symbol: string;  // Maps to symbolName
-  side?: "BUY" | "SELL" | "buy" | "sell";  // Defaults to "buy"
-  orderType?: "MARKET" | "LIMIT" | "STOP_LIMIT";  // Maps to entryStrategy
-  quantity: number;  // Maps to positionSizeUsdt
-  amount: number;  // Alias for quantity for compatibility
-  price?: number;  // Maps to entryPrice
-  targetPrice?: number;  // Maps to entryPrice
-  stopLoss?: number;  // Calculated from stopLossPercent
-  takeProfit?: number;  // Calculated from takeProfitLevel/takeProfitCustom
-  takeProfitPercent?: number;  // Maps to takeProfitCustom from database
-  timeInForce?: "GTC" | "IOC" | "FOK";  // Default "GTC"
+  symbol: string; // Maps to symbolName
+  side?: "BUY" | "SELL" | "buy" | "sell"; // Defaults to "buy"
+  orderType?: "MARKET" | "LIMIT" | "STOP_LIMIT"; // Maps to entryStrategy
+  quantity: number; // Maps to positionSizeUsdt
+  amount: number; // Alias for quantity for compatibility
+  price?: number; // Maps to entryPrice
+  targetPrice?: number; // Maps to entryPrice
+  stopLoss?: number; // Calculated from stopLossPercent
+  takeProfit?: number; // Calculated from takeProfitLevel/takeProfitCustom
+  takeProfitPercent?: number; // Maps to takeProfitCustom from database
+  timeInForce?: "GTC" | "IOC" | "FOK"; // Default "GTC"
   strategy?: {
     name: string;
     type: string;
     parameters: Record<string, string | number | boolean>;
     metadata?: Record<string, string | number>;
-  };  // Trading strategy object
-  confidence: number;  // Maps to confidenceScore
-  scheduledAt?: string | null;  // Maps to targetExecutionTime
-  executedAt?: string | null;  // Maps to actualExecutionTime
+  }; // Trading strategy object
+  confidence: number; // Maps to confidenceScore
+  scheduledAt?: string | null; // Maps to targetExecutionTime
+  executedAt?: string | null; // Maps to actualExecutionTime
 }
 
 // ============================================================================
@@ -501,19 +503,39 @@ export interface ModuleContext {
     executeTrade: (params: TradeParameters) => Promise<TradeResult>;
   };
   tradingStrategy: {
-    closePosition: (positionId: string, reason: string) => Promise<ServiceResponse<any>>;
+    closePosition: (
+      positionId: string,
+      reason: string
+    ) => Promise<ServiceResponse<any>>;
   };
   orderExecutor: {
     executePaperSnipe: (params: TradeParameters) => Promise<TradeResult>;
     executeRealSnipe: (params: TradeParameters) => Promise<TradeResult>;
-    createPositionEntry: (params: TradeParameters, result: TradeResult) => Promise<Position>;
+    createPositionEntry: (
+      params: TradeParameters,
+      result: TradeResult
+    ) => Promise<Position>;
   };
   positionManager: {
-    setupPositionMonitoring: (position: Position, result: TradeResult) => Promise<void>;
-    updatePositionStopLoss: (positionId: string, newStopLoss: number) => Promise<ServiceResponse<void>>;
-    updatePositionTakeProfit: (positionId: string, newTakeProfit: number) => Promise<ServiceResponse<void>>;
+    setupPositionMonitoring: (
+      position: Position,
+      result: TradeResult
+    ) => Promise<void>;
+    updatePositionStopLoss: (
+      positionId: string,
+      newStopLoss: number
+    ) => Promise<ServiceResponse<void>>;
+    updatePositionTakeProfit: (
+      positionId: string,
+      newTakeProfit: number
+    ) => Promise<ServiceResponse<void>>;
     getActivePositions: () => Map<string, Position>;
-    createPositionEntry: (tradeParams: any, symbol: string, stopLoss?: any, takeProfit?: any) => Promise<Position>;
+    createPositionEntry: (
+      tradeParams: any,
+      symbol: string,
+      stopLoss?: any,
+      takeProfit?: any
+    ) => Promise<Position>;
   };
   marketDataService: {
     getCurrentPrice: (symbol: string) => Promise<{ price: number } | null>;
@@ -532,13 +554,16 @@ export interface ModuleState {
   isHealthy: boolean;
   lastActivity: Date;
   metrics: Record<string, number> & {
-    strategyPerformance?: Record<string, {
-      trades: number;
-      successRate: number;
-      averagePnL: number;
-      maxDrawdown: number;
-      totalVolume: number;
-    }>;
+    strategyPerformance?: Record<
+      string,
+      {
+        trades: number;
+        successRate: number;
+        averagePnL: number;
+        maxDrawdown: number;
+        totalVolume: number;
+      }
+    >;
     portfolioRiskMetrics?: {
       concentrationRisk: number;
       correlationRisk: number;

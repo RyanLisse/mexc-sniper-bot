@@ -108,10 +108,14 @@ export class MultiPhaseTradingBot {
   /**
    * Initialize a new position
    */
-  initializePosition(symbol: string, entryPrice: number, positionSize: number): void {
+  initializePosition(
+    symbol: string,
+    entryPrice: number,
+    positionSize: number
+  ): void {
     if (entryPrice <= 0) throw new Error("Entry price must be positive");
     if (positionSize <= 0) throw new Error("Position size must be positive");
-    
+
     this.symbol = symbol;
     this.entryPrice = entryPrice;
     this.position = positionSize;
@@ -128,7 +132,7 @@ export class MultiPhaseTradingBot {
   getPositionInfo(): PositionInfo {
     const currentPrice = this.lastPrice || this.entryPrice;
     const unrealizedPnL = this.position * (currentPrice - this.entryPrice);
-    
+
     return {
       symbol: this.symbol,
       entryPrice: this.entryPrice,
@@ -147,7 +151,8 @@ export class MultiPhaseTradingBot {
     const actions: TradingAction[] = [];
 
     // Calculate price increase percentage
-    const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const priceIncrease =
+      ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
 
     // Check for stop-loss conditions (20% drawdown triggers emergency stop)
     if (priceIncrease <= -20) {
@@ -160,12 +165,13 @@ export class MultiPhaseTradingBot {
           price: currentPrice,
           isStopLoss: true,
         });
-        
+
         // Calculate realized loss
-        this.totalRealizedPnL += stopLossAmount * (currentPrice - this.entryPrice);
+        this.totalRealizedPnL +=
+          stopLossAmount * (currentPrice - this.entryPrice);
         this.position = 0; // Close entire position
       }
-      
+
       return {
         actions,
         status: this.buildStatus(currentPrice),
@@ -184,8 +190,10 @@ export class MultiPhaseTradingBot {
       // Check if price target is reached
       if (priceIncrease >= level.percentage) {
         this.completedPhases.add(phaseNumber);
-        const sellAmount = Math.floor((this.position * level.sellPercentage) / 100);
-        
+        const sellAmount = Math.floor(
+          (this.position * level.sellPercentage) / 100
+        );
+
         if (sellAmount > 0) {
           actions.push({
             type: "sell",
@@ -194,9 +202,10 @@ export class MultiPhaseTradingBot {
             amount: sellAmount,
             price: currentPrice,
           });
-          
+
           // Calculate realized profit for this phase
-          this.totalRealizedPnL += sellAmount * (currentPrice - this.entryPrice);
+          this.totalRealizedPnL +=
+            sellAmount * (currentPrice - this.entryPrice);
           this.position -= sellAmount; // Reduce remaining position
         }
       }
@@ -256,11 +265,13 @@ export class MultiPhaseTradingBot {
     const unrealizedPnL = remainingPosition * (currentPrice - this.entryPrice);
 
     const totalPnL = realizedPnL + unrealizedPnL;
-    const totalPnLPercent = (totalPnL / (this.position * this.entryPrice)) * 100;
+    const totalPnLPercent =
+      (totalPnL / (this.position * this.entryPrice)) * 100;
 
     // Calculate efficiency (percentage of available profit captured)
     const maxPossibleProfit = this.position * (currentPrice - this.entryPrice);
-    const efficiency = maxPossibleProfit > 0 ? (totalPnL / maxPossibleProfit) * 100 : 0;
+    const efficiency =
+      maxPossibleProfit > 0 ? (totalPnL / maxPossibleProfit) * 100 : 0;
 
     return {
       realizedPnL,
@@ -277,7 +288,8 @@ export class MultiPhaseTradingBot {
    * Get risk metrics
    */
   getRiskMetrics(currentPrice: number): RiskMetrics {
-    const priceChange = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const priceChange =
+      ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
     const currentDrawdown = Math.max(0, -priceChange); // Only negative moves are drawdown
     this.maxDrawdown = Math.max(this.maxDrawdown, currentDrawdown);
 
@@ -355,11 +367,17 @@ export class MultiPhaseTradingBot {
   /**
    * Handle partial fill scenario (for testing)
    */
-  async handlePartialFill(action: string, filledAmount: number, requestedAmount: number): Promise<void> {
+  async handlePartialFill(
+    _action: string,
+    filledAmount: number,
+    requestedAmount: number
+  ): Promise<void> {
     const fillRatio = filledAmount / requestedAmount;
     // Update position based on partial fill
     this.position = Math.max(0, this.position - filledAmount);
-    console.log(`Partial fill: ${filledAmount}/${requestedAmount} (${(fillRatio * 100).toFixed(1)}%)`);
+    console.log(
+      `Partial fill: ${filledAmount}/${requestedAmount} (${(fillRatio * 100).toFixed(1)}%)`
+    );
   }
 
   /**
@@ -374,7 +392,7 @@ export class MultiPhaseTradingBot {
       status: this.completedPhases.has(index + 1) ? "completed" : "pending",
       percentage: level.percentage,
     }));
-    
+
     return {
       completedPhases: this.completedPhases.size,
       phaseDetails,
@@ -409,13 +427,13 @@ export class MultiPhaseTradingBot {
   async performMaintenanceCleanup(): Promise<void> {
     // Simulate cleanup operations
     console.log("Performing maintenance cleanup...");
-    
+
     // Reset some internal state for memory management
     if (this.completedPhases.size === this.strategy.levels.length) {
       // If all phases completed, reset for new trading cycle
       this.reset();
     }
-    
+
     return Promise.resolve();
   }
 
@@ -423,7 +441,7 @@ export class MultiPhaseTradingBot {
    * Calculate optimal entry strategy based on market conditions
    */
   calculateOptimalEntry(
-    symbol: string, 
+    _symbol: string,
     marketConditions: {
       volatility: number;
       volume: number;
@@ -438,13 +456,15 @@ export class MultiPhaseTradingBot {
   } {
     const adjustments: string[] = [];
     let baseConfidence = 75; // Start with moderate confidence
-    
+
     // Calculate optimal entry price based on support/resistance levels
-    const supportResistanceRange = marketConditions.resistance - marketConditions.support;
-    const optimalEntry = marketConditions.support + (supportResistanceRange * 0.3); // Enter closer to support
-    
+    const supportResistanceRange =
+      marketConditions.resistance - marketConditions.support;
+    const optimalEntry =
+      marketConditions.support + supportResistanceRange * 0.3; // Enter closer to support
+
     // Adjust confidence based on market conditions
-    
+
     // Volatility adjustment
     if (marketConditions.volatility < 0.1) {
       baseConfidence += 10;
@@ -453,7 +473,7 @@ export class MultiPhaseTradingBot {
       baseConfidence -= 15;
       adjustments.push("High volatility reduces confidence");
     }
-    
+
     // Volume adjustment
     if (marketConditions.volume > 2.0) {
       baseConfidence += 8;
@@ -462,7 +482,7 @@ export class MultiPhaseTradingBot {
       baseConfidence -= 10;
       adjustments.push("Low volume reduces confidence");
     }
-    
+
     // Momentum adjustment
     if (marketConditions.momentum > 0.8) {
       baseConfidence += 12;
@@ -471,24 +491,30 @@ export class MultiPhaseTradingBot {
       baseConfidence -= 8;
       adjustments.push("Weak momentum reduces confidence");
     }
-    
+
     // Risk/reward ratio check
-    const riskRewardRatio = (marketConditions.resistance - optimalEntry) / (optimalEntry - marketConditions.support);
+    const riskRewardRatio =
+      (marketConditions.resistance - optimalEntry) /
+      (optimalEntry - marketConditions.support);
     if (riskRewardRatio > 2.0) {
       baseConfidence += 5;
-      adjustments.push(`Favorable risk/reward ratio: ${riskRewardRatio.toFixed(2)}:1`);
+      adjustments.push(
+        `Favorable risk/reward ratio: ${riskRewardRatio.toFixed(2)}:1`
+      );
     } else if (riskRewardRatio < 1.0) {
       baseConfidence -= 10;
-      adjustments.push(`Poor risk/reward ratio: ${riskRewardRatio.toFixed(2)}:1`);
+      adjustments.push(
+        `Poor risk/reward ratio: ${riskRewardRatio.toFixed(2)}:1`
+      );
     }
-    
+
     // Ensure confidence is within reasonable bounds
     const finalConfidence = Math.max(20, Math.min(95, baseConfidence));
-    
+
     return {
       entryPrice: Number(optimalEntry.toFixed(6)),
       confidence: finalConfidence,
-      adjustments
+      adjustments,
     };
   }
 
@@ -502,8 +528,9 @@ export class MultiPhaseTradingBot {
 
     let priceIncrease: string | undefined;
     if (currentPrice) {
-      const increase = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
-      priceIncrease = increase.toFixed(2) + "%";
+      const increase =
+        ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+      priceIncrease = `${increase.toFixed(2)}%`;
     }
 
     // Build visualization
@@ -633,7 +660,10 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     volume: number;
   }): void {
     // Adjust strategy levels based on market conditions
-    const volatilityMultiplier = Math.max(0.5, Math.min(2.0, 1 + marketConditions.volatility));
+    const volatilityMultiplier = Math.max(
+      0.5,
+      Math.min(2.0, 1 + marketConditions.volatility)
+    );
 
     this.strategy.levels = this.strategy.levels.map((level) => ({
       ...level,
@@ -662,7 +692,8 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     this.trailingStopLoss.enabled = true;
     this.trailingStopLoss.trailPercent = trailPercent;
     this.trailingStopLoss.highestPrice = this.lastPrice || this.entryPrice;
-    this.trailingStopLoss.stopPrice = this.trailingStopLoss.highestPrice * (1 - trailPercent / 100);
+    this.trailingStopLoss.stopPrice =
+      this.trailingStopLoss.highestPrice * (1 - trailPercent / 100);
   }
 
   /**
@@ -685,7 +716,10 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
   /**
    * Enhanced price update with advanced features
    */
-  onAdvancedPriceUpdate(currentPrice: number, volume?: number): PriceUpdateResult {
+  onAdvancedPriceUpdate(
+    currentPrice: number,
+    volume?: number
+  ): PriceUpdateResult {
     this.lastPrice = currentPrice;
     const actions: TradingAction[] = [];
 
@@ -696,7 +730,7 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
         description: `TRAILING STOP: Sell all ${this.position} units at ${currentPrice.toFixed(2)} (Trail: ${this.trailingStopLoss.trailPercent}%)`,
         amount: this.position,
         price: currentPrice,
-        isStopLoss: true
+        isStopLoss: true,
       });
       this.reset(); // Close all positions
       return {
@@ -706,10 +740,13 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     }
 
     // Calculate price increase percentage
-    const priceIncrease = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const priceIncrease =
+      ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
 
     // Volume-weighted decisions
-    const volumeMultiplier = volume ? Math.min(2.0, Math.max(0.5, volume / 1000000)) : 1.0;
+    const volumeMultiplier = volume
+      ? Math.min(2.0, Math.max(0.5, volume / 1000000))
+      : 1.0;
 
     // Check each phase target with volume consideration
     this.strategy.levels.forEach((level, index) => {
@@ -726,11 +763,14 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
       // Check if price target is reached
       if (priceIncrease >= adjustedTarget) {
         this.completedPhases.add(phaseNumber);
-        const sellAmount = Math.floor((this.position * level.sellPercentage) / 100);
+        const sellAmount = Math.floor(
+          (this.position * level.sellPercentage) / 100
+        );
 
         actions.push({
           type: "sell",
-          description: `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} ` +
+          description:
+            `EXECUTE Phase ${phaseNumber}: Sell ${sellAmount} units at ${currentPrice.toFixed(2)} ` +
             `(+${adjustedTarget.toFixed(2)}%, Vol: ${volumeMultiplier.toFixed(2)}x)`,
           phase: phaseNumber,
           amount: sellAmount,
@@ -752,13 +792,15 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
    * Calculate position efficiency score
    */
   calculateEfficiencyScore(currentPrice: number): number {
-    const currentReturn = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const currentReturn =
+      ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
     const maxPossibleReturn =
       this.strategy.levels[this.strategy.levels.length - 1]?.percentage || 0;
 
     if (maxPossibleReturn === 0) return 0;
 
-    const completionRatio = this.completedPhases.size / this.strategy.levels.length;
+    const completionRatio =
+      this.completedPhases.size / this.strategy.levels.length;
     const returnRatio = Math.max(0, currentReturn) / maxPossibleReturn;
 
     // Efficiency combines completion ratio and return capture
@@ -780,7 +822,8 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
     riskScore: number;
     recommendations: string[];
   } {
-    const priceChange = ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
+    const priceChange =
+      ((currentPrice - this.entryPrice) / this.entryPrice) * 100;
     const recommendations: string[] = [];
     let riskScore = 0;
 
@@ -827,15 +870,22 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
   /**
    * Handle partial fill scenario (for testing) - Advanced implementation
    */
-  async handlePartialFill(action: string, filledAmount: number, requestedAmount: number): Promise<void> {
+  async handlePartialFill(
+    _action: string,
+    filledAmount: number,
+    requestedAmount: number
+  ): Promise<void> {
     const fillRatio = filledAmount / requestedAmount;
     // Update position based on partial fill
     this.position = Math.max(0, this.position - filledAmount);
-    console.log(`Advanced partial fill: ${filledAmount}/${requestedAmount} (${(fillRatio * 100).toFixed(1)}%)`);
-    
+    console.log(
+      `Advanced partial fill: ${filledAmount}/${requestedAmount} (${(fillRatio * 100).toFixed(1)}%)`
+    );
+
     // Update realized PnL based on partial fill
     if (this.lastPrice && this.lastPrice > this.entryPrice) {
-      this.totalRealizedPnL += filledAmount * (this.lastPrice - this.entryPrice);
+      this.totalRealizedPnL +=
+        filledAmount * (this.lastPrice - this.entryPrice);
     }
   }
 
@@ -844,20 +894,20 @@ export class AdvancedMultiPhaseTradingBot extends MultiPhaseTradingBot {
    */
   async performMaintenanceCleanup(): Promise<void> {
     console.log("Performing advanced maintenance cleanup...");
-    
+
     // Advanced cleanup operations
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
     }
-    
+
     // Reset trailing stop if position is closed
     if (this.position === 0) {
       this.trailingStopLoss.enabled = false;
       this.trailingStopLoss.highestPrice = 0;
       this.trailingStopLoss.stopPrice = 0;
     }
-    
+
     return Promise.resolve();
   }
 }

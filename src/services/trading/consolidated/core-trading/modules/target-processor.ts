@@ -57,7 +57,9 @@ export class TargetProcessor {
         };
       }
 
-      this.context.logger.info(`Processing ${readyTargets.length} ready snipe targets`);
+      this.context.logger.info(
+        `Processing ${readyTargets.length} ready snipe targets`
+      );
 
       let successCount = 0;
       for (const target of readyTargets) {
@@ -95,7 +97,9 @@ export class TargetProcessor {
   /**
    * Process a single snipe target
    */
-  async processTarget(target: AutoSnipeTarget): Promise<ServiceResponse<TradeResult>> {
+  async processTarget(
+    target: AutoSnipeTarget
+  ): Promise<ServiceResponse<TradeResult>> {
     try {
       this.context.logger.info(`Processing snipe target: ${target.id}`, {
         symbol: target.symbol,
@@ -111,7 +115,11 @@ export class TargetProcessor {
 
       // Update target status based on result
       const newStatus = result.success ? "completed" : "failed";
-      await this.updateSnipeTargetStatus(target.id.toString(), newStatus, result.error);
+      await this.updateSnipeTargetStatus(
+        target.id.toString(),
+        newStatus,
+        result.error
+      );
 
       // Update statistics
       this.processedTargets++;
@@ -141,7 +149,11 @@ export class TargetProcessor {
       });
 
       // Mark target as failed
-      await this.updateSnipeTargetStatus(target.id.toString(), "failed", safeError.message);
+      await this.updateSnipeTargetStatus(
+        target.id.toString(),
+        "failed",
+        safeError.message
+      );
 
       return {
         success: false,
@@ -159,16 +171,24 @@ export class TargetProcessor {
       // Map database fields to trading parameters
       const symbol = target.symbol || target.symbolName;
       const side = (target.side || "buy").toUpperCase() as "BUY" | "SELL";
-      const orderType = target.orderType || (target.entryStrategy === "limit" ? "LIMIT" : "MARKET");
+      const orderType =
+        target.orderType ||
+        (target.entryStrategy === "limit" ? "LIMIT" : "MARKET");
       const quantity = target.quantity || target.positionSizeUsdt;
       const price = target.targetPrice || target.entryPrice || undefined;
-      
+
       // Calculate stop loss and take profit prices if needed
-      const stopLoss = target.stopLoss || (price && target.stopLossPercent ? 
-        price * (1 - target.stopLossPercent / 100) : undefined);
-      const takeProfit = target.takeProfit || (price && target.takeProfitCustom ? 
-        price * (1 + target.takeProfitCustom / 100) : undefined);
-      
+      const stopLoss =
+        target.stopLoss ||
+        (price && target.stopLossPercent
+          ? price * (1 - target.stopLossPercent / 100)
+          : undefined);
+      const takeProfit =
+        target.takeProfit ||
+        (price && target.takeProfitCustom
+          ? price * (1 + target.takeProfitCustom / 100)
+          : undefined);
+
       // Prepare trade parameters
       const tradeParams: TradeParameters = {
         symbol,
@@ -183,9 +203,10 @@ export class TargetProcessor {
 
       // Choose execution method based on configuration
       let result: TradeResult;
-      
+
       if (this.context.config.paperTradingMode) {
-        result = await this.context.orderExecutor.executePaperSnipe(tradeParams);
+        result =
+          await this.context.orderExecutor.executePaperSnipe(tradeParams);
       } else {
         result = await this.context.orderExecutor.executeRealSnipe(tradeParams);
       }
@@ -196,12 +217,17 @@ export class TargetProcessor {
           tradeParams,
           result
         );
-        
-        await this.context.positionManager.setupPositionMonitoring(position, result);
+
+        await this.context.positionManager.setupPositionMonitoring(
+          position,
+          result
+        );
 
         // Setup multi-phase monitoring if applicable
         if (target.strategy && this.isMultiPhaseStrategy(target.strategy)) {
-          const multiPhaseStrategy = this.convertToMultiPhaseStrategy(target.strategy);
+          const multiPhaseStrategy = this.convertToMultiPhaseStrategy(
+            target.strategy
+          );
           if (multiPhaseStrategy) {
             await this.setupMultiPhaseMonitoring(
               multiPhaseStrategy,
@@ -234,7 +260,7 @@ export class TargetProcessor {
   private async setupMultiPhaseMonitoring(
     strategy: MultiPhaseStrategy,
     position: any,
-    result: TradeResult
+    _result: TradeResult
   ): Promise<void> {
     try {
       this.context.logger.info("Setting up multi-phase monitoring", {
@@ -245,7 +271,7 @@ export class TargetProcessor {
 
       for (const [index, level] of strategy.levels.entries()) {
         const delay = level.delay || index * 1000; // Default 1s between levels
-        
+
         setTimeout(async () => {
           try {
             await this.executePhaseLevel(strategy, position, level, index);
@@ -287,27 +313,31 @@ export class TargetProcessor {
     });
 
     switch (level.action) {
-      case "partial_exit":
+      case "partial_exit": {
         const exitQuantity = position.quantity * (level.percentage / 100);
         await this.executePartialExit(position, exitQuantity);
         break;
-        
-      case "update_stop_loss":
+      }
+
+      case "update_stop_loss": {
         const newStopLoss = position.entryPrice * (1 + level.percentage / 100);
         await this.context.positionManager.updatePositionStopLoss(
           position.id,
           newStopLoss
         );
         break;
-        
-      case "update_take_profit":
-        const newTakeProfit = position.entryPrice * (1 + level.percentage / 100);
+      }
+
+      case "update_take_profit": {
+        const newTakeProfit =
+          position.entryPrice * (1 + level.percentage / 100);
         await this.context.positionManager.updatePositionTakeProfit(
           position.id,
           newTakeProfit
         );
         break;
-        
+      }
+
       default:
         this.context.logger.warn("Unknown phase action", {
           action: level.action,
@@ -319,7 +349,10 @@ export class TargetProcessor {
   /**
    * Execute partial exit for multi-phase strategy
    */
-  private async executePartialExit(position: any, quantity: number): Promise<void> {
+  private async executePartialExit(
+    position: any,
+    quantity: number
+  ): Promise<void> {
     try {
       const exitParams: TradeParameters = {
         symbol: position.symbol,
@@ -378,12 +411,15 @@ export class TargetProcessor {
         .limit(this.context.config.maxConcurrentSnipes || 10);
 
       // Filter by confidence threshold
-      return targets.filter((target: any) => 
-        (target.confidence || 0) >= maxConfidence
+      return targets.filter(
+        (target: any) => (target.confidence || 0) >= maxConfidence
       ) as AutoSnipeTarget[];
     } catch (error) {
       const safeError = toSafeError(error);
-      this.context.logger.error("Failed to fetch ready snipe targets", safeError);
+      this.context.logger.error(
+        "Failed to fetch ready snipe targets",
+        safeError
+      );
       throw error;
     }
   }
@@ -435,23 +471,30 @@ export class TargetProcessor {
    * Check if strategy is multi-phase
    */
   private isMultiPhaseStrategy(strategy: any): boolean {
-    return strategy && typeof strategy === 'object' && "levels" in strategy && Array.isArray(strategy.levels);
+    return (
+      strategy &&
+      typeof strategy === "object" &&
+      "levels" in strategy &&
+      Array.isArray(strategy.levels)
+    );
   }
 
   /**
    * Convert strategy to multi-phase strategy
    */
-  private convertToMultiPhaseStrategy(strategy: any): MultiPhaseStrategy | null {
+  private convertToMultiPhaseStrategy(
+    strategy: any
+  ): MultiPhaseStrategy | null {
     if (!this.isMultiPhaseStrategy(strategy)) {
       return null;
     }
 
     return {
-      id: strategy.id || strategy.name || 'unknown',
-      name: strategy.name || 'Multi-Phase Strategy',
-      description: strategy.description || 'Multi-phase trading strategy',
+      id: strategy.id || strategy.name || "unknown",
+      name: strategy.name || "Multi-Phase Strategy",
+      description: strategy.description || "Multi-phase trading strategy",
       maxPositionSize: strategy.maxPositionSize || 1000,
-      positionSizingMethod: strategy.positionSizingMethod || 'fixed',
+      positionSizingMethod: strategy.positionSizingMethod || "fixed",
       stopLossPercent: strategy.stopLossPercent || 5,
       takeProfitPercent: strategy.takeProfitPercent || 10,
       maxDrawdownPercent: strategy.maxDrawdownPercent || 15,
@@ -468,7 +511,7 @@ export class TargetProcessor {
       trailingStopPercent: strategy.trailingStopPercent || 0,
       enablePartialTakeProfit: strategy.enablePartialTakeProfit || false,
       partialTakeProfitPercent: strategy.partialTakeProfitPercent || 50,
-      levels: strategy.levels || []
+      levels: strategy.levels || [],
     };
   }
 
@@ -481,9 +524,10 @@ export class TargetProcessor {
     failedSnipes: number;
     successRate: number;
   } {
-    const successRate = this.processedTargets > 0 
-      ? this.successfulSnipes / this.processedTargets 
-      : 0;
+    const successRate =
+      this.processedTargets > 0
+        ? this.successfulSnipes / this.processedTargets
+        : 0;
 
     return {
       processedTargets: this.processedTargets,

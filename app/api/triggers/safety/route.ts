@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { inngest } from "@/src/inngest/client";
-import { 
-  apiResponse, 
-  createErrorResponse, 
-  createSuccessResponse, 
+import {
+  apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
   createValidationErrorResponse,
-  HTTP_STATUS 
+  HTTP_STATUS,
 } from "@/src/lib/api-response";
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     if (!action) {
       return apiResponse(
-        createValidationErrorResponse('action', 'Action is required'),
+        createValidationErrorResponse("action", "Action is required"),
         HTTP_STATUS.BAD_REQUEST
       );
     }
@@ -48,11 +48,14 @@ export async function POST(request: NextRequest) {
       case "toggle-simulation":
         if (typeof data.enabled !== "boolean") {
           return apiResponse(
-            createValidationErrorResponse('enabled', 'enabled boolean value is required for simulation toggle'),
+            createValidationErrorResponse(
+              "enabled",
+              "enabled boolean value is required for simulation toggle"
+            ),
             HTTP_STATUS.BAD_REQUEST
           );
         }
-        
+
         result = await inngest.send({
           name: "simulation/toggle",
           data: {
@@ -78,7 +81,10 @@ export async function POST(request: NextRequest) {
       case "emergency-halt":
         if (!data.reason) {
           return apiResponse(
-            createValidationErrorResponse('reason', 'Reason is required for emergency halt'),
+            createValidationErrorResponse(
+              "reason",
+              "Reason is required for emergency halt"
+            ),
             HTTP_STATUS.BAD_REQUEST
           );
         }
@@ -108,7 +114,10 @@ export async function POST(request: NextRequest) {
       case "error-recovery":
         if (!data.error || !data.context) {
           return apiResponse(
-            createValidationErrorResponse('error, context', 'Error details and context are required'),
+            createValidationErrorResponse(
+              "error, context",
+              "Error details and context are required"
+            ),
             HTTP_STATUS.BAD_REQUEST
           );
         }
@@ -127,33 +136,38 @@ export async function POST(request: NextRequest) {
 
       default:
         return apiResponse(
-          createValidationErrorResponse('action', `Unknown safety action: ${action}`),
+          createValidationErrorResponse(
+            "action",
+            `Unknown safety action: ${action}`
+          ),
           HTTP_STATUS.BAD_REQUEST
         );
     }
 
     return apiResponse(
-      createSuccessResponse({
-        action,
-        eventId: result.ids[0],
-        triggeredAt: new Date().toISOString(),
-      }, {
-        message: `Safety action '${action}' triggered successfully`
-      })
+      createSuccessResponse(
+        {
+          action,
+          eventId: result.ids[0],
+          triggeredAt: new Date().toISOString(),
+        },
+        {
+          message: `Safety action '${action}' triggered successfully`,
+        }
+      )
     );
-
   } catch (error) {
     console.error("Failed to trigger safety action:", { error: error });
     return apiResponse(
       createErrorResponse("Failed to trigger safety action", {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       }),
       HTTP_STATUS.INTERNAL_SERVER_ERROR
     );
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const availableActions = [
       {
@@ -162,32 +176,33 @@ export async function GET(request: NextRequest) {
         parameters: {},
         example: {
           action: "comprehensive-safety-check",
-          data: {}
-        }
+          data: {},
+        },
       },
       {
-        action: "position-reconciliation", 
-        description: "Trigger position reconciliation between local and exchange",
+        action: "position-reconciliation",
+        description:
+          "Trigger position reconciliation between local and exchange",
         parameters: {},
         example: {
           action: "position-reconciliation",
-          data: {}
-        }
+          data: {},
+        },
       },
       {
         action: "toggle-simulation",
         description: "Enable or disable simulation mode",
         parameters: {
           enabled: "boolean (required)",
-          userId: "string (optional)"
+          userId: "string (optional)",
         },
         example: {
           action: "toggle-simulation",
           data: {
             enabled: true,
-            userId: "user123"
-          }
-        }
+            userId: "user123",
+          },
+        },
       },
       {
         action: "risk-assessment",
@@ -195,23 +210,23 @@ export async function GET(request: NextRequest) {
         parameters: {},
         example: {
           action: "risk-assessment",
-          data: {}
-        }
+          data: {},
+        },
       },
       {
         action: "emergency-halt",
         description: "Activate emergency halt across all trading systems",
         parameters: {
           reason: "string (required)",
-          userId: "string (optional)"
+          userId: "string (optional)",
         },
         example: {
           action: "emergency-halt",
           data: {
             reason: "Manual emergency halt for system maintenance",
-            userId: "admin"
-          }
-        }
+            userId: "admin",
+          },
+        },
       },
       {
         action: "system-health-check",
@@ -219,8 +234,8 @@ export async function GET(request: NextRequest) {
         parameters: {},
         example: {
           action: "system-health-check",
-          data: {}
-        }
+          data: {},
+        },
       },
       {
         action: "error-recovery",
@@ -228,23 +243,23 @@ export async function GET(request: NextRequest) {
         parameters: {
           error: "object (required) - Error details",
           context: "object (required) - Error context",
-          severity: "string (optional) - low, medium, high, critical"
+          severity: "string (optional) - low, medium, high, critical",
         },
         example: {
           action: "error-recovery",
           data: {
             error: {
               message: "Network timeout occurred",
-              code: "NETWORK_TIMEOUT"
+              code: "NETWORK_TIMEOUT",
             },
             context: {
               service: "mexc_api",
-              operation: "fetch_positions"
+              operation: "fetch_positions",
             },
-            severity: "medium"
-          }
-        }
-      }
+            severity: "medium",
+          },
+        },
+      },
     ];
 
     return apiResponse(
@@ -253,10 +268,10 @@ export async function GET(request: NextRequest) {
         totalActions: availableActions.length,
         endpoint: "/api/triggers/safety",
         methods: ["POST"],
-        description: "Safety system trigger endpoints for manual control of safety operations"
+        description:
+          "Safety system trigger endpoints for manual control of safety operations",
       })
     );
-
   } catch (error) {
     console.error("Failed to get safety actions:", { error: error });
     return apiResponse(

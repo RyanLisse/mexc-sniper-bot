@@ -5,7 +5,7 @@
  * This is a critical endpoint that must be called before enabling auto-sniping functionality.
  */
 
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 import { apiAuthWrapper } from "@/src/lib/api-auth";
 import {
   createErrorResponse,
@@ -97,11 +97,11 @@ async function validateAutoSnipingConfig(config: any): Promise<{
         "risk_warning",
       ];
       const invalidTypes = config.allowedPatternTypes.filter(
-        (type: any) => !validTypes.includes(type),
+        (type: any) => !validTypes.includes(type)
       );
       if (invalidTypes.length > 0) {
         errors.push(
-          `Invalid pattern types: ${invalidTypes.join(", ")}. Valid types: ${validTypes.join(", ")}`,
+          `Invalid pattern types: ${invalidTypes.join(", ")}. Valid types: ${validTypes.join(", ")}`
         );
       }
     }
@@ -114,7 +114,7 @@ async function validateAutoSnipingConfig(config: any): Promise<{
 
   if (config.stopLossPercentage < 2) {
     warnings.push(
-      "Low stop loss percentage may result in frequent small losses",
+      "Low stop loss percentage may result in frequent small losses"
     );
   }
 
@@ -133,7 +133,7 @@ async function validateAutoSnipingConfig(config: any): Promise<{
  * GET /api/auto-sniping/config-validation
  * Generate comprehensive system readiness report
  */
-export const GET = apiAuthWrapper(async (request: NextRequest) => {
+export const GET = apiAuthWrapper(async (_request: NextRequest) => {
   try {
     const validator = MexcConfigValidator.getInstance();
     const report = await validator.generateSystemReadinessReport();
@@ -142,7 +142,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       createSuccessResponse({
         message: "System readiness report generated successfully",
         data: report,
-      }),
+      })
     );
   } catch (error) {
     console.error("[Config Validation] Failed to generate readiness report:", {
@@ -152,7 +152,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
       createErrorResponse("Failed to generate system readiness report", {
         error: error instanceof Error ? error.message : "Unknown error",
       }),
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
@@ -169,16 +169,17 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     const validator = MexcConfigValidator.getInstance();
 
     switch (action) {
-      case "health_check":
+      case "health_check": {
         const healthCheck = await validator.quickHealthCheck();
         return Response.json(
           createSuccessResponse({
             message: "Health check completed",
             data: healthCheck,
-          }),
+          })
         );
+      }
 
-      case "validate_component":
+      case "validate_component": {
         if (!component) {
           return Response.json(
             createErrorResponse("Component parameter required for validation", {
@@ -189,7 +190,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
                 "trading_config",
               ],
             }),
-            { status: 400 },
+            { status: 400 }
           );
         }
 
@@ -218,7 +219,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
                   "trading_config",
                 ],
               }),
-              { status: 400 },
+              { status: 400 }
             );
         }
 
@@ -226,17 +227,19 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           createSuccessResponse({
             message: `${component} validation completed`,
             data: validationResult,
-          }),
+          })
         );
+      }
 
-      case "full_validation":
+      case "full_validation": {
         const fullReport = await validator.generateSystemReadinessReport();
         return Response.json(
           createSuccessResponse({
             message: "Full system validation completed",
             data: fullReport,
-          }),
+          })
         );
+      }
 
       default:
         return Response.json(
@@ -248,7 +251,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
               "full_validation",
             ],
           }),
-          { status: 400 },
+          { status: 400 }
         );
     }
   } catch (error) {
@@ -257,7 +260,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       createErrorResponse("Configuration validation request failed", {
         error: error instanceof Error ? error.message : "Unknown error",
       }),
-      { status: 500 },
+      { status: 500 }
     );
   }
 });
@@ -276,7 +279,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
         createErrorResponse("Invalid request: config object is required", {
           code: "MISSING_CONFIG",
         }),
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -295,7 +298,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
           errors: validationResult.errors,
           code: "VALIDATION_FAILED",
         }),
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -306,7 +309,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
           message: "Configuration validation passed",
           validation: validationResult,
           wouldUpdate: Object.keys(config),
-        }),
+        })
       );
     }
 
@@ -323,7 +326,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
           updatedFields: Object.keys(config),
           currentStatus: status,
           validation: validationResult,
-        }),
+        })
       );
     } catch (updateError) {
       return Response.json(
@@ -334,7 +337,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
               : "Unknown error",
           code: "UPDATE_FAILED",
         }),
-        { status: 500 },
+        { status: 500 }
       );
     }
   } catch (error) {
@@ -345,7 +348,7 @@ export const PUT = apiAuthWrapper(async (request: NextRequest) => {
       createErrorResponse("Configuration update failed", {
         error: error instanceof Error ? error.message : "Unknown error",
       }),
-      { status: 500 },
+      { status: 500 }
     );
   }
 });

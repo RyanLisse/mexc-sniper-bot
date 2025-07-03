@@ -82,7 +82,9 @@ export class AgentHealthMonitor {
       }
     }, this.healthCheckIntervalMs);
 
-    this.logger.info(`Started health monitoring (interval: ${this.healthCheckIntervalMs}ms)`);
+    this.logger.info(
+      `Started health monitoring (interval: ${this.healthCheckIntervalMs}ms)`
+    );
   }
 
   /**
@@ -114,8 +116,12 @@ export class AgentHealthMonitor {
       // Collect enhanced metrics before health check
       const memoryUsage = this.getAgentMemoryUsage(agent);
       const cpuUsage = this.getAgentCpuUsage(agent);
-      const cacheStats = agent.instance.getCacheStats?.() || { hitRate: 0, size: 0 };
-      const cacheHitRate = typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
+      const cacheStats = agent.instance.getCacheStats?.() || {
+        hitRate: 0,
+        size: 0,
+      };
+      const cacheHitRate =
+        typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
 
       // Try a simple process call to test agent health
       const response = await Promise.race([
@@ -129,7 +135,12 @@ export class AgentHealthMonitor {
       ]);
 
       const responseTime = Date.now() - startTime;
-      const healthScore = this.calculateHealthScore(agent, responseTime, memoryUsage, cpuUsage);
+      const healthScore = this.calculateHealthScore(
+        agent,
+        responseTime,
+        memoryUsage,
+        cpuUsage
+      );
 
       result = {
         success: true,
@@ -144,7 +155,8 @@ export class AgentHealthMonitor {
           agent: agent.name,
           agentType: agent.type,
           cacheSize: cacheStats.size,
-          response: typeof response === "object" && response !== null ? response : {},
+          response:
+            typeof response === "object" && response !== null ? response : {},
         },
       };
 
@@ -153,8 +165,12 @@ export class AgentHealthMonitor {
       const responseTime = Date.now() - startTime;
       const memoryUsage = this.getAgentMemoryUsage(agent);
       const cpuUsage = this.getAgentCpuUsage(agent);
-      const cacheStats = agent.instance.getCacheStats?.() || { hitRate: 0, size: 0 };
-      const cacheHitRate = typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
+      const cacheStats = agent.instance.getCacheStats?.() || {
+        hitRate: 0,
+        size: 0,
+      };
+      const cacheHitRate =
+        typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
       const healthScore = this.calculateHealthScore(
         agent,
         responseTime,
@@ -220,20 +236,34 @@ export class AgentHealthMonitor {
    */
   getStats(): AgentRegistryStats {
     const agents = Array.from(this.getAgents().values());
-    const healthyCount = agents.filter((a) => a.health.status === "healthy").length;
-    const degradedCount = agents.filter((a) => a.health.status === "degraded").length;
-    const unhealthyCount = agents.filter((a) => a.health.status === "unhealthy").length;
-    const unknownCount = agents.filter((a) => a.health.status === "unknown").length;
+    const healthyCount = agents.filter(
+      (a) => a.health.status === "healthy"
+    ).length;
+    const degradedCount = agents.filter(
+      (a) => a.health.status === "degraded"
+    ).length;
+    const unhealthyCount = agents.filter(
+      (a) => a.health.status === "unhealthy"
+    ).length;
+    const unknownCount = agents.filter(
+      (a) => a.health.status === "unknown"
+    ).length;
 
-    const totalResponseTimes = agents.reduce((sum, a) => sum + a.health.responseTime, 0);
-    const averageResponseTime = agents.length > 0 ? totalResponseTimes / agents.length : 0;
+    const totalResponseTimes = agents.reduce(
+      (sum, a) => sum + a.health.responseTime,
+      0
+    );
+    const averageResponseTime =
+      agents.length > 0 ? totalResponseTimes / agents.length : 0;
 
     const totalHealthChecks = Array.from(this.healthHistory.values()).reduce(
       (sum, history) => sum + history.length,
       0
     );
 
-    const lastCheckTimes = agents.map((a) => a.health.lastChecked).filter(Boolean);
+    const lastCheckTimes = agents
+      .map((a) => a.health.lastChecked)
+      .filter(Boolean);
     const lastFullHealthCheck =
       lastCheckTimes.length > 0
         ? new Date(Math.max(...lastCheckTimes.map((d) => d.getTime())))
@@ -278,8 +308,14 @@ export class AgentHealthMonitor {
       0,
       100 - (responseTime / thresholds.responseTime.critical) * 100
     );
-    const memoryScore = Math.max(0, 100 - (memoryUsage / thresholds.memoryUsage.critical) * 100);
-    const cpuScore = Math.max(0, 100 - (cpuUsage / thresholds.cpuUsage.critical) * 100);
+    const memoryScore = Math.max(
+      0,
+      100 - (memoryUsage / thresholds.memoryUsage.critical) * 100
+    );
+    const cpuScore = Math.max(
+      0,
+      100 - (cpuUsage / thresholds.cpuUsage.critical) * 100
+    );
     const uptimeScore = agent.health.uptime;
     const errorRateScore = Math.max(0, 100 - agent.health.errorRate * 100);
 
@@ -311,8 +347,12 @@ export class AgentHealthMonitor {
 
     if (recent.length === 0) return 0;
 
-    const avgResponseTime = recent.reduce((sum, h) => sum + h.responseTime, 0) / recent.length;
-    return Math.min(100, Math.max(0, avgResponseTime / 100 + agent.health.errorRate * 50));
+    const avgResponseTime =
+      recent.reduce((sum, h) => sum + h.responseTime, 0) / recent.length;
+    return Math.min(
+      100,
+      Math.max(0, avgResponseTime / 100 + agent.health.errorRate * 50)
+    );
   }
 
   /**

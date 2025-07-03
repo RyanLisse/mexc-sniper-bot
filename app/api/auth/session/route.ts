@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/src/lib/supabase-auth";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getSession();
-    
+
     if (!session.isAuthenticated || !session.user) {
       return NextResponse.json({ user: null }, { status: 401 });
     }
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         id: session.user.id,
         userId: session.user.id,
         accessToken: session.accessToken,
-      }
+      },
     });
   } catch (error) {
     console.error("Session API error:", { error: error });

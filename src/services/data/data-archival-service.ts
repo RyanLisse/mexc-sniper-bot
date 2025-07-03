@@ -13,7 +13,12 @@ export class DataArchivalService {
     warn: (message: string, context?: any) =>
       console.warn("[data-archival-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[data-archival-service]", message, context || "", error || ""),
+      console.error(
+        "[data-archival-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[data-archival-service]", message, context || ""),
   };
@@ -117,7 +122,9 @@ export class DataArchivalService {
     const cutoffDate = new Date(
       Date.now() - this.EXECUTION_HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000
     );
-    console.info(`📦 Archiving execution history older than ${cutoffDate.toISOString()}`);
+    console.info(
+      `📦 Archiving execution history older than ${cutoffDate.toISOString()}`
+    );
 
     let totalArchived = 0;
 
@@ -131,11 +138,15 @@ export class DataArchivalService {
         return 0;
       }
 
-      console.info(`📦 Found ${recordsToArchive} execution history records to archive`);
+      console.info(
+        `📦 Found ${recordsToArchive} execution history records to archive`
+      );
 
       // Archive in batches to avoid overwhelming the system
       let batchCount = 0;
-      const totalBatches = Math.ceil(recordsToArchive / this.ARCHIVAL_BATCH_SIZE);
+      const totalBatches = Math.ceil(
+        recordsToArchive / this.ARCHIVAL_BATCH_SIZE
+      );
 
       while (true) {
         // Get a batch of old records
@@ -190,7 +201,9 @@ export class DataArchivalService {
     const cutoffDate = new Date(
       Date.now() - this.WORKFLOW_ACTIVITY_RETENTION_DAYS * 24 * 60 * 60 * 1000
     );
-    console.info(`📦 Archiving workflow activity older than ${cutoffDate.toISOString()}`);
+    console.info(
+      `📦 Archiving workflow activity older than ${cutoffDate.toISOString()}`
+    );
 
     let totalArchived = 0;
 
@@ -204,7 +217,9 @@ export class DataArchivalService {
         return 0;
       }
 
-      console.info(`📦 Found ${recordsToArchive} workflow activity records to archive`);
+      console.info(
+        `📦 Found ${recordsToArchive} workflow activity records to archive`
+      );
 
       // Delete old workflow activity records (they're less critical than execution history)
       const _deleteResult = await db
@@ -280,7 +295,11 @@ export class DataArchivalService {
     error?: string;
   }> {
     if (this.isArchiving) {
-      return { success: false, recordsArchived: 0, error: "Archival already in progress" };
+      return {
+        success: false,
+        recordsArchived: 0,
+        error: "Archival already in progress",
+      };
     }
 
     try {

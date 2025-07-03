@@ -89,7 +89,10 @@ export function extractBaseCurrency(symbol: string): string {
  * @param vcoinId - Optional vcoin ID for more precise filtering
  * @returns Boolean indicating if sufficient activity data exists
  */
-export async function hasActivityData(symbol: string, vcoinId?: string): Promise<boolean> {
+export async function hasActivityData(
+  symbol: string,
+  vcoinId?: string
+): Promise<boolean> {
   const activities = await getActivityDataForSymbol(symbol, vcoinId);
   return activities.length > 0;
 }

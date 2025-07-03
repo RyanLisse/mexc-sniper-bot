@@ -31,23 +31,23 @@ export function useEnhancedConnectivity() {
 
   // Load connectivity data
   const loadData = async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
     try {
       const response = await fetch("/api/mexc/enhanced-connectivity");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to load connectivity data");
       }
-      
+
       setState({
         data: result.data,
         isLoading: false,
         error: null,
       });
     } catch (error) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         error: error instanceof Error ? error.message : "Failed to load data",
@@ -63,7 +63,7 @@ export function useEnhancedConnectivity() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "test" }),
       });
-      
+
       const result = await response.json();
       if (result.success) {
         await loadData();
@@ -77,7 +77,7 @@ export function useEnhancedConnectivity() {
   // Load data on mount
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   return {
     ...state,
@@ -103,7 +103,7 @@ export function useMexcConnectivityEnhanced() {
 
 export function useConnectivityHealth() {
   const { data } = useEnhancedConnectivity();
-  
+
   return {
     health: data?.connected ? "good" : "poor",
     isHealthy: data?.connected || false,

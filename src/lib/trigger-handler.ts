@@ -59,14 +59,22 @@ export function createTriggerHandler(
 export const TriggerHandlers = {
   calendarPoll: createTriggerHandler("mexc/calendar.poll", "Calendar polling"),
 
-  patternAnalysis: createTriggerHandler("mexc/patterns.analyze", "Pattern analysis", (body) => ({
-    symbols: body.symbols || [],
-  })),
+  patternAnalysis: createTriggerHandler(
+    "mexc/patterns.analyze",
+    "Pattern analysis",
+    (body) => ({
+      symbols: body.symbols || [],
+    })
+  ),
 
-  symbolWatch: createTriggerHandler("mexc/symbol.watch", "Symbol watch", (body) => ({
-    vcoinId: body.vcoinId,
-    symbol: body.symbol,
-  })),
+  symbolWatch: createTriggerHandler(
+    "mexc/symbol.watch",
+    "Symbol watch",
+    (body) => ({
+      vcoinId: body.vcoinId,
+      symbol: body.symbol,
+    })
+  ),
 
   tradingStrategy: createTriggerHandler(
     "mexc/strategy.create",
@@ -77,10 +85,14 @@ export const TriggerHandlers = {
     })
   ),
 
-  emergency: createTriggerHandler("mexc/emergency.stop", "Emergency stop", (body) => ({
-    reason: body.reason || "Manual trigger",
-    userId: body.userId,
-  })),
+  emergency: createTriggerHandler(
+    "mexc/emergency.stop",
+    "Emergency stop",
+    (body) => ({
+      reason: body.reason || "Manual trigger",
+      userId: body.userId,
+    })
+  ),
 };
 
 /**
@@ -94,21 +106,28 @@ export function withAuth(handler: Function, _requiredRole = "user") {
 
     // Check for valid authentication
     if (!authHeader && !apiKey) {
-      return new Response(JSON.stringify({ error: "Authentication required" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     // For now, accept any bearer token or API key
     // Future: Implement proper token validation
-    const isAuthenticated = authHeader?.startsWith("Bearer ") || Boolean(apiKey);
+    const isAuthenticated =
+      authHeader?.startsWith("Bearer ") || Boolean(apiKey);
 
     if (!isAuthenticated) {
-      return new Response(JSON.stringify({ error: "Invalid authentication credentials" }), {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Invalid authentication credentials" }),
+        {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
     return handler(request);
   };
@@ -117,11 +136,18 @@ export function withAuth(handler: Function, _requiredRole = "user") {
 /**
  * Higher-order function to add rate limiting to trigger handlers
  */
-export function withRateLimit(handler: Function, maxRequests = 10, windowMs = 60000) {
+export function withRateLimit(
+  handler: Function,
+  maxRequests = 10,
+  windowMs = 60000
+) {
   const requests = new Map<string, number[]>();
 
   return async (request: NextRequest) => {
-    const clientIP = (request as any).ip || request.headers.get("x-forwarded-for") || "unknown";
+    const clientIP =
+      (request as any).ip ||
+      request.headers.get("x-forwarded-for") ||
+      "unknown";
     const now = Date.now();
     const windowStart = now - windowMs;
 
@@ -129,7 +155,9 @@ export function withRateLimit(handler: Function, maxRequests = 10, windowMs = 60
     const clientRequests = requests.get(clientIP) || [];
 
     // Remove old requests outside the window
-    const recentRequests = clientRequests.filter((timestamp) => timestamp > windowStart);
+    const recentRequests = clientRequests.filter(
+      (timestamp) => timestamp > windowStart
+    );
 
     // Check if rate limit exceeded
     if (recentRequests.length >= maxRequests) {

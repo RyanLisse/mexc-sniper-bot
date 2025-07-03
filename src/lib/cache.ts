@@ -17,13 +17,13 @@ export class Cache<T = any> {
     this.options = {
       ttl: options.ttl || 5 * 60 * 1000, // 5 minutes
       maxSize: options.maxSize || 1000,
-      onEvict: options.onEvict || (() => {})
+      onEvict: options.onEvict || (() => {}),
     };
   }
 
   set(key: string, value: T, ttl?: number): void {
     const expires = Date.now() + (ttl || this.options.ttl);
-    
+
     // Check if we need to evict old entries
     if (this.store.size >= this.options.maxSize && !this.store.has(key)) {
       this.evictOldest();
@@ -34,7 +34,7 @@ export class Cache<T = any> {
 
   get(key: string): T | undefined {
     const entry = this.store.get(key);
-    
+
     if (!entry) {
       return undefined;
     }
@@ -49,7 +49,7 @@ export class Cache<T = any> {
 
   has(key: string): boolean {
     const entry = this.store.get(key);
-    
+
     if (!entry) {
       return false;
     }
@@ -89,7 +89,7 @@ export class Cache<T = any> {
   values(): T[] {
     const now = Date.now();
     const values: T[] = [];
-    
+
     for (const [key, entry] of this.store) {
       if (now > entry.expires) {
         this.delete(key);
@@ -97,7 +97,7 @@ export class Cache<T = any> {
         values.push(entry.value);
       }
     }
-    
+
     return values;
   }
 
@@ -149,3 +149,11 @@ export class LRUCache<T = any> extends Cache<T> {
 }
 
 export const globalCacheManager = new CacheManager();
+
+// Cache key generation utility
+export function generateCacheKey(...components: (string | number | undefined)[]): string {
+  return components
+    .filter(component => component !== undefined && component !== null)
+    .map(component => String(component))
+    .join(':');
+}

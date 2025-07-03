@@ -1,12 +1,11 @@
 /**
  * Error Reporting API Endpoint
- * 
+ *
  * Handles client-side error reporting and provides error metadata
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { ApplicationError, isApplicationError } from "@/src/lib/errors";
 
 // Error reporting schema
 const ErrorReportSchema = z.object({
@@ -49,14 +48,16 @@ export async function POST(request: NextRequest) {
       message: "Error reported successfully",
       errorId: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     });
-
   } catch (error) {
     console.error("[ErrorReporting] Failed to process error report:", error);
-    
-    return NextResponse.json({
-      success: false,
-      error: "Failed to process error report",
-    }, { status: 400 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to process error report",
+      },
+      { status: 400 }
+    );
   }
 }
 
@@ -71,7 +72,7 @@ export async function GET() {
       data: {
         errorTypes: [
           "VALIDATION_ERROR",
-          "AUTHENTICATION_ERROR", 
+          "AUTHENTICATION_ERROR",
           "AUTHORIZATION_ERROR",
           "API_ERROR",
           "RATE_LIMIT_ERROR",
@@ -89,13 +90,15 @@ export async function GET() {
         timestamp: new Date().toISOString(),
       },
     });
-
   } catch (error) {
     console.error("[ErrorMetadata] Failed to get error metadata:", error);
-    
-    return NextResponse.json({
-      success: false,
-      error: "Failed to retrieve error metadata",
-    }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to retrieve error metadata",
+      },
+      { status: 500 }
+    );
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Symbol Data Analyzer
- * 
+ *
  * Handles analysis of MEXC symbol data and trading signals
  */
 
@@ -13,7 +13,9 @@ export class SymbolAnalyzer {
    */
   async analyzeSymbolData(
     symbolData: MexcSymbolData[],
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(symbolData, null, 2);
 
@@ -30,7 +32,9 @@ export class SymbolAnalyzer {
    */
   async identifyTradingSignals(
     marketData: MexcSymbolData,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const dataJson = JSON.stringify(marketData, null, 2);
 

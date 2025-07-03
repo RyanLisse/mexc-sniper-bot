@@ -1,6 +1,6 @@
 /**
  * Agent Metrics Collector
- * 
+ *
  * Collects and calculates performance metrics for individual agents
  */
 
@@ -77,9 +77,13 @@ export class AgentMetricsCollector {
       throw new Error(`Agent ${agentId} not found`);
     }
 
-    const healthHistory = this.agentRegistry.getAgentHealthHistory(agentId, 100);
+    const healthHistory = this.agentRegistry.getAgentHealthHistory(
+      agentId,
+      100
+    );
     const recentHistory = healthHistory.filter(
-      (h) => timestamp.getTime() - h.timestamp.getTime() < TIME_CONSTANTS.HOUR_MS
+      (h) =>
+        timestamp.getTime() - h.timestamp.getTime() < TIME_CONSTANTS.HOUR_MS
     );
 
     // Calculate basic metrics
@@ -87,13 +91,15 @@ export class AgentMetricsCollector {
     const successfulRequests = recentHistory.filter((h) => h.success).length;
     const failedRequests = totalRequests - successfulRequests;
 
-    const successRate = totalRequests > 0 ? successfulRequests / totalRequests : 0;
+    const successRate =
+      totalRequests > 0 ? successfulRequests / totalRequests : 0;
     const errorRate = totalRequests > 0 ? failedRequests / totalRequests : 0;
 
     const responseTimes = recentHistory.map((h) => h.responseTime);
     const averageResponseTime =
       responseTimes.length > 0
-        ? responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length
+        ? responseTimes.reduce((sum, time) => sum + time, 0) /
+          responseTimes.length
         : 0;
 
     // Calculate percentiles
@@ -110,7 +116,8 @@ export class AgentMetricsCollector {
 
     // Get cache stats if available
     const cacheStats = agent.instance.getCacheStats?.() || { hitRate: 0 };
-    const cacheHitRate = typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
+    const cacheHitRate =
+      typeof cacheStats.hitRate === "number" ? cacheStats.hitRate : 0;
 
     // Estimate resource usage (simplified)
     const memoryUsage = this.estimateMemoryUsage(agent);
@@ -146,9 +153,12 @@ export class AgentMetricsCollector {
     };
   }
 
-  private calculatePercentile(sortedValues: number[], percentile: number): number {
+  private calculatePercentile(
+    sortedValues: number[],
+    percentile: number
+  ): number {
     if (sortedValues.length === 0) return 0;
-    
+
     const index = Math.ceil((percentile / 100) * sortedValues.length) - 1;
     return sortedValues[Math.max(0, Math.min(index, sortedValues.length - 1))];
   }
@@ -157,30 +167,33 @@ export class AgentMetricsCollector {
     // Simplified memory estimation based on agent type and activity
     const baseMemory = 50; // Base 50MB
     const typeMultiplier = this.getMemoryMultiplierByType(agent.type);
-    const activityMultiplier = Math.min(2.0, 1.0 + (agent.health.requestCount || 0) / 1000);
-    
+    const activityMultiplier = Math.min(
+      2.0,
+      1.0 + (agent.health.requestCount || 0) / 1000
+    );
+
     return Math.round(baseMemory * typeMultiplier * activityMultiplier);
   }
 
-  private estimateCpuUsage(agent: any, recentHistory: any[]): number {
+  private estimateCpuUsage(_agent: any, recentHistory: any[]): number {
     // Simplified CPU estimation based on recent activity
     const baseUsage = 5; // Base 5%
     const activityFactor = Math.min(50, recentHistory.length * 2);
-    const errorPenalty = recentHistory.filter(h => !h.success).length * 5;
-    
+    const errorPenalty = recentHistory.filter((h) => !h.success).length * 5;
+
     return Math.min(100, baseUsage + activityFactor + errorPenalty);
   }
 
   private getMemoryMultiplierByType(agentType: string): number {
     const multipliers: Record<string, number> = {
-      'mexc-api': 1.5,
-      'pattern-discovery': 2.0,
-      'trading-strategy': 1.3,
-      'risk-manager': 1.2,
-      'calendar': 1.1,
-      'default': 1.0,
+      "mexc-api": 1.5,
+      "pattern-discovery": 2.0,
+      "trading-strategy": 1.3,
+      "risk-manager": 1.2,
+      calendar: 1.1,
+      default: 1.0,
     };
-    
+
     return multipliers[agentType] || multipliers.default;
   }
 }

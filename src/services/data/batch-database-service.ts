@@ -18,20 +18,7 @@ import { db, executeWithRetry, monitoredQuery } from "@/src/db";
 import { patternEmbeddings, snipeTargets } from "@/src/db/schema";
 import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type {
-  AggregationResult,
-  BatchOperationResult,
-  BuiltQuery,
-  DatabaseRow,
-  DatabaseTransaction,
-  PatternEmbeddingRow,
-  QueryParameter,
-  SnipeTargetRow,
-  TransactionOperation,
-  UpdateValue, 
-  WhereConditions,
-  WhereConditionValue
-} from "@/src/types/database-types";
+import type { SnipeTargetRow } from "@/src/types/database-types";
 
 // ============================================================================
 // Types and Schemas
@@ -45,7 +32,12 @@ const BatchInsertOptionsSchema = z.object({
 });
 
 const AggregationOptionsSchema = z.object({
-  groupBy: z.enum(["pattern_type", "symbol_name", "user_id", "confidence_range"]),
+  groupBy: z.enum([
+    "pattern_type",
+    "symbol_name",
+    "user_id",
+    "confidence_range",
+  ]),
   timeframe: z.enum(["1h", "6h", "24h", "7d", "30d"]).default("24h"),
   includeInactive: z.boolean().default(false),
   minConfidence: z.number().min(0).max(100).optional(),
@@ -102,7 +94,12 @@ export class BatchDatabaseService {
     warn: (message: string, context?: unknown) =>
       console.warn("[batch-database-service]", message, context || ""),
     error: (message: string, context?: unknown, error?: Error) =>
-      console.error("[batch-database-service]", message, context || "", error || ""),
+      console.error(
+        "[batch-database-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: unknown) =>
       console.debug("[batch-database-service]", message, context || ""),
   };
@@ -124,7 +121,8 @@ export class BatchDatabaseService {
     if (embeddings.length === 0) return 0;
 
     const validatedOptions = BatchInsertOptionsSchema.parse(options);
-    const { chunkSize, enableDeduplication, onConflictStrategy, validateData } = validatedOptions;
+    const { chunkSize, enableDeduplication, onConflictStrategy, validateData } =
+      validatedOptions;
 
     const startTime = performance.now();
     this.logger.info("Starting batch pattern embedding insertion", {
@@ -144,7 +142,8 @@ export class BatchDatabaseService {
 
       // Remove duplicates if requested
       if (enableDeduplication) {
-        processedEmbeddings = await this.deduplicateEmbeddings(processedEmbeddings);
+        processedEmbeddings =
+          await this.deduplicateEmbeddings(processedEmbeddings);
       }
 
       // Process in chunks with real database transactions for optimal performance
@@ -154,7 +153,7 @@ export class BatchDatabaseService {
       // Use database transaction for better consistency and rollback capability
       const result = await db.transaction(async (tx: any) => {
         let totalInserted = 0;
-        
+
         for (let i = 0; i < chunks.length; i++) {
           const chunk = chunks[i];
           const chunkStartTime = performance.now();
@@ -177,7 +176,8 @@ export class BatchDatabaseService {
                 {
                   operationType: "insert",
                   tableName: "pattern_embeddings",
-                  query: "INSERT INTO pattern_embeddings (...) VALUES (...) ON CONFLICT DO NOTHING",
+                  query:
+                    "INSERT INTO pattern_embeddings (...) VALUES (...) ON CONFLICT DO NOTHING",
                   parameters: chunk,
                 }
               );
@@ -257,10 +257,10 @@ export class BatchDatabaseService {
             // Continue with next chunk for other strategies
           }
         }
-        
+
         return totalInserted;
       });
-      
+
       insertedCount = result;
 
       const totalTime = performance.now() - startTime;
@@ -287,103 +287,106 @@ export class BatchDatabaseService {
   /**
    * Batch update pattern metrics with real database transactions
    */
-  async batchUpdatePatternMetrics(updates: PatternMetricUpdate[]): Promise<number> {
+  async batchUpdatePatternMetrics(
+    updates: PatternMetricUpdate[]
+  ): Promise<number> {
     if (updates.length === 0) return 0;
 
-    const startTime = performance.now();
+    const _startTime = performance.now();
     this.logger.info("Starting batch pattern metrics update", {
       updateCount: updates.length,
     });
 
     try {
       // Use database transaction for consistent updates
-      return await databaseConnectionPool.executeWrite(
-        async () => {
-          return await db.transaction(async (tx: any) => {
-            let updatedCount = 0;
+      return await databaseConnectionPool.executeWrite(async () => {
+        return await db.transaction(async (tx: any) => {
+          let updatedCount = 0;
 
-            if (updates.length === 1) {
-              // Single update - use direct query
-              const update = updates[0];
-              const setClause = this.buildUpdateSetClause(update);
+          if (updates.length === 1) {
+            // Single update - use direct query
+            const update = updates[0];
+            const setClause = this.buildUpdateSetClause(update);
 
-              if (Object.keys(setClause).length > 0) {
-                const result = await monitoredQuery(
-                  "single_pattern_metric_update",
-                  async () => {
-                    return await executeWithRetry(async () => {
-                      return await tx
-                        .update(patternEmbeddings)
-                        .set({
-                          ...setClause,
-                          lastSeenAt: new Date(),
-                          updatedAt: new Date(),
-                        })
-                        .where(eq(patternEmbeddings.patternId, update.patternId));
-                    });
-                  },
-                  {
-                    operationType: "update",
-                    tableName: "pattern_embeddings",
-                    query: "UPDATE pattern_embeddings SET ... WHERE pattern_id = ?",
-                    parameters: [update.patternId],
-                  }
-                );
-                updatedCount = (result as any).rowsAffected || 1;
-              }
-            } else {
-              // Multiple updates - use efficient batch approach within transaction
-              const updateQueries = updates
-                .map((update) => {
-                  const setClause = this.buildUpdateSetClause(update);
-                  return {
-                    patternId: update.patternId,
-                    updateFields: setClause,
-                  };
-                })
-                .filter((item) => Object.keys(item.updateFields).length > 0);
+            if (Object.keys(setClause).length > 0) {
+              const result = await monitoredQuery(
+                "single_pattern_metric_update",
+                async () => {
+                  return await executeWithRetry(async () => {
+                    return await tx
+                      .update(patternEmbeddings)
+                      .set({
+                        ...setClause,
+                        lastSeenAt: new Date(),
+                        updatedAt: new Date(),
+                      })
+                      .where(eq(patternEmbeddings.patternId, update.patternId));
+                  });
+                },
+                {
+                  operationType: "update",
+                  tableName: "pattern_embeddings",
+                  query:
+                    "UPDATE pattern_embeddings SET ... WHERE pattern_id = ?",
+                  parameters: [update.patternId],
+                }
+              );
+              updatedCount = (result as any).rowsAffected || 1;
+            }
+          } else {
+            // Multiple updates - use efficient batch approach within transaction
+            const updateQueries = updates
+              .map((update) => {
+                const setClause = this.buildUpdateSetClause(update);
+                return {
+                  patternId: update.patternId,
+                  updateFields: setClause,
+                };
+              })
+              .filter((item) => Object.keys(item.updateFields).length > 0);
 
-              // Process updates in batches to avoid query size limits
-              const batchSize = 25;
-              const batches = this.chunkArray(updateQueries, batchSize);
+            // Process updates in batches to avoid query size limits
+            const batchSize = 25;
+            const batches = this.chunkArray(updateQueries, batchSize);
 
-              for (const batch of batches) {
-                // Use individual updates within transaction for better reliability
-                for (const item of batch) {
-                  if (Object.keys(item.updateFields).length > 0) {
-                    await monitoredQuery(
-                      "batch_pattern_metric_update_item",
-                      async () => {
-                        return await executeWithRetry(async () => {
-                          const result = await tx
-                            .update(patternEmbeddings)
-                            .set({
-                              ...item.updateFields,
-                              lastSeenAt: new Date(),
-                              updatedAt: new Date(),
-                            })
-                            .where(eq(patternEmbeddings.patternId, item.patternId));
-                          return result;
-                        });
-                      },
-                      {
-                        operationType: "update",
-                        tableName: "pattern_embeddings",
-                        query: "UPDATE pattern_embeddings SET ... WHERE pattern_id = ?",
-                        parameters: [item.patternId],
-                      }
-                    );
-                    updatedCount++;
-                  }
+            for (const batch of batches) {
+              // Use individual updates within transaction for better reliability
+              for (const item of batch) {
+                if (Object.keys(item.updateFields).length > 0) {
+                  await monitoredQuery(
+                    "batch_pattern_metric_update_item",
+                    async () => {
+                      return await executeWithRetry(async () => {
+                        const result = await tx
+                          .update(patternEmbeddings)
+                          .set({
+                            ...item.updateFields,
+                            lastSeenAt: new Date(),
+                            updatedAt: new Date(),
+                          })
+                          .where(
+                            eq(patternEmbeddings.patternId, item.patternId)
+                          );
+                        return result;
+                      });
+                    },
+                    {
+                      operationType: "update",
+                      tableName: "pattern_embeddings",
+                      query:
+                        "UPDATE pattern_embeddings SET ... WHERE pattern_id = ?",
+                      parameters: [item.patternId],
+                    }
+                  );
+                  updatedCount++;
                 }
               }
             }
+          }
 
-            return updatedCount;
-          });
-        },
-        ["pattern_embeddings", "pattern_metrics"]
-      );
+          return updatedCount;
+        });
+      }, ["pattern_embeddings", "pattern_metrics"]);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Batch metrics update failed", {
@@ -397,7 +400,9 @@ export class BatchDatabaseService {
   /**
    * Batch check for snipe target duplicates
    */
-  async batchCheckSnipeTargetDuplicates(targets: SnipeTargetCheck[]): Promise<SnipeTargetCheck[]> {
+  async batchCheckSnipeTargetDuplicates(
+    targets: SnipeTargetCheck[]
+  ): Promise<SnipeTargetCheck[]> {
     if (targets.length === 0) return [];
 
     const startTime = performance.now();
@@ -437,7 +442,9 @@ export class BatchDatabaseService {
 
       // Create lookup set for O(1) duplicate checking
       const existingCombinations = new Set(
-        existingTargets.map((target: SnipeTargetRow) => `${target.userId}:${target.symbolName}`)
+        existingTargets.map(
+          (target: SnipeTargetRow) => `${target.userId}:${target.symbolName}`
+        )
       );
 
       // Filter out duplicates
@@ -473,7 +480,8 @@ export class BatchDatabaseService {
     options: AggregationOptions
   ): Promise<AggregatedMetrics[]> {
     const validatedOptions = AggregationOptionsSchema.parse(options);
-    const { groupBy, timeframe, includeInactive, minConfidence } = validatedOptions;
+    const { groupBy, timeframe, includeInactive, minConfidence } =
+      validatedOptions;
 
     const startTime = performance.now();
     this.logger.info("Starting pattern performance aggregation", {
@@ -504,7 +512,10 @@ export class BatchDatabaseService {
             let queryWithParams = baseQuery.query;
             baseQuery.parameters.forEach((param, index) => {
               const placeholder = `$${index + 1}`;
-              const value = param instanceof Date ? `'${param.toISOString()}'` : `'${param}'`;
+              const value =
+                param instanceof Date
+                  ? `'${param.toISOString()}'`
+                  : `'${param}'`;
               queryWithParams = queryWithParams.replace(placeholder, value);
             });
             return await db.execute(sql.raw(queryWithParams));
@@ -552,19 +563,29 @@ export class BatchDatabaseService {
   /**
    * Helper: Validate embedding data
    */
-  private validateEmbeddingData(embeddings: PatternEmbeddingBatch[]): PatternEmbeddingBatch[] {
+  private validateEmbeddingData(
+    embeddings: PatternEmbeddingBatch[]
+  ): PatternEmbeddingBatch[] {
     return embeddings.filter((embedding) => {
       try {
         // Validate embedding JSON
         const parsedEmbedding = JSON.parse(embedding.embedding);
         if (!Array.isArray(parsedEmbedding) || parsedEmbedding.length === 0) {
-          this.logger.warn("Invalid embedding format", { patternId: embedding.patternId });
+          this.logger.warn("Invalid embedding format", {
+            patternId: embedding.patternId,
+          });
           return false;
         }
 
         // Validate required fields
-        if (!embedding.patternId || !embedding.symbolName || !embedding.patternType) {
-          this.logger.warn("Missing required fields", { patternId: embedding.patternId });
+        if (
+          !embedding.patternId ||
+          !embedding.symbolName ||
+          !embedding.patternType
+        ) {
+          this.logger.warn("Missing required fields", {
+            patternId: embedding.patternId,
+          });
           return false;
         }
 
@@ -601,7 +622,9 @@ export class BatchDatabaseService {
   /**
    * Helper: Build update set clause for pattern metrics
    */
-  private buildUpdateSetClause(update: PatternMetricUpdate): Record<string, any> {
+  private buildUpdateSetClause(
+    update: PatternMetricUpdate
+  ): Record<string, any> {
     const setClause: Record<string, any> = {};
 
     if (update.successRate !== undefined) {
@@ -767,8 +790,8 @@ export class BatchDatabaseService {
    * Generic batch insert with proper transaction handling
    */
   async batchInsert<T extends Record<string, any>>(
-    tableName: string, 
-    records: T[], 
+    tableName: string,
+    records: T[],
     options: Partial<BatchInsertOptions> = {}
   ): Promise<number> {
     if (records.length === 0) return 0;
@@ -776,7 +799,7 @@ export class BatchDatabaseService {
     const validatedOptions = BatchInsertOptionsSchema.parse(options);
     const { chunkSize, onConflictStrategy } = validatedOptions;
 
-    const startTime = performance.now();
+    const _startTime = performance.now();
     this.logger.info("Starting generic batch insert", {
       tableName,
       recordCount: records.length,
@@ -785,69 +808,66 @@ export class BatchDatabaseService {
     });
 
     try {
-      return await databaseConnectionPool.executeWrite(
-        async () => {
-          return await db.transaction(async (tx: any) => {
-            let insertedCount = 0;
-            const chunks = this.chunkArray(records, chunkSize);
+      return await databaseConnectionPool.executeWrite(async () => {
+        return await db.transaction(async (tx: any) => {
+          let insertedCount = 0;
+          const chunks = this.chunkArray(records, chunkSize);
 
-            for (let i = 0; i < chunks.length; i++) {
-              const chunk = chunks[i];
-              
-              try {
-                const insertResult = await monitoredQuery(
-                  `batch_insert_${tableName}_chunk_${i}`,
-                  async () => {
-                    return await executeWithRetry(async () => {
-                      // Dynamic table access based on tableName
-                      const tableRef = this.getTableReference(tableName);
-                      
-                      if (onConflictStrategy === "ignore") {
-                        return await tx
-                          .insert(tableRef)
-                          .values(chunk)
-                          .onConflictDoNothing()
-                          .returning({ id: sql`id` });
-                      } else if (onConflictStrategy === "update") {
-                        // Note: This would need table-specific conflict resolution
-                        return await tx
-                          .insert(tableRef)
-                          .values(chunk)
-                          .returning({ id: sql`id` });
-                      } else {
-                        return await tx
-                          .insert(tableRef)
-                          .values(chunk)
-                          .returning({ id: sql`id` });
-                      }
-                    });
-                  },
-                  {
-                    operationType: "insert",
-                    tableName,
-                    query: `INSERT INTO ${tableName} (...) VALUES (...)`,
-                    parameters: chunk,
-                  }
-                );
+          for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
 
-                insertedCount += (insertResult as any[]).length;
-              } catch (error) {
-                if (onConflictStrategy === "error") {
-                  throw error;
-                }
-                this.logger.warn(`Chunk ${i + 1} insertion failed, continuing`, {
+            try {
+              const insertResult = await monitoredQuery(
+                `batch_insert_${tableName}_chunk_${i}`,
+                async () => {
+                  return await executeWithRetry(async () => {
+                    // Dynamic table access based on tableName
+                    const tableRef = this.getTableReference(tableName);
+
+                    if (onConflictStrategy === "ignore") {
+                      return await tx
+                        .insert(tableRef)
+                        .values(chunk)
+                        .onConflictDoNothing()
+                        .returning({ id: sql`id` });
+                    } else if (onConflictStrategy === "update") {
+                      // Note: This would need table-specific conflict resolution
+                      return await tx
+                        .insert(tableRef)
+                        .values(chunk)
+                        .returning({ id: sql`id` });
+                    } else {
+                      return await tx
+                        .insert(tableRef)
+                        .values(chunk)
+                        .returning({ id: sql`id` });
+                    }
+                  });
+                },
+                {
+                  operationType: "insert",
                   tableName,
-                  chunkSize: chunk.length,
-                  error: error instanceof Error ? error.message : "Unknown error",
-                });
-              }
-            }
+                  query: `INSERT INTO ${tableName} (...) VALUES (...)`,
+                  parameters: chunk,
+                }
+              );
 
-            return insertedCount;
-          });
-        },
-        [tableName]
-      );
+              insertedCount += (insertResult as any[]).length;
+            } catch (error) {
+              if (onConflictStrategy === "error") {
+                throw error;
+              }
+              this.logger.warn(`Chunk ${i + 1} insertion failed, continuing`, {
+                tableName,
+                chunkSize: chunk.length,
+                error: error instanceof Error ? error.message : "Unknown error",
+              });
+            }
+          }
+
+          return insertedCount;
+        });
+      }, [tableName]);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Generic batch insert failed", {
@@ -870,8 +890,8 @@ export class BatchDatabaseService {
     if (updates.length === 0) return 0;
 
     const batchSize = options.batchSize || 25;
-    const startTime = performance.now();
-    
+    const _startTime = performance.now();
+
     this.logger.info("Starting bulk update", {
       tableName,
       updateCount: updates.length,
@@ -879,47 +899,44 @@ export class BatchDatabaseService {
     });
 
     try {
-      return await databaseConnectionPool.executeWrite(
-        async () => {
-          return await db.transaction(async (tx: any) => {
-            let updatedCount = 0;
-            const batches = this.chunkArray(updates, batchSize);
+      return await databaseConnectionPool.executeWrite(async () => {
+        return await db.transaction(async (tx: any) => {
+          let updatedCount = 0;
+          const batches = this.chunkArray(updates, batchSize);
 
-            for (const batch of batches) {
-              for (const update of batch) {
-                const tableRef = this.getTableReference(tableName);
-                const whereConditions = this.buildWhereConditions(update.where);
+          for (const batch of batches) {
+            for (const update of batch) {
+              const tableRef = this.getTableReference(tableName);
+              const whereConditions = this.buildWhereConditions(update.where);
 
-                const result = await monitoredQuery(
-                  `bulk_update_${tableName}`,
-                  async () => {
-                    return await executeWithRetry(async () => {
-                      return await tx
-                        .update(tableRef)
-                        .set({
-                          ...update.set,
-                          updatedAt: new Date(),
-                        })
-                        .where(whereConditions);
-                    });
-                  },
-                  {
-                    operationType: "update",
-                    tableName,
-                    query: `UPDATE ${tableName} SET ... WHERE ...`,
-                    parameters: [update.where],
-                  }
-                );
+              const result = await monitoredQuery(
+                `bulk_update_${tableName}`,
+                async () => {
+                  return await executeWithRetry(async () => {
+                    return await tx
+                      .update(tableRef)
+                      .set({
+                        ...update.set,
+                        updatedAt: new Date(),
+                      })
+                      .where(whereConditions);
+                  });
+                },
+                {
+                  operationType: "update",
+                  tableName,
+                  query: `UPDATE ${tableName} SET ... WHERE ...`,
+                  parameters: [update.where],
+                }
+              );
 
-                updatedCount += (result as any).rowsAffected || 1;
-              }
+              updatedCount += (result as any).rowsAffected || 1;
             }
+          }
 
-            return updatedCount;
-          });
-        },
-        [tableName]
-      );
+          return updatedCount;
+        });
+      }, [tableName]);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Bulk update failed", {
@@ -947,7 +964,9 @@ export class BatchDatabaseService {
   ): Promise<T[]> {
     if (conditions.length === 0) return [];
 
-    const cacheKey = options.cacheKey || `bulk_select_${tableName}_${JSON.stringify(conditions).slice(0, 50)}`;
+    const cacheKey =
+      options.cacheKey ||
+      `bulk_select_${tableName}_${JSON.stringify(conditions).slice(0, 50)}`;
     const cacheTTL = options.cacheTTL || 60000; // 1 minute default
 
     return await databaseConnectionPool.executeSelect(
@@ -961,7 +980,7 @@ export class BatchDatabaseService {
 
               // Build OR conditions for multiple where clauses
               if (conditions.length > 0) {
-                const orConditions = conditions.map(condition => 
+                const orConditions = conditions.map((condition) =>
                   this.buildWhereConditions(condition)
                 );
                 query = query.where(sql`${sql.join(orConditions, sql` OR `)}`);
@@ -995,14 +1014,11 @@ export class BatchDatabaseService {
     invalidatePatterns: string[] = []
   ): Promise<T> {
     const startTime = performance.now();
-    
+
     try {
-      return await databaseConnectionPool.executeWrite(
-        async () => {
-          return await db.transaction(operations);
-        },
-        invalidatePatterns
-      );
+      return await databaseConnectionPool.executeWrite(async () => {
+        return await db.transaction(operations);
+      }, invalidatePatterns);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Transaction execution failed", {
@@ -1024,7 +1040,7 @@ export class BatchDatabaseService {
     if (conditions.length === 0) return 0;
 
     const batchSize = options.batchSize || 50;
-    const startTime = performance.now();
+    const _startTime = performance.now();
 
     this.logger.info("Starting batch delete", {
       tableName,
@@ -1033,41 +1049,38 @@ export class BatchDatabaseService {
     });
 
     try {
-      return await databaseConnectionPool.executeWrite(
-        async () => {
-          return await db.transaction(async (tx: any) => {
-            let deletedCount = 0;
-            const batches = this.chunkArray(conditions, batchSize);
+      return await databaseConnectionPool.executeWrite(async () => {
+        return await db.transaction(async (tx: any) => {
+          let deletedCount = 0;
+          const batches = this.chunkArray(conditions, batchSize);
 
-            for (const batch of batches) {
-              for (const condition of batch) {
-                const tableRef = this.getTableReference(tableName);
-                const whereConditions = this.buildWhereConditions(condition);
+          for (const batch of batches) {
+            for (const condition of batch) {
+              const tableRef = this.getTableReference(tableName);
+              const whereConditions = this.buildWhereConditions(condition);
 
-                const result = await monitoredQuery(
-                  `batch_delete_${tableName}`,
-                  async () => {
-                    return await executeWithRetry(async () => {
-                      return await tx.delete(tableRef).where(whereConditions);
-                    });
-                  },
-                  {
-                    operationType: "delete",
-                    tableName,
-                    query: `DELETE FROM ${tableName} WHERE ...`,
-                    parameters: [condition],
-                  }
-                );
+              const result = await monitoredQuery(
+                `batch_delete_${tableName}`,
+                async () => {
+                  return await executeWithRetry(async () => {
+                    return await tx.delete(tableRef).where(whereConditions);
+                  });
+                },
+                {
+                  operationType: "delete",
+                  tableName,
+                  query: `DELETE FROM ${tableName} WHERE ...`,
+                  parameters: [condition],
+                }
+              );
 
-                deletedCount += (result as any).rowsAffected || 1;
-              }
+              deletedCount += (result as any).rowsAffected || 1;
             }
+          }
 
-            return deletedCount;
-          });
-        },
-        [tableName]
-      );
+          return deletedCount;
+        });
+      }, [tableName]);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Batch delete failed", {
@@ -1117,8 +1130,8 @@ export class BatchDatabaseService {
       }
     }
 
-    return whereConditions.length === 1 
-      ? whereConditions[0] 
+    return whereConditions.length === 1
+      ? whereConditions[0]
       : and(...whereConditions);
   }
 
@@ -1127,8 +1140,9 @@ export class BatchDatabaseService {
    */
   private updatePerformanceMetrics(): void {
     this.performanceMetrics.totalOperations++;
-    this.performanceMetrics.averageOperationTime = 
-      this.performanceMetrics.totalProcessingTime / this.performanceMetrics.totalOperations;
+    this.performanceMetrics.averageOperationTime =
+      this.performanceMetrics.totalProcessingTime /
+      this.performanceMetrics.totalOperations;
 
     // Auto-optimize based on performance
     if (this.performanceMetrics.totalOperations % 100 === 0) {
@@ -1141,12 +1155,16 @@ export class BatchDatabaseService {
    */
   private optimizeBasedOnMetrics(): void {
     const avgTime = this.performanceMetrics.averageOperationTime;
-    
-    if (avgTime > 5000) { // 5 seconds average
-      this.logger.warn("Performance degradation detected, considering optimizations", {
-        averageOperationTime: avgTime,
-        totalOperations: this.performanceMetrics.totalOperations,
-      });
+
+    if (avgTime > 5000) {
+      // 5 seconds average
+      this.logger.warn(
+        "Performance degradation detected, considering optimizations",
+        {
+          averageOperationTime: avgTime,
+          totalOperations: this.performanceMetrics.totalOperations,
+        }
+      );
     }
 
     // Update optimization timestamp

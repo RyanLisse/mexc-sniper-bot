@@ -37,7 +37,10 @@ export class WorkflowExecutionService {
     private coordinationManager: CoordinationSystemManager,
     private metricsManager: OrchestrationMetricsManager
   ) {
-    this.workflowExecutor = new WorkflowExecutor(this.agentManager, this.dataFetcher);
+    this.workflowExecutor = new WorkflowExecutor(
+      this.agentManager,
+      this.dataFetcher
+    );
   }
 
   /**
@@ -51,18 +54,25 @@ export class WorkflowExecutionService {
     // Try enhanced coordination first if enabled
     if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const result = await this.coordinationManager.executeCalendarDiscoveryWorkflow(request);
+        const result =
+          await this.coordinationManager.executeCalendarDiscoveryWorkflow(
+            request
+          );
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
 
     // Legacy execution path
     try {
-      const result = await this.workflowExecutor.executeCalendarDiscoveryWorkflow(request);
+      const result =
+        await this.workflowExecutor.executeCalendarDiscoveryWorkflow(request);
       this.metricsManager.recordExecution(result, startTime);
       return result;
     } catch (error) {
@@ -87,18 +97,23 @@ export class WorkflowExecutionService {
     // Try enhanced coordination first if enabled
     if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const result = await this.coordinationManager.executeSymbolAnalysisWorkflow(request);
+        const result =
+          await this.coordinationManager.executeSymbolAnalysisWorkflow(request);
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
 
     // Legacy execution path
     try {
-      const result = await this.workflowExecutor.executeSymbolAnalysisWorkflow(request);
+      const result =
+        await this.workflowExecutor.executeSymbolAnalysisWorkflow(request);
       this.metricsManager.recordExecution(result, startTime);
       return result;
     } catch (error) {
@@ -123,18 +138,25 @@ export class WorkflowExecutionService {
     // Try enhanced coordination first if enabled
     if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const result = await this.coordinationManager.executePatternAnalysisWorkflow(request);
+        const result =
+          await this.coordinationManager.executePatternAnalysisWorkflow(
+            request
+          );
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
 
     // Legacy execution path
     try {
-      const result = await this.workflowExecutor.executePatternAnalysisWorkflow(request);
+      const result =
+        await this.workflowExecutor.executePatternAnalysisWorkflow(request);
       this.metricsManager.recordExecution(result, startTime);
       return result;
     } catch (error) {
@@ -159,18 +181,25 @@ export class WorkflowExecutionService {
     // Try enhanced coordination first if enabled
     if (this.coordinationManager.isCoordinationEnabled()) {
       try {
-        const result = await this.coordinationManager.executeTradingStrategyWorkflow(request);
+        const result =
+          await this.coordinationManager.executeTradingStrategyWorkflow(
+            request
+          );
         this.metricsManager.recordExecution(result, startTime);
         return result;
       } catch (error) {
-        this.logger.warn("Enhanced coordination failed, falling back to legacy mode:", error);
+        this.logger.warn(
+          "Enhanced coordination failed, falling back to legacy mode:",
+          error
+        );
         // Fall through to legacy execution
       }
     }
 
     // Legacy execution path
     try {
-      const result = await this.workflowExecutor.executeTradingStrategyWorkflow(request);
+      const result =
+        await this.workflowExecutor.executeTradingStrategyWorkflow(request);
       this.metricsManager.recordExecution(result, startTime);
       return result;
     } catch (error) {

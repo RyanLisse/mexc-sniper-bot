@@ -39,7 +39,11 @@ export interface ConnectionTrend {
 }
 
 export interface PerformanceAlert {
-  type: "latency_spike" | "failure_rate" | "quality_degradation" | "connection_lost";
+  type:
+    | "latency_spike"
+    | "failure_rate"
+    | "quality_degradation"
+    | "connection_lost";
   severity: "info" | "warning" | "critical";
   message: string;
   timestamp: Date;
@@ -76,7 +80,12 @@ export class ConnectionHealthMonitor {
     warn: (message: string, context?: any) =>
       console.warn("[connection-health-monitor]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[connection-health-monitor]", message, context || "", error || ""),
+      console.error(
+        "[connection-health-monitor]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[connection-health-monitor]", message, context || ""),
   };
@@ -162,7 +171,9 @@ export class ConnectionHealthMonitor {
         latency,
         timestamp,
         statusCode: response.status,
-        responseSize: Number.parseInt(response.headers.get("content-length") || "0"),
+        responseSize: Number.parseInt(
+          response.headers.get("content-length") || "0"
+        ),
       };
 
       if (!response.ok) {
@@ -199,10 +210,16 @@ export class ConnectionHealthMonitor {
     }
 
     // Check for latency spikes
-    if (this.config.enableAlerts && latency > this.config.alertThresholds.latencySpike) {
+    if (
+      this.config.enableAlerts &&
+      latency > this.config.alertThresholds.latencySpike
+    ) {
       this.triggerAlert({
         type: "latency_spike",
-        severity: latency > this.config.alertThresholds.latencySpike * 2 ? "critical" : "warning",
+        severity:
+          latency > this.config.alertThresholds.latencySpike * 2
+            ? "critical"
+            : "warning",
         message: `High latency detected: ${latency}ms`,
         timestamp: new Date(),
         metrics: { latency, average: this.getAverageLatency() },
@@ -234,7 +251,9 @@ export class ConnectionHealthMonitor {
   } {
     const _now = Date.now();
     const recentChecks = this.getRecentHealthChecks(1); // Last hour
-    const successfulChecks = recentChecks.filter((check) => check.success).length;
+    const successfulChecks = recentChecks.filter(
+      (check) => check.success
+    ).length;
     const failedChecks = recentChecks.length - successfulChecks;
 
     // Calculate consecutive failures
@@ -251,14 +270,17 @@ export class ConnectionHealthMonitor {
     const last24Hours = this.getRecentHealthChecks(24);
     const uptime =
       last24Hours.length > 0
-        ? (last24Hours.filter((check) => check.success).length / last24Hours.length) * 100
+        ? (last24Hours.filter((check) => check.success).length /
+            last24Hours.length) *
+          100
         : 100;
 
     return {
       totalChecks: recentChecks.length,
       successfulChecks,
       failedChecks,
-      successRate: recentChecks.length > 0 ? successfulChecks / recentChecks.length : 1,
+      successRate:
+        recentChecks.length > 0 ? successfulChecks / recentChecks.length : 1,
       averageLatency: this.getAverageLatency(),
       lastCheckTime: this.healthChecks[this.healthChecks.length - 1]?.timestamp,
       consecutiveFailures,
@@ -281,7 +303,9 @@ export class ConnectionHealthMonitor {
     score = score * 0.6 + successRateScore;
 
     if (metrics.successRate < 0.9) {
-      reasons.push(`Low success rate: ${(metrics.successRate * 100).toFixed(1)}%`);
+      reasons.push(
+        `Low success rate: ${(metrics.successRate * 100).toFixed(1)}%`
+      );
       recommendations.push("Check network stability and API status");
     }
 
@@ -339,7 +363,10 @@ export class ConnectionHealthMonitor {
         "Increase retry timeouts"
       );
     } else if (status === "fair") {
-      recommendations.push("Monitor trends closely", "Optimize request patterns");
+      recommendations.push(
+        "Monitor trends closely",
+        "Optimize request patterns"
+      );
     }
 
     return {
@@ -366,10 +393,12 @@ export class ConnectionHealthMonitor {
 
       const averageLatency =
         successful.length > 0
-          ? successful.reduce((sum, check) => sum + check.latency, 0) / successful.length
+          ? successful.reduce((sum, check) => sum + check.latency, 0) /
+            successful.length
           : 0;
 
-      const successRate = checks.length > 0 ? successful.length / checks.length : 1;
+      const successRate =
+        checks.length > 0 ? successful.length / checks.length : 1;
 
       // Calculate quality score for this period
       let qualityScore = 100;
@@ -386,7 +415,8 @@ export class ConnectionHealthMonitor {
       let trend: ConnectionTrend["trend"] = "stable";
       if (previousPeriodChecks.length > 0) {
         const previousSuccessRate =
-          previousPeriodChecks.filter((c) => c.success).length / previousPeriodChecks.length;
+          previousPeriodChecks.filter((c) => c.success).length /
+          previousPeriodChecks.length;
         const rateChange = successRate - previousSuccessRate;
 
         if (rateChange > 0.1) {
@@ -432,7 +462,8 @@ export class ConnectionHealthMonitor {
         severity: "critical",
         message: `Connection lost for ${metrics.consecutiveFailures} consecutive attempts`,
         timestamp: new Date(
-          Date.now() - metrics.consecutiveFailures * this.config.healthCheckInterval
+          Date.now() -
+            metrics.consecutiveFailures * this.config.healthCheckInterval
         ),
         metrics: { consecutiveFailures: metrics.consecutiveFailures },
         recommendations: [
@@ -450,7 +481,10 @@ export class ConnectionHealthMonitor {
         message: `High failure rate: ${(metrics.successRate * 100).toFixed(1)}%`,
         timestamp: new Date(Date.now() - 300000), // 5 minutes ago
         metrics: { successRate: metrics.successRate },
-        recommendations: ["Investigate connection stability", "Consider increasing timeouts"],
+        recommendations: [
+          "Investigate connection stability",
+          "Consider increasing timeouts",
+        ],
       });
     }
 
@@ -466,8 +500,12 @@ export class ConnectionHealthMonitor {
     this.recordLatency(result.latency);
 
     // Clean up old health checks
-    const cutoffTime = new Date(Date.now() - this.config.maxRetentionPeriod * 60 * 60 * 1000);
-    this.healthChecks = this.healthChecks.filter((check) => check.timestamp > cutoffTime);
+    const cutoffTime = new Date(
+      Date.now() - this.config.maxRetentionPeriod * 60 * 60 * 1000
+    );
+    this.healthChecks = this.healthChecks.filter(
+      (check) => check.timestamp > cutoffTime
+    );
 
     // Check for alerts
     if (this.config.enableAlerts) {
@@ -485,7 +523,10 @@ export class ConnectionHealthMonitor {
         severity: metrics.successRate < 0.5 ? "critical" : "warning",
         message: `High failure rate detected: ${(metrics.successRate * 100).toFixed(1)}%`,
         timestamp: new Date(),
-        metrics: { successRate: metrics.successRate, totalChecks: metrics.totalChecks },
+        metrics: {
+          successRate: metrics.successRate,
+          totalChecks: metrics.totalChecks,
+        },
         recommendations: [
           "Check network connectivity",
           "Verify API endpoint availability",
@@ -522,7 +563,9 @@ export class ConnectionHealthMonitor {
 
   private getAverageLatency(): number {
     if (this.latencies.length === 0) return 0;
-    return this.latencies.reduce((sum, lat) => sum + lat, 0) / this.latencies.length;
+    return (
+      this.latencies.reduce((sum, lat) => sum + lat, 0) / this.latencies.length
+    );
   }
 
   private getRecentHealthChecks(hours: number): HealthCheckResult[] {
@@ -531,7 +574,9 @@ export class ConnectionHealthMonitor {
   }
 
   private getHealthChecksInRange(start: Date, end: Date): HealthCheckResult[] {
-    return this.healthChecks.filter((check) => check.timestamp >= start && check.timestamp <= end);
+    return this.healthChecks.filter(
+      (check) => check.timestamp >= start && check.timestamp <= end
+    );
   }
 
   // ============================================================================

@@ -28,7 +28,10 @@ export class WorkflowStepExecutor {
   /**
    * Execute a single step with comprehensive error handling
    */
-  async executeStep(step: WorkflowStepConfig, context: WorkflowContext): Promise<void> {
+  async executeStep(
+    step: WorkflowStepConfig,
+    context: WorkflowContext
+  ): Promise<void> {
     const startTime = new Date();
     let attempt = 0;
     const maxAttempts = (step.retries || 0) + 1;
@@ -46,8 +49,13 @@ export class WorkflowStepExecutor {
         // Check agent availability
         if (!this.agentRegistry.isAgentAvailable(step.agentId)) {
           // Try fallback agent if available
-          if (step.fallbackAgentId && this.agentRegistry.isAgentAvailable(step.fallbackAgentId)) {
-            const fallbackAgent = this.agentRegistry.getAgentInstance(step.fallbackAgentId);
+          if (
+            step.fallbackAgentId &&
+            this.agentRegistry.isAgentAvailable(step.fallbackAgentId)
+          ) {
+            const fallbackAgent = this.agentRegistry.getAgentInstance(
+              step.fallbackAgentId
+            );
             if (fallbackAgent) {
               const output = await this.executeAgentWithTimeout(
                 fallbackAgent,
@@ -72,7 +80,9 @@ export class WorkflowStepExecutor {
         }
 
         // Transform input if needed
-        const input = step.transform ? step.transform(step.input, context) : step.input;
+        const input = step.transform
+          ? step.transform(step.input, context)
+          : step.input;
 
         // Execute with timeout
         const output = await this.executeAgentWithTimeout(
@@ -142,7 +152,8 @@ export class WorkflowStepExecutor {
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(
-        () => reject(new Error(`Step '${step.id}' timed out after ${timeout}ms`)),
+        () =>
+          reject(new Error(`Step '${step.id}' timed out after ${timeout}ms`)),
         timeout
       );
     });

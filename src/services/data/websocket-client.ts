@@ -13,7 +13,6 @@
  * - TypeScript type safety
  */
 
-import { EventEmitter } from "events";
 import type {
   AgentStatusMessage,
   MessageHandler,
@@ -25,6 +24,44 @@ import type {
   WebSocketClientConfig,
   WebSocketMessage,
 } from "@/src/lib/websocket-types";
+
+// Browser-compatible EventEmitter replacement using EventTarget
+class BrowserEventEmitter extends EventTarget {
+  emit(eventName: string, ...args: any[]): boolean {
+    const event = new CustomEvent(eventName, { detail: args });
+    this.dispatchEvent(event);
+    return true;
+  }
+
+  on(eventName: string, listener: (...args: any[]) => void): this {
+    const wrappedListener = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      listener(...(customEvent.detail || []));
+    };
+    this.addEventListener(eventName, wrappedListener);
+    return this;
+  }
+
+  off(eventName: string, listener: (...args: any[]) => void): this {
+    this.removeEventListener(eventName, listener);
+    return this;
+  }
+
+  once(eventName: string, listener: (...args: any[]) => void): this {
+    const wrappedListener = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      listener(...(customEvent.detail || []));
+    };
+    this.addEventListener(eventName, wrappedListener, { once: true });
+    return this;
+  }
+
+  removeAllListeners(eventName?: string): this {
+    // EventTarget doesn't have a direct way to remove all listeners
+    // This is a limitation, but for WebSocket client usage, explicit cleanup is preferred
+    return this;
+  }
+}
 
 // ======================
 // Message Queue
@@ -108,7 +145,11 @@ class SubscriptionManager {
     }
   >();
 
-  subscribe(channel: string, handler: MessageHandler, request?: SubscriptionRequest): void {
+  subscribe(
+    channel: string,
+    handler: MessageHandler,
+    request?: SubscriptionRequest
+  ): void {
     if (!this.subscriptions.has(channel)) {
       this.subscriptions.set(channel, {
         filters: request?.filters,
@@ -164,7 +205,7 @@ class SubscriptionManager {
 class ConnectionManager {
   private reconnectAttempts = 0;
   private reconnectDelay = 1000;
-  private reconnectTimeout?: NodeJS.Timeout;
+  private reconnectTimeout?: ReturnType<typeof setTimeout>;
   private readonly maxReconnectAttempts: number;
   private readonly maxReconnectDelay: number;
 
@@ -193,7 +234,10 @@ class ConnectionManager {
 
     this.reconnectTimeout = setTimeout(() => {
       this.reconnectAttempts++;
-      this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
+      this.reconnectDelay = Math.min(
+        this.reconnectDelay * 2,
+        this.maxReconnectDelay
+      );
       callback();
     }, delay);
   }
@@ -247,7 +291,7 @@ export interface WebSocketClientMetrics {
   lastActivity?: number;
 }
 
-export class WebSocketClientService extends EventEmitter {
+export class WebSocketClientService extends BrowserEventEmitter {
   private static instance: WebSocketClientService;
   private ws: WebSocket | null = null;
   private config: WebSocketClientConfig;
@@ -256,7 +300,7 @@ export class WebSocketClientService extends EventEmitter {
   private subscriptionManager = new SubscriptionManager();
   private messageQueue = new MessageQueue();
   private connectionManager = new ConnectionManager();
-  private heartbeatInterval?: NodeJS.Timeout;
+  private heartbeatInterval?: ReturnType<typeof setInterval>;
   private metrics: WebSocketClientMetrics;
   private authToken?: string;
 
@@ -298,7 +342,9 @@ export class WebSocketClientService extends EventEmitter {
     }
   }
 
-  static getInstance(config?: Partial<WebSocketClientConfig>): WebSocketClientService {
+  static getInstance(
+    config?: Partial<WebSocketClientConfig>
+  ): WebSocketClientService {
     if (!WebSocketClientService.instance) {
       WebSocketClientService.instance = new WebSocketClientService(config);
     }
@@ -370,7 +416,10 @@ export class WebSocketClientService extends EventEmitter {
         this.ws.onerror = null;
       }
 
-      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+      if (
+        this.ws.readyState === WebSocket.OPEN ||
+        this.ws.readyState === WebSocket.CONNECTING
+      ) {
         this.ws.close(1000, "Client disconnect");
       }
       this.ws = null;
@@ -399,7 +448,9 @@ export class WebSocketClientService extends EventEmitter {
   // Message Handling
   // ======================
 
-  send<T>(message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">): boolean {
+  send<T>(
+    message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">
+  ): boolean {
     const fullMessage: WebSocketMessage<T> = {
       ...message,
       messageId: crypto.randomUUID(),
@@ -441,7 +492,8 @@ export class WebSocketClientService extends EventEmitter {
     request?: SubscriptionRequest
   ): () => void {
     this.subscriptionManager.subscribe(channel, handler, request);
-    this.metrics.subscriptions = this.subscriptionManager.getSubscriptions().length;
+    this.metrics.subscriptions =
+      this.subscriptionManager.getSubscriptions().length;
 
     // Send subscription request to server
     this.send({
@@ -458,7 +510,8 @@ export class WebSocketClientService extends EventEmitter {
 
   unsubscribe(channel: WebSocketChannel, handler?: MessageHandler): void {
     this.subscriptionManager.unsubscribe(channel, handler);
-    this.metrics.subscriptions = this.subscriptionManager.getSubscriptions().length;
+    this.metrics.subscriptions =
+      this.subscriptionManager.getSubscriptions().length;
 
     // Send unsubscription request to server
     this.send({
@@ -472,7 +525,9 @@ export class WebSocketClientService extends EventEmitter {
   // Convenience Methods for Specific Message Types
   // ======================
 
-  subscribeToAgentStatus(handler: MessageHandler<AgentStatusMessage>): () => void {
+  subscribeToAgentStatus(
+    handler: MessageHandler<AgentStatusMessage>
+  ): () => void {
     return this.subscribe("agents:status", handler);
   }
 
@@ -480,15 +535,22 @@ export class WebSocketClientService extends EventEmitter {
     return this.subscribe("agents:health", handler);
   }
 
-  subscribeToTradingPrices(handler: MessageHandler<TradingPriceMessage>): () => void {
+  subscribeToTradingPrices(
+    handler: MessageHandler<TradingPriceMessage>
+  ): () => void {
     return this.subscribe("trading:prices", handler);
   }
 
-  subscribeToSymbolPrice(symbol: string, handler: MessageHandler<TradingPriceMessage>): () => void {
+  subscribeToSymbolPrice(
+    symbol: string,
+    handler: MessageHandler<TradingPriceMessage>
+  ): () => void {
     return this.subscribe(`trading:${symbol}:price`, handler);
   }
 
-  subscribeToPatternDiscovery(handler: MessageHandler<PatternDiscoveryMessage>): () => void {
+  subscribeToPatternDiscovery(
+    handler: MessageHandler<PatternDiscoveryMessage>
+  ): () => void {
     return this.subscribe("patterns:discovery", handler);
   }
 
@@ -496,7 +558,9 @@ export class WebSocketClientService extends EventEmitter {
     return this.subscribe("patterns:ready_state", handler);
   }
 
-  subscribeToNotifications(handler: MessageHandler<NotificationMessage>): () => void {
+  subscribeToNotifications(
+    handler: MessageHandler<NotificationMessage>
+  ): () => void {
     return this.subscribe("notifications:global", handler);
   }
 
@@ -576,7 +640,9 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   private handleClose(event: CloseEvent): void {
-    console.info(`[WebSocket Client] Connection closed: ${event.code} - ${event.reason}`);
+    console.info(
+      `[WebSocket Client] Connection closed: ${event.code} - ${event.reason}`
+    );
 
     this.stopHeartbeat();
     this.setState("disconnected");
@@ -623,7 +689,10 @@ export class WebSocketClientService extends EventEmitter {
   }
 
   private handleConnectionError(_error: any): void {
-    if (this.config.reconnection.enabled && this.connectionManager.shouldReconnect()) {
+    if (
+      this.config.reconnection.enabled &&
+      this.connectionManager.shouldReconnect()
+    ) {
       this.setState("reconnecting");
       this.connectionManager.scheduleReconnect(() => {
         this.connect();

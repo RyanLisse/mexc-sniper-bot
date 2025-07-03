@@ -2,19 +2,29 @@
 
 import type { UserTradingPreferences } from "../hooks/use-user-preferences";
 import { Badge } from "./ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 
 interface TradingConfigurationProps {
   preferences: UserTradingPreferences | null;
 }
 
-export function TradingConfiguration({ preferences }: TradingConfigurationProps) {
+export function TradingConfiguration({
+  preferences,
+}: TradingConfigurationProps) {
   if (!preferences) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Trading Configuration</CardTitle>
-          <CardDescription>Your current trading setup and risk management settings</CardDescription>
+          <CardDescription>
+            Your current trading setup and risk management settings
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center text-muted-foreground">
@@ -29,7 +39,9 @@ export function TradingConfiguration({ preferences }: TradingConfigurationProps)
     <Card>
       <CardHeader>
         <CardTitle>Trading Configuration</CardTitle>
-        <CardDescription>Your current trading setup and risk management settings</CardDescription>
+        <CardDescription>
+          Your current trading setup and risk management settings
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -41,10 +53,17 @@ export function TradingConfiguration({ preferences }: TradingConfigurationProps)
   );
 }
 
-function TradingBasicSettings({ preferences }: { preferences: UserTradingPreferences }) {
+function TradingBasicSettings({
+  preferences,
+}: {
+  preferences: UserTradingPreferences;
+}) {
   return (
     <div className="space-y-4">
-      <ConfigItem label="Default Buy Amount" value={`$${preferences.defaultBuyAmountUsdt} USDT`} />
+      <ConfigItem
+        label="Default Buy Amount"
+        value={`$${preferences.defaultBuyAmountUsdt} USDT`}
+      />
       <ConfigItem
         label="Max Concurrent Snipes"
         value={preferences.maxConcurrentSnipes.toString()}
@@ -58,7 +77,11 @@ function TradingBasicSettings({ preferences }: { preferences: UserTradingPrefere
   );
 }
 
-function TradingAdvancedSettings({ preferences }: { preferences: UserTradingPreferences }) {
+function TradingAdvancedSettings({
+  preferences,
+}: {
+  preferences: UserTradingPreferences;
+}) {
   const readyStatePattern = preferences.readyStatePattern as number[] | string;
   const pattern = Array.isArray(readyStatePattern)
     ? readyStatePattern
@@ -69,11 +92,17 @@ function TradingAdvancedSettings({ preferences }: { preferences: UserTradingPref
   return (
     <div className="space-y-4">
       <div>
-        <span className="text-sm font-medium text-muted-foreground">Risk Tolerance</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          Risk Tolerance
+        </span>
         <div className="flex items-center space-x-2">
           <Badge
-            variant={preferences.riskTolerance === "low" ? "default" : "secondary"}
-            className={preferences.riskTolerance === "low" ? "bg-green-500" : ""}
+            variant={
+              preferences.riskTolerance === "low" ? "default" : "secondary"
+            }
+            className={
+              preferences.riskTolerance === "low" ? "bg-green-500" : ""
+            }
           >
             {preferences.riskTolerance.toUpperCase()}
           </Badge>
@@ -81,13 +110,18 @@ function TradingAdvancedSettings({ preferences }: { preferences: UserTradingPref
       </div>
 
       <div>
-        <span className="text-sm font-medium text-muted-foreground">Ready State Pattern</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          Ready State Pattern
+        </span>
         <div className="text-lg font-semibold font-mono">
           sts:{pattern[0]}, st:{pattern[1]}, tt:{pattern[2]}
         </div>
       </div>
 
-      <ConfigItem label="Target Advance Notice" value={`${preferences.targetAdvanceHours} hours`} />
+      <ConfigItem
+        label="Target Advance Notice"
+        value={`${preferences.targetAdvanceHours} hours`}
+      />
     </div>
   );
 }

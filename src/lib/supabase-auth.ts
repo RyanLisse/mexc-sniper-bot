@@ -1,6 +1,6 @@
-import { type CookieOptions, createServerClient } from '@supabase/ssr';
+import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { eq } from "drizzle-orm";
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
 import { db, hasSupabaseConfig } from "../db";
 import { user as originalUser } from "../db/schemas/auth";
 import { users as supabaseUsers } from "../db/schemas/supabase-auth";
@@ -47,8 +47,8 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.SUPABASE_ANON_KEY || 'placeholder_key',
+    process.env.SUPABASE_URL || "https://placeholder.supabase.co",
+    process.env.SUPABASE_ANON_KEY || "placeholder_key",
     {
       cookies: {
         get(name: string) {
@@ -57,7 +57,7 @@ export async function createSupabaseServerClient() {
         set(name: string, value: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value, ...options });
-          } catch (error) {
+          } catch (_error) {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
@@ -65,8 +65,8 @@ export async function createSupabaseServerClient() {
         },
         remove(name: string, options: CookieOptions) {
           try {
-            cookieStore.set({ name, value: '', ...options });
-          } catch (error) {
+            cookieStore.set({ name, value: "", ...options });
+          } catch (_error) {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
@@ -83,7 +83,10 @@ export async function createSupabaseServerClient() {
 export async function getSession(): Promise<SupabaseSession> {
   try {
     const supabase = await createSupabaseServerClient();
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
 
     if (error) {
       getLogger().error("Error getting Supabase session:", error);
@@ -98,7 +101,11 @@ export async function getSession(): Promise<SupabaseSession> {
     const supabaseUser: SupabaseUser = {
       id: user.id,
       email: user.email ?? "",
-      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || "User",
+      name:
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email ||
+        "User",
       username: user.user_metadata?.username,
       picture: user.user_metadata?.picture || user.user_metadata?.avatar_url,
       emailVerified: !!user.email_confirmed_at,
@@ -138,9 +145,13 @@ export async function syncUserWithDatabase(supabaseUser: SupabaseUser) {
   try {
     const isSupabase = hasSupabaseConfig();
     const userTable = isSupabase ? supabaseUsers : originalUser;
-    
+
     // Check if user exists in our database
-    const existingUser = await db.select().from(userTable).where(eq(userTable.id, supabaseUser.id)).limit(1);
+    const existingUser = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, supabaseUser.id))
+      .limit(1);
 
     if (existingUser.length === 0) {
       // Create new user
@@ -151,13 +162,15 @@ export async function syncUserWithDatabase(supabaseUser: SupabaseUser) {
         username: supabaseUser.username,
         emailVerified: supabaseUser.emailVerified || false,
         image: supabaseUser.picture,
-        ...(isSupabase ? {
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } : {
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
+        ...(isSupabase
+          ? {
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }
+          : {
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }),
       };
 
       await db.insert(userTable).values(newUserData);
@@ -195,8 +208,12 @@ export async function getUserFromDatabase(supabaseId: string) {
   try {
     const isSupabase = hasSupabaseConfig();
     const userTable = isSupabase ? supabaseUsers : originalUser;
-    
-    const users = await db.select().from(userTable).where(eq(userTable.id, supabaseId)).limit(1);
+
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, supabaseId))
+      .limit(1);
     return users[0] || null;
   } catch (error) {
     getLogger().error("Error getting user from database:", error);
@@ -225,18 +242,20 @@ export async function requireAuth(): Promise<SupabaseUser> {
  */
 export function createSupabaseAdminClient() {
   return createServerClient(
-    process.env.SUPABASE_URL || 'https://placeholder.supabase.co',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder_service_role_key',
+    process.env.SUPABASE_URL || "https://placeholder.supabase.co",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder_service_role_key",
     {
       cookies: {
-        get() { return undefined; },
+        get() {
+          return undefined;
+        },
         set() {},
         remove() {},
       },
       auth: {
         autoRefreshToken: false,
         persistSession: false,
-      }
+      },
     }
   );
 }

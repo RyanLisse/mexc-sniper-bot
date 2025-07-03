@@ -13,7 +13,10 @@
  */
 
 import type { WebSocket } from "ws";
-import type { ConnectionMetrics, WebSocketConnection } from "@/src/lib/websocket-types";
+import type {
+  ConnectionMetrics,
+  WebSocketConnection,
+} from "@/src/lib/websocket-types";
 
 export interface ConnectionManagerMetrics {
   totalConnections: number;
@@ -30,12 +33,20 @@ export class ServerConnectionManager {
     warn: (message: string, context?: unknown) =>
       console.warn("[server-connection-manager]", message, context || ""),
     error: (message: string, context?: unknown, error?: Error) =>
-      console.error("[server-connection-manager]", message, context || "", error || ""),
+      console.error(
+        "[server-connection-manager]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: unknown) =>
       console.debug("[server-connection-manager]", message, context || ""),
   };
 
-  private connections = new Map<string, WebSocketConnection & { ws: WebSocket }>();
+  private connections = new Map<
+    string,
+    WebSocketConnection & { ws: WebSocket }
+  >();
   private userConnections = new Map<string, Set<string>>();
   private channelSubscriptions = new Map<string, Set<string>>();
   private connectionMetrics = new Map<string, ConnectionMetrics>();
@@ -96,7 +107,9 @@ export class ServerConnectionManager {
   removeConnection(connectionId: string): void {
     const connection = this.connections.get(connectionId);
     if (!connection) {
-      this.logger.warn(`Attempted to remove non-existent connection: ${connectionId}`);
+      this.logger.warn(
+        `Attempted to remove non-existent connection: ${connectionId}`
+      );
       return;
     }
 
@@ -133,14 +146,18 @@ export class ServerConnectionManager {
   /**
    * Get a specific connection by ID
    */
-  getConnection(connectionId: string): (WebSocketConnection & { ws: WebSocket }) | undefined {
+  getConnection(
+    connectionId: string
+  ): (WebSocketConnection & { ws: WebSocket }) | undefined {
     return this.connections.get(connectionId);
   }
 
   /**
    * Get all connections for a specific user
    */
-  getUserConnections(userId: string): (WebSocketConnection & { ws: WebSocket })[] {
+  getUserConnections(
+    userId: string
+  ): (WebSocketConnection & { ws: WebSocket })[] {
     const connectionIds = this.userConnections.get(userId) || new Set();
     return Array.from(connectionIds)
       .map((id) => this.connections.get(id))
@@ -150,7 +167,9 @@ export class ServerConnectionManager {
   /**
    * Get all connections subscribed to a specific channel
    */
-  getChannelSubscribers(channel: string): (WebSocketConnection & { ws: WebSocket })[] {
+  getChannelSubscribers(
+    channel: string
+  ): (WebSocketConnection & { ws: WebSocket })[] {
     const connectionIds = this.channelSubscriptions.get(channel) || new Set();
     return Array.from(connectionIds)
       .map((id) => this.connections.get(id))
@@ -163,7 +182,9 @@ export class ServerConnectionManager {
   subscribeToChannel(connectionId: string, channel: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
-      this.logger.warn(`Cannot subscribe non-existent connection: ${connectionId}`);
+      this.logger.warn(
+        `Cannot subscribe non-existent connection: ${connectionId}`
+      );
       return false;
     }
 
@@ -190,7 +211,9 @@ export class ServerConnectionManager {
   unsubscribeFromChannel(connectionId: string, channel: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
-      this.logger.warn(`Cannot unsubscribe non-existent connection: ${connectionId}`);
+      this.logger.warn(
+        `Cannot unsubscribe non-existent connection: ${connectionId}`
+      );
       return false;
     }
 
@@ -256,8 +279,13 @@ export class ServerConnectionManager {
    */
   getMetrics(): ConnectionManagerMetrics {
     const connections = Array.from(this.connections.values());
-    const authenticatedCount = connections.filter((c) => c.isAuthenticated).length;
-    const totalSubscriptions = connections.reduce((sum, c) => sum + c.subscriptions.size, 0);
+    const authenticatedCount = connections.filter(
+      (c) => c.isAuthenticated
+    ).length;
+    const totalSubscriptions = connections.reduce(
+      (sum, c) => sum + c.subscriptions.size,
+      0
+    );
 
     return {
       totalConnections: connections.length,
@@ -286,7 +314,9 @@ export class ServerConnectionManager {
     }
 
     if (inactiveConnections.length > 0) {
-      this.logger.info(`Cleaned up ${inactiveConnections.length} inactive connections`);
+      this.logger.info(
+        `Cleaned up ${inactiveConnections.length} inactive connections`
+      );
     }
 
     return inactiveConnections.length;
@@ -298,7 +328,9 @@ export class ServerConnectionManager {
   getConnectionsByType(
     clientType: WebSocketConnection["clientType"]
   ): (WebSocketConnection & { ws: WebSocket })[] {
-    return Array.from(this.connections.values()).filter((c) => c.clientType === clientType);
+    return Array.from(this.connections.values()).filter(
+      (c) => c.clientType === clientType
+    );
   }
 
   /**

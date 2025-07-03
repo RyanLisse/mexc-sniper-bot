@@ -1,6 +1,6 @@
 /**
  * Trading Signal Streamer
- * 
+ *
  * Handles streaming of trading signals and signal-based notifications
  */
 
@@ -51,7 +51,12 @@ export class TradingSignalStreamer {
   private broadcastSignalAlert(signal: TradingSignalMessage): void {
     const notification: NotificationMessage = {
       notificationId: crypto.randomUUID(),
-      type: signal.type === "buy" ? "success" : signal.type === "sell" ? "warning" : "info",
+      type:
+        signal.type === "buy"
+          ? "success"
+          : signal.type === "sell"
+            ? "warning"
+            : "info",
       title: "High-Strength Trading Signal",
       message: `${signal.type.toUpperCase()} signal for ${signal.symbol} (Strength: ${signal.strength}%, Confidence: ${Math.round(signal.confidence * 100)}%)`,
       priority: "high",

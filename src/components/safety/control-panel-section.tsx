@@ -81,7 +81,9 @@ export function ControlPanelSection({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium">Simulation Mode</h4>
-              <Badge variant={simulationStatus?.active ? "default" : "secondary"}>
+              <Badge
+                variant={simulationStatus?.active ? "default" : "secondary"}
+              >
                 {simulationStatus?.active ? "ACTIVE" : "INACTIVE"}
               </Badge>
             </div>
@@ -143,7 +145,10 @@ export function ControlPanelSection({
             <div className="space-y-2 pt-2 border-t">
               <h4 className="text-sm font-medium">Reconciliation</h4>
               <div className="text-xs text-muted-foreground space-y-1">
-                <div>Last Run: {new Date(reconciliationStatus.lastRun).toLocaleString()}</div>
+                <div>
+                  Last Run:{" "}
+                  {new Date(reconciliationStatus.lastRun).toLocaleString()}
+                </div>
                 <div>Status: {reconciliationStatus.status}</div>
                 <div>Discrepancies: {reconciliationStatus.discrepancies}</div>
               </div>

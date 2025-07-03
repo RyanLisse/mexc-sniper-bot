@@ -63,7 +63,12 @@ export class AlertCorrelationEngine {
           warn: (message: string, context?: any) =>
             console.warn("[alert-correlation-engine]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[alert-correlation-engine]", message, context || "", error || ""),
+            console.error(
+              "[alert-correlation-engine]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[alert-correlation-engine]", message, context || ""),
         };
@@ -132,10 +137,16 @@ export class AlertCorrelationEngine {
 
       // Group alerts by potential correlation patterns
       for (const pattern of this.patterns.values()) {
-        const correlatedAlerts = await this.findAlertsMatchingPattern(recentAlerts, pattern);
+        const correlatedAlerts = await this.findAlertsMatchingPattern(
+          recentAlerts,
+          pattern
+        );
 
         if (correlatedAlerts.length >= pattern.minAlerts) {
-          const correlation = await this.buildCorrelationResult(pattern, correlatedAlerts);
+          const correlation = await this.buildCorrelationResult(
+            pattern,
+            correlatedAlerts
+          );
           results.push(correlation);
         }
       }
@@ -161,7 +172,10 @@ export class AlertCorrelationEngine {
     // Try each pattern
     for (const pattern of this.patterns.values()) {
       const candidateAlerts = [...recentAlerts, selectAlert];
-      const matchingAlerts = await this.findAlertsMatchingPattern(candidateAlerts, pattern);
+      const matchingAlerts = await this.findAlertsMatchingPattern(
+        candidateAlerts,
+        pattern
+      );
 
       if (matchingAlerts.length >= pattern.minAlerts) {
         return await this.buildCorrelationResult(pattern, matchingAlerts);
@@ -179,7 +193,10 @@ export class AlertCorrelationEngine {
     // Time-based correlation (alerts within short time window)
     const timeWindow = 300000; // 5 minutes
     const timeCorrelated = recentAlerts.filter(
-      (a) => Math.abs(a.firstTriggeredAt.getTime() - alert.firstTriggeredAt.getTime()) < timeWindow
+      (a) =>
+        Math.abs(
+          a.firstTriggeredAt.getTime() - alert.firstTriggeredAt.getTime()
+        ) < timeWindow
     );
 
     if (timeCorrelated.length >= 2) {
@@ -188,30 +205,42 @@ export class AlertCorrelationEngine {
         type: "temporal",
         name: "Temporal Burst",
         description: "Multiple alerts triggered within short time window",
-        conditions: [{ field: "timeWindow", operator: "range", value: timeWindow }],
+        conditions: [
+          { field: "timeWindow", operator: "range", value: timeWindow },
+        ],
         confidence: 0.7,
         timeWindow,
         minAlerts: 2,
       };
 
-      return await this.buildCorrelationResult(pattern, [...timeCorrelated, alert]);
+      return await this.buildCorrelationResult(pattern, [
+        ...timeCorrelated,
+        alert,
+      ]);
     }
 
     // Source-based correlation (same source, different metrics)
-    const sourceCorrelated = recentAlerts.filter((a) => a.source === alert.source);
+    const sourceCorrelated = recentAlerts.filter(
+      (a) => a.source === alert.source
+    );
     if (sourceCorrelated.length >= 1) {
       const pattern: CorrelationPattern = {
         id: `source_${alert.source}_${Date.now()}`,
         type: "source",
         name: "Source Issues",
         description: `Multiple alerts from source: ${alert.source}`,
-        conditions: [{ field: "source", operator: "equals", value: alert.source }],
+        conditions: [
+          { field: "source", operator: "equals", value: alert.source },
+        ],
         confidence: 0.8,
         timeWindow: 1800000, // 30 minutes
         minAlerts: 2,
       };
 
-      return await this.buildCorrelationResult(pattern, [...sourceCorrelated, alert]);
+      return await this.buildCorrelationResult(pattern, [
+        ...sourceCorrelated,
+        alert,
+      ]);
     }
 
     // Severity escalation pattern
@@ -222,7 +251,9 @@ export class AlertCorrelationEngine {
       const escalationAlerts = recentAlerts.filter((a) => {
         const aSeverityIndex = severityLevels.indexOf(a.severity);
         return (
-          aSeverityIndex >= 0 && aSeverityIndex < alertSeverityIndex && a.source === alert.source
+          aSeverityIndex >= 0 &&
+          aSeverityIndex < alertSeverityIndex &&
+          a.source === alert.source
         );
       });
 
@@ -245,7 +276,10 @@ export class AlertCorrelationEngine {
           minAlerts: 2,
         };
 
-        return await this.buildCorrelationResult(pattern, [...escalationAlerts, alert]);
+        return await this.buildCorrelationResult(pattern, [
+          ...escalationAlerts,
+          alert,
+        ]);
       }
     }
 
@@ -256,7 +290,9 @@ export class AlertCorrelationEngine {
   // PATTERN MATCHING
   // ==========================================
 
-  private convertToSelectAlert(alert: InsertAlertInstance): SelectAlertInstance {
+  private convertToSelectAlert(
+    alert: InsertAlertInstance
+  ): SelectAlertInstance {
     return {
       ...alert,
       description: alert.description || null,
@@ -309,13 +345,22 @@ export class AlertCorrelationEngine {
         return fieldValue === condition.value;
 
       case "contains":
-        return typeof fieldValue === "string" && fieldValue.includes(condition.value as string);
+        return (
+          typeof fieldValue === "string" &&
+          fieldValue.includes(condition.value as string)
+        );
 
       case "starts_with":
-        return typeof fieldValue === "string" && fieldValue.startsWith(condition.value as string);
+        return (
+          typeof fieldValue === "string" &&
+          fieldValue.startsWith(condition.value as string)
+        );
 
       case "regex":
-        if (typeof fieldValue === "string" && typeof condition.value === "string") {
+        if (
+          typeof fieldValue === "string" &&
+          typeof condition.value === "string"
+        ) {
           const regex = new RegExp(condition.value);
           return regex.test(fieldValue);
         }
@@ -332,7 +377,10 @@ export class AlertCorrelationEngine {
     }
   }
 
-  private async getAlertFieldValue(alert: SelectAlertInstance, field: string): Promise<any> {
+  private async getAlertFieldValue(
+    alert: SelectAlertInstance,
+    field: string
+  ): Promise<any> {
     switch (field) {
       case "source":
         return alert.source;
@@ -372,7 +420,9 @@ export class AlertCorrelationEngine {
   // CORRELATION MANAGEMENT
   // ==========================================
 
-  private async createCorrelation(correlationResult: CorrelationResult): Promise<string> {
+  private async createCorrelation(
+    correlationResult: CorrelationResult
+  ): Promise<string> {
     const correlationKey = `correlation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const correlationData: InsertAlertCorrelation = {
@@ -386,10 +436,14 @@ export class AlertCorrelationEngine {
       pattern: JSON.stringify(correlationResult.pattern),
       confidence: correlationResult.confidence,
       firstAlertAt: new Date(
-        Math.min(...correlationResult.alerts.map((a) => a.firstTriggeredAt.getTime()))
+        Math.min(
+          ...correlationResult.alerts.map((a) => a.firstTriggeredAt.getTime())
+        )
       ),
       lastAlertAt: new Date(
-        Math.max(...correlationResult.alerts.map((a) => a.lastTriggeredAt.getTime()))
+        Math.max(
+          ...correlationResult.alerts.map((a) => a.lastTriggeredAt.getTime())
+        )
       ),
     };
 
@@ -487,17 +541,23 @@ export class AlertCorrelationEngine {
 
     switch (pattern.type) {
       case "temporal":
-        recommendations.push("Investigate system-wide issues causing simultaneous alerts");
+        recommendations.push(
+          "Investigate system-wide issues causing simultaneous alerts"
+        );
         recommendations.push("Check for deployment or configuration changes");
         break;
 
       case "source":
-        recommendations.push(`Focus investigation on ${alerts[0].source} component`);
+        recommendations.push(
+          `Focus investigation on ${alerts[0].source} component`
+        );
         recommendations.push("Check resource utilization and dependencies");
         break;
 
       case "severity":
-        recommendations.push("Immediate escalation required - severity is increasing");
+        recommendations.push(
+          "Immediate escalation required - severity is increasing"
+        );
         recommendations.push("Implement emergency response procedures");
         break;
 
@@ -514,7 +574,9 @@ export class AlertCorrelationEngine {
     // Add severity-specific recommendations
     const highestSeverity = this.getHighestSeverity(alerts);
     if (highestSeverity === "critical") {
-      recommendations.unshift("URGENT: Critical alerts detected - immediate action required");
+      recommendations.unshift(
+        "URGENT: Critical alerts detected - immediate action required"
+      );
     }
 
     return recommendations;
@@ -562,7 +624,10 @@ export class AlertCorrelationEngine {
       .where(
         and(
           eq(alertCorrelations.status, "active"),
-          gte(alertCorrelations.lastAlertAt, new Date(Date.now() - this.alertRetentionWindow))
+          gte(
+            alertCorrelations.lastAlertAt,
+            new Date(Date.now() - this.alertRetentionWindow)
+          )
         )
       );
 
@@ -602,7 +667,8 @@ export class AlertCorrelationEngine {
     }
 
     return allAlerts.filter(
-      (a) => Date.now() - a.firstTriggeredAt.getTime() < this.alertRetentionWindow
+      (a) =>
+        Date.now() - a.firstTriggeredAt.getTime() < this.alertRetentionWindow
     );
   }
 
@@ -647,7 +713,12 @@ export class AlertCorrelationEngine {
       description: "Multiple AI agents failing in sequence",
       conditions: [
         { field: "source", operator: "contains", value: "agent", weight: 0.8 },
-        { field: "severity", operator: "range", value: ["high", "critical"], weight: 0.6 },
+        {
+          field: "severity",
+          operator: "range",
+          value: ["high", "critical"],
+          weight: 0.6,
+        },
         { field: "timeWindow", operator: "range", value: 900000, weight: 0.4 }, // 15 minutes
       ],
       confidence: 0.9,
@@ -662,7 +733,12 @@ export class AlertCorrelationEngine {
       name: "Trading System Overload",
       description: "Multiple trading-related alerts indicating system stress",
       conditions: [
-        { field: "category", operator: "equals", value: "trading", weight: 0.9 },
+        {
+          field: "category",
+          operator: "equals",
+          value: "trading",
+          weight: 0.9,
+        },
         { field: "timeWindow", operator: "range", value: 600000, weight: 0.3 }, // 10 minutes
       ],
       confidence: 0.85,
@@ -677,9 +753,19 @@ export class AlertCorrelationEngine {
       name: "Database Performance Issues",
       description: "Database-related performance alerts",
       conditions: [
-        { field: "source", operator: "contains", value: "database", weight: 0.7 },
+        {
+          field: "source",
+          operator: "contains",
+          value: "database",
+          weight: 0.7,
+        },
         { field: "source", operator: "contains", value: "query", weight: 0.5 },
-        { field: "category", operator: "equals", value: "performance", weight: 0.6 },
+        {
+          field: "category",
+          operator: "equals",
+          value: "performance",
+          weight: 0.6,
+        },
       ],
       confidence: 0.8,
       timeWindow: 1200000, // 20 minutes
@@ -695,7 +781,12 @@ export class AlertCorrelationEngine {
       conditions: [
         { field: "source", operator: "contains", value: "api", weight: 0.6 },
         { field: "source", operator: "contains", value: "mexc", weight: 0.4 },
-        { field: "source", operator: "contains", value: "connectivity", weight: 0.5 },
+        {
+          field: "source",
+          operator: "contains",
+          value: "connectivity",
+          weight: 0.5,
+        },
       ],
       confidence: 0.75,
       timeWindow: 1800000, // 30 minutes
@@ -715,7 +806,10 @@ export class AlertCorrelationEngine {
 
     // Clean correlation cache
     for (const [key, result] of this.correlationCache.entries()) {
-      if (now - result.alerts[0].firstTriggeredAt.getTime() > this.maxCacheAge) {
+      if (
+        now - result.alerts[0].firstTriggeredAt.getTime() >
+        this.maxCacheAge
+      ) {
         this.correlationCache.delete(key);
       }
     }
@@ -745,7 +839,9 @@ export class AlertCorrelationEngine {
       .orderBy(desc(alertCorrelations.lastAlertAt));
   }
 
-  async getCorrelationDetails(correlationId: string): Promise<CorrelationResult | null> {
+  async getCorrelationDetails(
+    correlationId: string
+  ): Promise<CorrelationResult | null> {
     // Check cache first
     if (this.correlationCache.has(correlationId)) {
       return this.correlationCache.get(correlationId)!;

@@ -61,13 +61,30 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
     if (!this._logger) {
       this._logger = {
         info: (message: string, context?: any) =>
-          console.info("[enhanced-pattern-detection-core]", message, context || ""),
+          console.info(
+            "[enhanced-pattern-detection-core]",
+            message,
+            context || ""
+          ),
         warn: (message: string, context?: any) =>
-          console.warn("[enhanced-pattern-detection-core]", message, context || ""),
+          console.warn(
+            "[enhanced-pattern-detection-core]",
+            message,
+            context || ""
+          ),
         error: (message: string, context?: any, error?: Error) =>
-          console.error("[enhanced-pattern-detection-core]", message, context || "", error || ""),
+          console.error(
+            "[enhanced-pattern-detection-core]",
+            message,
+            context || "",
+            error || ""
+          ),
         debug: (message: string, context?: any) =>
-          console.debug("[enhanced-pattern-detection-core]", message, context || ""),
+          console.debug(
+            "[enhanced-pattern-detection-core]",
+            message,
+            context || ""
+          ),
       };
     }
     return this._logger;
@@ -122,9 +139,13 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
     });
   }
 
-  static getInstance(config?: Partial<PatternDetectionConfig>): EnhancedPatternDetectionCore {
+  static getInstance(
+    config?: Partial<PatternDetectionConfig>
+  ): EnhancedPatternDetectionCore {
     if (!EnhancedPatternDetectionCore.instance) {
-      EnhancedPatternDetectionCore.instance = new EnhancedPatternDetectionCore(config);
+      EnhancedPatternDetectionCore.instance = new EnhancedPatternDetectionCore(
+        config
+      );
     }
     return EnhancedPatternDetectionCore.instance;
   }
@@ -132,15 +153,20 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
   /**
    * Comprehensive Pattern Analysis with Event Emission
    */
-  async analyzePatterns(request: PatternAnalysisRequest): Promise<PatternAnalysisResult> {
+  async analyzePatterns(
+    request: PatternAnalysisRequest
+  ): Promise<PatternAnalysisResult> {
     const startTime = Date.now();
 
     try {
       // Validate request
       if (this.config.strictValidation) {
-        const validation = this.patternValidator.validateAnalysisRequest(request);
+        const validation =
+          this.patternValidator.validateAnalysisRequest(request);
         if (!validation.isValid) {
-          throw new Error(`Invalid analysis request: ${validation.errors.join(", ")}`);
+          throw new Error(
+            `Invalid analysis request: ${validation.errors.join(", ")}`
+          );
         }
 
         if (validation.warnings.length > 0 && this.config.logValidationErrors) {
@@ -155,8 +181,11 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
 
       // Ready state detection for symbols
       if (request.symbols && request.symbols.length > 0) {
-        const readyMatches = await this.patternAnalyzer.detectReadyStatePattern(request.symbols);
-        const preReadyMatches = await this.patternAnalyzer.detectPreReadyPatterns(request.symbols);
+        const readyMatches = await this.patternAnalyzer.detectReadyStatePattern(
+          request.symbols
+        );
+        const preReadyMatches =
+          await this.patternAnalyzer.detectPreReadyPatterns(request.symbols);
         allMatches.push(...readyMatches, ...preReadyMatches);
 
         // Emit ready state events
@@ -180,9 +209,10 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
 
       // Advance opportunity detection for calendar entries
       if (request.calendarEntries && request.calendarEntries.length > 0) {
-        const advanceMatches = await this.patternAnalyzer.detectAdvanceOpportunities(
-          request.calendarEntries
-        );
+        const advanceMatches =
+          await this.patternAnalyzer.detectAdvanceOpportunities(
+            request.calendarEntries
+          );
         allMatches.push(...advanceMatches);
 
         // Emit advance opportunity events
@@ -191,7 +221,8 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
             calendarEntriesAnalyzed: request.calendarEntries.length,
             duration: Date.now() - startTime,
             source: "calendar_analysis",
-            averageAdvanceHours: this.calculateAverageAdvanceHours(advanceMatches),
+            averageAdvanceHours:
+              this.calculateAverageAdvanceHours(advanceMatches),
           });
         }
       }
@@ -199,13 +230,16 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       // Correlation analysis if multiple symbols
       let correlations: CorrelationAnalysis[] = [];
       if (request.symbols && request.symbols.length > 1) {
-        correlations = await this.patternAnalyzer.analyzeSymbolCorrelations(request.symbols);
+        correlations = await this.patternAnalyzer.analyzeSymbolCorrelations(
+          request.symbols
+        );
       }
 
       // Filter by confidence threshold
       const filteredMatches = allMatches.filter(
         (match) =>
-          match.confidence >= (request.confidenceThreshold || this.config.confidenceThreshold)
+          match.confidence >=
+          (request.confidenceThreshold || this.config.confidenceThreshold)
       );
 
       // Validate matches if strict validation is enabled
@@ -254,8 +288,14 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
         correlations,
         analysisMetadata: {
           executionTime,
-          algorithmsUsed: ["ready_state", "advance_detection", "pre_ready", "correlation"],
-          confidenceDistribution: this.calculateConfidenceDistribution(allMatches),
+          algorithmsUsed: [
+            "ready_state",
+            "advance_detection",
+            "pre_ready",
+            "correlation",
+          ],
+          confidenceDistribution:
+            this.calculateConfidenceDistribution(allMatches),
         },
       };
     } catch (error) {
@@ -314,7 +354,8 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
         metadata: {
           duration: 0,
           source: "pattern_detection",
-          averageConfidence: matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length,
+          averageConfidence:
+            matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length,
           highConfidenceCount: matches.filter((m) => m.confidence >= 80).length,
           ...metadata,
         },
@@ -353,7 +394,10 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
   private calculateAverageAdvanceHours(matches: PatternMatch[]): number {
     if (matches.length === 0) return 0;
 
-    const totalHours = matches.reduce((sum, match) => sum + (match.advanceNoticeHours || 0), 0);
+    const totalHours = matches.reduce(
+      (sum, match) => sum + (match.advanceNoticeHours || 0),
+      0
+    );
     return totalHours / matches.length;
   }
 
@@ -379,10 +423,12 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
     try {
       if (!symbol) return null;
 
-      const matches = await this.patternAnalyzer.detectReadyStatePattern(symbol);
+      const matches =
+        await this.patternAnalyzer.detectReadyStatePattern(symbol);
 
       if (matches.length === 0) {
-        const preReadyMatches = await this.patternAnalyzer.detectPreReadyPatterns([symbol]);
+        const preReadyMatches =
+          await this.patternAnalyzer.detectPreReadyPatterns([symbol]);
         if (preReadyMatches.length > 0) {
           const match = preReadyMatches[0];
           return {
@@ -415,7 +461,8 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
           ? {
               activities: match.activityInfo.activities,
               activityBoost: match.activityInfo.activityBoost,
-              hasHighPriorityActivity: match.activityInfo.hasHighPriorityActivity,
+              hasHighPriorityActivity:
+                match.activityInfo.hasHighPriorityActivity,
             }
           : undefined,
       };
@@ -434,7 +481,9 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
   }
 
   // Copy remaining methods from original PatternDetectionCore
-  private async validateMatches(matches: PatternMatch[]): Promise<PatternMatch[]> {
+  private async validateMatches(
+    matches: PatternMatch[]
+  ): Promise<PatternMatch[]> {
     const validatedMatches: PatternMatch[] = [];
 
     for (const match of matches) {
@@ -479,17 +528,26 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
     };
   }
 
-  private calculateSummary(allMatches: PatternMatch[], filteredMatches: PatternMatch[]) {
-    const readyStateFound = filteredMatches.filter((m) => m.patternType === "ready_state").length;
-    const highConfidenceMatches = filteredMatches.filter((m) => m.confidence >= 80).length;
+  private calculateSummary(
+    allMatches: PatternMatch[],
+    filteredMatches: PatternMatch[]
+  ) {
+    const readyStateFound = filteredMatches.filter(
+      (m) => m.patternType === "ready_state"
+    ).length;
+    const highConfidenceMatches = filteredMatches.filter(
+      (m) => m.confidence >= 80
+    ).length;
     const advanceOpportunities = filteredMatches.filter(
       (m) =>
-        m.patternType === "launch_sequence" && m.advanceNoticeHours >= this.config.minAdvanceHours
+        m.patternType === "launch_sequence" &&
+        m.advanceNoticeHours >= this.config.minAdvanceHours
     ).length;
 
     const avgConfidence =
       filteredMatches.length > 0
-        ? filteredMatches.reduce((sum, m) => sum + m.confidence, 0) / filteredMatches.length
+        ? filteredMatches.reduce((sum, m) => sum + m.confidence, 0) /
+          filteredMatches.length
         : 0;
 
     return {
@@ -501,7 +559,9 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
     };
   }
 
-  private calculateConfidenceDistribution(matches: PatternMatch[]): Record<string, number> {
+  private calculateConfidenceDistribution(
+    matches: PatternMatch[]
+  ): Record<string, number> {
     const distribution = { "0-50": 0, "50-70": 0, "70-85": 0, "85-100": 0 };
 
     matches.forEach((match) => {
@@ -525,7 +585,8 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
 
     if (filteredMatches.length > 0) {
       const avgConfidence =
-        filteredMatches.reduce((sum, m) => sum + m.confidence, 0) / filteredMatches.length;
+        filteredMatches.reduce((sum, m) => sum + m.confidence, 0) /
+        filteredMatches.length;
       this.metrics.averageConfidence = Math.round(avgConfidence * 100) / 100;
     }
   }
@@ -566,9 +627,12 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
   /**
    * Detect ready state patterns in symbols
    */
-  async detectReadyStatePattern(symbols: SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectReadyStatePattern(
+    symbols: SymbolEntry[]
+  ): Promise<PatternMatch[]> {
     try {
-      const matches = await this.patternAnalyzer.detectReadyStatePattern(symbols);
+      const matches =
+        await this.patternAnalyzer.detectReadyStatePattern(symbols);
 
       // Emit event for ready state patterns
       if (matches.length > 0) {
@@ -593,9 +657,12 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
   /**
    * Detect pre-ready patterns in symbols
    */
-  async detectPreReadyPatterns(symbols: SymbolEntry[]): Promise<PatternMatch[]> {
+  async detectPreReadyPatterns(
+    symbols: SymbolEntry[]
+  ): Promise<PatternMatch[]> {
     try {
-      const matches = await this.patternAnalyzer.detectPreReadyPatterns(symbols);
+      const matches =
+        await this.patternAnalyzer.detectPreReadyPatterns(symbols);
 
       // Emit event for pre-ready patterns
       if (matches.length > 0) {
@@ -620,9 +687,12 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
   /**
    * Detect advance opportunities from calendar entries
    */
-  async detectAdvanceOpportunities(calendarEntries: any[]): Promise<PatternMatch[]> {
+  async detectAdvanceOpportunities(
+    calendarEntries: any[]
+  ): Promise<PatternMatch[]> {
     try {
-      const matches = await this.patternAnalyzer.detectAdvanceOpportunities(calendarEntries);
+      const matches =
+        await this.patternAnalyzer.detectAdvanceOpportunities(calendarEntries);
 
       // Emit event for advance opportunities
       if (matches.length > 0) {
@@ -647,4 +717,5 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
 }
 
 // Export singleton instance
-export const enhancedPatternDetectionCore = EnhancedPatternDetectionCore.getInstance();
+export const enhancedPatternDetectionCore =
+  EnhancedPatternDetectionCore.getInstance();

@@ -1,12 +1,25 @@
 "use client";
 
-import { Brain, CheckCircle, Database, Gauge, Settings, Zap } from "lucide-react";
+import {
+  Brain,
+  CheckCircle,
+  Database,
+  Gauge,
+  Settings,
+  Zap,
+} from "lucide-react";
 import { useAIServices } from "../../hooks/use-ai-services";
 import { useCacheMetrics } from "../../hooks/use-cache-metrics";
 import { useEnhancedPatterns } from "../../hooks/use-enhanced-patterns";
 import { usePhase3FeatureStatus } from "../../hooks/use-phase3-config";
 import { Badge } from "../ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Progress } from "../ui/progress";
 
 // Type definitions for component props
@@ -65,7 +78,8 @@ const getOverallStatus = (
 ) => {
   const checks = [
     aiServices?.overall?.status === "healthy",
-    cacheMetrics?.connection?.redis?.connected || cacheMetrics?.connection?.valkey?.connected,
+    cacheMetrics?.connection?.redis?.connected ||
+      cacheMetrics?.connection?.valkey?.connected,
     (enhancedPatterns?.summary?.totalPatterns || 0) > 0,
     featureStatus?.aiIntelligenceEnabled,
   ];
@@ -73,20 +87,33 @@ const getOverallStatus = (
   const healthyCount = checks.filter(Boolean).length;
   const totalChecks = checks.length;
 
-  if (healthyCount === totalChecks) return { status: "excellent", color: "green" };
-  if (healthyCount >= totalChecks * 0.75) return { status: "good", color: "blue" };
-  if (healthyCount >= totalChecks * 0.5) return { status: "fair", color: "yellow" };
+  if (healthyCount === totalChecks)
+    return { status: "excellent", color: "green" };
+  if (healthyCount >= totalChecks * 0.75)
+    return { status: "good", color: "blue" };
+  if (healthyCount >= totalChecks * 0.5)
+    return { status: "fair", color: "yellow" };
   return { status: "needs attention", color: "red" };
 };
 
 // Sub-components for Phase3IntegrationSummary
-function AIIntelligenceStatus({ aiServices }: { aiServices: AIServicesData | undefined }) {
+function AIIntelligenceStatus({
+  aiServices,
+}: {
+  aiServices: AIServicesData | undefined;
+}) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Brain className="h-4 w-4" />
         <h4 className="font-medium">AI Intelligence Integration</h4>
-        <Badge variant={aiServices?.overall?.status === "healthy" ? "default" : "destructive"}>
+        <Badge
+          variant={
+            aiServices?.overall?.status === "healthy"
+              ? "default"
+              : "destructive"
+          }
+        >
           {aiServices?.overall?.status || "unknown"}
         </Badge>
       </div>
@@ -94,19 +121,35 @@ function AIIntelligenceStatus({ aiServices }: { aiServices: AIServicesData | und
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="flex items-center justify-between p-2 border rounded">
           <span className="text-sm">Cohere Embeddings</span>
-          <Badge variant={aiServices?.services?.cohere?.available ? "default" : "outline"}>
+          <Badge
+            variant={
+              aiServices?.services?.cohere?.available ? "default" : "outline"
+            }
+          >
             {aiServices?.services?.cohere?.available ? "Active" : "Inactive"}
           </Badge>
         </div>
         <div className="flex items-center justify-between p-2 border rounded">
           <span className="text-sm">Perplexity Research</span>
-          <Badge variant={aiServices?.services?.perplexity?.available ? "default" : "outline"}>
-            {aiServices?.services?.perplexity?.available ? "Active" : "Inactive"}
+          <Badge
+            variant={
+              aiServices?.services?.perplexity?.available
+                ? "default"
+                : "outline"
+            }
+          >
+            {aiServices?.services?.perplexity?.available
+              ? "Active"
+              : "Inactive"}
           </Badge>
         </div>
         <div className="flex items-center justify-between p-2 border rounded">
           <span className="text-sm">OpenAI Fallback</span>
-          <Badge variant={aiServices?.services?.openai?.available ? "default" : "outline"}>
+          <Badge
+            variant={
+              aiServices?.services?.openai?.available ? "default" : "outline"
+            }
+          >
             {aiServices?.services?.openai?.available ? "Active" : "Inactive"}
           </Badge>
         </div>
@@ -117,11 +160,16 @@ function AIIntelligenceStatus({ aiServices }: { aiServices: AIServicesData | und
           <div className="flex justify-between text-sm">
             <span>Service Availability</span>
             <span>
-              {aiServices.overall.availableServices}/{aiServices.overall.totalServices} services
+              {aiServices.overall.availableServices}/
+              {aiServices.overall.totalServices} services
             </span>
           </div>
           <Progress
-            value={(aiServices.overall.availableServices / aiServices.overall.totalServices) * 100}
+            value={
+              (aiServices.overall.availableServices /
+                aiServices.overall.totalServices) *
+              100
+            }
             className="h-2"
           />
         </div>
@@ -142,7 +190,11 @@ function PatternDetectionStatus({
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4" />
         <h4 className="font-medium">Pattern Detection Enhancement</h4>
-        <Badge variant={featureStatus?.advanceDetectionEnabled ? "default" : "outline"}>
+        <Badge
+          variant={
+            featureStatus?.advanceDetectionEnabled ? "default" : "outline"
+          }
+        >
           {featureStatus?.advanceDetectionEnabled ? "Enabled" : "Disabled"}
         </Badge>
       </div>
@@ -161,11 +213,15 @@ function PatternDetectionStatus({
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
             <span>Avg Confidence</span>
-            <span>{enhancedPatterns?.summary?.averageConfidence?.toFixed(1) || 0}%</span>
+            <span>
+              {enhancedPatterns?.summary?.averageConfidence?.toFixed(1) || 0}%
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Avg Advance Hours</span>
-            <span>{enhancedPatterns?.summary?.averageAdvanceHours?.toFixed(1) || 0}h</span>
+            <span>
+              {enhancedPatterns?.summary?.averageAdvanceHours?.toFixed(1) || 0}h
+            </span>
           </div>
         </div>
       </div>
@@ -196,13 +252,19 @@ function PatternDetectionStatus({
   );
 }
 
-function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: CacheMetricsData | undefined }) {
+function CacheWarmingStatus({
+  cacheMetrics,
+}: {
+  cacheMetrics: CacheMetricsData | undefined;
+}) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <Database className="h-4 w-4" />
         <h4 className="font-medium">Cache Warming Service</h4>
-        <Badge variant={cacheMetrics?.warming?.isActive ? "default" : "outline"}>
+        <Badge
+          variant={cacheMetrics?.warming?.isActive ? "default" : "outline"}
+        >
           {cacheMetrics?.warming?.isActive ? "Active" : "Inactive"}
         </Badge>
       </div>
@@ -213,14 +275,22 @@ function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: CacheMetricsData |
             <span>Cache Hit Rate</span>
             <span>{cacheMetrics?.performance?.hitRate?.toFixed(1) || 0}%</span>
           </div>
-          <Progress value={cacheMetrics?.performance?.hitRate || 0} className="h-2" />
+          <Progress
+            value={cacheMetrics?.performance?.hitRate || 0}
+            className="h-2"
+          />
         </div>
         <div className="space-y-1">
           <div className="flex justify-between text-sm">
             <span>Success Rate</span>
-            <span>{cacheMetrics?.warming?.metrics?.successRate?.toFixed(1) || 0}%</span>
+            <span>
+              {cacheMetrics?.warming?.metrics?.successRate?.toFixed(1) || 0}%
+            </span>
           </div>
-          <Progress value={cacheMetrics?.warming?.metrics?.successRate || 0} className="h-2" />
+          <Progress
+            value={cacheMetrics?.warming?.metrics?.successRate || 0}
+            className="h-2"
+          />
         </div>
       </div>
 
@@ -228,19 +298,31 @@ function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: CacheMetricsData |
         <div>
           <span className="text-muted-foreground">Redis:</span>
           <Badge
-            variant={cacheMetrics?.connection?.redis?.connected ? "default" : "destructive"}
+            variant={
+              cacheMetrics?.connection?.redis?.connected
+                ? "default"
+                : "destructive"
+            }
             className="ml-1"
           >
-            {cacheMetrics?.connection?.redis?.connected ? "Connected" : "Disconnected"}
+            {cacheMetrics?.connection?.redis?.connected
+              ? "Connected"
+              : "Disconnected"}
           </Badge>
         </div>
         <div>
           <span className="text-muted-foreground">Valkey:</span>
           <Badge
-            variant={cacheMetrics?.connection?.valkey?.connected ? "default" : "destructive"}
+            variant={
+              cacheMetrics?.connection?.valkey?.connected
+                ? "default"
+                : "destructive"
+            }
             className="ml-1"
           >
-            {cacheMetrics?.connection?.valkey?.connected ? "Connected" : "Disconnected"}
+            {cacheMetrics?.connection?.valkey?.connected
+              ? "Connected"
+              : "Disconnected"}
           </Badge>
         </div>
       </div>
@@ -248,7 +330,11 @@ function CacheWarmingStatus({ cacheMetrics }: { cacheMetrics: CacheMetricsData |
   );
 }
 
-function ConfigurationStatus({ featureStatus }: { featureStatus: FeatureStatusData | undefined }) {
+function ConfigurationStatus({
+  featureStatus,
+}: {
+  featureStatus: FeatureStatusData | undefined;
+}) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
@@ -259,25 +345,41 @@ function ConfigurationStatus({ featureStatus }: { featureStatus: FeatureStatusDa
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div className="flex items-center justify-between">
           <span>AI Intelligence</span>
-          <Badge variant={featureStatus?.aiIntelligenceEnabled ? "default" : "outline"}>
+          <Badge
+            variant={
+              featureStatus?.aiIntelligenceEnabled ? "default" : "outline"
+            }
+          >
             {featureStatus?.aiIntelligenceEnabled ? "On" : "Off"}
           </Badge>
         </div>
         <div className="flex items-center justify-between">
           <span>Cache Warming</span>
-          <Badge variant={featureStatus?.cacheWarmingEnabled ? "default" : "outline"}>
+          <Badge
+            variant={featureStatus?.cacheWarmingEnabled ? "default" : "outline"}
+          >
             {featureStatus?.cacheWarmingEnabled ? "On" : "Off"}
           </Badge>
         </div>
         <div className="flex items-center justify-between">
           <span>Performance Monitoring</span>
-          <Badge variant={featureStatus?.performanceMonitoringEnabled ? "default" : "outline"}>
+          <Badge
+            variant={
+              featureStatus?.performanceMonitoringEnabled
+                ? "default"
+                : "outline"
+            }
+          >
             {featureStatus?.performanceMonitoringEnabled ? "On" : "Off"}
           </Badge>
         </div>
         <div className="flex items-center justify-between">
           <span>Advance Detection</span>
-          <Badge variant={featureStatus?.advanceDetectionEnabled ? "default" : "outline"}>
+          <Badge
+            variant={
+              featureStatus?.advanceDetectionEnabled ? "default" : "outline"
+            }
+          >
             {featureStatus?.advanceDetectionEnabled ? "On" : "Off"}
           </Badge>
         </div>
@@ -292,7 +394,12 @@ export function Phase3IntegrationSummary() {
   const { data: enhancedPatterns } = useEnhancedPatterns();
   const { data: featureStatus } = usePhase3FeatureStatus();
 
-  const overallStatus = getOverallStatus(aiServices, cacheMetrics, enhancedPatterns, featureStatus);
+  const overallStatus = getOverallStatus(
+    aiServices,
+    cacheMetrics,
+    enhancedPatterns,
+    featureStatus
+  );
 
   return (
     <Card>
@@ -329,8 +436,9 @@ export function Phase3IntegrationSummary() {
         {/* Quick Actions */}
         <div className="border-t pt-3">
           <div className="text-xs text-muted-foreground text-center">
-            All Phase 3 optimization features are now integrated and accessible through the
-            dashboard. Use the tabs above to configure and monitor each component.
+            All Phase 3 optimization features are now integrated and accessible
+            through the dashboard. Use the tabs above to configure and monitor
+            each component.
           </div>
         </div>
       </CardContent>

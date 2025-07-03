@@ -33,11 +33,19 @@ export function createPatternLogger(moduleName: string): PatternLogger {
 
   return {
     info: (message: string, context?: any) => {
-      console.info(prefix, message, ENABLE_CONTEXT_LOGGING ? context || "" : "");
+      console.info(
+        prefix,
+        message,
+        ENABLE_CONTEXT_LOGGING ? context || "" : ""
+      );
     },
 
     warn: (message: string, context?: any) => {
-      console.warn(prefix, message, ENABLE_CONTEXT_LOGGING ? context || "" : "");
+      console.warn(
+        prefix,
+        message,
+        ENABLE_CONTEXT_LOGGING ? context || "" : ""
+      );
     },
 
     error: (message: string, context?: any, error?: Error) => {
@@ -51,7 +59,11 @@ export function createPatternLogger(moduleName: string): PatternLogger {
 
     debug: (message: string, context?: any) => {
       if (LOG_LEVEL === "debug") {
-        console.debug(prefix, message, ENABLE_CONTEXT_LOGGING ? context || "" : "");
+        console.debug(
+          prefix,
+          message,
+          ENABLE_CONTEXT_LOGGING ? context || "" : ""
+        );
       }
     },
   };

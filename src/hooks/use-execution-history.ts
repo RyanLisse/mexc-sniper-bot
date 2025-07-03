@@ -88,10 +88,14 @@ export function useExecutionHistory(filters: ExecutionHistoryFilters) {
         }
       });
 
-      const response = await fetch(`/api/execution-history?${params.toString()}`);
+      const response = await fetch(
+        `/api/execution-history?${params.toString()}`
+      );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch execution history: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch execution history: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -183,18 +187,31 @@ export function formatExecutionRecord(execution: ExecutionRecord) {
     displayLatency: `${execution.executionLatencyMs || 0}ms`,
     displaySlippage: `${execution.slippagePercent?.toFixed(2) || "0.00"}%`,
     statusColor:
-      execution.status === "success" ? "green" : execution.status === "failed" ? "red" : "yellow",
+      execution.status === "success"
+        ? "green"
+        : execution.status === "failed"
+          ? "red"
+          : "yellow",
     actionColor:
-      execution.action === "buy" ? "blue" : execution.action === "sell" ? "green" : "gray",
+      execution.action === "buy"
+        ? "blue"
+        : execution.action === "sell"
+          ? "green"
+          : "gray",
   };
 }
 
 // Helper function to calculate profit/loss between buy and sell orders
-export function calculateProfitLoss(buyExecution: ExecutionRecord, sellExecution: ExecutionRecord) {
+export function calculateProfitLoss(
+  buyExecution: ExecutionRecord,
+  sellExecution: ExecutionRecord
+) {
   if (!buyExecution || !sellExecution) return null;
 
-  const buyValue = (buyExecution.executedPrice || 0) * (buyExecution.executedQuantity || 0);
-  const sellValue = (sellExecution.executedPrice || 0) * (sellExecution.executedQuantity || 0);
+  const buyValue =
+    (buyExecution.executedPrice || 0) * (buyExecution.executedQuantity || 0);
+  const sellValue =
+    (sellExecution.executedPrice || 0) * (sellExecution.executedQuantity || 0);
   const totalFees = (buyExecution.fees || 0) + (sellExecution.fees || 0);
 
   const profitLoss = sellValue - buyValue - totalFees;

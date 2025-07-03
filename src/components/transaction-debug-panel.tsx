@@ -14,7 +14,13 @@ import {
 import { useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -56,7 +62,11 @@ const DebugSearch = ({
   onSearch,
   isLoading,
 }: {
-  onSearch: (query: { symbol?: string; orderId?: string; timeRange?: string }) => void;
+  onSearch: (query: {
+    symbol?: string;
+    orderId?: string;
+    timeRange?: string;
+  }) => void;
   isLoading: boolean;
 }) => {
   const [symbol, setSymbol] = useState("");
@@ -78,7 +88,9 @@ const DebugSearch = ({
           <Search className="h-5 w-5" />
           Transaction Search & Debug
         </CardTitle>
-        <CardDescription>Search for missing transactions and debug trading history</CardDescription>
+        <CardDescription>
+          Search for missing transactions and debug trading history
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -158,7 +170,11 @@ const ExecutionHistoryDisplay = ({
           <div key={execution.id} className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Badge variant={execution.status === "success" ? "default" : "destructive"}>
+                <Badge
+                  variant={
+                    execution.status === "success" ? "default" : "destructive"
+                  }
+                >
                   {execution.status === "success" ? (
                     <CheckCircle className="h-3 w-3 mr-1" />
                   ) : (
@@ -167,7 +183,9 @@ const ExecutionHistoryDisplay = ({
                   {execution.status}
                 </Badge>
                 <span className="font-medium">{execution.symbolName}</span>
-                <Badge variant="outline">{execution.action.toUpperCase()}</Badge>
+                <Badge variant="outline">
+                  {execution.action.toUpperCase()}
+                </Badge>
               </div>
               <span className="text-xs text-muted-foreground">
                 {new Date(execution.executedAt).toLocaleString()}
@@ -176,19 +194,27 @@ const ExecutionHistoryDisplay = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Quantity</p>
-                <p className="font-medium">{execution.executedQuantity.toFixed(4)}</p>
+                <p className="font-medium">
+                  {execution.executedQuantity.toFixed(4)}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Price</p>
-                <p className="font-medium">${execution.executedPrice?.toFixed(4) || "N/A"}</p>
+                <p className="font-medium">
+                  ${execution.executedPrice?.toFixed(4) || "N/A"}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Total Cost</p>
-                <p className="font-medium">${execution.totalCost?.toFixed(2) || "N/A"}</p>
+                <p className="font-medium">
+                  ${execution.totalCost?.toFixed(2) || "N/A"}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Exchange Order ID</p>
-                <p className="font-mono text-xs">{execution.exchangeOrderId || "N/A"}</p>
+                <p className="font-mono text-xs">
+                  {execution.exchangeOrderId || "N/A"}
+                </p>
               </div>
             </div>
             {execution.exchangeResponse && (
@@ -197,7 +223,11 @@ const ExecutionHistoryDisplay = ({
                   Exchange Response
                 </summary>
                 <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
-                  {JSON.stringify(JSON.parse(execution.exchangeResponse), null, 2)}
+                  {JSON.stringify(
+                    JSON.parse(execution.exchangeResponse),
+                    null,
+                    2
+                  )}
                 </pre>
               </details>
             )}
@@ -238,7 +268,11 @@ const TransactionRecordsDisplay = ({
           <div key={transaction.id} className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
-                <Badge variant={transaction.status === "completed" ? "default" : "secondary"}>
+                <Badge
+                  variant={
+                    transaction.status === "completed" ? "default" : "secondary"
+                  }
+                >
                   {transaction.status === "completed" ? (
                     <CheckCircle className="h-3 w-3 mr-1" />
                   ) : transaction.status === "pending" ? (
@@ -249,7 +283,9 @@ const TransactionRecordsDisplay = ({
                   {transaction.status}
                 </Badge>
                 <span className="font-medium">{transaction.symbolName}</span>
-                <Badge variant="outline">{transaction.transactionType.toUpperCase()}</Badge>
+                <Badge variant="outline">
+                  {transaction.transactionType.toUpperCase()}
+                </Badge>
               </div>
               <span className="text-xs text-muted-foreground">
                 {new Date(transaction.transactionTime).toLocaleString()}
@@ -258,11 +294,15 @@ const TransactionRecordsDisplay = ({
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Buy Price</p>
-                <p className="font-medium">${transaction.buyPrice?.toFixed(4) || "N/A"}</p>
+                <p className="font-medium">
+                  ${transaction.buyPrice?.toFixed(4) || "N/A"}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Sell Price</p>
-                <p className="font-medium">${transaction.sellPrice?.toFixed(4) || "N/A"}</p>
+                <p className="font-medium">
+                  ${transaction.sellPrice?.toFixed(4) || "N/A"}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">Quantity</p>
@@ -283,7 +323,9 @@ const TransactionRecordsDisplay = ({
                       : ""
                   }`}
                 >
-                  {transaction.profitLoss ? `$${transaction.profitLoss.toFixed(2)}` : "N/A"}
+                  {transaction.profitLoss
+                    ? `$${transaction.profitLoss.toFixed(2)}`
+                    : "N/A"}
                 </p>
               </div>
             </div>
@@ -295,7 +337,10 @@ const TransactionRecordsDisplay = ({
 };
 
 // Main Component
-export function TransactionDebugPanel({ userId, className }: TransactionDebugPanelProps) {
+export function TransactionDebugPanel({
+  userId,
+  className,
+}: TransactionDebugPanelProps) {
   const [searchParams, setSearchParams] = useState<{
     symbol?: string;
     orderId?: string;
@@ -315,7 +360,9 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
         limit: "50",
         ...(searchParams.symbol && { symbol: searchParams.symbol }),
         ...(searchParams.timeRange && {
-          fromDate: (Date.now() - getTimeRangeMs(searchParams.timeRange)).toString(),
+          fromDate: (
+            Date.now() - getTimeRangeMs(searchParams.timeRange)
+          ).toString(),
         }),
       });
 
@@ -339,7 +386,9 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
         limit: "50",
         ...(searchParams.symbol && { symbolName: searchParams.symbol }),
         ...(searchParams.timeRange && {
-          fromDate: new Date(Date.now() - getTimeRangeMs(searchParams.timeRange)).toISOString(),
+          fromDate: new Date(
+            Date.now() - getTimeRangeMs(searchParams.timeRange)
+          ).toISOString(),
         }),
       });
 
@@ -350,7 +399,11 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
     enabled: !!userId,
   });
 
-  const handleSearch = (params: { symbol?: string; orderId?: string; timeRange?: string }) => {
+  const handleSearch = (params: {
+    symbol?: string;
+    orderId?: string;
+    timeRange?: string;
+  }) => {
     setSearchParams(params);
     refetchExecution();
     refetchTransactions();
@@ -361,11 +414,16 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
 
   return (
     <div className={`space-y-6 ${className}`}>
-      <DebugSearch onSearch={handleSearch} isLoading={executionLoading || transactionLoading} />
+      <DebugSearch
+        onSearch={handleSearch}
+        isLoading={executionLoading || transactionLoading}
+      />
 
       <Tabs defaultValue="execution" className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="execution">Execution History ({executions.length})</TabsTrigger>
+          <TabsTrigger value="execution">
+            Execution History ({executions.length})
+          </TabsTrigger>
           <TabsTrigger value="transactions">
             Transaction Records ({transactions.length})
           </TabsTrigger>
@@ -378,10 +436,15 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
                 <Database className="h-5 w-5" />
                 Execution History
               </CardTitle>
-              <CardDescription>Raw execution records from the MEXC exchange</CardDescription>
+              <CardDescription>
+                Raw execution records from the MEXC exchange
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <ExecutionHistoryDisplay executions={executions} isLoading={executionLoading} />
+              <ExecutionHistoryDisplay
+                executions={executions}
+                isLoading={executionLoading}
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -423,19 +486,33 @@ export function TransactionDebugPanel({ userId, className }: TransactionDebugPan
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold">{transactions.length}</p>
-              <p className="text-xs text-muted-foreground">Transactions Found</p>
+              <p className="text-xs text-muted-foreground">
+                Transactions Found
+              </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold">
-                {executions.filter((e: ExecutionRecord) => e.status === "success").length}
+                {
+                  executions.filter(
+                    (e: ExecutionRecord) => e.status === "success"
+                  ).length
+                }
               </p>
-              <p className="text-xs text-muted-foreground">Successful Executions</p>
+              <p className="text-xs text-muted-foreground">
+                Successful Executions
+              </p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold">
-                {transactions.filter((t: TransactionRecord) => t.status === "completed").length}
+                {
+                  transactions.filter(
+                    (t: TransactionRecord) => t.status === "completed"
+                  ).length
+                }
               </p>
-              <p className="text-xs text-muted-foreground">Completed Transactions</p>
+              <p className="text-xs text-muted-foreground">
+                Completed Transactions
+              </p>
             </div>
           </div>
         </CardContent>

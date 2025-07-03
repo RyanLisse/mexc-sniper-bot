@@ -122,7 +122,11 @@ export class WebSocketManager extends EventEmitter {
   } /**
    * Subscribe to a channel
    */
-  subscribe(channel: string, callback: (data: any) => void, symbol?: string): string {
+  subscribe(
+    channel: string,
+    callback: (data: any) => void,
+    symbol?: string
+  ): string {
     const id = `${channel}_${symbol || "all"}_${Date.now()}`;
 
     const subscription: Subscription = {
@@ -287,13 +291,19 @@ export class WebSocketManager extends EventEmitter {
    */
   private resubscribeAll(): void {
     for (const [id, subscription] of this.subscriptions) {
-      if (subscription.isActive && this.ws && this.ws.readyState === WebSocket.OPEN) {
+      if (
+        subscription.isActive &&
+        this.ws &&
+        this.ws.readyState === WebSocket.OPEN
+      ) {
         try {
-          this.ws.send(JSON.stringify({
-            method: "SUBSCRIPTION",
-            params: [subscription.channel],
-            id: id
-          }));
+          this.ws.send(
+            JSON.stringify({
+              method: "SUBSCRIPTION",
+              params: [subscription.channel],
+              id: id,
+            })
+          );
         } catch (error) {
           console.error(`Failed to resubscribe to ${id}:`, error);
         }
@@ -307,10 +317,12 @@ export class WebSocketManager extends EventEmitter {
   private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-      
-      console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-      
+      const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
+
+      console.log(
+        `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      );
+
       setTimeout(() => {
         this.connect();
       }, delay);

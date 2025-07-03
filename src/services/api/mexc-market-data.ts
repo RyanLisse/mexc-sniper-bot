@@ -105,7 +105,8 @@ export class MexcMarketDataClient extends MexcClientCore {
             }
           })
           .filter(
-            (entry: CalendarEntry | undefined): entry is CalendarEntry => entry !== undefined
+            (entry: CalendarEntry | undefined): entry is CalendarEntry =>
+              entry !== undefined
           );
       }
       // Fallback: check if data is directly an array (for backward compatibility)
@@ -136,11 +137,14 @@ export class MexcMarketDataClient extends MexcClientCore {
             }
           })
           .filter(
-            (entry: CalendarEntry | undefined): entry is CalendarEntry => entry !== undefined
+            (entry: CalendarEntry | undefined): entry is CalendarEntry =>
+              entry !== undefined
           );
       }
 
-      console.info(`[MexcMarketData] Retrieved ${calendarData.length} calendar entries`);
+      console.info(
+        `[MexcMarketData] Retrieved ${calendarData.length} calendar entries`
+      );
 
       return {
         success: true, // API call successful regardless of data count
@@ -167,9 +171,13 @@ export class MexcMarketDataClient extends MexcClientCore {
   /**
    * Get symbols data from MEXC V2 API
    */
-  async getSymbolsV2(vcoinId?: string): Promise<UnifiedMexcResponse<SymbolEntry[]>> {
+  async getSymbolsV2(
+    vcoinId?: string
+  ): Promise<UnifiedMexcResponse<SymbolEntry[]>> {
     try {
-      console.info(`[MexcMarketData] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`);
+      console.info(
+        `[MexcMarketData] Fetching symbols data${vcoinId ? ` for ${vcoinId}` : ""}...`
+      );
 
       const response = await this.makeRequest<{ data: { symbols: unknown[] } }>(
         "/api/platform/spot/market-v2/web/symbolsV2"
@@ -187,7 +195,10 @@ export class MexcMarketDataClient extends MexcClientCore {
       // Parse and validate the response
       let symbolData: SymbolEntry[] = [];
 
-      if (response.data?.data?.symbols && Array.isArray(response.data.data.symbols)) {
+      if (
+        response.data?.data?.symbols &&
+        Array.isArray(response.data.data.symbols)
+      ) {
         symbolData = response.data.data.symbols
           .filter((entry: unknown): entry is Record<string, unknown> => {
             if (typeof entry !== "object" || entry === null) return false;
@@ -229,7 +240,9 @@ export class MexcMarketDataClient extends MexcClientCore {
           .filter((entry): entry is SymbolEntry => entry !== null);
       }
 
-      console.info(`[MexcMarketData] Retrieved ${symbolData.length} symbol entries`);
+      console.info(
+        `[MexcMarketData] Retrieved ${symbolData.length} symbol entries`
+      );
 
       return {
         success: symbolData.length > 0,
@@ -301,7 +314,9 @@ export class MexcMarketDataClient extends MexcClientCore {
 
       // Parse and cache the symbols - MEXC uses status "1" for trading symbols, not "TRADING"
       const validSymbols = response.data.symbols
-        .filter((symbol) => symbol.status === "1" && symbol.quoteAsset === "USDT")
+        .filter(
+          (symbol) => symbol.status === "1" && symbol.quoteAsset === "USDT"
+        )
         .map((symbol): ExchangeSymbol | null => {
           try {
             return ExchangeSymbolSchema.parse(symbol);
@@ -315,7 +330,9 @@ export class MexcMarketDataClient extends MexcClientCore {
       this.exchangeSymbolsCache = validSymbols;
       this.exchangeSymbolsCacheTime = now;
 
-      console.info(`[MexcMarketData] Retrieved ${validSymbols.length} USDT trading pairs`);
+      console.info(
+        `[MexcMarketData] Retrieved ${validSymbols.length} USDT trading pairs`
+      );
 
       return {
         success: true,
@@ -344,7 +361,9 @@ export class MexcMarketDataClient extends MexcClientCore {
    */
   async get24hrTicker(symbol?: string): Promise<UnifiedMexcResponse<Ticker[]>> {
     try {
-      const endpoint = symbol ? `/api/v3/ticker/24hr?symbol=${symbol}` : "/api/v3/ticker/24hr";
+      const endpoint = symbol
+        ? `/api/v3/ticker/24hr?symbol=${symbol}`
+        : "/api/v3/ticker/24hr";
       const response = await this.makeRequest<Ticker | Ticker[]>(endpoint);
 
       if (!response.success) {
@@ -357,7 +376,9 @@ export class MexcMarketDataClient extends MexcClientCore {
       }
 
       // Handle both single symbol and all symbols response
-      const rawData = Array.isArray(response.data) ? response.data : [response.data];
+      const rawData = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
 
       const validatedData = rawData
         .map((ticker): Ticker | null => {
@@ -395,7 +416,9 @@ export class MexcMarketDataClient extends MexcClientCore {
     symbol?: string
   ): Promise<UnifiedMexcResponse<{ symbol: string; price: string }[]>> {
     try {
-      const endpoint = symbol ? `/api/v3/ticker/price?symbol=${symbol}` : "/api/v3/ticker/price";
+      const endpoint = symbol
+        ? `/api/v3/ticker/price?symbol=${symbol}`
+        : "/api/v3/ticker/price";
       const response = await this.makeRequest<
         { symbol: string; price: string } | { symbol: string; price: string }[]
       >(endpoint);
@@ -410,7 +433,9 @@ export class MexcMarketDataClient extends MexcClientCore {
       }
 
       // Handle both single symbol and all symbols response
-      const rawData = Array.isArray(response.data) ? response.data : [response.data];
+      const rawData = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
 
       return {
         success: true,
@@ -439,9 +464,29 @@ export class MexcMarketDataClient extends MexcClientCore {
     limit: number = 500,
     startTime?: number,
     endTime?: number
-  ): Promise<UnifiedMexcResponse<Array<[number, string, string, string, string, string, number, string, number, string, string]>>> {
+  ): Promise<
+    UnifiedMexcResponse<
+      Array<
+        [
+          number,
+          string,
+          string,
+          string,
+          string,
+          string,
+          number,
+          string,
+          number,
+          string,
+          string,
+        ]
+      >
+    >
+  > {
     try {
-      console.info(`[MexcMarketData] Fetching klines for ${symbol} with interval ${interval}, limit ${limit}`);
+      console.info(
+        `[MexcMarketData] Fetching klines for ${symbol} with interval ${interval}, limit ${limit}`
+      );
 
       // Build endpoint with parameters
       const params = new URLSearchParams({
@@ -451,14 +496,31 @@ export class MexcMarketDataClient extends MexcClientCore {
       });
 
       if (startTime) {
-        params.append('startTime', startTime.toString());
+        params.append("startTime", startTime.toString());
       }
       if (endTime) {
-        params.append('endTime', endTime.toString());
+        params.append("endTime", endTime.toString());
       }
 
       const endpoint = `/api/v3/klines?${params.toString()}`;
-      const response = await this.makeRequest<Array<[number, string, string, string, string, string, number, string, number, string, string]>>(endpoint);
+      const response =
+        await this.makeRequest<
+          Array<
+            [
+              number,
+              string,
+              string,
+              string,
+              string,
+              string,
+              number,
+              string,
+              number,
+              string,
+              string,
+            ]
+          >
+        >(endpoint);
 
       if (!response.success) {
         return {
@@ -479,7 +541,9 @@ export class MexcMarketDataClient extends MexcClientCore {
         };
       }
 
-      console.info(`[MexcMarketData] Retrieved ${response.data.length} kline data points`);
+      console.info(
+        `[MexcMarketData] Retrieved ${response.data.length} kline data points`
+      );
 
       return {
         success: true,
@@ -505,13 +569,17 @@ export class MexcMarketDataClient extends MexcClientCore {
   async getOrderBook(
     symbol: string,
     limit: number = 100
-  ): Promise<UnifiedMexcResponse<{
-    bids: [string, string][];
-    asks: [string, string][];
-    lastUpdateId: number;
-  }>> {
+  ): Promise<
+    UnifiedMexcResponse<{
+      bids: [string, string][];
+      asks: [string, string][];
+      lastUpdateId: number;
+    }>
+  > {
     try {
-      console.info(`[MexcMarketData] Fetching order book for ${symbol} with limit ${limit}`);
+      console.info(
+        `[MexcMarketData] Fetching order book for ${symbol} with limit ${limit}`
+      );
 
       const endpoint = `/api/v3/depth?symbol=${symbol}&limit=${limit}`;
       const response = await this.makeRequest<{
@@ -530,7 +598,11 @@ export class MexcMarketDataClient extends MexcClientCore {
       }
 
       // Validate response structure
-      if (!response.data || !Array.isArray(response.data.bids) || !Array.isArray(response.data.asks)) {
+      if (
+        !response.data ||
+        !Array.isArray(response.data.bids) ||
+        !Array.isArray(response.data.asks)
+      ) {
         return {
           success: false,
           data: { bids: [], asks: [], lastUpdateId: 0 },
@@ -539,7 +611,9 @@ export class MexcMarketDataClient extends MexcClientCore {
         };
       }
 
-      console.info(`[MexcMarketData] Retrieved order book with ${response.data.bids.length} bids and ${response.data.asks.length} asks`);
+      console.info(
+        `[MexcMarketData] Retrieved order book with ${response.data.bids.length} bids and ${response.data.asks.length} asks`
+      );
 
       return {
         success: true,
@@ -553,7 +627,10 @@ export class MexcMarketDataClient extends MexcClientCore {
         requestId: response.requestId,
       };
     } catch (error) {
-      console.error(`[MexcMarketData] Order book fetch failed for ${symbol}:`, error);
+      console.error(
+        `[MexcMarketData] Order book fetch failed for ${symbol}:`,
+        error
+      );
       return {
         success: false,
         data: { bids: [], asks: [], lastUpdateId: 0 },
@@ -574,7 +651,9 @@ export class MexcMarketDataClient extends MexcClientCore {
     const recoveryService = getGlobalErrorRecoveryService();
 
     try {
-      console.info("[MexcMarketData] Testing connectivity with error recovery...");
+      console.info(
+        "[MexcMarketData] Testing connectivity with error recovery..."
+      );
 
       const result = await recoveryService.executeWithRecovery(
         () => this.makeRequest("/api/v3/ping"),
@@ -607,7 +686,9 @@ export class MexcMarketDataClient extends MexcClientCore {
    */
   async getServerTime(): Promise<UnifiedMexcResponse<{ serverTime: number }>> {
     try {
-      const response = await this.makeRequest<{ serverTime: number }>("/api/v3/time");
+      const response = await this.makeRequest<{ serverTime: number }>(
+        "/api/v3/time"
+      );
       if (response.success) {
         return response;
       }
@@ -654,7 +735,8 @@ export class MexcMarketDataClient extends MexcClientCore {
   isExchangeCacheValid(): boolean {
     const now = Date.now();
     return Boolean(
-      this.exchangeSymbolsCache && now - this.exchangeSymbolsCacheTime < this.symbolsCacheExpiry
+      this.exchangeSymbolsCache &&
+        now - this.exchangeSymbolsCacheTime < this.symbolsCacheExpiry
     );
   }
 }

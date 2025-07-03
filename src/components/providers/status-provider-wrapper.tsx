@@ -13,7 +13,9 @@ interface StatusContextType {
 
 const StatusContext = createContext<StatusContextType | undefined>(undefined);
 
-export function StatusProviderWrapper({ children }: StatusProviderWrapperProps) {
+export function StatusProviderWrapper({
+  children,
+}: StatusProviderWrapperProps) {
   const [status, setStatus] = useState("ready");
 
   const updateStatus = (newStatus: string) => {
@@ -30,7 +32,9 @@ export function StatusProviderWrapper({ children }: StatusProviderWrapperProps) 
 export function useStatusProvider() {
   const context = useContext(StatusContext);
   if (!context) {
-    throw new Error("useStatusProvider must be used within StatusProviderWrapper");
+    throw new Error(
+      "useStatusProvider must be used within StatusProviderWrapper"
+    );
   }
   return context;
 }

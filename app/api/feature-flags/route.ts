@@ -1,20 +1,21 @@
 /**
  * Feature Flags Management API
- * 
+ *
  * API endpoints for managing enhanced feature flags with rollout controls,
  * A/B testing, and real-time monitoring.
  */
 
-import { NextRequest } from 'next/server';
-import { apiResponse, createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
-import { 
-  EnhancedFeatureFlagConfig,
+import type { NextRequest } from "next/server";
+import {
+  apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/src/lib/api-response";
+import {
   EnhancedFeatureFlagConfigSchema,
-  enhancedFeatureFlagManager, 
-  GradualRolloutConfig,
-  UserContext,
+  enhancedFeatureFlagManager,
   UserContextSchema,
-} from '@/src/lib/feature-flags/enhanced-feature-flag-manager';
+} from "@/src/lib/feature-flags/enhanced-feature-flag-manager";
 
 /**
  * GET /api/feature-flags
@@ -23,64 +24,67 @@ import {
 export async function GET(request: NextRequest): Promise<Response> {
   try {
     const url = new URL(request.url);
-    const flagName = url.searchParams.get('flag');
-    const includeAnalytics = url.searchParams.get('analytics') === 'true';
-    
+    const flagName = url.searchParams.get("flag");
+    const includeAnalytics = url.searchParams.get("analytics") === "true";
+
     if (flagName) {
       // Get specific flag configuration
       const flags = enhancedFeatureFlagManager.getAllFlags();
       const flag = flags[flagName];
-      
+
       if (!flag) {
         return apiResponse(
-          createErrorResponse('Feature flag not found', { flagName }),
+          createErrorResponse("Feature flag not found", { flagName }),
           404
         );
       }
 
-      let analytics = undefined;
+      let analytics;
       if (includeAnalytics) {
         analytics = enhancedFeatureFlagManager.getAnalytics(flagName);
       }
 
-      return apiResponse(createSuccessResponse({
-        flag,
-        analytics,
-      }));
+      return apiResponse(
+        createSuccessResponse({
+          flag,
+          analytics,
+        })
+      );
     }
 
     // Get all flags
     const flags = enhancedFeatureFlagManager.getAllFlags();
-    let analytics: any = undefined;
-    
+    let analytics: any;
+
     if (includeAnalytics) {
       const baseAnalytics = enhancedFeatureFlagManager.getAnalytics();
-      
+
       // Get analytics for each flag
       const flagAnalytics: Record<string, any> = {};
       for (const flagName of Object.keys(flags)) {
-        flagAnalytics[flagName] = enhancedFeatureFlagManager.getAnalytics(flagName);
+        flagAnalytics[flagName] =
+          enhancedFeatureFlagManager.getAnalytics(flagName);
       }
-      
+
       analytics = {
         ...baseAnalytics,
-        byFlag: flagAnalytics
+        byFlag: flagAnalytics,
       };
     }
 
-    return apiResponse(createSuccessResponse({
-      flags,
-      analytics,
-      count: Object.keys(flags).length,
-    }));
-
-  } catch (error) {
-    console.error('[Feature Flags API] GET Error:', error);
     return apiResponse(
-      createErrorResponse(
-        'Failed to retrieve feature flags',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createSuccessResponse({
+        flags,
+        analytics,
+        count: Object.keys(flags).length,
+      })
+    );
+  } catch (error) {
+    console.error("[Feature Flags API] GET Error:", error);
+    return apiResponse(
+      createErrorResponse("Failed to retrieve feature flags", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       500
     );
   }
@@ -96,31 +100,29 @@ export async function POST(request: NextRequest): Promise<Response> {
     const { action, ...data } = body;
 
     switch (action) {
-      case 'create':
+      case "create":
         return handleCreateFlag(data);
-        
-      case 'evaluate':
+
+      case "evaluate":
         return handleEvaluateFlag(data);
-        
-      case 'bulk_evaluate':
+
+      case "bulk_evaluate":
         return handleBulkEvaluate(data);
-        
+
       default:
         return apiResponse(
-          createErrorResponse('Invalid action', { 
-            validActions: ['create', 'evaluate', 'bulk_evaluate'] 
+          createErrorResponse("Invalid action", {
+            validActions: ["create", "evaluate", "bulk_evaluate"],
           }),
           400
         );
     }
-
   } catch (error) {
-    console.error('[Feature Flags API] POST Error:', error);
+    console.error("[Feature Flags API] POST Error:", error);
     return apiResponse(
-      createErrorResponse(
-        'Failed to process feature flag request',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createErrorResponse("Failed to process feature flag request", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       500
     );
   }
@@ -136,36 +138,41 @@ export async function PUT(request: NextRequest): Promise<Response> {
     const { flagName, action, ...updates } = body;
 
     if (!flagName) {
-      return apiResponse(
-        createErrorResponse('Flag name is required'),
-        400
-      );
+      return apiResponse(createErrorResponse("Flag name is required"), 400);
     }
 
     switch (action) {
-      case 'update':
+      case "update":
         enhancedFeatureFlagManager.updateFlag(flagName, updates);
         break;
-        
-      case 'emergency_disable':
-        const reason = updates.reason || 'Emergency disable via API';
+
+      case "emergency_disable": {
+        const reason = updates.reason || "Emergency disable via API";
         enhancedFeatureFlagManager.emergencyDisable(flagName, reason);
         break;
-        
-      case 'start_gradual_rollout':
+      }
+
+      case "start_gradual_rollout":
         if (!updates.gradualRolloutConfig) {
           return apiResponse(
-            createErrorResponse('Gradual rollout configuration is required'),
+            createErrorResponse("Gradual rollout configuration is required"),
             400
           );
         }
-        enhancedFeatureFlagManager.startGradualRollout(flagName, updates.gradualRolloutConfig);
+        enhancedFeatureFlagManager.startGradualRollout(
+          flagName,
+          updates.gradualRolloutConfig
+        );
         break;
-        
+
       default:
         return apiResponse(
-          createErrorResponse('Invalid action', { 
-            validActions: ['update', 'emergency_disable', 'start_gradual_rollout'] 
+          createErrorResponse("Invalid action", {
+            validActions: [
+              "update",
+              "emergency_disable",
+              "start_gradual_rollout",
+            ],
           }),
           400
         );
@@ -175,18 +182,18 @@ export async function PUT(request: NextRequest): Promise<Response> {
     const flags = enhancedFeatureFlagManager.getAllFlags();
     const updatedFlag = flags[flagName];
 
-    return apiResponse(createSuccessResponse({
-      message: 'Feature flag updated successfully',
-      flag: updatedFlag,
-    }));
-
-  } catch (error) {
-    console.error('[Feature Flags API] PUT Error:', error);
     return apiResponse(
-      createErrorResponse(
-        'Failed to update feature flag',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createSuccessResponse({
+        message: "Feature flag updated successfully",
+        flag: updatedFlag,
+      })
+    );
+  } catch (error) {
+    console.error("[Feature Flags API] PUT Error:", error);
+    return apiResponse(
+      createErrorResponse("Failed to update feature flag", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       500
     );
   }
@@ -196,9 +203,11 @@ export async function PUT(request: NextRequest): Promise<Response> {
  * DELETE /api/feature-flags
  * Delete a feature flag (not implemented for safety)
  */
-export async function DELETE(request: NextRequest): Promise<Response> {
+export async function DELETE(_request: NextRequest): Promise<Response> {
   return apiResponse(
-    createErrorResponse('Feature flag deletion is not supported for safety reasons'),
+    createErrorResponse(
+      "Feature flag deletion is not supported for safety reasons"
+    ),
     405
   );
 }
@@ -211,22 +220,22 @@ async function handleCreateFlag(data: any): Promise<Response> {
       ...data,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdBy: data.createdBy || 'api',
+      createdBy: data.createdBy || "api",
     });
 
     enhancedFeatureFlagManager.registerFlag(config);
 
-    return apiResponse(createSuccessResponse({
-      message: 'Feature flag created successfully',
-      flag: config,
-    }));
-
+    return apiResponse(
+      createSuccessResponse({
+        message: "Feature flag created successfully",
+        flag: config,
+      })
+    );
   } catch (error) {
     return apiResponse(
-      createErrorResponse(
-        'Invalid feature flag configuration',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createErrorResponse("Invalid feature flag configuration", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       400
     );
   }
@@ -237,10 +246,7 @@ async function handleEvaluateFlag(data: any): Promise<Response> {
     const { flagName, userContext, defaultValue = false } = data;
 
     if (!flagName) {
-      return apiResponse(
-        createErrorResponse('Flag name is required'),
-        400
-      );
+      return apiResponse(createErrorResponse("Flag name is required"), 400);
     }
 
     const validatedUserContext = UserContextSchema.parse(userContext);
@@ -250,16 +256,16 @@ async function handleEvaluateFlag(data: any): Promise<Response> {
       defaultValue
     );
 
-    return apiResponse(createSuccessResponse({
-      evaluation,
-    }));
-
+    return apiResponse(
+      createSuccessResponse({
+        evaluation,
+      })
+    );
   } catch (error) {
     return apiResponse(
-      createErrorResponse(
-        'Failed to evaluate feature flag',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createErrorResponse("Failed to evaluate feature flag", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       400
     );
   }
@@ -271,7 +277,7 @@ async function handleBulkEvaluate(data: any): Promise<Response> {
 
     if (!Array.isArray(flagNames) || flagNames.length === 0) {
       return apiResponse(
-        createErrorResponse('Flag names array is required'),
+        createErrorResponse("Flag names array is required"),
         400
       );
     }
@@ -292,25 +298,27 @@ async function handleBulkEvaluate(data: any): Promise<Response> {
         evaluations[flagName] = {
           flagName,
           enabled: defaultValue,
-          strategy: 'error',
+          strategy: "error",
           userInTargetGroup: false,
           evaluationTime: new Date(),
-          metadata: { error: error instanceof Error ? error.message : 'Unknown error' },
+          metadata: {
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
         };
       }
     }
 
-    return apiResponse(createSuccessResponse({
-      evaluations,
-      count: Object.keys(evaluations).length,
-    }));
-
+    return apiResponse(
+      createSuccessResponse({
+        evaluations,
+        count: Object.keys(evaluations).length,
+      })
+    );
   } catch (error) {
     return apiResponse(
-      createErrorResponse(
-        'Failed to evaluate feature flags',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createErrorResponse("Failed to evaluate feature flags", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       400
     );
   }

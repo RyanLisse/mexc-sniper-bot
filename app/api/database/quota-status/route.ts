@@ -2,9 +2,9 @@
  * Database Quota Status API - Minimal Implementation
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return NextResponse.json({
     success: true,
     message: "Database quota status retrieved successfully",
@@ -17,21 +17,21 @@ export async function GET(request: NextRequest) {
         connectionsActive: 2,
         connectionsMax: 8,
         cacheHitRate: 85,
-        avgQueryTime: 150
+        avgQueryTime: 150,
       },
       alerts: [],
       emergencyMode: {
         active: false,
-        actionsImplemented: []
-      }
-    }
+        actionsImplemented: [],
+      },
+    },
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   return NextResponse.json({
     success: true,
     message: "Quota management action completed successfully",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }

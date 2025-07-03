@@ -33,8 +33,14 @@ const DatabaseConfigSchema = z.object({
 const AuthConfigSchema = z.object({
   SUPABASE_URL: z.string().url("Invalid Supabase URL"),
   SUPABASE_ANON_KEY: z.string().min(1, "Supabase Anonymous Key is required"),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "Supabase Service Role Key is required").optional(),
-  AUTH_SECRET: z.string().min(32, "Auth secret must be at least 32 characters").optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z
+    .string()
+    .min(1, "Supabase Service Role Key is required")
+    .optional(),
+  AUTH_SECRET: z
+    .string()
+    .min(32, "Auth secret must be at least 32 characters")
+    .optional(),
   // Legacy Kinde config (commented out)
   // KINDE_CLIENT_ID: z.string().optional(),
   // KINDE_CLIENT_SECRET: z.string().optional(),
@@ -43,8 +49,14 @@ const AuthConfigSchema = z.object({
 
 // MEXC API Configuration
 const MexcConfigSchema = z.object({
-  MEXC_API_KEY: z.string().min(10, "MEXC API Key must be at least 10 characters").optional(),
-  MEXC_SECRET_KEY: z.string().min(20, "MEXC Secret Key must be at least 20 characters").optional(),
+  MEXC_API_KEY: z
+    .string()
+    .min(10, "MEXC API Key must be at least 10 characters")
+    .optional(),
+  MEXC_SECRET_KEY: z
+    .string()
+    .min(20, "MEXC Secret Key must be at least 20 characters")
+    .optional(),
   MEXC_BASE_URL: z.string().url().default("https://api.mexc.com"),
   MEXC_TIMEOUT: z.coerce.number().min(1000).default(10000),
   MEXC_RATE_LIMIT: z.coerce.number().min(1).default(50),
@@ -73,7 +85,9 @@ const SecurityConfigSchema = z.object({
 
 // Application Configuration
 const AppConfigSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "staging", "production"]).default("development"),
+  NODE_ENV: z
+    .enum(["development", "test", "staging", "production"])
+    .default("development"),
   PORT: z.coerce.number().min(1).max(65535).default(3008),
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
   APP_NAME: z.string().default("MEXC Sniper Bot"),
@@ -131,7 +145,9 @@ export type MexcConfig = z.infer<typeof MexcConfigSchema>;
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
 export type SecurityConfig = z.infer<typeof SecurityConfigSchema>;
 export type AppConfig = z.infer<typeof AppConfigSchema>;
-export type ExternalServicesConfig = z.infer<typeof ExternalServicesConfigSchema>;
+export type ExternalServicesConfig = z.infer<
+  typeof ExternalServicesConfigSchema
+>;
 export type CacheConfig = z.infer<typeof CacheConfigSchema>;
 export type TradingConfig = z.infer<typeof TradingConfigSchema>;
 export type CompleteConfig = z.infer<typeof CompleteConfigSchema>;
@@ -184,11 +200,16 @@ export class UnifiedConfigService {
   /**
    * Validate and load complete configuration
    */
-  async validateAndLoad(overrides: ConfigOverrides = {}): Promise<ConfigValidationResult> {
+  async validateAndLoad(
+    overrides: ConfigOverrides = {}
+  ): Promise<ConfigValidationResult> {
     const cacheKey = `config:validation:${JSON.stringify(overrides)}`;
 
     // Check cache first
-    const cached = await this.cache.get<ConfigValidationResult>(cacheKey, "config");
+    const cached = await this.cache.get<ConfigValidationResult>(
+      cacheKey,
+      "config"
+    );
     if (cached && Date.now() - this.lastValidation < 60000) {
       // 1 minute cache
       return cached;
@@ -287,7 +308,9 @@ export class UnifiedConfigService {
   /**
    * Get specific configuration section
    */
-  async getSection<K extends keyof CompleteConfig>(section: K): Promise<CompleteConfig[K] | null> {
+  async getSection<K extends keyof CompleteConfig>(
+    section: K
+  ): Promise<CompleteConfig[K] | null> {
     const config = await this.getConfig();
     return config ? config[section] : null;
   }
@@ -329,7 +352,9 @@ export class UnifiedConfigService {
   /**
    * Get required environment variables for a specific environment
    */
-  getRequiredVarsForEnvironment(env: "development" | "test" | "staging" | "production"): string[] {
+  getRequiredVarsForEnvironment(
+    env: "development" | "test" | "staging" | "production"
+  ): string[] {
     const base = [
       "DATABASE_URL",
       "OPENAI_API_KEY",
@@ -359,8 +384,16 @@ export class UnifiedConfigService {
         schema: DatabaseConfigSchema,
         description: "Database connection and pool settings",
       },
-      { name: "Authentication", schema: AuthConfigSchema, description: "Supabase Auth configuration" },
-      { name: "MEXC API", schema: MexcConfigSchema, description: "MEXC exchange API settings" },
+      {
+        name: "Authentication",
+        schema: AuthConfigSchema,
+        description: "Supabase Auth configuration",
+      },
+      {
+        name: "MEXC API",
+        schema: MexcConfigSchema,
+        description: "MEXC exchange API settings",
+      },
       {
         name: "OpenAI",
         schema: OpenAIConfigSchema,
@@ -371,13 +404,21 @@ export class UnifiedConfigService {
         schema: SecurityConfigSchema,
         description: "Security and encryption settings",
       },
-      { name: "Application", schema: AppConfigSchema, description: "General application settings" },
+      {
+        name: "Application",
+        schema: AppConfigSchema,
+        description: "General application settings",
+      },
       {
         name: "External Services",
         schema: ExternalServicesConfigSchema,
         description: "Third-party service integration",
       },
-      { name: "Cache", schema: CacheConfigSchema, description: "Caching system configuration" },
+      {
+        name: "Cache",
+        schema: CacheConfigSchema,
+        description: "Caching system configuration",
+      },
       {
         name: "Trading",
         schema: TradingConfigSchema,
@@ -396,7 +437,8 @@ export class UnifiedConfigService {
 
       // This would need more sophisticated schema introspection
       // For now, just add placeholder
-      docs += "| (See schema definition) | Various | Varies | Varies | (Auto-generated) |\n\n";
+      docs +=
+        "| (See schema definition) | Various | Varies | Varies | (Auto-generated) |\n\n";
     }
 
     return docs;
@@ -410,7 +452,10 @@ export class UnifiedConfigService {
     return process.env as Record<string, string>;
   }
 
-  private extractSection<T>(envVars: Record<string, any>, schema: z.ZodSchema<T>): Partial<T> {
+  private extractSection<T>(
+    envVars: Record<string, any>,
+    schema: z.ZodSchema<T>
+  ): Partial<T> {
     const result: any = {};
 
     // Get all possible keys from the schema
@@ -443,10 +488,14 @@ export class UnifiedConfigService {
     // Check for insecure settings
     if (vars.NODE_ENV === "production") {
       if (!vars.ENCRYPTION_MASTER_KEY) {
-        result.security.insecureSettings.push("ENCRYPTION_MASTER_KEY missing in production");
+        result.security.insecureSettings.push(
+          "ENCRYPTION_MASTER_KEY missing in production"
+        );
       }
       if (vars.CORS_ORIGIN === "*") {
-        result.security.insecureSettings.push("CORS_ORIGIN should not be * in production");
+        result.security.insecureSettings.push(
+          "CORS_ORIGIN should not be * in production"
+        );
       }
     }
   }
@@ -468,8 +517,10 @@ export class UnifiedConfigService {
     if (env === "development" && !vars.MEXC_API_KEY) {
       result.warnings.push({
         path: "mexc.MEXC_API_KEY",
-        message: "MEXC API credentials not set - trading features will be limited",
-        suggestion: "Set MEXC_API_KEY and MEXC_SECRET_KEY for full functionality",
+        message:
+          "MEXC API credentials not set - trading features will be limited",
+        suggestion:
+          "Set MEXC_API_KEY and MEXC_SECRET_KEY for full functionality",
       });
     }
   }
@@ -487,7 +538,10 @@ export class UnifiedConfigService {
       });
     }
 
-    if (sections.cache?.CACHE_ENABLED && sections.cache?.CACHE_MAX_SIZE < 1000) {
+    if (
+      sections.cache?.CACHE_ENABLED &&
+      sections.cache?.CACHE_MAX_SIZE < 1000
+    ) {
       result.warnings.push({
         path: "cache.CACHE_MAX_SIZE",
         message: "Cache size is very small, may impact performance",
@@ -520,7 +574,9 @@ export function getConfigService(): UnifiedConfigService {
 /**
  * Quick validation function for API routes
  */
-export async function validateConfig(overrides?: ConfigOverrides): Promise<ConfigValidationResult> {
+export async function validateConfig(
+  overrides?: ConfigOverrides
+): Promise<ConfigValidationResult> {
   const service = getConfigService();
   return service.validateAndLoad(overrides);
 }

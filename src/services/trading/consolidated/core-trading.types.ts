@@ -15,12 +15,21 @@ export const CoreTradingConfigSchema = z.object({
   // API Configuration
   apiKey: z.string().min(1, "API key is required"),
   secretKey: z.string().min(1, "Secret key is required"),
-  baseUrl: z.string().url("Valid base URL required").default("https://api.mexc.com"),
+  baseUrl: z
+    .string()
+    .url("Valid base URL required")
+    .default("https://api.mexc.com"),
 
   // Connection Settings
   timeout: z.number().positive("Timeout must be positive").default(10000),
-  maxRetries: z.number().nonnegative("Max retries cannot be negative").default(3),
-  rateLimitDelay: z.number().nonnegative("Rate limit delay cannot be negative").default(100),
+  maxRetries: z
+    .number()
+    .nonnegative("Max retries cannot be negative")
+    .default(3),
+  rateLimitDelay: z
+    .number()
+    .nonnegative("Rate limit delay cannot be negative")
+    .default(100),
 
   // Trading Settings
   enablePaperTrading: z.boolean().default(true),
@@ -28,22 +37,42 @@ export const CoreTradingConfigSchema = z.object({
     .number()
     .positive("Max concurrent positions must be positive")
     .default(5),
-  maxPositionSize: z.number().min(0).max(1, "Position size must be between 0 and 1").default(0.1),
-  defaultStrategy: z.enum(["conservative", "balanced", "aggressive"]).default("conservative"),
+  maxPositionSize: z
+    .number()
+    .min(0)
+    .max(1, "Position size must be between 0 and 1")
+    .default(0.1),
+  defaultStrategy: z
+    .enum(["conservative", "balanced", "aggressive"])
+    .default("conservative"),
 
   // Auto-Sniping Settings
   autoSnipingEnabled: z.boolean().default(false),
-  confidenceThreshold: z.number().min(0).max(100, "Confidence threshold must be 0-100").default(75),
-  snipeCheckInterval: z.number().positive("Snipe check interval must be positive").default(30000),
+  confidenceThreshold: z
+    .number()
+    .min(0)
+    .max(100, "Confidence threshold must be 0-100")
+    .default(75),
+  snipeCheckInterval: z
+    .number()
+    .positive("Snipe check interval must be positive")
+    .default(30000),
 
   // Risk Management
-  globalStopLossPercent: z.number().min(0).max(100, "Stop loss percent must be 0-100").default(15),
+  globalStopLossPercent: z
+    .number()
+    .min(0)
+    .max(100, "Stop loss percent must be 0-100")
+    .default(15),
   globalTakeProfitPercent: z
     .number()
     .min(0)
     .max(100, "Take profit percent must be 0-100")
     .default(25),
-  maxDailyLoss: z.number().min(0, "Max daily loss cannot be negative").default(1000),
+  maxDailyLoss: z
+    .number()
+    .min(0, "Max daily loss cannot be negative")
+    .default(1000),
 
   // Circuit Breaker Settings
   enableCircuitBreaker: z.boolean().default(true),
@@ -71,12 +100,19 @@ export const TradeParametersSchema = z
   .object({
     // Required Parameters
     symbol: z.string().min(1, "Symbol is required"),
-    side: z.enum(["BUY", "SELL"], { required_error: "Side must be BUY or SELL" }),
-    type: z.enum(["MARKET", "LIMIT", "STOP", "STOP_LIMIT"], { required_error: "Type is required" }),
+    side: z.enum(["BUY", "SELL"], {
+      required_error: "Side must be BUY or SELL",
+    }),
+    type: z.enum(["MARKET", "LIMIT", "STOP", "STOP_LIMIT"], {
+      required_error: "Type is required",
+    }),
 
     // Quantity Parameters (mutually exclusive)
     quantity: z.number().positive("Quantity must be positive").optional(),
-    quoteOrderQty: z.number().positive("Quote order quantity must be positive").optional(),
+    quoteOrderQty: z
+      .number()
+      .positive("Quote order quantity must be positive")
+      .optional(),
 
     // Price Parameters
     price: z.number().positive("Price must be positive").optional(),
@@ -95,10 +131,13 @@ export const TradeParametersSchema = z
     isAutoSnipe: z.boolean().default(false),
     confidenceScore: z.number().min(0).max(100).optional(),
   })
-  .refine((data) => data.quantity !== undefined || data.quoteOrderQty !== undefined, {
-    message: "Either quantity or quoteOrderQty must be provided",
-    path: ["quantity"],
-  })
+  .refine(
+    (data) => data.quantity !== undefined || data.quoteOrderQty !== undefined,
+    {
+      message: "Either quantity or quoteOrderQty must be provided",
+      path: ["quantity"],
+    }
+  )
   .refine(
     (data) => {
       if (data.type === "LIMIT" || data.type === "STOP_LIMIT") {
@@ -209,7 +248,9 @@ export const TradingStrategySchema = z.object({
 
   // Position Sizing
   maxPositionSize: z.number().min(0).max(1, "Max position size must be 0-1"),
-  positionSizingMethod: z.enum(["fixed", "kelly", "risk_parity"]).default("fixed"),
+  positionSizingMethod: z
+    .enum(["fixed", "kelly", "risk_parity"])
+    .default("fixed"),
 
   // Risk Management
   stopLossPercent: z.number().min(0).max(100),
@@ -402,7 +443,10 @@ export interface CoreTradingEvents {
   auto_snipe_executed: { target: AutoSnipeTarget; result: TradeResult };
   circuit_breaker_triggered: { reason: string; timestamp: Date };
   risk_limit_exceeded: { type: string; value: number; limit: number };
-  strategy_performance_updated: { strategy: string; metrics: PerformanceMetrics };
+  strategy_performance_updated: {
+    strategy: string;
+    metrics: PerformanceMetrics;
+  };
   error_occurred: { error: Error; context: string };
 }
 

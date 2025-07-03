@@ -207,9 +207,10 @@ export class PerformanceMonitor {
 
       // Calculate overall performance score
       metrics.overallPerformanceScore = this.calculatePerformanceScore(metrics);
-      metrics.optimizationEffectiveness = this.determineOptimizationEffectiveness(
-        metrics.overallPerformanceScore
-      );
+      metrics.optimizationEffectiveness =
+        this.determineOptimizationEffectiveness(
+          metrics.overallPerformanceScore
+        );
 
       this.metrics.push(metrics);
 
@@ -222,7 +223,10 @@ export class PerformanceMonitor {
         `[PerformanceMonitor] Collected metrics - Score: ${metrics.overallPerformanceScore.toFixed(1)}`
       );
     } catch (error) {
-      this.logger.error("[PerformanceMonitor] Failed to collect metrics:", error);
+      this.logger.error(
+        "[PerformanceMonitor] Failed to collect metrics:",
+        error
+      );
     }
   }
 
@@ -233,7 +237,9 @@ export class PerformanceMonitor {
     const now = new Date();
     const periodStart = new Date(now.getTime() - periodHours * 60 * 60 * 1000);
 
-    const periodMetrics = this.metrics.filter((m) => m.timestamp >= periodStart);
+    const periodMetrics = this.metrics.filter(
+      (m) => m.timestamp >= periodStart
+    );
 
     if (periodMetrics.length === 0) {
       throw new Error("No metrics available for the specified period");
@@ -254,12 +260,17 @@ export class PerformanceMonitor {
           status: "completed",
           impact: "high",
           metrics: {
-            errorsEliminated: Math.max(0, this.baseline.loggerErrors - averageMetrics.loggerErrors),
+            errorsEliminated: Math.max(
+              0,
+              this.baseline.loggerErrors - averageMetrics.loggerErrors
+            ),
             undefinedReferencesFixed: Math.max(
               0,
-              this.baseline.loggerErrors - averageMetrics.loggerUndefinedReferences
+              this.baseline.loggerErrors -
+                averageMetrics.loggerUndefinedReferences
             ),
-            stabilityImprovement: this.calculateLoggerStabilityImprovement(averageMetrics),
+            stabilityImprovement:
+              this.calculateLoggerStabilityImprovement(averageMetrics),
           },
         },
 
@@ -282,7 +293,8 @@ export class PerformanceMonitor {
           metrics: {
             initializationSuccess: averageMetrics.coordinationSystemActive,
             systemStability: this.calculateSystemStability(averageMetrics),
-            coordinationEfficiency: this.calculateCoordinationEfficiency(averageMetrics),
+            coordinationEfficiency:
+              this.calculateCoordinationEfficiency(averageMetrics),
           },
         },
 
@@ -292,9 +304,11 @@ export class PerformanceMonitor {
           metrics: {
             warningsEliminated: Math.max(
               0,
-              this.baseline.workflowWarnings - averageMetrics.workflowValidationWarnings
+              this.baseline.workflowWarnings -
+                averageMetrics.workflowValidationWarnings
             ),
-            registrationTimingOptimal: averageMetrics.workflowValidationWarnings === 0,
+            registrationTimingOptimal:
+              averageMetrics.workflowValidationWarnings === 0,
             validationSuccess: averageMetrics.workflowValidationWarnings === 0,
           },
         },
@@ -304,7 +318,10 @@ export class PerformanceMonitor {
         performanceScore: averageMetrics.overallPerformanceScore,
         improvementPercentage: this.calculateOverallImprovement(averageMetrics),
         systemStability: this.calculateSystemStability(averageMetrics),
-        recommendedNextSteps: this.generateRecommendations(averageMetrics, trends),
+        recommendedNextSteps: this.generateRecommendations(
+          averageMetrics,
+          trends
+        ),
       },
 
       metrics: periodMetrics,
@@ -394,7 +411,10 @@ export class PerformanceMonitor {
   // Calculation methods
   private calculatePerformanceScore(metrics: PerformanceMetrics): number {
     // Weighted score based on optimization targets
-    const responseTimeScore = Math.max(0, 100 - metrics.systemResponseTime / 20);
+    const responseTimeScore = Math.max(
+      0,
+      100 - metrics.systemResponseTime / 20
+    );
     const cacheScore = metrics.agentHealthCacheHitRate;
     const coordinationScore = metrics.coordinationSystemActive ? 100 : 0;
     const warningScore = metrics.workflowValidationWarnings === 0 ? 100 : 50;
@@ -418,22 +438,29 @@ export class PerformanceMonitor {
     return "poor";
   }
 
-  private calculateAverageMetrics(metrics: PerformanceMetrics[]): PerformanceMetrics {
+  private calculateAverageMetrics(
+    metrics: PerformanceMetrics[]
+  ): PerformanceMetrics {
     const sum = metrics.reduce(
       (acc, m) => ({
         systemResponseTime: acc.systemResponseTime + m.systemResponseTime,
         systemThroughput: acc.systemThroughput + m.systemThroughput,
         systemLoadAverage: acc.systemLoadAverage + m.systemLoadAverage,
-        agentHealthCacheHitRate: acc.agentHealthCacheHitRate + m.agentHealthCacheHitRate,
+        agentHealthCacheHitRate:
+          acc.agentHealthCacheHitRate + m.agentHealthCacheHitRate,
         agentHealthAverageResponseTime:
           acc.agentHealthAverageResponseTime + m.agentHealthAverageResponseTime,
-        agentHealthChecksPerMinute: acc.agentHealthChecksPerMinute + m.agentHealthChecksPerMinute,
+        agentHealthChecksPerMinute:
+          acc.agentHealthChecksPerMinute + m.agentHealthChecksPerMinute,
         coordinationInitializationTime:
           acc.coordinationInitializationTime + m.coordinationInitializationTime,
-        workflowValidationWarnings: acc.workflowValidationWarnings + m.workflowValidationWarnings,
+        workflowValidationWarnings:
+          acc.workflowValidationWarnings + m.workflowValidationWarnings,
         loggerErrors: acc.loggerErrors + m.loggerErrors,
-        loggerUndefinedReferences: acc.loggerUndefinedReferences + m.loggerUndefinedReferences,
-        overallPerformanceScore: acc.overallPerformanceScore + m.overallPerformanceScore,
+        loggerUndefinedReferences:
+          acc.loggerUndefinedReferences + m.loggerUndefinedReferences,
+        overallPerformanceScore:
+          acc.overallPerformanceScore + m.overallPerformanceScore,
       }),
       {
         systemResponseTime: 0,
@@ -457,11 +484,13 @@ export class PerformanceMonitor {
       systemThroughput: sum.systemThroughput / count,
       systemLoadAverage: sum.systemLoadAverage / count,
       agentHealthCacheHitRate: sum.agentHealthCacheHitRate / count,
-      agentHealthAverageResponseTime: sum.agentHealthAverageResponseTime / count,
+      agentHealthAverageResponseTime:
+        sum.agentHealthAverageResponseTime / count,
       agentHealthChecksPerMinute: sum.agentHealthChecksPerMinute / count,
       coordinationSystemActive:
         metrics.filter((m) => m.coordinationSystemActive).length / count > 0.8,
-      coordinationInitializationTime: sum.coordinationInitializationTime / count,
+      coordinationInitializationTime:
+        sum.coordinationInitializationTime / count,
       workflowValidationWarnings: sum.workflowValidationWarnings / count,
       loggerErrors: sum.loggerErrors / count,
       loggerUndefinedReferences: sum.loggerUndefinedReferences / count,
@@ -478,7 +507,11 @@ export class PerformanceMonitor {
     systemStability: "improving" | "stable" | "degrading";
   } {
     if (metrics.length < 2) {
-      return { responseTime: "stable", cachePerformance: "stable", systemStability: "stable" };
+      return {
+        responseTime: "stable",
+        cachePerformance: "stable",
+        systemStability: "stable",
+      };
     }
 
     const midpoint = Math.floor(metrics.length / 2);
@@ -496,32 +529,46 @@ export class PerformanceMonitor {
             ? "degrading"
             : "stable",
       cachePerformance:
-        secondHalfAvg.agentHealthCacheHitRate > firstHalfAvg.agentHealthCacheHitRate
+        secondHalfAvg.agentHealthCacheHitRate >
+        firstHalfAvg.agentHealthCacheHitRate
           ? "improving"
-          : secondHalfAvg.agentHealthCacheHitRate < firstHalfAvg.agentHealthCacheHitRate
+          : secondHalfAvg.agentHealthCacheHitRate <
+              firstHalfAvg.agentHealthCacheHitRate
             ? "degrading"
             : "stable",
       systemStability:
-        secondHalfAvg.overallPerformanceScore > firstHalfAvg.overallPerformanceScore
+        secondHalfAvg.overallPerformanceScore >
+        firstHalfAvg.overallPerformanceScore
           ? "improving"
-          : secondHalfAvg.overallPerformanceScore < firstHalfAvg.overallPerformanceScore
+          : secondHalfAvg.overallPerformanceScore <
+              firstHalfAvg.overallPerformanceScore
             ? "degrading"
             : "stable",
     };
   }
 
-  private calculateLoggerStabilityImprovement(metrics: PerformanceMetrics): number {
-    const errorReduction = Math.max(0, this.baseline.loggerErrors - metrics.loggerErrors);
+  private calculateLoggerStabilityImprovement(
+    metrics: PerformanceMetrics
+  ): number {
+    const errorReduction = Math.max(
+      0,
+      this.baseline.loggerErrors - metrics.loggerErrors
+    );
     return (errorReduction / this.baseline.loggerErrors) * 100;
   }
 
   private calculateResponseTimeReduction(currentResponseTime: number): number {
-    const improvement = Math.max(0, this.baseline.agentHealthResponseTime - currentResponseTime);
+    const improvement = Math.max(
+      0,
+      this.baseline.agentHealthResponseTime - currentResponseTime
+    );
     return (improvement / this.baseline.agentHealthResponseTime) * 100;
   }
 
   private calculateChecksUnder500ms(metrics: PerformanceMetrics[]): number {
-    const under500ms = metrics.filter((m) => m.agentHealthAverageResponseTime < 500).length;
+    const under500ms = metrics.filter(
+      (m) => m.agentHealthAverageResponseTime < 500
+    ).length;
     return (under500ms / metrics.length) * 100;
   }
 
@@ -534,17 +581,24 @@ export class PerformanceMonitor {
 
   private calculateCoordinationEfficiency(metrics: PerformanceMetrics): number {
     // Based on initialization time and warning elimination
-    const initEfficiency = Math.max(0, 100 - metrics.coordinationInitializationTime / 50);
-    const validationEfficiency = metrics.workflowValidationWarnings === 0 ? 100 : 70;
+    const initEfficiency = Math.max(
+      0,
+      100 - metrics.coordinationInitializationTime / 50
+    );
+    const validationEfficiency =
+      metrics.workflowValidationWarnings === 0 ? 100 : 70;
     return (initEfficiency + validationEfficiency) / 2;
   }
 
   private calculateOverallImprovement(metrics: PerformanceMetrics): number {
     // Calculate improvement percentage across all optimizations
-    const responseTimeImprovement = this.calculateResponseTimeReduction(metrics.systemResponseTime);
+    const responseTimeImprovement = this.calculateResponseTimeReduction(
+      metrics.systemResponseTime
+    );
     const cacheImprovement = metrics.agentHealthCacheHitRate; // 70% target hit
     const coordinationImprovement = metrics.coordinationSystemActive ? 90 : 0;
-    const validationImprovement = metrics.workflowValidationWarnings === 0 ? 100 : 50;
+    const validationImprovement =
+      metrics.workflowValidationWarnings === 0 ? 100 : 50;
     const loggerImprovement = this.calculateLoggerStabilityImprovement(metrics);
 
     return (
@@ -557,7 +611,10 @@ export class PerformanceMonitor {
     );
   }
 
-  private generateRecommendations(metrics: PerformanceMetrics, trends: any): string[] {
+  private generateRecommendations(
+    metrics: PerformanceMetrics,
+    trends: any
+  ): string[] {
     const recommendations: string[] = [];
 
     if (metrics.overallPerformanceScore < 70) {
@@ -573,7 +630,9 @@ export class PerformanceMonitor {
     }
 
     if (metrics.systemResponseTime > 1000) {
-      recommendations.push("System response time above 1s - consider additional optimizations");
+      recommendations.push(
+        "System response time above 1s - consider additional optimizations"
+      );
     }
 
     if (metrics.workflowValidationWarnings > 0) {
@@ -583,12 +642,18 @@ export class PerformanceMonitor {
     }
 
     if (trends.systemStability === "degrading") {
-      recommendations.push("System stability trend is degrading - investigate recent changes");
+      recommendations.push(
+        "System stability trend is degrading - investigate recent changes"
+      );
     }
 
     if (recommendations.length === 0) {
-      recommendations.push("System performing well - maintain current optimization levels");
-      recommendations.push("Consider Phase 2 optimizations for further improvements");
+      recommendations.push(
+        "System performing well - maintain current optimization levels"
+      );
+      recommendations.push(
+        "Consider Phase 2 optimizations for further improvements"
+      );
     }
 
     return recommendations;

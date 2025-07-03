@@ -170,7 +170,10 @@ export interface UseLiveTradingDataResult {
   /** Unsubscribe from symbol */
   unsubscribeFromSymbol: (symbol: string) => void;
   /** Get price change for timeframe */
-  getPriceChange: (symbol: string, timeframe: "1m" | "5m" | "1h" | "24h") => number;
+  getPriceChange: (
+    symbol: string,
+    timeframe: "1m" | "5m" | "1h" | "24h"
+  ) => number;
   /** Get top movers */
   getTopMovers: (type: "gainers" | "losers", limit?: number) => PriceData[];
   /** Clear historical data */
@@ -188,17 +191,31 @@ class PriceAnalyticsEngine {
     warn: (message: string, context?: any) =>
       console.warn("[use-live-trading-data]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[use-live-trading-data]", message, context || "", error || ""),
+      console.error(
+        "[use-live-trading-data]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[use-live-trading-data]", message, context || ""),
   };
 
-  private priceHistory = new Map<string, Array<{ price: number; timestamp: number }>>();
+  private priceHistory = new Map<
+    string,
+    Array<{ price: number; timestamp: number }>
+  >();
   private readonly maxHistoryPoints = 1000;
 
   // PERFORMANCE OPTIMIZATION: Cache recent calculations to avoid repeated work
-  private priceChangeCache = new Map<string, { result: number; timestamp: number }>();
-  private topMoversCache = new Map<string, { result: PriceData[]; timestamp: number }>();
+  private priceChangeCache = new Map<
+    string,
+    { result: number; timestamp: number }
+  >();
+  private topMoversCache = new Map<
+    string,
+    { result: PriceData[]; timestamp: number }
+  >();
   private readonly cacheTimeout = 5000; // 5 seconds cache
 
   addPricePoint(symbol: string, price: number, timestamp: number): void {
@@ -304,10 +321,16 @@ class PriceAnalyticsEngine {
   }
 
   // OPTIMIZATION: Partial sort implementation for top K elements (O(n) average case)
-  private partialSort(arr: PriceData[], descending: boolean, k: number): PriceData[] {
+  private partialSort(
+    arr: PriceData[],
+    descending: boolean,
+    k: number
+  ): PriceData[] {
     if (k >= arr.length) {
       return arr.sort((a, b) =>
-        descending ? b.changePercent - a.changePercent : a.changePercent - b.changePercent
+        descending
+          ? b.changePercent - a.changePercent
+          : a.changePercent - b.changePercent
       );
     }
 
@@ -315,7 +338,9 @@ class PriceAnalyticsEngine {
     if (k <= 10) {
       return arr
         .sort((a, b) =>
-          descending ? b.changePercent - a.changePercent : a.changePercent - b.changePercent
+          descending
+            ? b.changePercent - a.changePercent
+            : a.changePercent - b.changePercent
         )
         .slice(0, k);
     }
@@ -324,9 +349,15 @@ class PriceAnalyticsEngine {
     return this.quickSelect(arr, k, descending);
   }
 
-  private quickSelect(arr: PriceData[], k: number, descending: boolean): PriceData[] {
+  private quickSelect(
+    arr: PriceData[],
+    k: number,
+    descending: boolean
+  ): PriceData[] {
     const compare = (a: PriceData, b: PriceData) =>
-      descending ? b.changePercent - a.changePercent : a.changePercent - b.changePercent;
+      descending
+        ? b.changePercent - a.changePercent
+        : a.changePercent - b.changePercent;
 
     // Simple implementation - in production, use more sophisticated quickselect
     return arr.sort(compare).slice(0, k);
@@ -403,12 +434,17 @@ class TradingMetricsCalculator {
   }
 
   calculateMetrics(): TradingMetrics {
-    const completedTrades = this.executions.filter((e) => e.status === "filled");
-    const profitableTrades = completedTrades.filter((e) => this.isTradeProfit(e));
+    const completedTrades = this.executions.filter(
+      (e) => e.status === "filled"
+    );
+    const profitableTrades = completedTrades.filter((e) =>
+      this.isTradeProfit(e)
+    );
 
     const wins = profitableTrades.length;
     const _losses = completedTrades.length - wins;
-    const winRate = completedTrades.length > 0 ? wins / completedTrades.length : 0;
+    const winRate =
+      completedTrades.length > 0 ? wins / completedTrades.length : 0;
 
     const profits = profitableTrades.map((e) => this.getTradeProfit(e));
     const losses_amounts = completedTrades
@@ -416,19 +452,28 @@ class TradingMetricsCalculator {
       .map((e) => Math.abs(this.getTradeProfit(e)));
 
     const averageWin =
-      profits.length > 0 ? profits.reduce((sum, p) => sum + p, 0) / profits.length : 0;
+      profits.length > 0
+        ? profits.reduce((sum, p) => sum + p, 0) / profits.length
+        : 0;
     const averageLoss =
       losses_amounts.length > 0
         ? losses_amounts.reduce((sum, l) => sum + l, 0) / losses_amounts.length
         : 0;
 
-    const totalReturn = this.initialValue > 0 ? this.totalValue - this.initialValue : 0;
-    const totalReturnPercent = this.initialValue > 0 ? (totalReturn / this.initialValue) * 100 : 0;
+    const totalReturn =
+      this.initialValue > 0 ? this.totalValue - this.initialValue : 0;
+    const totalReturnPercent =
+      this.initialValue > 0 ? (totalReturn / this.initialValue) * 100 : 0;
 
-    const unrealizedPnl = this.positions.reduce((sum, pos) => sum + pos.unrealizedPnl, 0);
+    const unrealizedPnl = this.positions.reduce(
+      (sum, pos) => sum + pos.unrealizedPnl,
+      0
+    );
     const dayChange = unrealizedPnl; // Simplified calculation
     const dayChangePercent =
-      this.totalValue > 0 ? (dayChange / (this.totalValue - dayChange)) * 100 : 0;
+      this.totalValue > 0
+        ? (dayChange / (this.totalValue - dayChange)) * 100
+        : 0;
 
     return {
       totalValue: this.totalValue,
@@ -456,7 +501,11 @@ class TradingMetricsCalculator {
   private getTradeProfit(execution: TradeExecution): number {
     // Simplified profit calculation
     const direction = execution.side === "buy" ? 1 : -1;
-    return direction * (execution.executedPrice - execution.price) * execution.executedQuantity;
+    return (
+      direction *
+      (execution.executedPrice - execution.price) *
+      execution.executedQuantity
+    );
   }
 
   private calculateSharpeRatio(): number {
@@ -499,7 +548,9 @@ export function useLiveTradingData(
 
   // State management
   const [prices, setPrices] = useState(new Map<string, PriceData>());
-  const [orderBooks, setOrderBooks] = useState(new Map<string, OrderBookData>());
+  const [orderBooks, setOrderBooks] = useState(
+    new Map<string, OrderBookData>()
+  );
   const [signals, setSignals] = useState<TradingSignal[]>([]);
   const [executions, setExecutions] = useState<TradeExecution[]>([]);
   const [positions, setPositions] = useState<PortfolioPosition[]>([]);
@@ -561,10 +612,17 @@ export function useLiveTradingData(
       });
 
       // Add to analytics
-      analyticsRef.current.addPricePoint(priceData.symbol, priceData.price, priceData.timestamp);
+      analyticsRef.current.addPricePoint(
+        priceData.symbol,
+        priceData.price,
+        priceData.timestamp
+      );
 
       // Auto-subscribe to new symbol if enabled
-      if (autoSubscribeNewSymbols && !monitoredSymbols.includes(priceData.symbol)) {
+      if (
+        autoSubscribeNewSymbols &&
+        !monitoredSymbols.includes(priceData.symbol)
+      ) {
         setMonitoredSymbols((prev) => [...prev, priceData.symbol]);
       }
 
@@ -595,7 +653,8 @@ export function useLiveTradingData(
       );
 
       const spread = asks[0] ? asks[0].price - bids[0].price : 0;
-      const midPrice = asks[0] && bids[0] ? (asks[0].price + bids[0].price) / 2 : 0;
+      const midPrice =
+        asks[0] && bids[0] ? (asks[0].price + bids[0].price) / 2 : 0;
       const spreadPercent = midPrice > 0 ? (spread / midPrice) * 100 : 0;
 
       const orderBook: OrderBookData = {
@@ -690,15 +749,16 @@ export function useLiveTradingData(
 
       if (userId && portfolioData.userId !== userId) return;
 
-      const newPositions: PortfolioPosition[] = portfolioData.portfolio.positions.map((pos) => ({
-        symbol: pos.symbol,
-        quantity: pos.quantity,
-        averagePrice: pos.averagePrice,
-        currentPrice: pos.currentPrice,
-        unrealizedPnl: pos.unrealizedPnl,
-        unrealizedPnlPercent: pos.unrealizedPnlPercent,
-        marketValue: pos.quantity * pos.currentPrice,
-      }));
+      const newPositions: PortfolioPosition[] =
+        portfolioData.portfolio.positions.map((pos) => ({
+          symbol: pos.symbol,
+          quantity: pos.quantity,
+          averagePrice: pos.averagePrice,
+          currentPrice: pos.currentPrice,
+          unrealizedPnl: pos.unrealizedPnl,
+          unrealizedPnlPercent: pos.unrealizedPnlPercent,
+          marketValue: pos.quantity * pos.currentPrice,
+        }));
 
       setPositions(newPositions);
       metricsRef.current.updatePositions(newPositions);
@@ -743,20 +803,28 @@ export function useLiveTradingData(
 
     if (enablePortfolio && userId) {
       unsubscribers.push(subscribe(`user:${userId}:trading`, handlePortfolio));
-      unsubscribers.push(subscribe(`user:${userId}:portfolio`, handlePortfolio));
+      unsubscribers.push(
+        subscribe(`user:${userId}:portfolio`, handlePortfolio)
+      );
       unsubscribers.push(subscribe("trading:balance", handleBalance));
     }
 
     // Subscribe to specific symbols
     for (const symbol of monitoredSymbols) {
-      unsubscribers.push(subscribe(`trading:${symbol}:price`, handlePriceUpdate));
+      unsubscribers.push(
+        subscribe(`trading:${symbol}:price`, handlePriceUpdate)
+      );
 
       if (enableOrderBook) {
-        unsubscribers.push(subscribe(`trading:${symbol}:orderbook`, handleOrderBookUpdate));
+        unsubscribers.push(
+          subscribe(`trading:${symbol}:orderbook`, handleOrderBookUpdate)
+        );
       }
 
       if (enableSignals) {
-        unsubscribers.push(subscribe(`trading:${symbol}:signals`, handleTradingSignal));
+        unsubscribers.push(
+          subscribe(`trading:${symbol}:signals`, handleTradingSignal)
+        );
       }
     }
 
@@ -829,16 +897,19 @@ export function useLiveTradingData(
     setMonitoredSymbols((prev) => prev.filter((s) => s !== symbol));
   }, []);
 
-  const getPriceChange = useCallback((symbol: string, timeframe: "1m" | "5m" | "1h" | "24h") => {
-    const timeframeMs = {
-      "1m": 60 * 1000,
-      "5m": 5 * 60 * 1000,
-      "1h": 60 * 60 * 1000,
-      "24h": 24 * 60 * 60 * 1000,
-    }[timeframe];
+  const getPriceChange = useCallback(
+    (symbol: string, timeframe: "1m" | "5m" | "1h" | "24h") => {
+      const timeframeMs = {
+        "1m": 60 * 1000,
+        "5m": 5 * 60 * 1000,
+        "1h": 60 * 60 * 1000,
+        "24h": 24 * 60 * 60 * 1000,
+      }[timeframe];
 
-    return analyticsRef.current.getPriceChange(symbol, timeframeMs);
-  }, []);
+      return analyticsRef.current.getPriceChange(symbol, timeframeMs);
+    },
+    []
+  );
 
   const getTopMovers = useCallback(
     (type: "gainers" | "losers", limit = 10) => {

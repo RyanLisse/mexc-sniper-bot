@@ -3,7 +3,7 @@
  * Minimal implementation for build optimization
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export interface ApiError {
   message: string;
@@ -13,24 +13,24 @@ export interface ApiError {
 }
 
 export function handleApiError(error: unknown): NextResponse {
-  console.error('API Error:', error);
+  console.error("API Error:", error);
 
   if (error instanceof Error) {
     return NextResponse.json(
-      { 
+      {
         error: error.message,
-        code: 'INTERNAL_ERROR',
-        timestamp: new Date().toISOString()
+        code: "INTERNAL_ERROR",
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
   }
 
   return NextResponse.json(
-    { 
-      error: 'Unknown error occurred',
-      code: 'UNKNOWN_ERROR',
-      timestamp: new Date().toISOString()
+    {
+      error: "Unknown error occurred",
+      code: "UNKNOWN_ERROR",
+      timestamp: new Date().toISOString(),
     },
     { status: 500 }
   );
@@ -38,7 +38,7 @@ export function handleApiError(error: unknown): NextResponse {
 
 export function createApiError(
   message: string,
-  code: string = 'API_ERROR',
+  code: string = "API_ERROR",
   status: number = 400,
   details?: any
 ): ApiError {
@@ -46,19 +46,22 @@ export function createApiError(
     message,
     code,
     status,
-    details
+    details,
   };
 }
 
 export function isApiError(error: any): error is ApiError {
-  return error && typeof error.message === 'string';
+  return error && typeof error.message === "string";
 }
 
 // Add missing export aliases for compatibility
 export class ValidationError extends Error {
-  constructor(message: string, public code: string = 'VALIDATION_ERROR') {
+  constructor(
+    message: string,
+    public code: string = "VALIDATION_ERROR"
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
@@ -76,8 +79,8 @@ export function withApiErrorHandling<T extends any[], R>(
 }
 
 export function validateUserId(userId: string | null | undefined): string {
-  if (!userId || typeof userId !== 'string' || userId.trim().length === 0) {
-    throw new ValidationError('Valid userId is required', 'INVALID_USER_ID');
+  if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
+    throw new ValidationError("Valid userId is required", "INVALID_USER_ID");
   }
   return userId.trim();
 }
@@ -89,16 +92,17 @@ export function withDatabaseErrorHandling<T extends any[], R>(
     try {
       return await handler(...args);
     } catch (error) {
-      if (error instanceof Error && (
-        error.message.includes('ECONNREFUSED') ||
-        error.message.includes('timeout') ||
-        error.message.includes('connection')
-      )) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("ECONNREFUSED") ||
+          error.message.includes("timeout") ||
+          error.message.includes("connection"))
+      ) {
         return NextResponse.json(
-          { 
-            error: 'Database temporarily unavailable',
-            code: 'DATABASE_ERROR',
-            timestamp: new Date().toISOString()
+          {
+            error: "Database temporarily unavailable",
+            code: "DATABASE_ERROR",
+            timestamp: new Date().toISOString(),
           },
           { status: 503 }
         );

@@ -16,9 +16,18 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { createTooltipFormatter, generateListKey } from "../../lib/react-utilities";
+import {
+  createTooltipFormatter,
+  generateListKey,
+} from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 
 export const PerformanceTab = memo(function PerformanceTab({
@@ -46,7 +55,9 @@ export const PerformanceTab = memo(function PerformanceTab({
         <Card>
           <CardHeader>
             <CardTitle>Daily P&L Trend</CardTitle>
-            <CardDescription>Daily profit and loss over the last 30 days</CardDescription>
+            <CardDescription>
+              Daily profit and loss over the last 30 days
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <Suspense
@@ -116,15 +127,21 @@ export const PerformanceTab = memo(function PerformanceTab({
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
                   <span>Trading Volume</span>
-                  <span>{formatCurrency(data.tradingPerformance.tradingVolume)}</span>
+                  <span>
+                    {formatCurrency(data.tradingPerformance.tradingVolume)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Average Trade Size</span>
-                  <span>{formatCurrency(data.tradingPerformance.averageTradeSize)}</span>
+                  <span>
+                    {formatCurrency(data.tradingPerformance.averageTradeSize)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span>Average Hold Time</span>
-                  <span>{data.tradingPerformance.averageHoldTime.toFixed(1)} hours</span>
+                  <span>
+                    {data.tradingPerformance.averageHoldTime.toFixed(1)} hours
+                  </span>
                 </div>
               </div>
             </div>
@@ -148,11 +165,17 @@ export const PerformanceTab = memo(function PerformanceTab({
                 >
                   <div>
                     <p className="font-medium text-sm">{trade.symbol}</p>
-                    <p className="text-xs text-muted-foreground">{trade.duration}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {trade.duration}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-green-600">{formatCurrency(trade.pnl)}</p>
-                    <p className="text-xs text-muted-foreground">{trade.date}</p>
+                    <p className="font-bold text-green-600">
+                      {formatCurrency(trade.pnl)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {trade.date}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -174,11 +197,17 @@ export const PerformanceTab = memo(function PerformanceTab({
                 >
                   <div>
                     <p className="font-medium text-sm">{trade.symbol}</p>
-                    <p className="text-xs text-muted-foreground">{trade.duration}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {trade.duration}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-red-600">{formatCurrency(trade.pnl)}</p>
-                    <p className="text-xs text-muted-foreground">{trade.date}</p>
+                    <p className="font-bold text-red-600">
+                      {formatCurrency(trade.pnl)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {trade.date}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -194,7 +223,10 @@ export const PerformanceTab = memo(function PerformanceTab({
           <CardContent>
             <div className="space-y-2">
               {data.profitLossAnalytics.pnLDistribution.map((dist, index) => (
-                <div key={generateListKey(dist, index, "range")} className="space-y-1">
+                <div
+                  key={generateListKey(dist, index, "range")}
+                  className="space-y-1"
+                >
                   <div className="flex justify-between text-sm">
                     <span>{dist.range}</span>
                     <span>{dist.percentage}%</span>

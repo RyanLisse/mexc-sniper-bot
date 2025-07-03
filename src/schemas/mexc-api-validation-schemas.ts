@@ -19,7 +19,8 @@ export const AccountBalanceQuerySchema = z.object({
       (userId) => {
         if (!userId) return true; // Optional field
         // Allow UUID format or other valid user identifiers
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const userIdRegex = /^[a-zA-Z0-9_-]+([:.][a-zA-Z0-9_-]+)*$/; // Allow formats like "user:123" or "default-user"
         return uuidRegex.test(userId) || userIdRegex.test(userId);
       },
@@ -58,7 +59,8 @@ export const ApiCredentialsTestRequestSchema = z.object({
     .refine(
       (userId) => {
         // Allow UUID format or other valid user identifiers
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const userIdRegex = /^[a-zA-Z0-9_-]+([:.][a-zA-Z0-9_-]+)*$/; // Allow formats like "user:123" or "default-user"
         return uuidRegex.test(userId) || userIdRegex.test(userId);
       },
@@ -108,7 +110,8 @@ export const ConnectivityTestRequestSchema = z.object({
       (userId) => {
         if (!userId) return true; // Optional field
         // Allow UUID format or other valid user identifiers
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidRegex =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         const userIdRegex = /^[a-zA-Z0-9_-]+([:.][a-zA-Z0-9_-]+)*$/; // Allow formats like "user:123" or "default-user"
         return uuidRegex.test(userId) || userIdRegex.test(userId);
       },
@@ -279,13 +282,17 @@ export const MexcErrorResponseSchema = z.object({
 export function validateMexcApiRequest<T extends z.ZodSchema>(
   schema: T,
   data: unknown
-): { success: true; data: z.infer<T> } | { success: false; error: string; details: string[] } {
+):
+  | { success: true; data: z.infer<T> }
+  | { success: false; error: string; details: string[] } {
   try {
     const result = schema.parse(data);
     return { success: true, data: result };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const details = error.errors.map((err) => `${err.path.join(".")}: ${err.message}`);
+      const details = error.errors.map(
+        (err) => `${err.path.join(".")}: ${err.message}`
+      );
       const errorMessage = `MEXC API validation failed: ${details.join(", ")}`;
       return { success: false, error: errorMessage, details };
     }
@@ -327,12 +334,22 @@ export function validateMexcApiResponse<T extends z.ZodSchema>(
 
 export type AccountBalanceQuery = z.infer<typeof AccountBalanceQuerySchema>;
 export type BalanceItem = z.infer<typeof BalanceItemSchema>;
-export type AccountBalanceResponse = z.infer<typeof AccountBalanceResponseSchema>;
-export type ApiCredentialsTestRequest = z.infer<typeof ApiCredentialsTestRequestSchema>;
-export type ApiCredentialsTestResponse = z.infer<typeof ApiCredentialsTestResponseSchema>;
-export type ConnectivityTestRequest = z.infer<typeof ConnectivityTestRequestSchema>;
+export type AccountBalanceResponse = z.infer<
+  typeof AccountBalanceResponseSchema
+>;
+export type ApiCredentialsTestRequest = z.infer<
+  typeof ApiCredentialsTestRequestSchema
+>;
+export type ApiCredentialsTestResponse = z.infer<
+  typeof ApiCredentialsTestResponseSchema
+>;
+export type ConnectivityTestRequest = z.infer<
+  typeof ConnectivityTestRequestSchema
+>;
 export type ConnectivityMetrics = z.infer<typeof ConnectivityMetricsSchema>;
-export type ConnectivityTestResponse = z.infer<typeof ConnectivityTestResponseSchema>;
+export type ConnectivityTestResponse = z.infer<
+  typeof ConnectivityTestResponseSchema
+>;
 export type TradingOrderRequest = z.infer<typeof TradingOrderRequestSchema>;
 export type TradingOrderResponse = z.infer<typeof TradingOrderResponseSchema>;
 export type AccountInfoRequest = z.infer<typeof AccountInfoRequestSchema>;
@@ -340,9 +357,13 @@ export type AccountInfoResponse = z.infer<typeof AccountInfoResponseSchema>;
 export type SymbolInfoRequest = z.infer<typeof SymbolInfoRequestSchema>;
 export type SymbolInfo = z.infer<typeof SymbolInfoSchema>;
 export type SymbolInfoResponse = z.infer<typeof SymbolInfoResponseSchema>;
-export type CalendarListingsRequest = z.infer<typeof CalendarListingsRequestSchema>;
+export type CalendarListingsRequest = z.infer<
+  typeof CalendarListingsRequestSchema
+>;
 export type CalendarListing = z.infer<typeof CalendarListingSchema>;
-export type CalendarListingsResponse = z.infer<typeof CalendarListingsResponseSchema>;
+export type CalendarListingsResponse = z.infer<
+  typeof CalendarListingsResponseSchema
+>;
 export type ServerTimeResponse = z.infer<typeof ServerTimeResponseSchema>;
 export type ServerStatusResponse = z.infer<typeof ServerStatusResponseSchema>;
 export type MexcErrorResponse = z.infer<typeof MexcErrorResponseSchema>;

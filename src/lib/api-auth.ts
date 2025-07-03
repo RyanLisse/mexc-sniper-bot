@@ -25,8 +25,10 @@ let _logger: any = null;
 function getLogger() {
   if (!_logger) {
     _logger = {
-      info: (message: string, context?: any) => console.info("[api-auth]", message, context || ""),
-      warn: (message: string, context?: any) => console.warn("[api-auth]", message, context || ""),
+      info: (message: string, context?: any) =>
+        console.info("[api-auth]", message, context || ""),
+      warn: (message: string, context?: any) =>
+        console.warn("[api-auth]", message, context || ""),
       error: (message: string, context?: any, error?: Error) =>
         console.error("[api-auth]", message, context || "", error || ""),
       debug: (message: string, context?: any) =>
@@ -63,7 +65,8 @@ export async function requireApiAuth(
     throw new Response(
       JSON.stringify(
         createErrorResponse("Access temporarily restricted", {
-          message: "Your IP has been temporarily restricted due to suspicious activity",
+          message:
+            "Your IP has been temporarily restricted due to suspicious activity",
           code: "IP_RESTRICTED",
         })
       ),
@@ -77,7 +80,12 @@ export async function requireApiAuth(
   // Apply rate limiting unless explicitly skipped or bypassed
   if (!options?.skipRateLimit && !shouldBypassRateLimit(ip)) {
     const rateLimitType = options?.rateLimitType || "auth";
-    const rateLimitResult = await checkRateLimit(ip, endpoint, rateLimitType, userAgent);
+    const rateLimitResult = await checkRateLimit(
+      ip,
+      endpoint,
+      rateLimitType,
+      userAgent
+    );
 
     if (!rateLimitResult.success) {
       // Log additional security event for repeated violations
@@ -147,7 +155,10 @@ export async function requireApiAuth(
 /**
  * Validate that the userId parameter matches the authenticated user
  */
-export async function validateUserAccess(_request: NextRequest, userId: string) {
+export async function validateUserAccess(
+  _request: NextRequest,
+  userId: string
+) {
   try {
     const user = await requireAuth();
 
@@ -214,10 +225,13 @@ export function withAuth<T extends any[]>(
         return error;
       }
 
-      return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify(createErrorResponse("Internal server error")),
+        {
+          status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
   };
 }
@@ -239,10 +253,13 @@ export function withUserAccess<T extends any[]>(
         return error;
       }
 
-      return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify(createErrorResponse("Internal server error")),
+        {
+          status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
   };
 }
@@ -341,10 +358,13 @@ export function withAuthOptions<T extends any[]>(
         return error;
       }
 
-      return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify(createErrorResponse("Internal server error")),
+        {
+          status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
   };
 }
@@ -452,13 +472,15 @@ export async function checkAdminRole(user: any): Promise<boolean> {
     // Multi-level admin role check for comprehensive security
 
     // 1. Check environment-based admin list
-    const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((email) => email.trim()) || [];
+    const adminEmails =
+      process.env.ADMIN_EMAILS?.split(",").map((email) => email.trim()) || [];
     if (adminEmails.includes(user.email)) {
       return true;
     }
 
     // 2. Check admin user IDs from environment
-    const adminUserIds = process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
+    const adminUserIds =
+      process.env.ADMIN_USER_IDS?.split(",").map((id) => id.trim()) || [];
     if (adminUserIds.includes(user.id)) {
       return true;
     }
@@ -491,7 +513,10 @@ export async function checkAdminRole(user: any): Promise<boolean> {
 
     // 5. Check for specific admin permissions
     if (user.permissions && Array.isArray(user.permissions)) {
-      return user.permissions.includes("admin") || user.permissions.includes("super_admin");
+      return (
+        user.permissions.includes("admin") ||
+        user.permissions.includes("super_admin")
+      );
     }
 
     // 6. Default to false if no admin role found
@@ -530,10 +555,13 @@ export function apiAuthWrapper<T extends any[]>(
         return error;
       }
 
-      return new Response(JSON.stringify(createErrorResponse("Internal server error")), {
-        status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify(createErrorResponse("Internal server error")),
+        {
+          status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
   };
 }

@@ -1,11 +1,9 @@
 /**
  * MEXC API Agent
- * 
+ *
  * Main agent class that orchestrates MEXC API interactions and analysis
  */
 
-import type { SymbolEntry } from "@/src/schemas/unified/mexc-api-schemas";
-import type { CalendarEntry } from "@/src/services/api/mexc-client-types";
 import {
   getRecommendedMexcService,
   type ServiceResponse,
@@ -15,22 +13,26 @@ import { CalendarAnalyzer } from "./analyzers/calendar-analyzer";
 import { DataQualityAnalyzer } from "./analyzers/data-quality-analyzer";
 import { SymbolAnalyzer } from "./analyzers/symbol-analyzer";
 import { ResponseEnhancer } from "./enhancers/response-enhancer";
-import type { 
-  EnhancedApiResponse, 
-  MexcApiParams, 
-  MexcApiRequest, 
+import type {
+  EnhancedApiResponse,
+  MexcApiParams,
+  MexcApiRequest,
   MexcApiResponseData,
-  MexcCalendarEntry, 
-  MexcSymbolData 
+  MexcCalendarEntry,
+  MexcSymbolData,
 } from "./types";
 import { ResponseValidator } from "./validators/response-validator";
 
 // Simple logger for testing and development
 const logger = {
-  info: (message: string, ...args: any[]) => console.log(`[INFO] ${message}`, ...args),
-  warn: (message: string, ...args: any[]) => console.warn(`[WARN] ${message}`, ...args),
-  error: (message: string, ...args: any[]) => console.error(`[ERROR] ${message}`, ...args),
-  debug: (message: string, ...args: any[]) => console.debug(`[DEBUG] ${message}`, ...args),
+  info: (message: string, ...args: any[]) =>
+    console.log(`[INFO] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) =>
+    console.warn(`[WARN] ${message}`, ...args),
+  error: (message: string, ...args: any[]) =>
+    console.error(`[ERROR] ${message}`, ...args),
+  debug: (message: string, ...args: any[]) =>
+    console.debug(`[DEBUG] ${message}`, ...args),
 };
 
 export class MexcApiAgent extends BaseAgent {
@@ -46,7 +48,7 @@ export class MexcApiAgent extends BaseAgent {
   };
 
   private mexcService = getRecommendedMexcService();
-  
+
   // Analyzers and utilities
   private symbolAnalyzer: SymbolAnalyzer;
   private calendarAnalyzer: CalendarAnalyzer;
@@ -104,8 +106,13 @@ Output Format:
     this.responseEnhancer = new ResponseEnhancer();
   }
 
-  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
-    const request: MexcApiRequest = (context as unknown as MexcApiRequest) || { endpoint: input };
+  async process(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
+    const request: MexcApiRequest = (context as unknown as MexcApiRequest) || {
+      endpoint: input,
+    };
 
     const userMessage = `
 MEXC API Analysis Request:
@@ -144,28 +151,54 @@ Focus on actionable analysis for cryptocurrency trading decisions.
     };
   }
 
-  async analyzeSymbolData(symbolData: MexcSymbolData[]): Promise<AgentResponse> {
-    return await this.symbolAnalyzer.analyzeSymbolData(symbolData, this.getCallOpenAIAdapter());
+  async analyzeSymbolData(
+    symbolData: MexcSymbolData[]
+  ): Promise<AgentResponse> {
+    return await this.symbolAnalyzer.analyzeSymbolData(
+      symbolData,
+      this.getCallOpenAIAdapter()
+    );
   }
 
-  async analyzeCalendarData(calendarData: MexcCalendarEntry[]): Promise<AgentResponse> {
-    return await this.calendarAnalyzer.analyzeCalendarData(calendarData, this.getCallOpenAIAdapter());
+  async analyzeCalendarData(
+    calendarData: MexcCalendarEntry[]
+  ): Promise<AgentResponse> {
+    return await this.calendarAnalyzer.analyzeCalendarData(
+      calendarData,
+      this.getCallOpenAIAdapter()
+    );
   }
 
-  async assessDataQuality(apiResponse: MexcApiResponseData): Promise<AgentResponse> {
-    return await this.dataQualityAnalyzer.assessDataQuality(apiResponse, this.getCallOpenAIAdapter());
+  async assessDataQuality(
+    apiResponse: MexcApiResponseData
+  ): Promise<AgentResponse> {
+    return await this.dataQualityAnalyzer.assessDataQuality(
+      apiResponse,
+      this.getCallOpenAIAdapter()
+    );
   }
 
-  async identifyTradingSignals(marketData: MexcSymbolData): Promise<AgentResponse> {
-    return await this.symbolAnalyzer.identifyTradingSignals(marketData, this.getCallOpenAIAdapter());
+  async identifyTradingSignals(
+    marketData: MexcSymbolData
+  ): Promise<AgentResponse> {
+    return await this.symbolAnalyzer.identifyTradingSignals(
+      marketData,
+      this.getCallOpenAIAdapter()
+    );
   }
 
   // ======================
   // MEXC Service Integration
   // ======================
 
-  async callMexcApi(endpoint: string, params?: MexcApiParams): Promise<EnhancedApiResponse> {
-    logger.info(`[MexcApiAgent] Calling MEXC API via service layer: ${endpoint}`, { params });
+  async callMexcApi(
+    endpoint: string,
+    params?: MexcApiParams
+  ): Promise<EnhancedApiResponse> {
+    logger.info(
+      `[MexcApiAgent] Calling MEXC API via service layer: ${endpoint}`,
+      { params }
+    );
 
     try {
       let serviceResponse: ServiceResponse<unknown>;
@@ -174,23 +207,32 @@ Focus on actionable analysis for cryptocurrency trading decisions.
       switch (endpoint) {
         case "/api/v3/etf/calendar":
         case "/calendar":
-          logger.info(`[MexcApiAgent] Fetching calendar data via service layer`);
-          serviceResponse = await this.mexcService.getCalendarListings() as ServiceResponse<unknown>;
+          logger.info(
+            `[MexcApiAgent] Fetching calendar data via service layer`
+          );
+          serviceResponse =
+            (await this.mexcService.getCalendarListings()) as ServiceResponse<unknown>;
           break;
 
         case "/api/v3/etf/symbols":
         case "/symbols":
           logger.info(`[MexcApiAgent] Fetching symbols data via service layer`);
-          serviceResponse = await this.mexcService.getSymbolsData() as ServiceResponse<unknown>;
+          serviceResponse =
+            (await this.mexcService.getSymbolsData()) as ServiceResponse<unknown>;
           break;
 
         case "/account/balances":
-          logger.info(`[MexcApiAgent] Fetching account balances via service layer`);
-          serviceResponse = await this.mexcService.getAccountBalances() as ServiceResponse<unknown>;
+          logger.info(
+            `[MexcApiAgent] Fetching account balances via service layer`
+          );
+          serviceResponse =
+            (await this.mexcService.getAccountBalances()) as ServiceResponse<unknown>;
           break;
 
         case "/market-overview":
-          logger.info(`[MexcApiAgent] Fetching market overview via service layer`);
+          logger.info(
+            `[MexcApiAgent] Fetching market overview via service layer`
+          );
           serviceResponse = {
             success: false,
             data: null,
@@ -199,8 +241,10 @@ Focus on actionable analysis for cryptocurrency trading decisions.
           } as ServiceResponse<unknown>;
           break;
 
-        case "/health":
-          logger.info(`[MexcApiAgent] Performing health check via service layer`);
+        case "/health": {
+          logger.info(
+            `[MexcApiAgent] Performing health check via service layer`
+          );
           const healthResult = {
             healthy: true,
             timestamp: new Date().toISOString(),
@@ -212,9 +256,12 @@ Focus on actionable analysis for cryptocurrency trading decisions.
             timestamp: healthResult.timestamp,
           } as ServiceResponse<unknown>;
           break;
+        }
 
         default:
-          logger.warn(`[MexcApiAgent] Unknown endpoint: ${endpoint}, using fallback`);
+          logger.warn(
+            `[MexcApiAgent] Unknown endpoint: ${endpoint}, using fallback`
+          );
           serviceResponse = {
             success: false,
             data: null,
@@ -225,19 +272,24 @@ Focus on actionable analysis for cryptocurrency trading decisions.
       }
 
       // Add AI analysis to the response
-      const enhancedResponse = await this.responseEnhancer.enhanceServiceResponseWithAI(
-        serviceResponse, 
-        endpoint, 
-        this.getCallOpenAIAdapter()
-      );
+      const enhancedResponse =
+        await this.responseEnhancer.enhanceServiceResponseWithAI(
+          serviceResponse,
+          endpoint,
+          this.getCallOpenAIAdapter()
+        );
 
       logger.info(
         `[MexcApiAgent] Service call successful: ${endpoint} - Success: ${serviceResponse.success}`
       );
       return enhancedResponse;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      logger.error(`[MexcApiAgent] Service call failed for endpoint: ${endpoint}:`, errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      logger.error(
+        `[MexcApiAgent] Service call failed for endpoint: ${endpoint}:`,
+        errorMessage
+      );
 
       return {
         success: false,
@@ -257,7 +309,9 @@ Focus on actionable analysis for cryptocurrency trading decisions.
   // Utility Methods
   // ======================
 
-  isValidApiResponseStructure(response: unknown): response is MexcApiResponseData {
+  isValidApiResponseStructure(
+    response: unknown
+  ): response is MexcApiResponseData {
     return this.responseValidator.isValidApiResponseStructure(response);
   }
 
@@ -265,7 +319,10 @@ Focus on actionable analysis for cryptocurrency trading decisions.
     return this.responseValidator.isValidApiResponse(response);
   }
 
-  getUpcomingLaunches(calendarData: MexcCalendarEntry[], hoursAhead: number = 24): MexcCalendarEntry[] {
+  getUpcomingLaunches(
+    calendarData: MexcCalendarEntry[],
+    hoursAhead: number = 24
+  ): MexcCalendarEntry[] {
     return this.calendarAnalyzer.getUpcomingLaunches(calendarData, hoursAhead);
   }
 

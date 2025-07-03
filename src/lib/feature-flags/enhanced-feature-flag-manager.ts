@@ -3,7 +3,7 @@
  * Minimal implementation for build optimization
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 export const UserContextSchema = z.object({
   userId: z.string(),
@@ -18,10 +18,14 @@ export type UserContext = z.infer<typeof UserContextSchema>;
 export const GradualRolloutConfigSchema = z.object({
   enabled: z.boolean(),
   percentage: z.number().min(0).max(100),
-  stages: z.array(z.object({
-    percentage: z.number().min(0).max(100),
-    duration: z.number().min(0),
-  })).optional(),
+  stages: z
+    .array(
+      z.object({
+        percentage: z.number().min(0).max(100),
+        duration: z.number().min(0),
+      })
+    )
+    .optional(),
 });
 
 export type GradualRolloutConfig = z.infer<typeof GradualRolloutConfigSchema>;
@@ -30,7 +34,7 @@ export const EnhancedFeatureFlagConfigSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   enabled: z.boolean(),
-  strategy: z.enum(['simple', 'gradual', 'targeted']).default('simple'),
+  strategy: z.enum(["simple", "gradual", "targeted"]).default("simple"),
   targetGroups: z.array(z.string()).optional(),
   gradualRollout: GradualRolloutConfigSchema.optional(),
   createdAt: z.string(),
@@ -38,7 +42,9 @@ export const EnhancedFeatureFlagConfigSchema = z.object({
   createdBy: z.string(),
 });
 
-export type EnhancedFeatureFlagConfig = z.infer<typeof EnhancedFeatureFlagConfigSchema>;
+export type EnhancedFeatureFlagConfig = z.infer<
+  typeof EnhancedFeatureFlagConfigSchema
+>;
 
 export interface FlagEvaluation {
   flagName: string;
@@ -71,60 +77,69 @@ class EnhancedFeatureFlagManager {
     defaultValue: boolean = false
   ): Promise<FlagEvaluation> {
     const flag = this.flags.get(flagName);
-    
+
     if (!flag) {
       return {
         flagName,
         enabled: defaultValue,
-        strategy: 'default',
+        strategy: "default",
         userInTargetGroup: false,
         evaluationTime: new Date(),
-        metadata: { reason: 'flag_not_found' }
+        metadata: { reason: "flag_not_found" },
       };
     }
 
     const enabled = this.evaluateFlagForUser(flag, userContext);
-    
+
     return {
       flagName,
       enabled,
       strategy: flag.strategy,
       userInTargetGroup: enabled,
       evaluationTime: new Date(),
-      metadata: { userId: userContext.userId }
+      metadata: { userId: userContext.userId },
     };
   }
 
-  private evaluateFlagForUser(flag: EnhancedFeatureFlagConfig, userContext: UserContext): boolean {
+  private evaluateFlagForUser(
+    flag: EnhancedFeatureFlagConfig,
+    userContext: UserContext
+  ): boolean {
     if (!flag.enabled) return false;
-    
+
     switch (flag.strategy) {
-      case 'simple':
+      case "simple":
         return flag.enabled;
-      case 'gradual':
+      case "gradual":
         return this.evaluateGradualRollout(flag, userContext);
-      case 'targeted':
+      case "targeted":
         return this.evaluateTargetedFlag(flag, userContext);
       default:
         return flag.enabled;
     }
   }
 
-  private evaluateGradualRollout(flag: EnhancedFeatureFlagConfig, userContext: UserContext): boolean {
+  private evaluateGradualRollout(
+    flag: EnhancedFeatureFlagConfig,
+    userContext: UserContext
+  ): boolean {
     if (!flag.gradualRollout) return flag.enabled;
-    
+
     const hash = this.hashUser(userContext.userId);
     const percentage = flag.gradualRollout.percentage;
-    
+
     return hash < percentage;
   }
 
-  private evaluateTargetedFlag(flag: EnhancedFeatureFlagConfig, userContext: UserContext): boolean {
+  private evaluateTargetedFlag(
+    flag: EnhancedFeatureFlagConfig,
+    userContext: UserContext
+  ): boolean {
     if (!flag.targetGroups || flag.targetGroups.length === 0) {
       return flag.enabled;
     }
-    
-    const userPlan = userContext.plan || 'free';
+
+    const userPlan = userContext.plan || "free";
     return flag.targetGroups.includes(userPlan);
   }
 
@@ -132,16 +147,23 @@ class EnhancedFeatureFlagManager {
     let hash = 0;
     for (let i = 0; i < userId.length; i++) {
       const char = userId.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash) % 100;
   }
 
-  updateFlag(flagName: string, updates: Partial<EnhancedFeatureFlagConfig>): void {
+  updateFlag(
+    flagName: string,
+    updates: Partial<EnhancedFeatureFlagConfig>
+  ): void {
     const flag = this.flags.get(flagName);
     if (flag) {
-      const updatedFlag = { ...flag, ...updates, updatedAt: new Date().toISOString() };
+      const updatedFlag = {
+        ...flag,
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
       this.flags.set(flagName, updatedFlag);
     }
   }
@@ -149,17 +171,17 @@ class EnhancedFeatureFlagManager {
   emergencyDisable(flagName: string, reason: string): void {
     const flag = this.flags.get(flagName);
     if (flag) {
-      this.updateFlag(flagName, { 
+      this.updateFlag(flagName, {
         enabled: false,
-        description: `${flag.description || ''} [EMERGENCY DISABLED: ${reason}]`
+        description: `${flag.description || ""} [EMERGENCY DISABLED: ${reason}]`,
       });
     }
   }
 
   startGradualRollout(flagName: string, config: GradualRolloutConfig): void {
     this.updateFlag(flagName, {
-      strategy: 'gradual',
-      gradualRollout: config
+      strategy: "gradual",
+      gradualRollout: config,
     });
   }
 
@@ -167,7 +189,7 @@ class EnhancedFeatureFlagManager {
     if (flagName) {
       return this.analytics.get(flagName) || {};
     }
-    
+
     const result: Record<string, any> = {};
     for (const [name, analytics] of this.analytics) {
       result[name] = analytics;

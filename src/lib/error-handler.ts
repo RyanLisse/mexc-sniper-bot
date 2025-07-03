@@ -112,7 +112,10 @@ export class ErrorContext {
 /**
  * Handle API errors and return appropriate response
  */
-export function handleApiError(error: unknown, context?: Record<string, unknown>): NextResponse {
+export function handleApiError(
+  error: unknown,
+  context?: Record<string, unknown>
+): NextResponse {
   // Handle known application errors
   if (isApplicationError(error)) {
     const logContext = {
@@ -124,7 +127,11 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
 
     // Log based on error type
     if (error.isOperational) {
-      errorLogger.warn(`Operational error: ${error.message}`, error, logContext);
+      errorLogger.warn(
+        `Operational error: ${error.message}`,
+        error,
+        logContext
+      );
     } else {
       errorLogger.error(`System error: ${error.message}`, error, logContext);
     }
@@ -133,7 +140,9 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
     const response = createErrorResponse(error.getUserMessage(), {
       code: error.code,
       timestamp: error.timestamp.toISOString(),
-      ...(isValidationError(error) && error.field ? { field: error.field } : {}),
+      ...(isValidationError(error) && error.field
+        ? { field: error.field }
+        : {}),
       ...(isRateLimitError(error) ? { retryAfter: error.retryAfter } : {}),
     });
 
@@ -143,7 +152,11 @@ export function handleApiError(error: unknown, context?: Record<string, unknown>
   // Handle standard errors
   const safeError = ensureError(error);
   if (error instanceof Error) {
-    errorLogger.error(`Unhandled error: ${safeError.message}`, safeError, context);
+    errorLogger.error(
+      `Unhandled error: ${safeError.message}`,
+      safeError,
+      context
+    );
 
     // Check for specific error patterns
     if (safeError.message.includes("ECONNREFUSED")) {
@@ -239,9 +252,17 @@ export async function safeExecute<T>(
 
     const errorToLog = ensureError(error);
     if (isOperationalError(error)) {
-      errorLogger.warn(`Operation failed: ${operationName}`, errorToLog, enrichedContext);
+      errorLogger.warn(
+        `Operation failed: ${operationName}`,
+        errorToLog,
+        enrichedContext
+      );
     } else {
-      errorLogger.error(`System failure in: ${operationName}`, errorToLog, enrichedContext);
+      errorLogger.error(
+        `System failure in: ${operationName}`,
+        errorToLog,
+        enrichedContext
+      );
     }
 
     throw error;

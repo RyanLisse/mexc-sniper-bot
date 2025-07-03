@@ -105,7 +105,12 @@ export interface SafetyAlert {
 
 export interface SafetyAction {
   id: string;
-  type: "alert" | "restrict" | "shutdown" | "emergency_halt" | "consensus_override";
+  type:
+    | "alert"
+    | "restrict"
+    | "shutdown"
+    | "emergency_halt"
+    | "consensus_override";
   target: string; // agent ID, system, etc.
   reason: string;
   executedAt: string;
@@ -157,7 +162,11 @@ export interface SafetyMetrics {
 // ======================
 
 export type SafetyLevel = "safe" | "warning" | "critical" | "emergency";
-export type SystemStatus = "operational" | "degraded" | "critical" | "emergency";
+export type SystemStatus =
+  | "operational"
+  | "degraded"
+  | "critical"
+  | "emergency";
 export type RiskTrend = "improving" | "stable" | "deteriorating";
 export type EmergencyLevel = "none" | "low" | "medium" | "high" | "critical";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";

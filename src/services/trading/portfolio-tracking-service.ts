@@ -65,7 +65,10 @@ export class PortfolioTrackingService extends EventEmitter {
   };
 
   private mexcService = getRecommendedMexcService();
-  private portfolioCache = new Map<string, { summary: PortfolioSummary; expiresAt: number }>();
+  private portfolioCache = new Map<
+    string,
+    { summary: PortfolioSummary; expiresAt: number }
+  >();
   private priceCache = new Map<string, { price: number; expiresAt: number }>();
   private priceAlerts = new Map<string, PriceAlert>();
   private monitoringInterval?: NodeJS.Timeout;
@@ -80,7 +83,10 @@ export class PortfolioTrackingService extends EventEmitter {
   /**
    * Get real-time portfolio summary for a user
    */
-  async getPortfolioSummary(userId: string, forceRefresh = false): Promise<PortfolioSummary> {
+  async getPortfolioSummary(
+    userId: string,
+    forceRefresh = false
+  ): Promise<PortfolioSummary> {
     const cacheKey = `portfolio_${userId}`;
     const cached = this.portfolioCache.get(cacheKey);
 
@@ -126,11 +132,14 @@ export class PortfolioTrackingService extends EventEmitter {
             const entryValue = currentValue; // Simplified - in production track actual entry value
 
             const unrealizedPnl = currentValue - entryValue;
-            const unrealizedPnlPercent = entryValue > 0 ? (unrealizedPnl / entryValue) * 100 : 0;
+            const unrealizedPnlPercent =
+              entryValue > 0 ? (unrealizedPnl / entryValue) * 100 : 0;
 
             // Get 24h price change
             const ticker = await this.get24hTicker(symbol);
-            const dayChangePercent = ticker ? parseFloat(ticker.priceChangePercent || "0") : 0;
+            const dayChangePercent = ticker
+              ? parseFloat(ticker.priceChangePercent || "0")
+              : 0;
             const dayChange = (currentValue * dayChangePercent) / 100;
 
             const position: Position = {
@@ -146,7 +155,8 @@ export class PortfolioTrackingService extends EventEmitter {
               unrealizedPnlPercent,
               dayChange,
               dayChangePercent,
-              allocation: totalUsdtValue > 0 ? (currentValue / totalUsdtValue) * 100 : 0,
+              allocation:
+                totalUsdtValue > 0 ? (currentValue / totalUsdtValue) * 100 : 0,
             };
 
             positions.push(position);
@@ -154,32 +164,45 @@ export class PortfolioTrackingService extends EventEmitter {
             totalEntryValue += entryValue;
           }
         } catch (error) {
-          this.logger.warn(`Failed to process balance for ${balance.asset}:`, error);
+          this.logger.warn(
+            `Failed to process balance for ${balance.asset}:`,
+            error
+          );
         }
       }
 
       // Calculate portfolio-level metrics
-      const totalPnlPercent = totalEntryValue > 0 ? (totalPnl / totalEntryValue) * 100 : 0;
+      const totalPnlPercent =
+        totalEntryValue > 0 ? (totalPnl / totalEntryValue) * 100 : 0;
       const dayChange = positions.reduce((sum, pos) => sum + pos.dayChange, 0);
-      const dayChangePercent = totalUsdtValue > 0 ? (dayChange / totalUsdtValue) * 100 : 0;
+      const dayChangePercent =
+        totalUsdtValue > 0 ? (dayChange / totalUsdtValue) * 100 : 0;
 
       // Find best and worst performers
       const bestPerformer =
         positions.length > 0
           ? positions.reduce((best, current) =>
-              current.unrealizedPnlPercent > best.unrealizedPnlPercent ? current : best
+              current.unrealizedPnlPercent > best.unrealizedPnlPercent
+                ? current
+                : best
             )
           : null;
 
       const worstPerformer =
         positions.length > 0
           ? positions.reduce((worst, current) =>
-              current.unrealizedPnlPercent < worst.unrealizedPnlPercent ? current : worst
+              current.unrealizedPnlPercent < worst.unrealizedPnlPercent
+                ? current
+                : worst
             )
           : null;
 
-      const totalGainers = positions.filter((pos) => pos.unrealizedPnl > 0).length;
-      const totalLosers = positions.filter((pos) => pos.unrealizedPnl < 0).length;
+      const totalGainers = positions.filter(
+        (pos) => pos.unrealizedPnl > 0
+      ).length;
+      const totalLosers = positions.filter(
+        (pos) => pos.unrealizedPnl < 0
+      ).length;
 
       const summary: PortfolioSummary = {
         totalValue: totalUsdtValue,
@@ -312,7 +335,9 @@ export class PortfolioTrackingService extends EventEmitter {
    * Get all price alerts for a user
    */
   getPriceAlerts(userId: string): PriceAlert[] {
-    return Array.from(this.priceAlerts.values()).filter((alert) => alert.userId === userId);
+    return Array.from(this.priceAlerts.values()).filter(
+      (alert) => alert.userId === userId
+    );
   }
 
   /**
@@ -354,7 +379,9 @@ export class PortfolioTrackingService extends EventEmitter {
    * Check and trigger price alerts
    */
   private async checkPriceAlerts(): Promise<void> {
-    const alerts = Array.from(this.priceAlerts.values()).filter((alert) => !alert.triggered);
+    const alerts = Array.from(this.priceAlerts.values()).filter(
+      (alert) => !alert.triggered
+    );
 
     for (const alert of alerts) {
       try {

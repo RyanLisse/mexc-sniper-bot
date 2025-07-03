@@ -151,7 +151,14 @@ export interface RiskThresholdViolated extends BaseSafetyEvent {
     riskProfileId: string;
     userId: string;
     portfolioId: string;
-    violationType: "drawdown_threshold" | "position_risk" | "portfolio_risk" | "concentration_risk" | "consecutive_losses" | "daily_loss_threshold" | "monthly_loss_threshold";
+    violationType:
+      | "drawdown_threshold"
+      | "position_risk"
+      | "portfolio_risk"
+      | "concentration_risk"
+      | "consecutive_losses"
+      | "daily_loss_threshold"
+      | "monthly_loss_threshold";
     threshold: number;
     currentValue: number;
     severity: "low" | "medium" | "high" | "critical";
@@ -174,7 +181,11 @@ export interface SafetyAlertCreated extends BaseSafetyEvent {
     alertId: string;
     userId: string;
     portfolioId: string;
-    alertType: "RISK_WARNING" | "THRESHOLD_BREACH" | "EMERGENCY_TRIGGER" | "SYSTEM_ANOMALY";
+    alertType:
+      | "RISK_WARNING"
+      | "THRESHOLD_BREACH"
+      | "EMERGENCY_TRIGGER"
+      | "SYSTEM_ANOMALY";
     severity: "low" | "medium" | "high" | "critical";
     title: string;
     message: string;

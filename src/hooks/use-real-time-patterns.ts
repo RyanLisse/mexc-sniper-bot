@@ -51,7 +51,11 @@ export interface ReadyStateStatus {
 
 export interface PatternAlert {
   id: string;
-  type: "pattern_discovered" | "ready_state" | "high_confidence" | "execution_opportunity";
+  type:
+    | "pattern_discovered"
+    | "ready_state"
+    | "high_confidence"
+    | "execution_opportunity";
   symbol: string;
   message: string;
   confidence: number;
@@ -115,8 +119,15 @@ export interface UseRealTimePatternsResult {
 
 class PatternAnalyticsEngine {
   private patterns: PatternDiscoveryMessage[] = [];
-  private validatedPatterns = new Map<string, { success: boolean; executedAt: number }>();
-  private performanceHistory: Array<{ timestamp: number; success: boolean; symbol: string }> = [];
+  private validatedPatterns = new Map<
+    string,
+    { success: boolean; executedAt: number }
+  >();
+  private performanceHistory: Array<{
+    timestamp: number;
+    success: boolean;
+    symbol: string;
+  }> = [];
 
   addPattern(pattern: PatternDiscoveryMessage): void {
     this.patterns.unshift(pattern);
@@ -136,7 +147,8 @@ class PatternAnalyticsEngine {
     this.performanceHistory.push({
       timestamp: Date.now(),
       success,
-      symbol: this.patterns.find((p) => p.patternId === patternId)?.symbol || "",
+      symbol:
+        this.patterns.find((p) => p.patternId === patternId)?.symbol || "",
     });
 
     // Keep only last 500 performance records
@@ -148,11 +160,17 @@ class PatternAnalyticsEngine {
   calculateMetrics(): PatternMetrics {
     const now = Date.now();
     const last24h = now - 24 * 60 * 60 * 1000;
-    const recentPatterns = this.patterns.filter((p) => p.timing.detectedAt > last24h);
+    const recentPatterns = this.patterns.filter(
+      (p) => p.timing.detectedAt > last24h
+    );
 
-    const readyStatePatterns = recentPatterns.filter((p) => p.pattern.type === "ready_state");
+    const readyStatePatterns = recentPatterns.filter(
+      (p) => p.pattern.type === "ready_state"
+    );
 
-    const validatedCount = this.performanceHistory.filter((p) => p.timestamp > last24h).length;
+    const validatedCount = this.performanceHistory.filter(
+      (p) => p.timestamp > last24h
+    ).length;
     const successCount = this.performanceHistory.filter(
       (p) => p.timestamp > last24h && p.success
     ).length;
@@ -161,16 +179,27 @@ class PatternAnalyticsEngine {
     const falsePositiveRate =
       validatedCount > 0 ? (validatedCount - successCount) / validatedCount : 0;
 
-    const totalConfidence = recentPatterns.reduce((sum, p) => sum + p.pattern.confidence, 0);
+    const totalConfidence = recentPatterns.reduce(
+      (sum, p) => sum + p.pattern.confidence,
+      0
+    );
     const averageConfidence =
       recentPatterns.length > 0 ? totalConfidence / recentPatterns.length : 0;
 
-    const totalAdvanceNotice = recentPatterns.reduce((sum, p) => sum + p.timing.advanceNotice, 0);
+    const totalAdvanceNotice = recentPatterns.reduce(
+      (sum, p) => sum + p.timing.advanceNotice,
+      0
+    );
     const averageAdvanceNotice =
-      recentPatterns.length > 0 ? totalAdvanceNotice / recentPatterns.length : 0;
+      recentPatterns.length > 0
+        ? totalAdvanceNotice / recentPatterns.length
+        : 0;
 
     // Calculate top performing symbols
-    const symbolPerformance = new Map<string, { total: number; success: number }>();
+    const symbolPerformance = new Map<
+      string,
+      { total: number; success: number }
+    >();
     this.performanceHistory
       .filter((p) => p.timestamp > last24h)
       .forEach((p) => {
@@ -207,17 +236,22 @@ class PatternAnalyticsEngine {
 
   getSymbolStats(symbol: string) {
     const symbolPatterns = this.patterns.filter((p) => p.symbol === symbol);
-    const symbolPerformance = this.performanceHistory.filter((p) => p.symbol === symbol);
+    const symbolPerformance = this.performanceHistory.filter(
+      (p) => p.symbol === symbol
+    );
 
     const successCount = symbolPerformance.filter((p) => p.success).length;
-    const successRate = symbolPerformance.length > 0 ? successCount / symbolPerformance.length : 0;
+    const successRate =
+      symbolPerformance.length > 0
+        ? successCount / symbolPerformance.length
+        : 0;
 
     return {
       totalPatterns: symbolPatterns.length,
       successRate,
       averageConfidence:
-        symbolPatterns.reduce((sum, p) => sum + p.pattern.confidence, 0) / symbolPatterns.length ||
-        0,
+        symbolPatterns.reduce((sum, p) => sum + p.pattern.confidence, 0) /
+          symbolPatterns.length || 0,
       lastPattern: symbolPatterns[0],
       recentPerformance: symbolPerformance.slice(0, 10),
     };
@@ -268,7 +302,8 @@ class AlertManager {
     const fiveMinutes = 5 * 60 * 1000;
 
     return this.alerts.filter(
-      (alert) => alert.priority === "critical" || now - alert.timestamp < fiveMinutes
+      (alert) =>
+        alert.priority === "critical" || now - alert.timestamp < fiveMinutes
     );
   }
 
@@ -301,7 +336,9 @@ export function useRealTimePatterns(
 
   // State management
   const [patterns, setPatterns] = useState<PatternDiscoveryMessage[]>([]);
-  const [readyStates, setReadyStates] = useState(new Map<string, ReadyStateStatus>());
+  const [readyStates, setReadyStates] = useState(
+    new Map<string, ReadyStateStatus>()
+  );
   const [signals, setSignals] = useState<TradingSignalMessage[]>([]);
   const [monitoredSymbols, setMonitoredSymbols] = useState<string[]>([]);
   const [lastUpdate, setLastUpdate] = useState(0);
@@ -363,13 +400,22 @@ export function useRealTimePatterns(
       }
 
       // Auto-subscribe to new symbol if enabled
-      if (autoSubscribeNewSymbols && !monitoredSymbols.includes(pattern.symbol)) {
+      if (
+        autoSubscribeNewSymbols &&
+        !monitoredSymbols.includes(pattern.symbol)
+      ) {
         setMonitoredSymbols((prev) => [...prev, pattern.symbol]);
       }
 
       setLastUpdate(Date.now());
     },
-    [minConfidence, enableAnalytics, maxPatterns, autoSubscribeNewSymbols, monitoredSymbols]
+    [
+      minConfidence,
+      enableAnalytics,
+      maxPatterns,
+      autoSubscribeNewSymbols,
+      monitoredSymbols,
+    ]
   );
 
   // Ready state handler
@@ -460,7 +506,10 @@ export function useRealTimePatterns(
       const workflow = message.data as AgentWorkflowMessage;
 
       // Track pattern validation results
-      if (workflow.workflowType === "pattern_analysis" && workflow.status === "completed") {
+      if (
+        workflow.workflowType === "pattern_analysis" &&
+        workflow.status === "completed"
+      ) {
         const success = workflow.result?.success || false;
         const patternId = (workflow.metadata as any)?.patternId;
 
@@ -496,11 +545,17 @@ export function useRealTimePatterns(
 
     // Subscribe to specific symbols
     for (const symbol of symbols) {
-      unsubscribers.push(subscribe(`patterns:${symbol}:discovery`, handlePatternDiscovery));
-      unsubscribers.push(subscribe(`patterns:${symbol}:ready_state`, handleReadyState));
+      unsubscribers.push(
+        subscribe(`patterns:${symbol}:discovery`, handlePatternDiscovery)
+      );
+      unsubscribers.push(
+        subscribe(`patterns:${symbol}:ready_state`, handleReadyState)
+      );
 
       if (enableSignals) {
-        unsubscribers.push(subscribe(`trading:${symbol}:signals`, handleTradingSignal));
+        unsubscribers.push(
+          subscribe(`trading:${symbol}:signals`, handleTradingSignal)
+        );
       }
     }
 

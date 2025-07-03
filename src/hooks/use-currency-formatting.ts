@@ -46,6 +46,12 @@ export function useCurrencyFormatting() {
       formatBytes,
       formatGrowthRate,
     }),
-    [formatCurrency, formatTokenAmount, formatPercentage, formatBytes, formatGrowthRate]
+    [
+      formatCurrency,
+      formatTokenAmount,
+      formatPercentage,
+      formatBytes,
+      formatGrowthRate,
+    ]
   );
 }

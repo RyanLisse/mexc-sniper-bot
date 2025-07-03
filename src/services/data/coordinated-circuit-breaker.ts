@@ -65,13 +65,29 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
 
   private logger = {
     info: (message: string, context?: unknown) =>
-      console.info(`[circuit-breaker:${this.serviceName}]`, message, context || ""),
+      console.info(
+        `[circuit-breaker:${this.serviceName}]`,
+        message,
+        context || ""
+      ),
     warn: (message: string, context?: unknown) =>
-      console.warn(`[circuit-breaker:${this.serviceName}]`, message, context || ""),
+      console.warn(
+        `[circuit-breaker:${this.serviceName}]`,
+        message,
+        context || ""
+      ),
     error: (message: string, context?: unknown) =>
-      console.error(`[circuit-breaker:${this.serviceName}]`, message, context || ""),
+      console.error(
+        `[circuit-breaker:${this.serviceName}]`,
+        message,
+        context || ""
+      ),
     debug: (message: string, context?: unknown) =>
-      console.debug(`[circuit-breaker:${this.serviceName}]`, message, context || ""),
+      console.debug(
+        `[circuit-breaker:${this.serviceName}]`,
+        message,
+        context || ""
+      ),
   };
 
   constructor(serviceName: string, config: Partial<CircuitBreakerConfig> = {}) {
@@ -121,11 +137,15 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
       if (this.shouldAttemptReset()) {
         this.transitionToHalfOpen();
       } else {
-        const error = new Error(`Circuit breaker is open for service: ${this.serviceName}`);
+        const error = new Error(
+          `Circuit breaker is open for service: ${this.serviceName}`
+        );
         this.logger.warn("Circuit breaker open, rejecting call", {
           state: this.state,
           failureCount: this.failureCount,
-          timeSinceLastFailure: this.lastFailureTime ? Date.now() - this.lastFailureTime : null,
+          timeSinceLastFailure: this.lastFailureTime
+            ? Date.now() - this.lastFailureTime
+            : null,
         });
         throw error;
       }
@@ -165,7 +185,11 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
   ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Operation timeout after ${timeoutMs}ms for service: ${this.serviceName}`));
+        reject(
+          new Error(
+            `Operation timeout after ${timeoutMs}ms for service: ${this.serviceName}`
+          )
+        );
       }, timeoutMs);
 
       operation()
@@ -208,7 +232,10 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
       responseTime,
     });
 
-    if (this.state === "closed" && this.failureCount >= this.config.failureThreshold) {
+    if (
+      this.state === "closed" &&
+      this.failureCount >= this.config.failureThreshold
+    ) {
       this.transitionToOpen();
     } else if (this.state === "half-open") {
       this.transitionToOpen();
@@ -219,7 +246,7 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
 
   private updateResponseTimeMetrics(responseTime: number): void {
     this.responseTimeHistory.push(responseTime);
-    
+
     // Keep only recent response times (last 100 calls)
     if (this.responseTimeHistory.length > 100) {
       this.responseTimeHistory.shift();
@@ -233,11 +260,12 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
     // Calculate average response time
     const sum = this.responseTimeHistory.reduce((a, b) => a + b, 0);
     this.metrics.averageResponseTime = sum / this.responseTimeHistory.length;
-    
+
     // Calculate slow call rate
-    this.metrics.slowCallRate = this.metrics.totalCalls > 0 
-      ? this.slowCalls / this.metrics.totalCalls 
-      : 0;
+    this.metrics.slowCallRate =
+      this.metrics.totalCalls > 0
+        ? this.slowCalls / this.metrics.totalCalls
+        : 0;
   }
 
   private transitionToOpen(): void {
@@ -250,7 +278,8 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
       serviceName: this.serviceName,
       previousState,
       failureCount: this.failureCount,
-      timeSinceLastSuccess: this.successCount > 0 ? Date.now() - this.lastStateChangeTime : null,
+      timeSinceLastSuccess:
+        this.successCount > 0 ? Date.now() - this.lastStateChangeTime : null,
     });
 
     this.updateMetrics();
@@ -290,8 +319,10 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
   }
 
   private shouldAttemptReset(): boolean {
-    return this.lastFailureTime !== null &&
-           Date.now() - this.lastFailureTime > this.config.resetTimeout;
+    return (
+      this.lastFailureTime !== null &&
+      Date.now() - this.lastFailureTime > this.config.resetTimeout
+    );
   }
 
   private updateMetrics(): void {
@@ -310,8 +341,10 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
 
   private performHealthCheck(): void {
     // Check if slow call rate is too high
-    if (this.metrics.slowCallRate > this.config.slowCallRateThreshold && 
-        this.metrics.totalCalls > 10) {
+    if (
+      this.metrics.slowCallRate > this.config.slowCallRateThreshold &&
+      this.metrics.totalCalls > 10
+    ) {
       this.logger.warn("High slow call rate detected", {
         serviceName: this.serviceName,
         slowCallRate: this.metrics.slowCallRate,
@@ -353,9 +386,11 @@ class RealCoordinatedCircuitBreaker implements CoordinatedCircuitBreaker {
   }
 
   isHealthy(): boolean {
-    return this.state === "closed" && 
-           this.metrics.slowCallRate < this.config.slowCallRateThreshold &&
-           this.activeCalls < this.config.maxConcurrentCalls * 0.8;
+    return (
+      this.state === "closed" &&
+      this.metrics.slowCallRate < this.config.slowCallRateThreshold &&
+      this.activeCalls < this.config.maxConcurrentCalls * 0.8
+    );
   }
 }
 

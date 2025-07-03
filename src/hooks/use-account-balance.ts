@@ -51,7 +51,10 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
 
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated - return empty data instead
-        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+        if (
+          !isAuthenticated &&
+          (response.status === 403 || response.status === 401)
+        ) {
           console.debug("[useAccountBalance] Auth error, returning empty data");
           return {
             balances: [],
@@ -59,7 +62,9 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
             lastUpdated: new Date().toISOString(),
           };
         }
-        throw new Error(`Failed to fetch account balance: ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch account balance: ${response.statusText}`
+        );
       }
 
       const data = await response.json();
@@ -68,7 +73,9 @@ export function useAccountBalance(options: UseAccountBalanceOptions = {}) {
       if (!data.success) {
         // For auth errors, return empty data instead of throwing
         if (data.error?.includes("401") || data.error?.includes("403")) {
-          console.debug("[useAccountBalance] Auth error in response, returning empty data");
+          console.debug(
+            "[useAccountBalance] Auth error in response, returning empty data"
+          );
           return {
             balances: [],
             totalUsdtValue: 0,

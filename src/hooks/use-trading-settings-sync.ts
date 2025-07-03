@@ -84,7 +84,8 @@ export function useTradingSettingsSync(userId?: string) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || `Failed to fetch trading settings: ${response.statusText}`
+          errorData.message ||
+            `Failed to fetch trading settings: ${response.statusText}`
         );
       }
 
@@ -111,7 +112,8 @@ export function useTradingSettingsSync(userId?: string) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || `Failed to update trading settings: ${response.statusText}`
+          errorData.message ||
+            `Failed to update trading settings: ${response.statusText}`
         );
       }
 
@@ -217,8 +219,10 @@ export function useTradingSettingsSync(userId?: string) {
     // Computed values for easy access
     userSettings: settingsStatus?.userSettings,
     executionSettings: settingsStatus?.executionSettings,
-    isExecutionSystemActive: settingsStatus?.executionSettings?.tradingEnabled ?? false,
-    isAutoSnipingActive: settingsStatus?.executionSettings?.autoSnipingEnabled ?? false,
+    isExecutionSystemActive:
+      settingsStatus?.executionSettings?.tradingEnabled ?? false,
+    isAutoSnipingActive:
+      settingsStatus?.executionSettings?.autoSnipingEnabled ?? false,
   };
 }
 
@@ -226,7 +230,8 @@ export function useTradingSettingsSync(userId?: string) {
  * Hook for monitoring settings synchronization status
  */
 export function useTradingSettingsSyncMonitor(userId?: string) {
-  const { settingsStatus, syncHealth, autoSyncEnabled } = useTradingSettingsSync(userId);
+  const { settingsStatus, syncHealth, autoSyncEnabled } =
+    useTradingSettingsSync(userId);
 
   const syncMetrics = {
     // Sync status
@@ -248,7 +253,9 @@ export function useTradingSettingsSyncMonitor(userId?: string) {
 
     // Auto-sync status
     autoSyncEnabled,
-    nextSyncEstimate: autoSyncEnabled ? new Date(Date.now() + 10000).toISOString() : null,
+    nextSyncEstimate: autoSyncEnabled
+      ? new Date(Date.now() + 10000).toISOString()
+      : null,
   };
 
   return {
@@ -262,7 +269,8 @@ export function useTradingSettingsSyncMonitor(userId?: string) {
  * Hook for bulk settings operations
  */
 export function useBulkTradingSettings(userId?: string) {
-  const { updateExecutionSettings, syncToExecutionSystem } = useTradingSettingsSync(userId);
+  const { updateExecutionSettings, syncToExecutionSystem } =
+    useTradingSettingsSync(userId);
 
   const applyTradingProfile = useCallback(
     async (profileName: "conservative" | "balanced" | "aggressive") => {

@@ -39,7 +39,9 @@ export const SnipeTargetSchema = z.object({
   launchTime: z.date(),
   discoveredAt: z.date(),
   hoursAdvanceNotice: z.number(),
-  orderParameters: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+  orderParameters: z
+    .record(z.union([z.string(), z.number(), z.boolean()]))
+    .optional(),
   confidence: z.number().optional(),
 });
 
@@ -120,7 +122,14 @@ export const OrderResultSchema = z.object({
 export const OrderStatusSchema = z.object({
   orderId: z.string(),
   symbol: z.string(),
-  status: z.enum(["NEW", "PARTIALLY_FILLED", "FILLED", "CANCELED", "REJECTED", "EXPIRED"]),
+  status: z.enum([
+    "NEW",
+    "PARTIALLY_FILLED",
+    "FILLED",
+    "CANCELED",
+    "REJECTED",
+    "EXPIRED",
+  ]),
   side: z.enum(["BUY", "SELL"]),
   type: z.enum(["LIMIT", "MARKET", "STOP_LOSS", "STOP_LOSS_LIMIT"]),
   quantity: z.string(),
@@ -281,7 +290,9 @@ export type OrderResult = z.infer<typeof OrderResultSchema>;
 export type OrderStatus = z.infer<typeof OrderStatusSchema>;
 export type OrderBook = z.infer<typeof OrderBookSchema>;
 export type Kline = z.infer<typeof KlineSchema>;
-export type MexcServiceResponse<T = unknown> = z.infer<typeof MexcServiceResponseSchema> & {
+export type MexcServiceResponse<T = unknown> = z.infer<
+  typeof MexcServiceResponseSchema
+> & {
   data?: T;
 };
 
@@ -325,7 +336,9 @@ export const validateActivityResponse = (data: unknown): ActivityResponse => {
   return ActivityResponseSchema.parse(data);
 };
 
-export const validateActivityEnhancement = (data: unknown): ActivityEnhancement => {
+export const validateActivityEnhancement = (
+  data: unknown
+): ActivityEnhancement => {
   return ActivityEnhancementSchema.parse(data);
 };
 
@@ -351,7 +364,8 @@ export const validateMexcData = <T>(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown validation error",
+      error:
+        error instanceof Error ? error.message : "Unknown validation error",
     };
   }
 };
@@ -389,7 +403,9 @@ export const calculateActivityBoost = (activities: ActivityData[]): number => {
 
   const maxBoost = Math.max(
     ...activities.map(
-      (activity) => activityScores[activity.activityType as keyof typeof activityScores] || 5
+      (activity) =>
+        activityScores[activity.activityType as keyof typeof activityScores] ||
+        5
     )
   );
 
@@ -398,11 +414,17 @@ export const calculateActivityBoost = (activities: ActivityData[]): number => {
   return Math.min(maxBoost + multipleActivitiesBonus, 20);
 };
 
-export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => {
+export const hasHighPriorityActivity = (
+  activities: ActivityData[]
+): boolean => {
   const highPriorityTypes = ["LAUNCH_EVENT", "LISTING_EVENT", "SUN_SHINE"];
-  return activities.some((activity) => highPriorityTypes.includes(activity.activityType));
+  return activities.some((activity) =>
+    highPriorityTypes.includes(activity.activityType)
+  );
 };
 
-export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => {
+export const getUniqueActivityTypes = (
+  activities: ActivityData[]
+): string[] => {
   return [...new Set(activities.map((activity) => activity.activityType))];
 };

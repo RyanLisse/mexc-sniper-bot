@@ -1,6 +1,6 @@
 /**
  * Emergency Management Types and Interfaces
- * 
+ *
  * Core type definitions for the advanced emergency management system.
  * Extracted from advanced-emergency-coordinator.ts for better maintainability.
  */
@@ -227,9 +227,9 @@ export interface CoordinatorMetrics {
   protocolCoverage: number;
 }
 
-export type EmergencyEventType = 
+export type EmergencyEventType =
   | "protocol_activated"
-  | "level_escalated" 
+  | "level_escalated"
   | "level_deescalated"
   | "action_executed"
   | "action_failed"

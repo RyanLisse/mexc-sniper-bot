@@ -61,12 +61,18 @@ const ActivityListItem = memo(({ activity }: { activity: ActivityItem }) => {
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center space-x-2 mb-1">
-          <p className="text-sm font-medium text-gray-900 truncate">{activity.message}</p>
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.badgeColor}`}>
+          <p className="text-sm font-medium text-gray-900 truncate">
+            {activity.message}
+          </p>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full font-medium ${config.badgeColor}`}
+          >
             {activity.type}
           </span>
         </div>
-        <p className="text-xs text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
+        <p className="text-xs text-gray-500">
+          {formatTimeAgo(activity.timestamp)}
+        </p>
       </div>
       <div className="flex-shrink-0">
         <Icon className={`h-4 w-4 ${config.iconColor}`} />
@@ -100,7 +106,9 @@ const EmptyState = memo(() => (
   <div className="text-center text-gray-500 py-8">
     <Activity className="h-12 w-12 mx-auto mb-3 opacity-30" />
     <p className="text-sm font-medium">No recent activity</p>
-    <p className="text-xs text-gray-400 mt-1">Start discovery to see live updates</p>
+    <p className="text-xs text-gray-400 mt-1">
+      Start discovery to see live updates
+    </p>
   </div>
 ));
 EmptyState.displayName = "EmptyState";
@@ -128,7 +136,8 @@ export const OptimizedActivityFeed = memo(
     const sortedActivities = useMemo(
       () =>
         [...activities].sort(
-          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         ),
       [activities]
     );

@@ -1,5 +1,12 @@
-import type { SelectAlertInstance, SelectNotificationChannel } from "@/src/db/schemas/alerts";
-import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
+import type {
+  SelectAlertInstance,
+  SelectNotificationChannel,
+} from "@/src/db/schemas/alerts";
+import type {
+  NotificationMessage,
+  NotificationProvider,
+  NotificationResult,
+} from "./index";
 
 interface SMSConfig {
   provider: "twilio" | "aws_sns" | "nexmo" | "messagebird";
@@ -31,7 +38,12 @@ export class SMSProvider implements NotificationProvider {
           warn: (message: string, context?: any) =>
             console.warn("[sms-provider]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[sms-provider]", message, context || "", error || ""),
+            console.error(
+              "[sms-provider]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[sms-provider]", message, context || ""),
         };
@@ -108,7 +120,11 @@ export class SMSProvider implements NotificationProvider {
     try {
       const config = JSON.parse(channel.config) as SMSConfig;
 
-      const smsText = this.formatSMSMessage(message, alert, config.maxMessageLength || 160);
+      const smsText = this.formatSMSMessage(
+        message,
+        alert,
+        config.maxMessageLength || 160
+      );
 
       switch (config.provider) {
         case "twilio":
@@ -169,7 +185,10 @@ export class SMSProvider implements NotificationProvider {
     return text;
   }
 
-  private async sendViaTwilio(config: SMSConfig, message: string): Promise<NotificationResult> {
+  private async sendViaTwilio(
+    config: SMSConfig,
+    message: string
+  ): Promise<NotificationResult> {
     // In production, you would use the Twilio SDK
     // For now, we'll simulate the Twilio API call
 
@@ -203,7 +222,10 @@ export class SMSProvider implements NotificationProvider {
     };
   }
 
-  private async sendViaAWSSNS(config: SMSConfig, message: string): Promise<NotificationResult> {
+  private async sendViaAWSSNS(
+    config: SMSConfig,
+    message: string
+  ): Promise<NotificationResult> {
     // In production, you would use the AWS SDK
     // For now, we'll simulate the AWS SNS API call
 
@@ -240,7 +262,10 @@ export class SMSProvider implements NotificationProvider {
     };
   }
 
-  private async sendViaNexmo(config: SMSConfig, message: string): Promise<NotificationResult> {
+  private async sendViaNexmo(
+    config: SMSConfig,
+    message: string
+  ): Promise<NotificationResult> {
     // In production, you would use the Vonage/Nexmo SDK
     // For now, we'll simulate the Nexmo API call
 

@@ -17,8 +17,8 @@ interface AutoSnipingStatus {
   isHealthy: boolean;
 }
 
-export function SimpleAutoSnipingControl({ 
-  className 
+export function SimpleAutoSnipingControl({
+  className,
 }: SimpleAutoSnipingControlProps) {
   const [status, setStatus] = useState<AutoSnipingStatus>({
     isActive: false,
@@ -34,7 +34,7 @@ export function SimpleAutoSnipingControl({
     try {
       const response = await fetch("/api/auto-sniping/control");
       const result = await response.json();
-      
+
       if (result.success) {
         setStatus({
           isActive: result.data.status.autoSnipingEnabled || false,
@@ -75,12 +75,12 @@ export function SimpleAutoSnipingControl({
 
       if (result.success) {
         // Update status based on action
-        setStatus(prev => ({
+        setStatus((prev) => ({
           ...prev,
           isActive: action === "start",
           autoSnipingEnabled: action === "start",
         }));
-        
+
         // Refresh full status after a short delay
         setTimeout(fetchStatus, 1000);
       } else {
@@ -104,22 +104,22 @@ export function SimpleAutoSnipingControl({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           action: "emergency_stop",
-          reason: "User requested emergency stop" 
+          reason: "User requested emergency stop",
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        setStatus(prev => ({
+        setStatus((prev) => ({
           ...prev,
           isActive: false,
           autoSnipingEnabled: false,
           activePositions: 0,
         }));
-        
+
         // Refresh status
         setTimeout(fetchStatus, 1000);
       } else {
@@ -144,7 +144,9 @@ export function SimpleAutoSnipingControl({
               onClick={fetchStatus}
               disabled={isLoading}
             >
-              <Loader2 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <Loader2
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
           </CardTitle>
         </CardHeader>
@@ -178,7 +180,7 @@ export function SimpleAutoSnipingControl({
 
             {/* Controls */}
             <div className="flex gap-2">
-              <Button 
+              <Button
                 onClick={toggleAutoSniping}
                 disabled={isLoading}
                 variant={status.isActive ? "destructive" : "default"}
@@ -193,9 +195,9 @@ export function SimpleAutoSnipingControl({
                 )}
                 {status.isActive ? "Stop" : "Start"}
               </Button>
-              
+
               {status.isActive && (
-                <Button 
+                <Button
                   onClick={emergencyStop}
                   disabled={isLoading}
                   variant="destructive"
@@ -209,7 +211,10 @@ export function SimpleAutoSnipingControl({
             {/* Status Info */}
             <div className="text-xs text-gray-500 space-y-1">
               <div>System Health: {status.isHealthy ? "Good" : "Poor"}</div>
-              <div>Auto-Sniping: {status.autoSnipingEnabled ? "Enabled" : "Disabled"}</div>
+              <div>
+                Auto-Sniping:{" "}
+                {status.autoSnipingEnabled ? "Enabled" : "Disabled"}
+              </div>
               <div>Active Positions: {status.activePositions}</div>
             </div>
           </div>

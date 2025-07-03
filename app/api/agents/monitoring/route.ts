@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { createLogger } from "@/src/lib/unified-logger";
 import { AgentMonitoringService } from "@/src/services/notification/agent-monitoring-service";
 
@@ -8,11 +8,11 @@ export const dynamic = "force-dynamic";
 // Get monitoring status and alerts
 export async function GET(request: NextRequest) {
   // Get logger from unified logger system
-  const logger = createLogger("agents-monitoring", {
+  const _logger = createLogger("agents-monitoring", {
     enableStructuredLogging: process.env.NODE_ENV === "production",
     enablePerformanceLogging: true,
   });
-  
+
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get("action");
@@ -23,18 +23,19 @@ export async function GET(request: NextRequest) {
     const monitoringService = AgentMonitoringService.getInstance();
 
     switch (action) {
-      case "alerts":
+      case "alerts": {
         const alerts = monitoringService.getAlerts(includeResolved);
         return NextResponse.json({
           success: true,
           data: {
             alerts,
             totalAlerts: alerts.length,
-            unresolvedAlerts: alerts.filter(a => !a.resolved).length,
+            unresolvedAlerts: alerts.filter((a) => !a.resolved).length,
           },
         });
+      }
 
-      case "reports":
+      case "reports": {
         const reports = monitoringService.getReports(limit);
         return NextResponse.json({
           success: true,
@@ -44,22 +45,25 @@ export async function GET(request: NextRequest) {
             latestReport: reports[reports.length - 1] || null,
           },
         });
+      }
 
-      case "stats":
+      case "stats": {
         const stats = monitoringService.getStats();
         return NextResponse.json({
           success: true,
           data: stats,
         });
+      }
 
-      case "config":
+      case "config": {
         const config = monitoringService.getConfig();
         return NextResponse.json({
           success: true,
           data: config,
         });
+      }
 
-      default:
+      default: {
         // Default: return comprehensive monitoring overview
         const overview = {
           stats: monitoringService.getStats(),
@@ -72,15 +76,15 @@ export async function GET(request: NextRequest) {
           success: true,
           data: overview,
         });
+      }
     }
-
   } catch (error) {
     console.error("[API] Monitoring service request failed:", { error: error });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to retrieve monitoring data",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -94,13 +98,16 @@ export async function POST(request: NextRequest) {
     enableStructuredLogging: process.env.NODE_ENV === "production",
     enablePerformanceLogging: true,
   });
-  
+
   try {
     const body = await request.json();
     const { action, ...params } = body;
 
     // Inject logger into service instance
-    const monitoringService = AgentMonitoringService.getInstance(undefined, logger);
+    const monitoringService = AgentMonitoringService.getInstance(
+      undefined,
+      logger
+    );
 
     switch (action) {
       case "start":
@@ -119,7 +126,7 @@ export async function POST(request: NextRequest) {
           timestamp: new Date(),
         });
 
-      case "resolve_alert":
+      case "resolve_alert": {
         const { alertId } = params;
         if (!alertId) {
           return NextResponse.json(
@@ -131,12 +138,15 @@ export async function POST(request: NextRequest) {
         const resolved = monitoringService.resolveAlert(alertId);
         return NextResponse.json({
           success: resolved,
-          message: resolved ? "Alert resolved successfully" : "Alert not found or already resolved",
+          message: resolved
+            ? "Alert resolved successfully"
+            : "Alert not found or already resolved",
           alertId,
           timestamp: new Date(),
         });
+      }
 
-      case "generate_report":
+      case "generate_report": {
         // Force generation of a new report
         const report = await monitoringService.generateReport();
         return NextResponse.json({
@@ -144,6 +154,7 @@ export async function POST(request: NextRequest) {
           data: report,
           message: "Report generated successfully",
         });
+      }
 
       default:
         return NextResponse.json(
@@ -151,14 +162,13 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
     }
-
   } catch (error) {
     console.error("[API] Monitoring service action failed:", { error: error });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to execute monitoring action",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -180,14 +190,15 @@ export async function PATCH(request: NextRequest) {
       config: monitoringService.getConfig(),
       timestamp: new Date(),
     });
-
   } catch (error) {
-    console.error("[API] Monitoring configuration update failed:", { error: error });
+    console.error("[API] Monitoring configuration update failed:", {
+      error: error,
+    });
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: "Failed to update monitoring configuration",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

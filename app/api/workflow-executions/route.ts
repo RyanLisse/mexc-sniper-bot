@@ -1,7 +1,7 @@
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import { and, desc, eq } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { workflowActivity } from "@/src/db/schema";
+import { workflowActivity } from "@/src/db/schemas/workflows";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     // Build query conditions
     const conditions = [
       eq(workflowActivity.userId, userId),
-      eq(workflowActivity.workflowId, workflowId)
+      eq(workflowActivity.workflowId, workflowId),
     ];
 
     // Map status filter to activity levels
@@ -56,10 +56,13 @@ export async function GET(request: NextRequest) {
     const executions = activities.map((activity: any) => {
       const startTime = activity.timestamp.toISOString();
       const status = mapActivityLevelToStatus(activity.level);
-      
+
       // Calculate duration for completed executions (mock for now, can be enhanced)
-      const duration = status !== "running" ? Math.floor(Math.random() * 20000) + 5000 : undefined;
-      
+      const duration =
+        status !== "running"
+          ? Math.floor(Math.random() * 20000) + 5000
+          : undefined;
+
       return {
         id: activity.activityId,
         workflowId: activity.workflowId || workflowId,
@@ -67,30 +70,41 @@ export async function GET(request: NextRequest) {
         startTime,
         duration,
         error: activity.level === "error" ? activity.message : undefined,
-        result: activity.level === "success" ? {
-          message: activity.message,
-          symbolName: activity.symbolName,
-          vcoinId: activity.vcoinId,
-        } : undefined,
+        result:
+          activity.level === "success"
+            ? {
+                message: activity.message,
+                symbolName: activity.symbolName,
+                vcoinId: activity.vcoinId,
+              }
+            : undefined,
         metadata: {
           type: activity.type,
           message: activity.message,
           symbolName: activity.symbolName,
           vcoinId: activity.vcoinId,
           level: activity.level,
-        }
+        },
       };
     });
 
     // Calculate execution statistics
     const totalExecutions = executions.length;
-    const successfulExecutions = executions.filter((e: any) => e.status === "success").length;
-    const failedExecutions = executions.filter((e: any) => e.status === "failed").length;
-    const runningExecutions = executions.filter((e: any) => e.status === "running").length;
-    
-    const avgDuration = executions
-      .filter((e: any) => e.duration)
-      .reduce((sum: number, e: any) => sum + (e.duration || 0), 0) / Math.max(1, executions.filter((e: any) => e.duration).length);
+    const successfulExecutions = executions.filter(
+      (e: any) => e.status === "success"
+    ).length;
+    const failedExecutions = executions.filter(
+      (e: any) => e.status === "failed"
+    ).length;
+    const runningExecutions = executions.filter(
+      (e: any) => e.status === "running"
+    ).length;
+
+    const avgDuration =
+      executions
+        .filter((e: any) => e.duration)
+        .reduce((sum: number, e: any) => sum + (e.duration || 0), 0) /
+      Math.max(1, executions.filter((e: any) => e.duration).length);
 
     const response = {
       executions,
@@ -105,9 +119,12 @@ export async function GET(request: NextRequest) {
         successfulExecutions,
         failedExecutions,
         runningExecutions,
-        successRate: totalExecutions > 0 ? (successfulExecutions / totalExecutions) * 100 : 0,
+        successRate:
+          totalExecutions > 0
+            ? (successfulExecutions / totalExecutions) * 100
+            : 0,
         averageDuration: Math.round(avgDuration),
-      }
+      },
     };
 
     return NextResponse.json({
@@ -127,14 +144,14 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper function to map activity levels to execution status
-function mapActivityLevelToStatus(level: string): "success" | "failed" | "running" {
+function mapActivityLevelToStatus(
+  level: string
+): "success" | "failed" | "running" {
   switch (level) {
     case "success":
       return "success";
     case "error":
       return "failed";
-    case "warning":
-    case "info":
     default:
       return "running";
   }
@@ -143,7 +160,15 @@ function mapActivityLevelToStatus(level: string): "success" | "failed" | "runnin
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { workflowId, type, message, level = "info", symbolName, vcoinId, userId = "default" } = body;
+    const {
+      workflowId,
+      type,
+      message,
+      level = "info",
+      symbolName,
+      vcoinId,
+      userId = "default",
+    } = body;
 
     if (!workflowId || !type || !message) {
       return NextResponse.json(
@@ -177,7 +202,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         activity: newActivity[0],
-        message: "Workflow execution logged successfully"
+        message: "Workflow execution logged successfully",
       },
     });
   } catch (error) {

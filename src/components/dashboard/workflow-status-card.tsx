@@ -1,6 +1,14 @@
 "use client";
 
-import { Activity, AlertTriangle, Bot, Loader2, Pause, Play, RefreshCw } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Bot,
+  Loader2,
+  Pause,
+  Play,
+  RefreshCw,
+} from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -88,8 +96,15 @@ export function WorkflowStatusCard({
             <CardTitle className="text-lg">System Status</CardTitle>
           </div>
           <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              disabled={isLoading}
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
             </Button>
             <Button
               variant={isDiscoveryRunning ? "destructive" : "default"}
@@ -120,7 +135,9 @@ export function WorkflowStatusCard({
           <span className="text-sm font-medium">Discovery System:</span>
           <Badge
             variant="secondary"
-            className={getStatusColor(workflowStatus?.systemStatus || "stopped")}
+            className={getStatusColor(
+              workflowStatus?.systemStatus || "stopped"
+            )}
           >
             {workflowStatus?.systemStatus || "Unknown"}
           </Badge>
@@ -143,29 +160,31 @@ export function WorkflowStatusCard({
         </div>
 
         {/* Active Workflows */}
-        {workflowStatus?.activeWorkflows && workflowStatus.activeWorkflows.length > 0 && (
-          <div>
-            <span className="text-sm font-medium">Active Workflows:</span>
-            <div className="mt-1 space-y-1">
-              {workflowStatus.activeWorkflows.map((workflow) => (
-                <Badge
-                  key={`workflow-${workflow}-${Date.now()}`}
-                  variant="outline"
-                  className="text-xs mr-1"
-                >
-                  {workflow}
-                </Badge>
-              ))}
+        {workflowStatus?.activeWorkflows &&
+          workflowStatus.activeWorkflows.length > 0 && (
+            <div>
+              <span className="text-sm font-medium">Active Workflows:</span>
+              <div className="mt-1 space-y-1">
+                {workflowStatus.activeWorkflows.map((workflow) => (
+                  <Badge
+                    key={`workflow-${workflow}-${Date.now()}`}
+                    variant="outline"
+                    className="text-xs mr-1"
+                  >
+                    {workflow}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Last Update */}
         <div className="text-xs text-gray-500">
           Last refresh: {lastRefresh.toLocaleTimeString()}
           {workflowStatus?.lastUpdate && (
             <span className="block">
-              System update: {new Date(workflowStatus.lastUpdate).toLocaleTimeString()}
+              System update:{" "}
+              {new Date(workflowStatus.lastUpdate).toLocaleTimeString()}
             </span>
           )}
         </div>

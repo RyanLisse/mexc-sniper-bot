@@ -6,10 +6,27 @@
  */
 
 import { memo, useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { createTooltipFormatter, generateListKey } from "../../lib/react-utilities";
+import {
+  createTooltipFormatter,
+  generateListKey,
+} from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
 
 export const PatternsTab = memo(function PatternsTab({
@@ -56,25 +73,40 @@ export const PatternsTab = memo(function PatternsTab({
         <Card>
           <CardHeader>
             <CardTitle>Advance Detection Metrics</CardTitle>
-            <CardDescription>3.5+ hour advance detection performance</CardDescription>
+            <CardDescription>
+              3.5+ hour advance detection performance
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">
-                  {data.patternAnalytics.advanceDetectionMetrics.averageAdvanceTime.toFixed(1)}h
+                  {data.patternAnalytics.advanceDetectionMetrics.averageAdvanceTime.toFixed(
+                    1
+                  )}
+                  h
                 </div>
-                <p className="text-xs text-muted-foreground">Avg Advance Time</p>
+                <p className="text-xs text-muted-foreground">
+                  Avg Advance Time
+                </p>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">
-                  {data.patternAnalytics.advanceDetectionMetrics.optimalDetections}
+                  {
+                    data.patternAnalytics.advanceDetectionMetrics
+                      .optimalDetections
+                  }
                 </div>
-                <p className="text-xs text-muted-foreground">Optimal Detections</p>
+                <p className="text-xs text-muted-foreground">
+                  Optimal Detections
+                </p>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(1)}%
+                  {data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(
+                    1
+                  )}
+                  %
                 </div>
                 <p className="text-xs text-muted-foreground">Accuracy</p>
               </div>
@@ -85,16 +117,26 @@ export const PatternsTab = memo(function PatternsTab({
                 <div className="flex justify-between text-sm mb-1">
                   <span>Detection Accuracy</span>
                   <span>
-                    {data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(1)}%
+                    {data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy.toFixed(
+                      1
+                    )}
+                    %
                   </span>
                 </div>
-                <Progress value={data.patternAnalytics.advanceDetectionMetrics.detectionAccuracy} />
+                <Progress
+                  value={
+                    data.patternAnalytics.advanceDetectionMetrics
+                      .detectionAccuracy
+                  }
+                />
               </div>
 
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Pattern Confidence</span>
-                  <span>{data.patternAnalytics.averageConfidence.toFixed(1)}%</span>
+                  <span>
+                    {data.patternAnalytics.averageConfidence.toFixed(1)}%
+                  </span>
                 </div>
                 <Progress value={data.patternAnalytics.averageConfidence} />
               </div>
@@ -102,7 +144,9 @@ export const PatternsTab = memo(function PatternsTab({
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Ready State Patterns</span>
-                  <span>{data.patternAnalytics.readyStatePatterns} detected</span>
+                  <span>
+                    {data.patternAnalytics.readyStatePatterns} detected
+                  </span>
                 </div>
                 <Progress
                   value={
@@ -130,13 +174,19 @@ export const PatternsTab = memo(function PatternsTab({
                 key={generateListKey(type, index, "type")}
                 className="text-center p-4 rounded-lg border"
               >
-                <div className="text-2xl font-bold text-blue-600">{type.count}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {type.count}
+                </div>
                 <p className="text-sm text-muted-foreground capitalize">
                   {type.type.replace(/[-_]/g, " ")}
                 </p>
                 <div className="mt-2">
                   <Progress
-                    value={(type.count / data.patternAnalytics.totalPatternsDetected) * 100}
+                    value={
+                      (type.count /
+                        data.patternAnalytics.totalPatternsDetected) *
+                      100
+                    }
                     className="h-2"
                   />
                 </div>
@@ -158,13 +208,17 @@ export const PatternsTab = memo(function PatternsTab({
               <div className="text-3xl font-bold text-blue-600">
                 {data.patternAnalytics.totalPatternsDetected}
               </div>
-              <p className="text-sm text-muted-foreground">Total Patterns Detected</p>
+              <p className="text-sm text-muted-foreground">
+                Total Patterns Detected
+              </p>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">
                 {data.patternAnalytics.successfulPatterns}
               </div>
-              <p className="text-sm text-muted-foreground">Successful Patterns</p>
+              <p className="text-sm text-muted-foreground">
+                Successful Patterns
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -179,9 +233,14 @@ export const PatternsTab = memo(function PatternsTab({
               <div className="text-3xl font-bold text-green-600">
                 {data.patternAnalytics.patternSuccessRate.toFixed(1)}%
               </div>
-              <p className="text-sm text-muted-foreground">Overall Success Rate</p>
+              <p className="text-sm text-muted-foreground">
+                Overall Success Rate
+              </p>
             </div>
-            <Progress value={data.patternAnalytics.patternSuccessRate} className="h-4" />
+            <Progress
+              value={data.patternAnalytics.patternSuccessRate}
+              className="h-4"
+            />
           </CardContent>
         </Card>
 
@@ -195,9 +254,14 @@ export const PatternsTab = memo(function PatternsTab({
               <div className="text-3xl font-bold text-blue-600">
                 {data.patternAnalytics.averageConfidence.toFixed(1)}%
               </div>
-              <p className="text-sm text-muted-foreground">Average Confidence</p>
+              <p className="text-sm text-muted-foreground">
+                Average Confidence
+              </p>
             </div>
-            <Progress value={data.patternAnalytics.averageConfidence} className="h-4" />
+            <Progress
+              value={data.patternAnalytics.averageConfidence}
+              className="h-4"
+            />
           </CardContent>
         </Card>
       </div>

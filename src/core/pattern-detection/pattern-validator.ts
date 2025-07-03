@@ -11,8 +11,15 @@
  * - Extensible validation rules
  */
 
-import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
-import type { IPatternValidator, PatternAnalysisRequest, PatternMatch } from "./interfaces";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "../../services/api/mexc-unified-exports";
+import type {
+  IPatternValidator,
+  PatternAnalysisRequest,
+  PatternMatch,
+} from "./interfaces";
 
 /**
  * Pattern Validator Implementation
@@ -65,7 +72,9 @@ export class PatternValidator implements IPatternValidator {
       }
 
       if (typeof symbol.sts !== "number") {
-        errors.push("Symbol trading status (sts) is required and must be a number");
+        errors.push(
+          "Symbol trading status (sts) is required and must be a number"
+        );
       }
 
       if (typeof symbol.st !== "number") {
@@ -77,7 +86,10 @@ export class PatternValidator implements IPatternValidator {
       }
 
       // Value range validation
-      if (typeof symbol.sts === "number" && (symbol.sts < 0 || symbol.sts > 5)) {
+      if (
+        typeof symbol.sts === "number" &&
+        (symbol.sts < 0 || symbol.sts > 5)
+      ) {
         warnings.push("Symbol trading status (sts) outside normal range (0-5)");
       }
 
@@ -90,16 +102,31 @@ export class PatternValidator implements IPatternValidator {
       }
 
       // Optional fields validation
-      if (symbol.ca !== undefined && (typeof symbol.ca !== "number" || symbol.ca < 0)) {
-        warnings.push("Currency amount (ca) should be a positive number if provided");
+      if (
+        symbol.ca !== undefined &&
+        (typeof symbol.ca !== "number" || symbol.ca < 0)
+      ) {
+        warnings.push(
+          "Currency amount (ca) should be a positive number if provided"
+        );
       }
 
-      if (symbol.ps !== undefined && (typeof symbol.ps !== "number" || symbol.ps < 0)) {
-        warnings.push("Price scale (ps) should be a positive number if provided");
+      if (
+        symbol.ps !== undefined &&
+        (typeof symbol.ps !== "number" || symbol.ps < 0)
+      ) {
+        warnings.push(
+          "Price scale (ps) should be a positive number if provided"
+        );
       }
 
-      if (symbol.qs !== undefined && (typeof symbol.qs !== "number" || symbol.qs < 0)) {
-        warnings.push("Quantity scale (qs) should be a positive number if provided");
+      if (
+        symbol.qs !== undefined &&
+        (typeof symbol.qs !== "number" || symbol.qs < 0)
+      ) {
+        warnings.push(
+          "Quantity scale (qs) should be a positive number if provided"
+        );
       }
 
       // Symbol code format validation
@@ -115,7 +142,8 @@ export class PatternValidator implements IPatternValidator {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown validation error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown validation error";
       errors.push(`Validation error: ${errorMessage}`);
     }
 
@@ -184,7 +212,8 @@ export class PatternValidator implements IPatternValidator {
 
       if (
         entry.projectName !== undefined &&
-        (typeof entry.projectName !== "string" || entry.projectName.length === 0)
+        (typeof entry.projectName !== "string" ||
+          entry.projectName.length === 0)
       ) {
         warnings.push("Project name should be a non-empty string if provided");
       }
@@ -199,7 +228,8 @@ export class PatternValidator implements IPatternValidator {
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown validation error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown validation error";
       errors.push(`Validation error: ${errorMessage}`);
     }
 
@@ -248,15 +278,22 @@ export class PatternValidator implements IPatternValidator {
         errors.push("Advance notice hours is required and must be a number");
       }
 
-      if (!match.riskLevel || !["low", "medium", "high"].includes(match.riskLevel)) {
+      if (
+        !match.riskLevel ||
+        !["low", "medium", "high"].includes(match.riskLevel)
+      ) {
         errors.push("Risk level must be one of: low, medium, high");
       }
 
       if (
         !match.recommendation ||
-        !["immediate_action", "monitor_closely", "prepare_entry", "wait", "avoid"].includes(
-          match.recommendation
-        )
+        ![
+          "immediate_action",
+          "monitor_closely",
+          "prepare_entry",
+          "wait",
+          "avoid",
+        ].includes(match.recommendation)
       ) {
         errors.push(
           "Recommendation must be one of: immediate_action, monitor_closely, prepare_entry, wait, avoid"
@@ -276,13 +313,20 @@ export class PatternValidator implements IPatternValidator {
         }
         if (match.advanceNoticeHours > 8760) {
           // 1 year in hours
-          warnings.push("Advance notice hours seems unusually high (over 1 year)");
+          warnings.push(
+            "Advance notice hours seems unusually high (over 1 year)"
+          );
         }
       }
 
       // Pattern type validation
       if (match.patternType && typeof match.patternType === "string") {
-        const validTypes = ["ready_state", "pre_ready", "launch_sequence", "risk_warning"];
+        const validTypes = [
+          "ready_state",
+          "pre_ready",
+          "launch_sequence",
+          "risk_warning",
+        ];
         if (!validTypes.includes(match.patternType)) {
           warnings.push(`Unknown pattern type: ${match.patternType}`);
         }
@@ -290,13 +334,22 @@ export class PatternValidator implements IPatternValidator {
 
       // Indicators validation
       if (match.indicators) {
-        if (match.indicators.sts !== undefined && typeof match.indicators.sts !== "number") {
+        if (
+          match.indicators.sts !== undefined &&
+          typeof match.indicators.sts !== "number"
+        ) {
           warnings.push("Indicator sts should be a number if provided");
         }
-        if (match.indicators.st !== undefined && typeof match.indicators.st !== "number") {
+        if (
+          match.indicators.st !== undefined &&
+          typeof match.indicators.st !== "number"
+        ) {
           warnings.push("Indicator st should be a number if provided");
         }
-        if (match.indicators.tt !== undefined && typeof match.indicators.tt !== "number") {
+        if (
+          match.indicators.tt !== undefined &&
+          typeof match.indicators.tt !== "number"
+        ) {
           warnings.push("Indicator tt should be a number if provided");
         }
       }
@@ -308,11 +361,14 @@ export class PatternValidator implements IPatternValidator {
           match.historicalSuccess < 0 ||
           match.historicalSuccess > 100
         ) {
-          warnings.push("Historical success should be a percentage between 0 and 100");
+          warnings.push(
+            "Historical success should be a percentage between 0 and 100"
+          );
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown validation error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown validation error";
       errors.push(`Validation error: ${errorMessage}`);
     }
 
@@ -347,7 +403,12 @@ export class PatternValidator implements IPatternValidator {
 
       // Analysis type validation
       if (request.analysisType && typeof request.analysisType === "string") {
-        const validTypes = ["discovery", "monitoring", "validation", "correlation"];
+        const validTypes = [
+          "discovery",
+          "monitoring",
+          "validation",
+          "correlation",
+        ];
         if (!validTypes.includes(request.analysisType)) {
           errors.push(
             `Invalid analysis type: ${request.analysisType}. Must be one of: ${validTypes.join(", ")}`
@@ -375,11 +436,16 @@ export class PatternValidator implements IPatternValidator {
           request.confidenceThreshold < 0 ||
           request.confidenceThreshold > 100
         ) {
-          errors.push("Confidence threshold must be a number between 0 and 100");
+          errors.push(
+            "Confidence threshold must be a number between 0 and 100"
+          );
         }
       }
 
-      if (request.timeframe !== undefined && typeof request.timeframe !== "string") {
+      if (
+        request.timeframe !== undefined &&
+        typeof request.timeframe !== "string"
+      ) {
         warnings.push("Timeframe should be a string if provided");
       }
 
@@ -405,11 +471,14 @@ export class PatternValidator implements IPatternValidator {
           warnings.push("Calendar entries array is empty");
         }
         if (request.calendarEntries.length > 500) {
-          warnings.push("Large number of calendar entries may impact performance");
+          warnings.push(
+            "Large number of calendar entries may impact performance"
+          );
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown validation error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown validation error";
       errors.push(`Validation error: ${errorMessage}`);
     }
 

@@ -14,7 +14,11 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { db, executeWithRetry, monitoredQuery } from "@/src/db";
-import { patternEmbeddings, snipeTargets, userPreferences } from "@/src/db/schema";
+import {
+  patternEmbeddings,
+  snipeTargets,
+  userPreferences,
+} from "@/src/db/schema";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 // ============================================================================
@@ -23,7 +27,12 @@ import { toSafeError } from "@/src/lib/error-type-utils";
 
 const PatternBatchSchema = z.object({
   symbol: z.string(),
-  patternType: z.enum(["ready_state", "pre_ready", "launch_sequence", "price_action"]),
+  patternType: z.enum([
+    "ready_state",
+    "pre_ready",
+    "launch_sequence",
+    "price_action",
+  ]),
   userId: z.string(),
   confidence: z.number().min(0).max(100).optional(),
   vcoinId: z.string().optional(),
@@ -32,7 +41,12 @@ const PatternBatchSchema = z.object({
 
 const BulkPatternSchema = z.object({
   symbol: z.string(),
-  patternType: z.enum(["ready_state", "pre_ready", "launch_sequence", "price_action"]),
+  patternType: z.enum([
+    "ready_state",
+    "pre_ready",
+    "launch_sequence",
+    "price_action",
+  ]),
   confidence: z.number().min(0).max(100),
   embedding: z.array(z.number()),
   metadata: z.record(z.any()).optional(),
@@ -68,7 +82,12 @@ export class OptimizedPatternService {
     warn: (message: string, context?: any) =>
       console.warn("[optimized-pattern-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[optimized-pattern-service]", message, context || "", error || ""),
+      console.error(
+        "[optimized-pattern-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[optimized-pattern-service]", message, context || ""),
   };
@@ -126,7 +145,9 @@ export class OptimizedPatternService {
    * OPTIMIZATION: Batch fetch user preferences instead of individual queries
    * Eliminates N+1 pattern: 1 query per user → 1 query for all users
    */
-  private async batchFetchUserPreferences(patterns: PatternBatch[]): Promise<UserPreferenceCache> {
+  private async batchFetchUserPreferences(
+    patterns: PatternBatch[]
+  ): Promise<UserPreferenceCache> {
     const uniqueUserIds = [...new Set(patterns.map((p) => p.userId))];
 
     // Check cache first
@@ -209,7 +230,9 @@ export class OptimizedPatternService {
    * OPTIMIZATION: Batch check for duplicate snipe targets
    * Eliminates N+1 pattern: 1 query per pattern → 1 query for all patterns
    */
-  private async batchCheckDuplicates(patterns: PatternBatch[]): Promise<PatternBatch[]> {
+  private async batchCheckDuplicates(
+    patterns: PatternBatch[]
+  ): Promise<PatternBatch[]> {
     if (patterns.length === 0) return [];
 
     const userIds = [...new Set(patterns.map((p) => p.userId))];
@@ -245,7 +268,9 @@ export class OptimizedPatternService {
 
     // Create lookup set for O(1) duplicate checking
     const existingCombinations = new Set(
-      existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
+      existingTargets.map(
+        (target: any) => `${target.userId}:${target.symbolName}`
+      )
     );
 
     // Filter out duplicates in O(n) time
@@ -347,7 +372,10 @@ export class OptimizedPatternService {
       if (maxConcurrency === 1) {
         // Sequential processing
         for (const batch of batches) {
-          await this.processBulkBatch(batch, { useOptimizedQueries, enableVectorOptimization });
+          await this.processBulkBatch(batch, {
+            useOptimizedQueries,
+            enableVectorOptimization,
+          });
         }
       } else {
         // Concurrent processing with controlled concurrency
@@ -375,7 +403,9 @@ export class OptimizedPatternService {
         batchCount: batches.length,
         processingTimeMs: Math.round(processingTime),
         avgTimePerPattern: Math.round(processingTime / patterns.length),
-        patternsPerSecond: Math.round(patterns.length / (processingTime / 1000)),
+        patternsPerSecond: Math.round(
+          patterns.length / (processingTime / 1000)
+        ),
       });
     } catch (error) {
       const safeError = toSafeError(error);
@@ -456,8 +486,10 @@ export class OptimizedPatternService {
     else if (confidence >= 80) priority = 3;
     else if (confidence >= 75) priority = 4;
 
-    if (pattern.patternType === "ready_state") priority = Math.max(1, priority - 1);
-    if (pattern.patternType === "launch_sequence") priority = Math.max(1, priority - 1);
+    if (pattern.patternType === "ready_state")
+      priority = Math.max(1, priority - 1);
+    if (pattern.patternType === "launch_sequence")
+      priority = Math.max(1, priority - 1);
 
     return Math.max(1, Math.min(10, priority));
   }
@@ -508,7 +540,8 @@ export class OptimizedPatternService {
     const averageAge =
       validExpiries.length > 0
         ? this.cacheTTL -
-          validExpiries.reduce((sum, exp) => sum + (exp - now), 0) / validExpiries.length
+          validExpiries.reduce((sum, exp) => sum + (exp - now), 0) /
+            validExpiries.length
         : 0;
 
     return {

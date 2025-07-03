@@ -8,7 +8,13 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { generateListKey } from "../../lib/react-utilities";
 import type { AnalyticsTabProps } from "../../types/trading-analytics-types";
@@ -26,7 +32,9 @@ export const MarketTab = memo(function MarketTab({
         <Card>
           <CardHeader>
             <CardTitle>Market Conditions</CardTitle>
-            <CardDescription>Current market environment assessment</CardDescription>
+            <CardDescription>
+              Current market environment assessment
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -77,7 +85,11 @@ export const MarketTab = memo(function MarketTab({
                     ) : (
                       <TrendingDown className="h-4 w-4 text-red-600" />
                     )}
-                    <Badge variant={sector.performance > 0 ? "default" : "destructive"}>
+                    <Badge
+                      variant={
+                        sector.performance > 0 ? "default" : "destructive"
+                      }
+                    >
                       {formatPercentage(sector.performance)}
                     </Badge>
                   </div>
@@ -97,18 +109,22 @@ export const MarketTab = memo(function MarketTab({
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {data.marketAnalytics.tradingOpportunities.map((opportunity, index) => (
-                <div
-                  key={generateListKey(opportunity, index, "symbol")}
-                  className="flex items-center justify-between p-3 rounded-lg border"
-                >
-                  <div>
-                    <p className="font-medium">{opportunity.symbol}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{opportunity.type}</p>
+              {data.marketAnalytics.tradingOpportunities.map(
+                (opportunity, index) => (
+                  <div
+                    key={generateListKey(opportunity, index, "symbol")}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
+                    <div>
+                      <p className="font-medium">{opportunity.symbol}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {opportunity.type}
+                      </p>
+                    </div>
+                    <Badge variant="default">{opportunity.confidence}%</Badge>
                   </div>
-                  <Badge variant="default">{opportunity.confidence}%</Badge>
-                </div>
-              ))}
+                )
+              )}
             </div>
           </CardContent>
         </Card>
@@ -116,33 +132,58 @@ export const MarketTab = memo(function MarketTab({
         <Card>
           <CardHeader>
             <CardTitle>Market Correlations</CardTitle>
-            <CardDescription>Portfolio correlation to major assets</CardDescription>
+            <CardDescription>
+              Portfolio correlation to major assets
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>BTC Correlation</span>
-                <span>{data.marketAnalytics.correlationToMarket.btcCorrelation.toFixed(2)}</span>
+                <span>
+                  {data.marketAnalytics.correlationToMarket.btcCorrelation.toFixed(
+                    2
+                  )}
+                </span>
               </div>
-              <Progress value={data.marketAnalytics.correlationToMarket.btcCorrelation * 100} />
+              <Progress
+                value={
+                  data.marketAnalytics.correlationToMarket.btcCorrelation * 100
+                }
+              />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>ETH Correlation</span>
-                <span>{data.marketAnalytics.correlationToMarket.ethCorrelation.toFixed(2)}</span>
+                <span>
+                  {data.marketAnalytics.correlationToMarket.ethCorrelation.toFixed(
+                    2
+                  )}
+                </span>
               </div>
-              <Progress value={data.marketAnalytics.correlationToMarket.ethCorrelation * 100} />
+              <Progress
+                value={
+                  data.marketAnalytics.correlationToMarket.ethCorrelation * 100
+                }
+              />
             </div>
 
             <div>
               <div className="flex justify-between text-sm mb-1">
                 <span>Overall Market</span>
                 <span>
-                  {data.marketAnalytics.correlationToMarket.overallCorrelation.toFixed(2)}
+                  {data.marketAnalytics.correlationToMarket.overallCorrelation.toFixed(
+                    2
+                  )}
                 </span>
               </div>
-              <Progress value={data.marketAnalytics.correlationToMarket.overallCorrelation * 100} />
+              <Progress
+                value={
+                  data.marketAnalytics.correlationToMarket.overallCorrelation *
+                  100
+                }
+              />
             </div>
           </CardContent>
         </Card>
@@ -155,7 +196,10 @@ export const MarketTab = memo(function MarketTab({
           <CardContent>
             <div className="space-y-3">
               {data.marketAnalytics.marketTrends.map((trend, index) => (
-                <div key={generateListKey(trend, index, "trend")} className="space-y-1">
+                <div
+                  key={generateListKey(trend, index, "trend")}
+                  className="space-y-1"
+                >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{trend.trend}</span>
                     <Badge
@@ -170,7 +214,9 @@ export const MarketTab = memo(function MarketTab({
                       {trend.impact}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">Timeframe: {trend.timeframe}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Timeframe: {trend.timeframe}
+                  </p>
                 </div>
               ))}
             </div>

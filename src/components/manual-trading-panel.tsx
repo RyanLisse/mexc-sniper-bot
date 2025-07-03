@@ -19,10 +19,22 @@ import { useAccountBalance } from "../hooks/use-account-balance";
 import { TransactionDebugPanel } from "./transaction-debug-panel";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { Separator } from "./ui/separator";
 
 interface ManualTradingPanelProps {
@@ -56,7 +68,13 @@ const TradingForm = ({
   onTrade,
   isLoading,
 }: {
-  availableAssets: Array<{ asset?: string; free?: string; total?: number; locked?: string; usdtValue?: number }>;
+  availableAssets: Array<{
+    asset?: string;
+    free?: string;
+    total?: number;
+    locked?: string;
+    usdtValue?: number;
+  }>;
   onTrade: (order: TradeOrder) => void;
   isLoading: boolean;
 }) => {
@@ -91,7 +109,9 @@ const TradingForm = ({
 
       // For sell orders, check if user has enough balance
       if (side === "SELL" && selectedAssetData) {
-        const availableBalance = Number.parseFloat(selectedAssetData.free || "0");
+        const availableBalance = Number.parseFloat(
+          selectedAssetData.free || "0"
+        );
         const requestedQuantity = Number.parseFloat(quantity);
 
         if (requestedQuantity > availableBalance) {
@@ -103,7 +123,8 @@ const TradingForm = ({
       }
 
       const order: TradeOrder = {
-        symbol: side === "BUY" ? `${selectedAsset}USDT` : `${selectedAsset}USDT`,
+        symbol:
+          side === "BUY" ? `${selectedAsset}USDT` : `${selectedAsset}USDT`,
         side,
         type: orderType,
         quantity,
@@ -112,7 +133,15 @@ const TradingForm = ({
 
       onTrade(order);
     },
-    [selectedAsset, quantity, price, orderType, side, selectedAssetData, onTrade]
+    [
+      selectedAsset,
+      quantity,
+      price,
+      orderType,
+      side,
+      selectedAssetData,
+      onTrade,
+    ]
   );
 
   const resetForm = useCallback(() => {
@@ -128,14 +157,19 @@ const TradingForm = ({
           <DollarSign className="h-5 w-5" />
           Manual Trading
         </CardTitle>
-        <CardDescription>Place manual buy/sell orders for your holdings</CardDescription>
+        <CardDescription>
+          Place manual buy/sell orders for your holdings
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="side">Order Side</Label>
-              <Select value={side} onValueChange={(value: "BUY" | "SELL") => setSide(value)}>
+              <Select
+                value={side}
+                onValueChange={(value: "BUY" | "SELL") => setSide(value)}
+              >
                 <SelectTrigger className="bg-background border-border text-foreground hover:bg-accent/50 focus:ring-primary/50">
                   <SelectValue />
                 </SelectTrigger>
@@ -166,7 +200,9 @@ const TradingForm = ({
               <Label htmlFor="orderType">Order Type</Label>
               <Select
                 value={orderType}
-                onValueChange={(value: "MARKET" | "LIMIT") => setOrderType(value)}
+                onValueChange={(value: "MARKET" | "LIMIT") =>
+                  setOrderType(value)
+                }
               >
                 <SelectTrigger className="bg-background border-border text-foreground hover:bg-accent/50 focus:ring-primary/50">
                   <SelectValue />
@@ -203,7 +239,9 @@ const TradingForm = ({
                     ? // For selling, only show non-USDT assets the user owns
                       availableAssets
                         .filter(
-                          (asset) => Number.parseFloat(asset.free || "0") > 0 && (asset.asset || "") !== "USDT"
+                          (asset) =>
+                            Number.parseFloat(asset.free || "0") > 0 &&
+                            (asset.asset || "") !== "USDT"
                         )
                         .map((asset) => (
                           <SelectItem
@@ -212,16 +250,23 @@ const TradingForm = ({
                             className="focus:bg-accent focus:text-accent-foreground cursor-pointer min-h-[44px] sm:min-h-[32px]"
                           >
                             <div className="flex items-center justify-between w-full">
-                              <span className="font-medium">{asset.asset || ""}</span>
+                              <span className="font-medium">
+                                {asset.asset || ""}
+                              </span>
                               <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                                {Number.parseFloat(asset.free || "0").toFixed(4)} available
+                                {Number.parseFloat(asset.free || "0").toFixed(
+                                  4
+                                )}{" "}
+                                available
                               </span>
                             </div>
                           </SelectItem>
                         ))
                     : // For buying, only show assets the user owns (they can trade between their holdings)
                       availableAssets
-                        .filter((asset) => Number.parseFloat(asset.free || "0") > 0)
+                        .filter(
+                          (asset) => Number.parseFloat(asset.free || "0") > 0
+                        )
                         .map((asset) => (
                           <SelectItem
                             key={asset.asset || ""}
@@ -229,9 +274,14 @@ const TradingForm = ({
                             className="focus:bg-accent focus:text-accent-foreground cursor-pointer min-h-[44px] sm:min-h-[32px]"
                           >
                             <div className="flex items-center justify-between w-full">
-                              <span className="font-medium">{asset.asset || ""}</span>
+                              <span className="font-medium">
+                                {asset.asset || ""}
+                              </span>
                               <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                                {Number.parseFloat(asset.free || "0").toFixed(4)} available
+                                {Number.parseFloat(asset.free || "0").toFixed(
+                                  4
+                                )}{" "}
+                                available
                               </span>
                             </div>
                           </SelectItem>
@@ -241,8 +291,11 @@ const TradingForm = ({
             </div>
             {selectedAssetData && (
               <p className="text-xs text-muted-foreground mt-1">
-                Available: {Number.parseFloat(selectedAssetData.free).toFixed(4)} {selectedAsset}
-                {selectedAssetData.usdtValue && ` (≈ $${selectedAssetData.usdtValue.toFixed(2)})`}
+                Available:{" "}
+                {Number.parseFloat(selectedAssetData.free).toFixed(4)}{" "}
+                {selectedAsset}
+                {selectedAssetData.usdtValue &&
+                  ` (≈ $${selectedAssetData.usdtValue.toFixed(2)})`}
               </p>
             )}
           </div>
@@ -326,10 +379,14 @@ const TradingForm = ({
 
 // Recent Executions Component
 const RecentExecutions = ({ userId }: { userId: string }) => {
-  const { data: executions, isLoading } = useQuery<{ data: { executions: RecentExecution[] } }>({
+  const { data: executions, isLoading } = useQuery<{
+    data: { executions: RecentExecution[] };
+  }>({
     queryKey: ["execution-history", userId],
     queryFn: async () => {
-      const response = await fetch(`/api/execution-history?userId=${userId}&limit=10`);
+      const response = await fetch(
+        `/api/execution-history?userId=${userId}&limit=10`
+      );
       if (!response.ok) throw new Error("Failed to fetch execution history");
       return response.json();
     },
@@ -389,7 +446,9 @@ const RecentExecutions = ({ userId }: { userId: string }) => {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-sm">{execution.symbolName}</p>
+                    <p className="font-medium text-sm">
+                      {execution.symbolName}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {execution.executedQuantity.toFixed(4)} @ $
                       {execution.executedPrice?.toFixed(4)}
@@ -398,7 +457,13 @@ const RecentExecutions = ({ userId }: { userId: string }) => {
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-2">
-                    <Badge variant={execution.status === "success" ? "default" : "destructive"}>
+                    <Badge
+                      variant={
+                        execution.status === "success"
+                          ? "default"
+                          : "destructive"
+                      }
+                    >
                       {execution.status === "success" ? (
                         <CheckCircle className="h-3 w-3 mr-1" />
                       ) : (
@@ -408,7 +473,9 @@ const RecentExecutions = ({ userId }: { userId: string }) => {
                     </Badge>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {execution.totalCost ? `$${execution.totalCost.toFixed(2)}` : "-"}
+                    {execution.totalCost
+                      ? `$${execution.totalCost.toFixed(2)}`
+                      : "-"}
                   </p>
                 </div>
               </div>
@@ -421,7 +488,10 @@ const RecentExecutions = ({ userId }: { userId: string }) => {
 };
 
 // Main Component
-export function ManualTradingPanel({ userId, className }: ManualTradingPanelProps) {
+export function ManualTradingPanel({
+  userId,
+  className,
+}: ManualTradingPanelProps) {
   const queryClient = useQueryClient();
 
   const { data: balanceData, refetch: refetchBalance } = useAccountBalance({
@@ -464,7 +534,9 @@ export function ManualTradingPanel({ userId, className }: ManualTradingPanelProp
 
       // Refresh both balance and execution history
       refetchBalance();
-      queryClient.invalidateQueries({ queryKey: ["execution-history", userId] });
+      queryClient.invalidateQueries({
+        queryKey: ["execution-history", userId],
+      });
 
       // Form reset handled by component state management
     },
@@ -478,7 +550,9 @@ export function ManualTradingPanel({ userId, className }: ManualTradingPanelProp
   const availableAssets = useMemo(() => {
     return (
       balanceData?.balances?.filter(
-        (balance) => Number.parseFloat(balance.free || "0") > 0 || Number.parseFloat(balance.locked || "0") > 0
+        (balance) =>
+          Number.parseFloat(balance.free || "0") > 0 ||
+          Number.parseFloat(balance.locked || "0") > 0
       ) || []
     );
   }, [balanceData]);

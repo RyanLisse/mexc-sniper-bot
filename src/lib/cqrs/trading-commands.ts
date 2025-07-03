@@ -5,7 +5,10 @@
  * Part of Phase 3 Production Readiness implementation.
  */
 
-import { type DomainEvent, eventStoreManager } from "../event-sourcing/event-store";
+import {
+  type DomainEvent,
+  eventStoreManager,
+} from "../event-sourcing/event-store";
 import {
   BaseCommandHandler,
   type Command,
@@ -181,7 +184,9 @@ export class ExecuteTradeCommandHandler extends BaseCommandHandler<ExecuteTradeC
     const { payload } = command;
 
     // Get current trade state from events
-    const events = await eventStoreManager.getEventsForAggregate(command.aggregateId);
+    const events = await eventStoreManager.getEventsForAggregate(
+      command.aggregateId
+    );
     const currentVersion = events.length;
 
     if (currentVersion === 0) {
@@ -195,7 +200,9 @@ export class ExecuteTradeCommandHandler extends BaseCommandHandler<ExecuteTradeC
     }
 
     // Check if trade is in valid state for execution
-    const tradeCreatedEvent = events.find((e) => e.eventType === "TRADE_CREATED");
+    const tradeCreatedEvent = events.find(
+      (e) => e.eventType === "TRADE_CREATED"
+    );
     if (!tradeCreatedEvent) {
       return {
         success: false,
@@ -236,7 +243,9 @@ export class CancelTradeCommandHandler extends BaseCommandHandler<CancelTradeCom
   }
 
   async handle(command: CancelTradeCommand): Promise<CommandResult> {
-    const events = await eventStoreManager.getEventsForAggregate(command.aggregateId);
+    const events = await eventStoreManager.getEventsForAggregate(
+      command.aggregateId
+    );
     const currentVersion = events.length;
 
     if (currentVersion === 0) {
@@ -250,7 +259,9 @@ export class CancelTradeCommandHandler extends BaseCommandHandler<CancelTradeCom
     }
 
     // Check if trade can be cancelled
-    const isAlreadyExecuted = events.some((e) => e.eventType === "TRADE_EXECUTED");
+    const isAlreadyExecuted = events.some(
+      (e) => e.eventType === "TRADE_EXECUTED"
+    );
     if (isAlreadyExecuted) {
       return {
         success: false,
@@ -261,19 +272,28 @@ export class CancelTradeCommandHandler extends BaseCommandHandler<CancelTradeCom
       };
     }
 
-    return this.saveEvents(command.aggregateId, "Trade", currentVersion, "TRADE_CANCELLED", {
-      tradeId: command.aggregateId,
-      reason: command.payload.reason,
-      status: "CANCELLED",
-      cancelledAt: new Date(),
-    });
+    return this.saveEvents(
+      command.aggregateId,
+      "Trade",
+      currentVersion,
+      "TRADE_CANCELLED",
+      {
+        tradeId: command.aggregateId,
+        reason: command.payload.reason,
+        status: "CANCELLED",
+        cancelledAt: new Date(),
+      }
+    );
   }
 }
 
 /**
  * Get Trade Query Handler
  */
-export class GetTradeQueryHandler extends BaseQueryHandler<GetTradeQuery, TradeReadModel> {
+export class GetTradeQueryHandler extends BaseQueryHandler<
+  GetTradeQuery,
+  TradeReadModel
+> {
   protected getSupportedQueryType(): string {
     return "GET_TRADE";
   }
@@ -319,7 +339,9 @@ export class GetUserTradesQueryHandler extends BaseQueryHandler<
     return "GET_USER_TRADES";
   }
 
-  async handle(query: GetUserTradesQuery): Promise<QueryResult<TradeReadModel[]>> {
+  async handle(
+    query: GetUserTradesQuery
+  ): Promise<QueryResult<TradeReadModel[]>> {
     const { userId, status, limit = 10, offset = 0 } = query.parameters;
 
     // Get all trades for user
@@ -335,7 +357,9 @@ export class GetUserTradesQueryHandler extends BaseQueryHandler<
 
     // Sort by creation date (newest first)
     filteredModels.sort(
-      (a, b) => new Date(b.data.createdAt).getTime() - new Date(a.data.createdAt).getTime()
+      (a, b) =>
+        new Date(b.data.createdAt).getTime() -
+        new Date(a.data.createdAt).getTime()
     );
 
     // Apply pagination
@@ -343,7 +367,12 @@ export class GetUserTradesQueryHandler extends BaseQueryHandler<
     const paginatedModels = filteredModels.slice(offset, offset + limit);
     const trades = paginatedModels.map((model) => model.data as TradeReadModel);
 
-    return this.createPaginatedResult(trades, Math.floor(offset / limit) + 1, limit, total);
+    return this.createPaginatedResult(
+      trades,
+      Math.floor(offset / limit) + 1,
+      limit,
+      total
+    );
   }
 }
 
@@ -358,7 +387,9 @@ export class GetTradingStatsQueryHandler extends BaseQueryHandler<
     return "GET_TRADING_STATS";
   }
 
-  async handle(query: GetTradingStatsQuery): Promise<QueryResult<TradingStatsReadModel>> {
+  async handle(
+    query: GetTradingStatsQuery
+  ): Promise<QueryResult<TradingStatsReadModel>> {
     const { userId, symbol, fromDate, toDate } = query.parameters;
 
     // Build filter
@@ -547,9 +578,11 @@ export class TradingStatsProjection extends BaseReadModelProjection {
       statsData.totalTrades++;
 
       // Update average confidence
-      const totalConfidence = statsData.averageConfidence * (statsData.totalTrades - 1);
+      const totalConfidence =
+        statsData.averageConfidence * (statsData.totalTrades - 1);
       statsData.averageConfidence =
-        (totalConfidence + (event.payload.confidenceScore || 0)) / statsData.totalTrades;
+        (totalConfidence + (event.payload.confidenceScore || 0)) /
+        statsData.totalTrades;
 
       await this.saveModel({
         ...stats,
@@ -561,8 +594,12 @@ export class TradingStatsProjection extends BaseReadModelProjection {
 
   private async updateStatsForTradeExecuted(event: DomainEvent): Promise<void> {
     // Get the original trade data to get userId
-    const tradeEvents = await eventStoreManager.getEventsForAggregate(event.aggregateId);
-    const createEvent = tradeEvents.find((e) => e.eventType === "TRADE_CREATED");
+    const tradeEvents = await eventStoreManager.getEventsForAggregate(
+      event.aggregateId
+    );
+    const createEvent = tradeEvents.find(
+      (e) => e.eventType === "TRADE_CREATED"
+    );
     if (!createEvent) return;
 
     const statsId = `${createEvent.payload.userId}_all`;
@@ -571,7 +608,8 @@ export class TradingStatsProjection extends BaseReadModelProjection {
 
     const statsData = stats.data as TradingStatsReadModel;
     statsData.successfulTrades++;
-    statsData.totalVolume += event.payload.executedQuantity * event.payload.executedPrice;
+    statsData.totalVolume +=
+      event.payload.executedQuantity * event.payload.executedPrice;
     statsData.winRate = statsData.successfulTrades / statsData.totalTrades;
     statsData.lastTradeAt = event.payload.executionTime;
 
@@ -595,7 +633,10 @@ export function initializeTradingCQRS(): void {
   // Register query handlers
   queryBus.registerHandler("GET_TRADE", new GetTradeQueryHandler());
   queryBus.registerHandler("GET_USER_TRADES", new GetUserTradesQueryHandler());
-  queryBus.registerHandler("GET_TRADING_STATS", new GetTradingStatsQueryHandler());
+  queryBus.registerHandler(
+    "GET_TRADING_STATS",
+    new GetTradingStatsQueryHandler()
+  );
 
   // Initialize projections
   const tradeProjection = new TradeProjection();
@@ -670,7 +711,11 @@ export class TradingCommandFactory {
     ) as ExecuteTradeCommand;
   }
 
-  static cancelTrade(tradeId: string, reason: string, correlationId?: string): CancelTradeCommand {
+  static cancelTrade(
+    tradeId: string,
+    reason: string,
+    correlationId?: string
+  ): CancelTradeCommand {
     return CommandFactory.createCommand(
       "CANCEL_TRADE",
       tradeId,

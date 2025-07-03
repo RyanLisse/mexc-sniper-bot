@@ -89,7 +89,8 @@ export class ExecuteTradeUseCase {
       const tradeWithOrder = trade.addOrder(order);
 
       // Execute trade through trading service
-      const executionResult = await this.executeThroughTradingService(validatedInput);
+      const executionResult =
+        await this.executeThroughTradingService(validatedInput);
 
       // Update order with execution results
       const updatedOrder = this.updateOrderWithResults(order, executionResult);
@@ -158,7 +159,11 @@ export class ExecuteTradeUseCase {
 
     if (!result.success) {
       const firstError = result.error.errors[0];
-      throw new DomainValidationError(firstError.path.join("."), input, firstError.message);
+      throw new DomainValidationError(
+        firstError.path.join("."),
+        input,
+        firstError.message
+      );
     }
 
     // Additional validation rules
@@ -171,7 +176,11 @@ export class ExecuteTradeUseCase {
     }
 
     if (result.data.type === "LIMIT" && !result.data.price) {
-      throw new DomainValidationError("price", input, "Price is required for LIMIT orders");
+      throw new DomainValidationError(
+        "price",
+        input,
+        "Price is required for LIMIT orders"
+      );
     }
 
     if (result.data.type === "STOP_LIMIT" && !result.data.stopPrice) {
@@ -189,13 +198,19 @@ export class ExecuteTradeUseCase {
     const trade = await this.tradingRepository.findTradeById(tradeId);
 
     if (!trade) {
-      throw new InvalidTradeParametersError("tradeId", `Trade not found: ${tradeId}`);
+      throw new InvalidTradeParametersError(
+        "tradeId",
+        `Trade not found: ${tradeId}`
+      );
     }
 
     return trade;
   }
 
-  private async validateTradeExecution(trade: Trade, input: ExecuteTradeInput): Promise<void> {
+  private async validateTradeExecution(
+    trade: Trade,
+    input: ExecuteTradeInput
+  ): Promise<void> {
     // Check trade status
     if (trade.isFinalized()) {
       throw new InvalidOrderStateError(trade.status, "execute trade");
@@ -309,7 +324,9 @@ export class ExecuteTradeUseCase {
         return order.markAsSubmitted(data.orderId);
       }
     } else {
-      return order.markAsRejected(executionResult.error || "Unknown execution error");
+      return order.markAsRejected(
+        executionResult.error || "Unknown execution error"
+      );
     }
   }
 
@@ -331,7 +348,12 @@ export class ExecuteTradeUseCase {
         }
 
         // Calculate trade completion details
-        const entryPrice = Price.create(parseFloat(data.price), trade.symbol, "mexc", 8);
+        const entryPrice = Price.create(
+          parseFloat(data.price),
+          trade.symbol,
+          "mexc",
+          8
+        );
 
         const quantity = parseFloat(data.executedQty);
         const totalCost = Money.create(
@@ -351,7 +373,9 @@ export class ExecuteTradeUseCase {
       }
     } else {
       // Mark trade as failed
-      updatedTrade = updatedTrade.markAsFailed(executionResult.error || "Trade execution failed");
+      updatedTrade = updatedTrade.markAsFailed(
+        executionResult.error || "Trade execution failed"
+      );
     }
 
     return updatedTrade;

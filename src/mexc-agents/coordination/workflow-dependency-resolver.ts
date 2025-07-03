@@ -1,5 +1,8 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type { WorkflowContext, WorkflowStepConfig } from "./workflow-engine-types";
+import type {
+  WorkflowContext,
+  WorkflowStepConfig,
+} from "./workflow-engine-types";
 
 /**
  * Workflow dependency resolution and execution ordering
@@ -32,7 +35,9 @@ export class WorkflowDependencyResolver {
       }
 
       if (visiting.has(stepId)) {
-        throw new Error(`Circular dependency detected involving step '${stepId}'`);
+        throw new Error(
+          `Circular dependency detected involving step '${stepId}'`
+        );
       }
 
       const step = stepMap.get(stepId);
@@ -62,18 +67,25 @@ export class WorkflowDependencyResolver {
   /**
    * Group steps by dependency level for parallel execution
    */
-  groupStepsByDependencyLevel(steps: WorkflowStepConfig[]): WorkflowStepConfig[][] {
+  groupStepsByDependencyLevel(
+    steps: WorkflowStepConfig[]
+  ): WorkflowStepConfig[][] {
     const stepMap = new Map(steps.map((step) => [step.id, step]));
     const levels: WorkflowStepConfig[][] = [];
     const stepLevels = new Map<string, number>();
 
-    const getStepLevel = (stepId: string, visited = new Set<string>()): number => {
+    const getStepLevel = (
+      stepId: string,
+      visited = new Set<string>()
+    ): number => {
       if (stepLevels.has(stepId)) {
         return stepLevels.get(stepId)!;
       }
 
       if (visited.has(stepId)) {
-        throw new Error(`Circular dependency detected involving step '${stepId}'`);
+        throw new Error(
+          `Circular dependency detected involving step '${stepId}'`
+        );
       }
 
       const step = stepMap.get(stepId);
@@ -113,7 +125,10 @@ export class WorkflowDependencyResolver {
   /**
    * Wait for step dependencies to complete
    */
-  async waitForDependencies(step: WorkflowStepConfig, context: WorkflowContext): Promise<void> {
+  async waitForDependencies(
+    step: WorkflowStepConfig,
+    context: WorkflowContext
+  ): Promise<void> {
     if (!step.dependencies || step.dependencies.length === 0) {
       return;
     }
@@ -125,7 +140,10 @@ export class WorkflowDependencyResolver {
     while (Date.now() - startTime < timeout) {
       const allCompleted = step.dependencies.every((depId) => {
         const depResult = context.stepResults.get(depId);
-        return depResult && (depResult.status === "completed" || depResult.status === "skipped");
+        return (
+          depResult &&
+          (depResult.status === "completed" || depResult.status === "skipped")
+        );
       });
 
       if (allCompleted) {
@@ -139,13 +157,17 @@ export class WorkflowDependencyResolver {
       });
 
       if (failedDependencies.length > 0) {
-        throw new Error(`Dependencies failed: ${failedDependencies.join(", ")}`);
+        throw new Error(
+          `Dependencies failed: ${failedDependencies.join(", ")}`
+        );
       }
 
       await new Promise((resolve) => setTimeout(resolve, checkInterval));
     }
 
-    throw new Error(`Timeout waiting for dependencies: ${step.dependencies.join(", ")}`);
+    throw new Error(
+      `Timeout waiting for dependencies: ${step.dependencies.join(", ")}`
+    );
   }
 
   /**
@@ -170,7 +192,10 @@ export class WorkflowDependencyResolver {
     try {
       this.resolveDependencies(steps);
     } catch (error) {
-      if (error instanceof Error && error.message.includes("Circular dependency")) {
+      if (
+        error instanceof Error &&
+        error.message.includes("Circular dependency")
+      ) {
         errors.push(error.message);
       }
     }

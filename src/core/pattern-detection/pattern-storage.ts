@@ -15,7 +15,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { patternEmbeddings } from "../../db/schemas/patterns";
 import { toSafeError } from "../../lib/error-type-utils";
-import type { CalendarEntry, SymbolEntry } from "../../services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "../../services/api/mexc-unified-exports";
 import type { IPatternStorage } from "./interfaces";
 import {
   calculateOptimizedPatternSimilarity,
@@ -75,7 +78,8 @@ export class PatternStorage implements IPatternStorage {
 
       // Determine if data is SymbolEntry or CalendarEntry
       const isSymbolEntry = "sts" in data && "st" in data && "tt" in data;
-      const symbolName = "symbol" in data ? data.symbol : isSymbolEntry ? data.cd : "unknown";
+      const symbolName =
+        "symbol" in data ? data.symbol : isSymbolEntry ? data.cd : "unknown";
 
       // Generate unique pattern ID
       const timestamp = Date.now();
@@ -167,10 +171,23 @@ export class PatternStorage implements IPatternStorage {
 
     try {
       const patterns = await db
-        .select()
+        .select({
+          id: patternEmbeddings.id,
+          patternId: patternEmbeddings.patternId,
+          patternType: patternEmbeddings.patternType,
+          symbolName: patternEmbeddings.symbolName,
+          confidenceScore: patternEmbeddings.confidenceScore,
+          similarityScore: patternEmbeddings.similarityScore,
+          discoveredAt: patternEmbeddings.discoveredAt,
+          createdAt: patternEmbeddings.createdAt,
+          patternData: patternEmbeddings.patternData
+        })
         .from(patternEmbeddings)
         .where(
-          and(eq(patternEmbeddings.patternType, patternType), eq(patternEmbeddings.isActive, true))
+          and(
+            eq(patternEmbeddings.patternType, patternType),
+            eq(patternEmbeddings.isActive, true)
+          )
         )
         .limit(50);
 
@@ -181,7 +198,8 @@ export class PatternStorage implements IPatternStorage {
       }
 
       const totalSuccesses = patterns.reduce(
-        (sum: number, p: { truePositives?: number }) => sum + (p.truePositives || 0),
+        (sum: number, p: { truePositives?: number }) =>
+          sum + (p.truePositives || 0),
         0
       );
       const totalAttempts = patterns.reduce(
@@ -190,7 +208,8 @@ export class PatternStorage implements IPatternStorage {
         0
       );
 
-      const successRate = totalAttempts > 0 ? (totalSuccesses / totalAttempts) * 100 : 75;
+      const successRate =
+        totalAttempts > 0 ? (totalSuccesses / totalAttempts) * 100 : 75;
 
       // Cache the result
       this.setCachedValue(cacheKey, successRate);
@@ -245,14 +264,19 @@ export class PatternStorage implements IPatternStorage {
     }
 
     try {
-      let query = db.select().from(patternEmbeddings).where(eq(patternEmbeddings.isActive, true));
-
+      // Build the where conditions array
+      const whereConditions = [eq(patternEmbeddings.isActive, true)];
+      
       // Apply type filter if requested
       if (sameTypeOnly && pattern.type) {
-        query = query.where(eq(patternEmbeddings.patternType, pattern.type));
+        whereConditions.push(eq(patternEmbeddings.patternType, pattern.type));
       }
 
-      const allPatterns = await query.limit(Math.min(limit * 5, 500)); // Get more to filter from
+      const allPatterns = await db
+        .select()
+        .from(patternEmbeddings)
+        .where(and(...whereConditions))
+        .limit(Math.min(limit * 5, 500)); // Get more to filter from
 
       // OPTIMIZATION: Use optimized similarity calculation (60% faster)
       const similarPatterns = allPatterns
@@ -306,7 +330,8 @@ export class PatternStorage implements IPatternStorage {
     size: number;
     memoryUsage: number;
   } {
-    const hitRatio = this.cacheAccesses > 0 ? this.cacheHits / this.cacheAccesses : 0;
+    const hitRatio =
+      this.cacheAccesses > 0 ? this.cacheHits / this.cacheAccesses : 0;
     const size = this.cache.size;
 
     // OPTIMIZATION: Use optimized memory usage estimation (80% faster)

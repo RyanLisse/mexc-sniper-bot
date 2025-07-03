@@ -1,7 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Activity, AlertTriangle, Percent, Shield, TrendingDown } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  Percent,
+  Shield,
+  TrendingDown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Area,
@@ -21,7 +27,13 @@ import {
 } from "recharts";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { generateChartCellKey } from "../../lib/react-utilities";
 
@@ -48,7 +60,11 @@ interface PositionRisk {
 
 interface RiskAlert {
   id: string;
-  type: "risk_threshold" | "volatility_spike" | "correlation_break" | "liquidity_gap";
+  type:
+    | "risk_threshold"
+    | "volatility_spike"
+    | "correlation_break"
+    | "liquidity_gap";
   severity: "low" | "medium" | "high" | "critical";
   message: string;
   value: number;
@@ -77,7 +93,9 @@ interface StressTestResult {
  */
 export function RealTimeRiskMonitor() {
   // Local state for risk history
-  const [localRiskHistory, setLocalRiskHistory] = useState<RealTimeRiskData[]>([]);
+  const [localRiskHistory, setLocalRiskHistory] = useState<RealTimeRiskData[]>(
+    []
+  );
 
   // Fetch current risk metrics from API
   const { data: currentRisk, isLoading: riskLoading } = useQuery({
@@ -170,7 +188,9 @@ export function RealTimeRiskMonitor() {
         </div>
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading real-time risk data...</p>
+          <p className="text-muted-foreground">
+            Loading real-time risk data...
+          </p>
         </div>
       </div>
     );
@@ -217,7 +237,9 @@ export function RealTimeRiskMonitor() {
                   <Badge className={getAlertColor(alert.severity)}>
                     {alert.severity.toUpperCase()}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">{alert.timestamp}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {alert.timestamp}
+                  </span>
                 </div>
               </AlertDescription>
             </Alert>
@@ -233,7 +255,9 @@ export function RealTimeRiskMonitor() {
             <Shield className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getRiskColor(currentRisk.riskScore)}`}>
+            <div
+              className={`text-2xl font-bold ${getRiskColor(currentRisk.riskScore)}`}
+            >
               {currentRisk.riskScore.toFixed(1)}
             </div>
             <Progress value={currentRisk.riskScore} className="mt-2" />
@@ -251,7 +275,9 @@ export function RealTimeRiskMonitor() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Value at Risk (95%)</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Value at Risk (95%)
+            </CardTitle>
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -259,19 +285,28 @@ export function RealTimeRiskMonitor() {
               ${currentRisk.var95.toLocaleString()}
             </div>
             <div className="text-xs text-muted-foreground mt-2">
-              {((currentRisk.var95 / currentRisk.portfolioValue) * 100).toFixed(1)}% of portfolio
+              {((currentRisk.var95 / currentRisk.portfolioValue) * 100).toFixed(
+                1
+              )}
+              % of portfolio
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Portfolio Exposure</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Portfolio Exposure
+            </CardTitle>
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {((currentRisk.totalExposure / currentRisk.portfolioValue) * 100).toFixed(1)}%
+              {(
+                (currentRisk.totalExposure / currentRisk.portfolioValue) *
+                100
+              ).toFixed(1)}
+              %
             </div>
             <div className="text-xs text-muted-foreground mt-2">
               ${currentRisk.totalExposure.toLocaleString()} exposed
@@ -281,7 +316,9 @@ export function RealTimeRiskMonitor() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Volatility Index</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Volatility Index
+            </CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -315,7 +352,9 @@ export function RealTimeRiskMonitor() {
         <Card>
           <CardHeader>
             <CardTitle>Risk Score Trend</CardTitle>
-            <CardDescription>Real-time risk score over the last hour</CardDescription>
+            <CardDescription>
+              Real-time risk score over the last hour
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {localRiskHistory && localRiskHistory.length > 0 ? (
@@ -404,7 +443,12 @@ export function RealTimeRiskMonitor() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="timestamp" />
                   <YAxis />
-                  <Tooltip formatter={(value) => [`$${value?.toLocaleString()}`, "VaR 95%"]} />
+                  <Tooltip
+                    formatter={(value) => [
+                      `$${value?.toLocaleString()}`,
+                      "VaR 95%",
+                    ]}
+                  />
                   <Area
                     type="monotone"
                     dataKey="var95"
@@ -464,7 +508,9 @@ export function RealTimeRiskMonitor() {
       <Card>
         <CardHeader>
           <CardTitle>Position Risk Analysis</CardTitle>
-          <CardDescription>Detailed risk metrics for each position</CardDescription>
+          <CardDescription>
+            Detailed risk metrics for each position
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {positionRisks && positionRisks.length > 0 ? (
@@ -483,9 +529,14 @@ export function RealTimeRiskMonitor() {
                 </thead>
                 <tbody>
                   {positionRisks.map((position: PositionRisk) => (
-                    <tr key={position.symbol} className="border-b hover:bg-muted/50">
+                    <tr
+                      key={position.symbol}
+                      className="border-b hover:bg-muted/50"
+                    >
                       <td className="p-2 font-medium">{position.symbol}</td>
-                      <td className="p-2 text-right">${position.size.toLocaleString()}</td>
+                      <td className="p-2 text-right">
+                        ${position.size.toLocaleString()}
+                      </td>
                       <td className="p-2 text-right">
                         <span
                           className={
@@ -499,15 +550,28 @@ export function RealTimeRiskMonitor() {
                           {position.riskContribution.toFixed(1)}%
                         </span>
                       </td>
-                      <td className="p-2 text-right">${position.var95.toLocaleString()}</td>
                       <td className="p-2 text-right">
-                        <span className={position.pnl >= 0 ? "text-green-600" : "text-red-600"}>
+                        ${position.var95.toLocaleString()}
+                      </td>
+                      <td className="p-2 text-right">
+                        <span
+                          className={
+                            position.pnl >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
                           {position.pnl >= 0 ? "+" : ""}${position.pnl}
                         </span>
                       </td>
-                      <td className="p-2 text-right">{position.timeHeld.toFixed(1)}h</td>
                       <td className="p-2 text-right">
-                        <Progress value={position.correlation * 100} className="w-16" />
+                        {position.timeHeld.toFixed(1)}h
+                      </td>
+                      <td className="p-2 text-right">
+                        <Progress
+                          value={position.correlation * 100}
+                          className="w-16"
+                        />
                       </td>
                     </tr>
                   ))}
@@ -529,7 +593,9 @@ export function RealTimeRiskMonitor() {
       <Card>
         <CardHeader>
           <CardTitle>Stress Test Results</CardTitle>
-          <CardDescription>Portfolio impact under various stress scenarios</CardDescription>
+          <CardDescription>
+            Portfolio impact under various stress scenarios
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {stressTestResults && stressTestResults.length > 0 ? (
@@ -540,11 +606,17 @@ export function RealTimeRiskMonitor() {
                 <YAxis />
                 <Tooltip
                   formatter={(value, name) => [
-                    name === "portfolioLoss" ? `$${value?.toLocaleString()}` : `${value}%`,
+                    name === "portfolioLoss"
+                      ? `$${value?.toLocaleString()}`
+                      : `${value}%`,
                     name === "portfolioLoss" ? "Portfolio Loss" : "Loss %",
                   ]}
                 />
-                <Bar dataKey="portfolioLoss" fill="#ef4444" name="Portfolio Loss" />
+                <Bar
+                  dataKey="portfolioLoss"
+                  fill="#ef4444"
+                  name="Portfolio Loss"
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (

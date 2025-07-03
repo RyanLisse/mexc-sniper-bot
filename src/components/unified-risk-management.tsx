@@ -1,9 +1,21 @@
 "use client";
 import { Shield } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { Separator } from "./ui/separator";
 
 interface RiskSettings {
@@ -45,7 +57,9 @@ export function UnifiedRiskManagement({
           <Shield className="h-5 w-5" />
           Risk Management
         </CardTitle>
-        <CardDescription>Control your risk exposure and position sizing</CardDescription>
+        <CardDescription>
+          Control your risk exposure and position sizing
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
@@ -60,7 +74,10 @@ export function UnifiedRiskManagement({
                 step="0.5"
                 value={settings.stopLossPercent}
                 onChange={(e) =>
-                  updateSetting("stopLossPercent", Number.parseFloat(e.target.value) || 5)
+                  updateSetting(
+                    "stopLossPercent",
+                    Number.parseFloat(e.target.value) || 5
+                  )
                 }
               />
               <span className="text-sm text-muted-foreground">%</span>
@@ -93,7 +110,10 @@ export function UnifiedRiskManagement({
               max="10"
               value={settings.maxConcurrentSnipes}
               onChange={(e) =>
-                updateSetting("maxConcurrentSnipes", Number.parseInt(e.target.value) || 3)
+                updateSetting(
+                  "maxConcurrentSnipes",
+                  Number.parseInt(e.target.value) || 3
+                )
               }
             />
           </div>
@@ -109,7 +129,10 @@ export function UnifiedRiskManagement({
                 step="10"
                 value={settings.defaultBuyAmount}
                 onChange={(e) =>
-                  updateSetting("defaultBuyAmount", Number.parseFloat(e.target.value) || 100)
+                  updateSetting(
+                    "defaultBuyAmount",
+                    Number.parseFloat(e.target.value) || 100
+                  )
                 }
               />
               <span className="text-sm text-muted-foreground">USDT</span>
@@ -129,9 +152,15 @@ export function UnifiedRiskManagement({
               <SelectItem value="conservative">
                 Conservative - Early exits, preserve capital
               </SelectItem>
-              <SelectItem value="balanced">Balanced - Mix of safety and growth</SelectItem>
-              <SelectItem value="aggressive">Aggressive - Hold for maximum gains</SelectItem>
-              <SelectItem value="custom">Custom - Define your own strategy</SelectItem>
+              <SelectItem value="balanced">
+                Balanced - Mix of safety and growth
+              </SelectItem>
+              <SelectItem value="aggressive">
+                Aggressive - Hold for maximum gains
+              </SelectItem>
+              <SelectItem value="custom">
+                Custom - Define your own strategy
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>

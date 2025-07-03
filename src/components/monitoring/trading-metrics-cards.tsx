@@ -36,7 +36,9 @@ export const TradingMetricsCards = memo(function TradingMetricsCards({
           <div className="text-2xl font-bold">
             {formatCurrency(data.portfolioMetrics.currentValue)}
           </div>
-          <p className={`text-xs ${getPerformanceColor(data.portfolioMetrics.dayChange)}`}>
+          <p
+            className={`text-xs ${getPerformanceColor(data.portfolioMetrics.dayChange)}`}
+          >
             {formatPercentage(data.portfolioMetrics.dayChange)} today
           </p>
         </CardContent>
@@ -52,7 +54,10 @@ export const TradingMetricsCards = memo(function TradingMetricsCards({
           <div className="text-2xl font-bold text-green-600">
             {data.tradingPerformance.successRate.toFixed(1)}%
           </div>
-          <Progress value={data.tradingPerformance.successRate} className="mt-2" />
+          <Progress
+            value={data.tradingPerformance.successRate}
+            className="mt-2"
+          />
         </CardContent>
       </Card>
 
@@ -63,7 +68,9 @@ export const TradingMetricsCards = memo(function TradingMetricsCards({
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{data.tradingPerformance.totalTrades}</div>
+          <div className="text-2xl font-bold">
+            {data.tradingPerformance.totalTrades}
+          </div>
           <p className="text-xs text-muted-foreground">
             {data.tradingPerformance.successfulTrades} successful
           </p>
@@ -80,7 +87,10 @@ export const TradingMetricsCards = memo(function TradingMetricsCards({
           <div className="text-2xl font-bold text-orange-600">
             {data.riskManagement.currentRiskScore.toFixed(0)}
           </div>
-          <Progress value={data.riskManagement.currentRiskScore} className="mt-2" />
+          <Progress
+            value={data.riskManagement.currentRiskScore}
+            className="mt-2"
+          />
         </CardContent>
       </Card>
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { inngest } from "@/src/inngest/client";
 
 export async function POST(request: NextRequest) {
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // Validate emergency type
     const validTypes = [
       "api_failure",
-      "database_failure", 
+      "database_failure",
       "high_volatility",
       "system_overload",
       "trading_anomaly",
@@ -21,7 +21,9 @@ export async function POST(request: NextRequest) {
 
     if (!validTypes.includes(emergencyType)) {
       return NextResponse.json(
-        { error: `Invalid emergency type. Valid types: ${validTypes.join(", ")}` },
+        {
+          error: `Invalid emergency type. Valid types: ${validTypes.join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -30,7 +32,9 @@ export async function POST(request: NextRequest) {
     const validSeverities = ["low", "medium", "high", "critical"];
     if (!validSeverities.includes(severity)) {
       return NextResponse.json(
-        { error: `Invalid severity. Valid severities: ${validSeverities.join(", ")}` },
+        {
+          error: `Invalid severity. Valid severities: ${validSeverities.join(", ")}`,
+        },
         { status: 400 }
       );
     }
@@ -80,7 +84,7 @@ export async function GET() {
     validEmergencyTypes: [
       "api_failure",
       "database_failure",
-      "high_volatility", 
+      "high_volatility",
       "system_overload",
       "trading_anomaly",
     ],
@@ -93,8 +97,11 @@ export async function GET() {
       },
       {
         emergencyType: "high_volatility",
-        severity: "medium", 
-        data: { affectedSymbols: ["BTCUSDT", "ETHUSDT"], volatilityIncrease: "150%" },
+        severity: "medium",
+        data: {
+          affectedSymbols: ["BTCUSDT", "ETHUSDT"],
+          volatilityIncrease: "150%",
+        },
       },
       {
         emergencyType: "system_overload",

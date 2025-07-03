@@ -88,8 +88,10 @@ export class ErrorRecoveryAgent extends SafetyBaseAgent {
   private errorPatterns: Map<string, ErrorPattern> = new Map();
   private activeIncidents: Map<string, ErrorIncident> = new Map();
   private systemHealth: SystemHealth;
-  private circuitBreakers: Map<string, { isOpen: boolean; failures: number; lastFailure: Date }> =
-    new Map();
+  private circuitBreakers: Map<
+    string,
+    { isOpen: boolean; failures: number; lastFailure: Date }
+  > = new Map();
 
   constructor(safetyConfig?: Partial<SafetyConfig>) {
     const config: AgentConfig = {
@@ -173,7 +175,10 @@ Always prioritize system stability and user experience. Implement recovery strat
     }
   }
 
-  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
+  async process(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
     const recentIncidents = Array.from(this.activeIncidents.values()).slice(-5);
     const topErrorPatterns = Array.from(this.errorPatterns.values())
       .sort((a, b) => b.frequency - a.frequency)
@@ -204,7 +209,8 @@ ${recentIncidents
 Top Error Patterns:
 ${topErrorPatterns
   .map(
-    (pattern) => `- ${pattern.errorType}: ${pattern.frequency} occurrences (${pattern.severity})`
+    (pattern) =>
+      `- ${pattern.errorType}: ${pattern.frequency} occurrences (${pattern.severity})`
   )
   .join("\n")}
 
@@ -251,7 +257,12 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     const severity = context.severity || this.determineSeverity(error, context);
 
     // Create or update incident
-    const incident = await this.createOrUpdateIncident(error, context, errorType, severity);
+    const incident = await this.createOrUpdateIncident(
+      error,
+      context,
+      errorType,
+      severity
+    );
 
     // Update error patterns
     await this.updateErrorPatterns(error, errorType, context);
@@ -269,7 +280,11 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     }
 
     // Determine retry strategy
-    const retryStrategy = await this.determineRetryStrategy(incident, errorType, context);
+    const retryStrategy = await this.determineRetryStrategy(
+      incident,
+      errorType,
+      context
+    );
 
     if (retryStrategy.shouldRetry) {
       // Create recovery attempt
@@ -321,10 +336,18 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     if (message.includes("rate limit") || message.includes("429")) {
       return "rate_limit";
     }
-    if (message.includes("unauthorized") || message.includes("401") || message.includes("403")) {
+    if (
+      message.includes("unauthorized") ||
+      message.includes("401") ||
+      message.includes("403")
+    ) {
       return "auth_error";
     }
-    if (message.includes("database") || message.includes("sql") || stack.includes("drizzle")) {
+    if (
+      message.includes("database") ||
+      message.includes("sql") ||
+      stack.includes("drizzle")
+    ) {
       return "database_error";
     }
     if (message.includes("openai") || message.includes("api key")) {
@@ -341,7 +364,11 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     context: { service: string; operation: string }
   ): "low" | "medium" | "high" | "critical" {
     const criticalServices = ["database", "mexc_api"];
-    const criticalOperations = ["trade_execution", "position_update", "balance_check"];
+    const criticalOperations = [
+      "trade_execution",
+      "position_update",
+      "balance_check",
+    ];
 
     if (
       criticalServices.includes(context.service) &&
@@ -355,7 +382,10 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     ) {
       return "high";
     }
-    if (error.message.includes("timeout") || error.message.includes("rate limit")) {
+    if (
+      error.message.includes("timeout") ||
+      error.message.includes("rate limit")
+    ) {
       return "medium";
     }
     return "low";
@@ -363,7 +393,11 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
   private async createOrUpdateIncident(
     error: Error,
-    context: { service: string; operation: string; metadata?: Record<string, unknown> },
+    context: {
+      service: string;
+      operation: string;
+      metadata?: Record<string, unknown>;
+    },
     errorType: string,
     severity: "low" | "medium" | "high" | "critical"
   ): Promise<ErrorIncident> {
@@ -374,7 +408,10 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       // Update existing incident
       existingIncident.lastOccurrence = new Date().toISOString();
       existingIncident.occurrenceCount++;
-      existingIncident.severity = this.escalateSeverity(existingIncident.severity, severity);
+      existingIncident.severity = this.escalateSeverity(
+        existingIncident.severity,
+        severity
+      );
       return existingIncident;
     }
 
@@ -412,7 +449,11 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     const newLevel = levels[new_severity as keyof typeof levels] || 1;
 
     const escalatedLevel = Math.max(currentLevel, newLevel);
-    return Object.keys(levels)[escalatedLevel - 1] as "low" | "medium" | "high" | "critical";
+    return Object.keys(levels)[escalatedLevel - 1] as
+      | "low"
+      | "medium"
+      | "high"
+      | "critical";
   }
 
   private mapErrorTypeToIncidentType(errorType: string): ErrorIncident["type"] {
@@ -487,10 +528,15 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       // Check if should open circuit breaker
       if (breaker.failures >= this.recoveryConfig.circuitBreakerThreshold) {
         breaker.isOpen = true;
-        this.emitSafetyEvent("error", "high", `Circuit breaker opened for service: ${service}`, {
-          service,
-          failures: breaker.failures,
-        });
+        this.emitSafetyEvent(
+          "error",
+          "high",
+          `Circuit breaker opened for service: ${service}`,
+          {
+            service,
+            failures: breaker.failures,
+          }
+        );
       }
     } else {
       // Successful operation - reset failures
@@ -519,12 +565,15 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     }
 
     // Check retry attempt limits
-    if (incident.recoveryAttempts.length >= this.recoveryConfig.maxRetryAttempts) {
+    if (
+      incident.recoveryAttempts.length >= this.recoveryConfig.maxRetryAttempts
+    ) {
       return {
         shouldRetry: false,
         retryDelay: 0,
         strategy: "max_attempts_reached",
-        recommendedAction: "Maximum retry attempts reached - manual intervention required",
+        recommendedAction:
+          "Maximum retry attempts reached - manual intervention required",
       };
     }
 
@@ -533,7 +582,9 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       case "network_error":
         return {
           shouldRetry: true,
-          retryDelay: this.calculateBackoffDelay(incident.recoveryAttempts.length),
+          retryDelay: this.calculateBackoffDelay(
+            incident.recoveryAttempts.length
+          ),
           strategy: "exponential_backoff",
           recommendedAction: "Retry with exponential backoff",
         };
@@ -557,7 +608,9 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       case "database_error":
         return {
           shouldRetry: true,
-          retryDelay: this.calculateBackoffDelay(incident.recoveryAttempts.length),
+          retryDelay: this.calculateBackoffDelay(
+            incident.recoveryAttempts.length
+          ),
           strategy: "connection_retry",
           recommendedAction: "Retry database connection",
         };
@@ -565,7 +618,9 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       default:
         return {
           shouldRetry: true,
-          retryDelay: this.calculateBackoffDelay(incident.recoveryAttempts.length),
+          retryDelay: this.calculateBackoffDelay(
+            incident.recoveryAttempts.length
+          ),
           strategy: "default_retry",
           recommendedAction: "Standard retry with backoff",
         };
@@ -574,24 +629,33 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
   private calculateBackoffDelay(attemptNumber: number): number {
     const delay =
-      this.recoveryConfig.baseBackoffMs * this.recoveryConfig.backoffMultiplier ** attemptNumber;
+      this.recoveryConfig.baseBackoffMs *
+      this.recoveryConfig.backoffMultiplier ** attemptNumber;
     return Math.min(delay, this.recoveryConfig.maxBackoffMs);
   }
 
-  async markIncidentResolved(incidentId: string, resolution: string): Promise<void> {
-    const incident = Array.from(this.activeIncidents.values()).find((i) => i.id === incidentId);
+  async markIncidentResolved(
+    incidentId: string,
+    resolution: string
+  ): Promise<void> {
+    const incident = Array.from(this.activeIncidents.values()).find(
+      (i) => i.id === incidentId
+    );
     if (!incident) return;
 
     incident.recovered = true;
     incident.resolution = resolution;
 
     // Update pattern statistics
-    const pattern = this.errorPatterns.get(`${incident.service}-${incident.type}`);
+    const pattern = this.errorPatterns.get(
+      `${incident.service}-${incident.type}`
+    );
     if (pattern) {
       pattern.successfulRecoveries++;
       // Update average recovery time (simplified)
       const recoveryTime = Date.now() - Date.parse(incident.firstOccurrence);
-      pattern.averageRecoveryTime = (pattern.averageRecoveryTime + recoveryTime) / 2;
+      pattern.averageRecoveryTime =
+        (pattern.averageRecoveryTime + recoveryTime) / 2;
     }
 
     // Remove from active incidents
@@ -604,7 +668,11 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
       "error",
       "low",
       `Incident resolved: ${incident.type} in ${incident.service}`,
-      { incidentId, resolution, recoveryTime: Date.now() - Date.parse(incident.firstOccurrence) }
+      {
+        incidentId,
+        resolution,
+        recoveryTime: Date.now() - Date.parse(incident.firstOccurrence),
+      }
     );
   }
 
@@ -663,7 +731,9 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     // Check system health
     if (this.systemHealth.overall !== "healthy") {
       issues.push(`System health is ${this.systemHealth.overall}`);
-      recommendations.push("Investigate service issues and restore healthy status");
+      recommendations.push(
+        "Investigate service issues and restore healthy status"
+      );
     }
 
     // Check for critical incidents
@@ -676,17 +746,22 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     }
 
     // Check circuit breaker status
-    const openCircuitBreakers = Array.from(this.circuitBreakers.entries()).filter(
-      ([, breaker]) => breaker.isOpen
-    );
+    const openCircuitBreakers = Array.from(
+      this.circuitBreakers.entries()
+    ).filter(([, breaker]) => breaker.isOpen);
     if (openCircuitBreakers.length > 0) {
       issues.push(`${openCircuitBreakers.length} circuit breakers are open`);
-      recommendations.push("Wait for circuit breaker reset or address underlying issues");
+      recommendations.push(
+        "Wait for circuit breaker reset or address underlying issues"
+      );
     }
 
     // Check error rates
-    const highErrorRateServices = Object.entries(this.systemHealth.services).filter(
-      ([, service]) => service.errorRate > this.recoveryConfig.alertThresholds.errorRate
+    const highErrorRateServices = Object.entries(
+      this.systemHealth.services
+    ).filter(
+      ([, service]) =>
+        service.errorRate > this.recoveryConfig.alertThresholds.errorRate
     );
     if (highErrorRateServices.length > 0) {
       issues.push("High error rates detected in some services");
@@ -714,7 +789,9 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
       // Check for excessive incidents
       if (this.activeIncidents.size > 100) {
-        issues.push("Excessive active incidents - potential system instability");
+        issues.push(
+          "Excessive active incidents - potential system instability"
+        );
       }
 
       // Check pattern storage
@@ -755,9 +832,14 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
 
   updateRecoveryConfig(config: Partial<RecoveryConfig>): void {
     this.recoveryConfig = { ...this.recoveryConfig, ...config };
-    this.emitSafetyEvent("error", "low", "Error recovery configuration updated", {
-      newConfig: this.recoveryConfig,
-    });
+    this.emitSafetyEvent(
+      "error",
+      "low",
+      "Error recovery configuration updated",
+      {
+        newConfig: this.recoveryConfig,
+      }
+    );
   }
 
   isServiceHealthy(service: string): boolean {
@@ -765,11 +847,17 @@ Please provide detailed error analysis, recovery recommendations, and proactive 
     return serviceHealth ? serviceHealth.status === "healthy" : false;
   }
 
-  getCircuitBreakerStatus(): Array<{ service: string; isOpen: boolean; failures: number }> {
-    return Array.from(this.circuitBreakers.entries()).map(([service, breaker]) => ({
-      service,
-      isOpen: breaker.isOpen,
-      failures: breaker.failures,
-    }));
+  getCircuitBreakerStatus(): Array<{
+    service: string;
+    isOpen: boolean;
+    failures: number;
+  }> {
+    return Array.from(this.circuitBreakers.entries()).map(
+      ([service, breaker]) => ({
+        service,
+        isOpen: breaker.isOpen,
+        failures: breaker.failures,
+      })
+    );
   }
 }

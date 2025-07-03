@@ -40,7 +40,9 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
   /**
    * Place a trading order
    */
-  async placeOrder(params: OrderParameters): Promise<UnifiedMexcResponse<OrderResult>> {
+  async placeOrder(
+    params: OrderParameters
+  ): Promise<UnifiedMexcResponse<OrderResult>> {
     if (!this.config.apiKey || !this.config.secretKey) {
       return {
         success: false,
@@ -92,9 +94,15 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
 
       if (params.price) requestParams.price = params.price;
       if (params.timeInForce) requestParams.timeInForce = params.timeInForce;
-      if (params.quoteOrderQty) requestParams.quoteOrderQty = params.quoteOrderQty;
+      if (params.quoteOrderQty)
+        requestParams.quoteOrderQty = params.quoteOrderQty;
 
-      const response = await this.makeRequest("/api/v3/order", requestParams, true, true); // Skip cache for orders
+      const response = await this.makeRequest(
+        "/api/v3/order",
+        requestParams,
+        true,
+        true
+      ); // Skip cache for orders
 
       if (!response.success) {
         return {
@@ -113,7 +121,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         };
       }
 
-      console.info("[MexcTradingApi] Order placed successfully:", response.data);
+      console.info(
+        "[MexcTradingApi] Order placed successfully:",
+        response.data
+      );
 
       const orderData = response.data as any; // MEXC order response
       const orderResult: OrderResult = {
@@ -135,7 +146,8 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       };
     } catch (error) {
       console.error("[MexcTradingApi] Order placement failed:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown trading error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown trading error";
 
       return {
         success: false,
@@ -157,7 +169,9 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
   /**
    * Place a test order (paper trading)
    */
-  async placeTestOrder(params: OrderParameters): Promise<UnifiedMexcResponse<OrderResult>> {
+  async placeTestOrder(
+    params: OrderParameters
+  ): Promise<UnifiedMexcResponse<OrderResult>> {
     if (!this.config.apiKey || !this.config.secretKey) {
       return {
         success: false,
@@ -209,9 +223,15 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
 
       if (params.price) requestParams.price = params.price;
       if (params.timeInForce) requestParams.timeInForce = params.timeInForce;
-      if (params.quoteOrderQty) requestParams.quoteOrderQty = params.quoteOrderQty;
+      if (params.quoteOrderQty)
+        requestParams.quoteOrderQty = params.quoteOrderQty;
 
-      const response = await this.makeRequest("/api/v3/order/test", requestParams, true, true);
+      const response = await this.makeRequest(
+        "/api/v3/order/test",
+        requestParams,
+        true,
+        true
+      );
 
       if (!response.success) {
         return {
@@ -251,7 +271,8 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       };
     } catch (error) {
       console.error("[MexcTradingApi] Test order failed:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown test trading error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown test trading error";
 
       return {
         success: false,
@@ -291,7 +312,12 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       const params: Record<string, unknown> = {};
       if (symbol) params.symbol = symbol;
 
-      const response = await this.makeRequest("/api/v3/openOrders", params, true, true);
+      const response = await this.makeRequest(
+        "/api/v3/openOrders",
+        params,
+        true,
+        true
+      );
 
       return {
         success: response.success,
@@ -314,7 +340,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
   /**
    * Get order history for a symbol
    */
-  async getOrderHistory(symbol: string, limit = 50): Promise<UnifiedMexcResponse<any[]>> {
+  async getOrderHistory(
+    symbol: string,
+    limit = 50
+  ): Promise<UnifiedMexcResponse<any[]>> {
     if (!this.config.apiKey || !this.config.secretKey) {
       return {
         success: false,
@@ -330,7 +359,12 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         limit: Math.min(limit, 1000), // MEXC limit is 1000
       };
 
-      const response = await this.makeRequest("/api/v3/allOrders", params, true, true);
+      const response = await this.makeRequest(
+        "/api/v3/allOrders",
+        params,
+        true,
+        true
+      );
 
       return {
         success: response.success,
@@ -353,7 +387,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
   /**
    * Cancel an order
    */
-  async cancelOrder(symbol: string, orderId: string): Promise<UnifiedMexcResponse<any>> {
+  async cancelOrder(
+    symbol: string,
+    orderId: string
+  ): Promise<UnifiedMexcResponse<any>> {
     if (!this.config.apiKey || !this.config.secretKey) {
       return {
         success: false,
@@ -369,7 +406,12 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         orderId,
       };
 
-      const response = await this.makeRequest("/api/v3/order", params, true, true);
+      const response = await this.makeRequest(
+        "/api/v3/order",
+        params,
+        true,
+        true
+      );
 
       return {
         success: response.success,
@@ -396,7 +438,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
   /**
    * Validate order parameters
    */
-  validateOrderParameters(params: OrderParameters): { valid: boolean; errors: string[] } {
+  validateOrderParameters(params: OrderParameters): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!params.symbol) errors.push("Symbol is required");
@@ -405,7 +450,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     if (!params.quantity || Number.parseFloat(params.quantity) <= 0) {
       errors.push("Valid quantity is required");
     }
-    if (params.type === "LIMIT" && (!params.price || Number.parseFloat(params.price) <= 0)) {
+    if (
+      params.type === "LIMIT" &&
+      (!params.price || Number.parseFloat(params.price) <= 0)
+    ) {
       errors.push("Price is required for LIMIT orders");
     }
 
@@ -416,7 +464,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     if (params.type && !["LIMIT", "MARKET"].includes(params.type)) {
       errors.push("Order type must be LIMIT or MARKET");
     }
-    if (params.timeInForce && !["GTC", "IOC", "FOK"].includes(params.timeInForce)) {
+    if (
+      params.timeInForce &&
+      !["GTC", "IOC", "FOK"].includes(params.timeInForce)
+    ) {
       errors.push("Time in force must be GTC, IOC, or FOK");
     }
 
@@ -483,10 +534,16 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       } else {
         // For sell orders, check base asset balance
         const baseAsset = params.symbol.replace("USDT", "");
-        return await this.hasSufficientBalance(baseAsset, Number.parseFloat(params.quantity));
+        return await this.hasSufficientBalance(
+          baseAsset,
+          Number.parseFloat(params.quantity)
+        );
       }
     } catch (error) {
-      console.error("[MexcTradingApi] Failed to check order affordability:", error);
+      console.error(
+        "[MexcTradingApi] Failed to check order affordability:",
+        error
+      );
       return false;
     }
   }
@@ -501,7 +558,9 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         return "LIMIT"; // Default to limit orders
       }
 
-      const priceChange = Number.parseFloat(ticker.data[0].priceChangePercent || "0");
+      const priceChange = Number.parseFloat(
+        ticker.data[0].priceChangePercent || "0"
+      );
       const volume = Number.parseFloat(ticker.data[0].volume || "0");
 
       // Use market orders for high volume, stable price assets
@@ -512,7 +571,10 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
 
       return "LIMIT";
     } catch (error) {
-      console.error("[MexcTradingApi] Failed to get recommended order type:", error);
+      console.error(
+        "[MexcTradingApi] Failed to get recommended order type:",
+        error
+      );
       return "LIMIT";
     }
   }

@@ -26,7 +26,8 @@ export class TradeExecutor {
   private failedExecutions = 0;
 
   // Connection state
-  private connectionStatus: "connected" | "disconnected" | "error" = "disconnected";
+  private connectionStatus: "connected" | "disconnected" | "error" =
+    "disconnected";
   private lastConnectionCheck = new Date();
 
   // Rate limiting
@@ -88,7 +89,8 @@ export class TradeExecutor {
    */
   async getHealthStatus(): Promise<"operational" | "degraded" | "offline"> {
     if (!this.state.isInitialized) return "offline";
-    if (!this.state.isHealthy || this.connectionStatus === "error") return "degraded";
+    if (!this.state.isHealthy || this.connectionStatus === "error")
+      return "degraded";
     if (this.connectionStatus === "disconnected") return "degraded";
     return "operational";
   }
@@ -108,7 +110,9 @@ export class TradeExecutor {
   /**
    * Execute a snipe target
    */
-  async executeSnipeTarget(target: SnipeTarget): Promise<ServiceResponse<TradeExecutionResult>> {
+  async executeSnipeTarget(
+    target: SnipeTarget
+  ): Promise<ServiceResponse<TradeExecutionResult>> {
     const startTime = Date.now();
 
     try {
@@ -127,9 +131,15 @@ export class TradeExecutor {
       }
 
       // Connection check
-      if (this.connectionStatus === "disconnected" || this.connectionStatus === "error") {
+      if (
+        this.connectionStatus === "disconnected" ||
+        this.connectionStatus === "error"
+      ) {
         await this.testConnection();
-        if (this.connectionStatus === "error" || this.connectionStatus === "disconnected") {
+        if (
+          this.connectionStatus === "error" ||
+          this.connectionStatus === "disconnected"
+        ) {
           throw new Error("No connection to trading API");
         }
       }
@@ -208,7 +218,9 @@ export class TradeExecutor {
       // Validate parameters
       const validation = this.validateTradeParameters(params);
       if (!validation.isValid) {
-        throw new Error(`Invalid trade parameters: ${validation.errors.join(", ")}`);
+        throw new Error(
+          `Invalid trade parameters: ${validation.errors.join(", ")}`
+        );
       }
 
       // Execute the trade
@@ -256,7 +268,10 @@ export class TradeExecutor {
    */
   async getAverageExecutionTime(): Promise<number> {
     if (this.executionTimes.length === 0) return 0;
-    return this.executionTimes.reduce((sum, time) => sum + time, 0) / this.executionTimes.length;
+    return (
+      this.executionTimes.reduce((sum, time) => sum + time, 0) /
+      this.executionTimes.length
+    );
   }
 
   /**
@@ -301,7 +316,9 @@ export class TradeExecutor {
         status: this.connectionStatus,
       });
     } catch (error) {
-      this.context.logger.error(`Connection test failed: ${toSafeError(error).message}`);
+      this.context.logger.error(
+        `Connection test failed: ${toSafeError(error).message}`
+      );
       this.connectionStatus = "error";
     }
   }
@@ -309,7 +326,9 @@ export class TradeExecutor {
   /**
    * Prepare trade parameters from snipe target
    */
-  private async prepareTradeParameters(target: SnipeTarget): Promise<TradeParameters> {
+  private async prepareTradeParameters(
+    target: SnipeTarget
+  ): Promise<TradeParameters> {
     // Calculate position size in quote currency (USDT)
     const positionSizeUsdt = target.positionSizeUsdt;
 
@@ -349,7 +368,9 @@ export class TradeExecutor {
   /**
    * Execute trade with API (simulated)
    */
-  private async executeTrade(params: TradeParameters): Promise<TradeExecutionResult> {
+  private async executeTrade(
+    params: TradeParameters
+  ): Promise<TradeExecutionResult> {
     try {
       this.context.logger.debug("Executing trade", { params });
 
@@ -446,7 +467,10 @@ export class TradeExecutor {
   /**
    * Validate trade parameters
    */
-  private validateTradeParameters(params: TradeParameters): { isValid: boolean; errors: string[] } {
+  private validateTradeParameters(params: TradeParameters): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     if (!params.userId) {
@@ -497,10 +521,13 @@ export class TradeExecutor {
       failedExecutions: this.failedExecutions,
       averageExecutionTime:
         this.executionTimes.length > 0
-          ? this.executionTimes.reduce((sum, time) => sum + time, 0) / this.executionTimes.length
+          ? this.executionTimes.reduce((sum, time) => sum + time, 0) /
+            this.executionTimes.length
           : 0,
       successRate:
-        this.totalExecutions > 0 ? (this.successfulExecutions / this.totalExecutions) * 100 : 0,
+        this.totalExecutions > 0
+          ? (this.successfulExecutions / this.totalExecutions) * 100
+          : 0,
     };
 
     // Keep only last 100 execution times to prevent memory growth
@@ -515,13 +542,13 @@ export class TradeExecutor {
   async cancelAllPendingOrders(): Promise<ServiceResponse<number>> {
     try {
       this.context.logger.info("Cancelling all pending orders");
-      
+
       // In a real implementation, this would cancel all open orders via API
       // For now, simulate cancellation
       const cancelledCount = Math.floor(Math.random() * 5); // Simulate 0-4 cancelled orders
-      
+
       this.context.logger.info(`Cancelled ${cancelledCount} pending orders`);
-      
+
       return {
         success: true,
         data: cancelledCount,
@@ -543,13 +570,13 @@ export class TradeExecutor {
   async emergencyStop(): Promise<ServiceResponse<boolean>> {
     try {
       this.context.logger.warn("EMERGENCY: Stopping trade executor");
-      
+
       // Mark as not healthy
       this.state.isHealthy = false;
-      
+
       // In a real implementation, would disconnect from trading APIs
       this.context.logger.warn("Trade executor emergency stopped");
-      
+
       return {
         success: true,
         data: true,

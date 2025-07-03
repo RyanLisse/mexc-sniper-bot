@@ -14,11 +14,7 @@
 
 import { EventEmitter } from "node:events";
 import { createTimer } from "@/src/lib/structured-logger";
-import type {
-  RiskMetrics,
-  SafetyAlert,
-  SafetyConfiguration,
-} from "@/src/schemas/safety-monitoring-schemas";
+import type { SafetyAlert } from "@/src/schemas/safety-monitoring-schemas";
 import type { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import type { EmergencySafetySystem } from "./emergency-safety-system";
 import type { AlertManagement } from "./real-time-safety-monitoring-modules/alert-management";
@@ -140,7 +136,12 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
     warn: (message: string, context?: any) =>
       console.warn("[enhanced-safety-monitor]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[enhanced-safety-monitor]", message, context || "", error || ""),
+      console.error(
+        "[enhanced-safety-monitor]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[enhanced-safety-monitor]", message, context || ""),
   };
@@ -314,7 +315,10 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
     reason: string,
     severity: "medium" | "high" | "critical" = "high"
   ): Promise<boolean> {
-    const timer = createTimer("enhanced_emergency_stop", "enhanced-safety-monitor");
+    const timer = createTimer(
+      "enhanced_emergency_stop",
+      "enhanced-safety-monitor"
+    );
 
     try {
       this.logger.info("Executing enhanced emergency stop", {
@@ -330,19 +334,27 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
       this.realTimeMetrics.emergencyActions++;
 
       // Coordinate emergency response across all systems
-      const coordinatedResponse = await this.coordinateEmergencyResponse(reason, severity);
+      const coordinatedResponse = await this.coordinateEmergencyResponse(
+        reason,
+        severity
+      );
 
       if (!coordinatedResponse.success) {
-        throw new Error(`Emergency coordination failed: ${coordinatedResponse.error}`);
+        throw new Error(
+          `Emergency coordination failed: ${coordinatedResponse.error}`
+        );
       }
 
       // Execute emergency stop through safety coordinator
-      await this.safetyCoordinator.triggerEmergencyProcedure("enhanced_emergency_stop", {
-        reason,
-        severity,
-        timestamp: new Date().toISOString(),
-        emergencyCount: this.emergencyCount,
-      });
+      await this.safetyCoordinator.triggerEmergencyProcedure(
+        "enhanced_emergency_stop",
+        {
+          reason,
+          severity,
+          timestamp: new Date().toISOString(),
+          emergencyCount: this.emergencyCount,
+        }
+      );
 
       // Create critical alert
       await this.alertManagement.addAlert({
@@ -351,7 +363,8 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
         category: "system",
         title: "Enhanced Emergency Stop Executed",
         message: `Enhanced emergency stop executed: ${reason}`,
-        riskLevel: severity === "critical" ? 100 : severity === "high" ? 85 : 70,
+        riskLevel:
+          severity === "critical" ? 100 : severity === "high" ? 85 : 70,
         source: "enhanced_safety_monitor",
         autoActions: [
           {
@@ -424,7 +437,9 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
         active: emergencyStatus.active,
         level: emergencyStatus.systemHealth,
         activeProcedures: emergencyStatus.conditions.map((c) => c.type),
-        timeSinceLastEmergency: this.lastEmergencyTime ? Date.now() - this.lastEmergencyTime : 0,
+        timeSinceLastEmergency: this.lastEmergencyTime
+          ? Date.now() - this.lastEmergencyTime
+          : 0,
       },
       systemHealth: {
         overall: coordinatorStatus.overall.safetyScore,
@@ -468,11 +483,13 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
       anomalies.push(...volumeAnomalies);
 
       // Volatility anomaly detection
-      const volatilityAnomalies = await this.detectVolatilityAnomalies(marketData);
+      const volatilityAnomalies =
+        await this.detectVolatilityAnomalies(marketData);
       anomalies.push(...volatilityAnomalies);
 
       // Correlation anomaly detection
-      const correlationAnomalies = await this.detectCorrelationAnomalies(marketData);
+      const correlationAnomalies =
+        await this.detectCorrelationAnomalies(marketData);
       anomalies.push(...correlationAnomalies);
 
       // Store anomalies in history
@@ -492,11 +509,14 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
         this.logger.info("Anomalies detected", {
           count: anomalies.length,
           duration,
-          criticalAnomalies: anomalies.filter((a) => a.severity === "critical").length,
+          criticalAnomalies: anomalies.filter((a) => a.severity === "critical")
+            .length,
         });
 
         // Create alerts for critical anomalies
-        const criticalAnomalies = anomalies.filter((a) => a.severity === "critical");
+        const criticalAnomalies = anomalies.filter(
+          (a) => a.severity === "critical"
+        );
         for (const anomaly of criticalAnomalies) {
           await this.alertManagement.addAlert({
             type: "risk_threshold",
@@ -551,13 +571,18 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
       riskFactors,
       recommendations,
       actionRequired: currentRisk > this.config.criticalRiskThreshold,
-      emergencyLikelihood: this.calculateEmergencyLikelihood(currentRisk, predictedRisk),
+      emergencyLikelihood: this.calculateEmergencyLikelihood(
+        currentRisk,
+        predictedRisk
+      ),
     };
   }
 
   // Private methods
 
-  private mergeWithDefaults(config: Partial<EnhancedSafetyConfig>): EnhancedSafetyConfig {
+  private mergeWithDefaults(
+    config: Partial<EnhancedSafetyConfig>
+  ): EnhancedSafetyConfig {
     return {
       monitoringIntervalMs: 5000,
       riskAssessmentIntervalMs: 15000,
@@ -663,7 +688,9 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
     this.realTimeMetrics.timestamp = new Date().toISOString();
 
     // Check for emergency conditions
-    if (this.realTimeMetrics.overallRiskScore > this.config.emergencyRiskThreshold) {
+    if (
+      this.realTimeMetrics.overallRiskScore > this.config.emergencyRiskThreshold
+    ) {
       if (this.config.autoEmergencyStopEnabled) {
         await this.executeEnhancedEmergencyStop(
           `Risk score ${this.realTimeMetrics.overallRiskScore} exceeds emergency threshold ${this.config.emergencyRiskThreshold}`,
@@ -675,10 +702,12 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
 
   private async performRiskAssessmentCycle(): Promise<void> {
     try {
-      const comprehensiveAssessment = await this.riskAssessment.performComprehensiveAssessment();
+      const comprehensiveAssessment =
+        await this.riskAssessment.performComprehensiveAssessment();
 
       // Update risk metrics
-      this.realTimeMetrics.portfolioRisk = comprehensiveAssessment.portfolio.riskScore;
+      this.realTimeMetrics.portfolioRisk =
+        comprehensiveAssessment.portfolio.riskScore;
       this.realTimeMetrics.systemRisk = this.convertSystemHealthToRisk(
         comprehensiveAssessment.system
       );
@@ -687,7 +716,8 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
       );
 
       // Update overall risk score
-      this.realTimeMetrics.overallRiskScore = comprehensiveAssessment.overallRiskScore;
+      this.realTimeMetrics.overallRiskScore =
+        comprehensiveAssessment.overallRiskScore;
 
       // Update risk trend
       this.updateRiskTrend(comprehensiveAssessment.overallRiskScore);
@@ -747,34 +777,36 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
   }
 
   private async initializePredictiveModels(): Promise<void> {
-    this.logger.info("Initializing predictive models (placeholder implementation)");
+    this.logger.info(
+      "Initializing predictive models (placeholder implementation)"
+    );
     // Placeholder for machine learning model initialization
     // In production, this would load trained models for risk prediction and anomaly detection
   }
 
   private async detectPriceAnomalies(
-    marketData: Record<string, any>
+    _marketData: Record<string, any>
   ): Promise<AnomalyDetectionResult[]> {
     // Placeholder implementation - would use real market data analysis
     return [];
   }
 
   private async detectVolumeAnomalies(
-    marketData: Record<string, any>
+    _marketData: Record<string, any>
   ): Promise<AnomalyDetectionResult[]> {
     // Placeholder implementation - would use real volume analysis
     return [];
   }
 
   private async detectVolatilityAnomalies(
-    marketData: Record<string, any>
+    _marketData: Record<string, any>
   ): Promise<AnomalyDetectionResult[]> {
     // Placeholder implementation - would use real volatility analysis
     return [];
   }
 
   private async detectCorrelationAnomalies(
-    marketData: Record<string, any>
+    _marketData: Record<string, any>
   ): Promise<AnomalyDetectionResult[]> {
     // Placeholder implementation - would use real correlation analysis
     return [];
@@ -792,7 +824,10 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
   } {
     // Simple heuristic prediction based on current risk and trends
     const recentRisks = this.riskHistory.slice(-10).map((r) => r.risk);
-    const trend = recentRisks.length > 1 ? recentRisks[recentRisks.length - 1] - recentRisks[0] : 0;
+    const trend =
+      recentRisks.length > 1
+        ? recentRisks[recentRisks.length - 1] - recentRisks[0]
+        : 0;
 
     return {
       next5min: Math.max(0, Math.min(100, currentRisk + trend * 0.1)),
@@ -849,17 +884,24 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
     }
 
     if (predictedRisk.next15min > currentRisk + 10) {
-      recommendations.push("Risk expected to increase - prepare defensive measures");
+      recommendations.push(
+        "Risk expected to increase - prepare defensive measures"
+      );
     }
 
     if (riskFactors.length > 3) {
-      recommendations.push("Multiple risk factors detected - review system configuration");
+      recommendations.push(
+        "Multiple risk factors detected - review system configuration"
+      );
     }
 
     return recommendations;
   }
 
-  private calculateEmergencyLikelihood(currentRisk: number, predictedRisk: any): number {
+  private calculateEmergencyLikelihood(
+    currentRisk: number,
+    predictedRisk: any
+  ): number {
     const maxPredictedRisk = Math.max(
       predictedRisk.next5min,
       predictedRisk.next15min,
@@ -867,7 +909,10 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
     );
 
     if (maxPredictedRisk > this.config.emergencyRiskThreshold) {
-      return Math.min(100, (maxPredictedRisk - this.config.emergencyRiskThreshold) * 5);
+      return Math.min(
+        100,
+        (maxPredictedRisk - this.config.emergencyRiskThreshold) * 5
+      );
     }
 
     return Math.max(0, (currentRisk - this.config.criticalRiskThreshold) * 2);
@@ -883,7 +928,8 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
 
     const avgRecent = recentRisks.slice(-3).reduce((a, b) => a + b, 0) / 3;
     const avgOlder =
-      recentRisks.slice(0, -3).reduce((a, b) => a + b, 0) / Math.max(1, recentRisks.length - 3);
+      recentRisks.slice(0, -3).reduce((a, b) => a + b, 0) /
+      Math.max(1, recentRisks.length - 3);
 
     const diff = avgRecent - avgOlder;
 
@@ -910,7 +956,11 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
       poor: 90,
     };
 
-    return ratingToRisk[performanceAssessment.performanceRating as keyof typeof ratingToRisk] || 50;
+    return (
+      ratingToRisk[
+        performanceAssessment.performanceRating as keyof typeof ratingToRisk
+      ] || 50
+    );
   }
 
   private identifyDegradedServices(coordinatorStatus: any): string[] {
@@ -959,32 +1009,44 @@ export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
   private setupEventForwarding(): void {
     // Forward events from core components if they support event emission
     try {
-      if (this.alertManagement && 'on' in this.alertManagement && typeof this.alertManagement.on === 'function') {
+      if (
+        this.alertManagement &&
+        "on" in this.alertManagement &&
+        typeof this.alertManagement.on === "function"
+      ) {
         this.alertManagement.on("alert-created", (alert: any) => {
           this.emit("alert-created", alert);
         });
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.debug("Alert management does not support events");
     }
 
     try {
-      if (this.emergencySystem && 'on' in this.emergencySystem && typeof this.emergencySystem.on === 'function') {
+      if (
+        this.emergencySystem &&
+        "on" in this.emergencySystem &&
+        typeof this.emergencySystem.on === "function"
+      ) {
         this.emergencySystem.on("emergency-triggered", (emergency: any) => {
           this.emit("emergency-triggered", emergency);
         });
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.debug("Emergency system does not support events");
     }
 
     try {
-      if (this.safetyCoordinator && 'on' in this.safetyCoordinator && typeof this.safetyCoordinator.on === 'function') {
+      if (
+        this.safetyCoordinator &&
+        "on" in this.safetyCoordinator &&
+        typeof this.safetyCoordinator.on === "function"
+      ) {
         this.safetyCoordinator.on("emergency-triggered", (procedure: any) => {
           this.emit("emergency-triggered", procedure);
         });
       }
-    } catch (error) {
+    } catch (_error) {
       this.logger.debug("Safety coordinator does not support events");
     }
   }

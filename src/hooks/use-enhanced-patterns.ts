@@ -68,8 +68,10 @@ export interface EnhancedPatternsResponse {
 
 const enhancedPatternsQueryKeys = {
   all: ["enhanced-patterns"] as const,
-  list: (filters?: any) => [...enhancedPatternsQueryKeys.all, "list", filters] as const,
-  detail: (vcoinId: string) => [...enhancedPatternsQueryKeys.all, "detail", vcoinId] as const,
+  list: (filters?: any) =>
+    [...enhancedPatternsQueryKeys.all, "list", filters] as const,
+  detail: (vcoinId: string) =>
+    [...enhancedPatternsQueryKeys.all, "detail", vcoinId] as const,
   aiEnhanced: () => [...enhancedPatternsQueryKeys.all, "ai-enhanced"] as const,
 };
 
@@ -169,7 +171,9 @@ export function usePatternDetectionMetrics() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || "Failed to fetch pattern detection metrics");
+        throw new Error(
+          result.error || "Failed to fetch pattern detection metrics"
+        );
       }
 
       return result.data;
@@ -218,7 +222,9 @@ export function usePatternAnalysisTrigger() {
 
       // Invalidate and refetch pattern data
       if (queryClient) {
-        await queryClient.invalidateQueries({ queryKey: enhancedPatternsQueryKeys.all });
+        await queryClient.invalidateQueries({
+          queryKey: enhancedPatternsQueryKeys.all,
+        });
       }
 
       return result.data;
@@ -269,7 +275,8 @@ function transformPatternResponse(apiData: any): EnhancedPatternsResponse {
             enhancementType: "combined",
             processingTime: match.aiEnhancement.processingTime || 0,
             confidenceBoost:
-              (match.aiEnhancement.enhancedConfidence || 0) - (match.confidence || 0),
+              (match.aiEnhancement.enhancedConfidence || 0) -
+              (match.confidence || 0),
           },
         };
         aiEnhancedPatterns++;
@@ -298,8 +305,10 @@ function transformPatternResponse(apiData: any): EnhancedPatternsResponse {
       totalPatterns,
       readyStatePatterns,
       aiEnhancedPatterns,
-      averageConfidence: totalPatterns > 0 ? totalConfidence / totalPatterns : 0,
-      averageAdvanceHours: advanceHourCount > 0 ? totalAdvanceHours / advanceHourCount : 0,
+      averageConfidence:
+        totalPatterns > 0 ? totalConfidence / totalPatterns : 0,
+      averageAdvanceHours:
+        advanceHourCount > 0 ? totalAdvanceHours / advanceHourCount : 0,
     },
     aiServiceStatus: {
       cohereAvailable: apiData.aiServiceStatus?.cohere || false,

@@ -71,7 +71,9 @@ export class DynamicAgentLoader {
       }
 
       case "pattern-discovery": {
-        const { PatternDiscoveryAgent } = await import("./pattern-discovery-agent");
+        const { PatternDiscoveryAgent } = await import(
+          "./pattern-discovery-agent"
+        );
         AgentClass = PatternDiscoveryAgent;
         break;
       }
@@ -196,7 +198,9 @@ export async function loadAgent(type: AgentType): Promise<BaseAgent> {
 /**
  * Helper function to load multiple agents
  */
-export async function loadAgents(types: AgentType[]): Promise<Map<AgentType, BaseAgent>> {
+export async function loadAgents(
+  types: AgentType[]
+): Promise<Map<AgentType, BaseAgent>> {
   return agentLoader.loadAgents(types);
 }
 

@@ -18,7 +18,7 @@ export class WorkflowExecutionLogger {
   static async logExecution(execution: WorkflowExecutionLog): Promise<void> {
     try {
       const activityId = `${execution.workflowId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       await db.insert(workflowActivity).values({
         userId: execution.userId || "default",
         activityId,
@@ -30,7 +30,9 @@ export class WorkflowExecutionLogger {
         vcoinId: execution.vcoinId,
       });
 
-      console.log(`✅ Workflow execution logged: ${execution.workflowId} - ${execution.message}`);
+      console.log(
+        `✅ Workflow execution logged: ${execution.workflowId} - ${execution.message}`
+      );
     } catch (error) {
       console.error("❌ Failed to log workflow execution:", {
         error,
@@ -43,12 +45,16 @@ export class WorkflowExecutionLogger {
   /**
    * Log workflow start
    */
-  static async logStart(workflowId: string, message?: string, metadata?: {
-    symbolName?: string;
-    vcoinId?: string;
-    userId?: string;
-  }): Promise<void> {
-    await this.logExecution({
+  static async logStart(
+    workflowId: string,
+    message?: string,
+    metadata?: {
+      symbolName?: string;
+      vcoinId?: string;
+      userId?: string;
+    }
+  ): Promise<void> {
+    await WorkflowExecutionLogger.logExecution({
       workflowId,
       type: "workflow_start",
       message: message || `Workflow ${workflowId} started`,
@@ -60,12 +66,16 @@ export class WorkflowExecutionLogger {
   /**
    * Log workflow success
    */
-  static async logSuccess(workflowId: string, message?: string, metadata?: {
-    symbolName?: string;
-    vcoinId?: string;
-    userId?: string;
-  }): Promise<void> {
-    await this.logExecution({
+  static async logSuccess(
+    workflowId: string,
+    message?: string,
+    metadata?: {
+      symbolName?: string;
+      vcoinId?: string;
+      userId?: string;
+    }
+  ): Promise<void> {
+    await WorkflowExecutionLogger.logExecution({
       workflowId,
       type: "workflow_success",
       message: message || `Workflow ${workflowId} completed successfully`,
@@ -77,13 +87,17 @@ export class WorkflowExecutionLogger {
   /**
    * Log workflow error
    */
-  static async logError(workflowId: string, error: Error | string, metadata?: {
-    symbolName?: string;
-    vcoinId?: string;
-    userId?: string;
-  }): Promise<void> {
+  static async logError(
+    workflowId: string,
+    error: Error | string,
+    metadata?: {
+      symbolName?: string;
+      vcoinId?: string;
+      userId?: string;
+    }
+  ): Promise<void> {
     const errorMessage = error instanceof Error ? error.message : error;
-    await this.logExecution({
+    await WorkflowExecutionLogger.logExecution({
       workflowId,
       type: "workflow_error",
       message: `Workflow ${workflowId} failed: ${errorMessage}`,
@@ -95,12 +109,16 @@ export class WorkflowExecutionLogger {
   /**
    * Log workflow progress/info
    */
-  static async logProgress(workflowId: string, message: string, metadata?: {
-    symbolName?: string;
-    vcoinId?: string;
-    userId?: string;
-  }): Promise<void> {
-    await this.logExecution({
+  static async logProgress(
+    workflowId: string,
+    message: string,
+    metadata?: {
+      symbolName?: string;
+      vcoinId?: string;
+      userId?: string;
+    }
+  ): Promise<void> {
+    await WorkflowExecutionLogger.logExecution({
       workflowId,
       type: "workflow_progress",
       message,
@@ -112,12 +130,16 @@ export class WorkflowExecutionLogger {
   /**
    * Log workflow warning
    */
-  static async logWarning(workflowId: string, message: string, metadata?: {
-    symbolName?: string;
-    vcoinId?: string;
-    userId?: string;
-  }): Promise<void> {
-    await this.logExecution({
+  static async logWarning(
+    workflowId: string,
+    message: string,
+    metadata?: {
+      symbolName?: string;
+      vcoinId?: string;
+      userId?: string;
+    }
+  ): Promise<void> {
+    await WorkflowExecutionLogger.logExecution({
       workflowId,
       type: "workflow_warning",
       message,
@@ -129,19 +151,27 @@ export class WorkflowExecutionLogger {
   /**
    * Create a workflow execution context for easier logging
    */
-  static createContext(workflowId: string, metadata?: {
-    symbolName?: string;
-    vcoinId?: string;
-    userId?: string;
-  }) {
+  static createContext(
+    workflowId: string,
+    metadata?: {
+      symbolName?: string;
+      vcoinId?: string;
+      userId?: string;
+    }
+  ) {
     return {
       workflowId,
       metadata,
-      logStart: (message?: string) => this.logStart(workflowId, message, metadata),
-      logSuccess: (message?: string) => this.logSuccess(workflowId, message, metadata),
-      logError: (error: Error | string) => this.logError(workflowId, error, metadata),
-      logProgress: (message: string) => this.logProgress(workflowId, message, metadata),
-      logWarning: (message: string) => this.logWarning(workflowId, message, metadata),
+      logStart: (message?: string) =>
+        WorkflowExecutionLogger.logStart(workflowId, message, metadata),
+      logSuccess: (message?: string) =>
+        WorkflowExecutionLogger.logSuccess(workflowId, message, metadata),
+      logError: (error: Error | string) =>
+        WorkflowExecutionLogger.logError(workflowId, error, metadata),
+      logProgress: (message: string) =>
+        WorkflowExecutionLogger.logProgress(workflowId, message, metadata),
+      logWarning: (message: string) =>
+        WorkflowExecutionLogger.logWarning(workflowId, message, metadata),
     };
   }
 }

@@ -24,7 +24,9 @@ export class OrderExecutor {
   /**
    * Execute trade via manual trading module
    */
-  async executeTradeViaManualModule(params: TradeParameters): Promise<TradeResult> {
+  async executeTradeViaManualModule(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     try {
       this.context.logger.info("Executing trade via manual module", {
         symbol: params.symbol,
@@ -35,9 +37,10 @@ export class OrderExecutor {
       if (!this.context.manualTradingModule) {
         throw new Error("Manual trading module not available");
       }
-      
-      const result = await this.context.manualTradingModule.executeTrade(params);
-      
+
+      const result =
+        await this.context.manualTradingModule.executeTrade(params);
+
       this.context.logger.info("Manual trade execution completed", {
         success: result.success,
         orderId: result.data?.orderId,
@@ -72,16 +75,19 @@ export class OrderExecutor {
       });
 
       // Simulate execution delay
-      await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.random() * 100 + 50)
+      );
 
       // Simulate success/failure based on market conditions
       const simulatedSuccess = Math.random() > 0.1; // 90% success rate for paper trading
-      
+
       if (simulatedSuccess) {
         const simulatedOrderId = `paper_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        const simulatedFillPrice = params.price ? 
-          params.price * (0.999 + Math.random() * 0.002) : // ±0.1% slippage
-          100 * (1 + Math.random() * 0.1); // Random price if none provided
+        const simulatedFillPrice = params.price
+          ? params.price * (0.999 + Math.random() * 0.002)
+          : // ±0.1% slippage
+            100 * (1 + Math.random() * 0.1); // Random price if none provided
 
         return {
           success: true,
@@ -168,7 +174,9 @@ export class OrderExecutor {
   /**
    * Perform pre-trade validation
    */
-  private async performPreTradeValidation(params: TradeParameters): Promise<void> {
+  private async performPreTradeValidation(
+    params: TradeParameters
+  ): Promise<void> {
     // Check account balance
     const balance = await this.context.mexcService.getAccountBalance();
     if (!balance.success) {
@@ -177,19 +185,24 @@ export class OrderExecutor {
 
     // Check if we have sufficient balance
     const requiredBalance = (params.quantity || 0) * (params.price || 0);
-    const assetToCheck = params.side === "BUY" ? "USDT" : params.symbol.replace("USDT", "");
+    const assetToCheck =
+      params.side === "BUY" ? "USDT" : params.symbol.replace("USDT", "");
     // balance.data is already an array of balance entries
-    const balanceEntry = Array.isArray(balance.data) ? balance.data.find(
-      (b: any) => b.asset === assetToCheck
-    ) : null;
+    const balanceEntry = Array.isArray(balance.data)
+      ? balance.data.find((b: any) => b.asset === assetToCheck)
+      : null;
     const availableBalance = parseFloat(balanceEntry?.free || "0");
 
     if (availableBalance < requiredBalance) {
-      throw new Error(`Insufficient balance. Required: ${requiredBalance}, Available: ${availableBalance}`);
+      throw new Error(
+        `Insufficient balance. Required: ${requiredBalance}, Available: ${availableBalance}`
+      );
     }
 
     // Check symbol trading status
-    const symbolInfo = await this.context.mexcService.getSymbolInfoBasic(params.symbol);
+    const symbolInfo = await this.context.mexcService.getSymbolInfoBasic(
+      params.symbol
+    );
     if (!symbolInfo.success) {
       throw new Error(`Failed to get symbol info for ${params.symbol}`);
     }
@@ -197,18 +210,24 @@ export class OrderExecutor {
     // Check market data availability
     const currentPrice = await this.getCurrentMarketPrice(params.symbol);
     if (!currentPrice) {
-      throw new Error(`Unable to get current market price for ${params.symbol}`);
+      throw new Error(
+        `Unable to get current market price for ${params.symbol}`
+      );
     }
 
     // Validate price is within reasonable bounds
     if (params.price) {
       const priceDiff = Math.abs(params.price - currentPrice) / currentPrice;
-      if (priceDiff > 0.05) { // 5% price difference threshold
-        this.context.logger.warn("Order price significantly different from market price", {
-          orderPrice: params.price,
-          marketPrice: currentPrice,
-          difference: priceDiff,
-        });
+      if (priceDiff > 0.05) {
+        // 5% price difference threshold
+        this.context.logger.warn(
+          "Order price significantly different from market price",
+          {
+            orderPrice: params.price,
+            marketPrice: currentPrice,
+            difference: priceDiff,
+          }
+        );
       }
     }
   }
@@ -216,20 +235,24 @@ export class OrderExecutor {
   /**
    * Validate order parameters
    */
-  private async validateOrderParameters(params: TradeParameters): Promise<void> {
+  private async validateOrderParameters(
+    params: TradeParameters
+  ): Promise<void> {
     // Get symbol trading rules
-    const symbolInfo = await this.context.mexcService.getSymbolInfoBasic(params.symbol);
+    const symbolInfo = await this.context.mexcService.getSymbolInfoBasic(
+      params.symbol
+    );
     if (!symbolInfo.success || !symbolInfo.data) {
       throw new Error(`Failed to get symbol info for ${params.symbol}`);
     }
 
     // Note: Basic symbol info may not have detailed filters, so we'll use basic validation
-    
+
     // Basic validation since we don't have detailed filter info
     if (params.quantity && params.quantity <= 0) {
       throw new Error(`Invalid quantity: ${params.quantity}`);
     }
-    
+
     if (params.price && params.price <= 0) {
       throw new Error(`Invalid price: ${params.price}`);
     }
@@ -237,7 +260,8 @@ export class OrderExecutor {
     // Basic notional value validation
     if (params.price && params.quantity) {
       const notionalValue = params.quantity * params.price;
-      if (notionalValue < 10) { // Basic minimum of $10 USD equivalent
+      if (notionalValue < 10) {
+        // Basic minimum of $10 USD equivalent
         throw new Error(`Order value too small: ${notionalValue}`);
       }
     }
@@ -246,28 +270,37 @@ export class OrderExecutor {
   /**
    * Execute order with retry logic
    */
-  private async executeOrderWithRetry(params: TradeParameters): Promise<TradeResult> {
+  private async executeOrderWithRetry(
+    params: TradeParameters
+  ): Promise<TradeResult> {
     const maxRetries = this.context.config.maxRetries || 3;
     const retryDelay = 1000; // Fixed retry delay
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        this.context.logger.info(`Order execution attempt ${attempt}/${maxRetries}`, {
-          symbol: params.symbol,
-          side: params.side,
-          quantity: params.quantity,
-        });
+        this.context.logger.info(
+          `Order execution attempt ${attempt}/${maxRetries}`,
+          {
+            symbol: params.symbol,
+            side: params.side,
+            quantity: params.quantity,
+          }
+        );
 
         const orderData: TradingOrderData = {
           symbol: params.symbol,
           side: params.side.toUpperCase() as "BUY" | "SELL",
-          type: (params.type === "MARKET" || params.type === "LIMIT") ? params.type : "MARKET",
+          type:
+            params.type === "MARKET" || params.type === "LIMIT"
+              ? params.type
+              : "MARKET",
           quantity: params.quantity?.toString() || "0",
           price: params.price?.toString(),
           timeInForce: params.timeInForce,
         };
 
-        const orderResult = await this.context.mexcService.placeOrder(orderData);
+        const orderResult =
+          await this.context.mexcService.placeOrder(orderData);
 
         if (orderResult.success && orderResult.data) {
           return {
@@ -277,10 +310,14 @@ export class OrderExecutor {
               symbol: params.symbol,
               side: params.side,
               type: orderResult.data.type || params.type || "MARKET",
-              quantity: orderResult.data.quantity || params.quantity?.toString() || "0",
+              quantity:
+                orderResult.data.quantity || params.quantity?.toString() || "0",
               price: orderResult.data.price || params.price?.toString() || "0",
               status: orderResult.data.status || "FILLED",
-              executedQty: orderResult.data.executedQty || params.quantity?.toString() || "0",
+              executedQty:
+                orderResult.data.executedQty ||
+                params.quantity?.toString() ||
+                "0",
               timestamp: new Date().toISOString(),
             },
             timestamp: new Date().toISOString(),
@@ -290,23 +327,29 @@ export class OrderExecutor {
         }
       } catch (error) {
         const safeError = toSafeError(error);
-        
+
         if (attempt === maxRetries) {
-          this.context.logger.error("Order execution failed after all retries", {
-            params,
-            attempt,
-            error: safeError,
-          });
+          this.context.logger.error(
+            "Order execution failed after all retries",
+            {
+              params,
+              attempt,
+              error: safeError,
+            }
+          );
           throw error;
         }
 
-        this.context.logger.warn(`Order execution attempt ${attempt} failed, retrying...`, {
-          params,
-          error: safeError,
-          nextAttemptIn: retryDelay,
-        });
+        this.context.logger.warn(
+          `Order execution attempt ${attempt} failed, retrying...`,
+          {
+            params,
+            error: safeError,
+            nextAttemptIn: retryDelay,
+          }
+        );
 
-        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
     }
 
@@ -319,7 +362,9 @@ export class OrderExecutor {
   private async getCurrentMarketPrice(symbol: string): Promise<number | null> {
     try {
       const ticker = await this.context.mexcService.getTicker(symbol);
-      return ticker.success && ticker.data ? parseFloat(ticker.data.price) : null;
+      return ticker.success && ticker.data
+        ? parseFloat(ticker.data.price)
+        : null;
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to get current market price", {
@@ -342,7 +387,8 @@ export class OrderExecutor {
       symbol: params.symbol,
       side: params.side,
       orderId: result.data?.orderId || "",
-      quantity: parseFloat(result.data?.executedQty || "0") || params.quantity || 0,
+      quantity:
+        parseFloat(result.data?.executedQty || "0") || params.quantity || 0,
       entryPrice: parseFloat(result.data?.price || "0") || params.price || 0,
       currentPrice: parseFloat(result.data?.price || "0") || params.price || 0,
       timestamp: new Date().toISOString(),

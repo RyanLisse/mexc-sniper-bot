@@ -76,7 +76,8 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
     const resource = new Resource({
       [SEMRESATTRS_SERVICE_NAME]: "mexc-trading-bot",
       [SEMRESATTRS_SERVICE_VERSION]: process.env.APP_VERSION || "1.0.0",
-      [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || "development",
+      [SEMRESATTRS_DEPLOYMENT_ENVIRONMENT]:
+        process.env.NODE_ENV || "development",
       [SEMRESATTRS_SERVICE_NAMESPACE]: "trading",
       [SEMRESATTRS_SERVICE_INSTANCE_ID]: process.env.HOSTNAME || "localhost",
     });
@@ -85,7 +86,10 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
     const traceExporters = [];
 
     // Use OTLP HTTP exporter (compatible with Jaeger and other OTLP receivers)
-    if (process.env.JAEGER_ENDPOINT || process.env.OTEL_EXPORTER_OTLP_ENDPOINT) {
+    if (
+      process.env.JAEGER_ENDPOINT ||
+      process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+    ) {
       traceExporters.push(
         new OTLPTraceExporter({
           url:
@@ -208,7 +212,9 @@ export async function initializeOpenTelemetry(): Promise<any | null> {
       sdk
         .shutdown()
         .then(() => logger.info("[OpenTelemetry] SDK shut down successfully"))
-        .catch((error: any) => logger.error("[OpenTelemetry] Error shutting down SDK", error))
+        .catch((error: any) =>
+          logger.error("[OpenTelemetry] Error shutting down SDK", error)
+        )
         .finally(() => process.exit(0));
     });
 

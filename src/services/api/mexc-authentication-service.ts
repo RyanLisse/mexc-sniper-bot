@@ -79,7 +79,12 @@ export class MexcAuthenticationService {
     warn: (message: string, context?: any) =>
       console.warn("[mexc-authentication-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[mexc-authentication-service]", message, context || "", error || ""),
+      console.error(
+        "[mexc-authentication-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[mexc-authentication-service]", message, context || ""),
   };
@@ -93,9 +98,18 @@ export class MexcAuthenticationService {
 
   constructor(config: Partial<AuthenticationConfig> = {}) {
     this.config = {
-      apiKey: config.apiKey !== undefined ? config.apiKey : (process.env.MEXC_API_KEY || ""),
-      secretKey: config.secretKey !== undefined ? config.secretKey : (process.env.MEXC_SECRET_KEY || ""),
-      passphrase: config.passphrase !== undefined ? config.passphrase : (process.env.MEXC_PASSPHRASE || ""),
+      apiKey:
+        config.apiKey !== undefined
+          ? config.apiKey
+          : process.env.MEXC_API_KEY || "",
+      secretKey:
+        config.secretKey !== undefined
+          ? config.secretKey
+          : process.env.MEXC_SECRET_KEY || "",
+      passphrase:
+        config.passphrase !== undefined
+          ? config.passphrase
+          : process.env.MEXC_PASSPHRASE || "",
       enableEncryption: config.enableEncryption ?? false,
       encryptionKey: config.encryptionKey || process.env.MEXC_ENCRYPTION_KEY,
       testIntervalMs: config.testIntervalMs || 300000, // 5 minutes
@@ -161,7 +175,9 @@ export class MexcAuthenticationService {
    */
   getMetrics(): AuthenticationMetrics {
     const now = Date.now();
-    const uptime = this.status.lastValidAt ? now - this.status.lastValidAt.getTime() : 0;
+    const uptime = this.status.lastValidAt
+      ? now - this.status.lastValidAt.getTime()
+      : 0;
     return {
       ...this.metrics,
       uptime,
@@ -218,10 +234,13 @@ export class MexcAuthenticationService {
 
     try {
       const startTime = Date.now();
-      
+
       // Check if API client has testCredentials method, otherwise use getAccountInfo
       let testResult;
-      if (this.apiClient.testCredentials && typeof this.apiClient.testCredentials === 'function') {
+      if (
+        this.apiClient.testCredentials &&
+        typeof this.apiClient.testCredentials === "function"
+      ) {
         testResult = await this.apiClient.testCredentials();
       } else {
         // Fallback to getAccountInfo for compatibility
@@ -229,15 +248,17 @@ export class MexcAuthenticationService {
         testResult = {
           isValid: accountInfo.success,
           hasConnection: accountInfo.success,
-          error: accountInfo.success ? undefined : accountInfo.error || 'Unknown error'
+          error: accountInfo.success
+            ? undefined
+            : accountInfo.error || "Unknown error",
         };
       }
-      
+
       // Handle null/malformed responses
-      if (!testResult || typeof testResult !== 'object') {
-        throw new Error('Invalid API response format');
+      if (!testResult || typeof testResult !== "object") {
+        throw new Error("Invalid API response format");
       }
-      
+
       const responseTime = Math.max(Date.now() - startTime, 1); // Ensure at least 1ms
 
       const result: CredentialTestResult = {
@@ -268,7 +289,9 @@ export class MexcAuthenticationService {
   /**
    * Update credentials and re-test
    */
-  async updateCredentials(newCredentials: Partial<AuthenticationConfig>): Promise<void> {
+  async updateCredentials(
+    newCredentials: Partial<AuthenticationConfig>
+  ): Promise<void> {
     const wasValid = this.status.isValid;
 
     // Update configuration
@@ -303,7 +326,11 @@ export class MexcAuthenticationService {
    * Get encrypted credentials for secure storage
    */
   getEncryptedCredentials(): { apiKey: string; secretKey: string } | null {
-    if (!this.hasCredentials() || !this.config.enableEncryption || !this.config.encryptionKey) {
+    if (
+      !this.hasCredentials() ||
+      !this.config.enableEncryption ||
+      !this.config.encryptionKey
+    ) {
       return null;
     }
 
@@ -337,7 +364,11 @@ export class MexcAuthenticationService {
         secretKey: encryptedSecretKey,
       };
     } catch (error) {
-      this.logger.error("Failed to encrypt credentials:", undefined, error instanceof Error ? error : new Error(String(error)));
+      this.logger.error(
+        "Failed to encrypt credentials:",
+        undefined,
+        error instanceof Error ? error : new Error(String(error))
+      );
       return null;
     }
   }
@@ -350,7 +381,9 @@ export class MexcAuthenticationService {
     secretKey: string;
   }): Promise<boolean> {
     if (!this.config.enableEncryption || !this.config.encryptionKey) {
-      console.error("[MexcAuthenticationService] Encryption not enabled or key missing");
+      console.error(
+        "[MexcAuthenticationService] Encryption not enabled or key missing"
+      );
       return false;
     }
 
@@ -363,7 +396,8 @@ export class MexcAuthenticationService {
         Buffer.from(this.config.encryptionKey, "hex"),
         iv
       );
-      const apiKey = decipher.update(encryptedText, "hex", "utf8") + decipher.final("utf8");
+      const apiKey =
+        decipher.update(encryptedText, "hex", "utf8") + decipher.final("utf8");
 
       const secretKeyParts = encrypted.secretKey.split(":");
       const iv2 = Buffer.from(secretKeyParts[0], "hex");
@@ -373,12 +407,18 @@ export class MexcAuthenticationService {
         Buffer.from(this.config.encryptionKey, "hex"),
         iv2
       );
-      const secretKey = decipher2.update(encryptedText2, "hex", "utf8") + decipher2.final("utf8");
+      const secretKey =
+        decipher2.update(encryptedText2, "hex", "utf8") +
+        decipher2.final("utf8");
 
       await this.updateCredentials({ apiKey, secretKey });
       return true;
     } catch (error) {
-      this.logger.error("Failed to decrypt credentials:", undefined, error instanceof Error ? error : new Error(String(error)));
+      this.logger.error(
+        "Failed to decrypt credentials:",
+        undefined,
+        error instanceof Error ? error : new Error(String(error))
+      );
       return false;
     }
   }
@@ -429,7 +469,10 @@ export class MexcAuthenticationService {
     }
 
     const healthy =
-      status.hasCredentials && status.isValid && status.isConnected && !status.isBlocked;
+      status.hasCredentials &&
+      status.isValid &&
+      status.isConnected &&
+      !status.isBlocked;
 
     return {
       healthy,
@@ -462,7 +505,10 @@ export class MexcAuthenticationService {
   /**
    * Get service configuration (sanitized)
    */
-  getConfig(): Omit<AuthenticationConfig, "apiKey" | "secretKey" | "encryptionKey"> {
+  getConfig(): Omit<
+    AuthenticationConfig,
+    "apiKey" | "secretKey" | "encryptionKey"
+  > {
     return {
       passphrase: this.config.passphrase,
       enableEncryption: this.config.enableEncryption,
@@ -517,11 +563,13 @@ export class MexcAuthenticationService {
 
     // Update metrics
     if (this.metrics.totalTests > 0) {
-      this.metrics.successRate = (this.metrics.successfulTests / this.metrics.totalTests) * 100;
+      this.metrics.successRate =
+        (this.metrics.successfulTests / this.metrics.totalTests) * 100;
     }
 
     if (result.responseTime > 0) {
-      const totalResponseTime = this.metrics.averageResponseTime * (this.metrics.totalTests - 1);
+      const totalResponseTime =
+        this.metrics.averageResponseTime * (this.metrics.totalTests - 1);
       this.metrics.averageResponseTime =
         (totalResponseTime + result.responseTime) / this.metrics.totalTests;
     }
@@ -560,12 +608,12 @@ export class MexcAuthenticationService {
    */
   destroy(): void {
     this.stopPeriodicTesting();
-    
+
     // Clear credentials
     this.config.apiKey = "";
     this.config.secretKey = "";
     this.config.passphrase = "";
-    
+
     // Reset status
     this.status.hasCredentials = false;
     this.status.isValid = false;

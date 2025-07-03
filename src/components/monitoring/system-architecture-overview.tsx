@@ -14,7 +14,13 @@ import {
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +31,11 @@ import {
 } from "../../lib/react-utilities";
 
 // Helper type for safety status entries
-type SafetyStatusEntry = { passed: boolean; issues: string[]; recommendations: string[] };
+type SafetyStatusEntry = {
+  passed: boolean;
+  issues: string[];
+  recommendations: string[];
+};
 
 interface SystemOverviewData {
   timestamp: string;
@@ -81,10 +91,26 @@ interface SystemOverviewData {
   };
   safetyStatus: {
     overall: string;
-    simulation: { passed: boolean; issues: string[]; recommendations: string[] };
-    riskManager: { passed: boolean; issues: string[]; recommendations: string[] };
-    reconciliation: { passed: boolean; issues: string[]; recommendations: string[] };
-    errorRecovery: { passed: boolean; issues: string[]; recommendations: string[] };
+    simulation: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
+    riskManager: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
+    reconciliation: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
+    errorRecovery: {
+      passed: boolean;
+      issues: string[];
+      recommendations: string[];
+    };
     summary: string[];
   };
 }
@@ -184,9 +210,11 @@ export function SystemArchitectureOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {useSkeletonItems(3, "h-20 bg-gray-100 rounded animate-pulse").map((item) => (
-              <div key={item.key} className={item.className} />
-            ))}
+            {useSkeletonItems(3, "h-20 bg-gray-100 rounded animate-pulse").map(
+              (item) => (
+                <div key={item.key} className={item.className} />
+              )
+            )}
           </div>
         </CardContent>
       </Card>
@@ -224,7 +252,13 @@ export function SystemArchitectureOverview() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Badge variant={data.systemStatus.overall === "healthy" ? "default" : "destructive"}>
+          <Badge
+            variant={
+              data.systemStatus.overall === "healthy"
+                ? "default"
+                : "destructive"
+            }
+          >
             {data.systemStatus.overall.toUpperCase()}
           </Badge>
         </div>
@@ -243,14 +277,19 @@ export function SystemArchitectureOverview() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Health</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  System Health
+                </CardTitle>
                 {getStatusIcon(data.systemStatus.overall)}
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {data.systemStatus.healthScore.toFixed(1)}%
                 </div>
-                <Progress value={data.systemStatus.healthScore} className="mt-2" />
+                <Progress
+                  value={data.systemStatus.healthScore}
+                  className="mt-2"
+                />
               </CardContent>
             </Card>
 
@@ -260,7 +299,9 @@ export function SystemArchitectureOverview() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatUptime(data.systemStatus.uptime)}</div>
+                <div className="text-2xl font-bold">
+                  {formatUptime(data.systemStatus.uptime)}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Node.js {data.systemStatus.nodeVersion}
                 </p>
@@ -269,7 +310,9 @@ export function SystemArchitectureOverview() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Memory Usage
+                </CardTitle>
                 <Cpu className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -292,14 +335,18 @@ export function SystemArchitectureOverview() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Agents
+                </CardTitle>
                 <Network className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data.agentArchitecture.totalAgents}</div>
+                <div className="text-2xl font-bold">
+                  {data.agentArchitecture.totalAgents}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {data.agentArchitecture.coreAgents} core + {data.agentArchitecture.safetyAgents}{" "}
-                  safety
+                  {data.agentArchitecture.coreAgents} core +{" "}
+                  {data.agentArchitecture.safetyAgents} safety
                 </p>
               </CardContent>
             </Card>
@@ -311,68 +358,84 @@ export function SystemArchitectureOverview() {
             <Card>
               <CardHeader>
                 <CardTitle>Agent Health Status</CardTitle>
-                <CardDescription>Real-time status of all AI agents</CardDescription>
+                <CardDescription>
+                  Real-time status of all AI agents
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {Object.entries(data.agentArchitecture.agentHealth).map(([agent, healthy]) => (
-                  <div
-                    key={agent}
-                    className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
-                      selectedAgent === agent ? "bg-blue-50 border-blue-200" : "hover:bg-gray-50"
-                    }`}
-                    {...createKeyboardClickHandler(() =>
-                      setSelectedAgent(selectedAgent === agent ? null : agent)
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(healthy)}
-                      <div>
-                        <p className="font-medium">{agent.replace(/([A-Z])/g, " $1").trim()}</p>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {agent.includes("risk") ||
-                          agent.includes("simulation") ||
-                          agent.includes("reconciliation") ||
-                          agent.includes("error")
-                            ? "Safety Agent"
-                            : "Core Agent"}
-                        </p>
+                {Object.entries(data.agentArchitecture.agentHealth).map(
+                  ([agent, healthy]) => (
+                    <div
+                      key={agent}
+                      className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedAgent === agent
+                          ? "bg-blue-50 border-blue-200"
+                          : "hover:bg-gray-50"
+                      }`}
+                      {...createKeyboardClickHandler(() =>
+                        setSelectedAgent(selectedAgent === agent ? null : agent)
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(healthy)}
+                        <div>
+                          <p className="font-medium">
+                            {agent.replace(/([A-Z])/g, " $1").trim()}
+                          </p>
+                          <p className="text-sm text-muted-foreground capitalize">
+                            {agent.includes("risk") ||
+                            agent.includes("simulation") ||
+                            agent.includes("reconciliation") ||
+                            agent.includes("error")
+                              ? "Safety Agent"
+                              : "Core Agent"}
+                          </p>
+                        </div>
                       </div>
+                      <Badge variant={healthy ? "default" : "destructive"}>
+                        {healthy ? "Healthy" : "Unhealthy"}
+                      </Badge>
                     </div>
-                    <Badge variant={healthy ? "default" : "destructive"}>
-                      {healthy ? "Healthy" : "Unhealthy"}
-                    </Badge>
-                  </div>
-                ))}
+                  )
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle>Agent Interactions</CardTitle>
-                <CardDescription>Communication flow between agents</CardDescription>
+                <CardDescription>
+                  Communication flow between agents
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {data.agentArchitecture.agentInteractions.map((interaction, index) => (
-                    <div
-                      key={generateListKey(interaction, index, "from")}
-                      className="flex items-center gap-3 p-3 rounded-lg border"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{interaction.from}</span>
-                          <Zap className="h-3 w-3 text-blue-500" />
-                          <span className="font-medium text-sm">{interaction.to}</span>
+                  {data.agentArchitecture.agentInteractions.map(
+                    (interaction, index) => (
+                      <div
+                        key={generateListKey(interaction, index, "from")}
+                        className="flex items-center gap-3 p-3 rounded-lg border"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">
+                              {interaction.from}
+                            </span>
+                            <Zap className="h-3 w-3 text-blue-500" />
+                            <span className="font-medium text-sm">
+                              {interaction.to}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 capitalize">
+                            {interaction.type} communication
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground mt-1 capitalize">
-                          {interaction.type} communication
-                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {interaction.type}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-xs">
-                        {interaction.type}
-                      </Badge>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -381,31 +444,44 @@ export function SystemArchitectureOverview() {
 
         <TabsContent value="infrastructure" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(data.infrastructureHealth).map(([service, health]) => (
-              <Card key={service}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium capitalize">{service}</CardTitle>
-                  {getStatusIcon(health.status)}
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-lg font-bold ${getStatusColor(health.status)}`}>
-                    {health.status.toUpperCase()}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Response: {health.responseTime}ms
-                  </p>
-                  <Separator className="my-2" />
-                  <div className="space-y-1">
-                    {Object.entries(health.details || {}).map(([key, value]) => (
-                      <div key={key} className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{key}:</span>
-                        <span>{String(value)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {Object.entries(data.infrastructureHealth).map(
+              ([service, health]) => (
+                <Card key={service}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium capitalize">
+                      {service}
+                    </CardTitle>
+                    {getStatusIcon(health.status)}
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      className={`text-lg font-bold ${getStatusColor(health.status)}`}
+                    >
+                      {health.status.toUpperCase()}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Response: {health.responseTime}ms
+                    </p>
+                    <Separator className="my-2" />
+                    <div className="space-y-1">
+                      {Object.entries(health.details || {}).map(
+                        ([key, value]) => (
+                          <div
+                            key={key}
+                            className="flex justify-between text-xs"
+                          >
+                            <span className="text-muted-foreground">
+                              {key}:
+                            </span>
+                            <span>{String(value)}</span>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            )}
           </div>
         </TabsContent>
 
@@ -419,15 +495,20 @@ export function SystemArchitectureOverview() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Executions</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Executions
+                    </p>
                     <p className="text-2xl font-bold">
                       {data.orchestrationMetrics.totalExecutions}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Success Rate</p>
+                    <p className="text-sm text-muted-foreground">
+                      Success Rate
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
-                      {(data.orchestrationMetrics.successRate * 100).toFixed(1)}%
+                      {(data.orchestrationMetrics.successRate * 100).toFixed(1)}
+                      %
                     </p>
                   </div>
                   <div>
@@ -437,7 +518,9 @@ export function SystemArchitectureOverview() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Avg Duration</p>
+                    <p className="text-sm text-muted-foreground">
+                      Avg Duration
+                    </p>
                     <p className="text-2xl font-bold">
                       {data.orchestrationMetrics.averageDuration.toFixed(0)}ms
                     </p>
@@ -455,9 +538,13 @@ export function SystemArchitectureOverview() {
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Last Execution</span>
+                    <span className="text-sm text-muted-foreground">
+                      Last Execution
+                    </span>
                     <span className="text-sm">
-                      {new Date(data.orchestrationMetrics.lastExecution).toLocaleTimeString()}
+                      {new Date(
+                        data.orchestrationMetrics.lastExecution
+                      ).toLocaleTimeString()}
                     </span>
                   </div>
                 </div>
@@ -467,16 +554,25 @@ export function SystemArchitectureOverview() {
             <Card>
               <CardHeader>
                 <CardTitle>System Performance</CardTitle>
-                <CardDescription>Real-time performance indicators</CardDescription>
+                <CardDescription>
+                  Real-time performance indicators
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Success Rate</span>
-                      <span>{(data.orchestrationMetrics.successRate * 100).toFixed(1)}%</span>
+                      <span>
+                        {(data.orchestrationMetrics.successRate * 100).toFixed(
+                          1
+                        )}
+                        %
+                      </span>
                     </div>
-                    <Progress value={data.orchestrationMetrics.successRate * 100} />
+                    <Progress
+                      value={data.orchestrationMetrics.successRate * 100}
+                    />
                   </div>
 
                   <div>
@@ -520,7 +616,9 @@ export function SystemArchitectureOverview() {
                 Safety System Status
                 {getStatusIcon(data.safetyStatus.overall)}
               </CardTitle>
-              <CardDescription>Comprehensive safety monitoring and risk management</CardDescription>
+              <CardDescription>
+                Comprehensive safety monitoring and risk management
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -536,15 +634,23 @@ export function SystemArchitectureOverview() {
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <Badge
-                          variant={(status as SafetyStatusEntry).passed ? "default" : "destructive"}
+                          variant={
+                            (status as SafetyStatusEntry).passed
+                              ? "default"
+                              : "destructive"
+                          }
                         >
-                          {(status as SafetyStatusEntry).passed ? "Operational" : "Issues Detected"}
+                          {(status as SafetyStatusEntry).passed
+                            ? "Operational"
+                            : "Issues Detected"}
                         </Badge>
 
                         {(status as SafetyStatusEntry).issues &&
                           (status as SafetyStatusEntry).issues.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-red-600">Issues:</p>
+                              <p className="text-xs font-medium text-red-600">
+                                Issues:
+                              </p>
                               {(status as SafetyStatusEntry).issues.map(
                                 (issue: string, index: number) => (
                                   <p
@@ -559,10 +665,15 @@ export function SystemArchitectureOverview() {
                           )}
 
                         {(status as SafetyStatusEntry).recommendations &&
-                          (status as SafetyStatusEntry).recommendations.length > 0 && (
+                          (status as SafetyStatusEntry).recommendations.length >
+                            0 && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-blue-600">Recommendations:</p>
-                              {(status as SafetyStatusEntry).recommendations.map(
+                              <p className="text-xs font-medium text-blue-600">
+                                Recommendations:
+                              </p>
+                              {(
+                                status as SafetyStatusEntry
+                              ).recommendations.map(
                                 (rec: string, index: number) => (
                                   <p
                                     key={generateListKey(rec, index)}
@@ -585,7 +696,10 @@ export function SystemArchitectureOverview() {
                 <h4 className="font-medium mb-2">Safety Summary</h4>
                 <div className="space-y-1">
                   {data.safetyStatus.summary.map((item, index) => (
-                    <p key={generateListKey(item, index)} className="text-sm text-muted-foreground">
+                    <p
+                      key={generateListKey(item, index)}
+                      className="text-sm text-muted-foreground"
+                    >
                       • {item}
                     </p>
                   ))}

@@ -17,7 +17,13 @@ import { useMexcCalendar } from "../../hooks/use-mexc-data";
 import { usePatternSniper } from "../../hooks/use-pattern-sniper";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface CoinListingCardProps {
@@ -81,12 +87,16 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
   const hoursToLaunch = timeToLaunch / (1000 * 60 * 60);
 
   return (
-    <div className={`p-4 rounded-lg border ${getStatusColor()} transition-all hover:scale-[1.02]`}>
+    <div
+      className={`p-4 rounded-lg border ${getStatusColor()} transition-all hover:scale-[1.02]`}
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1 space-y-2">
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-lg">
-              {coin.symbol !== coin.vcoinId ? coin.symbol : `TOKEN-${coin.vcoinId.slice(0, 8)}`}
+              {coin.symbol !== coin.vcoinId
+                ? coin.symbol
+                : `TOKEN-${coin.vcoinId.slice(0, 8)}`}
             </h3>
             <Badge variant="outline" className={getStatusColor()}>
               <span className="flex items-center gap-1">
@@ -102,7 +112,9 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            {coin.projectName !== coin.vcoinId ? coin.projectName : `Project for ${coin.symbol}`}
+            {coin.projectName !== coin.vcoinId
+              ? coin.projectName
+              : `Project for ${coin.symbol}`}
           </p>
 
           <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
@@ -124,17 +136,26 @@ function CoinListingCard({ coin, onExecute, onRemove }: CoinListingCardProps) {
             )}
           </div>
 
-          {(coin.priceDecimalPlaces !== undefined || coin.quantityDecimalPlaces !== undefined) && (
+          {(coin.priceDecimalPlaces !== undefined ||
+            coin.quantityDecimalPlaces !== undefined) && (
             <div className="flex gap-2 text-xs">
-              <Badge variant="secondary">Price: {coin.priceDecimalPlaces} decimals</Badge>
-              <Badge variant="secondary">Qty: {coin.quantityDecimalPlaces} decimals</Badge>
+              <Badge variant="secondary">
+                Price: {coin.priceDecimalPlaces} decimals
+              </Badge>
+              <Badge variant="secondary">
+                Qty: {coin.quantityDecimalPlaces} decimals
+              </Badge>
             </div>
           )}
         </div>
 
         <div className="flex gap-2">
           {coin.status === "ready" && onExecute && (
-            <Button size="sm" onClick={onExecute} className="bg-green-600 hover:bg-green-700">
+            <Button
+              size="sm"
+              onClick={onExecute}
+              className="bg-green-600 hover:bg-green-700"
+            >
               <Zap className="h-4 w-4 mr-1" />
               Execute
             </Button>
@@ -172,10 +193,13 @@ function filterUpcomingCoins(calendarData: CalendarEntry[]): CalendarEntry[] {
       today.setHours(0, 0, 0, 0); // Set to start of today (00:00:00)
 
       // Only show listings within next 30 days to keep it manageable
-      const maxFutureDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const maxFutureDate = new Date(
+        today.getTime() + 30 * 24 * 60 * 60 * 1000
+      );
 
       return (
-        launchTime.getTime() >= today.getTime() && launchTime.getTime() <= maxFutureDate.getTime()
+        launchTime.getTime() >= today.getTime() &&
+        launchTime.getTime() <= maxFutureDate.getTime()
       );
     } catch {
       return false;
@@ -208,7 +232,9 @@ function enrichCalendarData(
       const firstOpenTime = item.firstOpenTime as number; // Safe due to filter above
 
       const isPending = pendingDetection.includes(vcoinId);
-      const isReady = readyTargets.some((target) => target.vcoinId && target.vcoinId === vcoinId);
+      const isReady = readyTargets.some(
+        (target) => target.vcoinId && target.vcoinId === vcoinId
+      );
       const isExecuted = executedTargets.includes(vcoinId);
 
       let status: "calendar" | "monitoring" | "ready" | "executed" = "calendar";
@@ -235,19 +261,25 @@ function processExecutedTargets(
 ): EnrichedCoin[] {
   return executedTargets
     .map((vcoinId) => {
-      const calendarEntry = enrichedCalendarData.find((coin) => coin.vcoinId === vcoinId);
+      const calendarEntry = enrichedCalendarData.find(
+        (coin) => coin.vcoinId === vcoinId
+      );
       if (!calendarEntry) return null;
       return {
         ...calendarEntry,
         status: "executed" as const,
-        launchTime: calendarEntry.launchTime || new Date(calendarEntry.firstOpenTime),
+        launchTime:
+          calendarEntry.launchTime || new Date(calendarEntry.firstOpenTime),
       };
     })
     .filter((coin) => coin !== null);
 }
 
 // Helper function to limit and sort displayed listings
-function limitDisplayedListings(listings: CalendarEntry[], maxCount = 50): CalendarEntry[] {
+function limitDisplayedListings(
+  listings: CalendarEntry[],
+  maxCount = 50
+): CalendarEntry[] {
   return listings
     .sort((a, b) => {
       const timeA = a.firstOpenTime ? new Date(a.firstOpenTime).getTime() : 0;
@@ -283,12 +315,19 @@ function useProcessedCoinData() {
   const enrichedCalendarData = enrichCalendarData(
     upcomingCoins,
     pendingDetection,
-    readyTargets.map(target => ({ ...target, vcoinId: target.vcoinId?.toString() })),
+    readyTargets.map((target) => ({
+      ...target,
+      vcoinId: target.vcoinId?.toString(),
+    })),
     executedTargets
   );
 
-  const calendarTargets = enrichedCalendarData.filter((c) => c.status === "calendar");
-  const monitoringTargets = enrichedCalendarData.filter((c) => c.status === "monitoring");
+  const calendarTargets = enrichedCalendarData.filter(
+    (c) => c.status === "calendar"
+  );
+  const monitoringTargets = enrichedCalendarData.filter(
+    (c) => c.status === "monitoring"
+  );
   const readyTargetsEnriched = readyTargets.map((target) => ({
     vcoinId: target.vcoinId?.toString() || "",
     symbol: (target as any).symbol || "",
@@ -300,9 +339,13 @@ function useProcessedCoinData() {
     priceDecimalPlaces: (target as any).priceDecimalPlaces || 8,
     quantityDecimalPlaces: (target as any).quantityDecimalPlaces || 8,
     discoveredAt: (target as any).discoveredAt || new Date(),
-    targetTime: (target as any).launchTime?.toISOString() || new Date().toISOString(),
+    targetTime:
+      (target as any).launchTime?.toISOString() || new Date().toISOString(),
   }));
-  const executedTargetsEnriched = processExecutedTargets(executedTargets, enrichedCalendarData);
+  const executedTargetsEnriched = processExecutedTargets(
+    executedTargets,
+    enrichedCalendarData
+  );
 
   // Transform stats to match expected interface
   const transformedStats = {
@@ -348,7 +391,9 @@ const StatsOverview = ({ stats }: StatsOverviewProps) => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Listings</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Total Listings
+              </p>
               <p className="text-2xl font-bold">{stats.totalListings}</p>
             </div>
             <Clock className="h-8 w-8 text-blue-400 opacity-50" />
@@ -359,8 +404,12 @@ const StatsOverview = ({ stats }: StatsOverviewProps) => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Monitoring</p>
-              <p className="text-2xl font-bold text-yellow-400">{stats.pendingDetection}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Monitoring
+              </p>
+              <p className="text-2xl font-bold text-yellow-400">
+                {stats.pendingDetection}
+              </p>
             </div>
             <Eye className="h-8 w-8 text-yellow-400 opacity-50" />
           </div>
@@ -370,8 +419,12 @@ const StatsOverview = ({ stats }: StatsOverviewProps) => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Ready to Snipe</p>
-              <p className="text-2xl font-bold text-green-400">{stats.readyToSnipe}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Ready to Snipe
+              </p>
+              <p className="text-2xl font-bold text-green-400">
+                {stats.readyToSnipe}
+              </p>
             </div>
             <Target className="h-8 w-8 text-green-400 opacity-50" />
           </div>
@@ -381,7 +434,9 @@ const StatsOverview = ({ stats }: StatsOverviewProps) => {
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Success Rate</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Success Rate
+              </p>
               <p className="text-2xl font-bold text-purple-400">
                 {stats.successRate?.toFixed(1) || 0}%
               </p>
@@ -419,11 +474,18 @@ const SystemControlBar = ({
               <Bot className="h-5 w-5" />
               Pattern Sniper System
             </CardTitle>
-            <CardDescription>Real-time pattern detection for new MEXC listings</CardDescription>
+            <CardDescription>
+              Real-time pattern detection for new MEXC listings
+            </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={isMonitoring ? "default" : "secondary"} className="px-3 py-1">
-              <Activity className={`h-3 w-3 mr-1 ${isMonitoring ? "animate-pulse" : ""}`} />
+            <Badge
+              variant={isMonitoring ? "default" : "secondary"}
+              className="px-3 py-1"
+            >
+              <Activity
+                className={`h-3 w-3 mr-1 ${isMonitoring ? "animate-pulse" : ""}`}
+              />
               {isMonitoring ? "Active" : "Inactive"}
             </Badge>
             <Button
@@ -433,7 +495,11 @@ const SystemControlBar = ({
             >
               {isMonitoring ? "Stop Monitoring" : "Start Monitoring"}
             </Button>
-            <Button onClick={forceRefresh} variant="outline" disabled={isLoading}>
+            <Button
+              onClick={forceRefresh}
+              variant="outline"
+              disabled={isLoading}
+            >
               Refresh
             </Button>
           </div>
@@ -510,10 +576,14 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
           </CardHeader>
           <CardContent className="space-y-2">
             {errors.calendar && (
-              <p className="text-sm text-red-300">Calendar API: {errors.calendar.message}</p>
+              <p className="text-sm text-red-300">
+                Calendar API: {errors.calendar.message}
+              </p>
             )}
             {errors.symbols && (
-              <p className="text-sm text-red-300">Symbols API: {errors.symbols.message}</p>
+              <p className="text-sm text-red-300">
+                Symbols API: {errors.symbols.message}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -526,8 +596,8 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
             <div className="flex items-center gap-2 text-blue-400">
               <Clock className="h-4 w-4" />
               <p className="text-sm">
-                Showing top 50 listings from today to 30 days ahead. Total found:{" "}
-                {enrichedCalendarData.length}.
+                Showing top 50 listings from today to 30 days ahead. Total
+                found: {enrichedCalendarData.length}.
               </p>
             </div>
           </CardContent>
@@ -539,7 +609,8 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
         <CardHeader>
           <CardTitle>Coin Listings</CardTitle>
           <CardDescription>
-            New listings from today to 30 days ahead (max 50 shown, sorted by launch time)
+            New listings from today to 30 days ahead (max 50 shown, sorted by
+            launch time)
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -553,25 +624,37 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
               </TabsTrigger>
               <TabsTrigger value="ready">
                 Ready
-                <Badge variant="secondary" className="ml-1 bg-green-500/20 text-green-400">
+                <Badge
+                  variant="secondary"
+                  className="ml-1 bg-green-500/20 text-green-400"
+                >
                   {readyTargetsEnriched.length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="monitoring">
                 Monitoring
-                <Badge variant="secondary" className="ml-1 bg-yellow-500/20 text-yellow-400">
+                <Badge
+                  variant="secondary"
+                  className="ml-1 bg-yellow-500/20 text-yellow-400"
+                >
                   {monitoringTargets.length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="upcoming">
                 Upcoming
-                <Badge variant="secondary" className="ml-1 bg-blue-500/20 text-blue-400">
+                <Badge
+                  variant="secondary"
+                  className="ml-1 bg-blue-500/20 text-blue-400"
+                >
                   {calendarTargets.length}
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="executed">
                 Executed
-                <Badge variant="secondary" className="ml-1 bg-purple-500/20 text-purple-400">
+                <Badge
+                  variant="secondary"
+                  className="ml-1 bg-purple-500/20 text-purple-400"
+                >
                   {executedTargetsEnriched.length}
                 </Badge>
               </TabsTrigger>
@@ -579,7 +662,9 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
 
             <TabsContent value="all" className="space-y-3">
               {enrichedCalendarData.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No coin listings found</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No coin listings found
+                </div>
               ) : (
                 enrichedCalendarData.map((coin) => (
                   <CoinListingCard
@@ -588,7 +673,9 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
                     onExecute={
                       coin.status === "ready"
                         ? () => {
-                            const target = readyTargets.find((t) => t.vcoinId?.toString() === coin.vcoinId);
+                            const target = readyTargets.find(
+                              (t) => t.vcoinId?.toString() === coin.vcoinId
+                            );
                             if (target) executeSnipe(target);
                           }
                         : undefined
@@ -634,15 +721,21 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
 
             <TabsContent value="upcoming" className="space-y-3">
               {calendarTargets.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No upcoming listings</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No upcoming listings
+                </div>
               ) : (
-                calendarTargets.map((coin) => <CoinListingCard key={coin.vcoinId} coin={coin} />)
+                calendarTargets.map((coin) => (
+                  <CoinListingCard key={coin.vcoinId} coin={coin} />
+                ))
               )}
             </TabsContent>
 
             <TabsContent value="executed" className="space-y-3">
               {executedTargetsEnriched.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No executed trades</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No executed trades
+                </div>
               ) : (
                 executedTargetsEnriched.map((target) => (
                   <CoinListingCard key={target.vcoinId} coin={target} />

@@ -95,7 +95,9 @@ export class MultiAgentOrchestrator {
     this.startHealthMonitoring();
   }
 
-  static getInstance(config?: Partial<OrchestratorConfig>): MultiAgentOrchestrator {
+  static getInstance(
+    config?: Partial<OrchestratorConfig>
+  ): MultiAgentOrchestrator {
     if (!MultiAgentOrchestrator.instance) {
       MultiAgentOrchestrator.instance = new MultiAgentOrchestrator(config);
     }
@@ -109,7 +111,10 @@ export class MultiAgentOrchestrator {
     this.registerAgent("pattern-discovery", new PatternDiscoveryAgent());
     this.registerAgent("symbol-analysis", new SymbolAnalysisAgent());
 
-    this.log("Orchestrator initialized with agents:", Array.from(this.agents.keys()));
+    this.log(
+      "Orchestrator initialized with agents:",
+      Array.from(this.agents.keys())
+    );
   }
 
   private registerAgent(type: string, agent: BaseAgent): void {
@@ -117,7 +122,10 @@ export class MultiAgentOrchestrator {
     this.log(`Registered agent: ${type}`);
   }
 
-  async executeWorkflow(workflowId: string, input: any): Promise<WorkflowExecution> {
+  async executeWorkflow(
+    workflowId: string,
+    input: any
+  ): Promise<WorkflowExecution> {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) {
       throw new Error(`Workflow not found: ${workflowId}`);
@@ -134,7 +142,9 @@ export class MultiAgentOrchestrator {
     };
 
     this.executions.set(executionId, execution);
-    this.log(`Starting workflow execution: ${executionId} for workflow: ${workflowId}`);
+    this.log(
+      `Starting workflow execution: ${executionId} for workflow: ${workflowId}`
+    );
 
     try {
       // Log workflow start
@@ -174,7 +184,8 @@ export class MultiAgentOrchestrator {
           resultsCount: execution.results.size,
         },
         performance: {
-          responseTimeMs: execution.endTime.getTime() - execution.startTime.getTime(),
+          responseTimeMs:
+            execution.endTime.getTime() - execution.startTime.getTime(),
           retryCount: 0,
         },
         success: true,
@@ -199,7 +210,8 @@ export class MultiAgentOrchestrator {
           errorCount: execution.errors.length,
         },
         performance: {
-          responseTimeMs: execution.endTime.getTime() - execution.startTime.getTime(),
+          responseTimeMs:
+            execution.endTime.getTime() - execution.startTime.getTime(),
           retryCount: 0,
         },
         success: false,
@@ -319,12 +331,17 @@ export class MultiAgentOrchestrator {
             `Step failed, retrying: ${step.agentType}, attempt ${attempt + 1}/${retries + 1}`
           );
           // Wait before retry (exponential backoff)
-          await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 2 ** attempt * 1000)
+          );
         }
       }
     }
 
-    throw lastError || new Error(`Step failed after ${retries + 1} attempts: ${step.agentType}`);
+    throw (
+      lastError ||
+      new Error(`Step failed after ${retries + 1} attempts: ${step.agentType}`)
+    );
   }
 
   defineWorkflow(definition: WorkflowDefinition): void {
@@ -412,7 +429,9 @@ export class MultiAgentOrchestrator {
           },
           success: unhealthyAgents.length === 0,
           error:
-            unhealthyAgents.length > 0 ? `${unhealthyAgents.length} unhealthy agents` : undefined,
+            unhealthyAgents.length > 0
+              ? `${unhealthyAgents.length} unhealthy agents`
+              : undefined,
         });
       }
     } catch (error) {
@@ -435,7 +454,8 @@ export class MultiAgentOrchestrator {
       workflowCount: this.workflows.size,
       activeExecutions: executions.filter((e) => e.status === "running").length,
       totalExecutions: executions.length,
-      completedExecutions: executions.filter((e) => e.status === "completed").length,
+      completedExecutions: executions.filter((e) => e.status === "completed")
+        .length,
       failedExecutions: executions.filter((e) => e.status === "failed").length,
     };
   }
@@ -521,7 +541,9 @@ export const BUILTIN_WORKFLOWS: WorkflowDefinition[] = [
 ];
 
 // Initialize built-in workflows
-export function initializeBuiltinWorkflows(orchestrator: MultiAgentOrchestrator): void {
+export function initializeBuiltinWorkflows(
+  orchestrator: MultiAgentOrchestrator
+): void {
   for (const workflow of BUILTIN_WORKFLOWS) {
     orchestrator.defineWorkflow(workflow);
   }

@@ -165,7 +165,10 @@ export class Trade extends AggregateRoot<string> {
     }
 
     // Stop loss validation
-    if (props.stopLossPercent && (props.stopLossPercent <= 0 || props.stopLossPercent >= 100)) {
+    if (
+      props.stopLossPercent &&
+      (props.stopLossPercent <= 0 || props.stopLossPercent >= 100)
+    ) {
       throw new BusinessRuleViolationError(
         "Stop loss percentage must be between 0 and 100",
         `Trade: ${props.id}`
@@ -315,9 +318,11 @@ export class Trade extends AggregateRoot<string> {
   }
 
   isFinalized(): boolean {
-    return [TradeStatus.COMPLETED, TradeStatus.FAILED, TradeStatus.CANCELLED].includes(
-      this.props.status
-    );
+    return [
+      TradeStatus.COMPLETED,
+      TradeStatus.FAILED,
+      TradeStatus.CANCELLED,
+    ].includes(this.props.status);
   }
 
   hasOrders(): boolean {
@@ -347,7 +352,11 @@ export class Trade extends AggregateRoot<string> {
   }
 
   calculatePnLPercentage(): number | undefined {
-    if (!this.props.realizedPnL || !this.props.totalCost || this.props.totalCost.isZero()) {
+    if (
+      !this.props.realizedPnL ||
+      !this.props.totalCost ||
+      this.props.totalCost.isZero()
+    ) {
       return undefined;
     }
     return (this.props.realizedPnL.amount / this.props.totalCost.amount) * 100;
@@ -357,7 +366,10 @@ export class Trade extends AggregateRoot<string> {
     if (!this.props.executionStartedAt || !this.props.executionCompletedAt) {
       return undefined;
     }
-    return this.props.executionCompletedAt.getTime() - this.props.executionStartedAt.getTime();
+    return (
+      this.props.executionCompletedAt.getTime() -
+      this.props.executionStartedAt.getTime()
+    );
   }
 
   // Command methods (return new instances)
@@ -379,9 +391,14 @@ export class Trade extends AggregateRoot<string> {
   }
 
   updateOrder(orderId: string, updatedOrder: Order): Trade {
-    const orderIndex = this.props.orders.findIndex((order) => order.id === orderId);
+    const orderIndex = this.props.orders.findIndex(
+      (order) => order.id === orderId
+    );
     if (orderIndex === -1) {
-      throw new InvalidTradeParametersError("orderId", `Order ${orderId} not found in trade`);
+      throw new InvalidTradeParametersError(
+        "orderId",
+        `Order ${orderId} not found in trade`
+      );
     }
 
     const updatedOrders = [...this.props.orders];
@@ -403,14 +420,18 @@ export class Trade extends AggregateRoot<string> {
 
     // Emit domain event
     updatedTrade.addDomainEvent(
-      TradingEventFactory.createTradeExecutionStarted(this.props.id, this.props.userId, {
-        symbol: this.props.symbol,
-        side: "BUY", // Simplified assumption
-        orderType: "MARKET",
-        strategy: this.props.strategy,
-        isAutoSnipe: this.props.isAutoSnipe,
-        confidenceScore: this.props.confidenceScore,
-      })
+      TradingEventFactory.createTradeExecutionStarted(
+        this.props.id,
+        this.props.userId,
+        {
+          symbol: this.props.symbol,
+          side: "BUY", // Simplified assumption
+          orderType: "MARKET",
+          strategy: this.props.strategy,
+          isAutoSnipe: this.props.isAutoSnipe,
+          confidenceScore: this.props.confidenceScore,
+        }
+      )
     );
 
     return updatedTrade;
@@ -449,17 +470,21 @@ export class Trade extends AggregateRoot<string> {
 
     // Emit domain event
     updatedTrade.addDomainEvent(
-      TradingEventFactory.createTradeExecutionCompleted(this.props.id, this.props.userId, {
-        orderId: this.props.orders[0]?.id || "unknown",
-        symbol: this.props.symbol,
-        side: "BUY", // Simplified
-        executedQuantity: quantity?.toString() || "0",
-        executedPrice: entryPrice.toFormattedString(),
-        totalCost: totalCost?.amount || 0,
-        fees: fees?.amount || 0,
-        executionTimeMs: updatedTrade.getExecutionDurationMs() || 0,
-        status: "FILLED",
-      })
+      TradingEventFactory.createTradeExecutionCompleted(
+        this.props.id,
+        this.props.userId,
+        {
+          orderId: this.props.orders[0]?.id || "unknown",
+          symbol: this.props.symbol,
+          side: "BUY", // Simplified
+          executedQuantity: quantity?.toString() || "0",
+          executedPrice: entryPrice.toFormattedString(),
+          totalCost: totalCost?.amount || 0,
+          fees: fees?.amount || 0,
+          executionTimeMs: updatedTrade.getExecutionDurationMs() || 0,
+          status: "FILLED",
+        }
+      )
     );
 
     return updatedTrade;

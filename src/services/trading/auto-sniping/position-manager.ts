@@ -1,6 +1,6 @@
 /**
  * Position Manager Module
- * 
+ *
  * Handles position creation, monitoring, and management.
  * Extracted from large auto-sniping.ts for better maintainability.
  */
@@ -22,18 +22,18 @@ export class PositionManager {
   }
 
   async initialize(): Promise<void> {
-    console.log('PositionManager initialized');
+    console.log("PositionManager initialized");
   }
 
   async shutdown(): Promise<void> {
     // Clear all pending timers
-    this.pendingStopLosses.forEach(timer => clearTimeout(timer));
-    this.pendingTakeProfits.forEach(timer => clearTimeout(timer));
-    
+    this.pendingStopLosses.forEach((timer) => clearTimeout(timer));
+    this.pendingTakeProfits.forEach((timer) => clearTimeout(timer));
+
     this.pendingStopLosses.clear();
     this.pendingTakeProfits.clear();
-    
-    console.log('PositionManager shutdown complete');
+
+    console.log("PositionManager shutdown complete");
   }
 
   async setupPositionMonitoring(tradeResult: TradeResult): Promise<void> {
@@ -46,18 +46,18 @@ export class PositionManager {
       id: tradeResult.data.orderId,
       symbol: tradeResult.data.symbol,
       quantity: parseFloat(tradeResult.data.quantity),
-      side: tradeResult.data.side as 'BUY' | 'SELL',
+      side: tradeResult.data.side as "BUY" | "SELL",
       entryPrice: parseFloat(tradeResult.data.price) || 0,
       currentPrice: parseFloat(tradeResult.data.price) || 0,
       unrealizedPnL: 0,
-      status: 'open',
+      status: "open",
       openTime: new Date(tradeResult.data.timestamp),
       closeTime: undefined,
-      strategy: 'auto-snipe',
+      strategy: "auto-snipe",
       confidenceScore: tradeResult.data.confidenceScore,
       autoSnipe: true,
       paperTrade: tradeResult.data.paperTrade || false,
-      tags: ['auto-snipe'],
+      tags: ["auto-snipe"],
       orderId: tradeResult.data.orderId,
       clientOrderId: tradeResult.data.clientOrderId,
       timestamp: tradeResult.data.timestamp,
@@ -69,7 +69,7 @@ export class PositionManager {
     this.setupStopLossMonitoring(position);
     this.setupTakeProfitMonitoring(position);
 
-    console.log('Position monitoring set up for:', position.id);
+    console.log("Position monitoring set up for:", position.id);
   }
 
   private setupStopLossMonitoring(position: Position): void {
@@ -78,7 +78,7 @@ export class PositionManager {
     // - Monitor market prices
     // - Execute stop loss when conditions are met
     // - Handle partial fills and error recovery
-    
+
     console.log(`Stop loss monitoring set up for position ${position.id}`);
   }
 
@@ -88,7 +88,7 @@ export class PositionManager {
     // - Monitor market prices
     // - Execute take profit when conditions are met
     // - Handle partial fills and error recovery
-    
+
     console.log(`Take profit monitoring set up for position ${position.id}`);
   }
 
@@ -124,7 +124,7 @@ export class PositionManager {
     }
 
     // Update position status
-    position.status = 'closed';
+    position.status = "closed";
     position.updatedAt = new Date();
 
     // Remove from active positions

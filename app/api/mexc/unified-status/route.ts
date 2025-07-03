@@ -3,9 +3,9 @@
  * Minimal implementation to eliminate import errors
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const response = {
       success: true,
@@ -22,19 +22,22 @@ export async function GET(request: NextRequest) {
         lastChecked: new Date().toISOString(),
         source: "fallback" as const,
         recommendations: ["Configure MEXC API credentials"],
-        nextSteps: ["Go to Configuration page", "Enter your MEXC API credentials"]
+        nextSteps: [
+          "Go to Configuration page",
+          "Enter your MEXC API credentials",
+        ],
       },
       message: "Status retrieved successfully",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     return NextResponse.json(response);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       {
         success: false,
         error: "Failed to get status",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
@@ -43,8 +46,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    
+    const _body = await request.json();
+
     const response = {
       success: true,
       data: {
@@ -52,18 +55,18 @@ export async function POST(request: NextRequest) {
         hasCredentials: false,
         credentialsValid: false,
         canTrade: false,
-        message: "Status refresh requested"
+        message: "Status refresh requested",
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     return NextResponse.json(response);
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       {
         success: false,
         error: "Failed to refresh status",
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

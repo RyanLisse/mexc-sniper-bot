@@ -128,7 +128,9 @@ export function useCacheWarmingStrategies() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || "Failed to fetch cache warming strategies");
+        throw new Error(
+          result.error || "Failed to fetch cache warming strategies"
+        );
       }
 
       return result.data;
@@ -199,7 +201,8 @@ export function useCachePerformance() {
         memoryUsage: data.performance.memoryUsage,
         trends: data.performance.trends,
         connectionStatus: data.connection,
-        isConnected: data.connection.redis.connected || data.connection.valkey.connected,
+        isConnected:
+          data.connection.redis.connected || data.connection.valkey.connected,
         fallbackMode: data.connection.gracefulDegradation.fallbackMode,
       }
     : null;
@@ -224,7 +227,9 @@ export function useCacheConnection() {
     isRedisConnected: data?.connection?.redis?.connected || false,
     isValkeyConnected: data?.connection?.valkey?.connected || false,
     isAnyConnected:
-      data?.connection?.redis?.connected || data?.connection?.valkey?.connected || false,
+      data?.connection?.redis?.connected ||
+      data?.connection?.valkey?.connected ||
+      false,
     fallbackMode: data?.connection?.gracefulDegradation?.fallbackMode || false,
   };
 }
@@ -245,7 +250,9 @@ export function getCachePerformanceColor(hitRate: number) {
 /**
  * Get cache warming strategy status color
  */
-export function getCacheStrategyStatusColor(status: CacheWarmingStrategy["status"]) {
+export function getCacheStrategyStatusColor(
+  status: CacheWarmingStrategy["status"]
+) {
   switch (status) {
     case "active":
       return "green";

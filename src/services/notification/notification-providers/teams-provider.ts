@@ -1,5 +1,12 @@
-import type { SelectAlertInstance, SelectNotificationChannel } from "@/src/db/schemas/alerts";
-import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
+import type {
+  SelectAlertInstance,
+  SelectNotificationChannel,
+} from "@/src/db/schemas/alerts";
+import type {
+  NotificationMessage,
+  NotificationProvider,
+  NotificationResult,
+} from "./index";
 
 interface TeamsConfig {
   webhookUrl: string;
@@ -56,7 +63,12 @@ export class TeamsProvider implements NotificationProvider {
           warn: (message: string, context?: any) =>
             console.warn("[teams-provider]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[teams-provider]", message, context || "", error || ""),
+            console.error(
+              "[teams-provider]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[teams-provider]", message, context || ""),
         };
@@ -139,16 +151,21 @@ export class TeamsProvider implements NotificationProvider {
     alert: SelectAlertInstance,
     message: NotificationMessage
   ): TeamsCard {
-    const themeColor = config.themeColor || this.getSeverityColor(alert.severity);
+    const themeColor =
+      config.themeColor || this.getSeverityColor(alert.severity);
     const icon = this.getSeverityIcon(alert.severity);
 
     // Build mentions
     let mentionsText = "";
     if (config.mentionUsers?.length) {
-      mentionsText += config.mentionUsers.map((user) => `<at>${user}</at>`).join(" ");
+      mentionsText += config.mentionUsers
+        .map((user) => `<at>${user}</at>`)
+        .join(" ");
     }
     if (config.mentionTeams?.length) {
-      mentionsText += config.mentionTeams.map((team) => `<at>${team}</at>`).join(" ");
+      mentionsText += config.mentionTeams
+        .map((team) => `<at>${team}</at>`)
+        .join(" ");
     }
 
     const sections: TeamsSection[] = [
@@ -159,7 +176,10 @@ export class TeamsProvider implements NotificationProvider {
           { name: "Alert ID", value: alert.id },
           { name: "Severity", value: alert.severity.toUpperCase() },
           { name: "Source", value: alert.source },
-          { name: "Metric Value", value: alert.metricValue?.toString() || "N/A" },
+          {
+            name: "Metric Value",
+            value: alert.metricValue?.toString() || "N/A",
+          },
         ],
       },
     ];
@@ -168,11 +188,17 @@ export class TeamsProvider implements NotificationProvider {
     const additionalFacts: TeamsFact[] = [];
 
     if (alert.threshold) {
-      additionalFacts.push({ name: "Threshold", value: alert.threshold.toString() });
+      additionalFacts.push({
+        name: "Threshold",
+        value: alert.threshold.toString(),
+      });
     }
 
     if (alert.anomalyScore) {
-      additionalFacts.push({ name: "Anomaly Score", value: alert.anomalyScore.toFixed(2) });
+      additionalFacts.push({
+        name: "Anomaly Score",
+        value: alert.anomalyScore.toFixed(2),
+      });
     }
 
     if (alert.environment) {

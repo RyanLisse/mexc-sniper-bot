@@ -65,7 +65,9 @@ export function validateExecutionPosition(position: unknown): any {
   throw new Error("Invalid execution position");
 }
 
-export function validateAutoSnipingMetrics(metrics: unknown): metrics is AutoSnipingMetrics {
+export function validateAutoSnipingMetrics(
+  metrics: unknown
+): metrics is AutoSnipingMetrics {
   try {
     AutoSnipingMetricsSchema.parse(metrics);
     return true;

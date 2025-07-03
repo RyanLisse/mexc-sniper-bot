@@ -10,9 +10,21 @@ import {
 } from "../../../hooks/use-phase3-config";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../ui/card";
 import { Label } from "../../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../ui/select";
 import { Separator } from "../../ui/separator";
 import { Switch } from "../../ui/switch";
 import { useToast } from "../../ui/use-toast";
@@ -106,12 +118,18 @@ const _defaultConfig: Phase3Configuration = {
 // ======================
 
 export function Phase3ConfigurationPanel() {
-  const { data: configData, isLoading: configLoading, error: configError } = usePhase3Config();
+  const {
+    data: configData,
+    isLoading: configLoading,
+    error: configError,
+  } = usePhase3Config();
   const { mutate: saveConfig, isPending: isSaving } = usePhase3ConfigUpdate();
   const { validateConfiguration } = usePhase3ConfigValidation();
   const { toast } = useToast();
 
-  const [config, setConfig] = useState<Phase3Configuration>(getDefaultPhase3Config());
+  const [config, setConfig] = useState<Phase3Configuration>(
+    getDefaultPhase3Config()
+  );
   const [hasChanges, setHasChanges] = useState(false);
 
   // Update local config when data is loaded
@@ -122,7 +140,11 @@ export function Phase3ConfigurationPanel() {
     }
   }, [configData]);
 
-  const updateConfig = (section: keyof Phase3Configuration, key: string, value: unknown) => {
+  const updateConfig = (
+    section: keyof Phase3Configuration,
+    key: string,
+    value: unknown
+  ) => {
     setConfig((prev) => ({
       ...prev,
       [section]: {
@@ -144,7 +166,10 @@ export function Phase3ConfigurationPanel() {
       [section]: {
         ...prev[section],
         [subsection]: {
-          ...((prev[section] as Record<string, unknown>)[subsection] as Record<string, unknown>),
+          ...((prev[section] as Record<string, unknown>)[subsection] as Record<
+            string,
+            unknown
+          >),
           [key]: value,
         },
       },
@@ -168,7 +193,8 @@ export function Phase3ConfigurationPanel() {
       onSuccess: () => {
         toast({
           title: "Configuration Saved",
-          description: "Phase 3 optimization settings have been updated successfully.",
+          description:
+            "Phase 3 optimization settings have been updated successfully.",
         });
         setHasChanges(false);
       },
@@ -227,7 +253,9 @@ export function Phase3ConfigurationPanel() {
         </CardHeader>
         <CardContent>
           <div className="text-red-600">
-            {configError instanceof Error ? configError.message : "Unknown error occurred"}
+            {configError instanceof Error
+              ? configError.message
+              : "Unknown error occurred"}
           </div>
         </CardContent>
       </Card>
@@ -244,7 +272,12 @@ export function Phase3ConfigurationPanel() {
             {hasChanges && <Badge variant="secondary">Unsaved Changes</Badge>}
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleReset} variant="outline" size="sm" disabled={isSaving}>
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              size="sm"
+              disabled={isSaving}
+            >
               Reset to Defaults
             </Button>
             <Button
@@ -285,7 +318,9 @@ export function Phase3ConfigurationPanel() {
               <Switch
                 id="ai-enabled"
                 checked={config.aiIntelligence.enabled}
-                onCheckedChange={(checked) => updateConfig("aiIntelligence", "enabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("aiIntelligence", "enabled", checked)
+                }
               />
             </div>
 
@@ -328,11 +363,17 @@ export function Phase3ConfigurationPanel() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="ai-confidence-threshold">AI Confidence Threshold (%)</Label>
+              <Label htmlFor="ai-confidence-threshold">
+                AI Confidence Threshold (%)
+              </Label>
               <Select
                 value={config.aiIntelligence.confidenceThreshold.toString()}
                 onValueChange={(value) =>
-                  updateConfig("aiIntelligence", "confidenceThreshold", Number.parseInt(value))
+                  updateConfig(
+                    "aiIntelligence",
+                    "confidenceThreshold",
+                    Number.parseInt(value)
+                  )
                 }
               >
                 <SelectTrigger>
@@ -352,7 +393,11 @@ export function Phase3ConfigurationPanel() {
               <Select
                 value={config.aiIntelligence.maxAIBoost.toString()}
                 onValueChange={(value) =>
-                  updateConfig("aiIntelligence", "maxAIBoost", Number.parseInt(value))
+                  updateConfig(
+                    "aiIntelligence",
+                    "maxAIBoost",
+                    Number.parseInt(value)
+                  )
                 }
               >
                 <SelectTrigger>
@@ -380,12 +425,18 @@ export function Phase3ConfigurationPanel() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="advance-detection">3.5+ Hour Advance Detection</Label>
+              <Label htmlFor="advance-detection">
+                3.5+ Hour Advance Detection
+              </Label>
               <Switch
                 id="advance-detection"
                 checked={config.patternDetection.advanceDetectionEnabled}
                 onCheckedChange={(checked) =>
-                  updateConfig("patternDetection", "advanceDetectionEnabled", checked)
+                  updateConfig(
+                    "patternDetection",
+                    "advanceDetectionEnabled",
+                    checked
+                  )
                 }
               />
             </div>
@@ -396,7 +447,11 @@ export function Phase3ConfigurationPanel() {
                 id="activity-enhancement"
                 checked={config.patternDetection.activityEnhancementEnabled}
                 onCheckedChange={(checked) =>
-                  updateConfig("patternDetection", "activityEnhancementEnabled", checked)
+                  updateConfig(
+                    "patternDetection",
+                    "activityEnhancementEnabled",
+                    checked
+                  )
                 }
               />
             </div>
@@ -408,7 +463,11 @@ export function Phase3ConfigurationPanel() {
               <Select
                 value={config.patternDetection.targetAdvanceHours.toString()}
                 onValueChange={(value) =>
-                  updateConfig("patternDetection", "targetAdvanceHours", Number.parseFloat(value))
+                  updateConfig(
+                    "patternDetection",
+                    "targetAdvanceHours",
+                    Number.parseFloat(value)
+                  )
                 }
               >
                 <SelectTrigger>
@@ -425,11 +484,17 @@ export function Phase3ConfigurationPanel() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pattern-confidence-threshold">Pattern Confidence Threshold (%)</Label>
+              <Label htmlFor="pattern-confidence-threshold">
+                Pattern Confidence Threshold (%)
+              </Label>
               <Select
                 value={config.patternDetection.confidenceThreshold.toString()}
                 onValueChange={(value) =>
-                  updateConfig("patternDetection", "confidenceThreshold", Number.parseInt(value))
+                  updateConfig(
+                    "patternDetection",
+                    "confidenceThreshold",
+                    Number.parseInt(value)
+                  )
                 }
               >
                 <SelectTrigger>
@@ -457,11 +522,15 @@ export function Phase3ConfigurationPanel() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="cache-warming-enabled">Enable Cache Warming</Label>
+              <Label htmlFor="cache-warming-enabled">
+                Enable Cache Warming
+              </Label>
               <Switch
                 id="cache-warming-enabled"
                 checked={config.cacheWarming.enabled}
-                onCheckedChange={(checked) => updateConfig("cacheWarming", "enabled", checked)}
+                onCheckedChange={(checked) =>
+                  updateConfig("cacheWarming", "enabled", checked)
+                }
               />
             </div>
 
@@ -481,21 +550,33 @@ export function Phase3ConfigurationPanel() {
           <div className="space-y-2">
             <Label>Warming Strategies</Label>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(config.cacheWarming.strategies).map(([strategy, enabled]) => (
-                <div key={strategy} className="flex items-center justify-between">
-                  <Label htmlFor={`strategy-${strategy}`} className="text-sm">
-                    {strategy.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
-                  </Label>
-                  <Switch
-                    id={`strategy-${strategy}`}
-                    checked={enabled}
-                    onCheckedChange={(checked) =>
-                      updateNestedConfig("cacheWarming", "strategies", strategy, checked)
-                    }
-                    disabled={!config.cacheWarming.enabled}
-                  />
-                </div>
-              ))}
+              {Object.entries(config.cacheWarming.strategies).map(
+                ([strategy, enabled]) => (
+                  <div
+                    key={strategy}
+                    className="flex items-center justify-between"
+                  >
+                    <Label htmlFor={`strategy-${strategy}`} className="text-sm">
+                      {strategy
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                    </Label>
+                    <Switch
+                      id={`strategy-${strategy}`}
+                      checked={enabled}
+                      onCheckedChange={(checked) =>
+                        updateNestedConfig(
+                          "cacheWarming",
+                          "strategies",
+                          strategy,
+                          checked
+                        )
+                      }
+                      disabled={!config.cacheWarming.enabled}
+                    />
+                  </div>
+                )
+              )}
             </div>
           </div>
         </div>

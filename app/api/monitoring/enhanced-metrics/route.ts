@@ -1,14 +1,18 @@
 /**
  * Enhanced Metrics API Endpoint
- * 
+ *
  * Phase 3 monitoring endpoint that provides comprehensive performance
  * and trading metrics with real-time data and alerting capabilities.
  */
 
-import { NextRequest } from 'next/server';
-import { apiResponse, createErrorResponse, createSuccessResponse } from '@/src/lib/api-response';
-import { enhancedPerformanceMonitor } from '@/src/lib/monitoring/enhanced-performance-monitor';
-import { tradingMetricsCollector } from '@/src/lib/monitoring/trading-metrics-collector';
+import type { NextRequest } from "next/server";
+import {
+  apiResponse,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/src/lib/api-response";
+import { enhancedPerformanceMonitor } from "@/src/lib/monitoring/enhanced-performance-monitor";
+import { tradingMetricsCollector } from "@/src/lib/monitoring/trading-metrics-collector";
 
 export interface MetricsResponse {
   timestamp: string;
@@ -25,7 +29,7 @@ export interface MetricsResponse {
   };
   realtime: any;
   health: {
-    status: 'healthy' | 'degraded' | 'unhealthy';
+    status: "healthy" | "degraded" | "unhealthy";
     issues: string[];
     score: number;
   };
@@ -38,17 +42,18 @@ export interface MetricsResponse {
 export async function GET(request: NextRequest): Promise<Response> {
   try {
     const url = new URL(request.url);
-    const format = url.searchParams.get('format') || 'json';
-    const includeHistory = url.searchParams.get('history') === 'true';
-    
+    const format = url.searchParams.get("format") || "json";
+    const _includeHistory = url.searchParams.get("history") === "true";
+
     // Gather performance metrics
     const performanceReport = enhancedPerformanceMonitor.getPerformanceReport();
-    const tradingPerformance = tradingMetricsCollector.getTradingPerformanceSummary();
+    const tradingPerformance =
+      tradingMetricsCollector.getTradingPerformanceSummary();
     const realtimeMetrics = tradingMetricsCollector.getRealtimeMetrics();
-    
+
     // Calculate health score
     const health = calculateSystemHealth(performanceReport, tradingPerformance);
-    
+
     const metrics: MetricsResponse = {
       timestamp: new Date().toISOString(),
       performance: performanceReport,
@@ -58,34 +63,32 @@ export async function GET(request: NextRequest): Promise<Response> {
     };
 
     // Return different formats based on request
-    if (format === 'csv') {
-      const csvData = tradingMetricsCollector.exportMetrics('csv');
+    if (format === "csv") {
+      const csvData = tradingMetricsCollector.exportMetrics("csv");
       return new Response(csvData, {
         headers: {
-          'Content-Type': 'text/csv',
-          'Content-Disposition': 'attachment; filename="trading-metrics.csv"',
+          "Content-Type": "text/csv",
+          "Content-Disposition": 'attachment; filename="trading-metrics.csv"',
         },
       });
     }
 
-    if (format === 'prometheus') {
+    if (format === "prometheus") {
       const prometheusMetrics = formatPrometheusMetrics(metrics);
       return new Response(prometheusMetrics, {
         headers: {
-          'Content-Type': 'text/plain',
+          "Content-Type": "text/plain",
         },
       });
     }
 
     return apiResponse(createSuccessResponse(metrics));
-    
   } catch (error) {
-    console.error('[Enhanced Metrics API] Error:', error);
+    console.error("[Enhanced Metrics API] Error:", error);
     return apiResponse(
-      createErrorResponse(
-        'Failed to retrieve enhanced metrics',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createErrorResponse("Failed to retrieve enhanced metrics", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       500
     );
   }
@@ -101,28 +104,28 @@ export async function POST(request: NextRequest): Promise<Response> {
     const { action, data } = body;
 
     switch (action) {
-      case 'record_trade':
-        if (data && data.symbol && data.executionTime !== undefined) {
+      case "record_trade":
+        if (data?.symbol && data.executionTime !== undefined) {
           tradingMetricsCollector.recordTradeExecution(data);
           return apiResponse(createSuccessResponse({ recorded: true }));
         }
         break;
 
-      case 'record_pattern':
-        if (data && data.symbol && data.patternType && data.confidence !== undefined) {
+      case "record_pattern":
+        if (data?.symbol && data.patternType && data.confidence !== undefined) {
           tradingMetricsCollector.recordPatternDetection(data);
           return apiResponse(createSuccessResponse({ recorded: true }));
         }
         break;
 
-      case 'update_pnl':
+      case "update_pnl":
         if (data && data.pnl !== undefined && data.symbol) {
           tradingMetricsCollector.updatePnL(data.pnl, data.symbol);
           return apiResponse(createSuccessResponse({ updated: true }));
         }
         break;
 
-      case 'update_risk':
+      case "update_risk":
         if (data && data.exposure !== undefined) {
           tradingMetricsCollector.updateRiskExposure(data.exposure);
           return apiResponse(createSuccessResponse({ updated: true }));
@@ -131,23 +134,31 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       default:
         return apiResponse(
-          createErrorResponse('Invalid action', { validActions: ['record_trade', 'record_pattern', 'update_pnl', 'update_risk'] }),
+          createErrorResponse("Invalid action", {
+            validActions: [
+              "record_trade",
+              "record_pattern",
+              "update_pnl",
+              "update_risk",
+            ],
+          }),
           400
         );
     }
 
     return apiResponse(
-      createErrorResponse('Missing required data for action', { action, requiredFields: getRequiredFields(action) }),
+      createErrorResponse("Missing required data for action", {
+        action,
+        requiredFields: getRequiredFields(action),
+      }),
       400
     );
-
   } catch (error) {
-    console.error('[Enhanced Metrics API] POST Error:', error);
+    console.error("[Enhanced Metrics API] POST Error:", error);
     return apiResponse(
-      createErrorResponse(
-        'Failed to process metrics submission',
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      ),
+      createErrorResponse("Failed to process metrics submission", {
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       500
     );
   }
@@ -156,8 +167,11 @@ export async function POST(request: NextRequest): Promise<Response> {
 /**
  * Calculate overall system health based on metrics
  */
-function calculateSystemHealth(performance: any, trading: any): {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+function calculateSystemHealth(
+  performance: any,
+  trading: any
+): {
+  status: "healthy" | "degraded" | "unhealthy";
   issues: string[];
   score: number;
 } {
@@ -166,7 +180,7 @@ function calculateSystemHealth(performance: any, trading: any): {
 
   // Check system performance
   if (performance.system.memoryUsageMB > 1024) {
-    issues.push('High memory usage detected');
+    issues.push("High memory usage detected");
     score -= 20;
   }
 
@@ -177,28 +191,28 @@ function calculateSystemHealth(performance: any, trading: any): {
 
   // Check trading performance
   if (trading.execution.successRate < 90) {
-    issues.push('Low trade execution success rate');
+    issues.push("Low trade execution success rate");
     score -= 15;
   }
 
   if (trading.execution.averageExecutionTime > 1000) {
-    issues.push('High trade execution latency');
+    issues.push("High trade execution latency");
     score -= 10;
   }
 
   if (trading.risk.currentExposure > 80) {
-    issues.push('High risk exposure');
+    issues.push("High risk exposure");
     score -= 25;
   }
 
   // Determine status
-  let status: 'healthy' | 'degraded' | 'unhealthy';
+  let status: "healthy" | "degraded" | "unhealthy";
   if (score >= 80) {
-    status = 'healthy';
+    status = "healthy";
   } else if (score >= 60) {
-    status = 'degraded';
+    status = "degraded";
   } else {
-    status = 'unhealthy';
+    status = "unhealthy";
   }
 
   return {
@@ -213,7 +227,7 @@ function calculateSystemHealth(performance: any, trading: any): {
  */
 function formatPrometheusMetrics(metrics: MetricsResponse): string {
   const timestamp = Date.now();
-  
+
   return [
     `# HELP mexc_trading_total_trades Total number of trades`,
     `# TYPE mexc_trading_total_trades counter`,
@@ -238,7 +252,7 @@ function formatPrometheusMetrics(metrics: MetricsResponse): string {
     `# HELP mexc_risk_exposure Current risk exposure percentage`,
     `# TYPE mexc_risk_exposure gauge`,
     `mexc_risk_exposure ${metrics.trading.risk.currentExposure} ${timestamp}`,
-  ].join('\n');
+  ].join("\n");
 }
 
 /**
@@ -246,14 +260,24 @@ function formatPrometheusMetrics(metrics: MetricsResponse): string {
  */
 function getRequiredFields(action: string): string[] {
   switch (action) {
-    case 'record_trade':
-      return ['symbol', 'executionTime', 'slippage', 'fillRate', 'success', 'orderType', 'side', 'quantity', 'price'];
-    case 'record_pattern':
-      return ['symbol', 'patternType', 'confidence', 'processingTime'];
-    case 'update_pnl':
-      return ['pnl', 'symbol'];
-    case 'update_risk':
-      return ['exposure'];
+    case "record_trade":
+      return [
+        "symbol",
+        "executionTime",
+        "slippage",
+        "fillRate",
+        "success",
+        "orderType",
+        "side",
+        "quantity",
+        "price",
+      ];
+    case "record_pattern":
+      return ["symbol", "patternType", "confidence", "processingTime"];
+    case "update_pnl":
+      return ["pnl", "symbol"];
+    case "update_risk":
+      return ["exposure"];
     default:
       return [];
   }

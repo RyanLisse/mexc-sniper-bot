@@ -1,6 +1,6 @@
 /**
  * Main Performance Collector
- * 
+ *
  * Orchestrates performance metrics collection across the system
  */
 
@@ -11,13 +11,13 @@ import { AgentMetricsCollector } from "./collectors/agent-metrics-collector";
 import { SystemMetricsCollector } from "./collectors/system-metrics-collector";
 import { WorkflowMetricsCollector } from "./collectors/workflow-metrics-collector";
 import { PerformanceReportGenerator } from "./reporters/performance-report-generator";
-import type { 
+import type {
   AgentPerformanceMetrics,
   MetricsStorage,
-  PerformanceCollectorOptions, 
-  PerformanceReport, 
-  SystemPerformanceSnapshot, 
-  WorkflowPerformanceMetrics
+  PerformanceCollectorOptions,
+  PerformanceReport,
+  SystemPerformanceSnapshot,
+  WorkflowPerformanceMetrics,
 } from "./types";
 
 export class PerformanceCollector {
@@ -149,15 +149,17 @@ export class PerformanceCollector {
     system: SystemPerformanceSnapshot | null;
   } {
     const agentMetrics = Array.from(this.storage.agentMetricsHistory.values())
-      .map(history => history[history.length - 1])
+      .map((history) => history[history.length - 1])
       .filter(Boolean);
 
-    const recentWorkflows = this.storage.workflowMetricsHistory
-      .slice(-10); // Last 10 workflows
+    const recentWorkflows = this.storage.workflowMetricsHistory.slice(-10); // Last 10 workflows
 
-    const latestSystemSnapshot = this.storage.systemSnapshotHistory.length > 0
-      ? this.storage.systemSnapshotHistory[this.storage.systemSnapshotHistory.length - 1]
-      : null;
+    const latestSystemSnapshot =
+      this.storage.systemSnapshotHistory.length > 0
+        ? this.storage.systemSnapshotHistory[
+            this.storage.systemSnapshotHistory.length - 1
+          ]
+        : null;
 
     return {
       agents: agentMetrics,
@@ -252,9 +254,12 @@ export class PerformanceCollector {
     };
   } {
     // Get latest system snapshot or create defaults
-    const latestSnapshot = this.storage.systemSnapshotHistory.length > 0
-      ? this.storage.systemSnapshotHistory[this.storage.systemSnapshotHistory.length - 1]
-      : null;
+    const latestSnapshot =
+      this.storage.systemSnapshotHistory.length > 0
+        ? this.storage.systemSnapshotHistory[
+            this.storage.systemSnapshotHistory.length - 1
+          ]
+        : null;
 
     // Calculate system metrics
     const systemMetrics = {
@@ -278,14 +283,14 @@ export class PerformanceCollector {
    */
   destroy(): void {
     this.logger.info("[PerformanceCollector] Performance collector destroyed");
-    
+
     if (this.collectionInterval) {
       clearInterval(this.collectionInterval);
       this.collectionInterval = null;
     }
-    
+
     this.isCollecting = false;
-    
+
     // Clear storage
     this.storage.agentMetricsHistory.clear();
     this.storage.workflowMetricsHistory = [];

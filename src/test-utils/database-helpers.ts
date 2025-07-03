@@ -16,7 +16,11 @@ export async function createTestUser(userId: string): Promise<void> {
     console.log(`🔧 Attempting to create test user: ${userId}`);
 
     // Check if user already exists
-    const existingUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+    const existingUser = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1);
 
     if (existingUser.length === 0) {
       console.log(`🔧 Creating new user: ${userId}`);
@@ -38,10 +42,17 @@ export async function createTestUser(userId: string): Promise<void> {
 
     // Verify user was created/exists
     try {
-      const verifyUser = await db.select().from(user).where(eq(user.id, userId)).limit(1);
+      const verifyUser = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, userId))
+        .limit(1);
       if (verifyUser.length === 0) {
         // In test mode, mock the user verification
-        if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+        if (
+          process.env.NODE_ENV === "test" ||
+          (globalThis as any).__TEST_ENV__
+        ) {
           console.log(`🧪 Mock user verification for test: ${userId}`);
           return;
         }
@@ -50,7 +61,9 @@ export async function createTestUser(userId: string): Promise<void> {
     } catch (dbError) {
       // If database verification fails in test mode, skip it
       if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
-        console.log(`🧪 Skipping user verification in test mode for: ${userId}`);
+        console.log(
+          `🧪 Skipping user verification in test mode for: ${userId}`
+        );
         return;
       }
       throw dbError;
@@ -95,9 +108,15 @@ export async function createTestUserPreferences(
       })
       .returning();
 
-    console.log(`✅ Successfully created user preferences for: ${userId}`, newPrefs[0]);
+    console.log(
+      `✅ Successfully created user preferences for: ${userId}`,
+      newPrefs[0]
+    );
   } catch (error) {
-    console.error(`❌ Test user preferences creation failed for ${userId}:`, error);
+    console.error(
+      `❌ Test user preferences creation failed for ${userId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -131,7 +150,10 @@ export async function cleanupTestData(userId: string): Promise<void> {
  */
 export async function getTestUserSnipeTargets(userId: string) {
   try {
-    return await db.select().from(snipeTargets).where(eq(snipeTargets.userId, userId));
+    return await db
+      .select()
+      .from(snipeTargets)
+      .where(eq(snipeTargets.userId, userId));
   } catch (error) {
     console.warn(
       `Get test targets warning: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -282,13 +304,16 @@ export function verifyPatternToRecordConversion(
     if (record.riskLevel !== pattern.riskLevel) return false;
 
     // Check status mapping
-    const expectedStatus = pattern.patternType === "ready_state" ? "ready" : "pending";
+    const expectedStatus =
+      pattern.patternType === "ready_state" ? "ready" : "pending";
     if (record.status !== expectedStatus) return false;
 
     // Check user preferences integration
     if (userPrefs) {
-      if (record.positionSizeUsdt !== userPrefs.defaultBuyAmountUsdt) return false;
-      if (record.takeProfitLevel !== userPrefs.defaultTakeProfitLevel) return false;
+      if (record.positionSizeUsdt !== userPrefs.defaultBuyAmountUsdt)
+        return false;
+      if (record.takeProfitLevel !== userPrefs.defaultTakeProfitLevel)
+        return false;
       if (record.stopLossPercent !== userPrefs.stopLossPercent) return false;
     }
 

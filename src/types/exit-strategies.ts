@@ -75,14 +75,22 @@ export const validateExitStrategy = (strategy: ExitStrategy): string[] => {
   const errors: string[] = [];
 
   // Check if percentages add up to 100%
-  const totalPercentage = strategy.levels.reduce((sum, level) => sum + level.percentage, 0);
+  const totalPercentage = strategy.levels.reduce(
+    (sum, level) => sum + level.percentage,
+    0
+  );
   if (Math.abs(totalPercentage - 100) > 0.01) {
-    errors.push(`Exit percentages must add up to 100% (currently ${totalPercentage.toFixed(2)}%)`);
+    errors.push(
+      `Exit percentages must add up to 100% (currently ${totalPercentage.toFixed(2)}%)`
+    );
   }
 
   // Check if target multipliers are in ascending order
   for (let i = 1; i < strategy.levels.length; i++) {
-    if (strategy.levels[i].targetMultiplier <= strategy.levels[i - 1].targetMultiplier) {
+    if (
+      strategy.levels[i].targetMultiplier <=
+      strategy.levels[i - 1].targetMultiplier
+    ) {
       errors.push("Target multipliers must be in ascending order");
       break;
     }
@@ -94,7 +102,9 @@ export const validateExitStrategy = (strategy: ExitStrategy): string[] => {
       errors.push(`Level ${index + 1}: Percentage must be between 0% and 100%`);
     }
     if (level.targetMultiplier <= 1.0) {
-      errors.push(`Level ${index + 1}: Target multiplier must be greater than 1.0x`);
+      errors.push(
+        `Level ${index + 1}: Target multiplier must be greater than 1.0x`
+      );
     }
   });
 

@@ -70,7 +70,9 @@ import type { CoreTradingConfig } from "./core-trading/types";
 /**
  * Get the global Core Trading Service instance (singleton)
  */
-export function getCoreTrading(config?: Partial<CoreTradingConfig>): CoreTradingService {
+export function getCoreTrading(
+  config?: Partial<CoreTradingConfig>
+): CoreTradingService {
   return CoreTradingService.getInstance(config);
 }
 
@@ -84,7 +86,9 @@ export function resetCoreTrading(): void {
 /**
  * Create a new Core Trading Service instance (not singleton)
  */
-export function createCoreTrading(config: Partial<CoreTradingConfig>): CoreTradingService {
+export function createCoreTrading(
+  config: Partial<CoreTradingConfig>
+): CoreTradingService {
   return new CoreTradingService(config);
 }
 

@@ -53,7 +53,9 @@ export interface IOptimizedAutoSnipingExecutionEngine {
   /**
    * Process snipe targets manually
    */
-  processSnipeTargets(): Promise<ServiceResponse<{ processedCount: number; successCount: number }>>;
+  processSnipeTargets(): Promise<
+    ServiceResponse<{ processedCount: number; successCount: number }>
+  >;
 
   /**
    * Execute a specific snipe target
@@ -93,7 +95,10 @@ export interface IOptimizedAutoSnipingExecutionEngine {
   /**
    * Update position size
    */
-  updatePositionSize(positionId: string, newSize: number): Promise<ServiceResponse<void>>;
+  updatePositionSize(
+    positionId: string,
+    newSize: number
+  ): Promise<ServiceResponse<void>>;
 
   /**
    * Get execution report for monitoring

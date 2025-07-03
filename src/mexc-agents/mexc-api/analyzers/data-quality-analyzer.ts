@@ -1,6 +1,6 @@
 /**
  * Data Quality Analyzer
- * 
+ *
  * Handles assessment of API response data quality and reliability
  */
 
@@ -14,7 +14,9 @@ export class DataQualityAnalyzer {
    */
   async assessDataQuality(
     apiResponse: MexcApiResponseData,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const responseJson = JSON.stringify(apiResponse, null, 2);
 
@@ -67,7 +69,9 @@ Provide a structured assessment with specific recommendations for trading decisi
    */
   async assessServiceResponseQuality(
     serviceResponse: ServiceResponse<unknown>,
-    callOpenAI: (messages: Array<{ role: string; content: string }>) => Promise<AgentResponse>
+    callOpenAI: (
+      messages: Array<{ role: string; content: string }>
+    ) => Promise<AgentResponse>
   ): Promise<AgentResponse> {
     const responseJson = JSON.stringify(serviceResponse, null, 2);
 
@@ -118,11 +122,13 @@ Provide specific recommendations for handling this response type.
 
     const obj = data as Record<string, unknown>;
     const totalFields = Object.keys(obj).length;
-    const completedFields = Object.values(obj).filter(value => 
-      value !== null && value !== undefined && value !== ""
+    const completedFields = Object.values(obj).filter(
+      (value) => value !== null && value !== undefined && value !== ""
     ).length;
 
-    return totalFields > 0 ? Math.round((completedFields / totalFields) * 100) : 0;
+    return totalFields > 0
+      ? Math.round((completedFields / totalFields) * 100)
+      : 0;
   }
 
   /**
@@ -145,8 +151,8 @@ Provide specific recommendations for handling this response type.
     if (!data || typeof data !== "object") return false;
 
     const obj = data as Record<string, unknown>;
-    return requiredFields.every(field => 
-      field in obj && obj[field] !== null && obj[field] !== undefined
+    return requiredFields.every(
+      (field) => field in obj && obj[field] !== null && obj[field] !== undefined
     );
   }
 

@@ -21,7 +21,9 @@ export const UserPreferencesUpdateSchema: ValidationSchema = {
   defaultBuyAmountUsdt: (value: any) =>
     value !== undefined ? Validators.buyAmountUsdt(Number(value)) : undefined,
   maxConcurrentSnipes: (value: any) =>
-    value !== undefined ? Validators.maxConcurrentSnipes(Number(value)) : undefined,
+    value !== undefined
+      ? Validators.maxConcurrentSnipes(Number(value))
+      : undefined,
   takeProfitLevel1: (value: any) =>
     value !== undefined
       ? Validators.takeProfitLevel(Number(value), "Take profit level 1")
@@ -49,11 +51,17 @@ export const UserPreferencesUpdateSchema: ValidationSchema = {
   readyStatePattern: (value: any) =>
     value !== undefined ? Validators.readyStatePattern(value) : undefined,
   targetAdvanceHours: (value: any) =>
-    value !== undefined ? Validators.targetAdvanceHours(Number(value)) : undefined,
+    value !== undefined
+      ? Validators.targetAdvanceHours(Number(value))
+      : undefined,
   calendarPollIntervalSeconds: (value: any) =>
-    value !== undefined ? Validators.pollInterval(Number(value), 60, 3600) : undefined,
+    value !== undefined
+      ? Validators.pollInterval(Number(value), 60, 3600)
+      : undefined,
   symbolsPollIntervalSeconds: (value: any) =>
-    value !== undefined ? Validators.pollInterval(Number(value), 10, 300) : undefined,
+    value !== undefined
+      ? Validators.pollInterval(Number(value), 10, 300)
+      : undefined,
 };
 
 // =======================
@@ -102,8 +110,13 @@ export const ApiCredentialsCreateSchema: ValidationSchema = {
 export const SnipeTargetsQuerySchema: ValidationSchema = {
   userId: "required",
   status: (value: any) => {
-    if (value && !["pending", "active", "completed", "failed", "cancelled"].includes(value)) {
-      throw new Error("Status must be one of: pending, active, completed, failed, cancelled");
+    if (
+      value &&
+      !["pending", "active", "completed", "failed", "cancelled"].includes(value)
+    ) {
+      throw new Error(
+        "Status must be one of: pending, active, completed, failed, cancelled"
+      );
     }
     return value;
   },
@@ -275,7 +288,9 @@ export const validateTradingParameters: ValidationFunction = (
 /**
  * Validates user ID matches authenticated user
  */
-export const validateUserIdMatch = (authenticatedUserId: string): ValidationFunction => {
+export const validateUserIdMatch = (
+  authenticatedUserId: string
+): ValidationFunction => {
   return (value: any, _field: string) => {
     if (value !== authenticatedUserId) {
       throw new Error("You can only access your own data");
@@ -287,14 +302,19 @@ export const validateUserIdMatch = (authenticatedUserId: string): ValidationFunc
 /**
  * Validates MEXC symbol format
  */
-export const validateMexcSymbol: ValidationFunction = (value: any, field: string) => {
+export const validateMexcSymbol: ValidationFunction = (
+  value: any,
+  field: string
+) => {
   if (typeof value !== "string") {
     throw new Error(`${field} must be a string`);
   }
 
   // MEXC symbols are typically in format BTCUSDT, ETHUSDT, etc.
   if (!/^[A-Z0-9]+USDT?$/.test(value)) {
-    throw new Error(`${field} must be a valid MEXC trading symbol (e.g., BTCUSDT)`);
+    throw new Error(
+      `${field} must be a valid MEXC trading symbol (e.g., BTCUSDT)`
+    );
   }
 
   return value.toUpperCase();
@@ -303,7 +323,10 @@ export const validateMexcSymbol: ValidationFunction = (value: any, field: string
 /**
  * Validates ISO date string
  */
-export const validateISODate: ValidationFunction = (value: any, field: string) => {
+export const validateISODate: ValidationFunction = (
+  value: any,
+  field: string
+) => {
   if (!value) return undefined;
 
   const date = new Date(value);
@@ -317,7 +340,10 @@ export const validateISODate: ValidationFunction = (value: any, field: string) =
 /**
  * Validates that a date is in the future
  */
-export const validateFutureDate: ValidationFunction = (value: any, field: string) => {
+export const validateFutureDate: ValidationFunction = (
+  value: any,
+  field: string
+) => {
   if (!value) return undefined;
 
   const date = new Date(value);
@@ -339,7 +365,9 @@ export const validateFutureDate: ValidationFunction = (value: any, field: string
 /**
  * Schema for user preferences with cross-field validation
  */
-export const CompleteUserPreferencesSchema: ValidationFunction = (data: any) => {
+export const CompleteUserPreferencesSchema: ValidationFunction = (
+  data: any
+) => {
   // First apply individual field validation
   const schema = UserPreferencesUpdateSchema;
   for (const [field, rule] of Object.entries(schema)) {

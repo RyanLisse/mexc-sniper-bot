@@ -1,5 +1,12 @@
-import type { SelectAlertInstance, SelectNotificationChannel } from "@/src/db/schemas/alerts";
-import type { NotificationMessage, NotificationProvider, NotificationResult } from "./index";
+import type {
+  SelectAlertInstance,
+  SelectNotificationChannel,
+} from "@/src/db/schemas/alerts";
+import type {
+  NotificationMessage,
+  NotificationProvider,
+  NotificationResult,
+} from "./index";
 
 interface EmailConfig {
   smtpHost: string;
@@ -30,7 +37,12 @@ export class EmailProvider implements NotificationProvider {
           warn: (message: string, context?: any) =>
             console.warn("[email-provider]", message, context || ""),
           error: (message: string, context?: any, error?: Error) =>
-            console.error("[email-provider]", message, context || "", error || ""),
+            console.error(
+              "[email-provider]",
+              message,
+              context || "",
+              error || ""
+            ),
           debug: (message: string, context?: any) =>
             console.debug("[email-provider]", message, context || ""),
         };
@@ -139,7 +151,10 @@ export class EmailProvider implements NotificationProvider {
     }
   }
 
-  private formatEmailHTML(message: NotificationMessage, alert: SelectAlertInstance): string {
+  private formatEmailHTML(
+    message: NotificationMessage,
+    alert: SelectAlertInstance
+  ): string {
     const priorityColor = this.getPriorityColor(message.priority);
     const severityIcon = this.getSeverityIcon(alert.severity);
 
@@ -194,7 +209,10 @@ export class EmailProvider implements NotificationProvider {
     `;
   }
 
-  private formatEmailText(message: NotificationMessage, alert: SelectAlertInstance): string {
+  private formatEmailText(
+    message: NotificationMessage,
+    alert: SelectAlertInstance
+  ): string {
     return `
 ${message.title}
 

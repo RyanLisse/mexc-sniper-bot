@@ -11,7 +11,10 @@ import {
   getUniqueActivityTypes,
   hasHighPriorityActivity,
 } from "@/src/schemas/unified/mexc-api-schemas";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
 import { getActivityDataForSymbol } from "./activity-integration";
 import type { PatternMatch } from "./pattern-types";
 import { PATTERN_CONSTANTS } from "./pattern-types";
@@ -38,7 +41,12 @@ export class ReadyStateDetector extends EventEmitter {
     warn: (message: string, context?: any) =>
       console.warn("[ready-state-detector]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[ready-state-detector]", message, context || "", error || ""),
+      console.error(
+        "[ready-state-detector]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[ready-state-detector]", message, context || ""),
   };
@@ -56,7 +64,8 @@ export class ReadyStateDetector extends EventEmitter {
     const matches: PatternMatch[] = [];
 
     // Check if we're in test environment
-    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const isTestEnv =
+      process.env.NODE_ENV === "test" || process.env.VITEST === "true";
 
     for (const symbol of symbols) {
       // Core ready state pattern validation
@@ -123,13 +132,16 @@ export class ReadyStateDetector extends EventEmitter {
       duration,
       averageConfidence:
         matches.length > 0
-          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          ? Math.round(
+              matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length
+            )
           : 0,
       isTestEnv,
     });
 
     // Emit events for pattern-target integration
-    const shouldEmitEvents = matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+    const shouldEmitEvents =
+      matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
     if (shouldEmitEvents) {
       this.emit("patterns_detected", {
         patternType: "ready_state",
@@ -141,12 +153,16 @@ export class ReadyStateDetector extends EventEmitter {
         },
       });
 
-      console.info("Pattern detection events emitted for auto-target creation", {
-        readyStateMatches: matches.length,
-        highConfidenceMatches: matches.filter((m) => m.confidence >= 90).length,
-        testMode: isTestEnv,
-        forceEmitted: options?.forceEmitEvents,
-      });
+      console.info(
+        "Pattern detection events emitted for auto-target creation",
+        {
+          readyStateMatches: matches.length,
+          highConfidenceMatches: matches.filter((m) => m.confidence >= 90)
+            .length,
+          testMode: isTestEnv,
+          forceEmitted: options?.forceEmitEvents,
+        }
+      );
     }
 
     return matches;
@@ -175,15 +191,26 @@ export class ReadyStateDetector extends EventEmitter {
       // Filter for our 3.5+ hour advantage window
       if (advanceHours >= this.MIN_ADVANCE_HOURS) {
         // Get activity data for enhanced analysis
-        const activities = await getActivityDataForSymbol(entry.symbol, entry.vcoinId);
+        const activities = await getActivityDataForSymbol(
+          entry.symbol,
+          entry.vcoinId
+        );
 
-        const confidence = await this.calculateAdvanceOpportunityConfidence(entry, advanceHours);
+        const confidence = await this.calculateAdvanceOpportunityConfidence(
+          entry,
+          advanceHours
+        );
 
         if (confidence >= 70) {
           // Store advance opportunity pattern (skip in test environment for speed)
-          const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+          const isTestEnv =
+            process.env.NODE_ENV === "test" || process.env.VITEST === "true";
           if (!isTestEnv) {
-            await this.storeSuccessfulPattern(entry, "launch_sequence", confidence);
+            await this.storeSuccessfulPattern(
+              entry,
+              "launch_sequence",
+              confidence
+            );
           }
 
           // Prepare activity information for advance opportunities
@@ -191,7 +218,9 @@ export class ReadyStateDetector extends EventEmitter {
             activities.length > 0
               ? {
                   activities,
-                  activityBoost: Math.round(calculateActivityBoost(activities) * 0.8), // Scaled boost
+                  activityBoost: Math.round(
+                    calculateActivityBoost(activities) * 0.8
+                  ), // Scaled boost
                   hasHighPriorityActivity: hasHighPriorityActivity(activities),
                   activityTypes: getUniqueActivityTypes(activities),
                 }
@@ -208,7 +237,9 @@ export class ReadyStateDetector extends EventEmitter {
               tt: (entry as any).tt,
               advanceHours,
               marketConditions: {
-                projectType: this.classifyProject(entry.projectName || entry.symbol),
+                projectType: this.classifyProject(
+                  entry.projectName || entry.symbol
+                ),
                 launchTiming: this.assessLaunchTiming(launchTimestamp),
               },
             },
@@ -216,7 +247,10 @@ export class ReadyStateDetector extends EventEmitter {
             detectedAt: new Date(),
             advanceNoticeHours: advanceHours,
             riskLevel: this.assessAdvanceOpportunityRisk(entry, advanceHours),
-            recommendation: this.getAdvanceRecommendation(advanceHours, confidence),
+            recommendation: this.getAdvanceRecommendation(
+              advanceHours,
+              confidence
+            ),
             historicalSuccess: isTestEnv
               ? 75
               : await this.getHistoricalSuccessRate("launch_sequence"),
@@ -235,18 +269,24 @@ export class ReadyStateDetector extends EventEmitter {
       averageAdvanceHours:
         matches.length > 0
           ? Math.round(
-              (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+              (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) /
+                matches.length) *
+                10
             ) / 10
           : 0,
       averageConfidence:
         matches.length > 0
-          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          ? Math.round(
+              matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length
+            )
           : 0,
     });
 
     // Emit events for pattern-target integration
-    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
-    const shouldEmitEvents = matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+    const isTestEnv =
+      process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const shouldEmitEvents =
+      matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
     if (shouldEmitEvents) {
       this.emit("patterns_detected", {
         patternType: "advance_opportunities",
@@ -258,24 +298,32 @@ export class ReadyStateDetector extends EventEmitter {
           averageAdvanceHours:
             matches.length > 0
               ? Math.round(
-                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) /
+                    matches.length) *
+                    10
                 ) / 10
               : 0,
         },
       });
 
-      console.info("Advance opportunity events emitted for auto-target creation", {
-        advanceOpportunityMatches: matches.length,
-        highConfidenceMatches: matches.filter((m) => m.confidence >= 80).length,
-        averageAdvanceHours:
-          matches.length > 0
-            ? Math.round(
-                (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
-              ) / 10
-            : 0,
-        testMode: isTestEnv,
-        forceEmitted: options?.forceEmitEvents,
-      });
+      console.info(
+        "Advance opportunity events emitted for auto-target creation",
+        {
+          advanceOpportunityMatches: matches.length,
+          highConfidenceMatches: matches.filter((m) => m.confidence >= 80)
+            .length,
+          averageAdvanceHours:
+            matches.length > 0
+              ? Math.round(
+                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) /
+                    matches.length) *
+                    10
+                ) / 10
+              : 0,
+          testMode: isTestEnv,
+          forceEmitted: options?.forceEmitEvents,
+        }
+      );
     }
 
     return matches;
@@ -322,13 +370,17 @@ export class ReadyStateDetector extends EventEmitter {
       duration,
       averageConfidence:
         matches.length > 0
-          ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
+          ? Math.round(
+              matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length
+            )
           : 0,
     });
 
     // Emit events for pattern-target integration
-    const isTestEnv = process.env.NODE_ENV === "test" || process.env.VITEST === "true";
-    const shouldEmitEvents = matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
+    const isTestEnv =
+      process.env.NODE_ENV === "test" || process.env.VITEST === "true";
+    const shouldEmitEvents =
+      matches.length > 0 && (!isTestEnv || options?.forceEmitEvents);
     if (shouldEmitEvents) {
       this.emit("patterns_detected", {
         patternType: "pre_ready",
@@ -340,27 +392,37 @@ export class ReadyStateDetector extends EventEmitter {
           averageEstimatedTimeToReady:
             matches.length > 0
               ? Math.round(
-                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
+                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) /
+                    matches.length) *
+                    10
                 ) / 10
               : 0,
         },
       });
 
-      console.info("Pre-ready pattern events emitted for auto-target creation", {
-        preReadyMatches: matches.length,
-        averageConfidence:
-          matches.length > 0
-            ? Math.round(matches.reduce((sum, m) => sum + m.confidence, 0) / matches.length)
-            : 0,
-        averageTimeToReady:
-          matches.length > 0
-            ? Math.round(
-                (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) / matches.length) * 10
-              ) / 10
-            : 0,
-        testMode: isTestEnv,
-        forceEmitted: options?.forceEmitEvents,
-      });
+      console.info(
+        "Pre-ready pattern events emitted for auto-target creation",
+        {
+          preReadyMatches: matches.length,
+          averageConfidence:
+            matches.length > 0
+              ? Math.round(
+                  matches.reduce((sum, m) => sum + m.confidence, 0) /
+                    matches.length
+                )
+              : 0,
+          averageTimeToReady:
+            matches.length > 0
+              ? Math.round(
+                  (matches.reduce((sum, m) => sum + m.advanceNoticeHours, 0) /
+                    matches.length) *
+                    10
+                ) / 10
+              : 0,
+          testMode: isTestEnv,
+          forceEmitted: options?.forceEmitEvents,
+        }
+      );
     }
 
     return matches;
@@ -377,7 +439,9 @@ export class ReadyStateDetector extends EventEmitter {
   /**
    * Calculate ready state confidence with real crypto pattern analysis
    */
-  private async calculateReadyStateConfidence(symbol: SymbolEntry): Promise<number> {
+  private async calculateReadyStateConfidence(
+    symbol: SymbolEntry
+  ): Promise<number> {
     let confidence = 50; // Base confidence
 
     // Exact pattern match validation (critical sts:2, st:2, tt:4)
@@ -396,7 +460,10 @@ export class ReadyStateDetector extends EventEmitter {
 
     // Activity data enhancement
     try {
-      const activities = await getActivityDataForSymbol(symbol.cd || "", (symbol as any).vcoinId);
+      const activities = await getActivityDataForSymbol(
+        symbol.cd || "",
+        (symbol as any).vcoinId
+      );
       if (activities && activities.length > 0) {
         const activityBoost = calculateActivityBoost(activities);
         confidence += activityBoost;
@@ -407,7 +474,10 @@ export class ReadyStateDetector extends EventEmitter {
         }
       }
     } catch (error) {
-      this.logger.warn("Activity enhancement failed", { symbol: symbol.cd, error });
+      this.logger.warn("Activity enhancement failed", {
+        symbol: symbol.cd,
+        error,
+      });
     }
 
     return Math.min(Math.max(confidence, 0), 100);
@@ -416,7 +486,9 @@ export class ReadyStateDetector extends EventEmitter {
   /**
    * Optimized version for test environments - faster execution
    */
-  private async calculateReadyStateConfidenceOptimized(symbol: SymbolEntry): Promise<number> {
+  private async calculateReadyStateConfidenceOptimized(
+    symbol: SymbolEntry
+  ): Promise<number> {
     let confidence = 50;
 
     // Core pattern validation
@@ -447,7 +519,9 @@ export class ReadyStateDetector extends EventEmitter {
     confidence += this.calculateAdvanceNoticeScore(advanceHours);
 
     // Project type assessment
-    const projectScore = this.getProjectTypeScore(entry.projectName || entry.symbol);
+    const projectScore = this.getProjectTypeScore(
+      entry.projectName || entry.symbol
+    );
     confidence += projectScore * 0.3;
 
     // Market timing assessment
@@ -465,7 +539,10 @@ export class ReadyStateDetector extends EventEmitter {
 
     // Activity enhancement for calendar entries
     try {
-      const activities = await getActivityDataForSymbol(entry.symbol, entry.vcoinId);
+      const activities = await getActivityDataForSymbol(
+        entry.symbol,
+        entry.vcoinId
+      );
       if (activities && activities.length > 0) {
         const activityBoost = calculateActivityBoost(activities) * 0.8; // Scale down for advance
         confidence += activityBoost;
@@ -585,7 +662,12 @@ export class ReadyStateDetector extends EventEmitter {
   private getAdvanceRecommendation(
     advanceHours: number,
     confidence: number
-  ): "immediate_action" | "monitor_closely" | "prepare_entry" | "wait" | "avoid" {
+  ):
+    | "immediate_action"
+    | "monitor_closely"
+    | "prepare_entry"
+    | "wait"
+    | "avoid" {
     // High confidence, optimal timing window
     if (confidence >= 80 && advanceHours >= 3.5 && advanceHours <= 12) {
       return "prepare_entry";
@@ -615,13 +697,28 @@ export class ReadyStateDetector extends EventEmitter {
   private classifyProject(projectName: string): string {
     const name = projectName.toLowerCase();
 
-    if (name.includes("ai") || name.includes("artificial") || name.includes("gpt")) return "AI";
-    if (name.includes("defi") || name.includes("swap") || name.includes("dex")) return "DeFi";
-    if (name.includes("game") || name.includes("metaverse") || name.includes("nft"))
+    if (
+      name.includes("ai") ||
+      name.includes("artificial") ||
+      name.includes("gpt")
+    )
+      return "AI";
+    if (name.includes("defi") || name.includes("swap") || name.includes("dex"))
+      return "DeFi";
+    if (
+      name.includes("game") ||
+      name.includes("metaverse") ||
+      name.includes("nft")
+    )
       return "GameFi";
-    if (name.includes("layer") || name.includes("chain") || name.includes("blockchain"))
+    if (
+      name.includes("layer") ||
+      name.includes("chain") ||
+      name.includes("blockchain")
+    )
       return "Infrastructure";
-    if (name.includes("meme") || name.includes("doge") || name.includes("shib")) return "Meme";
+    if (name.includes("meme") || name.includes("doge") || name.includes("shib"))
+      return "Meme";
     if (name.includes("dao") || name.includes("governance")) return "DAO";
     if (name.includes("oracle") || name.includes("data")) return "Oracle";
 
@@ -662,14 +759,17 @@ export class ReadyStateDetector extends EventEmitter {
     confidence: number
   ): Promise<void> {
     try {
-      const { patternEmbeddingService } = await import("../pattern-embedding-service");
+      const { patternEmbeddingService } = await import(
+        "../pattern-embedding-service"
+      );
 
       // Store pattern using PatternEmbeddingService
       await patternEmbeddingService.storePattern({
         id: `pattern_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type: patternType as any,
         timestamp: Date.now(),
-        confidence: typeof data === "object" && data.confidence ? data.confidence : 0.8,
+        confidence:
+          typeof data === "object" && data.confidence ? data.confidence : 0.8,
         data: {
           symbol: typeof data === "object" ? data.symbol || data.cd : data,
           vcoinId: typeof data === "object" ? data.vcoinId : undefined,
@@ -684,7 +784,10 @@ export class ReadyStateDetector extends EventEmitter {
         },
       });
 
-      this.logger.debug("Successful pattern stored", { patternType, confidence });
+      this.logger.debug("Successful pattern stored", {
+        patternType,
+        confidence,
+      });
     } catch (error) {
       this.logger.warn("Failed to store pattern", { patternType, error });
     }
@@ -724,7 +827,10 @@ export class ReadyStateDetector extends EventEmitter {
 
       return fallbacks[patternType as keyof typeof fallbacks] || 70;
     } catch (error) {
-      this.logger.warn("Failed to get historical success rate", { patternType, error });
+      this.logger.warn("Failed to get historical success rate", {
+        patternType,
+        error,
+      });
       return 75; // Conservative fallback
     }
   }
@@ -809,7 +915,8 @@ export class ReadyStateDetector extends EventEmitter {
 
     if (entry.projectName && entry.projectName.length > 3) score += 5;
     if (entry.symbol && entry.symbol.length > 1) score += 5;
-    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1) score += 5;
+    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1)
+      score += 5;
     if ((entry as any).sts !== undefined) score += 10;
 
     return score;

@@ -22,11 +22,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Slider } from "../ui/slider";
 
 interface OptimizationConfig {
-  algorithm: "bayesian" | "genetic" | "reinforcement_learning" | "multi_objective";
+  algorithm:
+    | "bayesian"
+    | "genetic"
+    | "reinforcement_learning"
+    | "multi_objective";
   parameterCategories: string[];
   objectives: Array<{
     name: string;
@@ -131,7 +141,10 @@ export function OptimizationControlPanel({
     const errors: string[] = [];
 
     // Check objectives weights sum to 1
-    const totalWeight = config.objectives.reduce((sum, obj) => sum + obj.weight, 0);
+    const totalWeight = config.objectives.reduce(
+      (sum, obj) => sum + obj.weight,
+      0
+    );
     if (Math.abs(totalWeight - 1.0) > 0.001) {
       errors.push("Objective weights must sum to 1.0");
     }
@@ -155,12 +168,22 @@ export function OptimizationControlPanel({
       errors.push("System health is critical - optimization disabled");
     }
 
-    if (config.enableBacktesting && systemHealth?.components.backtesting === "down") {
-      errors.push("Backtesting is unavailable - disable or fix backtesting service");
+    if (
+      config.enableBacktesting &&
+      systemHealth?.components.backtesting === "down"
+    ) {
+      errors.push(
+        "Backtesting is unavailable - disable or fix backtesting service"
+      );
     }
 
-    if (config.enableABTesting && systemHealth?.components.abTesting === "down") {
-      errors.push("A/B Testing is unavailable - disable or fix A/B testing service");
+    if (
+      config.enableABTesting &&
+      systemHealth?.components.abTesting === "down"
+    ) {
+      errors.push(
+        "A/B Testing is unavailable - disable or fix A/B testing service"
+      );
     }
 
     setValidationErrors(errors);
@@ -223,7 +246,9 @@ export function OptimizationControlPanel({
             <Label htmlFor="algorithm">Optimization Algorithm</Label>
             <Select
               value={config.algorithm}
-              onValueChange={(value) => setConfig({ ...config, algorithm: value as any })}
+              onValueChange={(value) =>
+                setConfig({ ...config, algorithm: value as any })
+              }
             >
               <SelectTrigger>
                 <SelectValue />
@@ -233,7 +258,9 @@ export function OptimizationControlPanel({
                   <SelectItem key={option.value} value={option.value}>
                     <div>
                       <div className="font-medium">{option.label}</div>
-                      <div className="text-xs text-gray-500">{option.description}</div>
+                      <div className="text-xs text-gray-500">
+                        {option.description}
+                      </div>
                     </div>
                   </SelectItem>
                 ))}
@@ -245,21 +272,30 @@ export function OptimizationControlPanel({
             <Label>Parameter Categories</Label>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {parameterCategoryOptions.map((category) => (
-                <label key={category.value} className="flex items-center space-x-2">
+                <label
+                  key={category.value}
+                  className="flex items-center space-x-2"
+                >
                   <Checkbox
-                    checked={config.parameterCategories.includes(category.value)}
+                    checked={config.parameterCategories.includes(
+                      category.value
+                    )}
                     onCheckedChange={(checked) => {
                       if (checked) {
                         setConfig({
                           ...config,
-                          parameterCategories: [...config.parameterCategories, category.value],
+                          parameterCategories: [
+                            ...config.parameterCategories,
+                            category.value,
+                          ],
                         });
                       } else {
                         setConfig({
                           ...config,
-                          parameterCategories: config.parameterCategories.filter(
-                            (c) => c !== category.value
-                          ),
+                          parameterCategories:
+                            config.parameterCategories.filter(
+                              (c) => c !== category.value
+                            ),
                         });
                       }
                     }}
@@ -278,21 +314,29 @@ export function OptimizationControlPanel({
                 type="number"
                 value={config.maxIterations}
                 onChange={(e) =>
-                  setConfig({ ...config, maxIterations: Number.parseInt(e.target.value) })
+                  setConfig({
+                    ...config,
+                    maxIterations: Number.parseInt(e.target.value),
+                  })
                 }
                 min={10}
                 max={1000}
               />
             </div>
             <div>
-              <Label htmlFor="convergenceThreshold">Convergence Threshold</Label>
+              <Label htmlFor="convergenceThreshold">
+                Convergence Threshold
+              </Label>
               <Input
                 id="convergenceThreshold"
                 type="number"
                 step="0.001"
                 value={config.convergenceThreshold}
                 onChange={(e) =>
-                  setConfig({ ...config, convergenceThreshold: Number.parseFloat(e.target.value) })
+                  setConfig({
+                    ...config,
+                    convergenceThreshold: Number.parseFloat(e.target.value),
+                  })
                 }
                 min={0.0001}
                 max={0.1}
@@ -304,7 +348,9 @@ export function OptimizationControlPanel({
             <Label>Exploration Rate: {config.explorationRate}</Label>
             <Slider
               value={[config.explorationRate]}
-              onValueChange={([value]) => setConfig({ ...config, explorationRate: value })}
+              onValueChange={([value]) =>
+                setConfig({ ...config, explorationRate: value })
+              }
               min={0.1}
               max={0.5}
               step={0.05}
@@ -327,13 +373,17 @@ export function OptimizationControlPanel({
             <div key={index} className="border rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium">{objective.name}</span>
-                <span className="text-sm text-gray-500 capitalize">{objective.direction}</span>
+                <span className="text-sm text-gray-500 capitalize">
+                  {objective.direction}
+                </span>
               </div>
               <div>
                 <Label>Weight: {objective.weight.toFixed(2)}</Label>
                 <Slider
                   value={[objective.weight]}
-                  onValueChange={([value]) => updateObjectiveWeight(index, value)}
+                  onValueChange={([value]) =>
+                    updateObjectiveWeight(index, value)
+                  }
                   min={0}
                   max={1}
                   step={0.05}
@@ -347,7 +397,9 @@ export function OptimizationControlPanel({
             <Info className="h-4 w-4" />
             <AlertDescription>
               Objective weights must sum to 1.0. Current total:{" "}
-              {config.objectives.reduce((sum, obj) => sum + obj.weight, 0).toFixed(2)}
+              {config.objectives
+                .reduce((sum, obj) => sum + obj.weight, 0)
+                .toFixed(2)}
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -375,13 +427,18 @@ export function OptimizationControlPanel({
 
             {config.enableBacktesting && (
               <div className="mt-2">
-                <Label htmlFor="backtestingDays">Backtesting Period (days)</Label>
+                <Label htmlFor="backtestingDays">
+                  Backtesting Period (days)
+                </Label>
                 <Input
                   id="backtestingDays"
                   type="number"
                   value={config.backtestingPeriodDays}
                   onChange={(e) =>
-                    setConfig({ ...config, backtestingPeriodDays: Number.parseInt(e.target.value) })
+                    setConfig({
+                      ...config,
+                      backtestingPeriodDays: Number.parseInt(e.target.value),
+                    })
                   }
                   min={7}
                   max={365}
@@ -394,17 +451,23 @@ export function OptimizationControlPanel({
             <label className="flex items-center space-x-2">
               <Checkbox
                 checked={config.enableABTesting}
-                onCheckedChange={(checked) => setConfig({ ...config, enableABTesting: !!checked })}
+                onCheckedChange={(checked) =>
+                  setConfig({ ...config, enableABTesting: !!checked })
+                }
               />
               <span>Enable A/B Testing</span>
             </label>
 
             {config.enableABTesting && (
               <div className="mt-2">
-                <Label>Traffic Split: {(config.abTestTrafficSplit * 100).toFixed(0)}%</Label>
+                <Label>
+                  Traffic Split: {(config.abTestTrafficSplit * 100).toFixed(0)}%
+                </Label>
                 <Slider
                   value={[config.abTestTrafficSplit]}
-                  onValueChange={([value]) => setConfig({ ...config, abTestTrafficSplit: value })}
+                  onValueChange={([value]) =>
+                    setConfig({ ...config, abTestTrafficSplit: value })
+                  }
                   min={0.01}
                   max={0.5}
                   step={0.01}
@@ -427,14 +490,18 @@ export function OptimizationControlPanel({
         <CardContent className="space-y-4">
           <div>
             <Label>
-              Maximum Risk Level: {(config.safetyConstraints.maxRiskLevel * 100).toFixed(0)}%
+              Maximum Risk Level:{" "}
+              {(config.safetyConstraints.maxRiskLevel * 100).toFixed(0)}%
             </Label>
             <Slider
               value={[config.safetyConstraints.maxRiskLevel]}
               onValueChange={([value]) =>
                 setConfig({
                   ...config,
-                  safetyConstraints: { ...config.safetyConstraints, maxRiskLevel: value },
+                  safetyConstraints: {
+                    ...config.safetyConstraints,
+                    maxRiskLevel: value,
+                  },
                 })
               }
               min={0.05}
@@ -467,14 +534,18 @@ export function OptimizationControlPanel({
 
           <div>
             <Label>
-              Maximum Drawdown: {(config.safetyConstraints.maxDrawdown * 100).toFixed(0)}%
+              Maximum Drawdown:{" "}
+              {(config.safetyConstraints.maxDrawdown * 100).toFixed(0)}%
             </Label>
             <Slider
               value={[config.safetyConstraints.maxDrawdown]}
               onValueChange={([value]) =>
                 setConfig({
                   ...config,
-                  safetyConstraints: { ...config.safetyConstraints, maxDrawdown: value },
+                  safetyConstraints: {
+                    ...config.safetyConstraints,
+                    maxDrawdown: value,
+                  },
                 })
               }
               min={0.05}
@@ -536,11 +607,15 @@ export function OptimizationControlPanel({
                       </div>
                       <div className="flex justify-between">
                         <span>Backtesting:</span>
-                        <span className="capitalize">{systemHealth.components.backtesting}</span>
+                        <span className="capitalize">
+                          {systemHealth.components.backtesting}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>A/B Testing:</span>
-                        <span className="capitalize">{systemHealth.components.abTesting}</span>
+                        <span className="capitalize">
+                          {systemHealth.components.abTesting}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -553,7 +628,9 @@ export function OptimizationControlPanel({
                   <Button
                     onClick={handleStartOptimization}
                     disabled={
-                      !isConfigValid || isStarting || systemHealth?.overallHealth === "critical"
+                      !isConfigValid ||
+                      isStarting ||
+                      systemHealth?.overallHealth === "critical"
                     }
                     className="w-full"
                     size="lg"
@@ -567,7 +644,9 @@ export function OptimizationControlPanel({
                       <AlertTriangle className="h-4 w-4 text-red-600" />
                       <AlertDescription>
                         <div className="text-red-800">
-                          <p className="font-medium mb-1">Configuration Issues:</p>
+                          <p className="font-medium mb-1">
+                            Configuration Issues:
+                          </p>
                           <ul className="list-disc list-inside space-y-1">
                             {validationErrors.map((error, index) => (
                               <li key={index}>{error}</li>

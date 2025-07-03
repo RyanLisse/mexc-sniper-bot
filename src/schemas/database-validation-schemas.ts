@@ -27,10 +27,26 @@ const TimestampSchema = z.object({
 const MetadataSchema = z.record(z.unknown()).optional();
 
 // Status enums for consistency
-const TargetStatusEnum = z.enum(["pending", "ready", "executed", "failed", "completed"]);
-const TransactionStatusEnum = z.enum(["pending", "completed", "failed", "partial"]);
+const TargetStatusEnum = z.enum([
+  "pending",
+  "ready",
+  "executed",
+  "failed",
+  "completed",
+]);
+const TransactionStatusEnum = z.enum([
+  "pending",
+  "completed",
+  "failed",
+  "partial",
+]);
 const ExecutionStatusEnum = z.enum(["success", "failed", "pending"]);
-const PatternTypeEnum = z.enum(["ready_state", "volume_surge", "momentum_shift", "unknown"]);
+const PatternTypeEnum = z.enum([
+  "ready_state",
+  "volume_surge",
+  "momentum_shift",
+  "unknown",
+]);
 const AlertSeverityEnum = z.enum(["low", "medium", "high", "critical"]);
 const SystemStatusEnum = z.enum(["healthy", "warning", "critical"]);
 
@@ -50,7 +66,9 @@ export const UserSchema = BaseEntitySchema.extend({
 // Trading Entity Schemas
 // ============================================================================
 
-export const SnipeTargetSchema = BaseEntitySchema.merge(UserReferenceSchema).extend({
+export const SnipeTargetSchema = BaseEntitySchema.merge(
+  UserReferenceSchema
+).extend({
   vcoinId: z.string().min(1),
   symbolName: z.string().min(1),
   projectName: z.string().min(1),
@@ -65,7 +83,9 @@ export const SnipeTargetSchema = BaseEntitySchema.merge(UserReferenceSchema).ext
   metadata: MetadataSchema,
 });
 
-export const TransactionSchema = BaseEntitySchema.merge(UserReferenceSchema).extend({
+export const TransactionSchema = BaseEntitySchema.merge(
+  UserReferenceSchema
+).extend({
   snipeTargetId: z.string().min(1),
   symbolName: z.string().min(1),
   buyOrderId: z.string().optional(),
@@ -80,7 +100,9 @@ export const TransactionSchema = BaseEntitySchema.merge(UserReferenceSchema).ext
   status: TransactionStatusEnum.default("pending"),
 });
 
-export const ExecutionHistorySchema = BaseEntitySchema.merge(UserReferenceSchema).extend({
+export const ExecutionHistorySchema = BaseEntitySchema.merge(
+  UserReferenceSchema
+).extend({
   snipeTargetId: z.string().optional(),
   symbolName: z.string().min(1),
   action: z.enum(["buy", "sell"]),
@@ -115,7 +137,9 @@ export const PatternEmbeddingSchema = BaseEntitySchema.extend({
 // Portfolio and Position Schemas
 // ============================================================================
 
-export const PositionSnapshotSchema = BaseEntitySchema.merge(UserReferenceSchema)
+export const PositionSnapshotSchema = BaseEntitySchema.merge(
+  UserReferenceSchema
+)
   .merge(TimestampSchema)
   .extend({
     totalBalance: z.number().min(0),
@@ -131,7 +155,9 @@ export const PositionSnapshotSchema = BaseEntitySchema.merge(UserReferenceSchema
 // System and Monitoring Schemas
 // ============================================================================
 
-export const SystemHealthSchema = BaseEntitySchema.merge(TimestampSchema).extend({
+export const SystemHealthSchema = BaseEntitySchema.merge(
+  TimestampSchema
+).extend({
   cpuUsage: z.number().min(0).max(100),
   memoryUsage: z.number().min(0).max(100),
   diskUsage: z.number().min(0).max(100),
@@ -160,7 +186,13 @@ export const AlertSchema = BaseEntitySchema.extend({
 export const ConfigurationSchema = BaseEntitySchema.extend({
   key: z.string().min(1).max(100),
   value: z.unknown(),
-  category: z.enum(["trading", "safety", "monitoring", "system", "auto-sniping"]),
+  category: z.enum([
+    "trading",
+    "safety",
+    "monitoring",
+    "system",
+    "auto-sniping",
+  ]),
   description: z.string().max(500).optional(),
   isActive: z.boolean().default(true),
 });
@@ -180,7 +212,9 @@ export const CacheEntrySchema = z.object({
   size: z.number().min(0).optional(), // Cache entry size in bytes
 });
 
-export const PerformanceMetricSchema = BaseEntitySchema.merge(TimestampSchema).extend({
+export const PerformanceMetricSchema = BaseEntitySchema.merge(
+  TimestampSchema
+).extend({
   operation: z.string().min(1).max(100),
   duration: z.number().min(0),
   success: z.boolean(),
@@ -254,10 +288,11 @@ export const UpdateTransactionSchema = TransactionSchema.partial().omit({
   createdAt: true,
 });
 
-export const UpdatePatternEmbeddingSchema = PatternEmbeddingSchema.partial().omit({
-  id: true,
-  createdAt: true,
-});
+export const UpdatePatternEmbeddingSchema =
+  PatternEmbeddingSchema.partial().omit({
+    id: true,
+    createdAt: true,
+  });
 
 export const UpdateConfigurationSchema = ConfigurationSchema.partial().omit({
   id: true,
@@ -270,7 +305,9 @@ export const UpdateConfigurationSchema = ConfigurationSchema.partial().omit({
 
 export const SnipeTargetQuerySchema = z.object({
   userId: z.string().optional(),
-  status: z.enum(["pending", "ready", "executed", "failed", "completed"]).optional(),
+  status: z
+    .enum(["pending", "ready", "executed", "failed", "completed"])
+    .optional(),
   symbolName: z.string().optional(),
   minConfidence: z.number().min(0).max(100).optional(),
   limit: z.number().min(1).max(1000).default(50).optional(),
@@ -312,7 +349,10 @@ export function validateDatabaseEntity<T extends z.ZodSchema>(
       const errorMessage = error.errors
         .map((err) => `${err.path.join(".")}: ${err.message}`)
         .join(", ");
-      return { success: false, error: `Database validation failed: ${errorMessage}` };
+      return {
+        success: false,
+        error: `Database validation failed: ${errorMessage}`,
+      };
     }
     return { success: false, error: "Unknown database validation error" };
   }
@@ -330,7 +370,10 @@ export function validateBatchInsert<T extends z.ZodSchema>(
       const errorMessage = error.errors
         .map((err) => `${err.path.join(".")}: ${err.message}`)
         .join(", ");
-      return { success: false, error: `Batch validation failed: ${errorMessage}` };
+      return {
+        success: false,
+        error: `Batch validation failed: ${errorMessage}`,
+      };
     }
     return { success: false, error: "Unknown batch validation error" };
   }
@@ -355,18 +398,28 @@ export type PerformanceMetric = z.infer<typeof PerformanceMetricSchema>;
 // Insert types
 export type InsertSnipeTarget = z.infer<typeof InsertSnipeTargetSchema>;
 export type InsertTransaction = z.infer<typeof InsertTransactionSchema>;
-export type InsertExecutionHistory = z.infer<typeof InsertExecutionHistorySchema>;
-export type InsertPatternEmbedding = z.infer<typeof InsertPatternEmbeddingSchema>;
-export type InsertPositionSnapshot = z.infer<typeof InsertPositionSnapshotSchema>;
+export type InsertExecutionHistory = z.infer<
+  typeof InsertExecutionHistorySchema
+>;
+export type InsertPatternEmbedding = z.infer<
+  typeof InsertPatternEmbeddingSchema
+>;
+export type InsertPositionSnapshot = z.infer<
+  typeof InsertPositionSnapshotSchema
+>;
 export type InsertSystemHealth = z.infer<typeof InsertSystemHealthSchema>;
 export type InsertAlert = z.infer<typeof InsertAlertSchema>;
 export type InsertConfiguration = z.infer<typeof InsertConfigurationSchema>;
-export type InsertPerformanceMetric = z.infer<typeof InsertPerformanceMetricSchema>;
+export type InsertPerformanceMetric = z.infer<
+  typeof InsertPerformanceMetricSchema
+>;
 
 // Update types
 export type UpdateSnipeTarget = z.infer<typeof UpdateSnipeTargetSchema>;
 export type UpdateTransaction = z.infer<typeof UpdateTransactionSchema>;
-export type UpdatePatternEmbedding = z.infer<typeof UpdatePatternEmbeddingSchema>;
+export type UpdatePatternEmbedding = z.infer<
+  typeof UpdatePatternEmbeddingSchema
+>;
 export type UpdateConfiguration = z.infer<typeof UpdateConfigurationSchema>;
 
 // Query types

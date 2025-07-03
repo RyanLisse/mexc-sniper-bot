@@ -1,6 +1,6 @@
 /**
  * Target Processor Module - Simplified Version
- * 
+ *
  * Handles processing and execution of snipe targets with minimal complexity.
  */
 
@@ -57,23 +57,25 @@ export class TargetProcessor {
 
   async initialize(): Promise<void> {
     this.initialized = true;
-    console.log('TargetProcessor initialized');
+    console.log("TargetProcessor initialized");
   }
 
   async shutdown(): Promise<void> {
     this.initialized = false;
-    console.log('TargetProcessor shutdown complete');
+    console.log("TargetProcessor shutdown complete");
   }
 
-  async processSnipeTargets(): Promise<SimpleServiceResponse<{ processedCount: number; successCount: number }>> {
+  async processSnipeTargets(): Promise<
+    SimpleServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     try {
       const targets = await this.getReadySnipeTargets();
-      
+
       if (targets.length === 0) {
         return {
           success: true,
           data: { processedCount: 0, successCount: 0 },
-          message: 'No ready snipe targets found',
+          message: "No ready snipe targets found",
           timestamp: new Date().toISOString(),
         };
       }
@@ -101,44 +103,48 @@ export class TargetProcessor {
     } catch (error: any) {
       return {
         success: false,
-        error: `Failed to process snipe targets: ${error?.message || 'Unknown error'}`,
+        error: `Failed to process snipe targets: ${error?.message || "Unknown error"}`,
         timestamp: new Date().toISOString(),
       };
     }
   }
 
-  async processTarget(target: SimpleTarget): Promise<SimpleServiceResponse<SimpleTradeResult>> {
+  async processTarget(
+    target: SimpleTarget
+  ): Promise<SimpleServiceResponse<SimpleTradeResult>> {
     try {
       // Simple validation
       if (!this.isValidTarget(target)) {
         return {
           success: false,
-          error: 'Target validation failed',
+          error: "Target validation failed",
           timestamp: new Date().toISOString(),
         };
       }
 
       // Update target status to executing
-      await this.updateTargetStatus(target.id, 'executing');
+      await this.updateTargetStatus(target.id, "executing");
 
       // Execute the trade
       const result = await this.executeTarget(target);
 
       // Update target status based on result
-      const finalStatus = result.success ? 'completed' : 'failed';
+      const finalStatus = result.success ? "completed" : "failed";
       await this.updateTargetStatus(target.id, finalStatus, result.error);
 
       return {
         success: result.success,
         data: result,
-        message: result.success ? 'Target processed successfully' : `Target failed: ${result.error}`,
+        message: result.success
+          ? "Target processed successfully"
+          : `Target failed: ${result.error}`,
         timestamp: new Date().toISOString(),
       };
     } catch (error: any) {
-      const errorMessage = error?.message || 'Unknown error';
-      
+      const errorMessage = error?.message || "Unknown error";
+
       // Update target status to failed
-      await this.updateTargetStatus(target.id, 'failed', errorMessage);
+      await this.updateTargetStatus(target.id, "failed", errorMessage);
 
       return {
         success: false,
@@ -155,7 +161,7 @@ export class TargetProcessor {
         .from(snipeTargets)
         .where(
           and(
-            eq(snipeTargets.status, 'pending'),
+            eq(snipeTargets.status, "pending"),
             or(
               isNull(snipeTargets.targetExecutionTime),
               lt(snipeTargets.targetExecutionTime, new Date())
@@ -166,7 +172,7 @@ export class TargetProcessor {
 
       return targets as SimpleTarget[];
     } catch (error) {
-      console.error('Error fetching ready snipe targets:', error);
+      console.error("Error fetching ready snipe targets:", error);
       return [];
     }
   }
@@ -175,7 +181,7 @@ export class TargetProcessor {
     // Basic validation
     const hasSymbol = target.symbol || target.symbolName;
     const hasQuantity = target.quantity || target.positionSizeUsdt;
-    
+
     if (!hasSymbol || !hasQuantity) {
       return false;
     }
@@ -192,52 +198,65 @@ export class TargetProcessor {
     return true;
   }
 
-  private async executeTarget(target: SimpleTarget): Promise<SimpleTradeResult> {
+  private async executeTarget(
+    target: SimpleTarget
+  ): Promise<SimpleTradeResult> {
     try {
-      const symbol = target.symbol || target.symbolName || '';
+      const symbol = target.symbol || target.symbolName || "";
       const quantity = target.quantity || target.positionSizeUsdt || 0;
-      const side = target.side || 'BUY';
+      const side = target.side || "BUY";
       const price = target.targetPrice || target.entryPrice || 0;
 
       // Validate target data
       if (!symbol) {
-        throw new Error('Symbol is required for execution');
-      }
-      
-      if (!quantity || quantity <= 0) {
-        throw new Error('Invalid quantity for execution');
+        throw new Error("Symbol is required for execution");
       }
 
-      console.log(`Executing trade: ${side} ${quantity} ${symbol} at ${price || 'market price'}`);
+      if (!quantity || quantity <= 0) {
+        throw new Error("Invalid quantity for execution");
+      }
+
+      console.log(
+        `Executing trade: ${side} ${quantity} ${symbol} at ${price || "market price"}`
+      );
 
       const orderParams = {
         symbol,
-        side: side.toUpperCase() as 'BUY' | 'SELL',
-        type: (target.orderType || 'MARKET').toUpperCase() as 'MARKET' | 'LIMIT' | 'STOP_LIMIT',
+        side: side.toUpperCase() as "BUY" | "SELL",
+        type: (target.orderType || "MARKET").toUpperCase() as
+          | "MARKET"
+          | "LIMIT"
+          | "STOP_LIMIT",
         quantity: quantity.toString(),
         price: price ? price.toString() : undefined,
-        timeInForce: (target.timeInForce || 'IOC') as 'GTC' | 'IOC' | 'FOK',
+        timeInForce: (target.timeInForce || "IOC") as "GTC" | "IOC" | "FOK",
       };
 
       const result = await this.mexcService.placeOrder(orderParams);
 
       if (!result.success || !result.data) {
-        throw new Error(result.error || 'Order execution failed');
+        throw new Error(result.error || "Order execution failed");
       }
 
       return {
         success: true,
-        orderId: String((result.data as any).orderId ?? ''),
+        orderId: String((result.data as any).orderId ?? ""),
         symbol: String((result.data as any).symbol ?? symbol),
-        quantity: parseFloat((result.data as any).origQty ?? (result.data as any).quantity ?? quantity),
+        quantity: parseFloat(
+          (result.data as any).origQty ??
+            (result.data as any).quantity ??
+            quantity
+        ),
         price: parseFloat((result.data as any).price ?? String(price)),
         side: String((result.data as any).side ?? side),
-        timestamp: new Date(Number((result.data as any).transactTime) || Date.now()),
+        timestamp: new Date(
+          Number((result.data as any).transactTime) || Date.now()
+        ),
       };
     } catch (error: any) {
       return {
         success: false,
-        error: error?.message || 'Trade execution failed',
+        error: error?.message || "Trade execution failed",
         timestamp: new Date(),
       };
     }
@@ -258,7 +277,7 @@ export class TargetProcessor {
         updateData.errorMessage = error;
       }
 
-      if (status === 'completed') {
+      if (status === "completed") {
         updateData.actualExecutionTime = new Date();
       }
 
@@ -279,7 +298,10 @@ export class TargetProcessor {
         .where(
           and(
             inArray(snipeTargets.status, ["executing", "completed"]),
-            or(isNull(snipeTargets.executionStatus), eq(snipeTargets.executionStatus, "success"))
+            or(
+              isNull(snipeTargets.executionStatus),
+              eq(snipeTargets.executionStatus, "success")
+            )
           )
         );
 

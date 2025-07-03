@@ -56,7 +56,10 @@ export class CoreRiskAssessment {
 
     // Calculate base risk metrics
     const positionSizeRisk = this.calculatePositionSizeRisk(tradeValue);
-    const concentrationRisk = this.calculateConcentrationRisk(symbol, tradeValue);
+    const concentrationRisk = this.calculateConcentrationRisk(
+      symbol,
+      tradeValue
+    );
     const correlationRisk = this.calculateCorrelationRisk(symbol, tradeValue);
     const marketRisk = this.calculateMarketRisk(symbol, marketData);
     const liquidityRisk = this.calculateLiquidityRisk(symbol, quantity);
@@ -99,7 +102,11 @@ export class CoreRiskAssessment {
     );
 
     // Determine approval based on risk score and limits
-    const approved = this.shouldApproveTradeRisk(riskScore, tradeValue, maxAllowedSize);
+    const approved = this.shouldApproveTradeRisk(
+      riskScore,
+      tradeValue,
+      maxAllowedSize
+    );
 
     return {
       approved,
@@ -109,7 +116,10 @@ export class CoreRiskAssessment {
       maxAllowedSize,
       estimatedImpact: {
         newExposure: newPortfolioValue,
-        riskIncrease: ((newPortfolioValue - currentPortfolioValue) / currentPortfolioValue) * 100,
+        riskIncrease:
+          ((newPortfolioValue - currentPortfolioValue) /
+            currentPortfolioValue) *
+          100,
         portfolioImpact,
       },
       advancedMetrics: {
@@ -122,7 +132,10 @@ export class CoreRiskAssessment {
         liquidityAdjustment,
         sentimentAdjustment,
         valueAtRisk: this.calculateTradeVaR(tradeValue, symbol),
-        expectedShortfall: this.calculateTradeExpectedShortfall(tradeValue, symbol),
+        expectedShortfall: this.calculateTradeExpectedShortfall(
+          tradeValue,
+          symbol
+        ),
       },
     };
   }
@@ -138,7 +151,10 @@ export class CoreRiskAssessment {
   /**
    * Calculate concentration risk for the portfolio
    */
-  private calculateConcentrationRisk(_symbol: string, tradeValue: number): number {
+  private calculateConcentrationRisk(
+    _symbol: string,
+    tradeValue: number
+  ): number {
     const portfolioValue = this.calculatePortfolioValue();
     const concentrationRatio = tradeValue / portfolioValue;
     return Math.min(concentrationRatio * 200, 100); // Scale up concentration risk
@@ -147,7 +163,10 @@ export class CoreRiskAssessment {
   /**
    * Calculate correlation risk with existing positions
    */
-  private calculateCorrelationRisk(_symbol: string, _tradeValue: number): number {
+  private calculateCorrelationRisk(
+    _symbol: string,
+    _tradeValue: number
+  ): number {
     // For now, use market correlation risk
     // In production, would calculate actual position correlations
     return this.config.marketConditions.correlationRisk * 100;
@@ -156,7 +175,10 @@ export class CoreRiskAssessment {
   /**
    * Calculate market risk based on current conditions
    */
-  private calculateMarketRisk(_symbol: string, _marketData?: Record<string, unknown>): number {
+  private calculateMarketRisk(
+    _symbol: string,
+    _marketData?: Record<string, unknown>
+  ): number {
     let risk = this.config.marketConditions.volatilityIndex;
 
     // Adjust for market sentiment
@@ -181,7 +203,10 @@ export class CoreRiskAssessment {
    * Calculate total portfolio value
    */
   private calculatePortfolioValue(): number {
-    return Array.from(this.config.positions.values()).reduce((total, pos) => total + pos.size, 0);
+    return Array.from(this.config.positions.values()).reduce(
+      (total, pos) => total + pos.size,
+      0
+    );
   }
 
   /**
@@ -233,7 +258,8 @@ export class CoreRiskAssessment {
 
     // Consider remaining portfolio capacity
     const portfolioValue = this.calculatePortfolioValue();
-    const remainingCapacity = this.config.riskConfig.maxPortfolioValue - portfolioValue;
+    const remainingCapacity =
+      this.config.riskConfig.maxPortfolioValue - portfolioValue;
 
     return Math.min(baseSize, remainingCapacity);
   }
@@ -289,7 +315,8 @@ export class CoreRiskAssessment {
 
     // Reject if portfolio would exceed limits
     const portfolioValue = this.calculatePortfolioValue();
-    if (portfolioValue + tradeValue > this.config.riskConfig.maxPortfolioValue) return false;
+    if (portfolioValue + tradeValue > this.config.riskConfig.maxPortfolioValue)
+      return false;
 
     return true;
   }
@@ -299,14 +326,18 @@ export class CoreRiskAssessment {
    */
   private calculateTradeVaR(tradeValue: number, _symbol: string): number {
     const volatility = this.config.marketConditions.volatilityIndex / 100;
-    const confidenceMultiplier = this.config.riskConfig.confidenceLevel === 0.95 ? 1.645 : 1.96;
+    const confidenceMultiplier =
+      this.config.riskConfig.confidenceLevel === 0.95 ? 1.645 : 1.96;
     return tradeValue * volatility * confidenceMultiplier;
   }
 
   /**
    * Calculate Expected Shortfall for a trade
    */
-  private calculateTradeExpectedShortfall(tradeValue: number, symbol: string): number {
+  private calculateTradeExpectedShortfall(
+    tradeValue: number,
+    symbol: string
+  ): number {
     const var95 = this.calculateTradeVaR(tradeValue, symbol);
     return var95 * 1.3; // Typical ES/VaR ratio
   }
@@ -344,7 +375,9 @@ export class CoreRiskAssessment {
 }
 
 // Factory function for creating core risk assessment instance
-export function createCoreRiskAssessment(config: CoreRiskAssessmentConfig): CoreRiskAssessment {
+export function createCoreRiskAssessment(
+  config: CoreRiskAssessmentConfig
+): CoreRiskAssessment {
   return new CoreRiskAssessment(config);
 }
 

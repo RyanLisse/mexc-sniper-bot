@@ -2,12 +2,31 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowDownRight, ArrowUpRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Badge } from "../ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Skeleton } from "../ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
 interface Trade {
   id: number;
@@ -44,16 +63,22 @@ function TradeRows({
         <TableRow key={trade.id}>
           <TableCell className="font-medium">{trade.symbolName}</TableCell>
           <TableCell>${trade.buyPrice.toFixed(4)}</TableCell>
-          <TableCell>{trade.sellPrice ? `$${trade.sellPrice.toFixed(4)}` : "-"}</TableCell>
+          <TableCell>
+            {trade.sellPrice ? `$${trade.sellPrice.toFixed(4)}` : "-"}
+          </TableCell>
           <TableCell>{trade.buyQuantity.toFixed(2)}</TableCell>
           <TableCell>${trade.buyTotalCost.toFixed(2)}</TableCell>
           <TableCell>
-            {trade.sellTotalRevenue ? `$${trade.sellTotalRevenue.toFixed(2)}` : "-"}
+            {trade.sellTotalRevenue
+              ? `$${trade.sellTotalRevenue.toFixed(2)}`
+              : "-"}
           </TableCell>
           <TableCell className={getProfitLossColor(trade.profitLoss)}>
             <div className="flex items-center gap-1">
               {getProfitLossIcon(trade.profitLoss)}
-              {trade.profitLoss !== null ? `$${Math.abs(trade.profitLoss).toFixed(2)}` : "-"}
+              {trade.profitLoss !== null
+                ? `$${Math.abs(trade.profitLoss).toFixed(2)}`
+                : "-"}
             </div>
           </TableCell>
           <TableCell className={getProfitLossColor(trade.profitLossPercentage)}>
@@ -61,11 +86,16 @@ function TradeRows({
               ? `${trade.profitLossPercentage > 0 ? "+" : ""}${trade.profitLossPercentage.toFixed(2)}%`
               : "-"}
           </TableCell>
-          <TableCell>{getStatusBadge(trade.status, trade.profitLoss)}</TableCell>
+          <TableCell>
+            {getStatusBadge(trade.status, trade.profitLoss)}
+          </TableCell>
           <TableCell className="text-muted-foreground text-xs">
-            {formatDistanceToNow(new Date(trade.sellTimestamp || trade.buyTimestamp), {
-              addSuffix: true,
-            })}
+            {formatDistanceToNow(
+              new Date(trade.sellTimestamp || trade.buyTimestamp),
+              {
+                addSuffix: true,
+              }
+            )}
           </TableCell>
         </TableRow>
       ))}
@@ -96,9 +126,12 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
   });
 
   const getProfitLossIcon = (percentage: number | null) => {
-    if (percentage === null) return <Minus className="h-4 w-4 text-muted-foreground" />;
-    if (percentage > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
-    if (percentage < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    if (percentage === null)
+      return <Minus className="h-4 w-4 text-muted-foreground" />;
+    if (percentage > 0)
+      return <TrendingUp className="h-4 w-4 text-green-500" />;
+    if (percentage < 0)
+      return <TrendingDown className="h-4 w-4 text-red-500" />;
     return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
@@ -157,7 +190,9 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
       <Card>
         <CardHeader>
           <CardTitle>Recent Trades</CardTitle>
-          <CardDescription>Latest trading activity and performance</CardDescription>
+          <CardDescription>
+            Latest trading activity and performance
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -170,9 +205,13 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
     );
   }
 
-  const totalProfit = trades?.reduce((sum, trade) => sum + (trade.profitLoss || 0), 0) || 0;
+  const totalProfit =
+    trades?.reduce((sum, trade) => sum + (trade.profitLoss || 0), 0) || 0;
   const winRate = trades?.length
-    ? ((trades.filter((t) => (t.profitLoss || 0) > 0).length / trades.length) * 100).toFixed(1)
+    ? (
+        (trades.filter((t) => (t.profitLoss || 0) > 0).length / trades.length) *
+        100
+      ).toFixed(1)
     : "0.0";
 
   return (
@@ -181,7 +220,9 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Recent Trades</CardTitle>
-            <CardDescription>Latest trading activity and performance</CardDescription>
+            <CardDescription>
+              Latest trading activity and performance
+            </CardDescription>
           </div>
           <div className="flex gap-4 text-sm">
             <div className="text-center">
@@ -224,7 +265,10 @@ export function RecentTradesTable({ userId }: RecentTradesTableProps) {
             <TableBody>
               {!trades || trades.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                  <TableCell
+                    colSpan={10}
+                    className="text-center text-muted-foreground py-8"
+                  >
                     No trades found
                   </TableCell>
                 </TableRow>

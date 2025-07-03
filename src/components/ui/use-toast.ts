@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode, useEffect, useState } from "react";
+import { type ReactElement, type ReactNode, useEffect, useState } from "react";
 
 type ToastProps = {
   id: string;
@@ -87,7 +87,9 @@ export const reducer = (state: State, action: Action): State => {
     case "UPDATE_TOAST":
       return {
         ...state,
-        toasts: state.toasts.map((t) => (t.id === action.toast.id ? { ...t, ...action.toast } : t)),
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t
+        ),
       };
 
     case "DISMISS_TOAST": {

@@ -46,7 +46,11 @@ export interface PatternValidationResult {
 
 export interface AgentConsensusRequest {
   requestId: string;
-  type: "trade_approval" | "pattern_validation" | "risk_assessment" | "emergency_response";
+  type:
+    | "trade_approval"
+    | "pattern_validation"
+    | "risk_assessment"
+    | "emergency_response";
   data: Record<string, unknown>;
   requiredAgents: string[];
   consensusThreshold: number; // percentage (50-100)
@@ -75,7 +79,11 @@ export interface AgentConsensusResponse {
 
 export interface SafetyProtocolViolation {
   id: string;
-  type: "behavior_anomaly" | "consensus_failure" | "validation_failure" | "performance_degradation";
+  type:
+    | "behavior_anomaly"
+    | "consensus_failure"
+    | "validation_failure"
+    | "performance_degradation";
   severity: "low" | "medium" | "high" | "critical";
   agentId?: string;
   description: string;

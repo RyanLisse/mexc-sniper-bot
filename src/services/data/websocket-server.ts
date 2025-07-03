@@ -52,7 +52,10 @@ class ConnectionManager {
       console.debug("[websocket-server]", message, context || ""),
   };
 
-  private connections = new Map<string, WebSocketConnection & { ws: WebSocket }>();
+  private connections = new Map<
+    string,
+    WebSocketConnection & { ws: WebSocket }
+  >();
   private userConnections = new Map<string, Set<string>>();
   private channelSubscriptions = new Map<string, Set<string>>();
   private connectionMetrics = new Map<string, ConnectionMetrics>();
@@ -98,7 +101,9 @@ class ConnectionManager {
       subscriptions: [],
     });
 
-    console.info(`[WebSocket] Connection added: ${connectionId} (user: ${userId || "anonymous"})`);
+    console.info(
+      `[WebSocket] Connection added: ${connectionId} (user: ${userId || "anonymous"})`
+    );
   }
 
   removeConnection(connectionId: string): void {
@@ -133,18 +138,24 @@ class ConnectionManager {
     console.info(`[WebSocket] Connection removed: ${connectionId}`);
   }
 
-  getConnection(connectionId: string): (WebSocketConnection & { ws: WebSocket }) | undefined {
+  getConnection(
+    connectionId: string
+  ): (WebSocketConnection & { ws: WebSocket }) | undefined {
     return this.connections.get(connectionId);
   }
 
-  getUserConnections(userId: string): (WebSocketConnection & { ws: WebSocket })[] {
+  getUserConnections(
+    userId: string
+  ): (WebSocketConnection & { ws: WebSocket })[] {
     const connectionIds = this.userConnections.get(userId) || new Set();
     return Array.from(connectionIds)
       .map((id) => this.connections.get(id))
       .filter(Boolean) as (WebSocketConnection & { ws: WebSocket })[];
   }
 
-  getChannelSubscribers(channel: string): (WebSocketConnection & { ws: WebSocket })[] {
+  getChannelSubscribers(
+    channel: string
+  ): (WebSocketConnection & { ws: WebSocket })[] {
     const connectionIds = this.channelSubscriptions.get(channel) || new Set();
     return Array.from(connectionIds)
       .map((id) => this.connections.get(id))
@@ -168,7 +179,9 @@ class ConnectionManager {
       metrics.subscriptions = Array.from(connection.subscriptions);
     }
 
-    console.info(`[WebSocket] Subscription added: ${connectionId} -> ${channel}`);
+    console.info(
+      `[WebSocket] Subscription added: ${connectionId} -> ${channel}`
+    );
     return true;
   }
 
@@ -192,7 +205,9 @@ class ConnectionManager {
       metrics.subscriptions = Array.from(connection.subscriptions);
     }
 
-    console.info(`[WebSocket] Subscription removed: ${connectionId} -> ${channel}`);
+    console.info(
+      `[WebSocket] Subscription removed: ${connectionId} -> ${channel}`
+    );
     return true;
   }
 
@@ -232,8 +247,13 @@ class ConnectionManager {
     connectionMetrics: ConnectionMetrics[];
   } {
     const connections = Array.from(this.connections.values());
-    const authenticatedCount = connections.filter((c) => c.isAuthenticated).length;
-    const totalSubscriptions = connections.reduce((sum, c) => sum + c.subscriptions.size, 0);
+    const authenticatedCount = connections.filter(
+      (c) => c.isAuthenticated
+    ).length;
+    const totalSubscriptions = connections.reduce(
+      (sum, c) => sum + c.subscriptions.size,
+      0
+    );
 
     return {
       totalConnections: connections.length,
@@ -250,8 +270,14 @@ class ConnectionManager {
 // ======================
 
 class RateLimiter {
-  private connectionLimits = new Map<string, { count: number; resetTime: number }>();
-  private ipLimits = new Map<string, { connections: Set<string>; resetTime: number }>();
+  private connectionLimits = new Map<
+    string,
+    { count: number; resetTime: number }
+  >();
+  private ipLimits = new Map<
+    string,
+    { connections: Set<string>; resetTime: number }
+  >();
 
   constructor(
     private maxConnectionsPerIP = 10,
@@ -357,7 +383,10 @@ class MessageRouter {
     this.globalHandlers.push(handler);
   }
 
-  async routeMessage(message: WebSocketMessage, _connectionId: string): Promise<void> {
+  async routeMessage(
+    message: WebSocketMessage,
+    _connectionId: string
+  ): Promise<void> {
     try {
       // Execute global handlers first
       for (const handler of this.globalHandlers) {
@@ -440,7 +469,9 @@ export class WebSocketServerService extends EventEmitter {
     this.setupMessageHandlers();
   }
 
-  static getInstance(config?: Partial<WebSocketServerConfig>): WebSocketServerService {
+  static getInstance(
+    config?: Partial<WebSocketServerConfig>
+  ): WebSocketServerService {
     if (!WebSocketServerService.instance) {
       WebSocketServerService.instance = new WebSocketServerService(config);
     }
@@ -515,7 +546,9 @@ export class WebSocketServerService extends EventEmitter {
   // Message Broadcasting
   // ======================
 
-  broadcast<T>(message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">): void {
+  broadcast<T>(
+    message: Omit<WebSocketMessage<T>, "messageId" | "timestamp">
+  ): void {
     const fullMessage: WebSocketMessage<T> = {
       ...message,
       messageId: crypto.randomUUID(),
@@ -527,7 +560,10 @@ export class WebSocketServerService extends EventEmitter {
       "broadcast",
       message.channel,
       async () => {
-        this.broadcastToChannel(message.channel as WebSocketChannel, fullMessage);
+        this.broadcastToChannel(
+          message.channel as WebSocketChannel,
+          fullMessage
+        );
         return Promise.resolve();
       },
       { messageType: message.type }
@@ -536,14 +572,19 @@ export class WebSocketServerService extends EventEmitter {
     });
   }
 
-  broadcastToChannel<T>(channel: WebSocketChannel, message: WebSocketMessage<T>): void {
+  broadcastToChannel<T>(
+    channel: WebSocketChannel,
+    message: WebSocketMessage<T>
+  ): void {
     const subscribers = this.connectionManager.getChannelSubscribers(channel);
 
     for (const connection of subscribers) {
       this.sendMessage(connection.id, message);
     }
 
-    console.info(`[WebSocket] Broadcasted to ${channel}: ${subscribers.length} subscribers`);
+    console.info(
+      `[WebSocket] Broadcasted to ${channel}: ${subscribers.length} subscribers`
+    );
   }
 
   broadcastToUser<T>(userId: string, message: WebSocketMessage<T>): void {
@@ -553,7 +594,9 @@ export class WebSocketServerService extends EventEmitter {
       this.sendMessage(connection.id, message);
     }
 
-    console.info(`[WebSocket] Broadcasted to user ${userId}: ${connections.length} connections`);
+    console.info(
+      `[WebSocket] Broadcasted to user ${userId}: ${connections.length} connections`
+    );
   }
 
   sendMessage<T>(connectionId: string, message: WebSocketMessage<T>): boolean {
@@ -589,7 +632,10 @@ export class WebSocketServerService extends EventEmitter {
 
       return true;
     } catch (error) {
-      console.error(`[WebSocket] Failed to send message to ${connectionId}:`, error);
+      console.error(
+        `[WebSocket] Failed to send message to ${connectionId}:`,
+        error
+      );
       return false;
     }
   }
@@ -667,14 +713,20 @@ export class WebSocketServerService extends EventEmitter {
   // Private Methods
   // ======================
 
-  private async handleConnection(ws: WebSocket, request: IncomingMessage): Promise<void> {
+  private async handleConnection(
+    ws: WebSocket,
+    request: IncomingMessage
+  ): Promise<void> {
     const connectionId = crypto.randomUUID();
     const clientIP = this.getClientIP(request);
     let connectionAdded = false;
 
     // Connection timeout handler
     const connectionTimeout = setTimeout(() => {
-      if (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN) {
+      if (
+        ws.readyState === WebSocket.CONNECTING ||
+        ws.readyState === WebSocket.OPEN
+      ) {
         console.warn(`[WebSocket] Connection timeout for ${connectionId}`);
         ws.close(1008, "Connection timeout");
       }
@@ -682,8 +734,13 @@ export class WebSocketServerService extends EventEmitter {
 
     try {
       // Validate WebSocket state
-      if (ws.readyState !== WebSocket.OPEN && ws.readyState !== WebSocket.CONNECTING) {
-        console.warn(`[WebSocket] Invalid WebSocket state: ${ws.readyState} for ${connectionId}`);
+      if (
+        ws.readyState !== WebSocket.OPEN &&
+        ws.readyState !== WebSocket.CONNECTING
+      ) {
+        console.warn(
+          `[WebSocket] Invalid WebSocket state: ${ws.readyState} for ${connectionId}`
+        );
         return;
       }
 
@@ -700,14 +757,21 @@ export class WebSocketServerService extends EventEmitter {
       let userId: string | undefined;
       if (this.config.authentication.required) {
         const authPromise = this.authenticateConnection(request);
-        const authTimeout = new Promise<{ valid: false; error: string }>((resolve) =>
-          setTimeout(() => resolve({ valid: false, error: "Authentication timeout" }), 5000)
+        const authTimeout = new Promise<{ valid: false; error: string }>(
+          (resolve) =>
+            setTimeout(
+              () => resolve({ valid: false, error: "Authentication timeout" }),
+              5000
+            )
         );
 
         const authResult = await Promise.race([authPromise, authTimeout]);
         if (!authResult.valid) {
-          const errorMsg = "error" in authResult ? authResult.error : "Authentication failed";
-          console.warn(`[WebSocket] Authentication failed for ${connectionId}: ${errorMsg}`);
+          const errorMsg =
+            "error" in authResult ? authResult.error : "Authentication failed";
+          console.warn(
+            `[WebSocket] Authentication failed for ${connectionId}: ${errorMsg}`
+          );
           ws.close(1008, errorMsg);
           return;
         }
@@ -716,7 +780,9 @@ export class WebSocketServerService extends EventEmitter {
 
       // Validate connection is still open before proceeding
       if (ws.readyState !== WebSocket.OPEN) {
-        console.warn(`[WebSocket] Connection closed during setup: ${connectionId}`);
+        console.warn(
+          `[WebSocket] Connection closed during setup: ${connectionId}`
+        );
         return;
       }
 
@@ -732,8 +798,15 @@ export class WebSocketServerService extends EventEmitter {
         try {
           await this.handleMessage(connectionId, data);
         } catch (error) {
-          console.error(`[WebSocket] Error in message handler for ${connectionId}:`, error);
-          this.sendError(connectionId, "MESSAGE_ERROR", "Failed to process message");
+          console.error(
+            `[WebSocket] Error in message handler for ${connectionId}:`,
+            error
+          );
+          this.sendError(
+            connectionId,
+            "MESSAGE_ERROR",
+            "Failed to process message"
+          );
         }
       });
 
@@ -742,8 +815,16 @@ export class WebSocketServerService extends EventEmitter {
       });
 
       ws.on("error", (error) => {
-        console.error(`[WebSocket] Connection error for ${connectionId}:`, error);
-        this.handleDisconnection(connectionId, clientIP, 1006, Buffer.from(error.message));
+        console.error(
+          `[WebSocket] Connection error for ${connectionId}:`,
+          error
+        );
+        this.handleDisconnection(
+          connectionId,
+          clientIP,
+          1006,
+          Buffer.from(error.message)
+        );
       });
 
       // Setup connection health monitoring
@@ -765,7 +846,9 @@ export class WebSocketServerService extends EventEmitter {
       });
 
       if (!welcomeSuccess) {
-        console.warn(`[WebSocket] Failed to send welcome message to ${connectionId}`);
+        console.warn(
+          `[WebSocket] Failed to send welcome message to ${connectionId}`
+        );
         this.handleDisconnection(
           connectionId,
           clientIP,
@@ -780,7 +863,10 @@ export class WebSocketServerService extends EventEmitter {
       );
       this.emit("connection:open", { connectionId, userId });
     } catch (error) {
-      console.error(`[WebSocket] Failed to handle connection ${connectionId}:`, error);
+      console.error(
+        `[WebSocket] Failed to handle connection ${connectionId}:`,
+        error
+      );
 
       // Clear timeout on error
       clearTimeout(connectionTimeout);
@@ -792,8 +878,12 @@ export class WebSocketServerService extends EventEmitter {
       }
 
       // Close WebSocket with appropriate error code
-      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-        const errorMsg = error instanceof Error ? error.message : "Internal server error";
+      if (
+        ws.readyState === WebSocket.OPEN ||
+        ws.readyState === WebSocket.CONNECTING
+      ) {
+        const errorMsg =
+          error instanceof Error ? error.message : "Internal server error";
         ws.close(1011, errorMsg);
       }
 
@@ -807,7 +897,10 @@ export class WebSocketServerService extends EventEmitter {
   ): Promise<void> {
     try {
       // Rate limiting check
-      if (this.config.rateLimiting.enabled && !this.rateLimiter.checkMessageLimit(connectionId)) {
+      if (
+        this.config.rateLimiting.enabled &&
+        !this.rateLimiter.checkMessageLimit(connectionId)
+      ) {
         this.sendError(connectionId, "RATE_LIMITED", "Too many messages");
         return;
       }
@@ -817,7 +910,11 @@ export class WebSocketServerService extends EventEmitter {
 
       // Validate message structure
       if (!this.isValidMessage(message)) {
-        this.sendError(connectionId, "INVALID_MESSAGE", "Invalid message format");
+        this.sendError(
+          connectionId,
+          "INVALID_MESSAGE",
+          "Invalid message format"
+        );
         return;
       }
 
@@ -840,7 +937,10 @@ export class WebSocketServerService extends EventEmitter {
 
       this.emit("message:received", { message, connectionId });
     } catch (error) {
-      console.error(`[WebSocket] Error handling message from ${connectionId}:`, error);
+      console.error(
+        `[WebSocket] Error handling message from ${connectionId}:`,
+        error
+      );
       this.sendError(connectionId, "SERVER_ERROR", "Failed to process message");
     }
   }
@@ -860,9 +960,15 @@ export class WebSocketServerService extends EventEmitter {
     this.emit("connection:close", { connectionId, reason: reason.toString() });
   }
 
-  private handleSubscription(connectionId: string, message: WebSocketMessage): void {
+  private handleSubscription(
+    connectionId: string,
+    message: WebSocketMessage
+  ): void {
     const { channel } = message.data;
-    const success = this.connectionManager.subscribeToChannel(connectionId, channel);
+    const success = this.connectionManager.subscribeToChannel(
+      connectionId,
+      channel
+    );
 
     this.sendMessage(connectionId, {
       type: "system:ack",
@@ -882,9 +988,15 @@ export class WebSocketServerService extends EventEmitter {
     }
   }
 
-  private handleUnsubscription(connectionId: string, message: WebSocketMessage): void {
+  private handleUnsubscription(
+    connectionId: string,
+    message: WebSocketMessage
+  ): void {
     const { channel } = message.data;
-    const success = this.connectionManager.unsubscribeFromChannel(connectionId, channel);
+    const success = this.connectionManager.unsubscribeFromChannel(
+      connectionId,
+      channel
+    );
 
     this.sendMessage(connectionId, {
       type: "system:ack",
@@ -961,7 +1073,8 @@ export class WebSocketServerService extends EventEmitter {
     try {
       const url = new URL(request.url || "", `http://${request.headers.host}`);
       const token =
-        url.searchParams.get("token") || request.headers.authorization?.replace("Bearer ", "");
+        url.searchParams.get("token") ||
+        request.headers.authorization?.replace("Bearer ", "");
 
       if (!token) {
         return { valid: false };
@@ -979,7 +1092,9 @@ export class WebSocketServerService extends EventEmitter {
     const xRealIP = request.headers["x-real-ip"];
 
     if (xForwardedFor) {
-      return Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor.split(",")[0];
+      return Array.isArray(xForwardedFor)
+        ? xForwardedFor[0]
+        : xForwardedFor.split(",")[0];
     }
 
     if (xRealIP) {
@@ -1022,7 +1137,9 @@ export class WebSocketServerService extends EventEmitter {
 
           // Check if connection is stale
           if (now - connection.lastActivity > timeout * 2) {
-            console.info(`[WebSocket] Closing stale connection: ${connection.id}`);
+            console.info(
+              `[WebSocket] Closing stale connection: ${connection.id}`
+            );
             connection.ws.close(1001, "Connection timeout");
           }
         }
@@ -1041,7 +1158,9 @@ export class WebSocketServerService extends EventEmitter {
         messagesPerSecond: 0, // Would need to track this properly
         averageLatency: 0, // Would need to measure latency
         errorRate: 0, // Would need to track errors
-        uptime: this.isRunning ? Date.now() - (this.serverMetrics.uptime || Date.now()) : 0,
+        uptime: this.isRunning
+          ? Date.now() - (this.serverMetrics.uptime || Date.now())
+          : 0,
       };
 
       this.emit("system:performance", { metrics: this.serverMetrics });

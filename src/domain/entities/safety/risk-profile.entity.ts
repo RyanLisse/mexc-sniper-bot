@@ -5,10 +5,7 @@
 
 import { z } from "zod";
 import { AggregateRoot } from "../../base/aggregate-root";
-import {
-  BusinessRuleViolationError,
-  DomainValidationError,
-} from "../../errors/trading-errors";
+import { DomainValidationError } from "../../errors/trading-errors";
 import {
   type RiskProfileCreated,
   type RiskProfileUpdated,
@@ -33,7 +30,11 @@ export type RiskViolationType =
 export type RiskLevel = "low" | "medium" | "high" | "critical";
 
 // Risk update types
-export type RiskUpdateType = "thresholds" | "exposures" | "tolerance" | "status";
+export type RiskUpdateType =
+  | "thresholds"
+  | "exposures"
+  | "tolerance"
+  | "status";
 
 export interface RiskThresholds {
   readonly maxDrawdownPercent: number;
@@ -221,7 +222,10 @@ export class RiskProfile extends AggregateRoot<string> {
 
   private static validateBusinessRules(props: RiskProfileProps): void {
     // Validate threshold relationships
-    if (props.thresholds.maxPositionRiskPercent > props.thresholds.maxPortfolioRiskPercent) {
+    if (
+      props.thresholds.maxPositionRiskPercent >
+      props.thresholds.maxPortfolioRiskPercent
+    ) {
       throw new DomainValidationError(
         "thresholds.maxPositionRiskPercent",
         props.thresholds.maxPositionRiskPercent,
@@ -230,7 +234,8 @@ export class RiskProfile extends AggregateRoot<string> {
     }
 
     // Validate exposure consistency
-    const calculatedTotal = props.exposures.longExposure + props.exposures.shortExposure;
+    const calculatedTotal =
+      props.exposures.longExposure + props.exposures.shortExposure;
     if (calculatedTotal > props.exposures.totalExposure) {
       throw new DomainValidationError(
         "exposures",
@@ -305,24 +310,34 @@ export class RiskProfile extends AggregateRoot<string> {
     return (drawdown / initialValue) * 100;
   }
 
-  calculateConcentrationPercent(positionValue: number, totalPortfolioValue: number): number {
+  calculateConcentrationPercent(
+    positionValue: number,
+    totalPortfolioValue: number
+  ): number {
     if (totalPortfolioValue <= 0) return 0;
     return (positionValue / totalPortfolioValue) * 100;
   }
 
   calculateTotalExposureRatio(): number {
     if (this.props.exposures.totalExposure <= 0) return 0;
-    const netExposure = this.props.exposures.longExposure + this.props.exposures.shortExposure;
+    const netExposure =
+      this.props.exposures.longExposure + this.props.exposures.shortExposure;
     return netExposure / this.props.exposures.totalExposure;
   }
 
   calculateLeverageRatio(): number {
     if (this.props.exposures.totalExposure <= 0) return 1.0;
-    return 1.0 + (this.props.exposures.leveragedExposure / this.props.exposures.totalExposure);
+    return (
+      1.0 +
+      this.props.exposures.leveragedExposure /
+        this.props.exposures.totalExposure
+    );
   }
 
   calculateNetPnL(): number {
-    return this.props.exposures.unrealizedPnL + this.props.exposures.realizedPnL;
+    return (
+      this.props.exposures.unrealizedPnL + this.props.exposures.realizedPnL
+    );
   }
 
   calculatePnLPercent(baseValue: number): number {
@@ -335,33 +350,59 @@ export class RiskProfile extends AggregateRoot<string> {
     return currentDrawdownPercent > this.props.thresholds.maxDrawdownPercent;
   }
 
-  isPositionRiskThresholdViolated(positionValue: number, portfolioValue: number): boolean {
-    const positionRiskPercent = this.calculateConcentrationPercent(positionValue, portfolioValue);
+  isPositionRiskThresholdViolated(
+    positionValue: number,
+    portfolioValue: number
+  ): boolean {
+    const positionRiskPercent = this.calculateConcentrationPercent(
+      positionValue,
+      portfolioValue
+    );
     return positionRiskPercent > this.props.thresholds.maxPositionRiskPercent;
   }
 
-  isConcentrationThresholdViolated(positionValue: number, portfolioValue: number): boolean {
-    const concentrationPercent = this.calculateConcentrationPercent(positionValue, portfolioValue);
+  isConcentrationThresholdViolated(
+    positionValue: number,
+    portfolioValue: number
+  ): boolean {
+    const concentrationPercent = this.calculateConcentrationPercent(
+      positionValue,
+      portfolioValue
+    );
     return concentrationPercent > this.props.thresholds.maxConcentrationPercent;
   }
 
-  isPortfolioRiskThresholdViolated(totalRiskExposure: number, portfolioValue: number): boolean {
-    const portfolioRiskPercent = this.calculateConcentrationPercent(totalRiskExposure, portfolioValue);
+  isPortfolioRiskThresholdViolated(
+    totalRiskExposure: number,
+    portfolioValue: number
+  ): boolean {
+    const portfolioRiskPercent = this.calculateConcentrationPercent(
+      totalRiskExposure,
+      portfolioValue
+    );
     return portfolioRiskPercent > this.props.thresholds.maxPortfolioRiskPercent;
   }
 
   evaluateThresholds(marketData: MarketDataForRisk): RiskAssessment {
     const violations: RiskViolationType[] = [];
-    
+
     // Check drawdown threshold
-    const drawdownPercent = this.calculateDrawdownPercent(marketData.portfolioValue, marketData.initialValue);
+    const drawdownPercent = this.calculateDrawdownPercent(
+      marketData.portfolioValue,
+      marketData.initialValue
+    );
     if (this.isDrawdownThresholdViolated(drawdownPercent)) {
       violations.push("drawdown_threshold");
     }
 
     // Check position risks
     for (const position of marketData.positions) {
-      if (this.isPositionRiskThresholdViolated(position.value, marketData.portfolioValue)) {
+      if (
+        this.isPositionRiskThresholdViolated(
+          position.value,
+          marketData.portfolioValue
+        )
+      ) {
         violations.push("position_risk");
         break;
       }
@@ -369,20 +410,36 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Check concentration risks
     for (const position of marketData.positions) {
-      if (this.isConcentrationThresholdViolated(position.value, marketData.portfolioValue)) {
+      if (
+        this.isConcentrationThresholdViolated(
+          position.value,
+          marketData.portfolioValue
+        )
+      ) {
         violations.push("concentration_risk");
         break;
       }
     }
 
     // Check portfolio risk
-    const totalRiskExposure = marketData.positions.reduce((total, pos) => total + pos.riskExposure, 0);
-    if (this.isPortfolioRiskThresholdViolated(totalRiskExposure, marketData.portfolioValue)) {
+    const totalRiskExposure = marketData.positions.reduce(
+      (total, pos) => total + pos.riskExposure,
+      0
+    );
+    if (
+      this.isPortfolioRiskThresholdViolated(
+        totalRiskExposure,
+        marketData.portfolioValue
+      )
+    ) {
       violations.push("portfolio_risk");
     }
 
     // Check consecutive losses
-    if (marketData.consecutiveLosses > this.props.thresholds.consecutiveLossThreshold) {
+    if (
+      marketData.consecutiveLosses >
+      this.props.thresholds.consecutiveLossThreshold
+    ) {
       violations.push("consecutive_losses");
     }
 
@@ -399,7 +456,8 @@ export class RiskProfile extends AggregateRoot<string> {
     // Calculate overall risk level
     const riskLevel = this.calculateRiskLevel(violations);
     const overallRisk = this.calculateOverallRiskScore(violations);
-    const recommendedActions = this.generateRecommendationsForViolations(violations);
+    const recommendedActions =
+      this.generateRecommendationsForViolations(violations);
 
     return {
       overallRisk,
@@ -421,14 +479,17 @@ export class RiskProfile extends AggregateRoot<string> {
     const weights: Record<RiskViolationType, number> = {
       drawdown_threshold: 0.25,
       position_risk: 0.15,
-      portfolio_risk: 0.20,
+      portfolio_risk: 0.2,
       concentration_risk: 0.15,
-      consecutive_losses: 0.10,
+      consecutive_losses: 0.1,
       daily_loss_threshold: 0.08,
       monthly_loss_threshold: 0.07,
     };
 
-    return violations.reduce((score, violation) => score + (weights[violation] || 0.1), 0);
+    return violations.reduce(
+      (score, violation) => score + (weights[violation] || 0.1),
+      0
+    );
   }
 
   // Business logic methods
@@ -449,16 +510,20 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Emit domain event
     updatedProfile.addDomainEvent(
-      SafetyEventFactory.createRiskProfileUpdated(this.props.id, this.props.userId, {
-        riskProfileId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        changeType: "thresholds",
-        previousValues: this.props.thresholds,
-        newValues: newThresholds,
-        updatedBy: "USER",
-        reason: "Manual threshold update",
-      })
+      SafetyEventFactory.createRiskProfileUpdated(
+        this.props.id,
+        this.props.userId,
+        {
+          riskProfileId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          changeType: "thresholds",
+          previousValues: this.props.thresholds,
+          newValues: newThresholds,
+          updatedBy: "USER",
+          reason: "Manual threshold update",
+        }
+      )
     );
 
     return updatedProfile;
@@ -473,16 +538,20 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Emit domain event
     updatedProfile.addDomainEvent(
-      SafetyEventFactory.createRiskProfileUpdated(this.props.id, this.props.userId, {
-        riskProfileId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        changeType: "exposures",
-        previousValues: this.props.exposures,
-        newValues: newExposures,
-        updatedBy: "SYSTEM",
-        reason: "Exposure update from market data",
-      })
+      SafetyEventFactory.createRiskProfileUpdated(
+        this.props.id,
+        this.props.userId,
+        {
+          riskProfileId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          changeType: "exposures",
+          previousValues: this.props.exposures,
+          newValues: newExposures,
+          updatedBy: "SYSTEM",
+          reason: "Exposure update from market data",
+        }
+      )
     );
 
     return updatedProfile;
@@ -497,16 +566,20 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Emit domain event
     updatedProfile.addDomainEvent(
-      SafetyEventFactory.createRiskProfileUpdated(this.props.id, this.props.userId, {
-        riskProfileId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        changeType: "tolerance",
-        previousValues: { riskToleranceLevel: this.props.riskToleranceLevel },
-        newValues: { riskToleranceLevel: newTolerance },
-        updatedBy: "USER",
-        reason: "Risk tolerance level change",
-      })
+      SafetyEventFactory.createRiskProfileUpdated(
+        this.props.id,
+        this.props.userId,
+        {
+          riskProfileId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          changeType: "tolerance",
+          previousValues: { riskToleranceLevel: this.props.riskToleranceLevel },
+          newValues: { riskToleranceLevel: newTolerance },
+          updatedBy: "USER",
+          reason: "Risk tolerance level change",
+        }
+      )
     );
 
     return updatedProfile;
@@ -525,16 +598,20 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Emit domain event
     updatedProfile.addDomainEvent(
-      SafetyEventFactory.createRiskProfileUpdated(this.props.id, this.props.userId, {
-        riskProfileId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        changeType: "status",
-        previousValues: { isActive: false },
-        newValues: { isActive: true },
-        updatedBy: "USER",
-        reason: "Risk profile activation",
-      })
+      SafetyEventFactory.createRiskProfileUpdated(
+        this.props.id,
+        this.props.userId,
+        {
+          riskProfileId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          changeType: "status",
+          previousValues: { isActive: false },
+          newValues: { isActive: true },
+          updatedBy: "USER",
+          reason: "Risk profile activation",
+        }
+      )
     );
 
     return updatedProfile;
@@ -553,22 +630,28 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Emit domain event
     updatedProfile.addDomainEvent(
-      SafetyEventFactory.createRiskProfileUpdated(this.props.id, this.props.userId, {
-        riskProfileId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        changeType: "status",
-        previousValues: { isActive: true },
-        newValues: { isActive: false },
-        updatedBy: "USER",
-        reason: "Risk profile deactivation",
-      })
+      SafetyEventFactory.createRiskProfileUpdated(
+        this.props.id,
+        this.props.userId,
+        {
+          riskProfileId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          changeType: "status",
+          previousValues: { isActive: true },
+          newValues: { isActive: false },
+          updatedBy: "USER",
+          reason: "Risk profile deactivation",
+        }
+      )
     );
 
     return updatedProfile;
   }
 
-  triggerThresholdViolation(violationData: ThresholdViolationData): RiskProfile {
+  triggerThresholdViolation(
+    violationData: ThresholdViolationData
+  ): RiskProfile {
     const updatedProfile = this.updateProps({
       updatedAt: new Date(),
       version: this.props.version + 1,
@@ -576,18 +659,22 @@ export class RiskProfile extends AggregateRoot<string> {
 
     // Emit domain event
     updatedProfile.addDomainEvent(
-      SafetyEventFactory.createRiskThresholdViolated(this.props.id, this.props.userId, {
-        riskProfileId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        violationType: violationData.violationType,
-        threshold: violationData.threshold,
-        currentValue: violationData.currentValue,
-        severity: violationData.severity,
-        recommendedActions: violationData.recommendedActions,
-        violationContext: violationData.violationContext || {},
-        detectedAt: new Date(),
-      })
+      SafetyEventFactory.createRiskThresholdViolated(
+        this.props.id,
+        this.props.userId,
+        {
+          riskProfileId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          violationType: violationData.violationType,
+          threshold: violationData.threshold,
+          currentValue: violationData.currentValue,
+          severity: violationData.severity,
+          recommendedActions: violationData.recommendedActions,
+          violationContext: violationData.violationContext || {},
+          detectedAt: new Date(),
+        }
+      )
     );
 
     return updatedProfile;
@@ -618,7 +705,9 @@ export class RiskProfile extends AggregateRoot<string> {
     return recommendations;
   }
 
-  generateRecommendationsForViolations(violations: RiskViolationType[]): string[] {
+  generateRecommendationsForViolations(
+    violations: RiskViolationType[]
+  ): string[] {
     const recommendations: string[] = [];
 
     for (const violation of violations) {
@@ -671,8 +760,16 @@ export class RiskProfile extends AggregateRoot<string> {
   }
 
   // Get uncommitted events (overridden for type safety)
-  getUncommittedEvents(): readonly (RiskProfileCreated | RiskProfileUpdated | RiskThresholdViolated)[] {
-    return this.getDomainEvents() as readonly (RiskProfileCreated | RiskProfileUpdated | RiskThresholdViolated)[];
+  getUncommittedEvents(): readonly (
+    | RiskProfileCreated
+    | RiskProfileUpdated
+    | RiskThresholdViolated
+  )[] {
+    return this.getDomainEvents() as readonly (
+      | RiskProfileCreated
+      | RiskProfileUpdated
+      | RiskThresholdViolated
+    )[];
   }
 
   // Convert to plain object for persistence

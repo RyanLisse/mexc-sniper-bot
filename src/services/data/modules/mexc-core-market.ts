@@ -5,7 +5,11 @@
  * Extracted from core client for better separation of concerns.
  */
 
-import type { CalendarEntry, MexcServiceResponse, SymbolEntry } from "./mexc-api-types";
+import type {
+  CalendarEntry,
+  MexcServiceResponse,
+  SymbolEntry,
+} from "./mexc-api-types";
 import type { MexcCoreHttpClient } from "./mexc-core-http";
 
 // ============================================================================
@@ -50,8 +54,11 @@ export class MexcCoreMarketClient {
         const calendarData = response.data.newCoins.map((coin: any) => ({
           vcoinId: coin.vcoinId || coin.id || "",
           symbol: coin.vcoinName || coin.symbol || coin.vcoinId || "",
-          projectName: coin.vcoinNameFull || coin.vcoinName || coin.projectName || "",
-          firstOpenTime: this.httpClient.parseTimestamp(coin.firstOpenTime || coin.first_open_time),
+          projectName:
+            coin.vcoinNameFull || coin.vcoinName || coin.projectName || "",
+          firstOpenTime: this.httpClient.parseTimestamp(
+            coin.firstOpenTime || coin.first_open_time
+          ),
           vcoinName: coin.vcoinName,
           vcoinNameFull: coin.vcoinNameFull,
           zone: coin.zone,
@@ -72,7 +79,11 @@ export class MexcCoreMarketClient {
         source: "mexc-core-market",
       };
     } catch (error) {
-      return this.httpClient.handleError(error, "getCalendarListings", startTime);
+      return this.httpClient.handleError(
+        error,
+        "getCalendarListings",
+        startTime
+      );
     }
   }
 
@@ -108,7 +119,9 @@ export class MexcCoreMarketClient {
   /**
    * Get symbols for a specific coin
    */
-  async getSymbolsByVcoinId(vcoinId: string): Promise<MexcServiceResponse<SymbolEntry[]>> {
+  async getSymbolsByVcoinId(
+    vcoinId: string
+  ): Promise<MexcServiceResponse<SymbolEntry[]>> {
     const startTime = Date.now();
 
     try {
@@ -156,7 +169,11 @@ export class MexcCoreMarketClient {
         source: "mexc-core-market",
       };
     } catch (error) {
-      return this.httpClient.handleError(error, "getSymbolsByVcoinId", startTime);
+      return this.httpClient.handleError(
+        error,
+        "getSymbolsByVcoinId",
+        startTime
+      );
     }
   }
 
@@ -212,7 +229,9 @@ export class MexcCoreMarketClient {
   /**
    * Get basic symbol information by symbol name
    */
-  async getSymbolInfoBasic(symbolName: string): Promise<MexcServiceResponse<any>> {
+  async getSymbolInfoBasic(
+    symbolName: string
+  ): Promise<MexcServiceResponse<any>> {
     const startTime = Date.now();
 
     try {
@@ -236,7 +255,11 @@ export class MexcCoreMarketClient {
         source: "mexc-core-market",
       };
     } catch (error) {
-      return this.httpClient.handleError(error, "getSymbolInfoBasic", startTime);
+      return this.httpClient.handleError(
+        error,
+        "getSymbolInfoBasic",
+        startTime
+      );
     }
   }
 
@@ -389,7 +412,9 @@ export class MexcCoreMarketClient {
 /**
  * Create a new MEXC market client instance
  */
-export function createMexcCoreMarketClient(httpClient: MexcCoreHttpClient): MexcCoreMarketClient {
+export function createMexcCoreMarketClient(
+  httpClient: MexcCoreHttpClient
+): MexcCoreMarketClient {
   return new MexcCoreMarketClient(httpClient);
 }
 

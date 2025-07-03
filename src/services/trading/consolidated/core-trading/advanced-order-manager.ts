@@ -1,6 +1,6 @@
 /**
  * Advanced Order Manager
- * 
+ *
  * Provides sophisticated order management capabilities including:
  * - OCO (One-Cancels-Other) orders
  * - Trailing stop orders
@@ -10,13 +10,7 @@
  */
 
 import { toSafeError } from "@/src/lib/error-type-utils";
-import type { 
-  ModuleContext, 
-  Position, 
-  ServiceResponse,
-  TradeParameters, 
-  TradeResult 
-} from "./types";
+import type { ModuleContext, ServiceResponse } from "./types";
 
 // ============================================================================
 // Advanced Order Types
@@ -78,17 +72,19 @@ export class AdvancedOrderManager {
   /**
    * Place an OCO order
    */
-  async placeOCOOrder(params: OCOOrderParams): Promise<ServiceResponse<{
-    limitOrderId: string;
-    stopOrderId: string;
-  }>> {
+  async placeOCOOrder(params: OCOOrderParams): Promise<
+    ServiceResponse<{
+      limitOrderId: string;
+      stopOrderId: string;
+    }>
+  > {
     try {
       this.context.logger.info("Placing OCO order", {
         symbol: params.symbol,
         side: params.side,
         quantity: params.quantity,
         price: params.price,
-        stopPrice: params.stopPrice
+        stopPrice: params.stopPrice,
       });
 
       // Validate OCO parameters
@@ -101,11 +97,13 @@ export class AdvancedOrderManager {
         type: "LIMIT",
         quantity: params.quantity.toString(),
         price: params.price.toString(),
-        timeInForce: params.timeInForce || "GTC"
+        timeInForce: params.timeInForce || "GTC",
       });
 
       if (!limitOrderResult.success) {
-        throw new Error(`Failed to place limit order: ${limitOrderResult.error}`);
+        throw new Error(
+          `Failed to place limit order: ${limitOrderResult.error}`
+        );
       }
 
       // Place stop order
@@ -115,50 +113,49 @@ export class AdvancedOrderManager {
         type: "LIMIT", // MEXC uses LIMIT for stop orders
         quantity: params.quantity.toString(),
         price: (params.stopLimitPrice || params.stopPrice).toString(),
-        timeInForce: params.timeInForce || "GTC"
+        timeInForce: params.timeInForce || "GTC",
       });
 
       if (!stopOrderResult.success) {
         // Cancel the limit order if stop order fails
         await this.context.mexcService.cancelOrder(
-          params.symbol, 
+          params.symbol,
           limitOrderResult.data.orderId
         );
         throw new Error(`Failed to place stop order: ${stopOrderResult.error}`);
       }
 
       const ocoId = `oco_${Date.now()}`;
-      
+
       // Store OCO order for monitoring
       this.activeOCOOrders.set(ocoId, params);
-      
+
       // Set up monitoring for OCO orders
       this.monitorOCOOrder(ocoId, {
         limitOrderId: limitOrderResult.data.orderId,
         stopOrderId: stopOrderResult.data.orderId,
-        symbol: params.symbol
+        symbol: params.symbol,
       });
 
       return {
         success: true,
         data: {
           limitOrderId: limitOrderResult.data.orderId,
-          stopOrderId: stopOrderResult.data.orderId
+          stopOrderId: stopOrderResult.data.orderId,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to place OCO order", {
         error: safeError.message,
-        params
+        params,
       });
 
       return {
         success: false,
         error: safeError.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -170,13 +167,15 @@ export class AdvancedOrderManager {
   /**
    * Place a trailing stop order
    */
-  async placeTrailingStop(params: TrailingStopParams): Promise<ServiceResponse<string>> {
+  async placeTrailingStop(
+    params: TrailingStopParams
+  ): Promise<ServiceResponse<string>> {
     try {
       this.context.logger.info("Placing trailing stop order", {
         symbol: params.symbol,
         side: params.side,
         quantity: params.quantity,
-        callbackRate: params.callbackRate
+        callbackRate: params.callbackRate,
       });
 
       // Validate parameters
@@ -191,7 +190,7 @@ export class AdvancedOrderManager {
       }
 
       const trailingStopId = `trailing_${Date.now()}`;
-      
+
       // Create trailing stop monitor
       const monitor = new TrailingStopMonitor(
         trailingStopId,
@@ -201,27 +200,26 @@ export class AdvancedOrderManager {
       );
 
       this.activeTrailingStops.set(trailingStopId, monitor);
-      
+
       // Start monitoring
       monitor.start();
 
       return {
         success: true,
         data: trailingStopId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to place trailing stop", {
         error: safeError.message,
-        params
+        params,
       });
 
       return {
         success: false,
         error: safeError.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -233,18 +231,20 @@ export class AdvancedOrderManager {
   /**
    * Place a bracket order (entry + take profit + stop loss)
    */
-  async placeBracketOrder(params: BracketOrderParams): Promise<ServiceResponse<{
-    entryOrderId?: string;
-    takeProfitOrderId: string;
-    stopLossOrderId: string;
-  }>> {
+  async placeBracketOrder(params: BracketOrderParams): Promise<
+    ServiceResponse<{
+      entryOrderId?: string;
+      takeProfitOrderId: string;
+      stopLossOrderId: string;
+    }>
+  > {
     try {
       this.context.logger.info("Placing bracket order", {
         symbol: params.symbol,
         side: params.side,
         quantity: params.quantity,
         takeProfitPrice: params.takeProfitPrice,
-        stopLossPrice: params.stopLossPrice
+        stopLossPrice: params.stopLossPrice,
       });
 
       // Validate bracket parameters
@@ -260,7 +260,7 @@ export class AdvancedOrderManager {
           type: "LIMIT",
           quantity: params.quantity.toString(),
           price: params.price.toString(),
-          timeInForce: params.timeInForce || "GTC"
+          timeInForce: params.timeInForce || "GTC",
         });
 
         if (!entryResult.success) {
@@ -278,15 +278,20 @@ export class AdvancedOrderManager {
         type: "LIMIT",
         quantity: params.quantity.toString(),
         price: params.takeProfitPrice.toString(),
-        timeInForce: params.timeInForce || "GTC"
+        timeInForce: params.timeInForce || "GTC",
       });
 
       if (!takeProfitResult.success) {
         // Cancel entry order if it exists
         if (entryOrderId) {
-          await this.context.mexcService.cancelOrder(params.symbol, entryOrderId);
+          await this.context.mexcService.cancelOrder(
+            params.symbol,
+            entryOrderId
+          );
         }
-        throw new Error(`Failed to place take profit order: ${takeProfitResult.error}`);
+        throw new Error(
+          `Failed to place take profit order: ${takeProfitResult.error}`
+        );
       }
 
       // Place stop loss order (opposite side)
@@ -296,23 +301,28 @@ export class AdvancedOrderManager {
         type: "LIMIT",
         quantity: params.quantity.toString(),
         price: params.stopLossPrice.toString(),
-        timeInForce: params.timeInForce || "GTC"
+        timeInForce: params.timeInForce || "GTC",
       });
 
       if (!stopLossResult.success) {
         // Cancel previous orders
         if (entryOrderId) {
-          await this.context.mexcService.cancelOrder(params.symbol, entryOrderId);
+          await this.context.mexcService.cancelOrder(
+            params.symbol,
+            entryOrderId
+          );
         }
         await this.context.mexcService.cancelOrder(
-          params.symbol, 
+          params.symbol,
           takeProfitResult.data.orderId
         );
-        throw new Error(`Failed to place stop loss order: ${stopLossResult.error}`);
+        throw new Error(
+          `Failed to place stop loss order: ${stopLossResult.error}`
+        );
       }
 
       const bracketId = `bracket_${Date.now()}`;
-      
+
       // Set up bracket order monitoring
       const monitor = new BracketOrderMonitor(
         bracketId,
@@ -320,7 +330,7 @@ export class AdvancedOrderManager {
           entryOrderId,
           takeProfitOrderId: takeProfitResult.data.orderId,
           stopLossOrderId: stopLossResult.data.orderId,
-          symbol: params.symbol
+          symbol: params.symbol,
         },
         this.context
       );
@@ -333,22 +343,21 @@ export class AdvancedOrderManager {
         data: {
           entryOrderId,
           takeProfitOrderId: takeProfitResult.data.orderId,
-          stopLossOrderId: stopLossResult.data.orderId
+          stopLossOrderId: stopLossResult.data.orderId,
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to place bracket order", {
         error: safeError.message,
-        params
+        params,
       });
 
       return {
         success: false,
         error: safeError.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -369,37 +378,38 @@ export class AdvancedOrderManager {
     try {
       // Get portfolio value
       const portfolioValue = await this.getPortfolioValue();
-      
+
       // Calculate risk amount (percentage of portfolio)
       const riskAmount = portfolioValue * (config.riskPerTrade / 100);
-      
+
       // Calculate risk per unit
       const riskPerUnit = Math.abs(entryPrice - stopLossPrice);
-      
+
       // Basic position size calculation
       let positionSize = riskAmount / riskPerUnit;
-      
+
       // Apply maximum position size limit
       const maxSizeInUnits = config.maxPositionSize / entryPrice;
       positionSize = Math.min(positionSize, maxSizeInUnits);
-      
+
       // Adjust for volatility
       const volatility = await this.estimateVolatility(symbol);
-      const volatilityAdjustment = 1 / (1 + volatility * config.volatilityMultiplier);
+      const volatilityAdjustment =
+        1 / (1 + volatility * config.volatilityMultiplier);
       positionSize *= volatilityAdjustment;
-      
+
       // Check correlation limits
       const correlationAdjustment = await this.calculateCorrelationAdjustment(
-        symbol, 
+        symbol,
         config.correlationLimit
       );
       positionSize *= correlationAdjustment;
-      
+
       // Ensure minimum viable position size
       const minPositionValue = 10; // $10 minimum
       const minUnits = minPositionValue / entryPrice;
       positionSize = Math.max(positionSize, minUnits);
-      
+
       this.context.logger.info("Position size calculated", {
         symbol,
         entryPrice,
@@ -408,20 +418,19 @@ export class AdvancedOrderManager {
         rawPositionSize: riskAmount / riskPerUnit,
         volatilityAdjustment,
         correlationAdjustment,
-        finalPositionSize: positionSize
+        finalPositionSize: positionSize,
       });
-      
+
       return positionSize;
-      
     } catch (error) {
       const safeError = toSafeError(error);
       this.context.logger.error("Failed to calculate position size", {
         error: safeError.message,
         symbol,
         entryPrice,
-        stopLossPrice
+        stopLossPrice,
       });
-      
+
       // Return conservative fallback position size
       return 50 / entryPrice; // $50 worth
     }
@@ -433,32 +442,46 @@ export class AdvancedOrderManager {
 
   private async validateOCOParameters(params: OCOOrderParams): Promise<void> {
     if (params.side === "BUY" && params.stopPrice >= params.price) {
-      throw new Error("For BUY OCO orders, stop price must be below limit price");
+      throw new Error(
+        "For BUY OCO orders, stop price must be below limit price"
+      );
     }
-    
+
     if (params.side === "SELL" && params.stopPrice <= params.price) {
-      throw new Error("For SELL OCO orders, stop price must be above limit price");
+      throw new Error(
+        "For SELL OCO orders, stop price must be above limit price"
+      );
     }
-    
+
     if (params.quantity <= 0) {
       throw new Error("Quantity must be positive");
     }
   }
 
-  private async validateBracketParameters(params: BracketOrderParams): Promise<void> {
+  private async validateBracketParameters(
+    params: BracketOrderParams
+  ): Promise<void> {
     if (params.side === "BUY") {
       if (params.takeProfitPrice <= (params.price || 0)) {
-        throw new Error("Take profit price must be above entry price for BUY orders");
+        throw new Error(
+          "Take profit price must be above entry price for BUY orders"
+        );
       }
       if (params.stopLossPrice >= (params.price || Infinity)) {
-        throw new Error("Stop loss price must be below entry price for BUY orders");
+        throw new Error(
+          "Stop loss price must be below entry price for BUY orders"
+        );
       }
     } else {
       if (params.takeProfitPrice >= (params.price || Infinity)) {
-        throw new Error("Take profit price must be below entry price for SELL orders");
+        throw new Error(
+          "Take profit price must be below entry price for SELL orders"
+        );
       }
       if (params.stopLossPrice <= (params.price || 0)) {
-        throw new Error("Stop loss price must be above entry price for SELL orders");
+        throw new Error(
+          "Stop loss price must be above entry price for SELL orders"
+        );
       }
     }
   }
@@ -471,7 +494,9 @@ export class AdvancedOrderManager {
       }
       return null;
     } catch (error) {
-      this.context.logger.error(`Failed to get current price for ${symbol}`, { error: error instanceof Error ? error.message : String(error) });
+      this.context.logger.error(`Failed to get current price for ${symbol}`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return null;
     }
   }
@@ -482,27 +507,32 @@ export class AdvancedOrderManager {
       if (balance.success && balance.data) {
         // Calculate total portfolio value in USDT
         let totalValue = 0;
-        
+
         for (const asset of balance.data) {
           if (asset.asset === "USDT") {
             totalValue += parseFloat(asset.free) + parseFloat(asset.locked);
           } else {
             // Convert other assets to USDT value
-            const ticker = await this.context.mexcService.getTicker(`${asset.asset}USDT`);
+            const ticker = await this.context.mexcService.getTicker(
+              `${asset.asset}USDT`
+            );
             if (ticker.success && ticker.data?.price) {
               const price = parseFloat(ticker.data.price);
-              const assetBalance = parseFloat(asset.free) + parseFloat(asset.locked);
+              const assetBalance =
+                parseFloat(asset.free) + parseFloat(asset.locked);
               totalValue += assetBalance * price;
             }
           }
         }
-        
+
         return totalValue;
       }
-      
+
       return 1000; // Fallback portfolio value
     } catch (error) {
-      this.context.logger.error("Failed to get portfolio value", { error: error instanceof Error ? error.message : String(error) });
+      this.context.logger.error("Failed to get portfolio value", {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return 1000; // Fallback
     }
   }
@@ -513,71 +543,72 @@ export class AdvancedOrderManager {
       // In a real implementation, this would use historical data
       const ticker = await this.context.mexcService.getTicker(symbol);
       if (ticker.success && ticker.data?.priceChangePercent) {
-        const priceChange = Math.abs(parseFloat(ticker.data.priceChangePercent));
+        const priceChange = Math.abs(
+          parseFloat(ticker.data.priceChangePercent)
+        );
         return priceChange / 100; // Convert percentage to decimal
       }
-      
+
       return 0.05; // 5% default volatility
-    } catch (error) {
+    } catch (_error) {
       return 0.05; // Fallback volatility
     }
   }
 
   private async calculateCorrelationAdjustment(
-    symbol: string, 
-    correlationLimit: number
+    _symbol: string,
+    _correlationLimit: number
   ): Promise<number> {
     try {
       // Simplified correlation calculation
       // In a real implementation, this would analyze existing positions
       // and their correlation with the new symbol
-      
+
       // For now, return a conservative adjustment
       return 0.8; // 20% reduction for correlation risk
-    } catch (error) {
+    } catch (_error) {
       return 0.8; // Conservative fallback
     }
   }
 
   private monitorOCOOrder(
-    ocoId: string, 
+    ocoId: string,
     orderIds: { limitOrderId: string; stopOrderId: string; symbol: string }
   ): void {
     // Implement OCO monitoring logic
     const checkInterval = 5000; // 5 seconds
-    
+
     const monitor = setInterval(async () => {
       try {
         // Check status of both orders
         const limitStatus = await this.context.mexcService.getOrderStatus(
           orderIds.limitOrderId
         );
-        
+
         const stopStatus = await this.context.mexcService.getOrderStatus(
           orderIds.stopOrderId
         );
-        
+
         // If one order is filled, cancel the other
         if (limitStatus.success && limitStatus.data?.status === "FILLED") {
           await this.context.mexcService.cancelOrder(
-            orderIds.symbol, 
+            orderIds.symbol,
             orderIds.stopOrderId
           );
           clearInterval(monitor);
           this.activeOCOOrders.delete(ocoId);
         } else if (stopStatus.success && stopStatus.data?.status === "FILLED") {
           await this.context.mexcService.cancelOrder(
-            orderIds.symbol, 
+            orderIds.symbol,
             orderIds.limitOrderId
           );
           clearInterval(monitor);
           this.activeOCOOrders.delete(ocoId);
         }
-        
       } catch (error) {
         this.context.logger.error("OCO monitoring error", {
           ocoId,
-          error: error instanceof Error ? error.message : String(error)
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }, checkInterval);
@@ -589,36 +620,35 @@ export class AdvancedOrderManager {
   async cancelAllAdvancedOrders(): Promise<ServiceResponse<void>> {
     try {
       // Cancel OCO orders
-      for (const [ocoId] of this.activeOCOOrders) {
+      for (const [_ocoId] of this.activeOCOOrders) {
         // Implementation would cancel associated orders
       }
-      
+
       // Stop trailing stops
-      for (const [trailingId, monitor] of this.activeTrailingStops) {
+      for (const [_trailingId, monitor] of this.activeTrailingStops) {
         monitor.stop();
       }
-      
+
       // Cancel bracket orders
-      for (const [bracketId, monitor] of this.activeBracketOrders) {
+      for (const [_bracketId, monitor] of this.activeBracketOrders) {
         monitor.stop();
       }
-      
+
       // Clear all active orders
       this.activeOCOOrders.clear();
       this.activeTrailingStops.clear();
       this.activeBracketOrders.clear();
-      
+
       return {
         success: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
     } catch (error) {
       const safeError = toSafeError(error);
       return {
         success: false,
         error: safeError.message,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
@@ -631,9 +661,10 @@ export class AdvancedOrderManager {
       activeOCOOrders: this.activeOCOOrders.size,
       activeTrailingStops: this.activeTrailingStops.size,
       activeBracketOrders: this.activeBracketOrders.size,
-      totalAdvancedOrders: this.activeOCOOrders.size + 
-                          this.activeTrailingStops.size + 
-                          this.activeBracketOrders.size
+      totalAdvancedOrders:
+        this.activeOCOOrders.size +
+        this.activeTrailingStops.size +
+        this.activeBracketOrders.size,
     };
   }
 }
@@ -674,7 +705,9 @@ class TrailingStopMonitor {
 
     try {
       // Get current price
-      const ticker = await this.context.mexcService.getTicker(this.params.symbol);
+      const ticker = await this.context.mexcService.getTicker(
+        this.params.symbol
+      );
       if (!ticker.success || !ticker.data?.price) return;
 
       const currentPrice = parseFloat(ticker.data.price);
@@ -700,11 +733,10 @@ class TrailingStopMonitor {
       if (shouldTrigger) {
         await this.triggerStop(currentPrice);
       }
-
     } catch (error) {
       this.context.logger.error("Trailing stop monitoring error", {
         id: this.id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -719,20 +751,19 @@ class TrailingStopMonitor {
         symbol: this.params.symbol,
         side: this.params.side,
         type: "MARKET",
-        quantity: this.params.quantity.toString()
+        quantity: this.params.quantity.toString(),
       });
 
       this.context.logger.info("Trailing stop triggered", {
         id: this.id,
         symbol: this.params.symbol,
         triggerPrice: currentPrice,
-        orderId: result.data?.orderId
+        orderId: result.data?.orderId,
       });
-
     } catch (error) {
       this.context.logger.error("Failed to execute trailing stop", {
         id: this.id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -788,11 +819,10 @@ class BracketOrderMonitor {
         );
         this.stop();
       }
-
     } catch (error) {
       this.context.logger.error("Bracket order monitoring error", {
         id: this.id,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }

@@ -81,7 +81,9 @@ export function useAIServices() {
 /**
  * Hook to get specific AI service status
  */
-export function useAIServiceStatus(serviceName: "cohere" | "perplexity" | "openai") {
+export function useAIServiceStatus(
+  serviceName: "cohere" | "perplexity" | "openai"
+) {
   const { data, isLoading, error } = useAIServices();
 
   return {
@@ -123,7 +125,8 @@ export function useAIServicesHealth() {
         isCritical: data.overall.status === "critical",
         availableServices: data.overall.availableServices,
         totalServices: data.overall.totalServices,
-        healthPercentage: (data.overall.availableServices / data.overall.totalServices) * 100,
+        healthPercentage:
+          (data.overall.availableServices / data.overall.totalServices) * 100,
         message: data.overall.message,
         lastUpdated: data.lastUpdated,
       }
@@ -146,8 +149,12 @@ export function useAIServiceHealthCheck() {
     try {
       // Invalidate and refetch AI services data
       if (queryClient) {
-        await queryClient.invalidateQueries({ queryKey: aiServicesQueryKeys.all });
-        await queryClient.refetchQueries({ queryKey: aiServicesQueryKeys.status() });
+        await queryClient.invalidateQueries({
+          queryKey: aiServicesQueryKeys.all,
+        });
+        await queryClient.refetchQueries({
+          queryKey: aiServicesQueryKeys.status(),
+        });
       }
       return { success: true };
     } catch (error) {
@@ -206,5 +213,7 @@ export function getAIServiceStatusIcon(status: AIServiceStatus["status"]) {
  * Format AI service capabilities for display
  */
 export function formatAICapabilities(capabilities: string[]) {
-  return capabilities.map((cap) => cap.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()));
+  return capabilities.map((cap) =>
+    cap.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  );
 }

@@ -198,7 +198,9 @@ export interface PortfolioService {
   /**
    * Get balance for a specific asset
    */
-  getAssetBalance(asset: string): Promise<{ free: string; locked: string } | null>;
+  getAssetBalance(
+    asset: string
+  ): Promise<{ free: string; locked: string } | null>;
 }
 
 export interface MarketService {
@@ -265,7 +267,9 @@ export interface MarketService {
   /**
    * Get symbol status
    */
-  getSymbolStatus(symbol: string): Promise<{ status: string; trading: boolean }>;
+  getSymbolStatus(
+    symbol: string
+  ): Promise<{ status: string; trading: boolean }>;
 
   /**
    * Get order book depth

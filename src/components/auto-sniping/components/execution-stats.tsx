@@ -47,14 +47,18 @@ export function ExecutionStats({
             className={`flex items-center gap-2 ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}
           >
             <DollarSign className="h-5 w-5" />
-            <span className="text-2xl font-bold">{formatCurrency(totalPnl)}</span>
+            <span className="text-2xl font-bold">
+              {formatCurrency(totalPnl)}
+            </span>
           </div>
           <p className="text-sm text-gray-600">Total P&L</p>
         </div>
         <div className="flex flex-col items-center p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center gap-2">
             <Percent className="h-5 w-5 text-purple-500" />
-            <span className="text-2xl font-bold">{successRate.toFixed(1)}%</span>
+            <span className="text-2xl font-bold">
+              {successRate.toFixed(1)}%
+            </span>
           </div>
           <p className="text-sm text-gray-600">Success Rate</p>
         </div>
@@ -63,19 +67,27 @@ export function ExecutionStats({
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="text-center">
-          <div className="text-xl font-bold text-blue-600">{stats?.totalTrades ?? 0}</div>
+          <div className="text-xl font-bold text-blue-600">
+            {stats?.totalTrades ?? 0}
+          </div>
           <p className="text-sm text-gray-600">Total Trades</p>
         </div>
         <div className="text-center">
-          <div className="text-xl font-bold text-green-600">{stats?.successfulTrades ?? 0}</div>
+          <div className="text-xl font-bold text-green-600">
+            {stats?.successfulTrades ?? 0}
+          </div>
           <p className="text-sm text-gray-600">Successful</p>
         </div>
         <div className="text-center">
-          <div className="text-xl font-bold text-red-600">{stats?.failedTrades ?? 0}</div>
+          <div className="text-xl font-bold text-red-600">
+            {stats?.failedTrades ?? 0}
+          </div>
           <p className="text-sm text-gray-600">Failed</p>
         </div>
         <div className="text-center">
-          <div className="text-xl font-bold text-orange-600">{stats?.dailyTradeCount ?? 0}</div>
+          <div className="text-xl font-bold text-orange-600">
+            {stats?.dailyTradeCount ?? 0}
+          </div>
           <p className="text-sm text-gray-600">Today</p>
         </div>
       </div>

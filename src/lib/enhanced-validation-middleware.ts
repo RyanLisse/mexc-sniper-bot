@@ -3,7 +3,7 @@
  * Provides validation utilities for API responses and data
  */
 
-import { z } from "zod";
+import type { z } from "zod";
 
 export interface ValidationResult<T> {
   success: boolean;
@@ -22,9 +22,12 @@ export interface EnhancedValidationResult<T> extends ValidationResult<T> {
 }
 
 export class ValidationError extends Error {
-  constructor(message: string, public details?: any) {
+  constructor(
+    message: string,
+    public details?: any
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
@@ -38,7 +41,7 @@ export class ValidationHealthMonitor {
       totalValidations: 0,
       successfulValidations: 0,
       failedValidations: 0,
-      averageResponseTime: 0
+      averageResponseTime: 0,
     };
   }
 
@@ -46,7 +49,11 @@ export class ValidationHealthMonitor {
     // Reset validation metrics
   }
 
-  static recordValidation(success: boolean, duration: number, error?: string): void {
+  static recordValidation(
+    _success: boolean,
+    _duration: number,
+    _error?: string
+  ): void {
     // Record validation metrics
     // Implementation would track success/failure rates and performance
   }
@@ -58,15 +65,18 @@ export class CriticalDataValidator {
       const validatedData = schema.parse(data);
       return { success: true, data: validatedData };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Validation failed" 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Validation failed",
       };
     }
   }
 
-  static validateCriticalData<T>(schema: z.ZodSchema<T>, data: any): ValidationResult<T> {
-    return this.validate(schema, data);
+  static validateCriticalData<T>(
+    schema: z.ZodSchema<T>,
+    data: any
+  ): ValidationResult<T> {
+    return CriticalDataValidator.validate(schema, data);
   }
 
   static clearMetrics(): void {
@@ -84,16 +94,19 @@ export function validateExternalApiResponse<T>(
     return { success: true, data: validatedData };
   } catch (error) {
     console.warn(`[Validation] ${apiName} response validation failed:`, error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "API response validation failed" 
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "API response validation failed",
     };
   }
 }
 
-export function withEnhancedValidation<T extends (...args: any[]) => Promise<any>>(
-  handler: T
-): T {
+export function withEnhancedValidation<
+  T extends (...args: any[]) => Promise<any>,
+>(handler: T): T {
   return (async (...args: Parameters<T>) => {
     // Simple pass-through implementation - actual validation would go here
     return await handler(...args);

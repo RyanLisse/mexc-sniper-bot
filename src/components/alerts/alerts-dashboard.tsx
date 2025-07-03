@@ -15,7 +15,13 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Progress } from "../ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
@@ -161,7 +167,9 @@ const useActiveAlerts = (refreshInterval: number) => {
   return useQuery({
     queryKey: ["alerts", "instances", "active"],
     queryFn: async (): Promise<AlertInstance[]> => {
-      const response = await fetch("/api/alerts/instances?status=active&limit=20");
+      const response = await fetch(
+        "/api/alerts/instances?status=active&limit=20"
+      );
       if (!response.ok) throw new Error("Failed to fetch active alerts");
       const result = await response.json();
       return result.data;
@@ -174,7 +182,9 @@ const useAlertAnalytics = () => {
   return useQuery({
     queryKey: ["alerts", "analytics"],
     queryFn: async (): Promise<AlertAnalytics> => {
-      const response = await fetch("/api/alerts/analytics?bucket=hourly&limit=24");
+      const response = await fetch(
+        "/api/alerts/analytics?bucket=hourly&limit=24"
+      );
       if (!response.ok) throw new Error("Failed to fetch analytics");
       const result = await response.json();
       return result.data;
@@ -197,7 +207,9 @@ const SystemHealthCards = ({ systemStatus }: SystemHealthCardsProps) => {
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{systemStatus?.overall.score || 0}%</div>
+          <div className="text-2xl font-bold">
+            {systemStatus?.overall.score || 0}%
+          </div>
           <Progress value={systemStatus?.overall.score || 0} className="mt-2" />
           <p className="text-xs text-muted-foreground mt-2">
             Last checked:{" "}
@@ -214,7 +226,9 @@ const SystemHealthCards = ({ systemStatus }: SystemHealthCardsProps) => {
           <Bell className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{systemStatus?.activeAlerts.count || 0}</div>
+          <div className="text-2xl font-bold">
+            {systemStatus?.activeAlerts.count || 0}
+          </div>
           <div className="flex space-x-2 mt-2">
             {systemStatus?.activeAlerts.critical ? (
               <Badge variant="destructive" className="text-xs">
@@ -240,7 +254,8 @@ const SystemHealthCards = ({ systemStatus }: SystemHealthCardsProps) => {
             {systemStatus?.services.anomalyDetection.modelsLoaded || 0}
           </div>
           <p className="text-xs text-muted-foreground">
-            {systemStatus?.services.anomalyDetection.totalQueuedSamples || 0} queued samples
+            {systemStatus?.services.anomalyDetection.totalQueuedSamples || 0}{" "}
+            queued samples
           </p>
         </CardContent>
       </Card>
@@ -255,7 +270,8 @@ const SystemHealthCards = ({ systemStatus }: SystemHealthCardsProps) => {
             {systemStatus?.services.correlation.patternsLoaded || 0}
           </div>
           <p className="text-xs text-muted-foreground">
-            {systemStatus?.services.correlation.recentAlertsTracked || 0} alerts tracked
+            {systemStatus?.services.correlation.recentAlertsTracked || 0} alerts
+            tracked
           </p>
         </CardContent>
       </Card>
@@ -272,7 +288,9 @@ function OverviewTab({ analytics }: { analytics: AnalyticsData | undefined }) {
         <Card>
           <CardHeader>
             <CardTitle>System Insights</CardTitle>
-            <CardDescription>AI-powered recommendations for system optimization</CardDescription>
+            <CardDescription>
+              AI-powered recommendations for system optimization
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -297,14 +315,19 @@ function OverviewTab({ analytics }: { analytics: AnalyticsData | undefined }) {
           <CardContent>
             {analytics?.summary.alertDistribution && (
               <div className="space-y-2">
-                {Object.entries(analytics.summary.alertDistribution).map(([severity, count]) => (
-                  <div key={severity} className="flex justify-between items-center">
-                    <Badge variant={getSeverityColor(severity)}>
-                      {severity.charAt(0).toUpperCase() + severity.slice(1)}
-                    </Badge>
-                    <span className="font-mono">{count}</span>
-                  </div>
-                ))}
+                {Object.entries(analytics.summary.alertDistribution).map(
+                  ([severity, count]) => (
+                    <div
+                      key={severity}
+                      className="flex justify-between items-center"
+                    >
+                      <Badge variant={getSeverityColor(severity)}>
+                        {severity.charAt(0).toUpperCase() + severity.slice(1)}
+                      </Badge>
+                      <span className="font-mono">{count}</span>
+                    </div>
+                  )
+                )}
               </div>
             )}
           </CardContent>
@@ -328,7 +351,8 @@ function OverviewTab({ analytics }: { analytics: AnalyticsData | undefined }) {
               <div className="flex justify-between">
                 <span>ML Accuracy</span>
                 <span className="font-mono">
-                  {analytics?.anomalyDetection.overallPerformance.averageAccuracy
+                  {analytics?.anomalyDetection.overallPerformance
+                    .averageAccuracy
                     ? `${(analytics.anomalyDetection.overallPerformance.averageAccuracy * 100).toFixed(1)}%`
                     : "N/A"}
                 </span>
@@ -336,7 +360,8 @@ function OverviewTab({ analytics }: { analytics: AnalyticsData | undefined }) {
               <div className="flex justify-between">
                 <span>False Positive Rate</span>
                 <span className="font-mono">
-                  {analytics?.anomalyDetection.overallPerformance.averageFalsePositiveRate
+                  {analytics?.anomalyDetection.overallPerformance
+                    .averageFalsePositiveRate
                     ? `${(analytics.anomalyDetection.overallPerformance.averageFalsePositiveRate * 100).toFixed(1)}%`
                     : "N/A"}
                 </span>
@@ -378,7 +403,9 @@ function AlertsTab({
               >
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <Badge variant={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
+                    <Badge variant={getSeverityColor(alert.severity)}>
+                      {alert.severity}
+                    </Badge>
                     <span className="font-medium">{alert.message}</span>
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
@@ -388,7 +415,11 @@ function AlertsTab({
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => onResolveAlert(alert.id)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onResolveAlert(alert.id)}
+                  >
                     Resolve
                   </Button>
                 </div>
@@ -414,7 +445,9 @@ function AnalyticsTab({ analytics }: { analytics: AnalyticsData | undefined }) {
           <CardTitle>Total Alerts</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{analytics?.summary.totalAlerts || 0}</div>
+          <div className="text-3xl font-bold">
+            {analytics?.summary.totalAlerts || 0}
+          </div>
           <p className="text-sm text-muted-foreground">Last 24 hours</p>
         </CardContent>
       </Card>
@@ -440,15 +473,23 @@ function AnalyticsTab({ analytics }: { analytics: AnalyticsData | undefined }) {
           <CardTitle>ML Models Active</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold">{analytics?.anomalyDetection.modelsActive || 0}</div>
-          <p className="text-sm text-muted-foreground">Anomaly detection models</p>
+          <div className="text-3xl font-bold">
+            {analytics?.anomalyDetection.modelsActive || 0}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Anomaly detection models
+          </p>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function ServicesTab({ systemStatus }: { systemStatus: SystemStatus | undefined }) {
+function ServicesTab({
+  systemStatus,
+}: {
+  systemStatus: SystemStatus | undefined;
+}) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <Card>
@@ -462,19 +503,27 @@ function ServicesTab({ systemStatus }: { systemStatus: SystemStatus | undefined 
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Status</span>
-              {getStatusIcon(systemStatus?.services.alerting.status || "unknown")}
+              {getStatusIcon(
+                systemStatus?.services.alerting.status || "unknown"
+              )}
             </div>
             <div className="flex justify-between">
               <span>Running</span>
-              <span>{systemStatus?.services.alerting.isRunning ? "Yes" : "No"}</span>
+              <span>
+                {systemStatus?.services.alerting.isRunning ? "Yes" : "No"}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Evaluation Interval</span>
-              <span>{systemStatus?.services.alerting.evaluationInterval || 0}ms</span>
+              <span>
+                {systemStatus?.services.alerting.evaluationInterval || 0}ms
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Buffered Metrics</span>
-              <span>{systemStatus?.services.alerting.metricsInBuffer || 0}</span>
+              <span>
+                {systemStatus?.services.alerting.metricsInBuffer || 0}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -491,15 +540,22 @@ function ServicesTab({ systemStatus }: { systemStatus: SystemStatus | undefined 
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Status</span>
-              {getStatusIcon(systemStatus?.services.anomalyDetection.status || "unknown")}
+              {getStatusIcon(
+                systemStatus?.services.anomalyDetection.status || "unknown"
+              )}
             </div>
             <div className="flex justify-between">
               <span>Models Loaded</span>
-              <span>{systemStatus?.services.anomalyDetection.modelsLoaded || 0}</span>
+              <span>
+                {systemStatus?.services.anomalyDetection.modelsLoaded || 0}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Queued Samples</span>
-              <span>{systemStatus?.services.anomalyDetection.totalQueuedSamples || 0}</span>
+              <span>
+                {systemStatus?.services.anomalyDetection.totalQueuedSamples ||
+                  0}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -516,15 +572,21 @@ function ServicesTab({ systemStatus }: { systemStatus: SystemStatus | undefined 
           <div className="space-y-2">
             <div className="flex justify-between">
               <span>Status</span>
-              {getStatusIcon(systemStatus?.services.correlation.status || "unknown")}
+              {getStatusIcon(
+                systemStatus?.services.correlation.status || "unknown"
+              )}
             </div>
             <div className="flex justify-between">
               <span>Patterns Loaded</span>
-              <span>{systemStatus?.services.correlation.patternsLoaded || 0}</span>
+              <span>
+                {systemStatus?.services.correlation.patternsLoaded || 0}
+              </span>
             </div>
             <div className="flex justify-between">
               <span>Alerts Tracked</span>
-              <span>{systemStatus?.services.correlation.recentAlertsTracked || 0}</span>
+              <span>
+                {systemStatus?.services.correlation.recentAlertsTracked || 0}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -604,9 +666,17 @@ export function AlertsDashboard() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Badge variant={systemStatus?.overall.status === "healthy" ? "default" : "destructive"}>
+          <Badge
+            variant={
+              systemStatus?.overall.status === "healthy"
+                ? "default"
+                : "destructive"
+            }
+          >
             {getStatusIcon(systemStatus?.overall.status || "unknown")}
-            <span className="ml-1">{systemStatus?.overall.status || "Unknown"}</span>
+            <span className="ml-1">
+              {systemStatus?.overall.status || "Unknown"}
+            </span>
           </Badge>
         </div>
       </div>
@@ -615,7 +685,11 @@ export function AlertsDashboard() {
       <SystemHealthCards systemStatus={systemStatus} />
 
       {/* Main Content Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+      <Tabs
+        value={selectedTab}
+        onValueChange={setSelectedTab}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="alerts">Active Alerts</TabsTrigger>

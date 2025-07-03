@@ -1,7 +1,10 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import OpenAI from "openai";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
-import { globalEnhancedAgentCache, initializeAgentCache } from "@/src/lib/enhanced-agent-cache";
+import {
+  globalEnhancedAgentCache,
+  initializeAgentCache,
+} from "@/src/lib/enhanced-agent-cache";
 import { toSafeError } from "@/src/lib/error-type-utils";
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { ErrorLoggingService } from "@/src/services/notification/error-logging-service";
@@ -48,8 +51,10 @@ export type AgentStatus = "idle" | "running" | "error" | "offline";
 export class BaseAgent {
   // Simple console logger to avoid webpack bundling issues
   protected logger = {
-    info: (message: string, context?: any) => console.info("[base-agent]", message, context || ""),
-    warn: (message: string, context?: any) => console.warn("[base-agent]", message, context || ""),
+    info: (message: string, context?: any) =>
+      console.info("[base-agent]", message, context || ""),
+    warn: (message: string, context?: any) =>
+      console.warn("[base-agent]", message, context || ""),
     error: (message: string, context?: any) =>
       console.error("[base-agent]", message, context || ""),
     debug: (message: string, context?: any) =>
@@ -166,7 +171,9 @@ export class BaseAgent {
       );
 
       if (enhancedCached) {
-        this.logger.info(`[${this.config.name}] Enhanced cache hit for request`);
+        this.logger.info(
+          `[${this.config.name}] Enhanced cache hit for request`
+        );
         // Convert from common-interfaces AgentResponse to base-agent AgentResponse
         return {
           content: enhancedCached.content,
@@ -185,10 +192,15 @@ export class BaseAgent {
       // Track cache miss in enhanced cache when it returns null
       if (this.config.cacheEnabled) {
         // Inform enhanced cache about the miss
-        await globalEnhancedAgentCache.trackCacheMiss(this.config.name).catch((error) => {
-          this.logger.warn(`[${this.config.name}] Failed to track cache miss:`, error);
-          // Continue execution - cache tracking is not critical
-        });
+        await globalEnhancedAgentCache
+          .trackCacheMiss(this.config.name)
+          .catch((error) => {
+            this.logger.warn(
+              `[${this.config.name}] Failed to track cache miss:`,
+              error
+            );
+            // Continue execution - cache tracking is not critical
+          });
       }
 
       // Fallback to local cache
@@ -206,7 +218,9 @@ export class BaseAgent {
         // If enhanced cache returns null, it means it was invalidated, so clear local cache too
         if (!enhancedCheck) {
           this.responseCache.delete(cacheKey);
-          this.logger.info(`[${this.config.name}] Local cache invalidated based on enhanced cache`);
+          this.logger.info(
+            `[${this.config.name}] Local cache invalidated based on enhanced cache`
+          );
         } else {
           this.logger.info(`[${this.config.name}] Local cache hit for request`);
           return {
@@ -243,7 +257,10 @@ export class BaseAgent {
         ...options,
       });
 
-      const content = "choices" in response ? response.choices[0]?.message?.content || "" : "";
+      const content =
+        "choices" in response
+          ? response.choices[0]?.message?.content || ""
+          : "";
 
       const executionTime = performance.now() - startTime;
 
@@ -252,7 +269,8 @@ export class BaseAgent {
         metadata: {
           agent: this.config.name,
           timestamp: new Date().toISOString(),
-          tokensUsed: "usage" in response ? response.usage?.total_tokens : undefined,
+          tokensUsed:
+            "usage" in response ? response.usage?.total_tokens : undefined,
           model: "model" in response ? response.model : undefined,
           fromCache: false,
           executionTimeMs: executionTime,
@@ -266,15 +284,17 @@ export class BaseAgent {
         const context = { options, agent: this.config.name };
 
         // Convert base-agent AgentResponse to common-interfaces AgentResponse
-        const commonAgentResponse: import("@/src/types/common-interfaces").AgentResponse = {
-          success: true,
-          data: agentResponse.content,
-          timestamp: Date.now(),
-          processingTime: agentResponse.metadata.executionTimeMs || executionTime,
-          confidence: 0.9, // Default confidence for AI responses
-          reasoning: `AI response from ${this.config.name}`,
-          metadata: agentResponse.metadata,
-        };
+        const commonAgentResponse: import("@/src/types/common-interfaces").AgentResponse =
+          {
+            success: true,
+            data: agentResponse.content,
+            timestamp: Date.now(),
+            processingTime:
+              agentResponse.metadata.executionTimeMs || executionTime,
+            confidence: 0.9, // Default confidence for AI responses
+            reasoning: `AI response from ${this.config.name}`,
+            metadata: agentResponse.metadata,
+          };
 
         await globalEnhancedAgentCache.setAgentResponse(
           this.config.name,
@@ -320,7 +340,10 @@ export class BaseAgent {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async process(_input: string, _context?: Record<string, unknown>): Promise<AgentResponse> {
+  async process(
+    _input: string,
+    _context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
     throw new Error("Process method must be implemented by subclass");
   }
 
@@ -334,14 +357,22 @@ export class BaseAgent {
   /**
    * Determine response priority for caching
    */
-  private determineResponsePriority(_response: AgentResponse): "low" | "medium" | "high" {
+  private determineResponsePriority(
+    _response: AgentResponse
+  ): "low" | "medium" | "high" {
     // High priority for pattern detection and critical trading signals
-    if (this.config.name.includes("pattern") || this.config.name.includes("strategy")) {
+    if (
+      this.config.name.includes("pattern") ||
+      this.config.name.includes("strategy")
+    ) {
       return "high";
     }
 
     // Medium priority for analysis agents
-    if (this.config.name.includes("analysis") || this.config.name.includes("calendar")) {
+    if (
+      this.config.name.includes("analysis") ||
+      this.config.name.includes("calendar")
+    ) {
       return "medium";
     }
 
@@ -368,15 +399,24 @@ export class BaseAgent {
       dependencies.push("mexc/connectivity", "mexc/symbols");
     }
 
-    if (messageContent.includes("calendar") || messageContent.includes("listing")) {
+    if (
+      messageContent.includes("calendar") ||
+      messageContent.includes("listing")
+    ) {
       dependencies.push("mexc/calendar");
     }
 
-    if (messageContent.includes("pattern") || messageContent.includes("ready_state")) {
+    if (
+      messageContent.includes("pattern") ||
+      messageContent.includes("ready_state")
+    ) {
       dependencies.push("pattern/detection");
     }
 
-    if (messageContent.includes("account") || messageContent.includes("balance")) {
+    if (
+      messageContent.includes("account") ||
+      messageContent.includes("balance")
+    ) {
       dependencies.push("mexc/account");
     }
 

@@ -1,12 +1,11 @@
 /**
  * MEXC API Agent
- * 
+ *
  * This file has been refactored for maintainability.
  * The original 912-line implementation has been split into focused modules.
- * 
+ *
  * This file now serves as a backward-compatibility layer.
  */
-
 
 export type {
   AnalysisResult,
@@ -19,11 +18,11 @@ export type {
   MexcSymbolFilterData,
 } from "./mexc-api";
 // Re-export everything from the new modular structure
-export { 
+export {
   CalendarAnalyzer,
   DataQualityAnalyzer,
   MexcApiAgent,
-  ResponseEnhancer, 
+  ResponseEnhancer,
   ResponseValidator,
-  SymbolAnalyzer
+  SymbolAnalyzer,
 } from "./mexc-api";

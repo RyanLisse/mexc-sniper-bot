@@ -36,7 +36,10 @@ export class MexcAuthService {
       throw new Error("API credentials not configured");
     }
 
-    return crypto.createHmac("sha256", this.config.secretKey).update(queryString).digest("hex");
+    return crypto
+      .createHmac("sha256", this.config.secretKey)
+      .update(queryString)
+      .digest("hex");
   }
 
   /**
@@ -86,7 +89,10 @@ export class MexcAuthService {
   /**
    * Add authentication parameters to request params
    */
-  addAuthParams(params: ApiParams, authContext: AuthenticationContext): ApiParams {
+  addAuthParams(
+    params: ApiParams,
+    authContext: AuthenticationContext
+  ): ApiParams {
     return {
       ...params,
       timestamp: authContext.timestamp,
@@ -125,7 +131,9 @@ export class MexcAuthService {
    * Validate API secret format
    */
   validateApiSecret(apiSecret: string): boolean {
-    return Boolean(apiSecret && typeof apiSecret === "string" && apiSecret.length >= 32);
+    return Boolean(
+      apiSecret && typeof apiSecret === "string" && apiSecret.length >= 32
+    );
   }
 
   /**
@@ -174,7 +182,10 @@ export class MexcAuthService {
     } catch (error) {
       return {
         valid: false,
-        error: error instanceof Error ? error.message : "Unknown authentication error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown authentication error",
       };
     }
   }

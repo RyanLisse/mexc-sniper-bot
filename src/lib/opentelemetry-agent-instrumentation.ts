@@ -11,31 +11,35 @@ export interface AgentInstrumentationConfig {
 
 class AgentInstrumentation {
   private config: AgentInstrumentationConfig = {
-    enabled: process.env.NODE_ENV === 'production',
+    enabled: process.env.NODE_ENV === "production",
     traceAgentOperations: false,
-    includeAgentMetadata: false
+    includeAgentMetadata: false,
   };
 
   initialize(config?: Partial<AgentInstrumentationConfig>): void {
     if (config) {
       this.config = { ...this.config, ...config };
     }
-    
+
     if (this.config.enabled) {
-      console.log('Agent instrumentation initialized');
+      console.log("Agent instrumentation initialized");
     }
   }
 
-  traceAgentOperation(agentId: string, operation: string, metadata?: any): void {
+  traceAgentOperation(
+    agentId: string,
+    operation: string,
+    metadata?: any
+  ): void {
     if (!this.config.enabled || !this.config.traceAgentOperations) {
       return;
     }
-    
-    console.debug('Agent Operation:', {
+
+    console.debug("Agent Operation:", {
       agentId,
       operation,
-      metadata: this.config.includeAgentMetadata ? metadata : '[hidden]',
-      timestamp: new Date().toISOString()
+      metadata: this.config.includeAgentMetadata ? metadata : "[hidden]",
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -43,12 +47,12 @@ class AgentInstrumentation {
     if (!this.config.enabled) {
       return;
     }
-    
-    console.debug('Agent Metric:', {
+
+    console.debug("Agent Metric:", {
       agentId,
       metric: metricName,
       value,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -59,16 +63,22 @@ class AgentInstrumentation {
 
 export const agentInstrumentation = new AgentInstrumentation();
 
-export function initializeAgentInstrumentation(config?: Partial<AgentInstrumentationConfig>): void {
+export function initializeAgentInstrumentation(
+  config?: Partial<AgentInstrumentationConfig>
+): void {
   agentInstrumentation.initialize(config);
 }
 
-export function instrumentAgentMethod(target: any, propertyKey: string, descriptor?: PropertyDescriptor): PropertyDescriptor | undefined {
+export function instrumentAgentMethod(
+  _target: any,
+  propertyKey: string,
+  descriptor?: PropertyDescriptor
+): PropertyDescriptor | undefined {
   if (!agentInstrumentation.isEnabled()) {
     return descriptor;
   }
 
-  if (!descriptor || typeof descriptor.value !== 'function') {
+  if (!descriptor || typeof descriptor.value !== "function") {
     return descriptor;
   }
 
@@ -76,10 +86,14 @@ export function instrumentAgentMethod(target: any, propertyKey: string, descript
   descriptor.value = function (...args: any[]) {
     try {
       const result = originalMethod.apply(this, args);
-      agentInstrumentation.traceAgentOperation(this.id || 'unknown', propertyKey, { args: args.length });
+      agentInstrumentation.traceAgentOperation(
+        this.id || "unknown",
+        propertyKey,
+        { args: args.length }
+      );
       return result;
     } catch (error) {
-      console.error('Agent method error:', error);
+      console.error("Agent method error:", error);
       throw error;
     }
   };

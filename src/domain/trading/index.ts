@@ -76,7 +76,9 @@ export class TradingDomainFactory {
     const logger = dependencies.logger || console;
 
     // Create feature flag manager
-    const featureFlagManager = new TradingDomainFeatureFlagManager(dependencies.featureFlags);
+    const featureFlagManager = new TradingDomainFeatureFlagManager(
+      dependencies.featureFlags
+    );
 
     // Create infrastructure adapters
     const tradingRepository = new DrizzleTradingRepository(logger);
@@ -119,8 +121,10 @@ export class TradingDomainFactory {
       featureFlagManager,
 
       // Helper methods
-      canUseTradingDomain: () => featureFlagManager.isCleanArchitectureTradingEnabled(),
-      shouldFallbackToLegacy: () => featureFlagManager.shouldUseLegacyTradingService(),
+      canUseTradingDomain: () =>
+        featureFlagManager.isCleanArchitectureTradingEnabled(),
+      shouldFallbackToLegacy: () =>
+        featureFlagManager.shouldUseLegacyTradingService(),
     };
   }
 }

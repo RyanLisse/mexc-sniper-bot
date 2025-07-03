@@ -38,8 +38,12 @@ export const BalanceHeader = memo(
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Wallet className="h-5 w-5 text-primary" />
-          <CardTitle className="text-lg text-foreground">Account Balance</CardTitle>
-          {isFetching && <RefreshCw className="h-4 w-4 animate-spin text-primary" />}
+          <CardTitle className="text-lg text-foreground">
+            Account Balance
+          </CardTitle>
+          {isFetching && (
+            <RefreshCw className="h-4 w-4 animate-spin text-primary" />
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -56,7 +60,11 @@ export const BalanceHeader = memo(
             onClick={onToggleVisibility}
             className="text-muted-foreground hover:text-foreground"
           >
-            {showBalances ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            {showBalances ? (
+              <Eye className="h-4 w-4" />
+            ) : (
+              <EyeOff className="h-4 w-4" />
+            )}
           </Button>
           <Button
             variant="outline"
@@ -65,7 +73,9 @@ export const BalanceHeader = memo(
             disabled={isFetching}
             className="border-border text-muted-foreground hover:bg-accent hover:text-foreground"
           >
-            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`}
+            />
           </Button>
         </div>
       </div>
@@ -81,20 +91,34 @@ BalanceHeader.displayName = "BalanceHeader";
 
 // Balance Item Component
 export const BalanceItemComponent = memo(
-  ({ balance, showBalances }: { balance: BalanceItem; showBalances: boolean }) => {
+  ({
+    balance,
+    showBalances,
+  }: {
+    balance: BalanceItem;
+    showBalances: boolean;
+  }) => {
     const { formatTokenAmount, formatCurrency } = useCurrencyFormatting();
 
     return (
       <div className="flex items-center justify-between p-3 bg-muted/30 border border-border rounded-lg hover:bg-muted/50 transition-colors">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-            <span className="text-xs font-bold text-primary">{balance.asset.slice(0, 2)}</span>
+            <span className="text-xs font-bold text-primary">
+              {balance.asset.slice(0, 2)}
+            </span>
           </div>
           <div>
-            <p className="font-medium text-sm text-foreground">{balance.asset}</p>
+            <p className="font-medium text-sm text-foreground">
+              {balance.asset}
+            </p>
             {balance.locked !== "0" && (
               <p className="text-xs text-muted-foreground">
-                {formatTokenAmount(Number.parseFloat(balance.locked), balance.asset)} locked
+                {formatTokenAmount(
+                  Number.parseFloat(balance.locked),
+                  balance.asset
+                )}{" "}
+                locked
               </p>
             )}
           </div>
@@ -103,7 +127,8 @@ export const BalanceItemComponent = memo(
           {showBalances ? (
             <>
               <p className="font-medium text-sm text-foreground">
-                {formatTokenAmount(balance.total, balance.asset)} {balance.asset}
+                {formatTokenAmount(balance.total, balance.asset)}{" "}
+                {balance.asset}
               </p>
               {balance.usdtValue && balance.usdtValue > 0 && (
                 <p className="text-xs text-muted-foreground">
@@ -140,32 +165,43 @@ export const PortfolioSummary = memo(
       <div className="p-4 bg-gradient-to-r from-muted/50 to-accent/20 rounded-lg border border-border">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-sm font-medium text-muted-foreground">Total Portfolio Value</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              Total Portfolio Value
+            </p>
             <p className="text-2xl font-bold text-foreground">
               {showBalances ? (
                 <span className="flex items-center">
-                  <TrendingUp className="h-5 w-5 text-primary mr-2" />${formatCurrency(totalValue)}{" "}
-                  USDT
+                  <TrendingUp className="h-5 w-5 text-primary mr-2" />$
+                  {formatCurrency(totalValue)} USDT
                 </span>
               ) : (
                 <span className="text-muted-foreground">••••••</span>
               )}
             </p>
           </div>
-          <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground">
+          <Badge
+            variant="secondary"
+            className="text-xs bg-muted text-muted-foreground"
+          >
             {assetCount} assets
           </Badge>
         </div>
 
         {showBalances && topHoldings.length > 0 && (
           <div className="border-t border-border pt-3">
-            <p className="text-xs font-medium text-muted-foreground mb-2">Major Holdings</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">
+              Major Holdings
+            </p>
             <div className="flex flex-wrap gap-2">
               {topHoldings.slice(0, 4).map((holding) =>
                 holding.total > 0 ? (
-                  <div key={holding.asset} className="text-xs bg-muted px-2 py-1 rounded">
+                  <div
+                    key={holding.asset}
+                    className="text-xs bg-muted px-2 py-1 rounded"
+                  >
                     <span className="text-foreground font-medium">
-                      {formatTokenAmount(holding.total, holding.asset)} {holding.asset}
+                      {formatTokenAmount(holding.total, holding.asset)}{" "}
+                      {holding.asset}
                     </span>
                     {holding.usdtValue && holding.usdtValue > 0 && (
                       <span className="text-muted-foreground ml-1">

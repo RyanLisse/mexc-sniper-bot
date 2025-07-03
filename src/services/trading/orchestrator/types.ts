@@ -31,7 +31,9 @@ export const AutoSnipingConfigSchema = z.object({
   confidenceThreshold: z.number().min(0).max(100).default(75),
   maxPositionSize: z.number().min(0).max(1).default(0.1), // 10% of portfolio
   stopLossPercentage: z.number().min(0).max(1).default(0.15), // 15% stop loss
-  strategy: z.enum(["conservative", "balanced", "aggressive"]).default("conservative"),
+  strategy: z
+    .enum(["conservative", "balanced", "aggressive"])
+    .default("conservative"),
   paperTradingMode: z.boolean().default(true),
 });
 
@@ -326,19 +328,7 @@ export function validateConfig(config: unknown): AutoSnipingConfig {
 
 export function validateStatus(status: unknown): AutoSnipingStatus {
   const validated = AutoSnipingStatusSchema.parse(status);
-  return {
-    active: validated.active,
-    safeToOperate: validated.safeToOperate,
-    currentPositions: validated.currentPositions,
-    totalPositions: validated.totalPositions,
-    profitLoss: validated.profitLoss,
-    systemHealth: validated.systemHealth,
-    lastOperation: validated.lastOperation,
-    runningTime: validated.runningTime,
-    detectedOpportunities: validated.detectedOpportunities,
-    executedTrades: validated.executedTrades,
-    avgConfidenceScore: validated.avgConfidenceScore,
-  };
+  return validated as AutoSnipingStatus;
 }
 
 // ============================================================================
@@ -367,7 +357,9 @@ export function isTradingPosition(obj: unknown): obj is TradingPosition {
   );
 }
 
-export function isTradeExecutionResult(obj: unknown): obj is TradeExecutionResult {
+export function isTradeExecutionResult(
+  obj: unknown
+): obj is TradeExecutionResult {
   return (
     obj !== null &&
     typeof obj === "object" &&

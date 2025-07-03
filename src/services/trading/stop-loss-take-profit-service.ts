@@ -44,7 +44,11 @@ export interface SimplePositionProtection {
 }
 
 export interface SimpleProtectionAlert {
-  type: "stop_loss_triggered" | "take_profit_triggered" | "trailing_stop_updated" | "protection_error";
+  type:
+    | "stop_loss_triggered"
+    | "take_profit_triggered"
+    | "trailing_stop_updated"
+    | "protection_error";
   userId: string;
   symbol: string;
   price: number;
@@ -152,11 +156,17 @@ export class StopLossTakeProfitService extends EventEmitter {
     }
 
     // Cancel any active orders
-    if (protection.stopLossOrder && protection.stopLossOrder.status === "active") {
+    if (
+      protection.stopLossOrder &&
+      protection.stopLossOrder.status === "active"
+    ) {
       this.cancelStopLossOrder(protection.stopLossOrder.id);
     }
 
-    if (protection.takeProfitOrder && protection.takeProfitOrder.status === "active") {
+    if (
+      protection.takeProfitOrder &&
+      protection.takeProfitOrder.status === "active"
+    ) {
       this.cancelStopLossOrder(protection.takeProfitOrder.id);
     }
 
@@ -170,7 +180,9 @@ export class StopLossTakeProfitService extends EventEmitter {
    * Get all protections for a user
    */
   getUserProtections(userId: string): SimplePositionProtection[] {
-    return Array.from(this.protections.values()).filter((p) => p.userId === userId);
+    return Array.from(this.protections.values()).filter(
+      (p) => p.userId === userId
+    );
   }
 
   /**
@@ -179,7 +191,15 @@ export class StopLossTakeProfitService extends EventEmitter {
   updatePositionProtection(
     userId: string,
     symbol: string,
-    updates: Partial<Pick<SimplePositionProtection, "stopLossPercent" | "takeProfitPercent" | "trailingStopPercent" | "enabled">>
+    updates: Partial<
+      Pick<
+        SimplePositionProtection,
+        | "stopLossPercent"
+        | "takeProfitPercent"
+        | "trailingStopPercent"
+        | "enabled"
+      >
+    >
   ): boolean {
     const protectionId = `${userId}_${symbol}`;
     const protection = this.protections.get(protectionId);
@@ -193,11 +213,16 @@ export class StopLossTakeProfitService extends EventEmitter {
 
     // Recalculate protection prices if percentages changed
     if (updates.stopLossPercent && protection.entryPrice) {
-      const stopPrice = protection.entryPrice * (1 - updates.stopLossPercent / 100);
+      const stopPrice =
+        protection.entryPrice * (1 - updates.stopLossPercent / 100);
       protection.trailingStopPrice = stopPrice;
     }
 
-    this.logger.info("Position protection updated", { userId, symbol, updates });
+    this.logger.info("Position protection updated", {
+      userId,
+      symbol,
+      updates,
+    });
     return true;
   }
 
@@ -210,7 +235,9 @@ export class StopLossTakeProfitService extends EventEmitter {
     }
 
     this.isMonitoring = true;
-    this.logger.info("Starting stop-loss/take-profit monitoring", { intervalMs });
+    this.logger.info("Starting stop-loss/take-profit monitoring", {
+      intervalMs,
+    });
 
     this.monitoringInterval = setInterval(async () => {
       try {
@@ -237,13 +264,18 @@ export class StopLossTakeProfitService extends EventEmitter {
    * Check all active protections
    */
   private async checkProtections(): Promise<void> {
-    const activeProtections = Array.from(this.protections.values()).filter((p) => p.enabled);
+    const activeProtections = Array.from(this.protections.values()).filter(
+      (p) => p.enabled
+    );
 
     for (const protection of activeProtections) {
       try {
         await this.checkPositionProtection(protection);
       } catch (error) {
-        this.logger.error(`Failed to check protection for ${protection.symbol}:`, error);
+        this.logger.error(
+          `Failed to check protection for ${protection.symbol}:`,
+          error
+        );
       }
     }
   }
@@ -251,10 +283,14 @@ export class StopLossTakeProfitService extends EventEmitter {
   /**
    * Check individual position protection
    */
-  private async checkPositionProtection(protection: SimplePositionProtection): Promise<void> {
+  private async checkPositionProtection(
+    protection: SimplePositionProtection
+  ): Promise<void> {
     // Mock implementation - replace with actual portfolio service call
     const portfolio = await this.getMockPortfolioSummary(protection.userId);
-    const position = portfolio.positions.find((p) => p.symbol === protection.symbol);
+    const position = portfolio.positions.find(
+      (p) => p.symbol === protection.symbol
+    );
 
     if (!position) {
       // Position no longer exists, remove protection
@@ -273,8 +309,12 @@ export class StopLossTakeProfitService extends EventEmitter {
       protection.maxPrice = currentPrice;
 
       // Update trailing stop price
-      const newStopPrice = currentPrice * (1 - protection.trailingStopPercent / 100);
-      if (!protection.trailingStopPrice || newStopPrice > protection.trailingStopPrice) {
+      const newStopPrice =
+        currentPrice * (1 - protection.trailingStopPercent / 100);
+      if (
+        !protection.trailingStopPrice ||
+        newStopPrice > protection.trailingStopPrice
+      ) {
         protection.trailingStopPrice = newStopPrice;
 
         this.emit("protectionAlert", {
@@ -301,7 +341,8 @@ export class StopLossTakeProfitService extends EventEmitter {
 
     // Check take-profit triggers
     if (protection.takeProfitPercent && !protection.takeProfitOrder) {
-      const takeProfitPrice = protection.entryPrice * (1 + protection.takeProfitPercent / 100);
+      const takeProfitPrice =
+        protection.entryPrice * (1 + protection.takeProfitPercent / 100);
       if (currentPrice >= takeProfitPrice) {
         await this.triggerTakeProfit(protection, currentPrice);
       }
@@ -311,7 +352,9 @@ export class StopLossTakeProfitService extends EventEmitter {
   /**
    * Mock portfolio service - replace with actual service
    */
-  private async getMockPortfolioSummary(userId: string): Promise<SimplePortfolioSummary> {
+  private async getMockPortfolioSummary(
+    _userId: string
+  ): Promise<SimplePortfolioSummary> {
     // Mock implementation
     return {
       positions: [
@@ -364,7 +407,9 @@ export class StopLossTakeProfitService extends EventEmitter {
         stopLossOrder.status = "filled";
         stopLossOrder.filledAt = new Date().toISOString();
         stopLossOrder.orderId = orderResult.data.orderId;
-        stopLossOrder.executionPrice = parseFloat(orderResult.data.price || "0");
+        stopLossOrder.executionPrice = parseFloat(
+          orderResult.data.price || "0"
+        );
 
         this.logger.info("Stop-loss order executed successfully", {
           orderId: orderResult.data.orderId,
@@ -455,7 +500,9 @@ export class StopLossTakeProfitService extends EventEmitter {
         takeProfitOrder.status = "filled";
         takeProfitOrder.filledAt = new Date().toISOString();
         takeProfitOrder.orderId = orderResult.data.orderId;
-        takeProfitOrder.executionPrice = parseFloat(orderResult.data.price || "0");
+        takeProfitOrder.executionPrice = parseFloat(
+          orderResult.data.price || "0"
+        );
 
         this.logger.info("Take-profit order executed successfully", {
           orderId: orderResult.data.orderId,
@@ -506,10 +553,10 @@ export class StopLossTakeProfitService extends EventEmitter {
   /**
    * Mock trading execution - replace with actual service
    */
-  private async mockExecuteTrade(params: any): Promise<any> {
+  private async mockExecuteTrade(_params: any): Promise<any> {
     // Mock implementation
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     return {
       success: true,
       data: {
@@ -541,7 +588,9 @@ export class StopLossTakeProfitService extends EventEmitter {
    * Get stop-loss orders for a user
    */
   getUserStopLossOrders(userId: string): SimpleStopLossOrder[] {
-    return Array.from(this.stopLossOrders.values()).filter((order) => order.userId === userId);
+    return Array.from(this.stopLossOrders.values()).filter(
+      (order) => order.userId === userId
+    );
   }
 
   /**

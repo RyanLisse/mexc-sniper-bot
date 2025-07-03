@@ -31,7 +31,9 @@ export const agentPerformanceMetrics = pgTable("agent_performance_metrics", {
   uptime: real().notNull(),
   lastError: text("last_error"),
   metadata: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
 
 export const alertAnalytics = pgTable("alert_analytics", {
@@ -96,7 +98,9 @@ export const anomalyModels = pgTable("anomaly_models", {
   metricName: text("metric_name").notNull(),
   modelType: text("model_type").notNull(),
   parameters: text().notNull(),
-  trainingDataFrom: timestamp("training_data_from", { mode: "string" }).notNull(),
+  trainingDataFrom: timestamp("training_data_from", {
+    mode: "string",
+  }).notNull(),
   trainingDataTo: timestamp("training_data_to", { mode: "string" }).notNull(),
   sampleCount: integer("sample_count").notNull(),
   accuracy: real(),
@@ -122,7 +126,9 @@ export const errorIncidents = pgTable(
     errorMessage: text("error_message").notNull(),
     stackTrace: text("stack_trace"),
     context: text().notNull(),
-    firstOccurrence: timestamp("first_occurrence", { mode: "string" }).notNull(),
+    firstOccurrence: timestamp("first_occurrence", {
+      mode: "string",
+    }).notNull(),
     lastOccurrence: timestamp("last_occurrence", { mode: "string" }).notNull(),
     occurrenceCount: integer("occurrence_count").default(1).notNull(),
     recovered: boolean().default(false).notNull(),
@@ -166,7 +172,10 @@ export const errorIncidents = pgTable(
       "btree",
       table.severity.asc().nullsLast().op("text_ops")
     ),
-    index("error_incidents_type_idx").using("btree", table.type.asc().nullsLast().op("text_ops")),
+    index("error_incidents_type_idx").using(
+      "btree",
+      table.type.asc().nullsLast().op("text_ops")
+    ),
     index("error_incidents_type_occurrence_idx").using(
       "btree",
       table.type.asc().nullsLast().op("text_ops"),
@@ -243,8 +252,12 @@ export const performanceAlerts = pgTable("performance_alerts", {
   resolvedAt: timestamp("resolved_at", { mode: "string" }),
   resolvedBy: text("resolved_by"),
   metadata: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-  updatedAt: timestamp("updated_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
 
 export const performanceBaselines = pgTable("performance_baselines", {
@@ -260,7 +273,9 @@ export const performanceBaselines = pgTable("performance_baselines", {
   calculatedAt: timestamp("calculated_at", { mode: "string" }).notNull(),
   validUntil: timestamp("valid_until", { mode: "string" }),
   metadata: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at", { mode: "string" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
 
 export const reconciliationReports = pgTable(
@@ -350,7 +365,10 @@ export const riskEvents = pgTable(
       table.eventType.asc().nullsLast().op("text_ops"),
       table.timestamp.asc().nullsLast().op("timestamp_ops")
     ),
-    index("risk_events_user_id_idx").using("btree", table.userId.asc().nullsLast().op("text_ops")),
+    index("risk_events_user_id_idx").using(
+      "btree",
+      table.userId.asc().nullsLast().op("text_ops")
+    ),
     index("risk_events_user_severity_idx").using(
       "btree",
       table.userId.asc().nullsLast().op("text_ops"),
@@ -374,8 +392,12 @@ export const systemHealthMetrics = pgTable(
     diskUsage: real("disk_usage"),
     totalErrors: integer("total_errors").default(0).notNull(),
     criticalErrors: integer("critical_errors").default(0).notNull(),
-    circuitBreakerOpen: boolean("circuit_breaker_open").default(false).notNull(),
-    circuitBreakerFailures: integer("circuit_breaker_failures").default(0).notNull(),
+    circuitBreakerOpen: boolean("circuit_breaker_open")
+      .default(false)
+      .notNull(),
+    circuitBreakerFailures: integer("circuit_breaker_failures")
+      .default(0)
+      .notNull(),
     metadata: text(),
     alertsActive: integer("alerts_active").default(0).notNull(),
     timestamp: timestamp({ mode: "string" }).notNull(),
@@ -409,35 +431,44 @@ export const systemHealthMetrics = pgTable(
   ]
 );
 
-export const systemPerformanceSnapshots = pgTable("system_performance_snapshots", {
-  id: serial().primaryKey().notNull(),
-  timestamp: timestamp({ mode: "string" }).notNull(),
-  totalAgents: integer("total_agents").notNull(),
-  healthyAgents: integer("healthy_agents").notNull(),
-  degradedAgents: integer("degraded_agents").notNull(),
-  unhealthyAgents: integer("unhealthy_agents").notNull(),
-  totalWorkflows: integer("total_workflows").notNull(),
-  runningWorkflows: integer("running_workflows").notNull(),
-  completedWorkflows: integer("completed_workflows").notNull(),
-  failedWorkflows: integer("failed_workflows").notNull(),
-  systemMemoryUsage: real("system_memory_usage").notNull(),
-  systemCpuUsage: real("system_cpu_usage").notNull(),
-  databaseConnections: integer("database_connections").notNull(),
-  averageResponseTime: real("average_response_time").notNull(),
-  throughput: real().notNull(),
-  errorRate: real("error_rate").notNull(),
-  uptime: integer().notNull(),
-  metadata: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-});
+export const systemPerformanceSnapshots = pgTable(
+  "system_performance_snapshots",
+  {
+    id: serial().primaryKey().notNull(),
+    timestamp: timestamp({ mode: "string" }).notNull(),
+    totalAgents: integer("total_agents").notNull(),
+    healthyAgents: integer("healthy_agents").notNull(),
+    degradedAgents: integer("degraded_agents").notNull(),
+    unhealthyAgents: integer("unhealthy_agents").notNull(),
+    totalWorkflows: integer("total_workflows").notNull(),
+    runningWorkflows: integer("running_workflows").notNull(),
+    completedWorkflows: integer("completed_workflows").notNull(),
+    failedWorkflows: integer("failed_workflows").notNull(),
+    systemMemoryUsage: real("system_memory_usage").notNull(),
+    systemCpuUsage: real("system_cpu_usage").notNull(),
+    databaseConnections: integer("database_connections").notNull(),
+    averageResponseTime: real("average_response_time").notNull(),
+    throughput: real().notNull(),
+    errorRate: real("error_rate").notNull(),
+    uptime: integer().notNull(),
+    metadata: text(),
+    createdAt: timestamp("created_at", { mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  }
+);
 
 export const verification = pgTable("verification", {
   id: text().primaryKey().notNull(),
   identifier: text().notNull(),
   value: text().notNull(),
   expiresAt: integer().notNull(),
-  createdAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-  updatedAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp({ mode: "string" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  updatedAt: timestamp({ mode: "string" })
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
 
 export const workflowActivity = pgTable(
@@ -452,7 +483,9 @@ export const workflowActivity = pgTable(
     symbolName: text("symbol_name"),
     vcoinId: text("vcoin_id"),
     level: text().default("info").notNull(),
-    timestamp: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    timestamp: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
     createdAt: timestamp("created_at", { mode: "string" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
@@ -476,30 +509,35 @@ export const workflowActivity = pgTable(
   ]
 );
 
-export const workflowPerformanceMetrics = pgTable("workflow_performance_metrics", {
-  id: serial().primaryKey().notNull(),
-  workflowId: text("workflow_id").notNull(),
-  executionId: text("execution_id").notNull(),
-  timestamp: timestamp({ mode: "string" }).notNull(),
-  duration: integer().notNull(),
-  status: text().notNull(),
-  stepsExecuted: integer("steps_executed").notNull(),
-  stepsSkipped: integer("steps_skipped").notNull(),
-  stepsFailed: integer("steps_failed").notNull(),
-  agentsUsed: text("agents_used").notNull(),
-  retriesPerformed: integer("retries_performed").notNull(),
-  fallbacksUsed: integer("fallbacks_used").notNull(),
-  totalResponseTime: real("total_response_time").notNull(),
-  averageStepTime: real("average_step_time").notNull(),
-  bottleneckStep: text("bottleneck_step"),
-  bottleneckDuration: real("bottleneck_duration"),
-  peakMemory: real("peak_memory").notNull(),
-  averageMemory: real("average_memory").notNull(),
-  peakCpu: real("peak_cpu").notNull(),
-  averageCpu: real("average_cpu").notNull(),
-  metadata: text(),
-  createdAt: timestamp("created_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-});
+export const workflowPerformanceMetrics = pgTable(
+  "workflow_performance_metrics",
+  {
+    id: serial().primaryKey().notNull(),
+    workflowId: text("workflow_id").notNull(),
+    executionId: text("execution_id").notNull(),
+    timestamp: timestamp({ mode: "string" }).notNull(),
+    duration: integer().notNull(),
+    status: text().notNull(),
+    stepsExecuted: integer("steps_executed").notNull(),
+    stepsSkipped: integer("steps_skipped").notNull(),
+    stepsFailed: integer("steps_failed").notNull(),
+    agentsUsed: text("agents_used").notNull(),
+    retriesPerformed: integer("retries_performed").notNull(),
+    fallbacksUsed: integer("fallbacks_used").notNull(),
+    totalResponseTime: real("total_response_time").notNull(),
+    averageStepTime: real("average_step_time").notNull(),
+    bottleneckStep: text("bottleneck_step"),
+    bottleneckDuration: real("bottleneck_duration"),
+    peakMemory: real("peak_memory").notNull(),
+    averageMemory: real("average_memory").notNull(),
+    peakCpu: real("peak_cpu").notNull(),
+    averageCpu: real("average_cpu").notNull(),
+    metadata: text(),
+    createdAt: timestamp("created_at", { mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  }
+);
 
 export const workflowSystemStatus = pgTable(
   "workflow_system_status",
@@ -543,8 +581,12 @@ export const user = pgTable(
     emailVerified: boolean().default(false).notNull(),
     image: text(),
     legacyBetterAuthId: text(),
-    createdAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    updatedAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    createdAt: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => [
     unique("user_email_unique").on(table.email),
@@ -567,8 +609,12 @@ export const account = pgTable(
     refreshTokenExpiresAt: integer(),
     scope: text(),
     password: text(),
-    createdAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    updatedAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    createdAt: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
   (table) => [
     foreignKey({
@@ -628,8 +674,12 @@ export const alertInstances = pgTable(
     resolvedAt: timestamp("resolved_at", { mode: "string" }),
     resolvedBy: text("resolved_by"),
     resolutionNotes: text("resolution_notes"),
-    firstTriggeredAt: timestamp("first_triggered_at", { mode: "string" }).notNull(),
-    lastTriggeredAt: timestamp("last_triggered_at", { mode: "string" }).notNull(),
+    firstTriggeredAt: timestamp("first_triggered_at", {
+      mode: "string",
+    }).notNull(),
+    lastTriggeredAt: timestamp("last_triggered_at", {
+      mode: "string",
+    }).notNull(),
     additionalData: text("additional_data"),
     labels: text(),
   },
@@ -877,7 +927,9 @@ export const patternEmbeddings = pgTable(
     patternData: text("pattern_data").notNull(),
     embedding: text().notNull(),
     embeddingDimension: integer("embedding_dimension").default(1536).notNull(),
-    embeddingModel: text("embedding_model").default("text-embedding-ada-002").notNull(),
+    embeddingModel: text("embedding_model")
+      .default("text-embedding-ada-002")
+      .notNull(),
     confidence: real().notNull(),
     occurrences: integer().default(1).notNull(),
     successRate: real("success_rate"),
@@ -911,7 +963,9 @@ export const patternEmbeddings = pgTable(
         table.isActive.asc().nullsLast().op("text_ops"),
         table.patternType.asc().nullsLast().op("float4_ops")
       )
-      .where(sql`((confidence > (0.7)::double precision) AND (is_active = true))`),
+      .where(
+        sql`((confidence > (0.7)::double precision) AND (is_active = true))`
+      ),
     index("idx_pattern_embeddings_symbol_timestamp").using(
       "btree",
       table.symbolName.asc().nullsLast().op("text_ops"),
@@ -1044,8 +1098,12 @@ export const session = pgTable(
     id: text().primaryKey().notNull(),
     expiresAt: integer().notNull(),
     token: text().notNull(),
-    createdAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
-    updatedAt: timestamp({ mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    createdAt: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp({ mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
     ipAddress: text(),
     userAgent: text(),
     userId: text().notNull(),
@@ -1147,7 +1205,10 @@ export const simulationTrades = pgTable(
       "btree",
       table.timestamp.asc().nullsLast().op("timestamp_ops")
     ),
-    index("simulation_trades_type_idx").using("btree", table.type.asc().nullsLast().op("text_ops")),
+    index("simulation_trades_type_idx").using(
+      "btree",
+      table.type.asc().nullsLast().op("text_ops")
+    ),
     foreignKey({
       columns: [table.sessionId],
       foreignColumns: [simulationSessions.id],
@@ -1549,7 +1610,9 @@ export const transactionQueue = pgTable(
     transactionData: text("transaction_data").notNull(),
     idempotencyKey: text("idempotency_key").notNull(),
     status: text().default("pending").notNull(),
-    queuedAt: timestamp("queued_at", { mode: "string" }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+    queuedAt: timestamp("queued_at", { mode: "string" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
     processingStartedAt: timestamp("processing_started_at", { mode: "string" }),
     completedAt: timestamp("completed_at", { mode: "string" }),
     result: text(),
@@ -1659,32 +1722,44 @@ export const userPreferences = pgTable(
   {
     id: serial().primaryKey().notNull(),
     userId: text("user_id").notNull(),
-    defaultBuyAmountUsdt: real("default_buy_amount_usdt").default(100).notNull(),
+    defaultBuyAmountUsdt: real("default_buy_amount_usdt")
+      .default(100)
+      .notNull(),
     maxConcurrentSnipes: integer("max_concurrent_snipes").default(3).notNull(),
     takeProfitLevel1: real("take_profit_level_1").default(5).notNull(),
     takeProfitLevel2: real("take_profit_level_2").default(10).notNull(),
     takeProfitLevel3: real("take_profit_level_3").default(15).notNull(),
     takeProfitLevel4: real("take_profit_level_4").default(25).notNull(),
     takeProfitCustom: real("take_profit_custom"),
-    defaultTakeProfitLevel: integer("default_take_profit_level").default(2).notNull(),
+    defaultTakeProfitLevel: integer("default_take_profit_level")
+      .default(2)
+      .notNull(),
     stopLossPercent: real("stop_loss_percent").default(5).notNull(),
     riskTolerance: text("risk_tolerance").default("medium").notNull(),
     readyStatePattern: text("ready_state_pattern").default("2,2,4").notNull(),
     targetAdvanceHours: real("target_advance_hours").default(3.5).notNull(),
     autoSnipeEnabled: boolean("auto_snipe_enabled").default(true).notNull(),
-    selectedExitStrategy: text("selected_exit_strategy").default("balanced").notNull(),
+    selectedExitStrategy: text("selected_exit_strategy")
+      .default("balanced")
+      .notNull(),
     customExitStrategy: text("custom_exit_strategy"),
     autoBuyEnabled: boolean("auto_buy_enabled").default(true).notNull(),
     autoSellEnabled: boolean("auto_sell_enabled").default(true).notNull(),
-    calendarPollIntervalSeconds: integer("calendar_poll_interval_seconds").default(300).notNull(),
-    symbolsPollIntervalSeconds: integer("symbols_poll_interval_seconds").default(30).notNull(),
+    calendarPollIntervalSeconds: integer("calendar_poll_interval_seconds")
+      .default(300)
+      .notNull(),
+    symbolsPollIntervalSeconds: integer("symbols_poll_interval_seconds")
+      .default(30)
+      .notNull(),
     createdAt: timestamp("created_at", { mode: "string" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
     updatedAt: timestamp("updated_at", { mode: "string" })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    takeProfitStrategy: text("take_profit_strategy").default("balanced").notNull(),
+    takeProfitStrategy: text("take_profit_strategy")
+      .default("balanced")
+      .notNull(),
     takeProfitLevelsConfig: text("take_profit_levels_config"),
     sellQuantityLevel1: real("sell_quantity_level_1").default(25).notNull(),
     sellQuantityLevel2: real("sell_quantity_level_2").default(25).notNull(),

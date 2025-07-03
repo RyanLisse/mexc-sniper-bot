@@ -1,7 +1,8 @@
 "use client";
 
 import { Menu, X } from "lucide-react";
-import React, { ReactNode, useCallback, useEffect } from "react";
+import type React from "react";
+import { type ReactNode, useCallback, useEffect } from "react";
 import { useIsMobile } from "../../hooks/use-mobile-clean";
 import { cn } from "../../lib/utils";
 
@@ -27,7 +28,12 @@ export interface MobileSidebarContentProps {
  * Mobile Sidebar Component
  * Touch-optimized sidebar with accessibility features
  */
-export function MobileSidebar({ open, onOpenChange, children, className }: MobileSidebarProps) {
+export function MobileSidebar({
+  open,
+  onOpenChange,
+  children,
+  className,
+}: MobileSidebarProps) {
   const { isMobile } = useIsMobile();
 
   // Handle escape key
@@ -66,7 +72,10 @@ export function MobileSidebar({ open, onOpenChange, children, className }: Mobil
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+      <div
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        onClick={handleClose}
+      />
 
       {/* Sidebar */}
       <div
@@ -105,7 +114,11 @@ export function MobileSidebar({ open, onOpenChange, children, className }: Mobil
  * Mobile Sidebar Trigger Button
  * Touch-optimized trigger with proper accessibility
  */
-export function MobileSidebarTrigger({ open, onClick, className }: MobileSidebarTriggerProps) {
+export function MobileSidebarTrigger({
+  open,
+  onClick,
+  className,
+}: MobileSidebarTriggerProps) {
   return (
     <button
       onClick={onClick}
@@ -139,7 +152,11 @@ export function MobileSidebarContent({
 }: MobileSidebarContentProps & React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex h-full w-full flex-col overflow-hidden", "px-4 py-2", className)}
+      className={cn(
+        "flex h-full w-full flex-col overflow-hidden",
+        "px-4 py-2",
+        className
+      )}
       {...props}
     >
       {children}

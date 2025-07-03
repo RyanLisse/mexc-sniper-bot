@@ -40,17 +40,28 @@ export function ExecutionControls({
 
   return (
     <div className="flex gap-2">
-      <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onRefresh}
+        disabled={isLoading}
+      >
         <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
         Refresh
       </Button>
       <Button
         variant={
-          isExecutionActive ? (executionStatus === "paused" ? "default" : "secondary") : "default"
+          isExecutionActive
+            ? executionStatus === "paused"
+              ? "default"
+              : "secondary"
+            : "default"
         }
         size="sm"
         onClick={onToggleExecution}
-        disabled={isStartingExecution || isPausingExecution || isResumingExecution}
+        disabled={
+          isStartingExecution || isPausingExecution || isResumingExecution
+        }
       >
         {isExecutionActive ? (
           executionStatus === "paused" ? (

@@ -1,19 +1,15 @@
-import { and, desc, eq, gte, sql } from "drizzle-orm";
-import { NextRequest, NextResponse } from "next/server";
+import { desc, eq, gte } from "drizzle-orm";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { 
-  executionHistory, 
-  patternEmbeddings, 
-  positionSnapshots,
-  snipeTargets, 
-  transactions 
-} from "@/src/db/schema";
 import {
-  createValidatedApiResponse,
-  TradingAnalyticsResponseSchema,
-} from "@/src/schemas/api-validation-schemas";
+  patternEmbeddings,
+  positionSnapshots,
+  snipeTargets,
+  transactions,
+} from "@/src/db/schema";
+import { TradingAnalyticsResponseSchema } from "@/src/schemas/api-validation-schemas";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Get comprehensive trading analytics
     const [
@@ -24,7 +20,7 @@ export async function GET(request: NextRequest) {
       positionAnalytics,
       executionAnalytics,
       profitLossAnalytics,
-      marketAnalytics
+      marketAnalytics,
     ] = await Promise.all([
       getTradingPerformanceMetrics(),
       getPortfolioMetrics(),
@@ -33,7 +29,7 @@ export async function GET(request: NextRequest) {
       getPositionAnalytics(),
       getExecutionAnalytics(),
       getProfitLossAnalytics(),
-      getMarketAnalytics()
+      getMarketAnalytics(),
     ]);
 
     const response = {
@@ -48,7 +44,7 @@ export async function GET(request: NextRequest) {
         winLossRatio: tradingPerformance.winLossRatio,
         sharpeRatio: tradingPerformance.sharpeRatio,
         maxDrawdown: tradingPerformance.maxDrawdown,
-        profitFactor: tradingPerformance.profitFactor
+        profitFactor: tradingPerformance.profitFactor,
       },
       portfolioMetrics: {
         currentValue: portfolioMetrics.currentValue,
@@ -61,7 +57,7 @@ export async function GET(request: NextRequest) {
         topPerformers: portfolioMetrics.topPerformers,
         riskAdjustedReturn: portfolioMetrics.riskAdjustedReturn,
         beta: portfolioMetrics.beta,
-        volatility: portfolioMetrics.volatility
+        volatility: portfolioMetrics.volatility,
       },
       patternAnalytics: {
         totalPatternsDetected: patternSuccessRates.totalPatterns,
@@ -73,9 +69,9 @@ export async function GET(request: NextRequest) {
         advanceDetectionMetrics: {
           averageAdvanceTime: patternSuccessRates.averageAdvanceTime,
           optimalDetections: patternSuccessRates.optimalDetections,
-          detectionAccuracy: patternSuccessRates.detectionAccuracy
+          detectionAccuracy: patternSuccessRates.detectionAccuracy,
         },
-        patternPerformance: patternSuccessRates.patternPerformance
+        patternPerformance: patternSuccessRates.patternPerformance,
       },
       riskManagement: {
         currentRiskScore: riskMetrics.currentRiskScore,
@@ -86,7 +82,7 @@ export async function GET(request: NextRequest) {
         stressTestResults: riskMetrics.stressTestResults,
         riskLimits: riskMetrics.riskLimits,
         exposureMetrics: riskMetrics.exposureMetrics,
-        circuitBreakerStatus: riskMetrics.circuitBreakerStatus
+        circuitBreakerStatus: riskMetrics.circuitBreakerStatus,
       },
       positionAnalytics: {
         activePositions: positionAnalytics.activePositions,
@@ -96,7 +92,7 @@ export async function GET(request: NextRequest) {
         leverageMetrics: positionAnalytics.leverageMetrics,
         liquidityMetrics: positionAnalytics.liquidityMetrics,
         unrealizedPnL: positionAnalytics.unrealizedPnL,
-        realizedPnL: positionAnalytics.realizedPnL
+        realizedPnL: positionAnalytics.realizedPnL,
       },
       executionAnalytics: {
         orderExecutionSpeed: executionAnalytics.orderExecutionSpeed,
@@ -105,7 +101,7 @@ export async function GET(request: NextRequest) {
         marketImpact: executionAnalytics.marketImpact,
         executionCosts: executionAnalytics.executionCosts,
         latencyMetrics: executionAnalytics.latencyMetrics,
-        orderBookAnalysis: executionAnalytics.orderBookAnalysis
+        orderBookAnalysis: executionAnalytics.orderBookAnalysis,
       },
       profitLossAnalytics: {
         dailyPnL: profitLossAnalytics.dailyPnL,
@@ -116,7 +112,7 @@ export async function GET(request: NextRequest) {
         bestTrades: profitLossAnalytics.bestTrades,
         worstTrades: profitLossAnalytics.worstTrades,
         pnLByStrategy: profitLossAnalytics.pnLByStrategy,
-        pnLByTimeframe: profitLossAnalytics.pnLByTimeframe
+        pnLByTimeframe: profitLossAnalytics.pnLByTimeframe,
       },
       marketAnalytics: {
         marketConditions: marketAnalytics.marketConditions,
@@ -125,25 +121,30 @@ export async function GET(request: NextRequest) {
         volatilityIndex: marketAnalytics.volatilityIndex,
         marketSentiment: marketAnalytics.marketSentiment,
         tradingOpportunities: marketAnalytics.tradingOpportunities,
-        marketTrends: marketAnalytics.marketTrends
-      }
+        marketTrends: marketAnalytics.marketTrends,
+      },
     };
 
     try {
       // Validate the response structure (partial validation for core fields)
-      const validatedResponse = TradingAnalyticsResponseSchema.partial().parse(response);
+      const validatedResponse =
+        TradingAnalyticsResponseSchema.partial().parse(response);
       return NextResponse.json(validatedResponse);
     } catch (validationError) {
-      console.warn("Trading analytics response validation warning:", { error: validationError });
+      console.warn("Trading analytics response validation warning:", {
+        error: validationError,
+      });
       // Return response anyway with warning logged (graceful degradation)
       return NextResponse.json(response);
     }
   } catch (error) {
-    console.error("[Monitoring API] Trading analytics failed:", { error: error });
+    console.error("[Monitoring API] Trading analytics failed:", {
+      error: error,
+    });
     return NextResponse.json(
-      { 
+      {
         error: "Failed to fetch trading analytics",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
@@ -156,21 +157,40 @@ async function getTradingPerformanceMetrics() {
     const trades = await db
       .select()
       .from(transactions)
-      .where(gte(transactions.createdAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)))
+      .where(
+        gte(
+          transactions.createdAt,
+          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        )
+      )
       .orderBy(desc(transactions.createdAt));
 
     const totalTrades = trades.length;
-    const successfulTrades = trades.filter((t: any) => t.status === 'completed' && (t.profitLoss || 0) > 0).length;
-    const successRate = totalTrades > 0 ? (successfulTrades / totalTrades) * 100 : 0;
+    const successfulTrades = trades.filter(
+      (t: any) => t.status === "completed" && (t.profitLoss || 0) > 0
+    ).length;
+    const successRate =
+      totalTrades > 0 ? (successfulTrades / totalTrades) * 100 : 0;
 
-    const averageTradeSize = trades.reduce((sum: any, t: any) => sum + (t.buyTotalCost || 0), 0) / totalTrades || 0;
-    const tradingVolume = trades.reduce((sum: any, t: any) => sum + (t.buyTotalCost || 0), 0);
+    const averageTradeSize =
+      trades.reduce((sum: any, t: any) => sum + (t.buyTotalCost || 0), 0) /
+        totalTrades || 0;
+    const tradingVolume = trades.reduce(
+      (sum: any, t: any) => sum + (t.buyTotalCost || 0),
+      0
+    );
 
-    const profits = trades.filter((t: any) => (t.profitLoss || 0) > 0).map((t: any) => t.profitLoss || 0);
-    const losses = trades.filter((t: any) => (t.profitLoss || 0) < 0).map((t: any) => Math.abs(t.profitLoss || 0));
-    
-    const averageProfit = profits.reduce((sum: any, p: any) => sum + p, 0) / profits.length || 0;
-    const averageLoss = losses.reduce((sum: any, l: any) => sum + l, 0) / losses.length || 0;
+    const profits = trades
+      .filter((t: any) => (t.profitLoss || 0) > 0)
+      .map((t: any) => t.profitLoss || 0);
+    const losses = trades
+      .filter((t: any) => (t.profitLoss || 0) < 0)
+      .map((t: any) => Math.abs(t.profitLoss || 0));
+
+    const averageProfit =
+      profits.reduce((sum: any, p: any) => sum + p, 0) / profits.length || 0;
+    const averageLoss =
+      losses.reduce((sum: any, l: any) => sum + l, 0) / losses.length || 0;
     const winLossRatio = averageLoss > 0 ? averageProfit / averageLoss : 0;
 
     return {
@@ -183,7 +203,7 @@ async function getTradingPerformanceMetrics() {
       winLossRatio,
       sharpeRatio: Math.random() * 1.5 + 0.5, // 0.5-2.0 mock
       maxDrawdown: Math.random() * 15 + 5, // 5-20% mock
-      profitFactor: winLossRatio > 0 ? winLossRatio * 1.2 : 1.0
+      profitFactor: winLossRatio > 0 ? winLossRatio * 1.2 : 1.0,
     };
   } catch (error) {
     console.error("Error calculating trading performance:", { error: error });
@@ -197,7 +217,7 @@ async function getTradingPerformanceMetrics() {
       winLossRatio: 0,
       sharpeRatio: 0,
       maxDrawdown: 0,
-      profitFactor: 0
+      profitFactor: 0,
     };
   }
 }
@@ -211,16 +231,26 @@ async function getPortfolioMetrics() {
       .limit(30);
 
     const current = recentPortfolio[0];
-    const dayAgo = recentPortfolio.find((p: any) => 
-      new Date(p.timestamp).getTime() < Date.now() - 24 * 60 * 60 * 1000
+    const dayAgo = recentPortfolio.find(
+      (p: any) =>
+        new Date(p.timestamp).getTime() < Date.now() - 24 * 60 * 60 * 1000
     );
-    const weekAgo = recentPortfolio.find((p: any) => 
-      new Date(p.timestamp).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
+    const weekAgo = recentPortfolio.find(
+      (p: any) =>
+        new Date(p.timestamp).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
     );
 
     const currentValue = current?.totalBalance || 10000;
-    const dayChange = dayAgo ? ((currentValue - (dayAgo.totalBalance || 10000)) / (dayAgo.totalBalance || 10000)) * 100 : 0;
-    const weekChange = weekAgo ? ((currentValue - (weekAgo.totalBalance || 10000)) / (weekAgo.totalBalance || 10000)) * 100 : 0;
+    const dayChange = dayAgo
+      ? ((currentValue - (dayAgo.totalBalance || 10000)) /
+          (dayAgo.totalBalance || 10000)) *
+        100
+      : 0;
+    const weekChange = weekAgo
+      ? ((currentValue - (weekAgo.totalBalance || 10000)) /
+          (weekAgo.totalBalance || 10000)) *
+        100
+      : 0;
 
     return {
       currentValue,
@@ -230,19 +260,19 @@ async function getPortfolioMetrics() {
       weekChange,
       monthChange: Math.random() * 20 - 10, // -10% to +10% mock
       allocations: [
-        { asset: 'BTC', percentage: 30, value: currentValue * 0.3 },
-        { asset: 'ETH', percentage: 25, value: currentValue * 0.25 },
-        { asset: 'USDT', percentage: 20, value: currentValue * 0.2 },
-        { asset: 'Others', percentage: 25, value: currentValue * 0.25 }
+        { asset: "BTC", percentage: 30, value: currentValue * 0.3 },
+        { asset: "ETH", percentage: 25, value: currentValue * 0.25 },
+        { asset: "USDT", percentage: 20, value: currentValue * 0.2 },
+        { asset: "Others", percentage: 25, value: currentValue * 0.25 },
       ],
       topPerformers: [
-        { symbol: 'BTCUSDT', return: 15.2 },
-        { symbol: 'ETHUSDT', return: 12.1 },
-        { symbol: 'ADAUSDT', return: 8.7 }
+        { symbol: "BTCUSDT", return: 15.2 },
+        { symbol: "ETHUSDT", return: 12.1 },
+        { symbol: "ADAUSDT", return: 8.7 },
       ],
       riskAdjustedReturn: Math.random() * 0.8 + 0.2, // 0.2-1.0 mock
       beta: Math.random() * 0.5 + 0.8, // 0.8-1.3 mock
-      volatility: Math.random() * 20 + 10 // 10-30% mock
+      volatility: Math.random() * 20 + 10, // 10-30% mock
     };
   } catch (error) {
     console.error("Error calculating portfolio metrics:", { error: error });
@@ -257,7 +287,7 @@ async function getPortfolioMetrics() {
       topPerformers: [],
       riskAdjustedReturn: 0,
       beta: 1,
-      volatility: 15
+      volatility: 15,
     };
   }
 }
@@ -267,21 +297,36 @@ async function getPatternSuccessRates() {
     const recentPatterns = await db
       .select()
       .from(patternEmbeddings)
-      .where(gte(patternEmbeddings.createdAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)));
+      .where(
+        gte(
+          patternEmbeddings.createdAt,
+          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        )
+      );
 
     const totalPatterns = recentPatterns.length;
-    const successfulPatterns = recentPatterns.filter((p: any) => p.isActive && p.truePositives > 0).length;
-    const successRate = totalPatterns > 0 ? (successfulPatterns / totalPatterns) * 100 : 0;
-    const averageConfidence = recentPatterns.reduce((sum: any, p: any) => sum + (p.confidence || 0), 0) / totalPatterns || 0;
+    const successfulPatterns = recentPatterns.filter(
+      (p: any) => p.isActive && p.truePositives > 0
+    ).length;
+    const successRate =
+      totalPatterns > 0 ? (successfulPatterns / totalPatterns) * 100 : 0;
+    const averageConfidence =
+      recentPatterns.reduce(
+        (sum: any, p: any) => sum + (p.confidence || 0),
+        0
+      ) / totalPatterns || 0;
 
-    const patternTypes = recentPatterns.reduce((acc: any, p: any) => {
-      const type = p.patternType || 'unknown';
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const patternTypes = recentPatterns.reduce(
+      (acc: any, p: any) => {
+        const type = p.patternType || "unknown";
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
-    const readyStatePatterns = recentPatterns.filter((p: any) => 
-      p.patternType === 'ready_state'
+    const readyStatePatterns = recentPatterns.filter(
+      (p: any) => p.patternType === "ready_state"
     ).length;
 
     return {
@@ -289,12 +334,15 @@ async function getPatternSuccessRates() {
       successfulPatterns,
       successRate,
       averageConfidence,
-      patternTypes: Object.entries(patternTypes).map(([type, count]) => ({ type, count })),
+      patternTypes: Object.entries(patternTypes).map(([type, count]) => ({
+        type,
+        count,
+      })),
       readyStatePatterns,
       averageAdvanceTime: Math.random() * 2 + 3.5, // 3.5-5.5 hours mock
       optimalDetections: Math.floor(totalPatterns * 0.8), // 80% optimal mock
       detectionAccuracy: Math.random() * 10 + 90, // 90-100% mock
-      patternPerformance: await getActualPatternPerformance(recentPatterns)
+      patternPerformance: await getActualPatternPerformance(recentPatterns),
     };
   } catch (error) {
     console.error("Error calculating pattern success rates:", { error: error });
@@ -309,10 +357,10 @@ async function getPatternSuccessRates() {
       optimalDetections: 0,
       detectionAccuracy: 95,
       patternPerformance: [
-        { pattern: 'ready-state', successRate: 0, avgReturn: 0 },
-        { pattern: 'volume-surge', successRate: 0, avgReturn: 0 },
-        { pattern: 'momentum-shift', successRate: 0, avgReturn: 0 }
-      ]
+        { pattern: "ready-state", successRate: 0, avgReturn: 0 },
+        { pattern: "volume-surge", successRate: 0, avgReturn: 0 },
+        { pattern: "momentum-shift", successRate: 0, avgReturn: 0 },
+      ],
     };
   }
 }
@@ -325,30 +373,32 @@ async function getRiskMetrics() {
     maxPositionSize: 0.1, // 10% max position
     diversificationRatio: Math.random() * 0.3 + 0.7, // 0.7-1.0
     correlationMatrix: [
-      { pair: 'BTC-ETH', correlation: 0.85 },
-      { pair: 'BTC-ALT', correlation: 0.72 },
-      { pair: 'ETH-ALT', correlation: 0.68 }
+      { pair: "BTC-ETH", correlation: 0.85 },
+      { pair: "BTC-ALT", correlation: 0.72 },
+      { pair: "ETH-ALT", correlation: 0.68 },
     ],
     stressTestResults: {
-      marketCrash: { impact: -15.2, recovery: '3-5 days' },
-      flashCrash: { impact: -8.7, recovery: '1-2 hours' },
-      liquidityStress: { impact: -5.3, recovery: '30-60 minutes' }
+      marketCrash: { impact: -15.2, recovery: "3-5 days" },
+      flashCrash: { impact: -8.7, recovery: "1-2 hours" },
+      liquidityStress: { impact: -5.3, recovery: "30-60 minutes" },
     },
     riskLimits: {
       dailyLoss: { limit: 5, current: 1.2 },
       maxDrawdown: { limit: 15, current: 3.8 },
-      concentration: { limit: 25, current: 18.5 }
+      concentration: { limit: 25, current: 18.5 },
     },
     exposureMetrics: {
       totalExposure: Math.random() * 50000 + 25000,
       leverageRatio: Math.random() * 2 + 1,
-      marginUtilization: Math.random() * 60 + 20
+      marginUtilization: Math.random() * 60 + 20,
     },
     circuitBreakerStatus: {
       active: Math.random() > 0.9,
-      lastTriggered: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-      triggerCount: Math.floor(Math.random() * 3)
-    }
+      lastTriggered: new Date(
+        Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+      ).toISOString(),
+      triggerCount: Math.floor(Math.random() * 3),
+    },
   };
 }
 
@@ -357,37 +407,39 @@ async function getPositionAnalytics() {
     const activeTargets = await db
       .select()
       .from(snipeTargets)
-      .where(eq(snipeTargets.status, 'active'));
+      .where(eq(snipeTargets.status, "active"));
 
     return {
       activePositions: activeTargets.length,
       positionSizes: activeTargets.map((t: any) => ({
         symbol: t.symbolName,
         size: t.positionSizeUsdt || 0,
-        percentage: Math.random() * 10 + 2 // 2-12% mock
+        percentage: Math.random() * 10 + 2, // 2-12% mock
       })),
       positionDurations: activeTargets.map((t: any) => ({
         symbol: t.symbolName,
-        duration: Math.floor((Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60)) // hours
+        duration: Math.floor(
+          (Date.now() - new Date(t.createdAt).getTime()) / (1000 * 60 * 60)
+        ), // hours
       })),
       sectorExposure: [
-        { sector: 'DeFi', exposure: 35 },
-        { sector: 'Layer 1', exposure: 28 },
-        { sector: 'NFT/Gaming', exposure: 15 },
-        { sector: 'Infrastructure', exposure: 22 }
+        { sector: "DeFi", exposure: 35 },
+        { sector: "Layer 1", exposure: 28 },
+        { sector: "NFT/Gaming", exposure: 15 },
+        { sector: "Infrastructure", exposure: 22 },
       ],
       leverageMetrics: {
         averageLeverage: Math.random() * 2 + 1,
         maxLeverage: 3,
-        leveragedPositions: Math.floor(activeTargets.length * 0.4)
+        leveragedPositions: Math.floor(activeTargets.length * 0.4),
       },
       liquidityMetrics: {
         averageLiquidity: Math.random() * 1000000 + 500000,
         liquidityScore: Math.random() * 30 + 70,
-        illiquidPositions: Math.floor(activeTargets.length * 0.1)
+        illiquidPositions: Math.floor(activeTargets.length * 0.1),
       },
       unrealizedPnL: Math.random() * 2000 - 1000, // -1k to +1k mock
-      realizedPnL: Math.random() * 5000 - 2500 // -2.5k to +2.5k mock
+      realizedPnL: Math.random() * 5000 - 2500, // -2.5k to +2.5k mock
     };
   } catch (error) {
     console.error("Error calculating position analytics:", { error: error });
@@ -396,10 +448,18 @@ async function getPositionAnalytics() {
       positionSizes: [],
       positionDurations: [],
       sectorExposure: [],
-      leverageMetrics: { averageLeverage: 1, maxLeverage: 3, leveragedPositions: 0 },
-      liquidityMetrics: { averageLiquidity: 0, liquidityScore: 0, illiquidPositions: 0 },
+      leverageMetrics: {
+        averageLeverage: 1,
+        maxLeverage: 3,
+        leveragedPositions: 0,
+      },
+      liquidityMetrics: {
+        averageLiquidity: 0,
+        liquidityScore: 0,
+        illiquidPositions: 0,
+      },
       unrealizedPnL: 0,
-      realizedPnL: 0
+      realizedPnL: 0,
     };
   }
 }
@@ -410,39 +470,39 @@ async function getExecutionAnalytics() {
     orderExecutionSpeed: {
       average: Math.random() * 200 + 50, // 50-250ms
       p95: Math.random() * 500 + 200, // 200-700ms
-      p99: Math.random() * 1000 + 500 // 500-1500ms
+      p99: Math.random() * 1000 + 500, // 500-1500ms
     },
     slippageMetrics: {
       averageSlippage: Math.random() * 0.5 + 0.1, // 0.1-0.6%
       maxSlippage: Math.random() * 2 + 1, // 1-3%
       slippageDistribution: [
-        { range: '0-0.1%', count: 65 },
-        { range: '0.1-0.5%', count: 25 },
-        { range: '0.5-1%', count: 8 },
-        { range: '>1%', count: 2 }
-      ]
+        { range: "0-0.1%", count: 65 },
+        { range: "0.1-0.5%", count: 25 },
+        { range: "0.5-1%", count: 8 },
+        { range: ">1%", count: 2 },
+      ],
     },
     fillRates: {
       fullFill: 85,
       partialFill: 12,
-      noFill: 3
+      noFill: 3,
     },
     marketImpact: Math.random() * 0.3 + 0.05, // 0.05-0.35%
     executionCosts: {
       tradingFees: Math.random() * 100 + 50,
       slippageCosts: Math.random() * 75 + 25,
-      marketImpactCosts: Math.random() * 50 + 10
+      marketImpactCosts: Math.random() * 50 + 10,
     },
     latencyMetrics: {
       orderToExchange: Math.random() * 20 + 5, // 5-25ms
       marketDataLatency: Math.random() * 10 + 2, // 2-12ms
-      systemLatency: Math.random() * 5 + 1 // 1-6ms
+      systemLatency: Math.random() * 5 + 1, // 1-6ms
     },
     orderBookAnalysis: {
       averageSpread: Math.random() * 0.2 + 0.05, // 0.05-0.25%
       bidAskImbalance: Math.random() * 0.4 + 0.3, // 0.3-0.7
-      orderBookDepth: Math.random() * 500000 + 100000 // $100k-$600k
-    }
+      orderBookDepth: Math.random() * 500000 + 100000, // $100k-$600k
+    },
   };
 }
 
@@ -450,43 +510,45 @@ async function getProfitLossAnalytics() {
   // Mock P&L analytics
   const generatePnLData = (days: number) => {
     return Array.from({ length: days }, (_, i) => ({
-      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      pnl: Math.random() * 1000 - 500 // -500 to +500
+      date: new Date(Date.now() - i * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      pnl: Math.random() * 1000 - 500, // -500 to +500
     })).reverse();
   };
 
   return {
     dailyPnL: generatePnLData(30),
-    weeklyPnL: generatePnLData(12).map(d => ({ ...d, pnl: d.pnl * 7 })),
-    monthlyPnL: generatePnLData(6).map(d => ({ ...d, pnl: d.pnl * 30 })),
+    weeklyPnL: generatePnLData(12).map((d) => ({ ...d, pnl: d.pnl * 7 })),
+    monthlyPnL: generatePnLData(6).map((d) => ({ ...d, pnl: d.pnl * 30 })),
     yearlyPnL: Math.random() * 50000 - 25000, // -25k to +25k
     pnLDistribution: [
-      { range: '>$1000', count: 12, percentage: 15 },
-      { range: '$500-$1000', count: 18, percentage: 22 },
-      { range: '$100-$500', count: 25, percentage: 31 },
-      { range: '$0-$100', count: 15, percentage: 19 },
-      { range: '<$0', count: 10, percentage: 13 }
+      { range: ">$1000", count: 12, percentage: 15 },
+      { range: "$500-$1000", count: 18, percentage: 22 },
+      { range: "$100-$500", count: 25, percentage: 31 },
+      { range: "$0-$100", count: 15, percentage: 19 },
+      { range: "<$0", count: 10, percentage: 13 },
     ],
     bestTrades: [
-      { symbol: 'BTCUSDT', pnl: 2500, date: '2024-01-15', duration: '4h' },
-      { symbol: 'ETHUSDT', pnl: 1800, date: '2024-01-10', duration: '6h' },
-      { symbol: 'ADAUSDT', pnl: 1200, date: '2024-01-08', duration: '2h' }
+      { symbol: "BTCUSDT", pnl: 2500, date: "2024-01-15", duration: "4h" },
+      { symbol: "ETHUSDT", pnl: 1800, date: "2024-01-10", duration: "6h" },
+      { symbol: "ADAUSDT", pnl: 1200, date: "2024-01-08", duration: "2h" },
     ],
     worstTrades: [
-      { symbol: 'SOLUSDT', pnl: -800, date: '2024-01-12', duration: '8h' },
-      { symbol: 'DOTUSDT', pnl: -600, date: '2024-01-07', duration: '3h' },
-      { symbol: 'LINKUSDT', pnl: -450, date: '2024-01-05', duration: '5h' }
+      { symbol: "SOLUSDT", pnl: -800, date: "2024-01-12", duration: "8h" },
+      { symbol: "DOTUSDT", pnl: -600, date: "2024-01-07", duration: "3h" },
+      { symbol: "LINKUSDT", pnl: -450, date: "2024-01-05", duration: "5h" },
     ],
     pnLByStrategy: [
-      { strategy: 'pattern-discovery', pnl: 5200, trades: 45 },
-      { strategy: 'momentum-trading', pnl: 3100, trades: 32 },
-      { strategy: 'arbitrage', pnl: 1800, trades: 28 }
+      { strategy: "pattern-discovery", pnl: 5200, trades: 45 },
+      { strategy: "momentum-trading", pnl: 3100, trades: 32 },
+      { strategy: "arbitrage", pnl: 1800, trades: 28 },
     ],
     pnLByTimeframe: [
-      { timeframe: '1h', pnl: 2500, trades: 85 },
-      { timeframe: '4h', pnl: 4200, trades: 45 },
-      { timeframe: '1d', pnl: 3100, trades: 25 }
-    ]
+      { timeframe: "1h", pnl: 2500, trades: 85 },
+      { timeframe: "4h", pnl: 4200, trades: 45 },
+      { timeframe: "1d", pnl: 3100, trades: 25 },
+    ],
   };
 }
 
@@ -494,83 +556,92 @@ async function getMarketAnalytics() {
   // Mock market analytics
   return {
     marketConditions: {
-      trend: 'bullish',
-      volatility: 'medium',
-      sentiment: 'optimistic',
-      fearGreedIndex: Math.floor(Math.random() * 40 + 50) // 50-90 (greed)
+      trend: "bullish",
+      volatility: "medium",
+      sentiment: "optimistic",
+      fearGreedIndex: Math.floor(Math.random() * 40 + 50), // 50-90 (greed)
     },
     correlationToMarket: {
       btcCorrelation: Math.random() * 0.4 + 0.6, // 0.6-1.0
       ethCorrelation: Math.random() * 0.3 + 0.7, // 0.7-1.0
-      overallCorrelation: Math.random() * 0.3 + 0.65 // 0.65-0.95
+      overallCorrelation: Math.random() * 0.3 + 0.65, // 0.65-0.95
     },
     sectorPerformance: [
-      { sector: 'DeFi', performance: 8.5, trend: 'up' },
-      { sector: 'Layer 1', performance: 12.2, trend: 'up' },
-      { sector: 'NFT/Gaming', performance: -2.1, trend: 'down' },
-      { sector: 'Infrastructure', performance: 5.7, trend: 'up' }
+      { sector: "DeFi", performance: 8.5, trend: "up" },
+      { sector: "Layer 1", performance: 12.2, trend: "up" },
+      { sector: "NFT/Gaming", performance: -2.1, trend: "down" },
+      { sector: "Infrastructure", performance: 5.7, trend: "up" },
     ],
     volatilityIndex: Math.random() * 30 + 20, // 20-50 VIX equivalent
     marketSentiment: {
-      social: 'positive',
-      news: 'neutral',
-      technical: 'bullish',
-      onChain: 'positive'
+      social: "positive",
+      news: "neutral",
+      technical: "bullish",
+      onChain: "positive",
     },
     tradingOpportunities: [
-      { symbol: 'NEWCOIN1USDT', confidence: 85, type: 'breakout' },
-      { symbol: 'NEWCOIN2USDT', confidence: 78, type: 'momentum' },
-      { symbol: 'NEWCOIN3USDT', confidence: 72, type: 'pattern' }
+      { symbol: "NEWCOIN1USDT", confidence: 85, type: "breakout" },
+      { symbol: "NEWCOIN2USDT", confidence: 78, type: "momentum" },
+      { symbol: "NEWCOIN3USDT", confidence: 72, type: "pattern" },
     ],
     marketTrends: [
-      { trend: 'AI tokens surge', impact: 'high', timeframe: 'short' },
-      { trend: 'DeFi resurgence', impact: 'medium', timeframe: 'medium' },
-      { trend: 'Layer 2 adoption', impact: 'high', timeframe: 'long' }
-    ]
+      { trend: "AI tokens surge", impact: "high", timeframe: "short" },
+      { trend: "DeFi resurgence", impact: "medium", timeframe: "medium" },
+      { trend: "Layer 2 adoption", impact: "high", timeframe: "long" },
+    ],
   };
 }
 
 async function getActualPatternPerformance(recentPatterns: any[]) {
   try {
     // Calculate performance for each pattern type
-    const patternTypes = ['ready-state', 'volume-surge', 'momentum-shift'];
-    
+    const patternTypes = ["ready-state", "volume-surge", "momentum-shift"];
+
     const performanceData = patternTypes.map((patternType) => {
-      const patternsOfType = recentPatterns.filter((p: any) => p.patternType === patternType);
-      
+      const patternsOfType = recentPatterns.filter(
+        (p: any) => p.patternType === patternType
+      );
+
       if (patternsOfType.length === 0) {
         return { pattern: patternType, successRate: 0, avgReturn: 0 };
       }
 
       // Calculate success rate from pattern data
-      const successfulPatterns = patternsOfType.filter((p: any) => p.isActive && (p.truePositives || 0) > 0);
-      const successRate = (successfulPatterns.length / patternsOfType.length) * 100;
+      const successfulPatterns = patternsOfType.filter(
+        (p: any) => p.isActive && (p.truePositives || 0) > 0
+      );
+      const successRate =
+        (successfulPatterns.length / patternsOfType.length) * 100;
 
       // Calculate average return based on confidence and success rate
       // Use a realistic estimation based on pattern performance
-      const avgConfidence = patternsOfType.reduce((sum: number, p: any) => sum + (p.confidence || 0), 0) / patternsOfType.length;
+      const avgConfidence =
+        patternsOfType.reduce(
+          (sum: number, p: any) => sum + (p.confidence || 0),
+          0
+        ) / patternsOfType.length;
       const baseReturn = (avgConfidence / 100) * (successRate / 100) * 20; // Scale based on confidence and success
-      
+
       // Add some variability based on pattern type
       let patternMultiplier = 1;
       switch (patternType) {
-        case 'ready-state':
+        case "ready-state":
           patternMultiplier = 1.2; // Highest returns
           break;
-        case 'volume-surge':
+        case "volume-surge":
           patternMultiplier = 0.9; // Medium returns
           break;
-        case 'momentum-shift':
+        case "momentum-shift":
           patternMultiplier = 0.7; // Lower returns
           break;
       }
 
       const avgReturn = baseReturn * patternMultiplier;
 
-      return { 
-        pattern: patternType, 
-        successRate: Math.round(successRate * 10) / 10, 
-        avgReturn: Math.round(avgReturn * 10) / 10 
+      return {
+        pattern: patternType,
+        successRate: Math.round(successRate * 10) / 10,
+        avgReturn: Math.round(avgReturn * 10) / 10,
       };
     });
 
@@ -579,9 +650,9 @@ async function getActualPatternPerformance(recentPatterns: any[]) {
     console.error("Error calculating actual pattern performance:", error);
     // Return realistic fallback data instead of hardcoded values
     return [
-      { pattern: 'ready-state', successRate: 0, avgReturn: 0 },
-      { pattern: 'volume-surge', successRate: 0, avgReturn: 0 },
-      { pattern: 'momentum-shift', successRate: 0, avgReturn: 0 }
+      { pattern: "ready-state", successRate: 0, avgReturn: 0 },
+      { pattern: "volume-surge", successRate: 0, avgReturn: 0 },
+      { pattern: "momentum-shift", successRate: 0, avgReturn: 0 },
     ];
   }
 }

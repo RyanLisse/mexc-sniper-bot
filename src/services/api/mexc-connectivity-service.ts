@@ -68,7 +68,12 @@ export class MexcConnectivityService {
     warn: (message: string, context?: any) =>
       console.warn("[mexc-connectivity-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[mexc-connectivity-service]", message, context || "", error || ""),
+      console.error(
+        "[mexc-connectivity-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[mexc-connectivity-service]", message, context || ""),
   };
@@ -103,7 +108,7 @@ export class MexcConnectivityService {
       try {
         user = await getUser();
         authenticatedUserId = user?.id;
-      } catch (error) {
+      } catch (_error) {
         // Continue without user
       }
 
@@ -120,7 +125,10 @@ export class MexcConnectivityService {
       );
 
       // Test basic connectivity with detailed metrics
-      const connectivityResult = await this.testMexcConnectivityWithMetrics(mexcService, context);
+      const connectivityResult = await this.testMexcConnectivityWithMetrics(
+        mexcService,
+        context
+      );
 
       // Test credentials if available and requested
       let credentialsResult: CredentialTestResult = {
@@ -131,7 +139,11 @@ export class MexcConnectivityService {
       };
 
       if (context.includeCredentialTest && credentials.source !== "none") {
-        credentialsResult = await this.testCredentials(mexcService, credentials, context);
+        credentialsResult = await this.testCredentials(
+          mexcService,
+          credentials,
+          context
+        );
       }
 
       // Build comprehensive response
@@ -139,7 +151,9 @@ export class MexcConnectivityService {
         latency: connectivityResult.latency,
         retryCount: connectivityResult.retryCount,
         connectionHealth: connectivityResult.connectionHealth,
-        lastSuccessfulCheck: connectivityResult.connected ? new Date().toISOString() : undefined,
+        lastSuccessfulCheck: connectivityResult.connected
+          ? new Date().toISOString()
+          : undefined,
       };
 
       const response: ConnectivityTestResponse = {
@@ -152,9 +166,14 @@ export class MexcConnectivityService {
         message: connectivityResult.connected
           ? credentialsResult.message
           : connectivityResult.error,
-        error: connectivityResult.connected ? credentialsResult.error : connectivityResult.error,
+        error: connectivityResult.connected
+          ? credentialsResult.error
+          : connectivityResult.error,
         timestamp: new Date().toISOString(),
-        status: this.determineOverallStatus(connectivityResult, credentialsResult),
+        status: this.determineOverallStatus(
+          connectivityResult,
+          credentialsResult
+        ),
         metrics,
       };
 
@@ -220,10 +239,13 @@ export class MexcConnectivityService {
 
     if (userId) {
       try {
-        console.info("[MexcConnectivityService] Fetching credentials for user", {
-          requestId: context?.requestId,
-          userId,
-        });
+        console.info(
+          "[MexcConnectivityService] Fetching credentials for user",
+          {
+            requestId: context?.requestId,
+            userId,
+          }
+        );
 
         userCredentials = await getUserCredentials(userId, "mexc");
         hasUserCredentials = !!userCredentials;
@@ -238,21 +260,29 @@ export class MexcConnectivityService {
         }
       } catch (error) {
         // Handle encryption service errors specifically
-        if (error instanceof Error && error.message.includes("Encryption service unavailable")) {
+        if (
+          error instanceof Error &&
+          error.message.includes("Encryption service unavailable")
+        ) {
           throw ErrorFactory.encryption(
             "Unable to access stored credentials due to server configuration issue"
           );
         }
 
-        console.warn("[MexcConnectivityService] Failed to retrieve user credentials:", {
-          requestId: context?.requestId,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        console.warn(
+          "[MexcConnectivityService] Failed to retrieve user credentials:",
+          {
+            requestId: context?.requestId,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
         // Continue to check environment credentials
       }
     }
 
-    const hasEnvironmentCredentials = !!(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY);
+    const hasEnvironmentCredentials = !!(
+      process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY
+    );
 
     if (!hasUserCredentials && hasEnvironmentCredentials) {
       credentialSource = "environment";
@@ -266,7 +296,10 @@ export class MexcConnectivityService {
     };
   }
 
-  private getRecommendedMexcService(userCredentials?: any, context?: ConnectivityTestContext) {
+  private getRecommendedMexcService(
+    userCredentials?: any,
+    context?: ConnectivityTestContext
+  ) {
     console.info("[MexcConnectivityService] Initializing MEXC service", {
       requestId: context?.requestId,
       hasUserCredentials: !!userCredentials,
@@ -314,14 +347,20 @@ export class MexcConnectivityService {
 
         if (isConnected) {
           const avgLatency = totalLatency / (attempt + 1);
-          const connectionHealth = this.determineConnectionHealth(avgLatency, retryCount);
+          const connectionHealth = this.determineConnectionHealth(
+            avgLatency,
+            retryCount
+          );
 
-          console.info("[MexcConnectivityService] Connectivity test successful", {
-            requestId: context.requestId,
-            attempt: attempt + 1,
-            latency: avgLatency,
-            connectionHealth,
-          });
+          console.info(
+            "[MexcConnectivityService] Connectivity test successful",
+            {
+              requestId: context.requestId,
+              attempt: attempt + 1,
+              latency: avgLatency,
+              connectionHealth,
+            }
+          );
 
           return {
             connected: true,
@@ -342,7 +381,8 @@ export class MexcConnectivityService {
         const attemptLatency = Date.now() - attemptStart;
         totalLatency += attemptLatency;
 
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
 
         attempts.push({
           attempt: attempt + 1,
@@ -468,7 +508,9 @@ export class MexcConnectivityService {
         message: accountResult.success
           ? `MEXC API connected with valid credentials from ${credentials.source === "database" ? "user settings" : "environment variables"}`
           : `Credentials invalid (source: ${credentials.source}): ${accountResult.error}`,
-        status: accountResult.success ? "fully_connected" : "invalid_credentials",
+        status: accountResult.success
+          ? "fully_connected"
+          : "invalid_credentials",
         error: accountResult.success ? undefined : accountResult.error,
       };
 
@@ -480,7 +522,8 @@ export class MexcConnectivityService {
 
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
       console.error("[MexcConnectivityService] Credential test failed", {
         requestId: context.requestId,

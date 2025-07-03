@@ -21,7 +21,7 @@ const SuccessResponseSchema = z.object({
   meta: z.any().optional(),
 });
 
-const ErrorResponseSchema = z.object({
+const _ErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
   code: z.string().optional(),
@@ -30,7 +30,7 @@ const ErrorResponseSchema = z.object({
   statusCode: z.number().optional(),
 });
 
-const ValidationErrorResponseSchema = z.object({
+const _ValidationErrorResponseSchema = z.object({
   success: z.boolean().optional(),
   error: z.string().optional(),
   message: z.string().optional(),
@@ -45,20 +45,31 @@ const ValidationErrorResponseSchema = z.object({
 export const AutoSnipingConfigSchema = z.object({
   enabled: z.boolean(),
   maxPositionSize: z.number().positive("Max position size must be positive"),
-  takeProfitPercentage: z.number().min(0.1).max(100, "Take profit must be between 0.1% and 100%"),
-  stopLossPercentage: z.number().min(0.1).max(100, "Stop loss must be between 0.1% and 100%"),
+  takeProfitPercentage: z
+    .number()
+    .min(0.1)
+    .max(100, "Take profit must be between 0.1% and 100%"),
+  stopLossPercentage: z
+    .number()
+    .min(0.1)
+    .max(100, "Stop loss must be between 0.1% and 100%"),
   patternConfidenceThreshold: z
     .number()
     .min(50)
     .max(100, "Confidence threshold must be between 50% and 100%"),
-  maxConcurrentTrades: z.number().min(1).max(10, "Max concurrent trades must be between 1 and 10"),
+  maxConcurrentTrades: z
+    .number()
+    .min(1)
+    .max(10, "Max concurrent trades must be between 1 and 10"),
   enableSafetyChecks: z.boolean(),
   enablePatternDetection: z.boolean(),
 });
 
 export const AutoSnipingActionRequestSchema = z.object({
   action: z.enum(["enable", "disable", "update", "start", "stop"], {
-    errorMap: () => ({ message: "Action must be one of: enable, disable, update, start, stop" }),
+    errorMap: () => ({
+      message: "Action must be one of: enable, disable, update, start, stop",
+    }),
   }),
   config: AutoSnipingConfigSchema.optional(),
 });
@@ -86,7 +97,9 @@ export const CreateSnipeTargetRequestSchema = z.object({
   takeProfitLevel: z.number().min(1).max(5).default(2),
   takeProfitCustom: z.number().positive().optional(),
   stopLossPercent: z.number().min(0.1).max(50).default(5.0),
-  status: z.enum(["pending", "ready", "executed", "failed", "completed"]).default("pending"),
+  status: z
+    .enum(["pending", "ready", "executed", "failed", "completed"])
+    .default("pending"),
   priority: z.number().min(1).max(10).default(1),
   maxRetries: z.number().min(0).max(10).default(3),
   targetExecutionTime: z.string().datetime().optional(),
@@ -96,7 +109,9 @@ export const CreateSnipeTargetRequestSchema = z.object({
 
 export const SnipeTargetQuerySchema = z.object({
   userId: z.string().min(1, "User ID is required"),
-  status: z.enum(["pending", "ready", "executed", "failed", "completed"]).optional(),
+  status: z
+    .enum(["pending", "ready", "executed", "failed", "completed"])
+    .optional(),
   limit: z.coerce.number().min(1).max(100).default(20).optional(),
   offset: z.coerce.number().min(0).default(0).optional(),
 });
@@ -108,7 +123,9 @@ export const UpdateSnipeTargetRequestSchema = z.object({
   takeProfitLevel: z.number().min(1).max(5).optional(),
   takeProfitCustom: z.number().positive().optional(),
   stopLossPercent: z.number().min(0.1).max(50).optional(),
-  status: z.enum(["pending", "ready", "executed", "failed", "completed"]).optional(),
+  status: z
+    .enum(["pending", "ready", "executed", "failed", "completed"])
+    .optional(),
   priority: z.number().min(1).max(10).optional(),
   confidenceScore: z.number().min(0).max(100).optional(),
   riskLevel: z.enum(["low", "medium", "high"]).optional(),
@@ -123,21 +140,34 @@ export const Phase3AIIntelligenceConfigSchema = z.object({
   cohereEnabled: z.boolean(),
   perplexityEnabled: z.boolean(),
   openaiEnabled: z.boolean(),
-  confidenceThreshold: z.number().min(0).max(100, "Confidence threshold must be between 0 and 100"),
-  maxAIBoost: z.number().min(0).max(100, "Max AI boost must be between 0 and 100"),
+  confidenceThreshold: z
+    .number()
+    .min(0)
+    .max(100, "Confidence threshold must be between 0 and 100"),
+  maxAIBoost: z
+    .number()
+    .min(0)
+    .max(100, "Max AI boost must be between 0 and 100"),
 });
 
 export const Phase3PatternDetectionConfigSchema = z.object({
   advanceDetectionEnabled: z.boolean(),
-  targetAdvanceHours: z.number().min(0, "Target advance hours must be positive"),
+  targetAdvanceHours: z
+    .number()
+    .min(0, "Target advance hours must be positive"),
   activityEnhancementEnabled: z.boolean(),
-  confidenceThreshold: z.number().min(0).max(100, "Confidence threshold must be between 0 and 100"),
+  confidenceThreshold: z
+    .number()
+    .min(0)
+    .max(100, "Confidence threshold must be between 0 and 100"),
 });
 
 export const Phase3CacheWarmingConfigSchema = z.object({
   enabled: z.boolean(),
   autoWarmingEnabled: z.boolean(),
-  warmingInterval: z.number().min(1, "Warming interval must be at least 1 minute"),
+  warmingInterval: z
+    .number()
+    .min(1, "Warming interval must be at least 1 minute"),
   strategies: z.object({
     mexcSymbols: z.boolean(),
     patternData: z.boolean(),
@@ -155,7 +185,10 @@ export const Phase3PerformanceConfigSchema = z.object({
     .max(365, "Metrics retention must be between 1 and 365 days"),
   performanceThresholds: z.object({
     maxResponseTime: z.number().min(1, "Max response time must be positive"),
-    minHitRate: z.number().min(0).max(100, "Min hit rate must be between 0 and 100"),
+    minHitRate: z
+      .number()
+      .min(0)
+      .max(100, "Min hit rate must be between 0 and 100"),
     maxMemoryUsage: z.number().min(1, "Max memory usage must be positive"),
   }),
 });
@@ -177,8 +210,14 @@ export const Phase3ConfigurationRequestSchema = z.object({
 
 export const RiskParametersSchema = z.object({
   maxPositionSize: z.number().positive("Max position size must be positive"),
-  stopLossPercentage: z.number().min(0.1).max(50, "Stop loss must be between 0.1% and 50%"),
-  takeProfitPercentage: z.number().min(0.1).max(1000, "Take profit must be between 0.1% and 1000%"),
+  stopLossPercentage: z
+    .number()
+    .min(0.1)
+    .max(50, "Stop loss must be between 0.1% and 50%"),
+  takeProfitPercentage: z
+    .number()
+    .min(0.1)
+    .max(1000, "Take profit must be between 0.1% and 1000%"),
 });
 
 export const TradingStrategyRequestSchema = z.object({
@@ -385,7 +424,10 @@ export function validateApiQuery<T extends z.ZodSchema>(
       const errorMessage = error.errors
         .map((err) => `${err.path.join(".")}: ${err.message}`)
         .join(", ");
-      return { success: false, error: `Query validation failed: ${errorMessage}` };
+      return {
+        success: false,
+        error: `Query validation failed: ${errorMessage}`,
+      };
     }
     return { success: false, error: "Unknown query validation error" };
   }
@@ -420,26 +462,52 @@ export function createValidatedSuccessResponse<T>(
 // ============================================================================
 
 export type AutoSnipingConfig = z.infer<typeof AutoSnipingConfigSchema>;
-export type AutoSnipingActionRequest = z.infer<typeof AutoSnipingActionRequestSchema>;
-export type CreateSnipeTargetRequest = z.infer<typeof CreateSnipeTargetRequestSchema>;
+export type AutoSnipingActionRequest = z.infer<
+  typeof AutoSnipingActionRequestSchema
+>;
+export type CreateSnipeTargetRequest = z.infer<
+  typeof CreateSnipeTargetRequestSchema
+>;
 export type SnipeTargetQuery = z.infer<typeof SnipeTargetQuerySchema>;
-export type UpdateSnipeTargetRequest = z.infer<typeof UpdateSnipeTargetRequestSchema>;
+export type UpdateSnipeTargetRequest = z.infer<
+  typeof UpdateSnipeTargetRequestSchema
+>;
 export type Phase3Configuration = z.infer<typeof Phase3ConfigurationSchema>;
-export type Phase3ConfigurationRequest = z.infer<typeof Phase3ConfigurationRequestSchema>;
-export type TradingStrategyRequest = z.infer<typeof TradingStrategyRequestSchema>;
+export type Phase3ConfigurationRequest = z.infer<
+  typeof Phase3ConfigurationRequestSchema
+>;
+export type TradingStrategyRequest = z.infer<
+  typeof TradingStrategyRequestSchema
+>;
 export type RiskParameters = z.infer<typeof RiskParametersSchema>;
 export type PortfolioQueryRequest = z.infer<typeof PortfolioQueryRequestSchema>;
-export type DatabaseOptimizeRequest = z.infer<typeof DatabaseOptimizeRequestSchema>;
-export type DatabaseMigrateRequest = z.infer<typeof DatabaseMigrateRequestSchema>;
+export type DatabaseOptimizeRequest = z.infer<
+  typeof DatabaseOptimizeRequestSchema
+>;
+export type DatabaseMigrateRequest = z.infer<
+  typeof DatabaseMigrateRequestSchema
+>;
 export type ExecutionHistoryQuery = z.infer<typeof ExecutionHistoryQuerySchema>;
-export type SecurityMonitoringQuery = z.infer<typeof SecurityMonitoringQuerySchema>;
-export type ScheduleControlRequest = z.infer<typeof ScheduleControlRequestSchema>;
+export type SecurityMonitoringQuery = z.infer<
+  typeof SecurityMonitoringQuerySchema
+>;
+export type ScheduleControlRequest = z.infer<
+  typeof ScheduleControlRequestSchema
+>;
 export type DataArchivalRequest = z.infer<typeof DataArchivalRequestSchema>;
 export type SymbolWatchTrigger = z.infer<typeof SymbolWatchTriggerSchema>;
 export type EmergencyTrigger = z.infer<typeof EmergencyTriggerSchema>;
 export type SafetyTrigger = z.infer<typeof SafetyTriggerSchema>;
-export type PatternAnalysisTrigger = z.infer<typeof PatternAnalysisTriggerSchema>;
+export type PatternAnalysisTrigger = z.infer<
+  typeof PatternAnalysisTriggerSchema
+>;
 export type CalendarPollTrigger = z.infer<typeof CalendarPollTriggerSchema>;
-export type MultiPhaseStrategyTrigger = z.infer<typeof MultiPhaseStrategyTriggerSchema>;
-export type WebSocketConnectionRequest = z.infer<typeof WebSocketConnectionRequestSchema>;
-export type QueryPerformanceRequest = z.infer<typeof QueryPerformanceRequestSchema>;
+export type MultiPhaseStrategyTrigger = z.infer<
+  typeof MultiPhaseStrategyTriggerSchema
+>;
+export type WebSocketConnectionRequest = z.infer<
+  typeof WebSocketConnectionRequestSchema
+>;
+export type QueryPerformanceRequest = z.infer<
+  typeof QueryPerformanceRequestSchema
+>;

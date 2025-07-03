@@ -22,7 +22,13 @@ export const OrderStatus = z.enum([
 export type OrderStatusType = z.infer<typeof OrderStatus>;
 
 // Order type enumeration
-export const OrderType = z.enum(["market", "limit", "stop_limit", "stop_market", "trailing_stop"]);
+export const OrderType = z.enum([
+  "market",
+  "limit",
+  "stop_limit",
+  "stop_market",
+  "trailing_stop",
+]);
 
 export type OrderTypeType = z.infer<typeof OrderType>;
 
@@ -107,7 +113,10 @@ export class ExecutionOrderService {
    * Create a new order
    */
   async createOrder(
-    orderData: Omit<ExecutionOrder, "id" | "status" | "createdAt" | "updatedAt" | "filledQuantity">
+    orderData: Omit<
+      ExecutionOrder,
+      "id" | "status" | "createdAt" | "updatedAt" | "filledQuantity"
+    >
   ): Promise<ExecutionOrder> {
     const now = Date.now();
     const order: ExecutionOrder = {
@@ -206,7 +215,10 @@ export class ExecutionOrderService {
   async cancelOrder(orderId: string): Promise<boolean> {
     const order = this.orders.get(orderId);
 
-    if (!order || ["filled", "cancelled", "rejected", "expired"].includes(order.status)) {
+    if (
+      !order ||
+      ["filled", "cancelled", "rejected", "expired"].includes(order.status)
+    ) {
       return false;
     }
 
@@ -225,7 +237,8 @@ export class ExecutionOrderService {
    */
   getActiveOrders(): ExecutionOrder[] {
     return Array.from(this.orders.values()).filter(
-      (order) => !["filled", "cancelled", "rejected", "expired"].includes(order.status)
+      (order) =>
+        !["filled", "cancelled", "rejected", "expired"].includes(order.status)
     );
   }
 
@@ -233,21 +246,30 @@ export class ExecutionOrderService {
    * Get order history
    */
   getOrderHistory(limit = 100): ExecutionOrder[] {
-    return this.orderHistory.sort((a, b) => b.updatedAt - a.updatedAt).slice(0, limit);
+    return this.orderHistory
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .slice(0, limit);
   }
 
   /**
    * Get orders by symbol
    */
   getOrdersBySymbol(symbol: string): ExecutionOrder[] {
-    return Array.from(this.orders.values()).filter((order) => order.symbol === symbol);
+    return Array.from(this.orders.values()).filter(
+      (order) => order.symbol === symbol
+    );
   }
 
   /**
    * Clear completed orders from memory
    */
   clearCompletedOrders(): number {
-    const completedStatuses: OrderStatusType[] = ["filled", "cancelled", "rejected", "expired"];
+    const completedStatuses: OrderStatusType[] = [
+      "filled",
+      "cancelled",
+      "rejected",
+      "expired",
+    ];
     let cleared = 0;
 
     for (const [orderId, order] of this.orders.entries()) {
@@ -265,7 +287,11 @@ export class ExecutionOrderService {
    */
   private async executeOrderReal(order: ExecutionOrder): Promise<void> {
     // If real trading is disabled or credentials not available, fall back to simulation
-    if (!this.config.enableRealTrading || !this.config.apiKey || !this.config.secretKey) {
+    if (
+      !this.config.enableRealTrading ||
+      !this.config.apiKey ||
+      !this.config.secretKey
+    ) {
       console.info(
         "[ExecutionOrderService] Using simulation mode - real trading disabled or credentials missing"
       );
@@ -311,11 +337,15 @@ export class ExecutionOrderService {
       const orderResult = response.data;
 
       // Update order with MEXC response
-      order.status = this.mapMexcStatusToOrderStatus(orderResult.status || "FILLED");
+      order.status = this.mapMexcStatusToOrderStatus(
+        orderResult.status || "FILLED"
+      );
       order.filledQuantity = orderResult.quantity
         ? parseFloat(orderResult.quantity)
         : order.quantity;
-      order.averageFillPrice = orderResult.price ? parseFloat(orderResult.price) : order.price;
+      order.averageFillPrice = orderResult.price
+        ? parseFloat(orderResult.price)
+        : order.price;
       order.clientOrderId = orderResult.orderId;
       order.updatedAt = Date.now();
 
@@ -333,8 +363,12 @@ export class ExecutionOrderService {
         `[ExecutionOrderService] Order executed successfully: ${orderResult.orderId} - ${order.status}`
       );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown execution error";
-      console.error("[ExecutionOrderService] Real order execution failed:", errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown execution error";
+      console.error(
+        "[ExecutionOrderService] Real order execution failed:",
+        errorMessage
+      );
 
       order.status = "rejected";
       order.metadata = {
@@ -353,7 +387,9 @@ export class ExecutionOrderService {
    */
   private async simulateOrderExecution(order: ExecutionOrder): Promise<void> {
     // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, Math.random() * 100 + 50));
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.random() * 100 + 50)
+    );
 
     // Simulate different execution scenarios
     const random = Math.random();

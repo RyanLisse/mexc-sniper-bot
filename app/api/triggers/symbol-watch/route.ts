@@ -1,21 +1,21 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { inngest } from "@/src/inngest/client";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      symbol, 
-      vcoinId, 
+    const {
+      symbol,
+      vcoinId,
       symbolName,
       projectName,
       launchTime,
-      watchDuration = 3600 
+      watchDuration = 3600,
     } = body; // Default 1 hour watch
 
     // Support both symbol and vcoinId for backward compatibility
     const targetVcoinId = vcoinId || symbol;
-    
+
     if (!targetVcoinId) {
       return NextResponse.json(
         {

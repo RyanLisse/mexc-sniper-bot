@@ -15,11 +15,11 @@ export class DatabaseQueryOptimizer {
       originalQuery: query,
       optimizedQuery: query,
       estimatedImprovement: 0,
-      reasoning: 'No optimization needed',
+      reasoning: "No optimization needed",
     };
   }
 
-  async analyzeQueryPlan(query: string) {
+  async analyzeQueryPlan(_query: string) {
     return {
       cost: 100,
       rows: 1000,
@@ -30,5 +30,5 @@ export class DatabaseQueryOptimizer {
 
 export const queryOptimizer = new DatabaseQueryOptimizer();
 
-// Add missing export aliases for compatibility  
+// Add missing export aliases for compatibility
 export const databaseQueryOptimizer = queryOptimizer;

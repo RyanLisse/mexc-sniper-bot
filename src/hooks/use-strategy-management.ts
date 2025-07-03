@@ -96,7 +96,10 @@ export function useStrategyManagement() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to fetch strategies: ${response.statusText}`);
+        throw new Error(
+          errorData.message ||
+            `Failed to fetch strategies: ${response.statusText}`
+        );
       }
 
       const result = await response.json();
@@ -120,7 +123,10 @@ export function useStrategyManagement() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to update strategy: ${response.statusText}`);
+        throw new Error(
+          errorData.message ||
+            `Failed to update strategy: ${response.statusText}`
+        );
       }
 
       return response.json();
@@ -169,7 +175,9 @@ export function useStrategyManagement() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to ${enabled ? "start" : "stop"} trading`);
+        throw new Error(
+          errorData.message || `Failed to ${enabled ? "start" : "stop"} trading`
+        );
       }
 
       // Refetch strategy data to get updated status
@@ -242,7 +250,9 @@ export function useStrategyManagement() {
 export function useStrategyPerformanceMonitor(strategyId?: string) {
   const { strategyData, isRealTimeEnabled } = useStrategyManagement();
 
-  const specificPerformance = strategyId ? strategyData?.strategyPerformance[strategyId] : null;
+  const specificPerformance = strategyId
+    ? strategyData?.strategyPerformance[strategyId]
+    : null;
 
   return {
     performance: specificPerformance,
@@ -258,11 +268,17 @@ export function useStrategyPerformanceMonitor(strategyId?: string) {
 export function useActivePositionsMonitor() {
   const { strategyData, isRealTimeEnabled } = useStrategyManagement();
 
-  const totalPnL = strategyData?.activePositions.reduce((sum, pos) => sum + pos.currentPnL, 0) || 0;
+  const totalPnL =
+    strategyData?.activePositions.reduce(
+      (sum, pos) => sum + pos.currentPnL,
+      0
+    ) || 0;
 
   const totalPnLPercentage = strategyData?.activePositions.length
-    ? strategyData.activePositions.reduce((sum, pos) => sum + pos.currentPnLPercentage, 0) /
-      strategyData.activePositions.length
+    ? strategyData.activePositions.reduce(
+        (sum, pos) => sum + pos.currentPnLPercentage,
+        0
+      ) / strategyData.activePositions.length
     : 0;
 
   return {

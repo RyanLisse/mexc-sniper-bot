@@ -17,7 +17,12 @@ export const DeviceTypeSchema = z.enum(["mobile", "tablet", "desktop"]);
 
 export const OrientationSchema = z.enum(["portrait", "landscape"]);
 
-export const GestureTypeSchema = z.enum(["swipe", "pinch", "tap", "long-press"]);
+export const GestureTypeSchema = z.enum([
+  "swipe",
+  "pinch",
+  "tap",
+  "long-press",
+]);
 
 export const GestureDirectionSchema = z.enum(["left", "right", "up", "down"]);
 

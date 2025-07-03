@@ -352,7 +352,9 @@ export function validateAgentRegistryStats(data: unknown): AgentRegistryStats {
 /**
  * Validate agent registry options
  */
-export function validateAgentRegistryOptions(data: unknown): AgentRegistryOptions {
+export function validateAgentRegistryOptions(
+  data: unknown
+): AgentRegistryOptions {
   return AgentRegistryOptionsSchema.parse(data);
 }
 
@@ -366,7 +368,9 @@ export function validateSystemAlert(data: unknown): SystemAlert {
 /**
  * Validate agent recovery result
  */
-export function validateAgentRecoveryResult(data: unknown): AgentRecoveryResult {
+export function validateAgentRecoveryResult(
+  data: unknown
+): AgentRecoveryResult {
   return AgentRecoveryResultSchema.parse(data);
 }
 

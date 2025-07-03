@@ -1,8 +1,8 @@
 /**
  * MEXC API Agent Module
- * 
+ *
  * Refactored from a single 912-line file into focused modules
- * 
+ *
  * Provides:
  * - MEXC exchange API interactions and analysis
  * - Symbol data analysis and trading signal identification

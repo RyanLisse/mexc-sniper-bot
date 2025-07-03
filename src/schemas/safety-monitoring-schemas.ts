@@ -194,7 +194,9 @@ export type SafetyAlert = z.infer<typeof SafetyAlertSchema>;
 export type SystemHealth = z.infer<typeof SystemHealthSchema>;
 export type MonitoringStats = z.infer<typeof MonitoringStatsSchema>;
 export type SafetyConfiguration = z.infer<typeof SafetyConfigurationSchema>;
-export type SafetyMonitoringReport = z.infer<typeof SafetyMonitoringReportSchema>;
+export type SafetyMonitoringReport = z.infer<
+  typeof SafetyMonitoringReportSchema
+>;
 export type ScheduledOperation = z.infer<typeof ScheduledOperationSchema>;
 
 // ============================================================================
@@ -308,11 +310,15 @@ export function validateSystemHealth(data: unknown): SystemHealth {
   return SystemHealthSchema.parse(data);
 }
 
-export function validateSafetyConfiguration(data: unknown): SafetyConfiguration {
+export function validateSafetyConfiguration(
+  data: unknown
+): SafetyConfiguration {
   return SafetyConfigurationSchema.parse(data);
 }
 
-export function validateSafetyMonitoringReport(data: unknown): SafetyMonitoringReport {
+export function validateSafetyMonitoringReport(
+  data: unknown
+): SafetyMonitoringReport {
   return SafetyMonitoringReportSchema.parse(data);
 }
 

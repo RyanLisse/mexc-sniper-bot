@@ -20,7 +20,11 @@ import { getGlobalStatusResolver } from "@/src/services/notification/unified-sta
 export interface StatusSyncContext {
   userId: string;
   provider: string;
-  action: "credential-test" | "credential-save" | "credential-delete" | "connectivity-change";
+  action:
+    | "credential-test"
+    | "credential-save"
+    | "credential-delete"
+    | "connectivity-change";
   timestamp: string;
   requestId?: string;
 }
@@ -46,7 +50,12 @@ export class StatusSynchronizationService {
     warn: (message: string, context?: any) =>
       console.warn("[status-sync-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[status-sync-service]", message, context || "", error || ""),
+      console.error(
+        "[status-sync-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[status-sync-service]", message, context || ""),
   };
@@ -54,7 +63,9 @@ export class StatusSynchronizationService {
   /**
    * Synchronize all status systems after successful credential validation
    */
-  async synchronizeAfterCredentialTest(context: StatusSyncContext): Promise<StatusSyncResult> {
+  async synchronizeAfterCredentialTest(
+    context: StatusSyncContext
+  ): Promise<StatusSyncResult> {
     const startTime = Date.now();
 
     console.info("[StatusSync] Starting credential test synchronization", {
@@ -164,7 +175,8 @@ export class StatusSynchronizationService {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
 
       console.error("[StatusSync] Synchronization failed:", {
         userId: context.userId,
@@ -188,7 +200,9 @@ export class StatusSynchronizationService {
   /**
    * Synchronize status after credential changes (save/delete)
    */
-  async synchronizeAfterCredentialChange(context: StatusSyncContext): Promise<StatusSyncResult> {
+  async synchronizeAfterCredentialChange(
+    context: StatusSyncContext
+  ): Promise<StatusSyncResult> {
     console.info("[StatusSync] Starting credential change synchronization", {
       userId: context.userId,
       action: context.action,
@@ -257,7 +271,12 @@ export async function syncAfterCredentialTest(
   requestId?: string
 ): Promise<StatusSyncResult> {
   const syncService = getGlobalStatusSyncService();
-  const context = syncService.createSyncContext(userId, provider, "credential-test", requestId);
+  const context = syncService.createSyncContext(
+    userId,
+    provider,
+    "credential-test",
+    requestId
+  );
   return syncService.synchronizeAfterCredentialTest(context);
 }
 
@@ -271,6 +290,11 @@ export async function syncAfterCredentialChange(
   requestId?: string
 ): Promise<StatusSyncResult> {
   const syncService = getGlobalStatusSyncService();
-  const context = syncService.createSyncContext(userId, provider, action, requestId);
+  const context = syncService.createSyncContext(
+    userId,
+    provider,
+    action,
+    requestId
+  );
   return syncService.synchronizeAfterCredentialChange(context);
 }

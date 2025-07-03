@@ -17,7 +17,10 @@ interface RiskMetricsSectionProps {
   isLoading: boolean;
 }
 
-export function RiskMetricsSection({ riskMetrics, isLoading }: RiskMetricsSectionProps) {
+export function RiskMetricsSection({
+  riskMetrics,
+  isLoading,
+}: RiskMetricsSectionProps) {
   const getRiskBadgeVariant = (risk: string) => {
     const variantMap = {
       low: "default" as const,
@@ -70,7 +73,9 @@ export function RiskMetricsSection({ riskMetrics, isLoading }: RiskMetricsSectio
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           Risk Assessment
-          <Badge variant={getRiskBadgeVariant(riskMetrics?.overallRisk || "unknown")}>
+          <Badge
+            variant={getRiskBadgeVariant(riskMetrics?.overallRisk || "unknown")}
+          >
             {riskMetrics?.overallRisk?.toUpperCase() || "UNKNOWN"}
           </Badge>
         </CardTitle>
@@ -82,19 +87,23 @@ export function RiskMetricsSection({ riskMetrics, isLoading }: RiskMetricsSectio
           {renderRiskRow("Market Risk", riskMetrics?.marketRisk || 0)}
           {renderRiskRow("System Risk", riskMetrics?.systemRisk || 0)}
 
-          {riskMetrics?.recommendations && riskMetrics.recommendations.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <h4 className="text-sm font-medium mb-2">Recommendations:</h4>
-              <ul className="text-xs text-muted-foreground space-y-1">
-                {riskMetrics.recommendations.map((rec) => (
-                  <li key={`rec-${rec.slice(0, 20)}`} className="flex items-start gap-1">
-                    <span>•</span>
-                    <span>{rec}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {riskMetrics?.recommendations &&
+            riskMetrics.recommendations.length > 0 && (
+              <div className="mt-4 pt-4 border-t">
+                <h4 className="text-sm font-medium mb-2">Recommendations:</h4>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  {riskMetrics.recommendations.map((rec) => (
+                    <li
+                      key={`rec-${rec.slice(0, 20)}`}
+                      className="flex items-start gap-1"
+                    >
+                      <span>•</span>
+                      <span>{rec}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
         </div>
       </CardContent>
     </Card>

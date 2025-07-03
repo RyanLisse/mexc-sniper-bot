@@ -87,7 +87,10 @@ export class AppError extends Error {
   public readonly timestamp: string;
   public readonly cause?: Error;
 
-  constructor(message: string, metadata: Partial<ErrorMetadata> & { code: ErrorCode }) {
+  constructor(
+    message: string,
+    metadata: Partial<ErrorMetadata> & { code: ErrorCode }
+  ) {
     super(message);
     this.name = "AppError";
 
@@ -190,7 +193,12 @@ export class NetworkError extends AppError {
 }
 
 export class MexcApiError extends AppError {
-  constructor(message: string, apiCode?: string, context?: ErrorContext, cause?: Error) {
+  constructor(
+    message: string,
+    apiCode?: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) {
     super(message, {
       code: ErrorCode.MEXC_API_ERROR,
       severity: ErrorSeverity.HIGH,
@@ -203,7 +211,12 @@ export class MexcApiError extends AppError {
 }
 
 export class DatabaseError extends AppError {
-  constructor(message: string, operation?: string, context?: ErrorContext, cause?: Error) {
+  constructor(
+    message: string,
+    operation?: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) {
     super(message, {
       code: ErrorCode.DATABASE_ERROR,
       severity: ErrorSeverity.HIGH,
@@ -216,7 +229,12 @@ export class DatabaseError extends AppError {
 }
 
 export class AgentError extends AppError {
-  constructor(message: string, agentName: string, context?: ErrorContext, cause?: Error) {
+  constructor(
+    message: string,
+    agentName: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) {
     super(message, {
       code: ErrorCode.AGENT_ERROR,
       severity: ErrorSeverity.MEDIUM,
@@ -229,7 +247,12 @@ export class AgentError extends AppError {
 }
 
 export class WorkflowError extends AppError {
-  constructor(message: string, workflowType: string, context?: ErrorContext, cause?: Error) {
+  constructor(
+    message: string,
+    workflowType: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) {
     super(message, {
       code: ErrorCode.WORKFLOW_ERROR,
       severity: ErrorSeverity.HIGH,
@@ -251,17 +274,33 @@ export const ErrorFactory = {
   network: (message: string, context?: ErrorContext, cause?: Error) =>
     new NetworkError(message, context, cause),
 
-  mexcApi: (message: string, apiCode?: string, context?: ErrorContext, cause?: Error) =>
-    new MexcApiError(message, apiCode, context, cause),
+  mexcApi: (
+    message: string,
+    apiCode?: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) => new MexcApiError(message, apiCode, context, cause),
 
-  database: (message: string, operation?: string, context?: ErrorContext, cause?: Error) =>
-    new DatabaseError(message, operation, context, cause),
+  database: (
+    message: string,
+    operation?: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) => new DatabaseError(message, operation, context, cause),
 
-  agent: (message: string, agentName: string, context?: ErrorContext, cause?: Error) =>
-    new AgentError(message, agentName, context, cause),
+  agent: (
+    message: string,
+    agentName: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) => new AgentError(message, agentName, context, cause),
 
-  workflow: (message: string, workflowType: string, context?: ErrorContext, cause?: Error) =>
-    new WorkflowError(message, workflowType, context, cause),
+  workflow: (
+    message: string,
+    workflowType: string,
+    context?: ErrorContext,
+    cause?: Error
+  ) => new WorkflowError(message, workflowType, context, cause),
 
   authentication: (message = "Authentication failed", context?: ErrorContext) =>
     new AppError(message, {
@@ -271,7 +310,10 @@ export const ErrorFactory = {
       context,
     }),
 
-  authorization: (message = "Insufficient permissions", context?: ErrorContext) =>
+  authorization: (
+    message = "Insufficient permissions",
+    context?: ErrorContext
+  ) =>
     new AppError(message, {
       code: ErrorCode.AUTHORIZATION_ERROR,
       severity: ErrorSeverity.MEDIUM,
@@ -324,7 +366,10 @@ export function isAppError(error: unknown): error is AppError {
 /**
  * Convert unknown error to AppError
  */
-export function toAppError(error: unknown, fallbackCode = ErrorCode.UNKNOWN_ERROR): AppError {
+export function toAppError(
+  error: unknown,
+  fallbackCode = ErrorCode.UNKNOWN_ERROR
+): AppError {
   if (isAppError(error)) {
     return error;
   }

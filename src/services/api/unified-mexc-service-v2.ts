@@ -25,7 +25,11 @@ import { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
 import { MexcCoreClient } from "../data/modules/mexc-core-client";
 
 // Import modular components
-import { hasValidCredentials, mergeConfig, type UnifiedMexcConfigV2 } from "./unified-mexc-config";
+import {
+  hasValidCredentials,
+  mergeConfig,
+  type UnifiedMexcConfigV2,
+} from "./unified-mexc-config";
 import { UnifiedMexcCoreModule } from "./unified-mexc-core";
 import { UnifiedMexcPortfolioModule } from "./unified-mexc-portfolio";
 import {
@@ -40,7 +44,9 @@ import {
 // Unified MEXC Service v2
 // ============================================================================
 
-export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, MarketService {
+export class UnifiedMexcServiceV2
+  implements PortfolioService, TradingService, MarketService
+{
   // Simple console logger to avoid webpack bundling issues
   private logger = {
     info: (message: string, context?: any) =>
@@ -84,9 +90,18 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     });
 
     // Initialize modular components
-    this.coreModule = new UnifiedMexcCoreModule(this.coreClient, this.cacheLayer);
-    this.portfolioModule = new UnifiedMexcPortfolioModule(this.coreClient, this.cacheLayer);
-    this.tradingModule = new UnifiedMexcTradingModule(this.coreClient, this.cacheLayer);
+    this.coreModule = new UnifiedMexcCoreModule(
+      this.coreClient,
+      this.cacheLayer
+    );
+    this.portfolioModule = new UnifiedMexcPortfolioModule(
+      this.coreClient,
+      this.cacheLayer
+    );
+    this.tradingModule = new UnifiedMexcTradingModule(
+      this.coreClient,
+      this.cacheLayer
+    );
   }
 
   // ============================================================================
@@ -172,22 +187,42 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
   }> {
     // Implement getOrderStatus using available trading methods
     try {
-      const result = await this.coreClient.getOrderStatus("", parseInt(orderId) || 0);
+      const result = await this.coreClient.getOrderStatus(
+        "",
+        parseInt(orderId) || 0
+      );
       return {
         success: result.success,
-        data: result.data ? {
-          orderId: String(result.data.orderId !== null && result.data.orderId !== undefined ? result.data.orderId : orderId),
-          symbol: result.data.symbol || "",
-          status: result.data.status || "",
-          side: result.data.side as "BUY" | "SELL",
-          type: result.data.type || "",
-          quantity: result.data.quantity || "0",
-          price: result.data.price,
-          executedQuantity: String(result.data.executedQty !== null && result.data.executedQty !== undefined ? result.data.executedQty : "0"),
-          cummulativeQuoteQuantity: String(result.data.cummulativeQuoteQty !== null && result.data.cummulativeQuoteQty !== undefined ? result.data.cummulativeQuoteQty : "0"),
-          timeInForce: result.data.timeInForce,
-          timestamp: Date.now(),
-        } : undefined,
+        data: result.data
+          ? {
+              orderId: String(
+                result.data.orderId !== null &&
+                  result.data.orderId !== undefined
+                  ? result.data.orderId
+                  : orderId
+              ),
+              symbol: result.data.symbol || "",
+              status: result.data.status || "",
+              side: result.data.side as "BUY" | "SELL",
+              type: result.data.type || "",
+              quantity: result.data.quantity || "0",
+              price: result.data.price,
+              executedQuantity: String(
+                result.data.executedQty !== null &&
+                  result.data.executedQty !== undefined
+                  ? result.data.executedQty
+                  : "0"
+              ),
+              cummulativeQuoteQuantity: String(
+                result.data.cummulativeQuoteQty !== null &&
+                  result.data.cummulativeQuoteQty !== undefined
+                  ? result.data.cummulativeQuoteQty
+                  : "0"
+              ),
+              timeInForce: result.data.timeInForce,
+              timestamp: Date.now(),
+            }
+          : undefined,
         error: result.error,
       };
     } catch (error) {
@@ -211,14 +246,24 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     error?: string;
   }> {
     try {
-      const result = await this.coreClient.cancelOrder(symbol || "", parseInt(orderId) || 0);
+      const result = await this.coreClient.cancelOrder(
+        symbol || "",
+        parseInt(orderId) || 0
+      );
       return {
         success: result.success,
-        data: result.data ? {
-          orderId: String(result.data.orderId !== null && result.data.orderId !== undefined ? result.data.orderId : orderId),
-          symbol: result.data.symbol || symbol || "",
-          status: result.data.status || "CANCELED",
-        } : undefined,
+        data: result.data
+          ? {
+              orderId: String(
+                result.data.orderId !== null &&
+                  result.data.orderId !== undefined
+                  ? result.data.orderId
+                  : orderId
+              ),
+              symbol: result.data.symbol || symbol || "",
+              status: result.data.status || "CANCELED",
+            }
+          : undefined,
         error: result.error,
       };
     } catch (error) {
@@ -252,7 +297,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       const result = await this.coreClient.getUserTrades({
         symbol: symbol || undefined,
         limit: limit || 100,
-        startTime: Date.now() - (7 * 24 * 60 * 60 * 1000), // Last 7 days
+        startTime: Date.now() - 7 * 24 * 60 * 60 * 1000, // Last 7 days
       });
 
       if (!result.success) {
@@ -264,7 +309,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
 
       // Transform the data to match expected format
       const transformedData = (result.data || []).map((trade: any) => ({
-        id: String(trade.id || trade.tradeId || `${Date.now()}-${Math.random()}`),
+        id: String(
+          trade.id || trade.tradeId || `${Date.now()}-${Math.random()}`
+        ),
         orderId: String(trade.orderId || ""),
         symbol: trade.symbol || symbol || "",
         side: (trade.side as "BUY" | "SELL") || "BUY",
@@ -280,12 +327,12 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
         data: transformedData,
       };
     } catch (error) {
-      this.logger.error("Trade history retrieval failed", { 
-        symbol, 
-        limit, 
-        error: error instanceof Error ? error.message : String(error) 
+      this.logger.error("Trade history retrieval failed", {
+        symbol,
+        limit,
+        error: error instanceof Error ? error.message : String(error),
       });
-      
+
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -311,16 +358,26 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       const result = await this.coreClient.getOpenOrders(symbol);
       return {
         success: result.success,
-        data: result.data ? result.data.map((order: any) => ({
-          orderId: String(order.orderId !== null && order.orderId !== undefined ? order.orderId : ""),
-          symbol: order.symbol || "",
-          side: order.side as "BUY" | "SELL",
-          type: order.type || "",
-          quantity: String(order.quantity !== null && order.quantity !== undefined ? order.quantity : "0"),
-          price: order.price,
-          status: order.status || "",
-          timestamp: order.timestamp || Date.now(),
-        })) : undefined,
+        data: result.data
+          ? result.data.map((order: any) => ({
+              orderId: String(
+                order.orderId !== null && order.orderId !== undefined
+                  ? order.orderId
+                  : ""
+              ),
+              symbol: order.symbol || "",
+              side: order.side as "BUY" | "SELL",
+              type: order.type || "",
+              quantity: String(
+                order.quantity !== null && order.quantity !== undefined
+                  ? order.quantity
+                  : "0"
+              ),
+              price: order.price,
+              status: order.status || "",
+              timestamp: order.timestamp || Date.now(),
+            }))
+          : undefined,
         error: result.error,
       };
     } catch (error) {
@@ -373,7 +430,6 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     }
   }
 
-
   async getTicker24hr(symbols?: string[]): Promise<{
     success: boolean;
     data?: Array<{
@@ -404,8 +460,10 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
 
         const ticker = {
           symbol: symbols[0],
-          price: tickerResponse.data?.price || tickerResponse.data?.lastPrice || "0",
-          lastPrice: tickerResponse.data?.lastPrice || tickerResponse.data?.price || "0",
+          price:
+            tickerResponse.data?.price || tickerResponse.data?.lastPrice || "0",
+          lastPrice:
+            tickerResponse.data?.lastPrice || tickerResponse.data?.price || "0",
           priceChangePercent: tickerResponse.data?.priceChangePercent || "0",
           volume: tickerResponse.data?.volume || "0",
         };
@@ -423,8 +481,14 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
           if (tickerResponse.success && tickerResponse.data) {
             return {
               symbol,
-              price: tickerResponse.data.price || tickerResponse.data.lastPrice || "0",
-              lastPrice: tickerResponse.data.lastPrice || tickerResponse.data.price || "0",
+              price:
+                tickerResponse.data.price ||
+                tickerResponse.data.lastPrice ||
+                "0",
+              lastPrice:
+                tickerResponse.data.lastPrice ||
+                tickerResponse.data.price ||
+                "0",
               priceChangePercent: tickerResponse.data.priceChangePercent || "0",
               volume: tickerResponse.data.volume || "0",
             };
@@ -439,15 +503,15 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       // Execute all ticker requests in parallel with rate limiting
       const batchSize = 5; // Process 5 symbols at a time to avoid rate limits
       const results: Array<any> = [];
-      
+
       for (let i = 0; i < tickerPromises.length; i += batchSize) {
         const batch = tickerPromises.slice(i, i + batchSize);
         const batchResults = await Promise.all(batch);
-        results.push(...batchResults.filter(result => result !== null));
-        
+        results.push(...batchResults.filter((result) => result !== null));
+
         // Small delay between batches to respect rate limits
         if (i + batchSize < tickerPromises.length) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
@@ -486,22 +550,28 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
       success: true,
       data: {
         symbol,
-        price: tickerResponse.data?.price || tickerResponse.data?.lastPrice || "0",
-        lastPrice: tickerResponse.data?.lastPrice || tickerResponse.data?.price || "0",
+        price:
+          tickerResponse.data?.price || tickerResponse.data?.lastPrice || "0",
+        lastPrice:
+          tickerResponse.data?.lastPrice || tickerResponse.data?.price || "0",
         priceChangePercent: tickerResponse.data?.priceChangePercent || "0",
         volume: tickerResponse.data?.volume || "0",
       },
     };
   }
 
-  async getSymbolStatus(symbol: string): Promise<{ status: string; trading: boolean }> {
+  async getSymbolStatus(
+    symbol: string
+  ): Promise<{ status: string; trading: boolean }> {
     try {
       const exchangeResponse = await this.getExchangeInfo();
       if (!exchangeResponse.success || !exchangeResponse.data) {
         return { status: "ERROR", trading: false };
       }
 
-      const symbolInfo = exchangeResponse.data.symbols?.find((s) => s.symbol === symbol);
+      const symbolInfo = exchangeResponse.data.symbols?.find(
+        (s) => s.symbol === symbol
+      );
       if (!symbolInfo) {
         return { status: "NOT_FOUND", trading: false };
       }
@@ -510,7 +580,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
         status: symbolInfo.status,
         trading: symbolInfo.status === "TRADING",
       };
-    } catch (error) {
+    } catch (_error) {
       return { status: "ERROR", trading: false };
     }
   }
@@ -528,7 +598,10 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     error?: string;
   }> {
     // Delegate to trading module's order book functionality
-    const orderBookResponse = await this.tradingModule.getOrderBook(symbol, limit);
+    const orderBookResponse = await this.tradingModule.getOrderBook(
+      symbol,
+      limit
+    );
     if (!orderBookResponse.success) {
       return {
         success: false,
@@ -556,7 +629,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
   }
 
   // Symbols & Market Data (Core Module)
-  async getSymbolsByVcoinId(vcoinId: string): Promise<MexcServiceResponse<SymbolEntry[]>> {
+  async getSymbolsByVcoinId(
+    vcoinId: string
+  ): Promise<MexcServiceResponse<SymbolEntry[]>> {
     return this.coreModule.getSymbolsByVcoinId(vcoinId);
   }
 
@@ -568,7 +643,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     return this.coreModule.getServerTime();
   }
 
-  async getSymbolInfoBasic(symbolName: string): Promise<MexcServiceResponse<any>> {
+  async getSymbolInfoBasic(
+    symbolName: string
+  ): Promise<MexcServiceResponse<any>> {
     return this.coreModule.getSymbolInfoBasic(symbolName);
   }
 
@@ -580,7 +657,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     return this.coreModule.getSymbolData(symbol);
   }
 
-  async getSymbolsForVcoins(vcoinIds: string[]): Promise<MexcServiceResponse<SymbolEntry[]>> {
+  async getSymbolsForVcoins(
+    vcoinIds: string[]
+  ): Promise<MexcServiceResponse<SymbolEntry[]>> {
     return this.coreModule.getSymbolsForVcoins(vcoinIds);
   }
 
@@ -595,7 +674,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     error?: string;
   }> {
     const coreResult = await this.coreModule.getSymbolsData();
-    
+
     if (!coreResult.success) {
       return {
         success: false,
@@ -658,7 +737,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
   // Account & Portfolio (Portfolio Module)
   async getAccountBalance(): Promise<MexcServiceResponse<BalanceEntry[]>> {
     const result = await this.portfolioModule.getAccountBalance();
-    
+
     // Convert to MexcServiceResponse format with timestamp
     return {
       success: result.success,
@@ -680,7 +759,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     }>
   > {
     const result = await this.portfolioModule.getAccountBalances();
-    
+
     // Convert to MexcServiceResponse format with timestamp
     return {
       success: result.success,
@@ -700,7 +779,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
 
   // Trading Methods (Trading Module)
 
-  async getSymbolTicker(symbol: string): Promise<MexcServiceResponse<SymbolTickerData>> {
+  async getSymbolTicker(
+    symbol: string
+  ): Promise<MexcServiceResponse<SymbolTickerData>> {
     return this.tradingModule.getSymbolTicker(symbol);
   }
 
@@ -718,11 +799,15 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     return this.tradingModule.getRecentActivity(symbol, hours);
   }
 
-  async placeOrder(orderData: TradingOrderData): Promise<MexcServiceResponse<any>> {
+  async placeOrder(
+    orderData: TradingOrderData
+  ): Promise<MexcServiceResponse<any>> {
     return this.tradingModule.placeOrder(orderData);
   }
 
-  async createOrder(orderData: TradingOrderData): Promise<MexcServiceResponse<any>> {
+  async createOrder(
+    orderData: TradingOrderData
+  ): Promise<MexcServiceResponse<any>> {
     return this.tradingModule.createOrder(orderData);
   }
 
@@ -737,7 +822,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     }>
   > {
     const result = await this.portfolioModule.getAccountInfo();
-    
+
     // Convert to MexcServiceResponse format with timestamp
     return {
       success: result.success,
@@ -762,11 +847,16 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     return this.portfolioModule.getTopAssets(limit);
   }
 
-  async hasSufficientBalance(asset: string, requiredAmount: number): Promise<boolean> {
+  async hasSufficientBalance(
+    asset: string,
+    requiredAmount: number
+  ): Promise<boolean> {
     return this.portfolioModule.hasSufficientBalance(asset, requiredAmount);
   }
 
-  async getAssetBalance(asset: string): Promise<{ free: string; locked: string } | null> {
+  async getAssetBalance(
+    asset: string
+  ): Promise<{ free: string; locked: string } | null> {
     return this.portfolioModule.getAssetBalance(asset);
   }
 
@@ -774,7 +864,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
   // Core Module - Connectivity & Status
   // ============================================================================
 
-  async testConnectivity(): Promise<MexcServiceResponse<{ serverTime: number; latency: number }>> {
+  async testConnectivity(): Promise<
+    MexcServiceResponse<{ serverTime: number; latency: number }>
+  > {
     return this.coreModule.testConnectivity();
   }
 
@@ -839,7 +931,9 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
   /**
    * Ping the MEXC API to test connectivity
    */
-  async ping(): Promise<MexcServiceResponse<{ serverTime: number; latency: number }>> {
+  async ping(): Promise<
+    MexcServiceResponse<{ serverTime: number; latency: number }>
+  > {
     return this.testConnectivity();
   }
 
@@ -858,7 +952,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     error?: string;
   }> {
     const result = await this.getTicker(symbol);
-    
+
     if (!result.success) {
       return {
         success: false,
@@ -886,7 +980,7 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
         return parseFloat(String(ticker.data.lastPrice)) || 0;
       }
       return 0;
-    } catch (error) {
+    } catch (_error) {
       return 0;
     }
   }
@@ -895,11 +989,13 @@ export class UnifiedMexcServiceV2 implements PortfolioService, TradingService, M
     try {
       const exchangeInfo = await this.getExchangeInfo();
       if (exchangeInfo.success && exchangeInfo.data?.symbols) {
-        const symbolInfo = exchangeInfo.data.symbols.find((s: any) => s.symbol === symbol);
-        return symbolInfo?.status === 'TRADING';
+        const symbolInfo = exchangeInfo.data.symbols.find(
+          (s: any) => s.symbol === symbol
+        );
+        return symbolInfo?.status === "TRADING";
       }
       return false;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

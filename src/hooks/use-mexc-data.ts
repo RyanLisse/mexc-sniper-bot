@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ApiResponse } from "@/src/lib/api-response";
 import { queryKeys } from "@/src/lib/query-client";
 import { useAuth } from "@/src/lib/supabase-auth-client";
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
 
 // MEXC Calendar Data Hook
 export function useMexcCalendar() {
@@ -53,7 +56,9 @@ export function useMexcSymbols(vcoinId?: string) {
   return useQuery({
     queryKey: queryKeys.mexcSymbols(vcoinId),
     queryFn: async () => {
-      const url = vcoinId ? `/api/mexc/symbols?vcoinId=${vcoinId}` : "/api/mexc/symbols";
+      const url = vcoinId
+        ? `/api/mexc/symbols?vcoinId=${vcoinId}`
+        : "/api/mexc/symbols";
       const response = await fetch(url, {
         credentials: "include", // Include authentication cookies
       });
@@ -143,7 +148,12 @@ export interface MexcConnectivityResult {
   hasEnvironmentCredentials: boolean;
   message: string;
   timestamp: string;
-  status: "fully_connected" | "no_credentials" | "invalid_credentials" | "network_error" | "error";
+  status:
+    | "fully_connected"
+    | "no_credentials"
+    | "invalid_credentials"
+    | "network_error"
+    | "error";
   error?: string;
   retryCount?: number;
   latency?: number;
@@ -179,7 +189,8 @@ export function useMexcConnectivity() {
 
         return result;
       } catch (error) {
-        const finalError = error instanceof Error ? error : new Error("Unknown error");
+        const finalError =
+          error instanceof Error ? error : new Error("Unknown error");
         console.warn(`Connectivity check failed:`, finalError.message);
         throw finalError;
       }
@@ -237,7 +248,9 @@ export function useRefreshMexcSymbols() {
 
   return useMutation({
     mutationFn: async (vcoinId?: string) => {
-      const url = vcoinId ? `/api/mexc/symbols?vcoinId=${vcoinId}` : "/api/mexc/symbols";
+      const url = vcoinId
+        ? `/api/mexc/symbols?vcoinId=${vcoinId}`
+        : "/api/mexc/symbols";
       const response = await fetch(url, {
         credentials: "include", // Include authentication cookies
       });
@@ -263,7 +276,10 @@ export function useMexcPatternDetection(vcoinId?: string) {
 
   // Analyze symbols for ready state pattern (sts:2, st:2, tt:4)
   const readyStatePattern = Array.isArray(symbols)
-    ? symbols.find((symbol: SymbolEntry) => symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4)
+    ? symbols.find(
+        (symbol: SymbolEntry) =>
+          symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4
+      )
     : undefined;
 
   const hasReadyPattern = !!readyStatePattern;
@@ -291,7 +307,8 @@ export function useUpcomingLaunches() {
           const hours24 = 24 * 60 * 60 * 1000;
 
           return (
-            launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours24
+            launchTime.getTime() > now.getTime() &&
+            launchTime.getTime() < now.getTime() + hours24
           );
         } catch (_error) {
           console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
@@ -319,7 +336,8 @@ export function useReadyLaunches() {
           const hours4 = 4 * 60 * 60 * 1000;
 
           return (
-            launchTime.getTime() > now.getTime() && launchTime.getTime() < now.getTime() + hours4
+            launchTime.getTime() > now.getTime() &&
+            launchTime.getTime() < now.getTime() + hours4
           );
         } catch (_error) {
           console.warn("Invalid date in calendar entry:", entry.firstOpenTime);
@@ -359,7 +377,10 @@ export function useSnipeTargets(userId?: string) {
       });
 
       if (!response.ok) {
-        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+        if (
+          !isAuthenticated &&
+          (response.status === 403 || response.status === 401)
+        ) {
           return [];
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -394,7 +415,10 @@ export function useMexcAccount(userId?: string) {
       });
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated
-        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+        if (
+          !isAuthenticated &&
+          (response.status === 403 || response.status === 401)
+        ) {
           return null;
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

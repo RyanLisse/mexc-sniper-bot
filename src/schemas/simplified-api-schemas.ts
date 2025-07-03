@@ -66,12 +66,15 @@ export function validateData<T>(data: any): ValidationResult<T> {
   return { success: true, data };
 }
 
-export function createSuccessResponse<T>(data: T, message?: string): ApiResponse {
+export function createSuccessResponse<T>(
+  data: T,
+  message?: string
+): ApiResponse {
   return {
     success: true,
     data,
     message,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
 
@@ -80,7 +83,7 @@ export function createErrorResponse(error: string, code?: string): ApiResponse {
     success: false,
     error,
     code,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 }
 

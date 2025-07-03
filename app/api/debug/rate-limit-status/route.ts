@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { 
-  getClientIP, 
-  getIPAnalysis, 
-  getRateLimitStats, 
-  getSecurityEvents, 
-  isIPSuspicious
+import { type NextRequest, NextResponse } from "next/server";
+import {
+  getClientIP,
+  getIPAnalysis,
+  getRateLimitStats,
+  getSecurityEvents,
+  isIPSuspicious,
 } from "@/src/lib/rate-limiter";
 
 export async function GET(request: NextRequest) {
@@ -24,13 +24,13 @@ export async function GET(request: NextRequest) {
       recentEvents: recentEvents.slice(0, 20), // Last 20 events
       debug: {
         timestamp: new Date().toISOString(),
-        userAgent: request.headers.get('user-agent'),
+        userAgent: request.headers.get("user-agent"),
         headers: {
-          'x-forwarded-for': request.headers.get('x-forwarded-for'),
-          'x-real-ip': request.headers.get('x-real-ip'),
-          'cf-connecting-ip': request.headers.get('cf-connecting-ip'),
-        }
-      }
-    }
+          "x-forwarded-for": request.headers.get("x-forwarded-for"),
+          "x-real-ip": request.headers.get("x-real-ip"),
+          "cf-connecting-ip": request.headers.get("cf-connecting-ip"),
+        },
+      },
+    },
   });
 }

@@ -1,8 +1,8 @@
 /**
  * WebSocket Agent Bridge Module
- * 
+ *
  * Refactored from a single 934-line file into focused modules
- * 
+ *
  * Provides:
  * - Real-time agent status broadcasting
  * - Live workflow execution updates

@@ -11,18 +11,18 @@ export interface DatabaseInstrumentationConfig {
 
 class DatabaseInstrumentation {
   private config: DatabaseInstrumentationConfig = {
-    enabled: process.env.NODE_ENV === 'production',
+    enabled: process.env.NODE_ENV === "production",
     traceSqlQueries: false,
-    includeQueryParameters: false
+    includeQueryParameters: false,
   };
 
   initialize(config?: Partial<DatabaseInstrumentationConfig>): void {
     if (config) {
       this.config = { ...this.config, ...config };
     }
-    
+
     if (this.config.enabled) {
-      console.log('Database instrumentation initialized');
+      console.log("Database instrumentation initialized");
     }
   }
 
@@ -30,11 +30,11 @@ class DatabaseInstrumentation {
     if (!this.config.enabled || !this.config.traceSqlQueries) {
       return;
     }
-    
-    console.debug('DB Query:', {
-      query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
-      parameters: this.config.includeQueryParameters ? parameters : '[hidden]',
-      timestamp: new Date().toISOString()
+
+    console.debug("DB Query:", {
+      query: query.substring(0, 100) + (query.length > 100 ? "..." : ""),
+      parameters: this.config.includeQueryParameters ? parameters : "[hidden]",
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -45,7 +45,9 @@ class DatabaseInstrumentation {
 
 export const databaseInstrumentation = new DatabaseInstrumentation();
 
-export function initializeDatabaseInstrumentation(config?: Partial<DatabaseInstrumentationConfig>): void {
+export function initializeDatabaseInstrumentation(
+  config?: Partial<DatabaseInstrumentationConfig>
+): void {
   databaseInstrumentation.initialize(config);
 }
 
@@ -57,9 +59,12 @@ export function instrumentDatabase<T>(dbInstance: T): T {
 }
 
 export function instrumentConnectionHealth(): void {
-  console.debug('Database connection health instrumentation enabled');
+  console.debug("Database connection health instrumentation enabled");
 }
 
-export function instrumentDatabaseQuery(query: string, parameters?: any[]): void {
+export function instrumentDatabaseQuery(
+  query: string,
+  parameters?: any[]
+): void {
   databaseInstrumentation.traceQuery(query, parameters);
 }

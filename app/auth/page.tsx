@@ -14,9 +14,7 @@ export default function AuthPage() {
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
               <Zap className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">
-              MEXC Sniper
-            </h1>
+            <h1 className="text-3xl font-bold text-foreground">MEXC Sniper</h1>
           </div>
           <p className="text-muted-foreground text-lg">
             AI-powered cryptocurrency trading platform

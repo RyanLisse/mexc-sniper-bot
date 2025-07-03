@@ -3,7 +3,11 @@
  */
 
 import { createLogger } from "../../lib/unified-logger";
-import type { AgentBehaviorMetrics, SafetyMonitorConfig, SafetyProtocolViolation } from "./types";
+import type {
+  AgentBehaviorMetrics,
+  SafetyMonitorConfig,
+  SafetyProtocolViolation,
+} from "./types";
 
 const logger = createLogger("behavior-monitor", {
   enableStructuredLogging: process.env.NODE_ENV === "production",
@@ -46,13 +50,19 @@ export class BehaviorMonitor {
       }
 
       // Detect anomalies
-      const anomalyResults = await this.detectBehaviorAnomalies(metrics, history);
+      const anomalyResults = await this.detectBehaviorAnomalies(
+        metrics,
+        history
+      );
 
       if (anomalyResults.anomalous) {
         anomalies.push(metrics);
 
         // Create safety violation if threshold exceeded
-        if (metrics.anomalyScore > this.safetyConfig.riskManagement.circuitBreakerThreshold) {
+        if (
+          metrics.anomalyScore >
+          this.safetyConfig.riskManagement.circuitBreakerThreshold
+        ) {
           const violation: SafetyProtocolViolation = {
             id: `violation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             type: "behavior_anomaly",
@@ -62,7 +72,8 @@ export class BehaviorMonitor {
             evidence: {
               metrics,
               anomalyScore: metrics.anomalyScore,
-              threshold: this.safetyConfig.riskManagement.circuitBreakerThreshold,
+              threshold:
+                this.safetyConfig.riskManagement.circuitBreakerThreshold,
             },
             detectedAt: new Date().toISOString(),
             resolved: false,
@@ -117,16 +128,23 @@ export class BehaviorMonitor {
       if (older.length === 0) continue;
 
       // Calculate performance trends
-      const recentAvgSuccess = recent.reduce((sum, m) => sum + m.successRate, 0) / recent.length;
-      const olderAvgSuccess = older.reduce((sum, m) => sum + m.successRate, 0) / older.length;
-      const successDegradation = ((olderAvgSuccess - recentAvgSuccess) / olderAvgSuccess) * 100;
+      const recentAvgSuccess =
+        recent.reduce((sum, m) => sum + m.successRate, 0) / recent.length;
+      const olderAvgSuccess =
+        older.reduce((sum, m) => sum + m.successRate, 0) / older.length;
+      const successDegradation =
+        ((olderAvgSuccess - recentAvgSuccess) / olderAvgSuccess) * 100;
 
-      const recentAvgResponse = recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
-      const olderAvgResponse = older.reduce((sum, m) => sum + m.responseTime, 0) / older.length;
-      const responseDegradation = ((recentAvgResponse - olderAvgResponse) / olderAvgResponse) * 100;
+      const recentAvgResponse =
+        recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
+      const olderAvgResponse =
+        older.reduce((sum, m) => sum + m.responseTime, 0) / older.length;
+      const responseDegradation =
+        ((recentAvgResponse - olderAvgResponse) / olderAvgResponse) * 100;
 
       // Check for significant degradation
-      const significantDegradation = successDegradation > 20 || responseDegradation > 50;
+      const significantDegradation =
+        successDegradation > 20 || responseDegradation > 50;
 
       if (significantDegradation) {
         degradedAgents.push(agentId);
@@ -173,9 +191,12 @@ export class BehaviorMonitor {
     }
 
     const recent = history.slice(-10);
-    const avgSuccessRate = recent.reduce((sum, m) => sum + m.successRate, 0) / recent.length;
-    const avgResponseTime = recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
-    const avgConfidence = recent.reduce((sum, m) => sum + m.confidenceScore, 0) / recent.length;
+    const avgSuccessRate =
+      recent.reduce((sum, m) => sum + m.successRate, 0) / recent.length;
+    const avgResponseTime =
+      recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
+    const avgConfidence =
+      recent.reduce((sum, m) => sum + m.confidenceScore, 0) / recent.length;
 
     let anomalyScore = 0;
     const reasons: string[] = [];
@@ -188,17 +209,24 @@ export class BehaviorMonitor {
     }
 
     // Check response time deviation
-    const responseDeviation = Math.abs(current.responseTime - avgResponseTime) / avgResponseTime;
+    const responseDeviation =
+      Math.abs(current.responseTime - avgResponseTime) / avgResponseTime;
     if (responseDeviation > 2) {
       anomalyScore += 30;
-      reasons.push(`Response time spike: ${(responseDeviation * 100).toFixed(1)}%`);
+      reasons.push(
+        `Response time spike: ${(responseDeviation * 100).toFixed(1)}%`
+      );
     }
 
     // Check confidence deviation
-    const confidenceDeviation = Math.abs(current.confidenceScore - avgConfidence);
+    const confidenceDeviation = Math.abs(
+      current.confidenceScore - avgConfidence
+    );
     if (confidenceDeviation > 25) {
       anomalyScore += 20;
-      reasons.push(`Confidence deviation: ${confidenceDeviation.toFixed(1)} points`);
+      reasons.push(
+        `Confidence deviation: ${confidenceDeviation.toFixed(1)} points`
+      );
     }
 
     // Check error rate spike
@@ -215,7 +243,9 @@ export class BehaviorMonitor {
   } /**
    * Determine severity level based on anomaly score
    */
-  private determineSeverity(anomalyScore: number): SafetyProtocolViolation["severity"] {
+  private determineSeverity(
+    anomalyScore: number
+  ): SafetyProtocolViolation["severity"] {
     if (anomalyScore >= 90) return "critical";
     if (anomalyScore >= 70) return "high";
     if (anomalyScore >= 50) return "medium";
@@ -225,7 +255,9 @@ export class BehaviorMonitor {
   /**
    * Determine action based on anomaly score
    */
-  private determineAction(anomalyScore: number): SafetyProtocolViolation["action"] {
+  private determineAction(
+    anomalyScore: number
+  ): SafetyProtocolViolation["action"] {
     if (anomalyScore >= 90) return "shutdown";
     if (anomalyScore >= 70) return "restrict";
     if (anomalyScore >= 50) return "warn";

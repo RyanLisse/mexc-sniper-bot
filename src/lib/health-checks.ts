@@ -290,12 +290,13 @@ export async function performSystemHealthCheck(): Promise<SystemHealth> {
   const _startTime = Date.now();
 
   // Run all health checks in parallel
-  const [databaseHealth, mexcApiHealth, openAiHealth, systemHealth] = await Promise.all([
-    checkDatabaseHealth(),
-    checkMexcApiHealth(),
-    checkOpenAiHealth(),
-    Promise.resolve(checkSystemResources()),
-  ]);
+  const [databaseHealth, mexcApiHealth, openAiHealth, systemHealth] =
+    await Promise.all([
+      checkDatabaseHealth(),
+      checkMexcApiHealth(),
+      checkOpenAiHealth(),
+      Promise.resolve(checkSystemResources()),
+    ]);
 
   const checks = [databaseHealth, mexcApiHealth, openAiHealth, systemHealth];
 
@@ -332,10 +333,14 @@ export async function getConnectivityStatus(): Promise<{
   const health = await performSystemHealthCheck();
 
   return {
-    apiConnectivity: health.checks.find((c) => c.service === "mexc-api")?.status !== "unhealthy",
+    apiConnectivity:
+      health.checks.find((c) => c.service === "mexc-api")?.status !==
+      "unhealthy",
     databaseConnectivity:
-      health.checks.find((c) => c.service === "database")?.status !== "unhealthy",
+      health.checks.find((c) => c.service === "database")?.status !==
+      "unhealthy",
     openAiConnectivity:
-      health.checks.find((c) => c.service === "openai-api")?.status !== "unhealthy",
+      health.checks.find((c) => c.service === "openai-api")?.status !==
+      "unhealthy",
   };
 }

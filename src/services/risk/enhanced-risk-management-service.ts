@@ -98,7 +98,10 @@ export interface MarketConditions {
 export class EnhancedRiskManagementService extends BaseService {
   private static instance: EnhancedRiskManagementService;
   private errorLogger = ErrorLoggingService.getInstance();
-  private portfolioCache = new Map<string, { metrics: PortfolioMetrics; expiresAt: number }>();
+  private portfolioCache = new Map<
+    string,
+    { metrics: PortfolioMetrics; expiresAt: number }
+  >();
   private correlationCache = new Map<
     string,
     { correlations: Record<string, number>; expiresAt: number }
@@ -106,7 +109,10 @@ export class EnhancedRiskManagementService extends BaseService {
   private readonly cacheExpiryMs = 2 * 60 * 1000; // 2 minutes
 
   // Default risk profile for new users
-  private readonly defaultRiskProfile: Omit<RiskProfile, "userId" | "updatedAt"> = {
+  private readonly defaultRiskProfile: Omit<
+    RiskProfile,
+    "userId" | "updatedAt"
+  > = {
     riskTolerance: "moderate",
     maxPositionSize: 5.0, // 5% of portfolio per position
     maxDailyLoss: 2.0, // 2% daily loss limit
@@ -125,7 +131,8 @@ export class EnhancedRiskManagementService extends BaseService {
 
   public static getInstance(logger?: ILogger): EnhancedRiskManagementService {
     if (!EnhancedRiskManagementService.instance) {
-      EnhancedRiskManagementService.instance = new EnhancedRiskManagementService(logger);
+      EnhancedRiskManagementService.instance =
+        new EnhancedRiskManagementService(logger);
     }
     return EnhancedRiskManagementService.instance;
   }
@@ -157,7 +164,9 @@ export class EnhancedRiskManagementService extends BaseService {
       // Calculate order impact
       const orderValue = this.calculateOrderValue(orderParams);
       const portfolioImpact =
-        portfolioMetrics.totalValue > 0 ? (orderValue / portfolioMetrics.totalValue) * 100 : 100;
+        portfolioMetrics.totalValue > 0
+          ? (orderValue / portfolioMetrics.totalValue) * 100
+          : 100;
 
       // Initialize assessment
       const assessment: RiskAssessment = {
@@ -204,7 +213,8 @@ export class EnhancedRiskManagementService extends BaseService {
         profile,
         marketConditions
       );
-      assessment.limits.positionSizeLimit = positionSizeValidation.maxAllowedSize;
+      assessment.limits.positionSizeLimit =
+        positionSizeValidation.maxAllowedSize;
       if (!positionSizeValidation.valid) {
         assessment.errors.push(...positionSizeValidation.errors);
         assessment.compliance.positionLimitCompliant = false;
@@ -256,7 +266,10 @@ export class EnhancedRiskManagementService extends BaseService {
       }
 
       // 7. Market Conditions Impact
-      const marketRiskAdjustment = this.adjustForMarketConditions(assessment, marketConditions);
+      const marketRiskAdjustment = this.adjustForMarketConditions(
+        assessment,
+        marketConditions
+      );
       assessment.riskScore = marketRiskAdjustment.adjustedRiskScore;
       assessment.recommendations.push(...marketRiskAdjustment.recommendations);
 
@@ -265,7 +278,9 @@ export class EnhancedRiskManagementService extends BaseService {
       assessment.approved = this.determineApproval(assessment);
 
       // Add general recommendations
-      assessment.recommendations.push(...this.generateRecommendations(assessment, profile));
+      assessment.recommendations.push(
+        ...this.generateRecommendations(assessment, profile)
+      );
 
       const assessmentTime = Date.now() - startTime;
       this.logger.info(
@@ -344,8 +359,12 @@ export class EnhancedRiskManagementService extends BaseService {
           side: "LONG" as const, // Spot trading is always long
           size: balance.total,
           notionalValue: balance.usdtValue || 0,
-          averagePrice: balance.usdtValue ? balance.usdtValue / balance.total : 0,
-          currentPrice: balance.usdtValue ? balance.usdtValue / balance.total : 0,
+          averagePrice: balance.usdtValue
+            ? balance.usdtValue / balance.total
+            : 0,
+          currentPrice: balance.usdtValue
+            ? balance.usdtValue / balance.total
+            : 0,
           unrealizedPnl: 0, // Would need historical data to calculate
           unrealizedPnlPercent: 0,
           riskWeight: 1.0, // Default weight
@@ -355,7 +374,10 @@ export class EnhancedRiskManagementService extends BaseService {
       // Calculate concentration
       const concentration: Record<string, number> = {};
       positions.forEach((position) => {
-        const percentage = totalUsdtValue > 0 ? (position.notionalValue / totalUsdtValue) * 100 : 0;
+        const percentage =
+          totalUsdtValue > 0
+            ? (position.notionalValue / totalUsdtValue) * 100
+            : 0;
         concentration[position.symbol] = percentage;
       });
 
@@ -382,7 +404,10 @@ export class EnhancedRiskManagementService extends BaseService {
 
       return metrics;
     } catch (error) {
-      this.logger.error("[Risk Management] Failed to get portfolio metrics:", error);
+      this.logger.error(
+        "[Risk Management] Failed to get portfolio metrics:",
+        error
+      );
 
       // Return empty portfolio on error
       return {
@@ -421,7 +446,8 @@ export class EnhancedRiskManagementService extends BaseService {
         Math.abs(Number.parseFloat(ticker.priceChangePercent || "0"))
       );
       const avgVolatility =
-        priceChanges.reduce((sum, change) => sum + change, 0) / priceChanges.length;
+        priceChanges.reduce((sum, change) => sum + change, 0) /
+        priceChanges.length;
 
       // Determine volatility level
       let volatility: MarketConditions["volatility"];
@@ -456,7 +482,10 @@ export class EnhancedRiskManagementService extends BaseService {
         riskMultiplier,
       };
     } catch (error) {
-      this.logger.error("[Risk Management] Failed to assess market conditions:", error);
+      this.logger.error(
+        "[Risk Management] Failed to assess market conditions:",
+        error
+      );
       return this.getDefaultMarketConditions();
     }
   }
@@ -471,14 +500,20 @@ export class EnhancedRiskManagementService extends BaseService {
     valid: boolean;
     errors: string[];
   } {
-    const asset = symbol.replace("USDT", "").replace("BTC", "").replace("ETH", "");
+    const asset = symbol
+      .replace("USDT", "")
+      .replace("BTC", "")
+      .replace("ETH", "");
     const errors: string[] = [];
 
     if (profile.blockedAssets.includes(asset)) {
       errors.push(`Asset ${asset} is blocked in your risk profile`);
     }
 
-    if (profile.allowedAssets.length > 0 && !profile.allowedAssets.includes(asset)) {
+    if (
+      profile.allowedAssets.length > 0 &&
+      !profile.allowedAssets.includes(asset)
+    ) {
       errors.push(`Asset ${asset} is not in your allowed assets list`);
     }
 
@@ -507,10 +542,13 @@ export class EnhancedRiskManagementService extends BaseService {
 
     const orderValue = this.calculateOrderValue(orderParams);
     const portfolioImpact =
-      portfolio.totalValue > 0 ? (orderValue / portfolio.totalValue) * 100 : 100;
+      portfolio.totalValue > 0
+        ? (orderValue / portfolio.totalValue) * 100
+        : 100;
 
     // Adjust limits based on market conditions
-    const adjustedMaxPositionSize = profile.maxPositionSize / marketConditions.riskMultiplier;
+    const adjustedMaxPositionSize =
+      profile.maxPositionSize / marketConditions.riskMultiplier;
 
     if (portfolioImpact > adjustedMaxPositionSize) {
       errors.push(
@@ -548,7 +586,9 @@ export class EnhancedRiskManagementService extends BaseService {
     const currentConcentration = portfolio.concentration[asset] || 0;
     const orderValue = this.calculateOrderValue(orderParams);
     const additionalConcentration =
-      portfolio.totalValue > 0 ? (orderValue / portfolio.totalValue) * 100 : 100;
+      portfolio.totalValue > 0
+        ? (orderValue / portfolio.totalValue) * 100
+        : 100;
 
     const newConcentration = currentConcentration + additionalConcentration;
 
@@ -564,7 +604,10 @@ export class EnhancedRiskManagementService extends BaseService {
 
     return {
       compliant: newConcentration <= profile.concentrationLimit,
-      riskLevel: Math.min(100, (newConcentration / profile.concentrationLimit) * 100),
+      riskLevel: Math.min(
+        100,
+        (newConcentration / profile.concentrationLimit) * 100
+      ),
       warnings,
     };
   }
@@ -625,7 +668,10 @@ export class EnhancedRiskManagementService extends BaseService {
         warnings,
       };
     } catch (error) {
-      this.logger.error("[Risk Management] Correlation assessment failed:", error);
+      this.logger.error(
+        "[Risk Management] Correlation assessment failed:",
+        error
+      );
       return {
         compliant: true, // Default to compliant on error
         riskLevel: 50,
@@ -658,7 +704,9 @@ export class EnhancedRiskManagementService extends BaseService {
 
       // Calculate order impact as percentage of 24h volume
       const volumeImpact =
-        volume24h > 0 ? (Number.parseFloat(orderParams.quantity) / volume24h) * 100 : 100;
+        volume24h > 0
+          ? (Number.parseFloat(orderParams.quantity) / volume24h) * 100
+          : 100;
 
       let riskLevel = 0;
       if (volumeImpact > 10) {
@@ -680,7 +728,10 @@ export class EnhancedRiskManagementService extends BaseService {
 
       return { riskLevel, warnings };
     } catch (error) {
-      this.logger.error("[Risk Management] Liquidity assessment failed:", error);
+      this.logger.error(
+        "[Risk Management] Liquidity assessment failed:",
+        error
+      );
       return {
         riskLevel: 50,
         warnings: ["Unable to assess liquidity risk"],
@@ -705,7 +756,9 @@ export class EnhancedRiskManagementService extends BaseService {
 
     // Check maximum concurrent positions
     if (portfolio.activeTrades >= profile.maxConcurrentPositions) {
-      errors.push(`Maximum concurrent positions (${profile.maxConcurrentPositions}) reached`);
+      errors.push(
+        `Maximum concurrent positions (${profile.maxConcurrentPositions}) reached`
+      );
     } else if (portfolio.activeTrades >= profile.maxConcurrentPositions * 0.8) {
       warnings.push(
         `Approaching maximum concurrent positions limit (${portfolio.activeTrades}/${profile.maxConcurrentPositions})`
@@ -728,7 +781,9 @@ export class EnhancedRiskManagementService extends BaseService {
 
     // Market condition warnings
     if (marketConditions.volatility === "extreme") {
-      warnings.push("Extreme market volatility detected - consider reducing position sizes");
+      warnings.push(
+        "Extreme market volatility detected - consider reducing position sizes"
+      );
     } else if (marketConditions.volatility === "high") {
       warnings.push("High market volatility detected - trade with caution");
     }
@@ -755,7 +810,9 @@ export class EnhancedRiskManagementService extends BaseService {
     return quantity * price;
   }
 
-  private async getAssetCorrelations(symbol: string): Promise<Record<string, number>> {
+  private async getAssetCorrelations(
+    symbol: string
+  ): Promise<Record<string, number>> {
     const cacheKey = `correlations_${symbol}`;
     const cached = this.correlationCache.get(cacheKey);
 
@@ -805,7 +862,9 @@ export class EnhancedRiskManagementService extends BaseService {
     };
   }
 
-  private determineRiskLevel(riskScore: number): "low" | "medium" | "high" | "extreme" {
+  private determineRiskLevel(
+    riskScore: number
+  ): "low" | "medium" | "high" | "extreme" {
     if (riskScore < 25) return "low";
     if (riskScore < 50) return "medium";
     if (riskScore < 75) return "high";
@@ -840,19 +899,29 @@ export class EnhancedRiskManagementService extends BaseService {
     recommendations: string[];
   } {
     const recommendations: string[] = [];
-    let adjustedRiskScore = assessment.riskScore * marketConditions.riskMultiplier;
+    let adjustedRiskScore =
+      assessment.riskScore * marketConditions.riskMultiplier;
 
     if (marketConditions.volatility === "extreme") {
       adjustedRiskScore *= 1.5;
-      recommendations.push("Extreme market volatility - consider reducing position size by 50%");
+      recommendations.push(
+        "Extreme market volatility - consider reducing position size by 50%"
+      );
     } else if (marketConditions.volatility === "high") {
       adjustedRiskScore *= 1.2;
-      recommendations.push("High market volatility - consider reducing position size by 20%");
+      recommendations.push(
+        "High market volatility - consider reducing position size by 20%"
+      );
     }
 
-    if (marketConditions.trend === "bearish" && marketConditions.volatility !== "low") {
+    if (
+      marketConditions.trend === "bearish" &&
+      marketConditions.volatility !== "low"
+    ) {
       adjustedRiskScore *= 1.1;
-      recommendations.push("Bearish market trend detected - extra caution advised");
+      recommendations.push(
+        "Bearish market trend detected - extra caution advised"
+      );
     }
 
     return {
@@ -861,15 +930,22 @@ export class EnhancedRiskManagementService extends BaseService {
     };
   }
 
-  private generateRecommendations(assessment: RiskAssessment, profile: RiskProfile): string[] {
+  private generateRecommendations(
+    assessment: RiskAssessment,
+    profile: RiskProfile
+  ): string[] {
     const recommendations: string[] = [];
 
     if (assessment.riskLevel === "high" || assessment.riskLevel === "extreme") {
-      recommendations.push("Consider reducing position size due to high risk level");
+      recommendations.push(
+        "Consider reducing position size due to high risk level"
+      );
     }
 
     if (assessment.limits.correlationRisk > 70) {
-      recommendations.push("High correlation with existing positions - consider diversification");
+      recommendations.push(
+        "High correlation with existing positions - consider diversification"
+      );
     }
 
     if (assessment.limits.concentrationRisk > 80) {
@@ -879,7 +955,9 @@ export class EnhancedRiskManagementService extends BaseService {
     }
 
     if (profile.riskTolerance === "conservative" && assessment.riskScore > 50) {
-      recommendations.push("Risk level exceeds conservative profile - consider smaller position");
+      recommendations.push(
+        "Risk level exceeds conservative profile - consider smaller position"
+      );
     }
 
     return recommendations;
@@ -917,9 +995,14 @@ export class EnhancedRiskManagementService extends BaseService {
       const mexcClient = getUnifiedMexcClient();
       await mexcClient.testConnectivity();
 
-      this.logger.info("[Enhanced Risk Management] Service initialized successfully");
+      this.logger.info(
+        "[Enhanced Risk Management] Service initialized successfully"
+      );
     } catch (error) {
-      this.logger.error("[Enhanced Risk Management] Service initialization failed:", error);
+      this.logger.error(
+        "[Enhanced Risk Management] Service initialization failed:",
+        error
+      );
       throw error;
     }
   }
@@ -947,7 +1030,10 @@ export class EnhancedRiskManagementService extends BaseService {
       };
 
       // Perform a dry-run risk assessment
-      const assessment = await this.assessTradingRisk(testUserId, testOrderParams);
+      const assessment = await this.assessTradingRisk(
+        testUserId,
+        testOrderParams
+      );
 
       const metrics = {
         portfolioCacheSize: this.portfolioCache.size,
@@ -956,7 +1042,8 @@ export class EnhancedRiskManagementService extends BaseService {
       };
 
       return {
-        healthy: assessment !== null && typeof assessment.riskLevel === "string",
+        healthy:
+          assessment !== null && typeof assessment.riskLevel === "string",
         metrics,
       };
     } catch (error) {
@@ -969,7 +1056,8 @@ export class EnhancedRiskManagementService extends BaseService {
 }
 
 // Export singleton instance
-export const enhancedRiskManagementService = EnhancedRiskManagementService.getInstance();
+export const enhancedRiskManagementService =
+  EnhancedRiskManagementService.getInstance();
 
 // Export with alternative name for backward compatibility
 export const enhancedRiskManagement = enhancedRiskManagementService;

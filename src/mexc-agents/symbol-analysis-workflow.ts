@@ -65,11 +65,15 @@ export class SymbolAnalysisWorkflow {
     marketAnalysis: AgentResponse,
     symbolData: SymbolData
   ): Promise<SymbolAnalysisResult> {
-    console.info(`[SymbolAnalysisWorkflow] Combining analysis for ${symbolData.symbol}`);
+    console.info(
+      `[SymbolAnalysisWorkflow] Combining analysis for ${symbolData.symbol}`
+    );
 
     const readinessInsights = this.extractReadinessInsights(readinessAnalysis);
-    const patternInsights = this.extractPatternValidationInsights(patternAnalysis);
-    const marketInsights = this.extractMarketMicrostructureInsights(marketAnalysis);
+    const patternInsights =
+      this.extractPatternValidationInsights(patternAnalysis);
+    const marketInsights =
+      this.extractMarketMicrostructureInsights(marketAnalysis);
 
     const patternData = this.analyzeSymbolDataPattern(symbolData);
     const unifiedConfidence = this.calculateUnifiedConfidence([
@@ -105,7 +109,11 @@ export class SymbolAnalysisWorkflow {
       metadata: {
         confidence: unifiedConfidence,
         analysisTimestamp: new Date().toISOString(),
-        agentsUsed: ["symbol-analysis", "pattern-validation", "market-microstructure"],
+        agentsUsed: [
+          "symbol-analysis",
+          "pattern-validation",
+          "market-microstructure",
+        ],
       },
     };
   }
@@ -145,7 +153,9 @@ export class SymbolAnalysisWorkflow {
     };
   }
 
-  private extractPatternValidationInsights(analysis: AgentResponse): AnalysisResult & {
+  private extractPatternValidationInsights(
+    analysis: AgentResponse
+  ): AnalysisResult & {
     patterns: string[];
     validationScore: number;
     signals: string[];
@@ -166,14 +176,20 @@ export class SymbolAnalysisWorkflow {
 
     // Extract signals
     if (content.includes("volume spike")) signals.push("volume_spike");
-    if (content.includes("price consolidation")) signals.push("price_consolidation");
-    if (content.includes("breakout potential")) signals.push("breakout_potential");
-    if (content.includes("momentum building")) signals.push("momentum_building");
+    if (content.includes("price consolidation"))
+      signals.push("price_consolidation");
+    if (content.includes("breakout potential"))
+      signals.push("breakout_potential");
+    if (content.includes("momentum building"))
+      signals.push("momentum_building");
 
     insights.push(`Patterns detected: ${patterns.length}`);
     insights.push(`Signals identified: ${signals.length}`);
 
-    const validationScore = Math.min(patterns.length * 15 + signals.length * 10, 100);
+    const validationScore = Math.min(
+      patterns.length * 15 + signals.length * 10,
+      100
+    );
 
     return {
       confidence,
@@ -185,7 +201,9 @@ export class SymbolAnalysisWorkflow {
     };
   }
 
-  private extractMarketMicrostructureInsights(analysis: AgentResponse): AnalysisResult & {
+  private extractMarketMicrostructureInsights(
+    analysis: AgentResponse
+  ): AnalysisResult & {
     microstructure: {
       liquidity: number;
       volatility: number;
@@ -201,10 +219,13 @@ export class SymbolAnalysisWorkflow {
 
     // Extract volatility
     const volatilityMatch = content.match(/volatility[:\s]*(\d+(?:\.\d+)?)/i);
-    const volatility = volatilityMatch ? Number.parseFloat(volatilityMatch[1]) : 50;
+    const volatility = volatilityMatch
+      ? Number.parseFloat(volatilityMatch[1])
+      : 50;
 
     // Extract support levels
-    const supportMatches = content.match(/support[:\s]*\$?(\d+(?:\.\d+)?)/gi) || [];
+    const supportMatches =
+      content.match(/support[:\s]*\$?(\d+(?:\.\d+)?)/gi) || [];
     const supportLevels = supportMatches
       .map((match) => {
         const levelMatch = match.match(/(\d+(?:\.\d+)?)/);
@@ -306,12 +327,18 @@ export class SymbolAnalysisWorkflow {
     }
 
     // Pattern factors
-    if (Array.isArray(patternInsights.patterns) && patternInsights.patterns.length >= 2) {
+    if (
+      Array.isArray(patternInsights.patterns) &&
+      patternInsights.patterns.length >= 2
+    ) {
       score += 20;
       factors.push("Multiple patterns detected");
     }
 
-    if (Array.isArray(patternInsights.signals) && patternInsights.signals.length >= 2) {
+    if (
+      Array.isArray(patternInsights.signals) &&
+      patternInsights.signals.length >= 2
+    ) {
       score += 15;
       factors.push("Strong signal confirmation");
     }
@@ -321,12 +348,18 @@ export class SymbolAnalysisWorkflow {
       liquidity?: number;
       volatility?: number;
     };
-    if (typeof microstructure?.liquidity === "number" && microstructure.liquidity >= 70) {
+    if (
+      typeof microstructure?.liquidity === "number" &&
+      microstructure.liquidity >= 70
+    ) {
       score += 10;
       factors.push("High liquidity");
     }
 
-    if (typeof microstructure?.volatility === "number" && microstructure.volatility <= 40) {
+    if (
+      typeof microstructure?.volatility === "number" &&
+      microstructure.volatility <= 40
+    ) {
       score += 5;
       factors.push("Controlled volatility");
     }
@@ -362,12 +395,18 @@ export class SymbolAnalysisWorkflow {
       liquidity?: number;
       volatility?: number;
     };
-    if (typeof microstructure?.liquidity === "number" && microstructure.liquidity < 50) {
+    if (
+      typeof microstructure?.liquidity === "number" &&
+      microstructure.liquidity < 50
+    ) {
       riskScore += 25;
       riskFactors.push("Poor liquidity conditions");
     }
 
-    if (typeof microstructure?.volatility === "number" && microstructure.volatility > 70) {
+    if (
+      typeof microstructure?.volatility === "number" &&
+      microstructure.volatility > 70
+    ) {
       riskScore += 20;
       riskFactors.push("High volatility risk");
     }
@@ -398,7 +437,11 @@ export class SymbolAnalysisWorkflow {
 
   private generateSymbolRecommendations(
     tradingReadiness: { ready: boolean; score: number; factors: string[] },
-    riskAssessment: { level: "low" | "medium" | "high"; factors: string[]; confidence: number },
+    riskAssessment: {
+      level: "low" | "medium" | "high";
+      factors: string[];
+      confidence: number;
+    },
     confidence: number
   ): {
     action: "snipe" | "prepare" | "monitor" | "skip";
@@ -409,7 +452,11 @@ export class SymbolAnalysisWorkflow {
     let timing = "Not recommended";
     let reasoning = "Insufficient data or confidence";
 
-    if (tradingReadiness.ready && riskAssessment.level === "low" && confidence >= 80) {
+    if (
+      tradingReadiness.ready &&
+      riskAssessment.level === "low" &&
+      confidence >= 80
+    ) {
       action = "snipe";
       timing = "Immediate - within next hour";
       reasoning = `High readiness (${tradingReadiness.score}%) with low risk and high confidence (${confidence}%)`;

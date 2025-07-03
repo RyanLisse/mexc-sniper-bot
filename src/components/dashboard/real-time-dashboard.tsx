@@ -30,7 +30,13 @@ import type { ConnectionMetrics as WebSocketConnectionMetrics } from "../../lib/
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 // Use optimized icon imports for better tree shaking
 import {
   Activity,
@@ -75,7 +81,10 @@ const ConnectionStatus = memo(function ConnectionStatus({
     [isConnected]
   );
 
-  const StatusIcon = useMemo(() => (isConnected ? Wifi : WifiOff), [isConnected]);
+  const StatusIcon = useMemo(
+    () => (isConnected ? Wifi : WifiOff),
+    [isConnected]
+  );
 
   return (
     <Card className="mb-4">
@@ -83,22 +92,30 @@ const ConnectionStatus = memo(function ConnectionStatus({
         <CardTitle className="flex items-center gap-2">
           <StatusIcon className={`h-5 w-5 ${statusColor}`} />
           WebSocket Connection
-          <Badge variant={isConnected ? "default" : "destructive"}>{state}</Badge>
+          <Badge variant={isConnected ? "default" : "destructive"}>
+            {state}
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Messages Sent</p>
-            <p className="text-lg font-semibold">{metrics?.messagesSent || 0}</p>
+            <p className="text-lg font-semibold">
+              {metrics?.messagesSent || 0}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Messages Received</p>
-            <p className="text-lg font-semibold">{metrics?.messagesReceived || 0}</p>
+            <p className="text-lg font-semibold">
+              {metrics?.messagesReceived || 0}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Subscriptions</p>
-            <p className="text-lg font-semibold">{metrics?.subscriptions?.length || 0}</p>
+            <p className="text-lg font-semibold">
+              {metrics?.subscriptions?.length || 0}
+            </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Latency</p>
@@ -113,7 +130,9 @@ const ConnectionStatus = memo(function ConnectionStatus({
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Connection Error</AlertTitle>
             <AlertDescription>
-              {error ? (error as any)?.message || String(error) : "Unknown error"}
+              {error
+                ? (error as any)?.message || String(error)
+                : "Unknown error"}
             </AlertDescription>
           </Alert>
         )}
@@ -181,14 +200,18 @@ const AgentStatusPanel = memo(function AgentStatusPanel() {
         </CardTitle>
         <CardDescription>
           Real-time status of all 11 AI agents
-          {timeAgo > 0 && <span className="ml-2 text-xs">Updated {timeAgo}s ago</span>}
+          {timeAgo > 0 && (
+            <span className="ml-2 text-xs">Updated {timeAgo}s ago</span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-64">
           <div className="space-y-3">
             {agentStatuses.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No agent data available</p>
+              <p className="text-muted-foreground text-center py-4">
+                No agent data available
+              </p>
             ) : (
               agentStatuses.map((agent) => {
                 const StatusIcon = getStatusIcon(agent.status);
@@ -198,10 +221,14 @@ const AgentStatusPanel = memo(function AgentStatusPanel() {
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div className="flex items-center gap-3">
-                      <StatusIcon className={`h-4 w-4 ${getStatusColor(agent.status)}`} />
+                      <StatusIcon
+                        className={`h-4 w-4 ${getStatusColor(agent.status)}`}
+                      />
                       <div>
                         <p className="font-medium">{agent.agentType}</p>
-                        <p className="text-xs text-muted-foreground">{agent.agentId}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {agent.agentId}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -216,7 +243,9 @@ const AgentStatusPanel = memo(function AgentStatusPanel() {
                       >
                         {agent.status}
                       </Badge>
-                      <p className="text-xs text-muted-foreground mt-1">{agent.responseTime}ms</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {agent.responseTime}ms
+                      </p>
                     </div>
                   </div>
                 );
@@ -235,7 +264,10 @@ const AgentStatusPanel = memo(function AgentStatusPanel() {
 
 const TradingDataPanel = memo(function TradingDataPanel() {
   // Memoize symbols array to prevent unnecessary re-renders
-  const symbols = useMemo(() => ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"], []);
+  const symbols = useMemo(
+    () => ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT"],
+    []
+  );
 
   const { prices, getPrice, getTopMovers, lastUpdate } = useLiveTradingData({
     symbols,
@@ -249,7 +281,10 @@ const TradingDataPanel = memo(function TradingDataPanel() {
 
   // Memoize formatting functions to avoid recreating them on every render
   const formatPrice = useCallback((price: number) => {
-    return price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+    return price?.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    });
   }, []);
 
   const formatPercent = useCallback((percent: number) => {
@@ -268,11 +303,15 @@ const TradingDataPanel = memo(function TradingDataPanel() {
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
           Live Trading Data
-          <Badge variant="outline">{Array.from(prices.keys()).length} symbols</Badge>
+          <Badge variant="outline">
+            {Array.from(prices.keys()).length} symbols
+          </Badge>
         </CardTitle>
         <CardDescription>
           Real-time price feeds from MEXC
-          {timeAgo > 0 && <span className="ml-2 text-xs">Updated {timeAgo}s ago</span>}
+          {timeAgo > 0 && (
+            <span className="ml-2 text-xs">Updated {timeAgo}s ago</span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -329,7 +368,9 @@ const TradingDataPanel = memo(function TradingDataPanel() {
                     </div>
                     <div className="text-right">
                       <p className="font-mono">${formatPrice(price.price)}</p>
-                      <p className="text-sm text-green-600">{formatPercent(price.changePercent)}</p>
+                      <p className="text-sm text-green-600">
+                        {formatPercent(price.changePercent)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -350,7 +391,9 @@ const TradingDataPanel = memo(function TradingDataPanel() {
                     </div>
                     <div className="text-right">
                       <p className="font-mono">${formatPrice(price.price)}</p>
-                      <p className="text-sm text-red-600">{formatPercent(price.changePercent)}</p>
+                      <p className="text-sm text-red-600">
+                        {formatPercent(price.changePercent)}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -368,13 +411,16 @@ const TradingDataPanel = memo(function TradingDataPanel() {
 // ======================
 
 const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
-  const { patterns, readyStates, alerts, metrics, dismissAlert } = useRealTimePatterns({
-    minConfidence: 0.7,
-    enableSignals: true,
-    enableAnalytics: true,
-  });
+  const { patterns, readyStates, alerts, metrics, dismissAlert } =
+    useRealTimePatterns({
+      minConfidence: 0.7,
+      enableSignals: true,
+      enableAnalytics: true,
+    });
 
-  const readySymbols = Array.from(readyStates.values()).filter((rs) => rs.isReady);
+  const readySymbols = Array.from(readyStates.values()).filter(
+    (rs) => rs.isReady
+  );
 
   return (
     <Card>
@@ -384,12 +430,16 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
           Pattern Discovery
           <Badge variant="outline">{patterns.length} patterns</Badge>
         </CardTitle>
-        <CardDescription>Real-time AI pattern detection and ready state monitoring</CardDescription>
+        <CardDescription>
+          Real-time AI pattern detection and ready state monitoring
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">{readySymbols.length}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {readySymbols.length}
+            </p>
             <p className="text-xs text-muted-foreground">Ready Symbols</p>
           </div>
           <div className="text-center">
@@ -397,11 +447,15 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
             <p className="text-xs text-muted-foreground">Total Patterns</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold">{Math.round(metrics.averageConfidence * 100)}%</p>
+            <p className="text-2xl font-bold">
+              {Math.round(metrics.averageConfidence * 100)}%
+            </p>
             <p className="text-xs text-muted-foreground">Avg Confidence</p>
           </div>
           <div className="text-center">
-            <p className="text-2xl font-bold">{Math.round(metrics.successRate * 100)}%</p>
+            <p className="text-2xl font-bold">
+              {Math.round(metrics.successRate * 100)}%
+            </p>
             <p className="text-xs text-muted-foreground">Success Rate</p>
           </div>
         </div>
@@ -417,7 +471,9 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {alerts.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No active alerts</p>
+                  <p className="text-muted-foreground text-center py-4">
+                    No active alerts
+                  </p>
                 ) : (
                   alerts.map((alert) => (
                     <Alert
@@ -435,11 +491,19 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
                         {alert.symbol}
                         <div className="flex items-center gap-2">
                           <Badge
-                            variant={alert.priority === "critical" ? "destructive" : "secondary"}
+                            variant={
+                              alert.priority === "critical"
+                                ? "destructive"
+                                : "secondary"
+                            }
                           >
                             {alert.priority}
                           </Badge>
-                          <Button size="sm" variant="ghost" onClick={() => dismissAlert(alert.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => dismissAlert(alert.id)}
+                          >
                             ×
                           </Button>
                         </div>
@@ -461,7 +525,9 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
             <ScrollArea className="h-48">
               <div className="space-y-2">
                 {readySymbols.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No symbols ready</p>
+                  <p className="text-muted-foreground text-center py-4">
+                    No symbols ready
+                  </p>
                 ) : (
                   readySymbols.map((rs) => (
                     <div
@@ -470,10 +536,14 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
                     >
                       <div>
                         <p className="font-medium">{rs.symbol}</p>
-                        <p className="text-xs text-green-600">Ready for Trading</p>
+                        <p className="text-xs text-green-600">
+                          Ready for Trading
+                        </p>
                       </div>
                       <div className="text-right">
-                        <Badge variant="default">{Math.round(rs.confidence * 100)}%</Badge>
+                        <Badge variant="default">
+                          {Math.round(rs.confidence * 100)}%
+                        </Badge>
                         <p className="text-xs text-muted-foreground">
                           {rs.advanceNotice > 0
                             ? `${Math.round(rs.advanceNotice / 1000 / 60)}m advance`
@@ -506,7 +576,9 @@ const PatternDiscoveryPanel = memo(function PatternDiscoveryPanel() {
                         {Math.round(pattern.pattern.confidence * 100)}%
                       </Badge>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(pattern.timing.detectedAt).toLocaleTimeString()}
+                        {new Date(
+                          pattern.timing.detectedAt
+                        ).toLocaleTimeString()}
                       </p>
                     </div>
                   </div>
@@ -538,19 +610,27 @@ const WorkflowPanel = memo(function WorkflowPanel() {
           Active Workflows
           <Badge variant="outline">{activeWorkflows.length} running</Badge>
         </CardTitle>
-        <CardDescription>Real-time AI workflow execution status</CardDescription>
+        <CardDescription>
+          Real-time AI workflow execution status
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-48">
           <div className="space-y-3">
             {activeWorkflows.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">No active workflows</p>
+              <p className="text-muted-foreground text-center py-4">
+                No active workflows
+              </p>
             ) : (
               activeWorkflows.map((workflow) => (
                 <div key={workflow.workflowId} className="p-3 rounded border">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-medium">{workflow.workflowType}</p>
-                    <Badge variant={workflow.status === "running" ? "default" : "secondary"}>
+                    <Badge
+                      variant={
+                        workflow.status === "running" ? "default" : "secondary"
+                      }
+                    >
                       {workflow.status}
                     </Badge>
                   </div>
@@ -581,10 +661,12 @@ const WorkflowPanel = memo(function WorkflowPanel() {
 export default function RealTimeDashboard() {
   const supabase = createClientComponentClient();
   const [user, setUser] = useState<any>(null);
-  
+
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
@@ -594,7 +676,8 @@ export default function RealTimeDashboard() {
     debug: false,
   });
 
-  const { notifications, unreadCount, markAsRead, clearNotifications } = useNotifications(user?.id);
+  const { notifications, unreadCount, markAsRead, clearNotifications } =
+    useNotifications(user?.id);
 
   return (
     <div className="p-6 space-y-6">
@@ -653,9 +736,14 @@ export default function RealTimeDashboard() {
             <ScrollArea className="h-32">
               <div className="space-y-2">
                 {notifications.slice(0, 5).map((notification) => (
-                  <div key={notification.notificationId} className="p-2 rounded border">
+                  <div
+                    key={notification.notificationId}
+                    className="p-2 rounded border"
+                  >
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">{notification.title}</p>
+                      <p className="font-medium text-sm">
+                        {notification.title}
+                      </p>
                       <Badge
                         variant={
                           notification.type === "error"
@@ -668,7 +756,9 @@ export default function RealTimeDashboard() {
                         {notification.type}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">{notification.message}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {notification.message}
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(notification.timestamp).toLocaleTimeString()}
                     </p>

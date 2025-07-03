@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 /**
  * Simplified Status Context
@@ -40,7 +46,7 @@ export function StatusProvider({ children }: StatusProviderProps) {
     overall: "loading",
     message: "Loading status...",
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,15 +54,15 @@ export function StatusProvider({ children }: StatusProviderProps) {
   const loadStatus = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const response = await fetch("/api/mexc/unified-status");
       const result = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch status");
       }
-      
+
       const data = result.data;
       setStatus({
         connected: data.connected || false,
@@ -67,9 +73,10 @@ export function StatusProvider({ children }: StatusProviderProps) {
         message: data.statusMessage || "Status unknown",
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load status";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load status";
       setError(errorMessage);
-      setStatus(prev => ({
+      setStatus((prev) => ({
         ...prev,
         overall: "error",
         message: errorMessage,
@@ -82,7 +89,7 @@ export function StatusProvider({ children }: StatusProviderProps) {
   // Load status on mount
   useEffect(() => {
     loadStatus();
-  }, []);
+  }, [loadStatus]);
 
   const contextValue: StatusContextType = {
     status,
@@ -91,7 +98,11 @@ export function StatusProvider({ children }: StatusProviderProps) {
     refreshStatus: loadStatus,
   };
 
-  return <StatusContext.Provider value={contextValue}>{children}</StatusContext.Provider>;
+  return (
+    <StatusContext.Provider value={contextValue}>
+      {children}
+    </StatusContext.Provider>
+  );
 }
 
 // Hook to use Status Context
@@ -111,7 +122,7 @@ export function useNetworkStatus() {
 
 export function useCredentialStatus() {
   const { status } = useStatus();
-  return { 
+  return {
     hasCredentials: status.hasCredentials,
     isValid: status.isValid,
   };
@@ -185,11 +196,14 @@ export interface TradingStatus {
 
 export interface SystemStatus {
   overall: "healthy" | "warning" | "error" | "unknown";
-  components: Record<string, {
-    status: "active" | "inactive" | "warning" | "error";
-    message: string;
-    lastChecked: string;
-  }>;
+  components: Record<
+    string,
+    {
+      status: "active" | "inactive" | "warning" | "error";
+      message: string;
+      lastChecked: string;
+    }
+  >;
   lastHealthCheck: string;
 }
 

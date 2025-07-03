@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { requireAuth } from "@/src/lib/supabase-auth";
 import { NotificationService } from "@/src/services/notification/notification-providers";
 
 // ==========================================
@@ -11,11 +10,11 @@ import { NotificationService } from "@/src/services/notification/notification-pr
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     // Instantiate service at runtime to prevent build-time issues
@@ -38,7 +37,7 @@ export async function POST(
           error: "Test notification failed",
           details: result.error,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
   } catch (error) {

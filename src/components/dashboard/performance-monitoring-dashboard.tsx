@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Badge } from "../ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import {
   Activity,
   AlertTriangle,
@@ -84,7 +90,9 @@ export default function PerformanceMonitoringDashboard({
         }
 
         // Fetch performance alerts
-        const alertsResponse = await fetch("/api/monitoring/alerts?limit=10&resolved=false");
+        const alertsResponse = await fetch(
+          "/api/monitoring/alerts?limit=10&resolved=false"
+        );
         if (alertsResponse.ok) {
           const alertsResult = await alertsResponse.json();
           if (alertsResult.success) {
@@ -113,7 +121,10 @@ export default function PerformanceMonitoringDashboard({
     return `${hours}h ${minutes}m`;
   };
 
-  const _getHealthStatus = (value: number, thresholds: { warning: number; error: number }) => {
+  const _getHealthStatus = (
+    value: number,
+    thresholds: { warning: number; error: number }
+  ) => {
     if (value >= thresholds.error) return "error";
     if (value >= thresholds.warning) return "warning";
     return "healthy";
@@ -138,8 +149,12 @@ export default function PerformanceMonitoringDashboard({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Performance Monitoring</h2>
-          <p className="text-muted-foreground">Real-time system performance and cache metrics</p>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Performance Monitoring
+          </h2>
+          <p className="text-muted-foreground">
+            Real-time system performance and cache metrics
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {isLoading ? (
@@ -162,7 +177,10 @@ export default function PerformanceMonitoringDashboard({
           {alerts
             .filter((alert) => !alert.resolved)
             .map((alert) => (
-              <Alert key={alert.id} variant={alert.type === "error" ? "destructive" : "default"}>
+              <Alert
+                key={alert.id}
+                variant={alert.type === "error" ? "destructive" : "default"}
+              >
                 <AlertTriangle className="h-4 w-4" />
                 <AlertTitle>Performance Alert</AlertTitle>
                 <AlertDescription>{alert.message}</AlertDescription>
@@ -184,40 +202,59 @@ export default function PerformanceMonitoringDashboard({
             {/* Cache Hit Ratio */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Cache Hit Ratio</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Cache Hit Ratio
+                </CardTitle>
                 <Zap className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{cacheMetrics.hitRatio.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">
+                  {cacheMetrics.hitRatio.toFixed(1)}%
+                </div>
                 <Progress value={cacheMetrics.hitRatio} className="mt-2" />
-                <p className="text-xs text-muted-foreground mt-2">Target: 90%+</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Target: 90%+
+                </p>
               </CardContent>
             </Card>
 
             {/* API Response Time */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">API Response Time</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  API Response Time
+                </CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemHealth.apiResponseTime}ms</div>
+                <div className="text-2xl font-bold">
+                  {systemHealth.apiResponseTime}ms
+                </div>
                 <Progress
-                  value={Math.min(100, (500 - systemHealth.apiResponseTime) / 5)}
+                  value={Math.min(
+                    100,
+                    (500 - systemHealth.apiResponseTime) / 5
+                  )}
                   className="mt-2"
                 />
-                <p className="text-xs text-muted-foreground mt-2">Target: &lt;200ms</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Target: &lt;200ms
+                </p>
               </CardContent>
             </Card>
 
             {/* System Memory */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Memory Usage
+                </CardTitle>
                 <Gauge className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemHealth.memoryUsage.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">
+                  {systemHealth.memoryUsage.toFixed(1)}%
+                </div>
                 <Progress value={systemHealth.memoryUsage} className="mt-2" />
                 <p className="text-xs text-muted-foreground mt-2">
                   {systemHealth.memoryUsage > 80 ? "High usage" : "Normal"}
@@ -228,11 +265,15 @@ export default function PerformanceMonitoringDashboard({
             {/* System Uptime */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  System Uptime
+                </CardTitle>
                 <Server className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatUptime(systemHealth.uptime)}</div>
+                <div className="text-2xl font-bold">
+                  {formatUptime(systemHealth.uptime)}
+                </div>
                 <div className="flex items-center gap-2 mt-2">
                   <CheckCircle className="h-4 w-4 text-green-500" />
                   <span className="text-sm text-green-600">Healthy</span>
@@ -261,8 +302,14 @@ export default function PerformanceMonitoringDashboard({
                     ) : (
                       <WifiOff className="h-4 w-4 text-red-500" />
                     )}
-                    <Badge variant={cacheMetrics.redisConnected ? "default" : "destructive"}>
-                      {cacheMetrics.redisConnected ? "Connected" : "Disconnected"}
+                    <Badge
+                      variant={
+                        cacheMetrics.redisConnected ? "default" : "destructive"
+                      }
+                    >
+                      {cacheMetrics.redisConnected
+                        ? "Connected"
+                        : "Disconnected"}
                     </Badge>
                   </div>
                 </div>
@@ -281,11 +328,15 @@ export default function PerformanceMonitoringDashboard({
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Hit Ratio</span>
-                    <span className="font-medium">{cacheMetrics.hitRatio.toFixed(1)}%</span>
+                    <span className="font-medium">
+                      {cacheMetrics.hitRatio.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Miss Ratio</span>
-                    <span className="font-medium">{cacheMetrics.missRatio.toFixed(1)}%</span>
+                    <span className="font-medium">
+                      {cacheMetrics.missRatio.toFixed(1)}%
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Total Requests</span>
@@ -295,7 +346,9 @@ export default function PerformanceMonitoringDashboard({
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Avg Response Time</span>
-                    <span className="font-medium">{cacheMetrics.avgResponseTime.toFixed(1)}ms</span>
+                    <span className="font-medium">
+                      {cacheMetrics.avgResponseTime.toFixed(1)}ms
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -308,12 +361,19 @@ export default function PerformanceMonitoringDashboard({
             {/* Database Performance */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Database Response Time</CardTitle>
+                <CardTitle className="text-sm">
+                  Database Response Time
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemHealth.databaseResponseTime}ms</div>
+                <div className="text-2xl font-bold">
+                  {systemHealth.databaseResponseTime}ms
+                </div>
                 <Progress
-                  value={Math.min(100, (200 - systemHealth.databaseResponseTime) / 2)}
+                  value={Math.min(
+                    100,
+                    (200 - systemHealth.databaseResponseTime) / 2
+                  )}
                   className="mt-2"
                 />
               </CardContent>
@@ -325,7 +385,9 @@ export default function PerformanceMonitoringDashboard({
                 <CardTitle className="text-sm">CPU Usage</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemHealth.cpuUsage.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">
+                  {systemHealth.cpuUsage.toFixed(1)}%
+                </div>
                 <Progress value={systemHealth.cpuUsage} className="mt-2" />
               </CardContent>
             </Card>
@@ -336,10 +398,14 @@ export default function PerformanceMonitoringDashboard({
                 <CardTitle className="text-sm">Active Connections</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{systemHealth.activeConnections}</div>
+                <div className="text-2xl font-bold">
+                  {systemHealth.activeConnections}
+                </div>
                 <div className="flex items-center gap-2 mt-2">
                   <Activity className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm text-muted-foreground">Real-time</span>
+                  <span className="text-sm text-muted-foreground">
+                    Real-time
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -350,12 +416,16 @@ export default function PerformanceMonitoringDashboard({
           <Card>
             <CardHeader>
               <CardTitle>Performance Trends</CardTitle>
-              <CardDescription>Historical performance data and trends analysis</CardDescription>
+              <CardDescription>
+                Historical performance data and trends analysis
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8 text-muted-foreground">
                 <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Performance trends visualization would be implemented here</p>
+                <p>
+                  Performance trends visualization would be implemented here
+                </p>
                 <p className="text-sm mt-2">
                   Integration with time-series data and charting library
                 </p>

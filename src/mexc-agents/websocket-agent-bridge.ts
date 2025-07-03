@@ -1,12 +1,11 @@
 /**
  * WebSocket Agent Bridge
- * 
+ *
  * This file has been refactored for maintainability.
  * The original 934-line implementation has been split into focused modules.
- * 
+ *
  * This file now serves as a backward-compatibility layer.
  */
-
 
 export type {
   AgentStatusTracker,
@@ -18,10 +17,10 @@ export type {
   WorkflowTracker,
 } from "./websocket-bridge";
 // Re-export everything from the new modular structure
-export { 
+export {
   PatternDiscoveryStreamer,
   RealTimeDataStreamer,
-  TradingSignalStreamer, 
-  WebSocketAgentBridge, 
-  webSocketAgentBridge
+  TradingSignalStreamer,
+  WebSocketAgentBridge,
+  webSocketAgentBridge,
 } from "./websocket-bridge";

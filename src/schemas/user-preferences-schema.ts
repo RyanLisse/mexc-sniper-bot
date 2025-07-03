@@ -32,8 +32,12 @@ export const RiskPreferencesSchema = z.object({
   maxDailyLoss: z.number().min(0).default(1000),
   maxDrawdown: z.number().min(0).max(50).default(20),
   emergencyStopEnabled: z.boolean().default(true),
-  riskLevel: z.enum(["conservative", "moderate", "aggressive"]).default("moderate"),
-  positionSizingMethod: z.enum(["fixed", "percentage", "kelly"]).default("percentage"),
+  riskLevel: z
+    .enum(["conservative", "moderate", "aggressive"])
+    .default("moderate"),
+  positionSizingMethod: z
+    .enum(["fixed", "percentage", "kelly"])
+    .default("percentage"),
 });
 
 // Trading preferences
@@ -69,17 +73,25 @@ export const CompleteUserPreferencesSchema = z.object({
 });
 
 // Preference update schemas
-export const UpdateUserPreferencesSchema = UserPreferencesSchema.partial().omit({ id: true });
+export const UpdateUserPreferencesSchema = UserPreferencesSchema.partial().omit(
+  { id: true }
+);
 export const UpdateRiskPreferencesSchema = RiskPreferencesSchema.partial();
-export const UpdateTradingPreferencesSchema = TradingPreferencesSchema.partial();
-export const UpdateNotificationPreferencesSchema = NotificationPreferencesSchema.partial();
+export const UpdateTradingPreferencesSchema =
+  TradingPreferencesSchema.partial();
+export const UpdateNotificationPreferencesSchema =
+  NotificationPreferencesSchema.partial();
 
 // Type exports
 export type UserPreferences = z.infer<typeof UserPreferencesSchema>;
 export type RiskPreferences = z.infer<typeof RiskPreferencesSchema>;
 export type TradingPreferences = z.infer<typeof TradingPreferencesSchema>;
-export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>;
-export type CompleteUserPreferences = z.infer<typeof CompleteUserPreferencesSchema>;
+export type NotificationPreferences = z.infer<
+  typeof NotificationPreferencesSchema
+>;
+export type CompleteUserPreferences = z.infer<
+  typeof CompleteUserPreferencesSchema
+>;
 
 // Validation functions
 export function validateUserPreferences(data: unknown): UserPreferences {
@@ -94,7 +106,9 @@ export function validateTradingPreferences(data: unknown): TradingPreferences {
   return TradingPreferencesSchema.parse(data);
 }
 
-export function validateNotificationPreferences(data: unknown): NotificationPreferences {
+export function validateNotificationPreferences(
+  data: unknown
+): NotificationPreferences {
   return NotificationPreferencesSchema.parse(data);
 }
 

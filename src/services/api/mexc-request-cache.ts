@@ -22,7 +22,12 @@ export class MexcRequestCache {
     warn: (message: string, context?: any) =>
       console.warn("[mexc-request-cache]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[mexc-request-cache]", message, context || "", error || ""),
+      console.error(
+        "[mexc-request-cache]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[mexc-request-cache]", message, context || ""),
   };
@@ -75,7 +80,10 @@ export class MexcRequestCache {
     if (Date.now() - entry.timestamp > entry.ttl) {
       this.cache.delete(key);
       this.missCount++;
-      this.logger.debug("Cache expired", { key, age: Date.now() - entry.timestamp });
+      this.logger.debug("Cache expired", {
+        key,
+        age: Date.now() - entry.timestamp,
+      });
       return null;
     }
 
@@ -184,7 +192,11 @@ export class MexcRequestCache {
   /**
    * Generate cache key for API requests
    */
-  static generateKey(method: string, url: string, params?: Record<string, unknown>): string {
+  static generateKey(
+    method: string,
+    url: string,
+    params?: Record<string, unknown>
+  ): string {
     const paramsStr = params ? JSON.stringify(params) : "";
     return `${method}:${url}:${paramsStr}`;
   }
@@ -237,7 +249,11 @@ export function resetGlobalCache(): void {
  * Cache decorator for methods
  */
 export function cacheable(ttl: number = 60000) {
-  return (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) => {
+  return (
+    target: unknown,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {

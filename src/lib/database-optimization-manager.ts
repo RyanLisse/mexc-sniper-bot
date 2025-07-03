@@ -2,13 +2,13 @@
  * Database Optimization Manager - Simple implementation
  */
 
-import { IndexRecommendation } from "./database-index-optimizer";
+import type { IndexRecommendation } from "./database-index-optimizer";
 
 export interface OptimizationResult {
-  type: 'index' | 'query' | 'schema';
+  type: "index" | "query" | "schema";
   description: string;
   applied: boolean;
-  impact: 'low' | 'medium' | 'high';
+  impact: "low" | "medium" | "high";
 }
 
 export class DatabaseOptimizationManager {
@@ -25,8 +25,12 @@ export class DatabaseOptimizationManager {
     };
   }
 
-  async applyOptimization(recommendation: IndexRecommendation): Promise<boolean> {
-    console.log(`[Optimization Manager] Would apply optimization: ${recommendation.reason}`);
+  async applyOptimization(
+    recommendation: IndexRecommendation
+  ): Promise<boolean> {
+    console.log(
+      `[Optimization Manager] Would apply optimization: ${recommendation.reason}`
+    );
     return true;
   }
 }

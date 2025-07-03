@@ -12,11 +12,18 @@
  */
 
 import { z } from "zod";
-import { PatternDetectionCore, type PatternMatch } from "@/src/core/pattern-detection";
+import {
+  PatternDetectionCore,
+  type PatternMatch,
+} from "@/src/core/pattern-detection";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 // PatternType is inlined below as the file doesn't exist
-type PatternType = "ready_state" | "pre_ready" | "launch_sequence" | "risk_warning";
+type PatternType =
+  | "ready_state"
+  | "pre_ready"
+  | "launch_sequence"
+  | "risk_warning";
 
 // ============================================================================
 // Pattern Monitoring Schemas
@@ -25,7 +32,9 @@ type PatternType = "ready_state" | "pre_ready" | "launch_sequence" | "risk_warni
 export const PatternFilterCriteriaSchema = z.object({
   minConfidence: z.number().min(0).max(100).default(70),
   allowedPatternTypes: z
-    .array(z.enum(["ready_state", "pre_ready", "launch_sequence", "risk_warning"]))
+    .array(
+      z.enum(["ready_state", "pre_ready", "launch_sequence", "risk_warning"])
+    )
     .default(["ready_state"]),
   maxAge: z.number().positive().default(300000), // 5 minutes in ms
   requireCalendarConfirmation: z.boolean().default(true),
@@ -52,7 +61,12 @@ export const PatternScoreSchema = z.object({
 export const EnhancedPatternMatchSchema = z.object({
   // Original pattern data
   symbol: z.string(),
-  patternType: z.enum(["ready_state", "pre_ready", "launch_sequence", "risk_warning"]),
+  patternType: z.enum([
+    "ready_state",
+    "pre_ready",
+    "launch_sequence",
+    "risk_warning",
+  ]),
   confidence: z.number().min(0).max(100),
   timestamp: z.string().datetime(),
   riskLevel: z.enum(["low", "medium", "high"]),
@@ -96,7 +110,12 @@ export class OptimizedPatternMonitor {
     warn: (message: string, context?: any) =>
       console.warn("[optimized-pattern-monitor]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[optimized-pattern-monitor]", message, context || "", error || ""),
+      console.error(
+        "[optimized-pattern-monitor]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[optimized-pattern-monitor]", message, context || ""),
   };
@@ -161,7 +180,9 @@ export class OptimizedPatternMonitor {
 
       // Enhance patterns with scoring and metadata
       const enhancedPatterns = await Promise.all(
-        freshPatterns.map((pattern) => this.enhancePattern(pattern, filterCriteria))
+        freshPatterns.map((pattern) =>
+          this.enhancePattern(pattern, filterCriteria)
+        )
       );
 
       // Filter patterns based on criteria
@@ -172,7 +193,11 @@ export class OptimizedPatternMonitor {
 
       // Update metrics
       const processingTime = Date.now() - startTime;
-      this.updateMetrics(enhancedPatterns.length, eligiblePatterns.length, processingTime);
+      this.updateMetrics(
+        enhancedPatterns.length,
+        eligiblePatterns.length,
+        processingTime
+      );
       return eligiblePatterns;
     } catch (error) {
       const safeError = toSafeError(error);
@@ -220,7 +245,9 @@ export class OptimizedPatternMonitor {
       }
     }
 
-    return recentPatterns.sort((a, b) => b.enhancedScore - a.enhancedScore).slice(0, count);
+    return recentPatterns
+      .sort((a, b) => b.enhancedScore - a.enhancedScore)
+      .slice(0, count);
   }
 
   /**
@@ -229,7 +256,11 @@ export class OptimizedPatternMonitor {
   async isSymbolEligible(
     symbol: string,
     criteria: Partial<PatternFilterCriteria> = {}
-  ): Promise<{ eligible: boolean; reason?: string; pattern?: EnhancedPatternMatch }> {
+  ): Promise<{
+    eligible: boolean;
+    reason?: string;
+    pattern?: EnhancedPatternMatch;
+  }> {
     try {
       const patterns = await this.getEligiblePatterns(criteria, 1);
       const symbolPattern = patterns.find((p) => p.symbol === symbol);
@@ -262,9 +293,12 @@ export class OptimizedPatternMonitor {
    */
   getMetrics() {
     const cacheSize = this.patternCache.size;
-    const totalCacheRequests = this.metrics.cacheHitCount + this.metrics.cacheMissCount;
+    const totalCacheRequests =
+      this.metrics.cacheHitCount + this.metrics.cacheMissCount;
     const cacheHitRatio =
-      totalCacheRequests > 0 ? (this.metrics.cacheHitCount / totalCacheRequests) * 100 : 0;
+      totalCacheRequests > 0
+        ? (this.metrics.cacheHitCount / totalCacheRequests) * 100
+        : 0;
 
     return {
       ...this.metrics,
@@ -272,7 +306,9 @@ export class OptimizedPatternMonitor {
       cacheHitRatio: Math.round(cacheHitRatio * 100) / 100,
       eligibilityRate:
         this.metrics.totalPatternsProcessed > 0
-          ? (this.metrics.eligiblePatternsFound / this.metrics.totalPatternsProcessed) * 100
+          ? (this.metrics.eligiblePatternsFound /
+              this.metrics.totalPatternsProcessed) *
+            100
           : 0,
     };
   }
@@ -432,7 +468,8 @@ export class OptimizedPatternMonitor {
       reasoning.push("Calendar confirmation bonus: +10");
     }
 
-    finalScore = pattern.confidence + riskAdjustment + volumeAdjustment + calendarBonus;
+    finalScore =
+      pattern.confidence + riskAdjustment + volumeAdjustment + calendarBonus;
     finalScore = Math.max(0, Math.min(150, finalScore)); // Clamp to 0-150
 
     return PatternScoreSchema.parse({
@@ -453,11 +490,15 @@ export class OptimizedPatternMonitor {
 
     // Check confidence threshold
     if (pattern.confidence < criteria.minConfidence) {
-      reasons.push(`Confidence ${pattern.confidence}% below threshold ${criteria.minConfidence}%`);
+      reasons.push(
+        `Confidence ${pattern.confidence}% below threshold ${criteria.minConfidence}%`
+      );
     }
 
     // Check pattern type
-    if (!criteria.allowedPatternTypes.includes(pattern.patternType as PatternType)) {
+    if (
+      !criteria.allowedPatternTypes.includes(pattern.patternType as PatternType)
+    ) {
       reasons.push(`Pattern type ${pattern.patternType} not allowed`);
     }
 
@@ -479,7 +520,10 @@ export class OptimizedPatternMonitor {
     }
 
     // Check whitelist (if specified)
-    if (criteria.symbolWhitelist && !criteria.symbolWhitelist.includes(pattern.symbol)) {
+    if (
+      criteria.symbolWhitelist &&
+      !criteria.symbolWhitelist.includes(pattern.symbol)
+    ) {
       reasons.push(`Symbol ${pattern.symbol} not in whitelist`);
     }
 
@@ -488,7 +532,9 @@ export class OptimizedPatternMonitor {
     const patternRiskIndex = riskLevels.indexOf(pattern.riskLevel);
     const maxRiskIndex = riskLevels.indexOf(criteria.maxRiskLevel);
     if (patternRiskIndex > maxRiskIndex) {
-      reasons.push(`Risk level ${pattern.riskLevel} exceeds maximum ${criteria.maxRiskLevel}`);
+      reasons.push(
+        `Risk level ${pattern.riskLevel} exceeds maximum ${criteria.maxRiskLevel}`
+      );
     }
 
     return {

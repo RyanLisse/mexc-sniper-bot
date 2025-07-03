@@ -8,11 +8,25 @@
  */
 
 import { AlertTriangle, HelpCircle, Home, RefreshCw } from "lucide-react";
-import { Component, type ComponentType, type ErrorInfo, type ReactNode } from "react";
-import { errorHandler, type StandardizedErrorContext } from "../../lib/standardized-error-handler";
+import {
+  Component,
+  type ComponentType,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
+import {
+  errorHandler,
+  type StandardizedErrorContext,
+} from "../../lib/standardized-error-handler";
 import { createLogger } from "../../lib/unified-logger";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 
 const logger = createLogger("error-boundary", {
   enableStructuredLogging: true,
@@ -41,7 +55,10 @@ interface ErrorBoundaryProps {
 /**
  * Enhanced Error Boundary with standardized error handling
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private retryCount = 0;
   private maxRetries = 3;
 
@@ -131,7 +148,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   private renderErrorUI() {
-    const { errorId, userMessage, recoveryActions, retryable, showDetails, error } = this.state;
+    const {
+      errorId,
+      userMessage,
+      recoveryActions,
+      retryable,
+      showDetails,
+      error,
+    } = this.state;
 
     const canRetry = retryable && this.retryCount < this.maxRetries;
     const isPageLevel = this.props.level === "page";
@@ -146,7 +170,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <CardTitle className="text-lg">
               {isPageLevel ? "Page Error" : "Something went wrong"}
             </CardTitle>
-            <CardDescription>{userMessage || "An unexpected error occurred"}</CardDescription>
+            <CardDescription>
+              {userMessage || "An unexpected error occurred"}
+            </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4">
@@ -168,7 +194,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             {/* Action Buttons */}
             <div className="space-y-2">
               {canRetry && (
-                <Button onClick={this.handleRetry} className="w-full" variant="default">
+                <Button
+                  onClick={this.handleRetry}
+                  className="w-full"
+                  variant="default"
+                >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Try Again ({this.maxRetries - this.retryCount} attempts left)
                 </Button>
@@ -176,17 +206,29 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
               {isPageLevel ? (
                 <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={this.handleGoHome} variant="outline" size="sm">
+                  <Button
+                    onClick={this.handleGoHome}
+                    variant="outline"
+                    size="sm"
+                  >
                     <Home className="mr-2 h-4 w-4" />
                     Home
                   </Button>
-                  <Button onClick={this.handleReload} variant="outline" size="sm">
+                  <Button
+                    onClick={this.handleReload}
+                    variant="outline"
+                    size="sm"
+                  >
                     <RefreshCw className="mr-2 h-4 w-4" />
                     Reload
                   </Button>
                 </div>
               ) : (
-                <Button onClick={this.handleReload} variant="outline" className="w-full">
+                <Button
+                  onClick={this.handleReload}
+                  variant="outline"
+                  className="w-full"
+                >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Reload Page
                 </Button>
@@ -195,7 +237,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
             {/* Error Details */}
             <div className="space-y-2">
-              <Button onClick={this.toggleDetails} variant="ghost" size="sm" className="w-full">
+              <Button
+                onClick={this.toggleDetails}
+                variant="ghost"
+                size="sm"
+                className="w-full"
+              >
                 <HelpCircle className="mr-2 h-4 w-4" />
                 {showDetails ? "Hide" : "Show"} Technical Details
               </Button>
@@ -214,7 +261,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                     </div>
                     {error?.stack && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer font-semibold">Stack Trace</summary>
+                        <summary className="cursor-pointer font-semibold">
+                          Stack Trace
+                        </summary>
                         <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap text-[10px]">
                           {error.stack}
                         </pre>
@@ -274,7 +323,9 @@ export function LightErrorBoundary({ children }: { children: ReactNode }) {
       fallback={
         <div className="rounded border border-red-200 bg-red-50 p-4 text-center">
           <AlertTriangle className="mx-auto mb-2 h-5 w-5 text-red-600" />
-          <p className="text-sm text-red-800">Component failed to load. Please refresh the page.</p>
+          <p className="text-sm text-red-800">
+            Component failed to load. Please refresh the page.
+          </p>
         </div>
       }
     >

@@ -151,14 +151,24 @@ export class AgentRegistry extends AgentRegistryCore {
   /**
    * Get system health alerts
    */
-  getSystemAlerts(): { type: "warning" | "critical"; message: string; timestamp: Date }[] {
-    const alerts: { type: "warning" | "critical"; message: string; timestamp: Date }[] = [];
+  getSystemAlerts(): {
+    type: "warning" | "critical";
+    message: string;
+    timestamp: Date;
+  }[] {
+    const alerts: {
+      type: "warning" | "critical";
+      message: string;
+      timestamp: Date;
+    }[] = [];
     const stats = this.getStats();
     const now = new Date();
 
     // Check unhealthy agent percentage
     const unhealthyPercentage =
-      stats.totalAgents > 0 ? (stats.unhealthyAgents / stats.totalAgents) * 100 : 0;
+      stats.totalAgents > 0
+        ? (stats.unhealthyAgents / stats.totalAgents) * 100
+        : 0;
     if (unhealthyPercentage > 20) {
       alerts.push({
         type: unhealthyPercentage > 50 ? "critical" : "warning",
@@ -259,7 +269,10 @@ export class AgentRegistry extends AgentRegistryCore {
   /**
    * Update agent health from check result
    */
-  private updateAgentHealthFromResult(id: string, result: HealthCheckResult): void {
+  private updateAgentHealthFromResult(
+    id: string,
+    result: HealthCheckResult
+  ): void {
     const agent = this.agents.get(id);
     if (!agent) return;
 
@@ -271,10 +284,13 @@ export class AgentRegistry extends AgentRegistryCore {
     health.requestCount = result.requestCount || health.requestCount;
 
     // Update enhanced metrics
-    if (result.memoryUsage !== undefined) health.memoryUsage = result.memoryUsage;
+    if (result.memoryUsage !== undefined)
+      health.memoryUsage = result.memoryUsage;
     if (result.cpuUsage !== undefined) health.cpuUsage = result.cpuUsage;
-    if (result.cacheHitRate !== undefined) health.cacheHitRate = result.cacheHitRate;
-    if (result.healthScore !== undefined) health.healthScore = result.healthScore;
+    if (result.cacheHitRate !== undefined)
+      health.cacheHitRate = result.cacheHitRate;
+    if (result.healthScore !== undefined)
+      health.healthScore = result.healthScore;
 
     if (result.success) {
       health.lastResponse = result.timestamp;
@@ -303,7 +319,8 @@ export class AgentRegistry extends AgentRegistryCore {
 
     // Calculate uptime
     const totalChecks = health.requestCount;
-    health.uptime = totalChecks > 0 ? (health.successCount / totalChecks) * 100 : 0;
+    health.uptime =
+      totalChecks > 0 ? (health.successCount / totalChecks) * 100 : 0;
   }
 
   /**
@@ -316,14 +333,17 @@ export class AgentRegistry extends AgentRegistryCore {
     if (hasError) {
       if (health.consecutiveErrors >= thresholds.consecutiveErrors.critical) {
         health.status = "unhealthy";
-      } else if (health.consecutiveErrors >= thresholds.consecutiveErrors.warning) {
+      } else if (
+        health.consecutiveErrors >= thresholds.consecutiveErrors.warning
+      ) {
         health.status = "degraded";
       } else {
         health.status = "degraded";
       }
     } else {
       // Check all metrics for overall status
-      const responseTimeOk = health.responseTime <= thresholds.responseTime.warning;
+      const responseTimeOk =
+        health.responseTime <= thresholds.responseTime.warning;
       const errorRateOk = health.errorRate <= thresholds.errorRate.warning;
       const memoryOk = health.memoryUsage <= thresholds.memoryUsage.warning;
       const cpuOk = health.cpuUsage <= thresholds.cpuUsage.warning;
@@ -341,7 +361,9 @@ export class AgentRegistry extends AgentRegistryCore {
    */
   private async attemptRecovery(agent: RegisteredAgent): Promise<void> {
     try {
-      await this.recoveryStrategies.attemptAgentRecovery(agent, (id) => this.getAgent(id));
+      await this.recoveryStrategies.attemptAgentRecovery(agent, (id) =>
+        this.getAgent(id)
+      );
     } catch (error) {
       this.logger.error(
         `Recovery failed for agent ${agent.id}:`,
@@ -361,7 +383,9 @@ export function getGlobalAgentRegistry(): AgentRegistry {
   return globalRegistry;
 }
 
-export function initializeGlobalAgentRegistry(options?: AgentRegistryOptions): AgentRegistry {
+export function initializeGlobalAgentRegistry(
+  options?: AgentRegistryOptions
+): AgentRegistry {
   if (globalRegistry) {
     try {
       globalRegistry.destroy();

@@ -44,7 +44,10 @@ export function useApiCredentials(userId?: string, provider = "mexc") {
 
       if (!response.ok) {
         // Don't throw errors for 403/401 when not authenticated
-        if (!isAuthenticated && (response.status === 403 || response.status === 401)) {
+        if (
+          !isAuthenticated &&
+          (response.status === 403 || response.status === 401)
+        ) {
           return null;
         }
         throw new Error("Failed to fetch API credentials");
@@ -92,7 +95,9 @@ export function useSaveApiCredentials() {
 
       // Ensure user can only save their own credentials
       if (user.id !== data.userId) {
-        throw new Error("Access denied: You can only save your own credentials");
+        throw new Error(
+          "Access denied: You can only save your own credentials"
+        );
       }
 
       // Enhanced debugging for request (development only)
@@ -133,7 +138,10 @@ export function useSaveApiCredentials() {
         let errorDetails: any;
         try {
           errorDetails = await response.json();
-          console.error("[DEBUG] API credentials error response:", errorDetails);
+          console.error(
+            "[DEBUG] API credentials error response:",
+            errorDetails
+          );
         } catch (parseError) {
           console.error("[DEBUG] Failed to parse error response:", parseError);
           errorDetails = {
@@ -143,7 +151,9 @@ export function useSaveApiCredentials() {
         }
 
         throw new Error(
-          errorDetails.error || errorDetails.message || "Failed to save API credentials"
+          errorDetails.error ||
+            errorDetails.message ||
+            "Failed to save API credentials"
         );
       }
 
@@ -151,7 +161,11 @@ export function useSaveApiCredentials() {
     },
     onSuccess: (data, variables) => {
       // Optimized: Update cache directly instead of invalidating
-      const queryKey = ["api-credentials", variables.userId, variables.provider || "mexc"];
+      const queryKey = [
+        "api-credentials",
+        variables.userId,
+        variables.provider || "mexc",
+      ];
       queryClient.setQueryData(queryKey, data);
 
       // Also invalidate connectivity status to reflect changes
@@ -168,7 +182,13 @@ export function useDeleteApiCredentials() {
   const { user, isAuthenticated } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ userId, provider = "mexc" }: { userId: string; provider?: string }) => {
+    mutationFn: async ({
+      userId,
+      provider = "mexc",
+    }: {
+      userId: string;
+      provider?: string;
+    }) => {
       // Check authentication before deleting
       if (!isAuthenticated || !user?.id) {
         throw new Error("Authentication required to delete credentials");
@@ -176,7 +196,9 @@ export function useDeleteApiCredentials() {
 
       // Ensure user can only delete their own credentials
       if (user.id !== userId) {
-        throw new Error("Access denied: You can only delete your own credentials");
+        throw new Error(
+          "Access denied: You can only delete your own credentials"
+        );
       }
 
       const response = await fetch(
@@ -209,7 +231,13 @@ export function useTestApiCredentials() {
   const { user, isAuthenticated } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ userId, provider = "mexc" }: { userId: string; provider?: string }) => {
+    mutationFn: async ({
+      userId,
+      provider = "mexc",
+    }: {
+      userId: string;
+      provider?: string;
+    }) => {
       // Check authentication before testing
       if (!isAuthenticated || !user?.id) {
         throw new Error("Authentication required to test credentials");
@@ -217,7 +245,9 @@ export function useTestApiCredentials() {
 
       // Ensure user can only test their own credentials
       if (user.id !== userId) {
-        throw new Error("Access denied: You can only test your own credentials");
+        throw new Error(
+          "Access denied: You can only test your own credentials"
+        );
       }
 
       if (process.env.NODE_ENV === "development") {
@@ -249,7 +279,10 @@ export function useTestApiCredentials() {
           errorDetails = await response.json();
           console.error("[DEBUG] API credentials test error:", errorDetails);
         } catch (parseError) {
-          console.error("[DEBUG] Failed to parse test error response:", parseError);
+          console.error(
+            "[DEBUG] Failed to parse test error response:",
+            parseError
+          );
           errorDetails = {
             error: `HTTP ${response.status}: ${response.statusText}`,
             message: "Failed to parse error response",
@@ -257,7 +290,9 @@ export function useTestApiCredentials() {
         }
 
         throw new Error(
-          errorDetails.error || errorDetails.message || "API credentials test failed"
+          errorDetails.error ||
+            errorDetails.message ||
+            "API credentials test failed"
         );
       }
 
@@ -266,12 +301,16 @@ export function useTestApiCredentials() {
 
       return {
         success: true,
-        message: result.message || "API credentials are valid and connection successful",
+        message:
+          result.message ||
+          "API credentials are valid and connection successful",
         ...result.data,
       };
     },
     onSuccess: (_data, variables) => {
-      console.info("[DEBUG] API credentials test succeeded, invalidating status caches");
+      console.info(
+        "[DEBUG] API credentials test succeeded, invalidating status caches"
+      );
 
       // Invalidate all related caches when credentials test succeeds
       // This fixes the status synchronization issue identified by the swarm
@@ -308,10 +347,16 @@ export function useTestApiCredentials() {
 
       // 5. Invalidate API credentials cache for the tested user
       queryClient.invalidateQueries({
-        queryKey: ["api-credentials", variables.userId, variables.provider || "mexc"],
+        queryKey: [
+          "api-credentials",
+          variables.userId,
+          variables.provider || "mexc",
+        ],
       });
 
-      console.info("[DEBUG] Cache invalidation completed - status should update immediately");
+      console.info(
+        "[DEBUG] Cache invalidation completed - status should update immediately"
+      );
     },
   });
 }

@@ -1,10 +1,10 @@
 /**
  * Emergency Stop API Route
- * 
+ *
  * Critical safety endpoint for immediately halting all optimization processes
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 import { getParameterManager } from "@/src/lib/parameter-management";
 import { logger } from "@/src/lib/utils";
 
@@ -17,37 +17,44 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { reason, revertToSnapshot, notifyUsers = true } = body;
 
-    logger.warn('Emergency stop initiated', { 
-      reason: reason || 'Manual emergency stop',
+    logger.warn("Emergency stop initiated", {
+      reason: reason || "Manual emergency stop",
       timestamp: new Date(),
-      userAgent: request.headers.get('user-agent')
+      userAgent: request.headers.get("user-agent"),
     });
 
     const emergencyReport = {
       timestamp: new Date(),
-      reason: reason || 'Manual emergency stop',
+      reason: reason || "Manual emergency stop",
       actionsPerformed: [] as string[],
       errors: [] as string[],
-      success: true
+      success: true,
     };
 
     try {
       // 1. Stop all active optimizations immediately
       const activeOptimizations: Array<{ id: string }> = []; // In real implementation, get from engine
-      
+
       for (const optimization of activeOptimizations) {
         try {
           // await optimizationEngine.stopOptimization(optimization.id);
-          emergencyReport.actionsPerformed.push(`Stopped optimization: ${optimization.id}`);
+          emergencyReport.actionsPerformed.push(
+            `Stopped optimization: ${optimization.id}`
+          );
         } catch (error) {
-          emergencyReport.errors.push(`Failed to stop optimization ${optimization.id}: ${error instanceof Error ? error.message : String(error)}`);
+          emergencyReport.errors.push(
+            `Failed to stop optimization ${optimization.id}: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
-      emergencyReport.actionsPerformed.push(`Stopped ${activeOptimizations.length} active optimizations`);
-
+      emergencyReport.actionsPerformed.push(
+        `Stopped ${activeOptimizations.length} active optimizations`
+      );
     } catch (error) {
-      emergencyReport.errors.push(`Failed to stop optimizations: ${error instanceof Error ? error.message : String(error)}`);
+      emergencyReport.errors.push(
+        `Failed to stop optimizations: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     try {
@@ -56,104 +63,128 @@ export async function POST(request: NextRequest) {
         // Find the most recent safe snapshot
         const parameterManager = getParameterManager();
         const snapshots = parameterManager.getSnapshots();
-        const safeSnapshot = snapshots.find(s => 
-          s.name.includes('emergency') || 
-          s.name.includes('safe') || 
-          s.name.includes('baseline')
-        ) || snapshots[0]; // Fallback to most recent
+        const safeSnapshot =
+          snapshots.find(
+            (s) =>
+              s.name.includes("emergency") ||
+              s.name.includes("safe") ||
+              s.name.includes("baseline")
+          ) || snapshots[0]; // Fallback to most recent
 
         if (safeSnapshot) {
           await parameterManager.restoreFromSnapshot(safeSnapshot.id);
-          emergencyReport.actionsPerformed.push(`Reverted to snapshot: ${safeSnapshot.name}`);
+          emergencyReport.actionsPerformed.push(
+            `Reverted to snapshot: ${safeSnapshot.name}`
+          );
         } else {
           // No snapshot available, reset to defaults
           await parameterManager.resetAllParameters();
-          emergencyReport.actionsPerformed.push('Reset all parameters to defaults');
+          emergencyReport.actionsPerformed.push(
+            "Reset all parameters to defaults"
+          );
         }
       } else {
         // Create emergency snapshot before reset
         const parameterManager = getParameterManager();
         const emergencySnapshotId = await parameterManager.createSnapshot(
           `emergency_backup_${Date.now()}`,
-          `Emergency backup before stop: ${reason || 'Manual stop'}`
+          `Emergency backup before stop: ${reason || "Manual stop"}`
         );
-        emergencyReport.actionsPerformed.push(`Created emergency backup: ${emergencySnapshotId}`);
+        emergencyReport.actionsPerformed.push(
+          `Created emergency backup: ${emergencySnapshotId}`
+        );
 
         // Reset to safe defaults
         await parameterManager.resetAllParameters();
-        emergencyReport.actionsPerformed.push('Reset all parameters to safe defaults');
+        emergencyReport.actionsPerformed.push(
+          "Reset all parameters to safe defaults"
+        );
       }
-
     } catch (error) {
-      emergencyReport.errors.push(`Failed to revert parameters: ${error instanceof Error ? error.message : String(error)}`);
+      emergencyReport.errors.push(
+        `Failed to revert parameters: ${error instanceof Error ? error.message : String(error)}`
+      );
       emergencyReport.success = false;
     }
 
     try {
       // 3. Disable automatic parameter updates
       // In real implementation, this would set a system flag
-      emergencyReport.actionsPerformed.push('Disabled automatic parameter updates');
-
+      emergencyReport.actionsPerformed.push(
+        "Disabled automatic parameter updates"
+      );
     } catch (error) {
-      emergencyReport.errors.push(`Failed to disable auto-updates: ${error instanceof Error ? error.message : String(error)}`);
+      emergencyReport.errors.push(
+        `Failed to disable auto-updates: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     try {
       // 4. Send emergency notifications
       if (notifyUsers) {
         await sendEmergencyNotifications(emergencyReport, reason);
-        emergencyReport.actionsPerformed.push('Sent emergency notifications');
+        emergencyReport.actionsPerformed.push("Sent emergency notifications");
       }
-
     } catch (error) {
-      emergencyReport.errors.push(`Failed to send notifications: ${error instanceof Error ? error.message : String(error)}`);
+      emergencyReport.errors.push(
+        `Failed to send notifications: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     try {
       // 5. Log emergency event to audit trail
       await logEmergencyEvent(emergencyReport, request);
-      emergencyReport.actionsPerformed.push('Logged emergency event to audit trail');
-
+      emergencyReport.actionsPerformed.push(
+        "Logged emergency event to audit trail"
+      );
     } catch (error) {
-      emergencyReport.errors.push(`Failed to log emergency event: ${error instanceof Error ? error.message : String(error)}`);
+      emergencyReport.errors.push(
+        `Failed to log emergency event: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
 
     // 6. Return emergency report
     const responseStatus = emergencyReport.success ? 200 : 207; // 207 = Multi-Status (partial success)
 
-    return NextResponse.json({
-      message: 'Emergency stop executed',
-      success: emergencyReport.success,
-      report: emergencyReport,
-      nextSteps: [
-        'Review system logs for any issues',
-        'Verify parameter settings are safe',
-        'Check system health before resuming operations',
-        'Consider running diagnostic tests',
-        'Re-enable automatic updates when ready'
-      ],
-      emergencyContact: {
-        escalationRequired: emergencyReport.errors.length > 0,
-        supportLevel: emergencyReport.errors.length > 2 ? 'critical' : 'standard'
-      }
-    }, { status: responseStatus });
-
+    return NextResponse.json(
+      {
+        message: "Emergency stop executed",
+        success: emergencyReport.success,
+        report: emergencyReport,
+        nextSteps: [
+          "Review system logs for any issues",
+          "Verify parameter settings are safe",
+          "Check system health before resuming operations",
+          "Consider running diagnostic tests",
+          "Re-enable automatic updates when ready",
+        ],
+        emergencyContact: {
+          escalationRequired: emergencyReport.errors.length > 0,
+          supportLevel:
+            emergencyReport.errors.length > 2 ? "critical" : "standard",
+        },
+      },
+      { status: responseStatus }
+    );
   } catch (error) {
-    logger.error('Critical error during emergency stop:', { error });
-    
+    logger.error("Critical error during emergency stop:", { error });
+
     // Even if emergency stop fails, we need to return a response
-    return NextResponse.json({
-      message: 'Emergency stop encountered critical errors',
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      criticalFailure: true,
-      immediateActions: [
-        'Contact system administrator immediately',
-        'Check system logs manually',
-        'Consider manual system shutdown if needed',
-        'Verify trading operations are halted'
-      ]
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        message: "Emergency stop encountered critical errors",
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        criticalFailure: true,
+        immediateActions: [
+          "Contact system administrator immediately",
+          "Check system logs manually",
+          "Consider manual system shutdown if needed",
+          "Verify trading operations are halted",
+        ],
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -170,29 +201,28 @@ export async function GET() {
       emergencyProtocols: {
         autoStopOnHighRisk: true,
         autoRevertOnFailure: true,
-        notificationChannels: ['email', 'slack', 'sms'],
-        escalationLevels: ['team', 'manager', 'executive']
+        notificationChannels: ["email", "slack", "sms"],
+        escalationLevels: ["team", "manager", "executive"],
       },
       systemSafeguards: {
         maxRiskThreshold: 0.25,
-        maxDrawdownLimit: 0.20,
+        maxDrawdownLimit: 0.2,
         minSharpeRatioThreshold: 0.5,
         emergencySnapshotRetention: 30, // days
-        autoDisableAfterFailures: 3
+        autoDisableAfterFailures: 3,
       },
       emergencyContacts: [
-        { role: 'Primary', contact: 'system-admin@company.com' },
-        { role: 'Secondary', contact: 'tech-lead@company.com' },
-        { role: 'Escalation', contact: 'emergency@company.com' }
-      ]
+        { role: "Primary", contact: "system-admin@company.com" },
+        { role: "Secondary", contact: "tech-lead@company.com" },
+        { role: "Escalation", contact: "emergency@company.com" },
+      ],
     };
 
     return NextResponse.json(emergencyStatus);
-
   } catch (error) {
-    logger.error('Failed to get emergency stop status:', { error });
+    logger.error("Failed to get emergency stop status:", { error });
     return NextResponse.json(
-      { error: 'Failed to retrieve emergency stop status' },
+      { error: "Failed to retrieve emergency stop status" },
       { status: 500 }
     );
   }
@@ -202,26 +232,27 @@ export async function GET() {
  * Send emergency notifications to relevant stakeholders
  */
 async function sendEmergencyNotifications(
-  report: any, 
+  report: any,
   reason?: string
 ): Promise<void> {
   try {
     const notificationPayload = {
-      type: 'emergency_stop',
+      type: "emergency_stop",
       timestamp: report.timestamp,
-      reason: reason || 'Manual emergency stop',
-      severity: report.errors.length > 0 ? 'high' : 'medium',
-      affectedSystems: ['parameter_optimization', 'trading_bot'],
+      reason: reason || "Manual emergency stop",
+      severity: report.errors.length > 0 ? "high" : "medium",
+      affectedSystems: ["parameter_optimization", "trading_bot"],
       actionsPerformed: report.actionsPerformed,
       errors: report.errors,
-      nextSteps: 'System review required before resuming operations'
+      nextSteps: "System review required before resuming operations",
     };
 
     // In real implementation, send to notification service
-    logger.info('Emergency notification sent', { payload: notificationPayload });
-
+    logger.info("Emergency notification sent", {
+      payload: notificationPayload,
+    });
   } catch (error) {
-    logger.error('Failed to send emergency notifications:', { error });
+    logger.error("Failed to send emergency notifications:", { error });
     throw error;
   }
 }
@@ -230,26 +261,25 @@ async function sendEmergencyNotifications(
  * Log emergency event to audit trail
  */
 async function logEmergencyEvent(
-  report: any, 
+  report: any,
   request: NextRequest
 ): Promise<void> {
   try {
     const auditEntry = {
-      eventType: 'emergency_stop',
+      eventType: "emergency_stop",
       timestamp: report.timestamp,
-      userAgent: request.headers.get('user-agent'),
-      ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-      sessionId: request.headers.get('x-session-id') || 'unknown',
+      userAgent: request.headers.get("user-agent"),
+      ipAddress: request.headers.get("x-forwarded-for") || "unknown",
+      sessionId: request.headers.get("x-session-id") || "unknown",
       report,
-      severity: 'critical',
-      category: 'system_safety'
+      severity: "critical",
+      category: "system_safety",
     };
 
     // In real implementation, save to audit database
-    logger.info('Emergency event logged to audit trail', { auditEntry });
-
+    logger.info("Emergency event logged to audit trail", { auditEntry });
   } catch (error) {
-    logger.error('Failed to log emergency event:', { error });
+    logger.error("Failed to log emergency event:", { error });
     throw error;
   }
 }

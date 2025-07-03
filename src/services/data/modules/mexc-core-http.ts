@@ -5,7 +5,11 @@
  * Extracted from core client for better separation of concerns.
  */
 
-import type { MexcApiConfig, MexcApiResponse, MexcServiceResponse } from "./mexc-api-types";
+import type {
+  MexcApiConfig,
+  MexcApiResponse,
+  MexcServiceResponse,
+} from "./mexc-api-types";
 
 // ============================================================================
 // HTTP Client with Authentication
@@ -70,9 +74,13 @@ export class MexcCoreHttpClient {
       // Handle rate limit responses from MEXC
       if (response.status === 429) {
         const retryAfter = response.headers.get("retry-after");
-        const delay = retryAfter ? parseInt(retryAfter) * 1000 : this.config.rateLimitDelay * 2;
+        const delay = retryAfter
+          ? parseInt(retryAfter) * 1000
+          : this.config.rateLimitDelay * 2;
 
-        this.logger.warn(`Rate limited by MEXC API. Waiting ${delay}ms before retry`);
+        this.logger.warn(
+          `Rate limited by MEXC API. Waiting ${delay}ms before retry`
+        );
         await new Promise((resolve) => setTimeout(resolve, delay));
 
         // Retry once after rate limit delay
@@ -97,9 +105,15 @@ export class MexcCoreHttpClient {
   /**
    * Make an authenticated HTTP request
    */
-  async makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<MexcApiResponse> {
+  async makeAuthenticatedRequest(
+    url: string,
+    options: RequestInit = {}
+  ): Promise<MexcApiResponse> {
     // Add authentication to URL and headers
-    const { authenticatedUrl, authHeaders } = this.generateAuthUrlAndHeaders(url, options);
+    const { authenticatedUrl, authHeaders } = this.generateAuthUrlAndHeaders(
+      url,
+      options
+    );
 
     return this.makeRequest(authenticatedUrl, {
       ...options,
@@ -113,9 +127,17 @@ export class MexcCoreHttpClient {
   /**
    * Handle errors consistently across all methods
    */
-  handleError(error: unknown, methodName: string, _startTime: number): MexcServiceResponse<never> {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    this.logger.error(`[MexcCoreHttpClient.${methodName}] Error:`, errorMessage);
+  handleError(
+    error: unknown,
+    methodName: string,
+    _startTime: number
+  ): MexcServiceResponse<never> {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    this.logger.error(
+      `[MexcCoreHttpClient.${methodName}] Error:`,
+      errorMessage
+    );
 
     return {
       success: false,
@@ -154,7 +176,10 @@ export class MexcCoreHttpClient {
     }
 
     // Apply minimum delay between requests
-    if (timeSinceLastRequest < this.config.rateLimitDelay && this.requestCount > 0) {
+    if (
+      timeSinceLastRequest < this.config.rateLimitDelay &&
+      this.requestCount > 0
+    ) {
       const minDelay = this.config.rateLimitDelay - timeSinceLastRequest;
       if (minDelay > 0) {
         this.logger.debug(`Minimum delay: waiting ${minDelay}ms`);
@@ -194,7 +219,9 @@ export class MexcCoreHttpClient {
     // For GET requests, use JSON content type; for POST use form data
     const method = options.method?.toUpperCase() || "GET";
     const contentType =
-      method === "POST" ? "application/x-www-form-urlencoded" : "application/json";
+      method === "POST"
+        ? "application/x-www-form-urlencoded"
+        : "application/json";
 
     const authHeaders = {
       "X-MEXC-APIKEY": this.config.apiKey,
@@ -207,13 +234,18 @@ export class MexcCoreHttpClient {
   private createSignature(data: string): string {
     if (typeof window !== "undefined") {
       // Browser environment - return a placeholder
-      this.logger.warn("MEXC API signatures cannot be generated in browser environment");
+      this.logger.warn(
+        "MEXC API signatures cannot be generated in browser environment"
+      );
       return "browser-placeholder";
     }
 
     try {
       const crypto = require("node:crypto");
-      return crypto.createHmac("sha256", this.config.secretKey).update(data).digest("hex");
+      return crypto
+        .createHmac("sha256", this.config.secretKey)
+        .update(data)
+        .digest("hex");
     } catch (error) {
       this.logger.error("Failed to create MEXC signature:", error);
       return "signature-error";
@@ -266,7 +298,9 @@ export class MexcCoreHttpClient {
 /**
  * Create a new MEXC HTTP client instance
  */
-export function createMexcCoreHttpClient(config: MexcApiConfig): MexcCoreHttpClient {
+export function createMexcCoreHttpClient(
+  config: MexcApiConfig
+): MexcCoreHttpClient {
   return new MexcCoreHttpClient(config);
 }
 

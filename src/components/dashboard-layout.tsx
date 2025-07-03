@@ -123,7 +123,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <SidebarMenu>
                   {mainNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton isActive={pathname === item.href} asChild>
+                      <SidebarMenuButton
+                        isActive={pathname === item.href}
+                        asChild
+                      >
                         <Link href={item.href}>
                           <item.icon className="mr-2 h-4 w-4" />
                           {item.title}
@@ -141,7 +144,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <SidebarMenu>
                   {secondaryNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton isActive={pathname === item.href} asChild>
+                      <SidebarMenuButton
+                        isActive={pathname === item.href}
+                        asChild
+                      >
                         <Link href={item.href}>
                           <item.icon className="mr-2 h-4 w-4" />
                           {item.title}
@@ -157,13 +163,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarFooter className="border-t p-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start h-auto p-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-auto p-2"
+                >
                   <Avatar className="h-8 w-8 mr-2">
                     <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                    <AvatarFallback>
+                      {user?.email?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col items-start text-sm">
-                    <span className="font-medium">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User"}</span>
+                    <span className="font-medium">
+                      {user?.user_metadata?.full_name ||
+                        user?.email?.split("@")[0] ||
+                        "User"}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                       {user?.email || "user@example.com"}
                     </span>
@@ -185,7 +200,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="cursor-pointer"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign out
                 </DropdownMenuItem>
@@ -207,7 +225,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </h1>
             <div className="ml-auto" />
           </div>
-          <div className="p-6 h-[calc(100vh-4rem)] overflow-auto">{children}</div>
+          <div className="p-6 h-[calc(100vh-4rem)] overflow-auto">
+            {children}
+          </div>
         </main>
       </div>
     </SidebarProvider>

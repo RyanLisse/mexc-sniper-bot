@@ -16,7 +16,12 @@ const logger = {
   warn: (message: string, context?: any) =>
     console.warn("[opentelemetry-production]", message, context || ""),
   error: (message: string, context?: any, error?: Error) =>
-    console.error("[opentelemetry-production]", message, context || "", error || ""),
+    console.error(
+      "[opentelemetry-production]",
+      message,
+      context || "",
+      error || ""
+    ),
   debug: (message: string, context?: any) =>
     console.debug("[opentelemetry-production]", message, context || ""),
 };
@@ -119,11 +124,14 @@ export function getProductionTelemetryConfig(): ProductionTelemetryConfig {
       otlp: {
         enabled: !!process.env.OTLP_ENDPOINT,
         endpoint: process.env.OTLP_ENDPOINT,
-        headers: process.env.OTLP_HEADERS ? JSON.parse(process.env.OTLP_HEADERS) : undefined,
+        headers: process.env.OTLP_HEADERS
+          ? JSON.parse(process.env.OTLP_HEADERS)
+          : undefined,
       },
       jaeger: {
         enabled: !!process.env.JAEGER_ENDPOINT,
-        endpoint: process.env.JAEGER_ENDPOINT || "http://localhost:14268/api/traces",
+        endpoint:
+          process.env.JAEGER_ENDPOINT || "http://localhost:14268/api/traces",
       },
       prometheus: {
         enabled: process.env.PROMETHEUS_ENABLED === "true",
@@ -179,7 +187,10 @@ export async function createProductionTelemetrySDK(
     ]);
 
     // Create resource with comprehensive service information
-    const resource = await createServiceResource(telemetryConfig, semanticConventions);
+    const resource = await createServiceResource(
+      telemetryConfig,
+      semanticConventions
+    );
 
     // Configure sampling strategy
     const sampler = await createOptimizedSampler(telemetryConfig);
@@ -267,8 +278,12 @@ async function createServiceResource(
  * Create optimized sampler based on environment and performance requirements with dynamic imports
  */
 async function createOptimizedSampler(config: ProductionTelemetryConfig) {
-  const { AlwaysOffSampler, AlwaysOnSampler, ParentBasedSampler, TraceIdRatioBasedSampler } =
-    await import("@opentelemetry/sdk-trace-base");
+  const {
+    AlwaysOffSampler,
+    AlwaysOnSampler,
+    ParentBasedSampler,
+    TraceIdRatioBasedSampler,
+  } = await import("@opentelemetry/sdk-trace-base");
 
   if (!config.tracing.enabled) {
     return new AlwaysOffSampler();
@@ -333,7 +348,9 @@ async function createSpanProcessors(config: ProductionTelemetryConfig) {
   // Jaeger exporter for development and staging
   if (config.exporters.jaeger.enabled && config.exporters.jaeger.endpoint) {
     const { JaegerExporter } = await import("@opentelemetry/exporter-jaeger");
-    const { BatchSpanProcessor } = await import("@opentelemetry/sdk-trace-node");
+    const { BatchSpanProcessor } = await import(
+      "@opentelemetry/sdk-trace-node"
+    );
 
     const jaegerExporter = new JaegerExporter({
       endpoint: config.exporters.jaeger.endpoint,
@@ -381,7 +398,9 @@ async function createMetricReaders(config: ProductionTelemetryConfig) {
 
   // Prometheus metrics exporter
   if (config.exporters.prometheus.enabled) {
-    const { PrometheusExporter } = await import("@opentelemetry/exporter-prometheus");
+    const { PrometheusExporter } = await import(
+      "@opentelemetry/exporter-prometheus"
+    );
 
     readers.push(
       new PrometheusExporter({
@@ -398,7 +417,9 @@ async function createMetricReaders(config: ProductionTelemetryConfig) {
  * Create filtered instrumentations for optimal performance with dynamic imports
  */
 async function createInstrumentations(config: ProductionTelemetryConfig) {
-  const { getNodeAutoInstrumentations } = await import("@opentelemetry/auto-instrumentations-node");
+  const { getNodeAutoInstrumentations } = await import(
+    "@opentelemetry/auto-instrumentations-node"
+  );
 
   const instrumentations = getNodeAutoInstrumentations({
     // Disable instrumentations that may cause performance issues in production
@@ -417,7 +438,9 @@ async function createInstrumentations(config: ProductionTelemetryConfig) {
       enabled: true,
       ignoreIncomingRequestHook: (req: any) => {
         const url = req.url || "";
-        return config.security.excludeUrls.some((excludeUrl) => url.includes(excludeUrl));
+        return config.security.excludeUrls.some((excludeUrl) =>
+          url.includes(excludeUrl)
+        );
       },
       // ignoreSensitiveHeaders: config.security.maskSensitiveData,
     },

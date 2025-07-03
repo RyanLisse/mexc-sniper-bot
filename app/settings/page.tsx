@@ -7,30 +7,38 @@ import {
   RefreshCw,
   Save,
   Settings,
-  Shield,
-  Target,
-  TrendingUp,
   Wifi,
-  WifiOff, 
   XCircle,
-  Zap
+  Zap,
 } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { Card, CardContent } from "@/src/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
 import { useToast } from "@/src/components/ui/use-toast";
 import { UnifiedAutomationSettings } from "@/src/components/unified-automation-settings";
 import { UnifiedRiskManagement } from "@/src/components/unified-risk-management";
 import { UnifiedTakeProfitSettings } from "@/src/components/unified-take-profit-settings";
-import { calculateSyncHealthScore, formatSyncStatus, useTradingSettingsSync } from "@/src/hooks/use-trading-settings-sync";
-import { useMultiLevelTakeProfit, useUpdateMultiLevelTakeProfit, useUpdateUserPreferences, useUserPreferences } from "@/src/hooks/use-user-preferences";
-import { getTakeProfitStrategyById, TAKE_PROFIT_STRATEGIES, TakeProfitStrategy } from "@/src/types/take-profit-strategies";
+import {
+  calculateSyncHealthScore,
+  formatSyncStatus,
+  useTradingSettingsSync,
+} from "@/src/hooks/use-trading-settings-sync";
+import {
+  useMultiLevelTakeProfit,
+  useUpdateMultiLevelTakeProfit,
+  useUpdateUserPreferences,
+  useUserPreferences,
+} from "@/src/hooks/use-user-preferences";
+import type { TakeProfitStrategy } from "@/src/types/take-profit-strategies";
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user, isLoading: userLoading } = useAuth();
@@ -69,8 +77,12 @@ export default function SettingsPage() {
   const [takeProfitStrategy, setTakeProfitStrategy] = useState(
     preferences?.takeProfitStrategy || "balanced"
   );
-  const [customTakeProfitStrategy, setCustomTakeProfitStrategy] = useState<TakeProfitStrategy | undefined>(
-    preferences?.takeProfitLevelsConfig ? JSON.parse(preferences.takeProfitLevelsConfig) : undefined
+  const [customTakeProfitStrategy, setCustomTakeProfitStrategy] = useState<
+    TakeProfitStrategy | undefined
+  >(
+    preferences?.takeProfitLevelsConfig
+      ? JSON.parse(preferences.takeProfitLevelsConfig)
+      : undefined
   );
 
   // Risk management
@@ -78,7 +90,7 @@ export default function SettingsPage() {
     stopLossPercent: preferences?.stopLossPercent || 5,
     riskTolerance: preferences?.riskTolerance || "medium",
     maxConcurrentSnipes: preferences?.maxConcurrentSnipes || 3,
-    defaultBuyAmount: preferences?.defaultBuyAmountUsdt || 100
+    defaultBuyAmount: preferences?.defaultBuyAmountUsdt || 100,
   });
 
   // Enhanced take profit handlers
@@ -87,19 +99,23 @@ export default function SettingsPage() {
     setIsDirty(true);
   };
 
-  const handleCustomTakeProfitStrategyChange = (strategy: TakeProfitStrategy) => {
+  const handleCustomTakeProfitStrategyChange = (
+    strategy: TakeProfitStrategy
+  ) => {
     setCustomTakeProfitStrategy(strategy);
     setIsDirty(true);
   };
 
   // Exit strategies
-  const [exitStrategy, setExitStrategy] = useState(preferences?.selectedExitStrategy || "balanced");
+  const [exitStrategy, setExitStrategy] = useState(
+    preferences?.selectedExitStrategy || "balanced"
+  );
 
   // Auto trading settings
   const [autoSettings, setAutoSettings] = useState({
     autoSnipeEnabled: preferences?.autoSnipeEnabled ?? true,
     autoBuyEnabled: preferences?.autoBuyEnabled ?? true,
-    autoSellEnabled: preferences?.autoSellEnabled ?? true
+    autoSellEnabled: preferences?.autoSellEnabled ?? true,
   });
 
   // Initialize state from preferences
@@ -109,7 +125,7 @@ export default function SettingsPage() {
         stopLossPercent: preferences.stopLossPercent || 5,
         riskTolerance: preferences.riskTolerance || "medium",
         maxConcurrentSnipes: preferences.maxConcurrentSnipes || 3,
-        defaultBuyAmount: preferences.defaultBuyAmountUsdt || 100
+        defaultBuyAmount: preferences.defaultBuyAmountUsdt || 100,
       });
 
       setExitStrategy(preferences.selectedExitStrategy || "balanced");
@@ -117,14 +133,14 @@ export default function SettingsPage() {
       setAutoSettings({
         autoSnipeEnabled: preferences.autoSnipeEnabled ?? true,
         autoBuyEnabled: preferences.autoBuyEnabled ?? true,
-        autoSellEnabled: preferences.autoSellEnabled ?? true
+        autoSellEnabled: preferences.autoSellEnabled ?? true,
       });
     }
   }, [preferences]);
 
   // Handle saving editable take-profit table
-  const handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
-    console.info('Saving multi-level take-profit levels:', levels);
+  const _handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
+    console.info("Saving multi-level take-profit levels:", levels);
 
     // Update the multi-level configuration
     const updatedConfig = {
@@ -144,17 +160,24 @@ export default function SettingsPage() {
 
       toast({
         title: "Multi-Level Take-Profit Saved",
-        description: "Your advanced take-profit configuration has been updated successfully.",
+        description:
+          "Your advanced take-profit configuration has been updated successfully.",
       });
 
-      console.info('✅ Successfully saved multi-level take-profit configuration');
+      console.info(
+        "✅ Successfully saved multi-level take-profit configuration"
+      );
     } catch (error) {
-      console.error('❌ Failed to save multi-level take-profit configuration:', { error: error instanceof Error ? error.message : String(error) });
+      console.error(
+        "❌ Failed to save multi-level take-profit configuration:",
+        { error: error instanceof Error ? error.message : String(error) }
+      );
 
       toast({
         title: "Error saving take-profit configuration",
-        description: "Failed to save your multi-level take-profit configuration. Please try again.",
-        variant: "destructive"
+        description:
+          "Failed to save your multi-level take-profit configuration. Please try again.",
+        variant: "destructive",
       });
 
       throw error; // Re-throw to trigger error handling in component
@@ -177,19 +200,20 @@ export default function SettingsPage() {
         selectedExitStrategy: exitStrategy,
         autoSnipeEnabled: autoSettings.autoSnipeEnabled,
         autoBuyEnabled: autoSettings.autoBuyEnabled,
-        autoSellEnabled: autoSettings.autoSellEnabled
+        autoSellEnabled: autoSettings.autoSellEnabled,
       });
 
       setIsDirty(false);
       toast({
         title: "Settings saved",
-        description: "Your trading configuration has been updated successfully.",
+        description:
+          "Your trading configuration has been updated successfully.",
       });
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Error saving settings",
         description: "Failed to save your configuration. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   }, [
@@ -200,23 +224,27 @@ export default function SettingsPage() {
     autoSettings,
     updatePreferencesMutation.mutateAsync,
     toast,
-    userId
+    userId,
   ]);
 
   // Sync settings to execution system
   const handleSyncToExecution = useCallback(async () => {
     try {
       await syncToExecutionSystem();
-      
+
       toast({
         title: "Settings synced",
-        description: "Your settings have been applied to the trading execution system.",
+        description:
+          "Your settings have been applied to the trading execution system.",
       });
     } catch (error) {
       console.error("Failed to sync settings:", error);
       toast({
         title: "Sync failed",
-        description: error instanceof Error ? error.message : "Failed to sync settings to execution system.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to sync settings to execution system.",
         variant: "destructive",
       });
     }
@@ -243,7 +271,8 @@ export default function SettingsPage() {
           <div>
             <h1 className="text-3xl font-bold">Trading Settings</h1>
             <p className="text-muted-foreground mt-1">
-              Configure your trading parameters, risk management, and automation preferences
+              Configure your trading parameters, risk management, and automation
+              preferences
             </p>
             {/* Sync status indicator */}
             <div className="flex items-center space-x-4 mt-3">
@@ -254,10 +283,11 @@ export default function SettingsPage() {
                   <XCircle className="h-4 w-4 text-orange-500" />
                 )}
                 <span className="text-sm text-muted-foreground">
-                  Execution System: {formatSyncStatus(settingsStatus?.syncStatus)}
+                  Execution System:{" "}
+                  {formatSyncStatus(settingsStatus?.syncStatus)}
                 </span>
               </div>
-              
+
               {isExecutionSystemActive && (
                 <div className="flex items-center space-x-2">
                   <Wifi className="h-4 w-4 text-green-500" />
@@ -266,7 +296,7 @@ export default function SettingsPage() {
                   </span>
                 </div>
               )}
-              
+
               {isAutoSnipingActive && (
                 <div className="flex items-center space-x-2">
                   <Zap className="h-4 w-4 text-blue-500" />
@@ -275,13 +305,11 @@ export default function SettingsPage() {
                   </span>
                 </div>
               )}
-              
+
               {syncError && (
                 <div className="flex items-center space-x-2">
                   <AlertCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-sm text-red-600">
-                    Sync Error
-                  </span>
+                  <span className="text-sm text-red-600">Sync Error</span>
                 </div>
               )}
             </div>
@@ -290,27 +318,37 @@ export default function SettingsPage() {
             {/* Sync health indicator */}
             <div className="flex items-center gap-2">
               {settingsStatus && (
-                <Badge 
-                  variant={calculateSyncHealthScore(syncHealth) > 80 ? "default" : "destructive"}
+                <Badge
+                  variant={
+                    calculateSyncHealthScore(syncHealth) > 80
+                      ? "default"
+                      : "destructive"
+                  }
                   className="text-xs"
                 >
                   Health: {calculateSyncHealthScore(syncHealth)}%
                 </Badge>
               )}
             </div>
-            
+
             {isDirty && (
-              <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+              <Badge
+                variant="outline"
+                className="border-yellow-500 text-yellow-600"
+              >
                 Unsaved changes
               </Badge>
             )}
-            
+
             {!isInSync && !isDirty && (
-              <Badge variant="outline" className="border-orange-500 text-orange-600">
+              <Badge
+                variant="outline"
+                className="border-orange-500 text-orange-600"
+              >
                 Out of sync
               </Badge>
             )}
-            
+
             {/* Sync to execution button */}
             <Button
               onClick={handleSyncToExecution}
@@ -321,14 +359,16 @@ export default function SettingsPage() {
               <Zap className="mr-2 h-4 w-4" />
               {isSyncing ? "Syncing..." : "Sync to Execution"}
             </Button>
-            
+
             {/* Save settings button */}
             <Button
               onClick={handleSave}
               disabled={updatePreferencesMutation.isPending || !isDirty}
             >
               <Save className="mr-2 h-4 w-4" />
-              {updatePreferencesMutation.isPending ? "Saving..." : "Save Changes"}
+              {updatePreferencesMutation.isPending
+                ? "Saving..."
+                : "Save Changes"}
             </Button>
           </div>
         </div>
@@ -341,15 +381,18 @@ export default function SettingsPage() {
                 <Settings className="h-5 w-5 text-blue-500" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium">API Credentials & System Configuration</p>
+                <p className="text-sm font-medium">
+                  API Credentials & System Configuration
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  Manage API keys, system health checks, and environment configuration in System Check
+                  Manage API keys, system health checks, and environment
+                  configuration in System Check
                 </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open('/config', '_self')}
+                onClick={() => window.open("/config", "_self")}
                 className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400"
               >
                 <ExternalLink className="mr-2 h-4 w-4" />

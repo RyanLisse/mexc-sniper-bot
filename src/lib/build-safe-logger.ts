@@ -23,10 +23,16 @@ export class BuildSafeLogger {
     this.service = service || "mexc-trading-bot";
   }
 
-  private formatMessage(level: string, message: string, context?: BuildSafeLogContext): string {
+  private formatMessage(
+    level: string,
+    message: string,
+    context?: BuildSafeLogContext
+  ): string {
     const timestamp = new Date().toISOString();
     const contextStr =
-      context && Object.keys(context).length > 0 ? ` ${JSON.stringify(context)}` : "";
+      context && Object.keys(context).length > 0
+        ? ` ${JSON.stringify(context)}`
+        : "";
     return `${timestamp} [${level.toUpperCase()}] ${this.component}: ${message}${contextStr}`;
   }
 
@@ -60,21 +66,45 @@ export class BuildSafeLogger {
     this.info(`Trading: ${operation}`, context);
   }
 
-  pattern(patternType: string, confidence: number, context?: BuildSafeLogContext): void {
+  pattern(
+    patternType: string,
+    confidence: number,
+    context?: BuildSafeLogContext
+  ): void {
     this.info(`Pattern detected: ${patternType}`, { ...context, confidence });
   }
 
-  api(endpoint: string, method: string, responseTime: number, context?: BuildSafeLogContext): void {
+  api(
+    endpoint: string,
+    method: string,
+    responseTime: number,
+    context?: BuildSafeLogContext
+  ): void {
     this.info(`API call: ${method} ${endpoint}`, { ...context, responseTime });
   }
 
-  agent(agentId: string, taskType: string, context?: BuildSafeLogContext): void {
-    this.info(`Agent: ${agentId} - ${taskType}`, { ...context, agentId, taskType });
+  agent(
+    agentId: string,
+    taskType: string,
+    context?: BuildSafeLogContext
+  ): void {
+    this.info(`Agent: ${agentId} - ${taskType}`, {
+      ...context,
+      agentId,
+      taskType,
+    });
   }
 
-  performance(operation: string, duration: number, context?: BuildSafeLogContext): void {
+  performance(
+    operation: string,
+    duration: number,
+    context?: BuildSafeLogContext
+  ): void {
     const level = duration > 1000 ? "warn" : "info";
-    this[level](`Performance: ${operation} completed in ${duration}ms`, { ...context, duration });
+    this[level](`Performance: ${operation} completed in ${duration}ms`, {
+      ...context,
+      duration,
+    });
   }
 
   cache(
@@ -89,9 +119,17 @@ export class BuildSafeLogger {
     });
   }
 
-  safety(event: string, riskScore: number, context?: BuildSafeLogContext): void {
+  safety(
+    event: string,
+    riskScore: number,
+    context?: BuildSafeLogContext
+  ): void {
     const level = riskScore > 70 ? "warn" : "info";
-    this[level](`Safety: ${event}`, { ...context, riskScore, safetyEvent: event });
+    this[level](`Safety: ${event}`, {
+      ...context,
+      riskScore,
+      safetyEvent: event,
+    });
   }
 }
 
@@ -99,7 +137,10 @@ export class BuildSafeLogger {
  * Build-safe logger factory
  * Creates loggers that work during webpack bundling without import issues
  */
-export function createBuildSafeLogger(component: string, service?: string): BuildSafeLogger {
+export function createBuildSafeLogger(
+  component: string,
+  service?: string
+): BuildSafeLogger {
   return new BuildSafeLogger(component, service);
 }
 

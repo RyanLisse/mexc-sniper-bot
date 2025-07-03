@@ -19,9 +19,19 @@ import {
 import { useEffect, useState } from "react";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
 import { Progress } from "@/src/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
 
 interface EnhancedMetrics {
   timestamp: string;
@@ -199,14 +209,20 @@ export function EnhancedMetricsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Enhanced Performance Metrics</h2>
-          <p className="text-gray-600">Last updated: {lastUpdate.toLocaleTimeString()}</p>
+          <p className="text-gray-600">
+            Last updated: {lastUpdate.toLocaleTimeString()}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className={getHealthBadgeColor(metrics.health.status)}>
             {getHealthIcon(metrics.health.status)}
             <span className="ml-1">{metrics.health.status.toUpperCase()}</span>
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => setAutoRefresh(!autoRefresh)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAutoRefresh(!autoRefresh)}
+          >
             {autoRefresh ? "Pause" : "Resume"} Auto-refresh
           </Button>
           <Button size="sm" onClick={fetchMetrics}>
@@ -228,13 +244,17 @@ export function EnhancedMetricsDashboard() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span>Overall Health</span>
-                <span className="text-lg font-semibold">{metrics.health.score}/100</span>
+                <span className="text-lg font-semibold">
+                  {metrics.health.score}/100
+                </span>
               </div>
               <Progress value={metrics.health.score} className="h-3" />
             </div>
             {metrics.health.issues.length > 0 && (
               <div>
-                <h4 className="font-medium mb-2 text-red-600">Active Issues:</h4>
+                <h4 className="font-medium mb-2 text-red-600">
+                  Active Issues:
+                </h4>
                 <ul className="space-y-1">
                   {metrics.health.issues.map((issue, index) => (
                     <li key={index} className="flex items-center gap-2 text-sm">
@@ -263,12 +283,17 @@ export function EnhancedMetricsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Trades</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Trades
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.trading.execution.totalTrades}</div>
+                <div className="text-2xl font-bold">
+                  {metrics.trading.execution.totalTrades}
+                </div>
                 <p className="text-xs text-gray-600">
-                  Success Rate: {formatPercentage(metrics.trading.execution.successRate)}
+                  Success Rate:{" "}
+                  {formatPercentage(metrics.trading.execution.successRate)}
                 </p>
               </CardContent>
             </Card>
@@ -287,7 +312,8 @@ export function EnhancedMetricsDashboard() {
                   {formatCurrency(metrics.trading.profitability.totalPnL)}
                 </div>
                 <p className="text-xs text-gray-600">
-                  Avg: {formatCurrency(metrics.trading.profitability.averagePnL)}
+                  Avg:{" "}
+                  {formatCurrency(metrics.trading.profitability.averagePnL)}
                 </p>
               </CardContent>
             </Card>
@@ -301,22 +327,30 @@ export function EnhancedMetricsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatDuration(metrics.trading.execution.averageExecutionTime)}
+                  {formatDuration(
+                    metrics.trading.execution.averageExecutionTime
+                  )}
                 </div>
                 <p className="text-xs text-gray-600">
-                  Slippage: {metrics.trading.execution.averageSlippage.toFixed(2)}bp
+                  Slippage:{" "}
+                  {metrics.trading.execution.averageSlippage.toFixed(2)}bp
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Pattern Detection</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Pattern Detection
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.trading.patterns.detectionsToday}</div>
+                <div className="text-2xl font-bold">
+                  {metrics.trading.patterns.detectionsToday}
+                </div>
                 <p className="text-xs text-gray-600">
-                  Confidence: {formatPercentage(metrics.trading.patterns.averageConfidence)}
+                  Confidence:{" "}
+                  {formatPercentage(metrics.trading.patterns.averageConfidence)}
                 </p>
               </CardContent>
             </Card>
@@ -328,7 +362,9 @@ export function EnhancedMetricsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">API Response Time</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  API Response Time
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -339,7 +375,9 @@ export function EnhancedMetricsDashboard() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">WebSocket Latency</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  WebSocket Latency
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -350,11 +388,15 @@ export function EnhancedMetricsDashboard() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Pattern Processing</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Pattern Processing
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatDuration(metrics.performance.trading.riskCalculationTime)}
+                  {formatDuration(
+                    metrics.performance.trading.riskCalculationTime
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -366,33 +408,47 @@ export function EnhancedMetricsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Current Exposure</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Current Exposure
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="text-2xl font-bold">
                     {formatPercentage(metrics.trading.risk.currentExposure)}
                   </div>
-                  <Progress value={metrics.trading.risk.currentExposure} className="h-2" />
+                  <Progress
+                    value={metrics.trading.risk.currentExposure}
+                    className="h-2"
+                  />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Risk Score</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Risk Score
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="text-2xl font-bold">{metrics.trading.risk.riskScore}/100</div>
-                  <Progress value={metrics.trading.risk.riskScore} className="h-2" />
+                  <div className="text-2xl font-bold">
+                    {metrics.trading.risk.riskScore}/100
+                  </div>
+                  <Progress
+                    value={metrics.trading.risk.riskScore}
+                    className="h-2"
+                  />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Max Drawdown</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Max Drawdown
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
@@ -408,7 +464,9 @@ export function EnhancedMetricsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Memory Usage</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Memory Usage
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -416,7 +474,9 @@ export function EnhancedMetricsDashboard() {
                     {metrics.performance.system.memoryUsageMB.toFixed(1)} MB
                   </div>
                   <Progress
-                    value={(metrics.performance.system.memoryUsageMB / 1024) * 100}
+                    value={
+                      (metrics.performance.system.memoryUsageMB / 1024) * 100
+                    }
                     className="h-2"
                   />
                 </div>
@@ -439,10 +499,14 @@ export function EnhancedMetricsDashboard() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Alerts
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics.performance.alerts.active}</div>
+                <div className="text-2xl font-bold">
+                  {metrics.performance.alerts.active}
+                </div>
                 {metrics.performance.alerts.lastAlert && (
                   <p className="text-xs text-gray-600">
                     Last: {metrics.performance.alerts.lastAlert}

@@ -27,7 +27,10 @@ import type {
   RiskEngineConfig,
   StressTestScenario,
 } from "../../schemas/risk-engine-schemas-extracted";
-import { type CircuitBreaker, circuitBreakerRegistry } from "../circuit-breaker";
+import {
+  type CircuitBreaker,
+  circuitBreakerRegistry,
+} from "../circuit-breaker";
 
 // Import modular components
 import {
@@ -103,11 +106,14 @@ export class AdvancedRiskEngine extends EventEmitter {
   private get logger() {
     if (!this._logger) {
       this._logger = {
-        info: (message: string, context?: any) => console.info("[index]", message, context || ""),
-        warn: (message: string, context?: any) => console.warn("[index]", message, context || ""),
+        info: (message: string, context?: any) =>
+          console.info("[index]", message, context || ""),
+        warn: (message: string, context?: any) =>
+          console.warn("[index]", message, context || ""),
         error: (message: string, context?: any, error?: Error) =>
           console.error("[index]", message, context || "", error || ""),
-        debug: (message: string, context?: any) => console.debug("[index]", message, context || ""),
+        debug: (message: string, context?: any) =>
+          console.debug("[index]", message, context || ""),
       };
     }
     return this._logger;
@@ -129,11 +135,14 @@ export class AdvancedRiskEngine extends EventEmitter {
   constructor(config?: Partial<RiskEngineConfig>) {
     super();
     this.config = this.mergeWithDefaultConfig(config);
-    this.circuitBreaker = circuitBreakerRegistry.getBreaker("advanced-risk-engine", {
-      failureThreshold: 3,
-      recoveryTimeout: 30000,
-      expectedFailureRate: 0.1,
-    });
+    this.circuitBreaker = circuitBreakerRegistry.getBreaker(
+      "advanced-risk-engine",
+      {
+        failureThreshold: 3,
+        recoveryTimeout: 30000,
+        expectedFailureRate: 0.1,
+      }
+    );
 
     // Initialize modules
     this.initializeModules();
@@ -259,7 +268,9 @@ export class AdvancedRiskEngine extends EventEmitter {
     quantity: number,
     price: number,
     marketData?: Record<string, unknown>
-  ): Promise<TradeRiskAssessment & { advancedMetrics: Record<string, number> }> {
+  ): Promise<
+    TradeRiskAssessment & { advancedMetrics: Record<string, number> }
+  > {
     return await this.circuitBreaker.execute(async () => {
       const result = await this.coreRiskAssessment.assessTradeRisk(
         symbol,
@@ -277,7 +288,10 @@ export class AdvancedRiskEngine extends EventEmitter {
         warnings: result.warnings,
         maxAllowedSize: result.maxAllowedSize,
         estimatedImpact: result.estimatedImpact,
-        advancedMetrics: result.advancedMetrics as unknown as Record<string, number>,
+        advancedMetrics: result.advancedMetrics as unknown as Record<
+          string,
+          number
+        >,
       };
     });
   }
@@ -285,7 +299,9 @@ export class AdvancedRiskEngine extends EventEmitter {
   /**
    * Update market conditions for risk calculations with validation
    */
-  async updateMarketConditions(conditions: Partial<MarketConditions>): Promise<void> {
+  async updateMarketConditions(
+    conditions: Partial<MarketConditions>
+  ): Promise<void> {
     await this.marketConditionsManager.updateMarketConditions(conditions);
 
     // Check for emergency market conditions
@@ -306,7 +322,8 @@ export class AdvancedRiskEngine extends EventEmitter {
     this.positions.set(position.symbol, position);
 
     // Recalculate portfolio risk metrics
-    const portfolioMetrics = await this.marketConditionsManager.getPortfolioRiskMetrics();
+    const portfolioMetrics =
+      await this.marketConditionsManager.getPortfolioRiskMetrics();
 
     // Check for risk threshold breaches
     await this.eventManagementHealth.checkRiskThresholds(portfolioMetrics);
@@ -321,7 +338,9 @@ export class AdvancedRiskEngine extends EventEmitter {
     this.marketConditionsManager.removePosition(symbol);
     this.positions.delete(symbol);
     this.updateAllModules();
-    console.info(`[AdvancedRiskEngine] Removed position tracking for ${symbol}`);
+    console.info(
+      `[AdvancedRiskEngine] Removed position tracking for ${symbol}`
+    );
   }
 
   /**
@@ -334,7 +353,9 @@ export class AdvancedRiskEngine extends EventEmitter {
   /**
    * Perform stress testing on current portfolio
    */
-  async performStressTest(scenarios?: StressTestScenario[]): Promise<StressTestResult> {
+  async performStressTest(
+    scenarios?: StressTestScenario[]
+  ): Promise<StressTestResult> {
     return await this.stressTestingValidation.performStressTest(scenarios);
   }
 
@@ -346,7 +367,11 @@ export class AdvancedRiskEngine extends EventEmitter {
     entryPrice: number,
     currentPrice: number
   ): StopLossRecommendation {
-    return this.dynamicCalculations.calculateDynamicStopLoss(symbol, entryPrice, currentPrice);
+    return this.dynamicCalculations.calculateDynamicStopLoss(
+      symbol,
+      entryPrice,
+      currentPrice
+    );
   }
 
   /**
@@ -357,7 +382,11 @@ export class AdvancedRiskEngine extends EventEmitter {
     entryPrice: number,
     currentPrice: number
   ): TakeProfitRecommendation {
-    return this.dynamicCalculations.calculateDynamicTakeProfit(symbol, entryPrice, currentPrice);
+    return this.dynamicCalculations.calculateDynamicTakeProfit(
+      symbol,
+      entryPrice,
+      currentPrice
+    );
   }
 
   /**
@@ -435,7 +464,9 @@ export class AdvancedRiskEngine extends EventEmitter {
       beta?: number;
     }>
   ): Promise<void> {
-    await this.marketConditionsManager.updatePortfolioPositions(portfolioPositions);
+    await this.marketConditionsManager.updatePortfolioPositions(
+      portfolioPositions
+    );
 
     // Update local positions map
     for (const pos of portfolioPositions) {
@@ -460,7 +491,9 @@ export class AdvancedRiskEngine extends EventEmitter {
     requestedPositionSize: number;
     correlationWithPortfolio?: number;
   }): Promise<DiversificationAssessment> {
-    return await this.dynamicCalculations.assessDiversificationRisk(newPosition);
+    return await this.dynamicCalculations.assessDiversificationRisk(
+      newPosition
+    );
   }
 
   /**
@@ -506,7 +539,9 @@ export class AdvancedRiskEngine extends EventEmitter {
     requestedPositionSize: number;
     portfolioValue: number;
   }): Promise<VolatilityAdjustment> {
-    return await this.dynamicCalculations.calculateVolatilityAdjustedPosition(positionRequest);
+    return await this.dynamicCalculations.calculateVolatilityAdjustedPosition(
+      positionRequest
+    );
   }
 
   /**
@@ -539,7 +574,8 @@ export class AdvancedRiskEngine extends EventEmitter {
     const position = this.positions.get(symbol);
     if (position) {
       const priceChange =
-        ((riskData.currentPrice - riskData.entryPrice) / riskData.entryPrice) * 100;
+        ((riskData.currentPrice - riskData.entryPrice) / riskData.entryPrice) *
+        100;
       const drawdown = priceChange < 0 ? Math.abs(priceChange) : 0;
 
       position.unrealizedPnL = riskData.unrealizedPnL;
@@ -634,21 +670,40 @@ export class AdvancedRiskEngine extends EventEmitter {
     crossExchangeDeviation: number;
     coordinatedTrading: boolean;
   }): Promise<ManipulationDetection> {
-    const result = await this.stressTestingValidation.detectManipulation(activity);
-    
+    const result =
+      await this.stressTestingValidation.detectManipulation(activity);
+
     // Emit manipulation events based on detected patterns
-    if (result.indicators.includes("coordinated_pump") && activity.rapidPriceMovement > 50) {
-      this.emit("manipulation_detected", { type: "pump_detected", activity, result });
+    if (
+      result.indicators.includes("coordinated_pump") &&
+      activity.rapidPriceMovement > 50
+    ) {
+      this.emit("manipulation_detected", {
+        type: "pump_detected",
+        activity,
+        result,
+      });
     }
-    
-    if (result.indicators.includes("coordinated_pump") && activity.rapidPriceMovement < -30) {
-      this.emit("manipulation_detected", { type: "dump_detected", activity, result });
+
+    if (
+      result.indicators.includes("coordinated_pump") &&
+      activity.rapidPriceMovement < -30
+    ) {
+      this.emit("manipulation_detected", {
+        type: "dump_detected",
+        activity,
+        result,
+      });
     }
-    
+
     if (result.riskLevel === "high" || result.riskLevel === "critical") {
-      this.emit("manipulation_detected", { type: "manipulation_alert", activity, result });
+      this.emit("manipulation_detected", {
+        type: "manipulation_alert",
+        activity,
+        result,
+      });
     }
-    
+
     return result;
   }
 
@@ -676,7 +731,9 @@ export class AdvancedRiskEngine extends EventEmitter {
   }
 
   // Private helper methods
-  private mergeWithDefaultConfig(partial?: Partial<RiskEngineConfig>): RiskEngineConfig {
+  private mergeWithDefaultConfig(
+    partial?: Partial<RiskEngineConfig>
+  ): RiskEngineConfig {
     const defaultConfig: RiskEngineConfig = {
       maxPortfolioValue: 100000,
       maxSinglePositionSize: 10000,
@@ -700,7 +757,9 @@ export class AdvancedRiskEngine extends EventEmitter {
 }
 
 // Factory function for creating advanced risk engine
-export function createAdvancedRiskEngine(config?: Partial<RiskEngineConfig>): AdvancedRiskEngine {
+export function createAdvancedRiskEngine(
+  config?: Partial<RiskEngineConfig>
+): AdvancedRiskEngine {
   return new AdvancedRiskEngine(config);
 }
 

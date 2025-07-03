@@ -18,10 +18,7 @@ export function MobileTestDashboard() {
             <span>Device Type:</span>
             <span>{isMobile ? "Mobile" : "Desktop"}</span>
           </div>
-          <Button 
-            onClick={() => setIsMobile(!isMobile)}
-            className="w-full"
-          >
+          <Button onClick={() => setIsMobile(!isMobile)} className="w-full">
             Toggle Device Type
           </Button>
           <div className="p-4 bg-muted rounded">

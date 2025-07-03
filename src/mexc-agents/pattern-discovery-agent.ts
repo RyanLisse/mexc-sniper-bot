@@ -1,5 +1,8 @@
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
-import type { CalendarEntry, SymbolEntry } from "@/src/services/api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "@/src/services/api/mexc-unified-exports";
 import { type AgentConfig, type AgentResponse, BaseAgent } from "./base-agent";
 
 // Extended calendar entry for pattern analysis
@@ -93,11 +96,15 @@ Analysis Output:
     super(config);
   }
 
-  async process(input: string, context?: Record<string, unknown>): Promise<AgentResponse> {
-    const request: PatternAnalysisRequest = (context as unknown as PatternAnalysisRequest) || {
-      analysisType: "discovery",
-      confidenceThreshold: 70,
-    };
+  async process(
+    input: string,
+    context?: Record<string, unknown>
+  ): Promise<AgentResponse> {
+    const request: PatternAnalysisRequest =
+      (context as unknown as PatternAnalysisRequest) || {
+        analysisType: "discovery",
+        confidenceThreshold: 70,
+      };
 
     const userMessage = `
 MEXC Pattern Discovery Analysis:
@@ -155,7 +162,9 @@ Provide specific pattern matches with confidence levels and clear action items.
     ]);
   }
 
-  async discoverNewListings(calendarEntries: CalendarEntry[]): Promise<AgentResponse> {
+  async discoverNewListings(
+    calendarEntries: CalendarEntry[]
+  ): Promise<AgentResponse> {
     try {
       this.logger.info(
         `[PatternDiscoveryAgent] Starting discovery analysis on ${calendarEntries.length} calendar entries`
@@ -173,7 +182,8 @@ Provide specific pattern matches with confidence levels and clear action items.
       }
 
       // Extract patterns and early interest indicators from calendar data
-      const processedData = this.extractPatternsFromCalendarData(calendarEntries);
+      const processedData =
+        this.extractPatternsFromCalendarData(calendarEntries);
 
       // Create enhanced analysis prompt with pattern focus
       const userMessage = `
@@ -254,7 +264,10 @@ Provide specific pattern matches with confidence scores and actionable recommend
         },
       };
     } catch (error) {
-      this.logger.error(`[PatternDiscoveryAgent] Discovery analysis failed:`, error);
+      this.logger.error(
+        `[PatternDiscoveryAgent] Discovery analysis failed:`,
+        error
+      );
       return {
         content: `Pattern discovery analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -287,9 +300,12 @@ Provide specific pattern matches with confidence scores and actionable recommend
         const advanceHours = (launchTimestamp - now) / (1000 * 60 * 60);
 
         // Extract pattern indicators
-        const projectType = this.classifyProjectType(entry.projectName || entry.symbol);
+        const projectType = this.classifyProjectType(
+          entry.projectName || entry.symbol
+        );
         const marketTiming = this.assessMarketTiming(launchTimestamp);
-        const advanceNoticeQuality = this.assessAdvanceNoticeQuality(advanceHours);
+        const advanceNoticeQuality =
+          this.assessAdvanceNoticeQuality(advanceHours);
 
         return {
           ...entry,
@@ -306,9 +322,16 @@ Provide specific pattern matches with confidence scores and actionable recommend
           urgencyLevel: this.calculateUrgencyLevel(advanceHours),
 
           // Trading readiness indicators
-          expectedTradingPairs: (entry as any).tradingPairs || [`${entry.symbol}USDT`],
-          infrastructureReady: (entry as any).sts === 2 && (entry as any).st === 2,
-          patternConfidence: this.calculatePatternConfidence(entry, advanceHours, projectType),
+          expectedTradingPairs: (entry as any).tradingPairs || [
+            `${entry.symbol}USDT`,
+          ],
+          infrastructureReady:
+            (entry as any).sts === 2 && (entry as any).st === 2,
+          patternConfidence: this.calculatePatternConfidence(
+            entry,
+            advanceHours,
+            projectType
+          ),
 
           // Risk indicators
           weekendLaunch: marketTiming.isWeekend,
@@ -320,7 +343,10 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Classify project type based on name/description
-  private classifyProjectType(projectName: string): { category: string; marketAppeal: number } {
+  private classifyProjectType(projectName: string): {
+    category: string;
+    marketAppeal: number;
+  } {
     const name = projectName.toLowerCase();
 
     if (
@@ -389,7 +415,10 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Assess quality of advance notice timing
-  private assessAdvanceNoticeQuality(advanceHours: number): { quality: string; score: number } {
+  private assessAdvanceNoticeQuality(advanceHours: number): {
+    quality: string;
+    score: number;
+  } {
     if (advanceHours < 0) return { quality: "expired", score: 0 };
     if (advanceHours < 1) return { quality: "critical", score: 30 };
     if (advanceHours < 3.5) return { quality: "poor", score: 50 };
@@ -425,7 +454,8 @@ Provide specific pattern matches with confidence scores and actionable recommend
 
     // Data completeness
     if (entry.projectName) confidence += 5;
-    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1) confidence += 5;
+    if ((entry as any).tradingPairs && (entry as any).tradingPairs.length > 1)
+      confidence += 5;
     if ((entry as any).sts !== undefined) confidence += 10;
 
     return Math.min(Math.round(confidence), 95);
@@ -459,10 +489,16 @@ Provide specific pattern matches with confidence scores and actionable recommend
   }
 
   // Generate pattern analysis summary
-  private generatePatternSummary(processedData: PatternCalendarEntry[]): Record<string, unknown> {
+  private generatePatternSummary(
+    processedData: PatternCalendarEntry[]
+  ): Record<string, unknown> {
     const upcomingOpportunities = processedData.filter((d) => d.isUpcoming);
-    const highConfidenceMatches = processedData.filter((d) => (d.patternConfidence || 0) >= 80);
-    const optimalAdvanceNotice = processedData.filter((d) => d.hasOptimalAdvance === true);
+    const highConfidenceMatches = processedData.filter(
+      (d) => (d.patternConfidence || 0) >= 80
+    );
+    const optimalAdvanceNotice = processedData.filter(
+      (d) => d.hasOptimalAdvance === true
+    );
 
     const totalAdvanceHours = upcomingOpportunities.reduce(
       (sum, d) => sum + (d.advanceHours || 0),
@@ -470,7 +506,8 @@ Provide specific pattern matches with confidence scores and actionable recommend
     );
     const averageAdvanceHours =
       upcomingOpportunities.length > 0
-        ? Math.round((totalAdvanceHours / upcomingOpportunities.length) * 100) / 100
+        ? Math.round((totalAdvanceHours / upcomingOpportunities.length) * 100) /
+          100
         : 0;
 
     const projectTypes = processedData.reduce(
@@ -490,8 +527,10 @@ Provide specific pattern matches with confidence scores and actionable recommend
       averageAdvanceHours,
       projectTypeDistribution: projectTypes,
       urgencyLevels: {
-        immediate: processedData.filter((d) => d.urgencyLevel === "immediate").length,
-        critical: processedData.filter((d) => d.urgencyLevel === "critical").length,
+        immediate: processedData.filter((d) => d.urgencyLevel === "immediate")
+          .length,
+        critical: processedData.filter((d) => d.urgencyLevel === "critical")
+          .length,
         high: processedData.filter((d) => d.urgencyLevel === "high").length,
         medium: processedData.filter((d) => d.urgencyLevel === "medium").length,
         low: processedData.filter((d) => d.urgencyLevel === "low").length,
@@ -500,7 +539,9 @@ Provide specific pattern matches with confidence scores and actionable recommend
     };
   }
 
-  async analyzeSymbolPatterns(symbolData: SymbolData[]): Promise<AgentResponse> {
+  async analyzeSymbolPatterns(
+    symbolData: SymbolData[]
+  ): Promise<AgentResponse> {
     return await this.process("Analyze MEXC symbol patterns", {
       symbolData,
       analysisType: "monitoring",
@@ -592,7 +633,9 @@ Focus on precise pattern matching and actionable timing recommendations.
     ]);
   }
 
-  async identifyEarlyOpportunities(marketData: SymbolData | CalendarEntry): Promise<AgentResponse> {
+  async identifyEarlyOpportunities(
+    marketData: SymbolData | CalendarEntry
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Early Opportunity Identification:
 
@@ -637,7 +680,9 @@ Focus on opportunities that provide 3.5+ hours advance notice for optimal positi
     ]);
   }
 
-  async assessPatternReliability(patternData: SymbolData | CalendarEntry): Promise<AgentResponse> {
+  async assessPatternReliability(
+    patternData: SymbolData | CalendarEntry
+  ): Promise<AgentResponse> {
     const userMessage = `
 MEXC Pattern Reliability Assessment:
 
@@ -748,7 +793,9 @@ Provide specific pattern matches with confidence levels, timing recommendations,
         },
       ]);
 
-      this.logger.info(`[PatternDiscoveryAgent] Pattern analysis completed for ${params.vcoinId}`);
+      this.logger.info(
+        `[PatternDiscoveryAgent] Pattern analysis completed for ${params.vcoinId}`
+      );
       return response;
     } catch (error) {
       this.logger.error(

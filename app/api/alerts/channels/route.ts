@@ -1,11 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
-import { requireAuth } from "@/src/lib/supabase-auth";
-import { NotificationService } from "@/src/services/notification/notification-providers";
 
 // ==========================================
 // GET /api/alerts/channels - List notification channels
@@ -13,7 +10,7 @@ import { NotificationService } from "@/src/services/notification/notification-pr
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await validateRequest(request);
+    const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
     // Initialize services at runtime
@@ -21,7 +18,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") || undefined;
-    const enabled = searchParams.get("enabled") !== null ? searchParams.get("enabled") === "true" : undefined;
+    const enabled =
+      searchParams.get("enabled") !== null
+        ? searchParams.get("enabled") === "true"
+        : undefined;
 
     const channels = await alertConfigService.listNotificationChannels({
       type,
@@ -29,13 +29,17 @@ export async function GET(request: NextRequest) {
     });
 
     // Format channels for client consumption (hide sensitive config data)
-    const formattedChannels = channels.map(channel => {
+    const formattedChannels = channels.map((channel) => {
       const parsedConfig = channel.config ? JSON.parse(channel.config) : {};
       return {
         ...channel,
         config: parsedConfig,
-        severityFilter: channel.severityFilter ? JSON.parse(channel.severityFilter) : null,
-        categoryFilter: channel.categoryFilter ? JSON.parse(channel.categoryFilter) : null,
+        severityFilter: channel.severityFilter
+          ? JSON.parse(channel.severityFilter)
+          : null,
+        categoryFilter: channel.categoryFilter
+          ? JSON.parse(channel.categoryFilter)
+          : null,
         tagFilter: channel.tagFilter ? JSON.parse(channel.tagFilter) : null,
         // Hide sensitive configuration details
         configSummary: getConfigSummary(channel.type, parsedConfig),
@@ -65,14 +69,20 @@ export async function POST(request: NextRequest) {
     const alertConfigService = new AlertConfigurationService(db);
 
     const body = await request.json();
-    
-    const channelId = await alertConfigService.createNotificationChannel(body, user.id);
 
-    return NextResponse.json({
-      success: true,
-      data: { channelId },
-      message: "Notification channel created successfully",
-    }, { status: 201 });
+    const channelId = await alertConfigService.createNotificationChannel(
+      body,
+      user.id
+    );
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: { channelId },
+        message: "Notification channel created successfully",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating notification channel:", { error: error });
     return handleApiError(error);
@@ -88,34 +98,36 @@ function getConfigSummary(type: string, config: any): any {
         fromAddress: config.fromAddress,
         recipients: config.toAddresses?.length || 0,
       };
-    
+
     case "slack":
       return {
         hasWebhook: !!config.webhookUrl,
         channel: config.channel,
         username: config.username,
       };
-    
+
     case "webhook":
       return {
         url: config.url ? `${config.url.split("/")[2]}...` : null,
         method: config.method || "POST",
         hasAuth: !!config.authentication,
       };
-    
+
     case "sms":
       return {
         provider: config.provider,
         fromNumber: config.fromPhoneNumber,
         recipients: config.toPhoneNumbers?.length || 0,
       };
-    
+
     case "teams":
       return {
         hasWebhook: !!config.webhookUrl,
-        mentions: (config.mentionUsers?.length || 0) + (config.mentionTeams?.length || 0),
+        mentions:
+          (config.mentionUsers?.length || 0) +
+          (config.mentionTeams?.length || 0),
       };
-    
+
     default:
       return {};
   }

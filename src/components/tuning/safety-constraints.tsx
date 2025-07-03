@@ -7,7 +7,14 @@
  * Ensures that optimizations don't exceed safe risk boundaries.
  */
 
-import { AlertTriangle, CheckCircle2, Lock, Settings, Shield, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Lock,
+  Settings,
+  Shield,
+  XCircle,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
@@ -72,8 +79,12 @@ export function SafetyConstraints({
   );
 
   const overallStatus = useMemo(() => {
-    const violationCount = constraints.filter((c) => c.currentStatus === "violation").length;
-    const warningCount = constraints.filter((c) => c.currentStatus === "warning").length;
+    const violationCount = constraints.filter(
+      (c) => c.currentStatus === "violation"
+    ).length;
+    const warningCount = constraints.filter(
+      (c) => c.currentStatus === "warning"
+    ).length;
     const _enabledCount = constraints.filter((c) => c.enabled).length;
 
     if (violationCount > 0) return "critical";
@@ -111,7 +122,9 @@ export function SafetyConstraints({
             <div className="flex items-center justify-between">
               <Label className="text-sm">{constraint.name}</Label>
               <div className="flex items-center gap-2">
-                {constraint.locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {constraint.locked && (
+                  <Lock className="h-3 w-3 text-muted-foreground" />
+                )}
                 <Switch
                   checked={constraint.enabled}
                   onCheckedChange={handleToggle}
@@ -140,13 +153,17 @@ export function SafetyConstraints({
         );
 
       case "range": {
-        const [min, max] = Array.isArray(constraint.value) ? constraint.value : [0, 100];
+        const [min, max] = Array.isArray(constraint.value)
+          ? constraint.value
+          : [0, 100];
         return (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm">{constraint.name}</Label>
               <div className="flex items-center gap-2">
-                {constraint.locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {constraint.locked && (
+                  <Lock className="h-3 w-3 text-muted-foreground" />
+                )}
                 <Switch
                   checked={constraint.enabled}
                   onCheckedChange={handleToggle}
@@ -160,7 +177,12 @@ export function SafetyConstraints({
                 type="number"
                 placeholder="Min"
                 value={min}
-                onChange={(e) => handleValueChange([Number.parseFloat(e.target.value) || 0, max])}
+                onChange={(e) =>
+                  handleValueChange([
+                    Number.parseFloat(e.target.value) || 0,
+                    max,
+                  ])
+                }
                 disabled={!constraint.enabled || readOnly}
                 className="text-sm"
               />
@@ -168,7 +190,12 @@ export function SafetyConstraints({
                 type="number"
                 placeholder="Max"
                 value={max}
-                onChange={(e) => handleValueChange([min, Number.parseFloat(e.target.value) || 100])}
+                onChange={(e) =>
+                  handleValueChange([
+                    min,
+                    Number.parseFloat(e.target.value) || 100,
+                  ])
+                }
                 disabled={!constraint.enabled || readOnly}
                 className="text-sm"
               />
@@ -182,7 +209,9 @@ export function SafetyConstraints({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Label className="text-sm">{constraint.name}</Label>
-              {constraint.locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+              {constraint.locked && (
+                <Lock className="h-3 w-3 text-muted-foreground" />
+              )}
             </div>
             <Switch
               checked={constraint.value}
@@ -198,7 +227,9 @@ export function SafetyConstraints({
             <div className="flex items-center justify-between">
               <Label className="text-sm">{constraint.name}</Label>
               <div className="flex items-center gap-2">
-                {constraint.locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+                {constraint.locked && (
+                  <Lock className="h-3 w-3 text-muted-foreground" />
+                )}
                 <Switch
                   checked={constraint.enabled}
                   onCheckedChange={handleToggle}
@@ -283,7 +314,8 @@ export function SafetyConstraints({
             Safety Constraints
           </h2>
           <p className="text-muted-foreground">
-            Configure safety limits for parameter optimization and trading operations
+            Configure safety limits for parameter optimization and trading
+            operations
           </p>
         </div>
 
@@ -311,7 +343,9 @@ export function SafetyConstraints({
 
       {/* Overall Status Alert */}
       {overallStatus !== "healthy" && (
-        <Alert variant={overallStatus === "critical" ? "destructive" : "default"}>
+        <Alert
+          variant={overallStatus === "critical" ? "destructive" : "default"}
+        >
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             {overallStatus === "critical"
@@ -322,94 +356,113 @@ export function SafetyConstraints({
       )}
 
       {/* Constraint Categories */}
-      {Object.entries(categorizedConstraints).map(([category, categoryConstraints]) => (
-        <Card key={category}>
-          <CardHeader className="cursor-pointer" onClick={() => toggleCategory(category)}>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {getCategoryIcon(category)}
-                <span className="capitalize">{category} Constraints</span>
-                <Badge variant="outline" className="text-xs">
-                  {categoryConstraints.filter((c) => c.enabled).length}/{categoryConstraints.length}
-                </Badge>
-              </div>
+      {Object.entries(categorizedConstraints).map(
+        ([category, categoryConstraints]) => (
+          <Card key={category}>
+            <CardHeader
+              className="cursor-pointer"
+              onClick={() => toggleCategory(category)}
+            >
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getCategoryIcon(category)}
+                  <span className="capitalize">{category} Constraints</span>
+                  <Badge variant="outline" className="text-xs">
+                    {categoryConstraints.filter((c) => c.enabled).length}/
+                    {categoryConstraints.length}
+                  </Badge>
+                </div>
 
-              <div className="flex items-center gap-2">
-                {categoryConstraints.some((c) => c.currentStatus === "violation") && (
-                  <XCircle className="h-4 w-4 text-red-500" />
-                )}
-                {categoryConstraints.some((c) => c.currentStatus === "warning") && (
-                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                )}
-                <span className="text-sm">{expandedCategories.has(category) ? "▼" : "▶"}</span>
-              </div>
-            </CardTitle>
-          </CardHeader>
+                <div className="flex items-center gap-2">
+                  {categoryConstraints.some(
+                    (c) => c.currentStatus === "violation"
+                  ) && <XCircle className="h-4 w-4 text-red-500" />}
+                  {categoryConstraints.some(
+                    (c) => c.currentStatus === "warning"
+                  ) && <AlertTriangle className="h-4 w-4 text-yellow-500" />}
+                  <span className="text-sm">
+                    {expandedCategories.has(category) ? "▼" : "▶"}
+                  </span>
+                </div>
+              </CardTitle>
+            </CardHeader>
 
-          {expandedCategories.has(category) && (
-            <CardContent>
-              <div className="space-y-6">
-                {categoryConstraints.map((constraint, index) => (
-                  <div key={constraint.id}>
-                    {index > 0 && <Separator />}
+            {expandedCategories.has(category) && (
+              <CardContent>
+                <div className="space-y-6">
+                  {categoryConstraints.map((constraint, index) => (
+                    <div key={constraint.id}>
+                      {index > 0 && <Separator />}
 
-                    <div className="space-y-3">
-                      {/* Constraint Header */}
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {getStatusIcon(constraint.currentStatus)}
-                            <span className="font-medium">{constraint.name}</span>
-                            {getSeverityBadge(constraint.severity)}
-                            {constraint.locked && (
-                              <Badge variant="outline" className="text-xs">
-                                <Lock className="h-3 w-3 mr-1" />
-                                Locked
-                              </Badge>
+                      <div className="space-y-3">
+                        {/* Constraint Header */}
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              {getStatusIcon(constraint.currentStatus)}
+                              <span className="font-medium">
+                                {constraint.name}
+                              </span>
+                              {getSeverityBadge(constraint.severity)}
+                              {constraint.locked && (
+                                <Badge variant="outline" className="text-xs">
+                                  <Lock className="h-3 w-3 mr-1" />
+                                  Locked
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {constraint.description}
+                            </p>
+                          </div>
+
+                          <div className="text-right text-sm text-muted-foreground">
+                            <div>
+                              Last checked:{" "}
+                              {new Date(
+                                constraint.lastChecked
+                              ).toLocaleTimeString()}
+                            </div>
+                            {constraint.violationCount > 0 && (
+                              <div className="text-red-600">
+                                {constraint.violationCount} violations
+                              </div>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{constraint.description}</p>
                         </div>
 
-                        <div className="text-right text-sm text-muted-foreground">
-                          <div>
-                            Last checked: {new Date(constraint.lastChecked).toLocaleTimeString()}
-                          </div>
-                          {constraint.violationCount > 0 && (
-                            <div className="text-red-600">
-                              {constraint.violationCount} violations
-                            </div>
-                          )}
+                        {/* Constraint Control */}
+                        <div className="ml-6">
+                          {renderConstraintControl(constraint)}
                         </div>
+
+                        {/* Constraint Status */}
+                        {constraint.currentStatus !== "ok" && (
+                          <Alert
+                            variant={
+                              constraint.currentStatus === "violation"
+                                ? "destructive"
+                                : "default"
+                            }
+                            className="ml-6"
+                          >
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertDescription>
+                              {constraint.currentStatus === "violation"
+                                ? `Safety constraint violated! Current value exceeds safe limits.`
+                                : `Warning: Constraint approaching limits. Monitor closely.`}
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </div>
-
-                      {/* Constraint Control */}
-                      <div className="ml-6">{renderConstraintControl(constraint)}</div>
-
-                      {/* Constraint Status */}
-                      {constraint.currentStatus !== "ok" && (
-                        <Alert
-                          variant={
-                            constraint.currentStatus === "violation" ? "destructive" : "default"
-                          }
-                          className="ml-6"
-                        >
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription>
-                            {constraint.currentStatus === "violation"
-                              ? `Safety constraint violated! Current value exceeds safe limits.`
-                              : `Warning: Constraint approaching limits. Monitor closely.`}
-                          </AlertDescription>
-                        </Alert>
-                      )}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          )}
-        </Card>
-      ))}
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )
+      )}
 
       {/* Constraint Summary */}
       <Card>
@@ -427,14 +480,20 @@ export function SafetyConstraints({
 
             <div className="text-center">
               <div className="text-2xl font-bold text-yellow-600">
-                {constraints.filter((c) => c.currentStatus === "warning").length}
+                {
+                  constraints.filter((c) => c.currentStatus === "warning")
+                    .length
+                }
               </div>
               <div className="text-sm text-muted-foreground">Warnings</div>
             </div>
 
             <div className="text-center">
               <div className="text-2xl font-bold text-red-600">
-                {constraints.filter((c) => c.currentStatus === "violation").length}
+                {
+                  constraints.filter((c) => c.currentStatus === "violation")
+                    .length
+                }
               </div>
               <div className="text-sm text-muted-foreground">Violations</div>
             </div>

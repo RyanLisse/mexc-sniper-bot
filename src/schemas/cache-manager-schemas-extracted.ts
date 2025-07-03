@@ -223,7 +223,9 @@ export const CacheOptimizationResultSchema = z.object({
 // ============================================================================
 
 export type CacheDataType = z.infer<typeof CacheDataTypeSchema>;
-export type CacheInvalidationStrategy = z.infer<typeof CacheInvalidationStrategySchema>;
+export type CacheInvalidationStrategy = z.infer<
+  typeof CacheInvalidationStrategySchema
+>;
 export type CacheEntryMetadata = z.infer<typeof CacheEntryMetadataSchema>;
 export type CacheEntry = z.infer<typeof CacheEntrySchema>;
 export type CacheConfig = z.infer<typeof CacheConfigSchema>;
@@ -234,7 +236,9 @@ export type TypeBreakdownEntry = z.infer<typeof TypeBreakdownEntrySchema>;
 export type CacheAnalytics = z.infer<typeof CacheAnalyticsSchema>;
 export type CacheSizeBreakdown = z.infer<typeof CacheSizeBreakdownSchema>;
 export type CacheCleanupResult = z.infer<typeof CacheCleanupResultSchema>;
-export type CacheOptimizationResult = z.infer<typeof CacheOptimizationResultSchema>;
+export type CacheOptimizationResult = z.infer<
+  typeof CacheOptimizationResultSchema
+>;
 
 // ============================================================================
 // Validation Utilities
@@ -285,7 +289,9 @@ export function validateCacheDataType(data: unknown): CacheDataType {
 /**
  * Validate cache invalidation strategy
  */
-export function validateCacheInvalidationStrategy(data: unknown): CacheInvalidationStrategy {
+export function validateCacheInvalidationStrategy(
+  data: unknown
+): CacheInvalidationStrategy {
   return CacheInvalidationStrategySchema.parse(data);
 }
 
@@ -306,7 +312,9 @@ export function validateCacheCleanupResult(data: unknown): CacheCleanupResult {
 /**
  * Validate cache optimization result
  */
-export function validateCacheOptimizationResult(data: unknown): CacheOptimizationResult {
+export function validateCacheOptimizationResult(
+  data: unknown
+): CacheOptimizationResult {
   return CacheOptimizationResultSchema.parse(data);
 }
 

@@ -1,5 +1,11 @@
 import { ErrorLoggingService } from "../services/notification/error-logging-service";
-import { AppError, ErrorCode, ErrorSeverity, isAppError, toAppError } from "./error-types";
+import {
+  AppError,
+  ErrorCode,
+  ErrorSeverity,
+  isAppError,
+  toAppError,
+} from "./error-types";
 export interface ErrorHandlerConfig {
   enableLogging?: boolean;
   enableRetry?: boolean;
@@ -31,7 +37,12 @@ export class ErrorHandlerService {
     warn: (message: string, context?: any) =>
       console.warn("[error-handler-service]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[error-handler-service]", message, context || "", error || ""),
+      console.error(
+        "[error-handler-service]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[error-handler-service]", message, context || ""),
   };
@@ -76,7 +87,10 @@ export class ErrorHandlerService {
 
     // Add context if provided
     if (context) {
-      const newAppError = { ...appError, context: { ...appError.context, ...context } };
+      const newAppError = {
+        ...appError,
+        context: { ...appError.context, ...context },
+      };
       Object.assign(appError, newAppError);
     }
 
@@ -154,16 +168,23 @@ export class ErrorHandlerService {
       monitoringPeriodMs: options.monitoringPeriodMs ?? 300000,
     };
 
-    const circuitState = this.getCircuitBreakerState(circuitKey, circuitOptions);
+    const circuitState = this.getCircuitBreakerState(
+      circuitKey,
+      circuitOptions
+    );
 
     // Check if circuit is open
     if (circuitState.state === "open") {
-      if (Date.now() - circuitState.lastFailureTime < circuitOptions.resetTimeoutMs) {
+      if (
+        Date.now() - circuitState.lastFailureTime <
+        circuitOptions.resetTimeoutMs
+      ) {
         throw new AppError("Circuit breaker is open", {
           code: ErrorCode.EXTERNAL_SERVICE_ERROR,
           severity: ErrorSeverity.HIGH,
           retryable: true,
-          userMessage: "Service is temporarily unavailable. Please try again later.",
+          userMessage:
+            "Service is temporarily unavailable. Please try again later.",
           context: { ...context, circuitKey, circuitState: "open" },
         });
       }
@@ -260,7 +281,8 @@ export class ErrorHandlerService {
       summary.byCode[error.code] = (summary.byCode[error.code] || 0) + 1;
 
       // Count by severity
-      summary.bySeverity[error.severity] = (summary.bySeverity[error.severity] || 0) + 1;
+      summary.bySeverity[error.severity] =
+        (summary.bySeverity[error.severity] || 0) + 1;
 
       // Count retryable errors
       if (error.retryable) {
@@ -292,7 +314,10 @@ export class ErrorHandlerService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private getCircuitBreakerState(key: string, options: CircuitBreakerOptions): CircuitBreakerState {
+  private getCircuitBreakerState(
+    key: string,
+    options: CircuitBreakerOptions
+  ): CircuitBreakerState {
     let state = this.circuitBreakers.get(key);
 
     if (!state) {

@@ -1,6 +1,6 @@
 /**
  * Logger Type Definitions
- * 
+ *
  * Standardized logger types to replace 'any' context parameters across the codebase.
  * Provides type safety for logging operations while maintaining flexibility.
  */
@@ -17,7 +17,7 @@ type LoggerPrimitive = string | number | boolean | null | undefined;
 /**
  * Logger context value - supports nested objects and arrays
  */
-export type LoggerContextValue = 
+export type LoggerContextValue =
   | LoggerPrimitive
   | LoggerContextValue[]
   | { [key: string]: LoggerContextValue };

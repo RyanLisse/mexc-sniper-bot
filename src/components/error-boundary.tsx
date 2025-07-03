@@ -1,10 +1,27 @@
 "use client";
 
-import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
-import { Component, type ComponentType, type ErrorInfo, type ReactNode } from "react";
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Home,
+  RefreshCcw,
+} from "lucide-react";
+import {
+  Component,
+  type ComponentType,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -31,7 +48,10 @@ interface ErrorBoundaryState {
  * Provides graceful error handling for React component trees with
  * customizable fallback UI and error recovery options.
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[error-boundary]", message, context || ""),
@@ -62,7 +82,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     props: ErrorBoundaryProps,
     state: ErrorBoundaryState
   ): Partial<ErrorBoundaryState> | null {
-    if (props.resetKeys && props.resetOnKeysChange !== false && state.hasError) {
+    if (
+      props.resetKeys &&
+      props.resetOnKeysChange !== false &&
+      state.hasError
+    ) {
       // Check if reset keys have changed
       const hasKeysChanged = props.resetKeys.some(
         (key, index) => key !== state.previousResetKeys?.[index]
@@ -137,7 +161,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       // Server-side: Log to console only (no browser globals available)
       console.error("Server-side error:", error.message, error.stack);
 
-      this.logger.info("Error logged to monitoring services", { errorId: error.name });
+      this.logger.info("Error logged to monitoring services", {
+        errorId: error.name,
+      });
     } catch (loggingError) {
       // Fallback logging if error service fails
       console.error("Failed to log error to monitoring service:", loggingError);
@@ -233,9 +259,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     <CardHeader>
       <div className="flex items-center gap-2">
         <AlertCircle className="h-5 w-5 text-red-500" />
-        <CardTitle className="text-lg">{this.getErrorTitle(isPageLevel, isSectionLevel)}</CardTitle>
+        <CardTitle className="text-lg">
+          {this.getErrorTitle(isPageLevel, isSectionLevel)}
+        </CardTitle>
       </div>
-      <CardDescription>{this.getErrorDescription(isPageLevel, isSectionLevel)}</CardDescription>
+      <CardDescription>
+        {this.getErrorDescription(isPageLevel, isSectionLevel)}
+      </CardDescription>
     </CardHeader>
   );
 
@@ -257,7 +287,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return (
       <div className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
-        This component has crashed {errorCount} times. Consider refreshing the page.
+        This component has crashed {errorCount} times. Consider refreshing the
+        page.
       </div>
     );
   };
@@ -336,7 +367,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             {this.renderErrorMessage()}
             {this.renderErrorCountWarning()}
             {this.renderActionButtons(isPageLevel)}
-            {process.env.NODE_ENV === "development" && this.renderErrorDetails()}
+            {process.env.NODE_ENV === "development" &&
+              this.renderErrorDetails()}
           </CardContent>
         </Card>
       </div>
@@ -388,7 +420,11 @@ export function useErrorHandler() {
 /**
  * Async error boundary for handling async component errors
  */
-export function AsyncErrorBoundary({ children, fallback, ...props }: ErrorBoundaryProps) {
+export function AsyncErrorBoundary({
+  children,
+  fallback,
+  ...props
+}: ErrorBoundaryProps) {
   return (
     <ErrorBoundary
       {...props}
@@ -430,7 +466,11 @@ export function AsyncErrorBoundary({ children, fallback, ...props }: ErrorBounda
 /**
  * SSR-Safe Error Boundary for handling hydration mismatches
  */
-export function SSRSafeErrorBoundary({ children, fallback, ...props }: ErrorBoundaryProps) {
+export function SSRSafeErrorBoundary({
+  children,
+  fallback,
+  ...props
+}: ErrorBoundaryProps) {
   return (
     <ErrorBoundary
       {...props}
@@ -441,11 +481,14 @@ export function SSRSafeErrorBoundary({ children, fallback, ...props }: ErrorBoun
           error.message.includes("client") ||
           error.message.includes("server")
         ) {
-          console.warn("[SSR-Safe Error Boundary] Potential hydration mismatch:", {
-            error: error.message,
-            stack: error.stack,
-            componentStack: errorInfo.componentStack,
-          });
+          console.warn(
+            "[SSR-Safe Error Boundary] Potential hydration mismatch:",
+            {
+              error: error.message,
+              stack: error.stack,
+              componentStack: errorInfo.componentStack,
+            }
+          );
         }
 
         // Call parent error handler if provided

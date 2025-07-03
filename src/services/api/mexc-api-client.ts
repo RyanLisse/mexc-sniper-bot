@@ -18,8 +18,8 @@
  * - mexc-trading-service.ts: Trading operations and market data
  */
 
-import type { EnhancedUnifiedCacheSystem } from "@/src/lib/enhanced-unified-cache";
-import type { PerformanceMonitoringService } from "@/src/lib/performance-monitoring-service";
+import type { EnhancedUnifiedCacheSystem } from "../../lib/enhanced-unified-cache";
+import type { PerformanceMonitoringService } from "../../lib/performance-monitoring-service";
 import type { UnifiedMexcConfig } from "@/src/schemas/unified/mexc-api-schemas";
 import type { CircuitBreaker } from "../risk/circuit-breaker";
 // Import and export all types for backward compatibility

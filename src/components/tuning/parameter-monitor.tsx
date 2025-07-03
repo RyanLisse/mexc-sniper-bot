@@ -30,7 +30,13 @@ import {
   X,
   Zap,
 } from "../ui/optimized-icons";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface Parameter {
@@ -85,33 +91,33 @@ export function ParameterMonitor() {
         const paramsData = await paramsResponse.json();
 
         // Convert to Parameter objects
-        const parameterList: Parameter[] = Object.entries(paramsData.parameters).map(
-          ([name, value]) => {
-            const definition = paramsData.definitions[name];
-            const recentChanges =
-              paramsData.changeHistory
-                ?.filter((change: ParameterChange) => change.parameter === name)
-                .slice(0, 5) || [];
+        const parameterList: Parameter[] = Object.entries(
+          paramsData.parameters
+        ).map(([name, value]) => {
+          const definition = paramsData.definitions[name];
+          const recentChanges =
+            paramsData.changeHistory
+              ?.filter((change: ParameterChange) => change.parameter === name)
+              .slice(0, 5) || [];
 
-            return {
-              name,
-              category: definition?.category || "system",
-              currentValue: value,
-              defaultValue: definition?.defaultValue || value,
-              type: definition?.type || "string",
-              description: definition?.description || "",
-              lastChanged: recentChanges[0]?.timestamp
-                ? new Date(recentChanges[0].timestamp)
-                : new Date(),
-              changedBy: recentChanges[0]?.source || "system",
-              impactLevel: definition?.impactLevel || "medium",
-              constraints: definition?.constraints || {},
-              trend: calculateTrend(recentChanges),
-              validationStatus: "valid",
-              validationMessage: undefined,
-            };
-          }
-        );
+          return {
+            name,
+            category: definition?.category || "system",
+            currentValue: value,
+            defaultValue: definition?.defaultValue || value,
+            type: definition?.type || "string",
+            description: definition?.description || "",
+            lastChanged: recentChanges[0]?.timestamp
+              ? new Date(recentChanges[0].timestamp)
+              : new Date(),
+            changedBy: recentChanges[0]?.source || "system",
+            impactLevel: definition?.impactLevel || "medium",
+            constraints: definition?.constraints || {},
+            trend: calculateTrend(recentChanges),
+            validationStatus: "valid",
+            validationMessage: undefined,
+          };
+        });
 
         setParameters(parameterList);
         setChangeHistory(paramsData.changeHistory || []);
@@ -122,12 +128,16 @@ export function ParameterMonitor() {
       }
     };
 
-    const calculateTrend = (changes: ParameterChange[]): "up" | "down" | "stable" => {
+    const calculateTrend = (
+      changes: ParameterChange[]
+    ): "up" | "down" | "stable" => {
       if (changes.length < 2) return "stable";
 
       const recent = changes.slice(0, 2);
-      const current = typeof recent[0].newValue === "number" ? recent[0].newValue : 0;
-      const previous = typeof recent[1].newValue === "number" ? recent[1].newValue : 0;
+      const current =
+        typeof recent[0].newValue === "number" ? recent[0].newValue : 0;
+      const previous =
+        typeof recent[1].newValue === "number" ? recent[1].newValue : 0;
 
       if (current > previous) return "up";
       if (current < previous) return "down";
@@ -192,7 +202,12 @@ export function ParameterMonitor() {
         setParameters((prev) =>
           prev.map((p) =>
             p.name === parameterName
-              ? { ...p, currentValue: editValue, lastChanged: new Date(), changedBy: "manual_ui" }
+              ? {
+                  ...p,
+                  currentValue: editValue,
+                  lastChanged: new Date(),
+                  changedBy: "manual_ui",
+                }
               : p
           )
         );
@@ -243,16 +258,31 @@ export function ParameterMonitor() {
         return { valid: false, message: "Value must be a number" };
       }
 
-      if (parameter.constraints.min !== undefined && numValue < parameter.constraints.min) {
-        return { valid: false, message: `Value must be at least ${parameter.constraints.min}` };
+      if (
+        parameter.constraints.min !== undefined &&
+        numValue < parameter.constraints.min
+      ) {
+        return {
+          valid: false,
+          message: `Value must be at least ${parameter.constraints.min}`,
+        };
       }
 
-      if (parameter.constraints.max !== undefined && numValue > parameter.constraints.max) {
-        return { valid: false, message: `Value must be at most ${parameter.constraints.max}` };
+      if (
+        parameter.constraints.max !== undefined &&
+        numValue > parameter.constraints.max
+      ) {
+        return {
+          valid: false,
+          message: `Value must be at most ${parameter.constraints.max}`,
+        };
       }
     }
 
-    if (parameter.constraints.options && !parameter.constraints.options.includes(value)) {
+    if (
+      parameter.constraints.options &&
+      !parameter.constraints.options.includes(value)
+    ) {
       return {
         valid: false,
         message: `Value must be one of: ${parameter.constraints.options.join(", ")}`,
@@ -331,7 +361,10 @@ export function ParameterMonitor() {
 
           <div>
             <Label htmlFor="category">Category</Label>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
@@ -369,7 +402,9 @@ export function ParameterMonitor() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       {getParameterIcon(parameter.category)}
-                      <CardTitle className="text-lg">{parameter.name}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {parameter.name}
+                      </CardTitle>
                       {getTrendIcon(parameter.trend || "stable")}
                     </div>
 
@@ -390,7 +425,9 @@ export function ParameterMonitor() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-gray-600 mt-1">{parameter.description}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {parameter.description}
+                  </p>
                 </CardHeader>
 
                 <CardContent className="space-y-3">
@@ -402,7 +439,9 @@ export function ParameterMonitor() {
                         {parameter.type === "boolean" ? (
                           <Select
                             value={editValue.toString()}
-                            onValueChange={(value) => setEditValue(value === "true")}
+                            onValueChange={(value) =>
+                              setEditValue(value === "true")
+                            }
                           >
                             <SelectTrigger className="w-24">
                               <SelectValue />
@@ -413,7 +452,10 @@ export function ParameterMonitor() {
                             </SelectContent>
                           </Select>
                         ) : parameter.constraints.options ? (
-                          <Select value={editValue} onValueChange={setEditValue}>
+                          <Select
+                            value={editValue}
+                            onValueChange={setEditValue}
+                          >
                             <SelectTrigger className="w-32">
                               <SelectValue />
                             </SelectTrigger>
@@ -427,7 +469,9 @@ export function ParameterMonitor() {
                           </Select>
                         ) : (
                           <Input
-                            type={parameter.type === "number" ? "number" : "text"}
+                            type={
+                              parameter.type === "number" ? "number" : "text"
+                            }
                             value={editValue}
                             onChange={(e) =>
                               setEditValue(
@@ -442,7 +486,10 @@ export function ParameterMonitor() {
                           />
                         )}
 
-                        <Button size="sm" onClick={() => handleSave(parameter.name)}>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSave(parameter.name)}
+                        >
                           <Save className="w-3 h-3" />
                         </Button>
 
@@ -465,7 +512,9 @@ export function ParameterMonitor() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleEdit(parameter.name, parameter.currentValue)}
+                          onClick={() =>
+                            handleEdit(parameter.name, parameter.currentValue)
+                          }
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -481,7 +530,9 @@ export function ParameterMonitor() {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleReset(parameter.name)}
-                      disabled={parameter.currentValue === parameter.defaultValue}
+                      disabled={
+                        parameter.currentValue === parameter.defaultValue
+                      }
                     >
                       <RotateCcw className="w-3 h-3 mr-1" />
                       Reset
@@ -533,11 +584,15 @@ export function ParameterMonitor() {
                           {change.oldValue?.toString()}
                         </span>
                         <span className="mx-2">→</span>
-                        <span className="text-green-600">{change.newValue?.toString()}</span>
+                        <span className="text-green-600">
+                          {change.newValue?.toString()}
+                        </span>
                       </div>
 
                       {change.reason && (
-                        <p className="text-xs text-gray-500 mt-1">{change.reason}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {change.reason}
+                        </p>
                       )}
                     </div>
 

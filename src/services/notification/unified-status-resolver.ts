@@ -47,7 +47,12 @@ export class UnifiedStatusResolver {
     warn: (message: string, context?: any) =>
       console.warn("[unified-status-resolver]", message, context || ""),
     error: (message: string, context?: any, error?: Error) =>
-      console.error("[unified-status-resolver]", message, context || "", error || ""),
+      console.error(
+        "[unified-status-resolver]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: any) =>
       console.debug("[unified-status-resolver]", message, context || ""),
   };
@@ -81,7 +86,9 @@ export class UnifiedStatusResolver {
   async resolveStatus(): Promise<StatusResolutionResult> {
     if (this.isResolving) {
       // Return last known status if already resolving to prevent race conditions
-      return this.lastKnownStatus || this.createFallbackStatus("Resolving status...");
+      return (
+        this.lastKnownStatus || this.createFallbackStatus("Resolving status...")
+      );
     }
 
     this.isResolving = true;
@@ -106,8 +113,13 @@ export class UnifiedStatusResolver {
       return this.createFallbackStatus("All connectivity checks failed");
     } catch (error) {
       const safeError = toSafeError(error);
-      console.error("[UnifiedStatusResolver] Resolution failed:", safeError.message);
-      return this.createFallbackStatus(`Status resolution error: ${safeError.message}`);
+      console.error(
+        "[UnifiedStatusResolver] Resolution failed:",
+        safeError.message
+      );
+      return this.createFallbackStatus(
+        `Status resolution error: ${safeError.message}`
+      );
     } finally {
       this.isResolving = false;
     }
@@ -126,13 +138,17 @@ export class UnifiedStatusResolver {
 
       // Create status from direct service result
       const isConnected = connectivityTest.success;
-      
+
       const credentials: UnifiedCredentialStatus = {
-        hasCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
+        hasCredentials: Boolean(
+          process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY
+        ),
         isValid: isConnected,
         source: "environment" as const,
         hasUserCredentials: false, // Would need database check for this
-        hasEnvironmentCredentials: Boolean(process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY),
+        hasEnvironmentCredentials: Boolean(
+          process.env.MEXC_API_KEY && process.env.MEXC_SECRET_KEY
+        ),
         lastValidated: new Date().toISOString(),
         canAuthenticate: isConnected,
         connectionHealth: isConnected ? "good" : "poor",
@@ -157,7 +173,10 @@ export class UnifiedStatusResolver {
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
-      console.debug("[UnifiedStatusResolver] Direct service call failed:", error);
+      console.debug(
+        "[UnifiedStatusResolver] Direct service call failed:",
+        error
+      );
       return null;
     }
   }
@@ -194,13 +213,18 @@ export class UnifiedStatusResolver {
       });
 
       if (!response.ok) {
-        console.warn("[UnifiedStatusResolver] Enhanced endpoint failed:", response.status);
+        console.warn(
+          "[UnifiedStatusResolver] Enhanced endpoint failed:",
+          response.status
+        );
         return null;
       }
 
       const data = await response.json();
       if (!data.success || !data.data) {
-        console.warn("[UnifiedStatusResolver] Enhanced endpoint returned invalid data");
+        console.warn(
+          "[UnifiedStatusResolver] Enhanced endpoint returned invalid data"
+        );
         return null;
       }
 
@@ -208,7 +232,9 @@ export class UnifiedStatusResolver {
     } catch (error) {
       // Don't log connection refused as error - it's expected during startup
       if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
-        console.debug("[UnifiedStatusResolver] Enhanced endpoint not available (startup)");
+        console.debug(
+          "[UnifiedStatusResolver] Enhanced endpoint not available (startup)"
+        );
       } else {
         console.warn("[UnifiedStatusResolver] Enhanced endpoint error:", error);
       }
@@ -234,13 +260,19 @@ export class UnifiedStatusResolver {
       });
 
       if (!response.ok) {
-        console.warn("[UnifiedStatusResolver] Legacy endpoint failed:", response.status);
+        console.warn(
+          "[UnifiedStatusResolver] Legacy endpoint failed:",
+          response.status
+        );
         return null;
       }
 
       const data = await response.json();
       if (!data.success) {
-        console.warn("[UnifiedStatusResolver] Legacy endpoint returned error:", data.error);
+        console.warn(
+          "[UnifiedStatusResolver] Legacy endpoint returned error:",
+          data.error
+        );
         return null;
       }
 
@@ -248,7 +280,9 @@ export class UnifiedStatusResolver {
     } catch (error) {
       // Don't log connection refused as error - it's expected during startup
       if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
-        console.debug("[UnifiedStatusResolver] Legacy endpoint not available (startup)");
+        console.debug(
+          "[UnifiedStatusResolver] Legacy endpoint not available (startup)"
+        );
       } else {
         console.warn("[UnifiedStatusResolver] Legacy endpoint error:", error);
       }

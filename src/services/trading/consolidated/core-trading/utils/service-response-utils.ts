@@ -1,6 +1,6 @@
 /**
  * Service Response Utilities
- * 
+ *
  * Eliminates redundant ServiceResponse patterns and error handling throughout the codebase.
  * Provides standardized methods for creating success/error responses with consistent structure.
  */
@@ -42,13 +42,13 @@ export class ServiceResponseUtils {
   ): Promise<ServiceResponse<T>> {
     try {
       const result = await operation();
-      return this.success(result);
+      return ServiceResponseUtils.success(result);
     } catch (error) {
       const safeError = toSafeError(error);
-      const errorMessage = errorContext 
+      const errorMessage = errorContext
         ? `${errorContext}: ${safeError.message}`
         : safeError.message;
-      return this.error(errorMessage);
+      return ServiceResponseUtils.error(errorMessage);
     }
   }
 
@@ -62,13 +62,13 @@ export class ServiceResponseUtils {
   ): ServiceResponse<T> {
     try {
       const result = operation();
-      return this.success(result);
+      return ServiceResponseUtils.success(result);
     } catch (error) {
       const safeError = toSafeError(error);
-      const errorMessage = errorContext 
+      const errorMessage = errorContext
         ? `${errorContext}: ${safeError.message}`
         : safeError.message;
-      return this.error(errorMessage);
+      return ServiceResponseUtils.error(errorMessage);
     }
   }
 
@@ -81,21 +81,23 @@ export class ServiceResponseUtils {
     errorMessage: string
   ): ServiceResponse<void> {
     if (condition) {
-      return this.success();
+      return ServiceResponseUtils.success();
     }
-    return this.error(errorMessage);
+    return ServiceResponseUtils.error(errorMessage);
   }
 
   /**
    * Convert an existing result to ServiceResponse format
    * Useful for adapting legacy code patterns
    */
-  static fromResult<T>(
-    result: { success: boolean; data?: T; error?: string }
-  ): ServiceResponse<T> {
+  static fromResult<T>(result: {
+    success: boolean;
+    data?: T;
+    error?: string;
+  }): ServiceResponse<T> {
     if (result.success) {
-      return this.success(result.data);
+      return ServiceResponseUtils.success(result.data);
     }
-    return this.error(result.error || "Operation failed");
+    return ServiceResponseUtils.error(result.error || "Operation failed");
   }
 }

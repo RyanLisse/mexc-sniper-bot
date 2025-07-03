@@ -1,19 +1,19 @@
 "use client";
 
-import { 
-  Activity, 
-  AlertTriangle, 
-  BarChart3, 
-  Clock, 
-  DollarSign, 
-  Loader2, 
-  Pause, 
-  Play, 
-  RefreshCw, 
-  Square, 
-  Target, 
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Clock,
+  DollarSign,
+  Loader2,
+  Pause,
+  Play,
+  RefreshCw,
+  Square,
+  Target,
   TrendingUp,
-  Zap 
+  Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
@@ -60,7 +60,7 @@ export function EnhancedAutoSnipingDashboard() {
     errors: patternErrors,
   } = usePatternSniper();
 
-  const [snipeTargets, setSnipeTargets] = useState<SnipeTarget[]>([]);
+  const [_snipeTargets, setSnipeTargets] = useState<SnipeTarget[]>([]);
   const [targetsLoading, setTargetsLoading] = useState(false);
 
   // Fetch snipe targets from database
@@ -69,7 +69,7 @@ export function EnhancedAutoSnipingDashboard() {
     try {
       const response = await fetch("/api/snipe-targets?userId=user123");
       const result = await response.json();
-      
+
       if (result.success) {
         setSnipeTargets(result.data || []);
       }
@@ -115,9 +115,9 @@ export function EnhancedAutoSnipingDashboard() {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(value);
   };
 
@@ -130,13 +130,17 @@ export function EnhancedAutoSnipingDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">Auto-Sniping Dashboard</h2>
+          <h2 className="text-2xl font-bold text-white">
+            Auto-Sniping Dashboard
+          </h2>
           <p className="text-slate-400">
             Real-time monitoring and control of automated sniping operations
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <div className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`} />
+          <div
+            className={`w-3 h-3 rounded-full ${isConnected ? "bg-green-400" : "bg-red-400"}`}
+          />
           <span className="text-sm text-slate-400">
             {isConnected ? "Connected" : "Disconnected"}
           </span>
@@ -149,9 +153,13 @@ export function EnhancedAutoSnipingDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-400">Execution Status</p>
+                <p className="text-sm font-medium text-slate-400">
+                  Execution Status
+                </p>
                 <div className="flex items-center space-x-2 mt-1">
-                  <Badge variant={executionData?.isActive ? "default" : "secondary"}>
+                  <Badge
+                    variant={executionData?.isActive ? "default" : "secondary"}
+                  >
                     {executionData?.status || "Inactive"}
                   </Badge>
                   {!executionData?.isHealthy && (
@@ -168,7 +176,9 @@ export function EnhancedAutoSnipingDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-400">Active Positions</p>
+                <p className="text-sm font-medium text-slate-400">
+                  Active Positions
+                </p>
                 <p className="text-2xl font-bold text-green-400">
                   {executionData?.activePositions || 0}
                 </p>
@@ -182,10 +192,16 @@ export function EnhancedAutoSnipingDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-400">Today's PnL</p>
-                <p className={`text-2xl font-bold ${
-                  (executionData?.totalPnl || 0) >= 0 ? "text-green-400" : "text-red-400"
-                }`}>
+                <p className="text-sm font-medium text-slate-400">
+                  Today's PnL
+                </p>
+                <p
+                  className={`text-2xl font-bold ${
+                    (executionData?.totalPnl || 0) >= 0
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
                   {formatCurrency(executionData?.totalPnl || 0)}
                 </p>
               </div>
@@ -198,7 +214,9 @@ export function EnhancedAutoSnipingDashboard() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-400">Success Rate</p>
+                <p className="text-sm font-medium text-slate-400">
+                  Success Rate
+                </p>
                 <p className="text-2xl font-bold text-purple-400">
                   {formatPercentage(executionData?.successRate || 0)}
                 </p>
@@ -234,12 +252,14 @@ export function EnhancedAutoSnipingDashboard() {
             )}
             {patternErrors.calendar && (
               <div className="text-red-300">
-                <strong>Pattern Detection (Calendar):</strong> {patternErrors.calendar.message}
+                <strong>Pattern Detection (Calendar):</strong>{" "}
+                {patternErrors.calendar.message}
               </div>
             )}
             {patternErrors.symbols && (
               <div className="text-red-300">
-                <strong>Pattern Detection (Symbols):</strong> {patternErrors.symbols.message}
+                <strong>Pattern Detection (Symbols):</strong>{" "}
+                {patternErrors.symbols.message}
               </div>
             )}
           </CardContent>
@@ -258,7 +278,9 @@ export function EnhancedAutoSnipingDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Auto-Sniping Controls */}
             <div className="space-y-3">
-              <h4 className="font-medium text-slate-300">Auto-Sniping Execution</h4>
+              <h4 className="font-medium text-slate-300">
+                Auto-Sniping Execution
+              </h4>
               <div className="flex flex-wrap gap-2">
                 <Button
                   onClick={handleToggleExecution}
@@ -355,7 +377,9 @@ export function EnhancedAutoSnipingDashboard() {
                   onClick={fetchSnipeTargets}
                   disabled={targetsLoading}
                 >
-                  <RefreshCw className={`h-4 w-4 ${targetsLoading ? "animate-spin" : ""}`} />
+                  <RefreshCw
+                    className={`h-4 w-4 ${targetsLoading ? "animate-spin" : ""}`}
+                  />
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -370,13 +394,23 @@ export function EnhancedAutoSnipingDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center space-x-3">
-                            <h3 className="font-bold text-green-400 text-lg">{target.symbol}</h3>
-                            <Badge variant="default" className="bg-green-500">READY</Badge>
+                            <h3 className="font-bold text-green-400 text-lg">
+                              {target.symbol}
+                            </h3>
+                            <Badge variant="default" className="bg-green-500">
+                              READY
+                            </Badge>
                           </div>
-                          <p className="text-slate-300 mt-1">{target.projectName}</p>
+                          <p className="text-slate-300 mt-1">
+                            {target.projectName}
+                          </p>
                           <div className="flex items-center space-x-4 mt-2 text-sm text-slate-400">
-                            <span>Launch: {target.launchTime.toLocaleString()}</span>
-                            <span>Advance: {target.hoursAdvanceNotice.toFixed(1)}h</span>
+                            <span>
+                              Launch: {target.launchTime.toLocaleString()}
+                            </span>
+                            <span>
+                              Advance: {target.hoursAdvanceNotice.toFixed(1)}h
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -386,9 +420,13 @@ export function EnhancedAutoSnipingDashboard() {
               ) : (
                 <div className="text-center py-8">
                   <Target className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-400 mb-2">No Ready Targets</h3>
+                  <h3 className="text-lg font-semibold text-slate-400 mb-2">
+                    No Ready Targets
+                  </h3>
                   <p className="text-slate-500">
-                    {patternMonitoring ? "Monitoring for new opportunities..." : "Start pattern detection to find targets"}
+                    {patternMonitoring
+                      ? "Monitoring for new opportunities..."
+                      : "Start pattern detection to find targets"}
                   </p>
                 </div>
               )}
@@ -399,23 +437,34 @@ export function EnhancedAutoSnipingDashboard() {
         <TabsContent value="pending" className="space-y-4">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader>
-              <CardTitle>Under Monitoring ({pendingDetection.length})</CardTitle>
+              <CardTitle>
+                Under Monitoring ({pendingDetection.length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {pendingDetection.length > 0 ? (
                 <div className="space-y-2">
                   {pendingDetection.map((vcoinId) => {
-                    const target = calendarTargets.find((t) => t.vcoinId === vcoinId);
+                    const target = calendarTargets.find(
+                      (t) => t.vcoinId === vcoinId
+                    );
                     return target ? (
                       <div
                         key={vcoinId}
                         className="flex justify-between items-center p-3 bg-yellow-50/5 border border-yellow-500/20 rounded"
                       >
                         <div>
-                          <span className="font-medium text-yellow-400">{target.symbol}</span>
-                          <span className="text-slate-400 ml-2">{target.projectName}</span>
+                          <span className="font-medium text-yellow-400">
+                            {target.symbol}
+                          </span>
+                          <span className="text-slate-400 ml-2">
+                            {target.projectName}
+                          </span>
                         </div>
-                        <Badge variant="outline" className="border-yellow-500 text-yellow-400">
+                        <Badge
+                          variant="outline"
+                          className="border-yellow-500 text-yellow-400"
+                        >
                           Scanning...
                         </Badge>
                       </div>
@@ -425,7 +474,9 @@ export function EnhancedAutoSnipingDashboard() {
               ) : (
                 <div className="text-center py-8">
                   <Clock className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-500">No targets currently under monitoring</p>
+                  <p className="text-slate-500">
+                    No targets currently under monitoring
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -481,19 +532,27 @@ export function EnhancedAutoSnipingDashboard() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Total Listings:</span>
-                    <span className="text-blue-400">{patternStats?.totalListings || 0}</span>
+                    <span className="text-blue-400">
+                      {patternStats?.totalListings || 0}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Monitoring:</span>
-                    <span className="text-yellow-400">{patternStats?.pendingDetection || 0}</span>
+                    <span className="text-yellow-400">
+                      {patternStats?.pendingDetection || 0}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Ready to Snipe:</span>
-                    <span className="text-green-400">{patternStats?.readyToSnipe || 0}</span>
+                    <span className="text-green-400">
+                      {patternStats?.readyToSnipe || 0}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Executed:</span>
-                    <span className="text-purple-400">{patternStats?.executed || 0}</span>
+                    <span className="text-purple-400">
+                      {patternStats?.executed || 0}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -516,7 +575,11 @@ export function EnhancedAutoSnipingDashboard() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">System Health:</span>
-                    <Badge variant={executionData?.isHealthy ? "default" : "destructive"}>
+                    <Badge
+                      variant={
+                        executionData?.isHealthy ? "default" : "destructive"
+                      }
+                    >
                       {executionData?.isHealthy ? "Good" : "Poor"}
                     </Badge>
                   </div>

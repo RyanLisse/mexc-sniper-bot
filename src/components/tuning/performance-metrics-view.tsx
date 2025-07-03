@@ -22,7 +22,13 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface PerformanceMetric {
   timestamp: string;
@@ -85,8 +91,13 @@ export function PerformanceMetricsView({
 
     return metrics
       .filter((m) => new Date(m.timestamp).getTime() > cutoff)
-      .filter((m) => selectedOperation === "all" || m.operation === selectedOperation)
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      .filter(
+        (m) => selectedOperation === "all" || m.operation === selectedOperation
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
   }, [metrics, timeRange, selectedOperation]);
 
   const metricSummaries = useMemo(() => {
@@ -128,7 +139,11 @@ export function PerformanceMetricsView({
               ? "down"
               : "stable",
         status:
-          latest.throughput >= 10 ? "healthy" : latest.throughput >= 5 ? "warning" : "critical",
+          latest.throughput >= 10
+            ? "healthy"
+            : latest.throughput >= 5
+              ? "warning"
+              : "critical",
       },
       {
         name: "Error Rate",
@@ -143,7 +158,11 @@ export function PerformanceMetricsView({
               ? "down"
               : "stable",
         status:
-          latest.errorRate <= 0.01 ? "healthy" : latest.errorRate <= 0.05 ? "warning" : "critical",
+          latest.errorRate <= 0.01
+            ? "healthy"
+            : latest.errorRate <= 0.05
+              ? "warning"
+              : "critical",
       },
       {
         name: "Success Rate",
@@ -176,7 +195,12 @@ export function PerformanceMetricsView({
             : latest.cpuUsage < previous.cpuUsage * 0.9
               ? "down"
               : "stable",
-        status: latest.cpuUsage <= 50 ? "healthy" : latest.cpuUsage <= 80 ? "warning" : "critical",
+        status:
+          latest.cpuUsage <= 50
+            ? "healthy"
+            : latest.cpuUsage <= 80
+              ? "warning"
+              : "critical",
       },
       {
         name: "Memory Usage",
@@ -205,14 +229,25 @@ export function PerformanceMetricsView({
   const overallHealth = useMemo(() => {
     if (metricSummaries.length === 0) return { status: "warning", score: 0 };
 
-    const healthyCount = metricSummaries.filter((m) => m.status === "healthy").length;
-    const warningCount = metricSummaries.filter((m) => m.status === "warning").length;
-    const criticalCount = metricSummaries.filter((m) => m.status === "critical").length;
+    const healthyCount = metricSummaries.filter(
+      (m) => m.status === "healthy"
+    ).length;
+    const warningCount = metricSummaries.filter(
+      (m) => m.status === "warning"
+    ).length;
+    const criticalCount = metricSummaries.filter(
+      (m) => m.status === "critical"
+    ).length;
 
-    const score = (healthyCount * 100 + warningCount * 60) / metricSummaries.length;
+    const score =
+      (healthyCount * 100 + warningCount * 60) / metricSummaries.length;
 
     const status =
-      criticalCount > 0 ? "critical" : warningCount > healthyCount ? "warning" : "healthy";
+      criticalCount > 0
+        ? "critical"
+        : warningCount > healthyCount
+          ? "warning"
+          : "healthy";
 
     return { status, score: Math.round(score) };
   }, [metricSummaries]);
@@ -288,7 +323,10 @@ export function PerformanceMetricsView({
             </SelectContent>
           </Select>
 
-          <Select value={selectedOperation} onValueChange={setSelectedOperation}>
+          <Select
+            value={selectedOperation}
+            onValueChange={setSelectedOperation}
+          >
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -308,7 +346,9 @@ export function PerformanceMetricsView({
           )}
 
           {onExport && (
-            <Select onValueChange={(format) => onExport(format as "csv" | "json")}>
+            <Select
+              onValueChange={(format) => onExport(format as "csv" | "json")}
+            >
               <SelectTrigger className="w-20">
                 <SelectValue placeholder="Export" />
               </SelectTrigger>
@@ -357,7 +397,9 @@ export function PerformanceMetricsView({
           <Card key={metric.name}>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">{metric.name}</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  {metric.name}
+                </span>
                 <div className="flex items-center gap-1">
                   {getTrendIcon(metric.trend)}
                   {getStatusIcon(metric.status)}
@@ -366,7 +408,9 @@ export function PerformanceMetricsView({
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-2xl font-bold">{formatValue(metric.current, metric.unit)}</div>
+                <div className="text-2xl font-bold">
+                  {formatValue(metric.current, metric.unit)}
+                </div>
 
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
@@ -389,7 +433,10 @@ export function PerformanceMetricsView({
                 {/* Threshold Indicator */}
                 <div className="relative">
                   <Progress
-                    value={Math.min(100, (metric.current / metric.threshold.critical) * 100)}
+                    value={Math.min(
+                      100,
+                      (metric.current / metric.threshold.critical) * 100
+                    )}
                     className="h-2"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -441,11 +488,15 @@ export function PerformanceMetricsView({
 
                     <div className="flex items-center gap-4 text-sm">
                       <div className="text-right">
-                        <div className="font-medium">{Math.round(metric.responseTime)}ms</div>
+                        <div className="font-medium">
+                          {Math.round(metric.responseTime)}ms
+                        </div>
                         <div className="text-muted-foreground">Response</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-medium">{metric.throughput.toFixed(1)}</div>
+                        <div className="font-medium">
+                          {metric.throughput.toFixed(1)}
+                        </div>
                         <div className="text-muted-foreground">req/s</div>
                       </div>
                       <div className="text-right">
@@ -467,14 +518,16 @@ export function PerformanceMetricsView({
                         variant={
                           metric.errorRate === 0 && metric.responseTime < 1000
                             ? "default"
-                            : metric.errorRate < 0.05 && metric.responseTime < 2000
+                            : metric.errorRate < 0.05 &&
+                                metric.responseTime < 2000
                               ? "secondary"
                               : "destructive"
                         }
                       >
                         {metric.errorRate === 0 && metric.responseTime < 1000
                           ? "Good"
-                          : metric.errorRate < 0.05 && metric.responseTime < 2000
+                          : metric.errorRate < 0.05 &&
+                              metric.responseTime < 2000
                             ? "Fair"
                             : "Poor"}
                       </Badge>

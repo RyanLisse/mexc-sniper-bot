@@ -101,7 +101,10 @@ Output Format:
     super(config);
   }
 
-  async process(input: string, context?: CalendarMonitoringRequest): Promise<AgentResponse> {
+  async process(
+    input: string,
+    context?: CalendarMonitoringRequest
+  ): Promise<AgentResponse> {
     const request: CalendarMonitoringRequest = context || {
       timeframe: "24h",
       minimumAdvanceHours: 3.5,
@@ -166,7 +169,9 @@ Focus on opportunities providing ${request.minimumAdvanceHours || 3.5}+ hours ad
     ]);
   }
 
-  async scanForNewListings(calendarData: CalendarEntry[]): Promise<AgentResponse> {
+  async scanForNewListings(
+    calendarData: CalendarEntry[]
+  ): Promise<AgentResponse> {
     try {
       this.agentLogger.info(
         `[CalendarAgent] Scanning ${calendarData.length} calendar entries for new listings`
@@ -257,7 +262,10 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
         metadata: aiResponse.metadata,
       };
     } catch (error) {
-      this.agentLogger.error(`[CalendarAgent] Error scanning new listings:`, error);
+      this.agentLogger.error(
+        `[CalendarAgent] Error scanning new listings:`,
+        error
+      );
       return {
         content: `Calendar analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -277,11 +285,14 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       response !== null &&
       "success" in response &&
       "data" in response &&
-      typeof (response as { success: boolean; data: unknown; error?: string }).success === "boolean"
+      typeof (response as { success: boolean; data: unknown; error?: string })
+        .success === "boolean"
     );
   }
 
-  private preprocessCalendarData(calendarData: CalendarEntry[]): ProcessedCalendarEntry[] {
+  private preprocessCalendarData(
+    calendarData: CalendarEntry[]
+  ): ProcessedCalendarEntry[] {
     const now = Date.now();
 
     return calendarData
@@ -292,7 +303,9 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       .map((entry) => {
         const launchTime = entry.firstOpenTime;
         const launchTimestamp =
-          typeof launchTime === "number" ? launchTime : new Date(launchTime).getTime();
+          typeof launchTime === "number"
+            ? launchTime
+            : new Date(launchTime).getTime();
         const advanceHours = (launchTimestamp - now) / (1000 * 60 * 60);
 
         return {
@@ -320,16 +333,21 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   }
 
   // Generate analysis summary data
-  private generateAnalysisSummary(processedListings: ProcessedCalendarEntry[]): string {
+  private generateAnalysisSummary(
+    processedListings: ProcessedCalendarEntry[]
+  ): string {
     const upcomingListings = processedListings.filter((l) => l.isUpcoming);
     const recentListings = processedListings.filter((l) => l.isRecent);
-    const criticalListings = processedListings.filter((l) => l.urgency === "critical");
+    const criticalListings = processedListings.filter(
+      (l) => l.urgency === "critical"
+    );
     const highPriorityListings = processedListings.filter(
       (l) => l.hasAdvanceNotice && l.isUpcoming
     );
 
     const nextLaunch = upcomingListings.length > 0 ? upcomingListings[0] : null;
-    const recommendedActions = this.generateRecommendedActions(processedListings);
+    const recommendedActions =
+      this.generateRecommendedActions(processedListings);
 
     return JSON.stringify(
       {
@@ -355,12 +373,16 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   }
 
   // Generate recommended actions based on listings analysis
-  private generateRecommendedActions(listings: ProcessedCalendarEntry[]): string[] {
+  private generateRecommendedActions(
+    listings: ProcessedCalendarEntry[]
+  ): string[] {
     const actions: string[] = [];
 
     const criticalListings = listings.filter((l) => l.urgency === "critical");
     const highUrgencyListings = listings.filter((l) => l.urgency === "high");
-    const upcomingListings = listings.filter((l) => l.isUpcoming && l.hasAdvanceNotice);
+    const upcomingListings = listings.filter(
+      (l) => l.isUpcoming && l.hasAdvanceNotice
+    );
 
     if (criticalListings.length > 0) {
       actions.push(
@@ -381,7 +403,9 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
     }
 
     if (actions.length === 0) {
-      actions.push("MONITOR: Continue regular calendar scanning for new announcements");
+      actions.push(
+        "MONITOR: Continue regular calendar scanning for new announcements"
+      );
     }
 
     return actions;
@@ -390,7 +414,9 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
   // Fetch fresh calendar data using MexcApiAgent
   async fetchLatestCalendarData(): Promise<CalendarEntry[]> {
     try {
-      this.agentLogger.info(`[CalendarAgent] Fetching latest calendar data via MexcApiAgent`);
+      this.agentLogger.info(
+        `[CalendarAgent] Fetching latest calendar data via MexcApiAgent`
+      );
 
       const mexcApiAgent = new MexcApiAgent();
       const response = await mexcApiAgent.callMexcApi("/calendar");
@@ -404,37 +430,55 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       }
 
       // Validate calendar entries using Zod
-      const validatedEntries = (Array.isArray(response.data) ? response.data : [])
+      const validatedEntries = (
+        Array.isArray(response.data) ? response.data : []
+      )
         .map((entry: unknown) => {
           try {
             const validation = validateCalendarEntry(entry);
             if (validation.isValid && validation.data) {
               return validation.data;
             } else {
-              this.agentLogger.warn(`[CalendarAgent] Invalid calendar entry:`, validation.errors);
+              this.agentLogger.warn(
+                `[CalendarAgent] Invalid calendar entry:`,
+                validation.errors
+              );
               return null;
             }
           } catch (_error) {
-            this.agentLogger.warn(`[CalendarAgent] Invalid calendar entry:`, entry);
+            this.agentLogger.warn(
+              `[CalendarAgent] Invalid calendar entry:`,
+              entry
+            );
             return null;
           }
         })
-        .filter((entry: CalendarEntry | null): entry is CalendarEntry => entry !== null);
+        .filter(
+          (entry: CalendarEntry | null): entry is CalendarEntry =>
+            entry !== null
+        );
 
       this.agentLogger.info(
         `[CalendarAgent] Retrieved ${validatedEntries.length} valid calendar entries`
       );
       return validatedEntries;
     } catch (error) {
-      this.agentLogger.error(`[CalendarAgent] Failed to fetch calendar data:`, error);
+      this.agentLogger.error(
+        `[CalendarAgent] Failed to fetch calendar data:`,
+        error
+      );
       return [];
     }
   }
 
   // Comprehensive calendar monitoring workflow
-  async performCalendarMonitoring(_request?: CalendarMonitoringRequest): Promise<AgentResponse> {
+  async performCalendarMonitoring(
+    _request?: CalendarMonitoringRequest
+  ): Promise<AgentResponse> {
     try {
-      this.agentLogger.info(`[CalendarAgent] Starting comprehensive calendar monitoring`);
+      this.agentLogger.info(
+        `[CalendarAgent] Starting comprehensive calendar monitoring`
+      );
 
       // Fetch latest calendar data
       const calendarData = await this.fetchLatestCalendarData();
@@ -455,8 +499,12 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       // If scan was successful, enhance with additional monitoring plan
       if (scanResults.content && !scanResults.content.includes("failed")) {
         // Extract processed data from content (since we can't use metadata)
-        const upcomingListingsMatch = scanResults.content.match(/"upcomingListings":\s*(\d+)/);
-        const upcomingCount = upcomingListingsMatch ? Number.parseInt(upcomingListingsMatch[1]) : 0;
+        const upcomingListingsMatch = scanResults.content.match(
+          /"upcomingListings":\s*(\d+)/
+        );
+        const upcomingCount = upcomingListingsMatch
+          ? Number.parseInt(upcomingListingsMatch[1])
+          : 0;
 
         if (upcomingCount > 0) {
           // Generate a simple monitoring plan
@@ -472,7 +520,10 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
 
       return scanResults;
     } catch (error) {
-      this.agentLogger.error(`[CalendarAgent] Calendar monitoring workflow failed:`, error);
+      this.agentLogger.error(
+        `[CalendarAgent] Calendar monitoring workflow failed:`,
+        error
+      );
       return {
         content: `Calendar monitoring failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         metadata: {
@@ -593,7 +644,9 @@ Provide a comprehensive assessment with specific scores and recommendations.
     ]);
   }
 
-  async createMonitoringPlan(discoveredListings: NewListingData[]): Promise<AgentResponse> {
+  async createMonitoringPlan(
+    discoveredListings: NewListingData[]
+  ): Promise<AgentResponse> {
     const listingsJson = JSON.stringify(discoveredListings, null, 2);
 
     const userMessage = `

@@ -20,7 +20,10 @@ import { MexcApiClient } from "./mexc-api-client";
  * Handles market data, tickers, symbols, and exchange information
  * Implements MarketService interface for service compliance
  */
-export class MexcMarketService extends BaseMexcService implements MarketService {
+export class MexcMarketService
+  extends BaseMexcService
+  implements MarketService
+{
   private apiClient: MexcApiClient;
 
   constructor(config: Partial<UnifiedMexcConfig> = {}) {
@@ -110,7 +113,8 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
       // Map internal format to interface format
       const mappedSymbols = symbols.map((symbol: SymbolEntry) => ({
         symbol: symbol.symbol || "",
-        status: (symbol as any).status || symbol.sts === 1 ? "TRADING" : "UNKNOWN",
+        status:
+          (symbol as any).status || symbol.sts === 1 ? "TRADING" : "UNKNOWN",
         baseAsset: (symbol as any).baseAsset || "",
         quoteAsset: (symbol as any).quoteAsset || "",
       }));
@@ -131,7 +135,7 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
    * Get 24hr ticker statistics
    * Implements MarketService.getTicker24hr interface
    */
-  async getTicker24hr(symbols?: string[]): Promise<{
+  async getTicker24hr(_symbols?: string[]): Promise<{
     success: boolean;
     data?: Array<{
       symbol: string;
@@ -151,7 +155,9 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
         };
       }
 
-      const data = Array.isArray(response.data) ? response.data : [response.data];
+      const data = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
       const tickers = this.validateAndMapArray(data, TickerSchema) as Ticker[];
 
       // Map internal format to interface format
@@ -199,7 +205,9 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
         };
       }
 
-      const tickerData = Array.isArray(response.data) ? response.data[0] : response.data;
+      const tickerData = Array.isArray(response.data)
+        ? response.data[0]
+        : response.data;
       const tickerValidation = validateMexcData(TickerSchema, tickerData);
       if (!tickerValidation.success) {
         return {
@@ -241,14 +249,18 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
    * Get symbol status
    * Implements MarketService.getSymbolStatus interface
    */
-  async getSymbolStatus(symbol: string): Promise<{ status: string; trading: boolean }> {
+  async getSymbolStatus(
+    symbol: string
+  ): Promise<{ status: string; trading: boolean }> {
     try {
       const exchangeResponse = await this.getExchangeInfoInternal();
       if (!exchangeResponse.success || !exchangeResponse.data) {
         throw new Error("Failed to get exchange info");
       }
 
-      const symbolInfo = exchangeResponse.data.symbols?.find((s: any) => s.symbol === symbol);
+      const symbolInfo = exchangeResponse.data.symbols?.find(
+        (s: any) => s.symbol === symbol
+      );
 
       if (!symbolInfo) {
         throw new Error(`Symbol ${symbol} not found`);
@@ -258,7 +270,7 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
         status: symbolInfo.status || "UNKNOWN",
         trading: symbolInfo.status === "TRADING",
       };
-    } catch (error) {
+    } catch (_error) {
       return { status: "ERROR", trading: false };
     }
   }
@@ -280,8 +292,10 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
     error?: string;
   }> {
     try {
-      console.info(`[MexcMarketService] Fetching order book for ${symbol}, limit: ${limit}`);
-      
+      console.info(
+        `[MexcMarketService] Fetching order book for ${symbol}, limit: ${limit}`
+      );
+
       // Use the MEXC API endpoint directly via the base service
       const orderBookData = await this.executeRequest<{
         bids: [string, string][];
@@ -291,7 +305,9 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
 
       // Validate and format the order book data
       if (!orderBookData || !orderBookData.bids || !orderBookData.asks) {
-        console.warn(`[MexcMarketService] Invalid order book data structure for ${symbol}`);
+        console.warn(
+          `[MexcMarketService] Invalid order book data structure for ${symbol}`
+        );
         return {
           success: false,
           error: "Invalid order book data received from MEXC API",
@@ -313,7 +329,9 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
           String(Array.isArray(ask) ? ask[1] : ask.quantity || "0"),
         ]);
 
-      console.info(`[MexcMarketService] Order book retrieved for ${symbol}: ${formattedBids.length} bids, ${formattedAsks.length} asks`);
+      console.info(
+        `[MexcMarketService] Order book retrieved for ${symbol}: ${formattedBids.length} bids, ${formattedAsks.length} asks`
+      );
 
       return {
         success: true,
@@ -324,7 +342,10 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
         },
       };
     } catch (error) {
-      console.error(`[MexcMarketService] Order book fetch error for ${symbol}:`, error);
+      console.error(
+        `[MexcMarketService] Order book fetch error for ${symbol}:`,
+        error
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
@@ -345,9 +366,14 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
       if (!response.success) {
         throw new Error(response.error || "Failed to get exchange info");
       }
-      const exchangeValidation = validateMexcData(ExchangeInfoSchema, response.data);
+      const exchangeValidation = validateMexcData(
+        ExchangeInfoSchema,
+        response.data
+      );
       if (!exchangeValidation.success) {
-        throw new Error(exchangeValidation.error || "Failed to validate exchange info");
+        throw new Error(
+          exchangeValidation.error || "Failed to validate exchange info"
+        );
       }
 
       return {
@@ -400,14 +426,18 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
   /**
    * Get 24hr ticker statistics (internal method)
    */
-  async getTicker24hrInternal(symbols?: string[]): Promise<MexcServiceResponse<Ticker[]>> {
+  async getTicker24hrInternal(
+    _symbols?: string[]
+  ): Promise<MexcServiceResponse<Ticker[]>> {
     try {
       const response = await this.apiClient.get24hrTicker();
       if (!response.success) {
         throw new Error(response.error || "Failed to get 24hr ticker");
       }
 
-      const data = Array.isArray(response.data) ? response.data : [response.data];
+      const data = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
       const tickers = this.validateAndMapArray(data, TickerSchema) as Ticker[];
 
       return {
@@ -429,17 +459,23 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
   /**
    * Get single symbol ticker (internal method)
    */
-  async getTickerInternal(symbol: string): Promise<MexcServiceResponse<Ticker>> {
+  async getTickerInternal(
+    symbol: string
+  ): Promise<MexcServiceResponse<Ticker>> {
     try {
       const response = await this.apiClient.get24hrTicker(symbol);
       if (!response.success) {
         throw new Error(response.error || "Failed to get ticker");
       }
 
-      const tickerData = Array.isArray(response.data) ? response.data[0] : response.data;
+      const tickerData = Array.isArray(response.data)
+        ? response.data[0]
+        : response.data;
       const tickerValidation = validateMexcData(TickerSchema, tickerData);
       if (!tickerValidation.success) {
-        throw new Error(tickerValidation.error || "Failed to validate ticker data");
+        throw new Error(
+          tickerValidation.error || "Failed to validate ticker data"
+        );
       }
       const ticker = tickerValidation.data;
 
@@ -494,7 +530,7 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
         bidPrice: bestBid,
         askPrice: bestAsk,
       };
-    } catch (error) {
+    } catch (_error) {
       return { hasGap: false, gapPercentage: 0, bidPrice: 0, askPrice: 0 };
     }
   }
@@ -505,7 +541,9 @@ export class MexcMarketService extends BaseMexcService implements MarketService 
  */
 let marketServiceInstance: MexcMarketService | null = null;
 
-export function getMexcMarketService(config?: UnifiedMexcConfig): MexcMarketService {
+export function getMexcMarketService(
+  config?: UnifiedMexcConfig
+): MexcMarketService {
   if (!marketServiceInstance) {
     marketServiceInstance = new MexcMarketService(config);
   }

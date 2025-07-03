@@ -58,9 +58,11 @@ export class AutoSnipingCoordinator {
 
   // Simple logger fallback
   private logger = {
-    info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ''),
-    error: (msg: string, error?: any) => console.error(`[ERROR] ${msg}`, error || ''),
-    debug: (msg: string, meta?: any) => console.log(`[DEBUG] ${msg}`, meta || ''),
+    info: (msg: string, meta?: any) => console.log(`[INFO] ${msg}`, meta || ""),
+    error: (msg: string, error?: any) =>
+      console.error(`[ERROR] ${msg}`, error || ""),
+    debug: (msg: string, meta?: any) =>
+      console.log(`[DEBUG] ${msg}`, meta || ""),
   };
 
   constructor(context?: SimpleModuleContext) {
@@ -146,7 +148,7 @@ export class AutoSnipingCoordinator {
 
       return {
         success: false,
-        error: error?.message || 'Failed to start auto-sniping',
+        error: error?.message || "Failed to start auto-sniping",
         timestamp: new Date().toISOString(),
       };
     }
@@ -182,7 +184,7 @@ export class AutoSnipingCoordinator {
 
       return {
         success: false,
-        error: error?.message || 'Failed to stop auto-sniping',
+        error: error?.message || "Failed to stop auto-sniping",
         timestamp: new Date().toISOString(),
       };
     }
@@ -191,7 +193,9 @@ export class AutoSnipingCoordinator {
   /**
    * Process snipe targets - simplified implementation
    */
-  async processSnipeTargets(): Promise<SimpleServiceResponse<{ processedCount: number; successCount: number }>> {
+  async processSnipeTargets(): Promise<
+    SimpleServiceResponse<{ processedCount: number; successCount: number }>
+  > {
     const startTime = Date.now();
 
     try {
@@ -236,9 +240,12 @@ export class AutoSnipingCoordinator {
       this.processedTargets += processedCount;
       this.lastSnipeCheck = new Date();
 
-      this.logger.info(`Processed ${processedCount} targets, ${successCount} successful`, {
-        processingTime: Date.now() - startTime,
-      });
+      this.logger.info(
+        `Processed ${processedCount} targets, ${successCount} successful`,
+        {
+          processingTime: Date.now() - startTime,
+        }
+      );
 
       return {
         success: true,
@@ -251,7 +258,7 @@ export class AutoSnipingCoordinator {
       return {
         success: false,
         data: { processedCount: 0, successCount: 0 },
-        error: error?.message || 'Processing failed',
+        error: error?.message || "Processing failed",
         timestamp: new Date().toISOString(),
       };
     }
@@ -268,7 +275,9 @@ export class AutoSnipingCoordinator {
   /**
    * Process a single target - simplified implementation
    */
-  async processTarget(target: SimpleAutoSnipeTarget): Promise<SimpleServiceResponse<SimpleTradeResult>> {
+  async processTarget(
+    target: SimpleAutoSnipeTarget
+  ): Promise<SimpleServiceResponse<SimpleTradeResult>> {
     try {
       // Mock processing - replace with actual trading logic
       const result: SimpleTradeResult = {
@@ -287,7 +296,7 @@ export class AutoSnipingCoordinator {
     } catch (error: any) {
       return {
         success: false,
-        error: error?.message || 'Target processing failed',
+        error: error?.message || "Target processing failed",
         timestamp: new Date().toISOString(),
       };
     }
@@ -314,7 +323,9 @@ export class AutoSnipingCoordinator {
    * Calculate average confidence
    */
   private calculateAverageConfidence(): number {
-    return this.successfulSnipes > 0 ? (this.successfulSnipes / this.processedTargets) * 100 : 0;
+    return this.successfulSnipes > 0
+      ? (this.successfulSnipes / this.processedTargets) * 100
+      : 0;
   }
 
   /**

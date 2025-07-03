@@ -5,10 +5,7 @@
 
 import { z } from "zod";
 import { AggregateRoot } from "../../base/aggregate-root";
-import {
-  BusinessRuleViolationError,
-  DomainValidationError,
-} from "../../errors/trading-errors";
+import { DomainValidationError } from "../../errors/trading-errors";
 import {
   type EmergencyStopCompleted,
   type EmergencyStopCreated,
@@ -224,7 +221,8 @@ export class EmergencyStop extends AggregateRoot<string> {
       version: 1,
     };
 
-    const emergencyStop = EmergencyStop.createWithValidation(emergencyStopProps);
+    const emergencyStop =
+      EmergencyStop.createWithValidation(emergencyStopProps);
 
     // Emit domain event
     emergencyStop.addDomainEvent(
@@ -246,7 +244,9 @@ export class EmergencyStop extends AggregateRoot<string> {
     return EmergencyStop.createWithValidation(props);
   }
 
-  private static createWithValidation(props: EmergencyStopProps): EmergencyStop {
+  private static createWithValidation(
+    props: EmergencyStopProps
+  ): EmergencyStop {
     // Validate props
     const validationResult = EmergencyStopPropsSchema.safeParse(props);
     if (!validationResult.success) {
@@ -285,7 +285,11 @@ export class EmergencyStop extends AggregateRoot<string> {
 
     // Validate threshold values are positive for applicable condition types
     for (const condition of props.triggerConditions) {
-      if (["drawdown_threshold", "position_risk", "portfolio_exposure"].includes(condition.type)) {
+      if (
+        ["drawdown_threshold", "position_risk", "portfolio_exposure"].includes(
+          condition.type
+        )
+      ) {
         if (condition.threshold <= 0 || condition.threshold > 100) {
           throw new DomainValidationError(
             "triggerConditions.threshold",
@@ -294,9 +298,12 @@ export class EmergencyStop extends AggregateRoot<string> {
           );
         }
       }
-      
+
       if (condition.type === "consecutive_losses") {
-        if (condition.threshold <= 0 || !Number.isInteger(condition.threshold)) {
+        if (
+          condition.threshold <= 0 ||
+          !Number.isInteger(condition.threshold)
+        ) {
           throw new DomainValidationError(
             "triggerConditions.threshold",
             condition.threshold,
@@ -307,7 +314,7 @@ export class EmergencyStop extends AggregateRoot<string> {
     }
 
     // Validate action priorities are unique
-    const priorities = props.emergencyActions.map(action => action.priority);
+    const priorities = props.emergencyActions.map((action) => action.priority);
     const uniquePriorities = new Set(priorities);
     if (priorities.length !== uniquePriorities.size) {
       throw new DomainValidationError(
@@ -453,13 +460,15 @@ export class EmergencyStop extends AggregateRoot<string> {
     };
   }
 
-  evaluateTriggerConditions(marketData: Record<string, any>): TriggerConditionsEvaluation {
-    const evaluationResults = this.triggerConditions.map(condition =>
+  evaluateTriggerConditions(
+    marketData: Record<string, any>
+  ): TriggerConditionsEvaluation {
+    const evaluationResults = this.triggerConditions.map((condition) =>
       this.evaluateTriggerCondition(condition, marketData)
     );
 
-    const triggeredConditions = this.triggerConditions.filter((_, index) =>
-      evaluationResults[index].isTriggered
+    const triggeredConditions = this.triggerConditions.filter(
+      (_, index) => evaluationResults[index].isTriggered
     );
 
     const prioritizedConditions = [...triggeredConditions].sort((a, b) => {
@@ -468,9 +477,10 @@ export class EmergencyStop extends AggregateRoot<string> {
     });
 
     const isEmergencyTriggered = triggeredConditions.length > 0;
-    const highestSeverity = prioritizedConditions.length > 0
-      ? prioritizedConditions[0].priority
-      : "low";
+    const highestSeverity =
+      prioritizedConditions.length > 0
+        ? prioritizedConditions[0].priority
+        : "low";
 
     return {
       triggeredConditions,
@@ -480,7 +490,10 @@ export class EmergencyStop extends AggregateRoot<string> {
     };
   }
 
-  trigger(reason: string, triggerData: Record<string, any> = {}): EmergencyStop {
+  trigger(
+    reason: string,
+    triggerData: Record<string, any> = {}
+  ): EmergencyStop {
     if (!this.isActive) {
       throw new DomainValidationError(
         "status",
@@ -509,27 +522,34 @@ export class EmergencyStop extends AggregateRoot<string> {
 
     // Emit domain event
     updatedStop.addDomainEvent(
-      SafetyEventFactory.createEmergencyStopTriggered(this.props.id, this.props.userId, {
-        emergencyStopId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        reason,
-        triggerData,
-        triggeredAt,
-        scheduledActions: this.props.emergencyActions.map(action => ({
-          actionType: action.type,
-          priority: action.priority,
-          timeout: action.timeout,
-          retryCount: action.retryCount,
-        })),
-      })
+      SafetyEventFactory.createEmergencyStopTriggered(
+        this.props.id,
+        this.props.userId,
+        {
+          emergencyStopId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          reason,
+          triggerData,
+          triggeredAt,
+          scheduledActions: this.props.emergencyActions.map((action) => ({
+            actionType: action.type,
+            priority: action.priority,
+            timeout: action.timeout,
+            retryCount: action.retryCount,
+          })),
+        }
+      )
     );
 
     return updatedStop;
   }
 
   executeActions(actionResults: ActionResult[]): EmergencyStop {
-    if (this.status !== EmergencyStopStatus.TRIGGERED && this.status !== EmergencyStopStatus.EXECUTING) {
+    if (
+      this.status !== EmergencyStopStatus.TRIGGERED &&
+      this.status !== EmergencyStopStatus.EXECUTING
+    ) {
       throw new DomainValidationError(
         "status",
         this.status,
@@ -537,9 +557,12 @@ export class EmergencyStop extends AggregateRoot<string> {
       );
     }
 
-    const totalExecutionTime = actionResults.reduce((total, result) => total + result.duration, 0);
-    const failedActions = actionResults.filter(result => !result.success);
-    
+    const totalExecutionTime = actionResults.reduce(
+      (total, result) => total + result.duration,
+      0
+    );
+    const failedActions = actionResults.filter((result) => !result.success);
+
     let newStatus: EmergencyStopStatus;
     if (failedActions.length === 0) {
       newStatus = EmergencyStopStatus.EXECUTING; // Will be completed in a separate call
@@ -560,7 +583,10 @@ export class EmergencyStop extends AggregateRoot<string> {
   }
 
   markAsCompleted(): EmergencyStop {
-    if (this.status !== EmergencyStopStatus.EXECUTING && this.status !== EmergencyStopStatus.PARTIAL_FAILURE) {
+    if (
+      this.status !== EmergencyStopStatus.EXECUTING &&
+      this.status !== EmergencyStopStatus.PARTIAL_FAILURE
+    ) {
       throw new DomainValidationError(
         "status",
         this.status,
@@ -578,22 +604,29 @@ export class EmergencyStop extends AggregateRoot<string> {
 
     // Emit domain event
     updatedStop.addDomainEvent(
-      SafetyEventFactory.createEmergencyStopCompleted(this.props.id, this.props.userId, {
-        emergencyStopId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        triggeredAt: this.props.lastTriggered!,
-        completedAt,
-        executionSummary: this.generateExecutionSummary(),
-        actionResults: this.props.actionResults,
-      })
+      SafetyEventFactory.createEmergencyStopCompleted(
+        this.props.id,
+        this.props.userId,
+        {
+          emergencyStopId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          triggeredAt: this.props.lastTriggered!,
+          completedAt,
+          executionSummary: this.generateExecutionSummary(),
+          actionResults: this.props.actionResults,
+        }
+      )
     );
 
     return updatedStop;
   }
 
   markAsFailed(failureReason: string): EmergencyStop {
-    if (this.status === EmergencyStopStatus.COMPLETED || this.status === EmergencyStopStatus.FAILED) {
+    if (
+      this.status === EmergencyStopStatus.COMPLETED ||
+      this.status === EmergencyStopStatus.FAILED
+    ) {
       throw new DomainValidationError(
         "status",
         this.status,
@@ -612,20 +645,26 @@ export class EmergencyStop extends AggregateRoot<string> {
 
     // Emit domain event
     updatedStop.addDomainEvent(
-      SafetyEventFactory.createEmergencyStopFailed(this.props.id, this.props.userId, {
-        emergencyStopId: this.props.id,
-        userId: this.props.userId,
-        portfolioId: this.props.portfolioId,
-        triggeredAt: this.props.lastTriggered!,
-        failedAt,
-        failureReason,
-        failedActions: this.props.failedActions.map(failed => ({
-          actionType: failed.actionType,
-          error: failed.error || "Unknown error",
-          attemptsCount: 1, // Default to 1 attempt
-        })),
-        partialResults: this.props.actionResults.filter(result => result.success),
-      })
+      SafetyEventFactory.createEmergencyStopFailed(
+        this.props.id,
+        this.props.userId,
+        {
+          emergencyStopId: this.props.id,
+          userId: this.props.userId,
+          portfolioId: this.props.portfolioId,
+          triggeredAt: this.props.lastTriggered!,
+          failedAt,
+          failureReason,
+          failedActions: this.props.failedActions.map((failed) => ({
+            actionType: failed.actionType,
+            error: failed.error || "Unknown error",
+            attemptsCount: 1, // Default to 1 attempt
+          })),
+          partialResults: this.props.actionResults.filter(
+            (result) => result.success
+          ),
+        }
+      )
     );
 
     return updatedStop;
@@ -633,19 +672,21 @@ export class EmergencyStop extends AggregateRoot<string> {
 
   createCoordinationPlan(): CoordinationPlan {
     // Sort actions by priority
-    const sortedActions = [...this.props.emergencyActions].sort((a, b) => a.priority - b.priority);
-    
+    const sortedActions = [...this.props.emergencyActions].sort(
+      (a, b) => a.priority - b.priority
+    );
+
     // Group parallel actions (same priority + can run in parallel)
     const parallelGroups: EmergencyAction[][] = [];
     const sequentialSteps: EmergencyAction[] = [];
-    
+
     let currentGroup: EmergencyAction[] = [];
     let currentPriority = -1;
-    
+
     for (const action of sortedActions) {
       if (action.priority !== currentPriority) {
         if (currentGroup.length > 0) {
-          if (currentGroup.every(a => a.canRunInParallel)) {
+          if (currentGroup.every((a) => a.canRunInParallel)) {
             parallelGroups.push(currentGroup);
           } else {
             sequentialSteps.push(...currentGroup);
@@ -657,10 +698,10 @@ export class EmergencyStop extends AggregateRoot<string> {
         currentGroup.push(action);
       }
     }
-    
+
     // Handle the last group
     if (currentGroup.length > 0) {
-      if (currentGroup.every(a => a.canRunInParallel)) {
+      if (currentGroup.every((a) => a.canRunInParallel)) {
         parallelGroups.push(currentGroup);
       } else {
         sequentialSteps.push(...currentGroup);
@@ -668,31 +709,37 @@ export class EmergencyStop extends AggregateRoot<string> {
     }
 
     // Calculate estimated time
-    const parallelTime = parallelGroups.reduce((total, group) => 
-      total + Math.max(...group.map(action => action.timeout)), 0
+    const parallelTime = parallelGroups.reduce(
+      (total, group) =>
+        total + Math.max(...group.map((action) => action.timeout)),
+      0
     );
-    const sequentialTime = sequentialSteps.reduce((total, action) => total + action.timeout, 0);
+    const sequentialTime = sequentialSteps.reduce(
+      (total, action) => total + action.timeout,
+      0
+    );
     const totalEstimatedTime = parallelTime + sequentialTime;
 
     return {
       parallelGroups,
       sequentialSteps,
       totalEstimatedTime,
-      criticalPath: sortedActions.filter(action => action.priority <= 2), // High and critical priority
+      criticalPath: sortedActions.filter((action) => action.priority <= 2), // High and critical priority
     };
   }
 
   generateExecutionSummary(): ExecutionSummary {
     const totalActions = this.props.actionResults.length;
-    const successfulActions = this.props.actionResults.filter(result => result.success).length;
+    const successfulActions = this.props.actionResults.filter(
+      (result) => result.success
+    ).length;
     const failedActions = this.props.failedActions.length;
-    const averageActionTime = totalActions > 0 
-      ? this.props.totalExecutionTime / totalActions 
-      : 0;
+    const averageActionTime =
+      totalActions > 0 ? this.props.totalExecutionTime / totalActions : 0;
     const overallSuccess = failedActions === 0 && totalActions > 0;
-    const criticalActionsFailed = this.props.failedActions.some(failed =>
-      this.props.emergencyActions.find(action => 
-        action.type === failed.actionType && action.priority <= 2
+    const criticalActionsFailed = this.props.failedActions.some((failed) =>
+      this.props.emergencyActions.find(
+        (action) => action.type === failed.actionType && action.priority <= 2
       )
     );
 
@@ -708,7 +755,10 @@ export class EmergencyStop extends AggregateRoot<string> {
   }
 
   reset(): EmergencyStop {
-    if (this.status !== EmergencyStopStatus.COMPLETED && this.status !== EmergencyStopStatus.FAILED) {
+    if (
+      this.status !== EmergencyStopStatus.COMPLETED &&
+      this.status !== EmergencyStopStatus.FAILED
+    ) {
       throw new DomainValidationError(
         "status",
         this.status,
@@ -731,7 +781,7 @@ export class EmergencyStop extends AggregateRoot<string> {
     });
   }
 
-  recover(recoveryReason: string): EmergencyStop {
+  recover(_recoveryReason: string): EmergencyStop {
     if (this.status !== EmergencyStopStatus.FAILED) {
       throw new DomainValidationError(
         "status",
@@ -844,8 +894,18 @@ export class EmergencyStop extends AggregateRoot<string> {
   }
 
   // Get uncommitted events (overridden for type safety)
-  getUncommittedEvents(): readonly (EmergencyStopCreated | EmergencyStopTriggered | EmergencyStopCompleted | EmergencyStopFailed)[] {
-    return this.getDomainEvents() as readonly (EmergencyStopCreated | EmergencyStopTriggered | EmergencyStopCompleted | EmergencyStopFailed)[];
+  getUncommittedEvents(): readonly (
+    | EmergencyStopCreated
+    | EmergencyStopTriggered
+    | EmergencyStopCompleted
+    | EmergencyStopFailed
+  )[] {
+    return this.getDomainEvents() as readonly (
+      | EmergencyStopCreated
+      | EmergencyStopTriggered
+      | EmergencyStopCompleted
+      | EmergencyStopFailed
+    )[];
   }
 
   // Convert to plain object for persistence

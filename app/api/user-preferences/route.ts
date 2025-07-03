@@ -1,127 +1,141 @@
-import { eq } from 'drizzle-orm';
-import { NextRequest, NextResponse } from 'next/server';
+import { eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { db, type NewUserPreferences, userPreferences } from "@/src/db";
 import {
   apiResponse,
-  createErrorResponse,
   createSuccessResponse,
-  createValidationErrorResponse, 
-  HTTP_STATUS
+  createValidationErrorResponse,
+  HTTP_STATUS,
 } from "@/src/lib/api-response";
-import { 
-  DatabaseConnectionError, 
+import {
   validateUserId,
-  withApiErrorHandling, 
-  withDatabaseErrorHandling 
+  withApiErrorHandling,
+  withDatabaseErrorHandling,
 } from "@/src/lib/central-api-error-handler";
 
 // GET /api/user-preferences?userId=xxx
-export const GET = withApiErrorHandling(async (request: NextRequest) => {
-  const { searchParams } = new URL(request.url);
-  const userId = validateUserId(searchParams.get('userId'));
+export const GET = withApiErrorHandling(
+  async (request: NextRequest) => {
+    const { searchParams } = new URL(request.url);
+    const userId = validateUserId(searchParams.get("userId"));
 
-  const result = await withDatabaseErrorHandling(
-    () => db
-      .select()
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, userId))
-      .limit(1),
-    'fetch user preferences'
-  ) as any[];
+    const result = (await withDatabaseErrorHandling(
+      () =>
+        db
+          .select()
+          .from(userPreferences)
+          .where(eq(userPreferences.userId, userId))
+          .limit(1),
+      "fetch user preferences"
+    )) as any[];
 
-  if (result.length === 0) {
-    return apiResponse(
-      createSuccessResponse(null, {
-        message: 'No preferences found for user'
-      })
-    );
-  }
-
-  const prefs = result[0];
-  
-  // Safe pattern parsing with fallbacks
-  let patternParts: number[] = [2, 2, 4]; // Default fallback
-  try {
-    if (prefs.readyStatePattern && typeof prefs.readyStatePattern === 'string') {
-      const parts = prefs.readyStatePattern.split(",").map(Number);
-      if (parts.length >= 3 && parts.every((p: number) => !isNaN(p) && p > 0)) {
-        patternParts = parts;
-      }
+    if (result.length === 0) {
+      return apiResponse(
+        createSuccessResponse(null, {
+          message: "No preferences found for user",
+        })
+      );
     }
-  } catch (error) {
-    console.warn('[API] Failed to parse readyStatePattern, using defaults:', { 
-      pattern: prefs.readyStatePattern, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    });
-  }
 
-  // Safe JSON parsing helper
-  const safeJsonParse = (jsonString: string | null | undefined, fallback: any = undefined) => {
-    if (!jsonString || typeof jsonString !== 'string') return fallback;
+    const prefs = result[0];
+
+    // Safe pattern parsing with fallbacks
+    let patternParts: number[] = [2, 2, 4]; // Default fallback
     try {
-      return JSON.parse(jsonString);
+      if (
+        prefs.readyStatePattern &&
+        typeof prefs.readyStatePattern === "string"
+      ) {
+        const parts = prefs.readyStatePattern.split(",").map(Number);
+        if (
+          parts.length >= 3 &&
+          parts.every((p: number) => !Number.isNaN(p) && p > 0)
+        ) {
+          patternParts = parts;
+        }
+      }
     } catch (error) {
-      console.warn('[API] Failed to parse JSON field:', { 
-        jsonString: jsonString.substring(0, 100), 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      console.warn("[API] Failed to parse readyStatePattern, using defaults:", {
+        pattern: prefs.readyStatePattern,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
-      return fallback;
     }
-  };
 
-  const response = {
-    userId: prefs.userId,
-    defaultBuyAmountUsdt: prefs.defaultBuyAmountUsdt,
-    maxConcurrentSnipes: prefs.maxConcurrentSnipes,
-    takeProfitLevels: {
-      level1: prefs.takeProfitLevel1,
-      level2: prefs.takeProfitLevel2,
-      level3: prefs.takeProfitLevel3,
-      level4: prefs.takeProfitLevel4,
-      custom: prefs.takeProfitCustom || undefined,
-    },
-    takeProfitSellQuantities: {
-      level1: prefs.sellQuantityLevel1 || 25.0,
-      level2: prefs.sellQuantityLevel2 || 25.0,
-      level3: prefs.sellQuantityLevel3 || 25.0,
-      level4: prefs.sellQuantityLevel4 || 25.0,
-      custom: prefs.sellQuantityCustom || 100.0,
-    },
-    takeProfitCustom: prefs.takeProfitCustom,
-    defaultTakeProfitLevel: prefs.defaultTakeProfitLevel,
-    stopLossPercent: prefs.stopLossPercent,
-    riskTolerance: prefs.riskTolerance as "low" | "medium" | "high",
-    readyStatePattern: [patternParts[0] || 2, patternParts[1] || 2, patternParts[2] || 4] as [number, number, number],
-    targetAdvanceHours: prefs.targetAdvanceHours,
-    calendarPollIntervalSeconds: prefs.calendarPollIntervalSeconds,
-    symbolsPollIntervalSeconds: prefs.symbolsPollIntervalSeconds,
-    // Enhanced Take Profit Strategy Settings
-    takeProfitStrategy: prefs.takeProfitStrategy || "balanced",
-    takeProfitLevelsConfig: safeJsonParse(prefs.takeProfitLevelsConfig),
-    // Legacy Exit Strategy Settings (for backward compatibility)
-    selectedExitStrategy: prefs.selectedExitStrategy || "balanced",
-    customExitStrategy: safeJsonParse(prefs.customExitStrategy),
-    autoBuyEnabled: prefs.autoBuyEnabled ?? true,
-    autoSellEnabled: prefs.autoSellEnabled ?? true,
-    autoSnipeEnabled: prefs.autoSnipeEnabled ?? true,
-  };
+    // Safe JSON parsing helper
+    const safeJsonParse = (
+      jsonString: string | null | undefined,
+      fallback: any = undefined
+    ) => {
+      if (!jsonString || typeof jsonString !== "string") return fallback;
+      try {
+        return JSON.parse(jsonString);
+      } catch (error) {
+        console.warn("[API] Failed to parse JSON field:", {
+          jsonString: jsonString.substring(0, 100),
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+        return fallback;
+      }
+    };
 
-  return apiResponse(
-    createSuccessResponse(response)
-  );
-}, { operation: 'user-preferences-get' });
+    const response = {
+      userId: prefs.userId,
+      defaultBuyAmountUsdt: prefs.defaultBuyAmountUsdt,
+      maxConcurrentSnipes: prefs.maxConcurrentSnipes,
+      takeProfitLevels: {
+        level1: prefs.takeProfitLevel1,
+        level2: prefs.takeProfitLevel2,
+        level3: prefs.takeProfitLevel3,
+        level4: prefs.takeProfitLevel4,
+        custom: prefs.takeProfitCustom || undefined,
+      },
+      takeProfitSellQuantities: {
+        level1: prefs.sellQuantityLevel1 || 25.0,
+        level2: prefs.sellQuantityLevel2 || 25.0,
+        level3: prefs.sellQuantityLevel3 || 25.0,
+        level4: prefs.sellQuantityLevel4 || 25.0,
+        custom: prefs.sellQuantityCustom || 100.0,
+      },
+      takeProfitCustom: prefs.takeProfitCustom,
+      defaultTakeProfitLevel: prefs.defaultTakeProfitLevel,
+      stopLossPercent: prefs.stopLossPercent,
+      riskTolerance: prefs.riskTolerance as "low" | "medium" | "high",
+      readyStatePattern: [
+        patternParts[0] || 2,
+        patternParts[1] || 2,
+        patternParts[2] || 4,
+      ] as [number, number, number],
+      targetAdvanceHours: prefs.targetAdvanceHours,
+      calendarPollIntervalSeconds: prefs.calendarPollIntervalSeconds,
+      symbolsPollIntervalSeconds: prefs.symbolsPollIntervalSeconds,
+      // Enhanced Take Profit Strategy Settings
+      takeProfitStrategy: prefs.takeProfitStrategy || "balanced",
+      takeProfitLevelsConfig: safeJsonParse(prefs.takeProfitLevelsConfig),
+      // Legacy Exit Strategy Settings (for backward compatibility)
+      selectedExitStrategy: prefs.selectedExitStrategy || "balanced",
+      customExitStrategy: safeJsonParse(prefs.customExitStrategy),
+      autoBuyEnabled: prefs.autoBuyEnabled ?? true,
+      autoSellEnabled: prefs.autoSellEnabled ?? true,
+      autoSnipeEnabled: prefs.autoSnipeEnabled ?? true,
+    };
+
+    return apiResponse(createSuccessResponse(response));
+  },
+  { operation: "user-preferences-get" }
+);
 
 // POST /api/user-preferences
-export const POST = withApiErrorHandling(async (request: NextRequest) => {
-  const body = await request.json();
-  const { userId, ...data } = body;
+export const POST = withApiErrorHandling(
+  async (request: NextRequest) => {
+    const body = await request.json();
+    const { userId, ...data } = body;
 
-  const validatedUserId = validateUserId(userId);
+    const validatedUserId = validateUserId(userId);
 
-  const updateData: Partial<NewUserPreferences> = {
-    userId: validatedUserId,
-    updatedAt: new Date(),
-  };
+    const updateData: Partial<NewUserPreferences> = {
+      userId: validatedUserId,
+      updatedAt: new Date(),
+    };
 
     // Map the structured data to database fields
     if (data.defaultBuyAmountUsdt !== undefined) {
@@ -153,7 +167,10 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
     if (data.takeProfitLevel1 !== undefined) {
       if (data.takeProfitLevel1 < 0) {
         return apiResponse(
-          createValidationErrorResponse('takeProfitLevel1', 'Take profit level 1 cannot be negative'),
+          createValidationErrorResponse(
+            "takeProfitLevel1",
+            "Take profit level 1 cannot be negative"
+          ),
           HTTP_STATUS.BAD_REQUEST
         );
       }
@@ -162,7 +179,10 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
     if (data.takeProfitLevel2 !== undefined) {
       if (data.takeProfitLevel2 < 0) {
         return apiResponse(
-          createValidationErrorResponse('takeProfitLevel2', 'Take profit level 2 cannot be negative'),
+          createValidationErrorResponse(
+            "takeProfitLevel2",
+            "Take profit level 2 cannot be negative"
+          ),
           HTTP_STATUS.BAD_REQUEST
         );
       }
@@ -171,7 +191,10 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
     if (data.takeProfitLevel3 !== undefined) {
       if (data.takeProfitLevel3 < 0) {
         return apiResponse(
-          createValidationErrorResponse('takeProfitLevel3', 'Take profit level 3 cannot be negative'),
+          createValidationErrorResponse(
+            "takeProfitLevel3",
+            "Take profit level 3 cannot be negative"
+          ),
           HTTP_STATUS.BAD_REQUEST
         );
       }
@@ -180,7 +203,10 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
     if (data.takeProfitLevel4 !== undefined) {
       if (data.takeProfitLevel4 < 0) {
         return apiResponse(
-          createValidationErrorResponse('takeProfitLevel4', 'Take profit level 4 cannot be negative'),
+          createValidationErrorResponse(
+            "takeProfitLevel4",
+            "Take profit level 4 cannot be negative"
+          ),
           HTTP_STATUS.BAD_REQUEST
         );
       }
@@ -189,7 +215,10 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
     if (data.takeProfitCustom !== undefined) {
       if (data.takeProfitCustom < 0) {
         return apiResponse(
-          createValidationErrorResponse('takeProfitCustom', 'Custom take profit level cannot be negative'),
+          createValidationErrorResponse(
+            "takeProfitCustom",
+            "Custom take profit level cannot be negative"
+          ),
           HTTP_STATUS.BAD_REQUEST
         );
       }
@@ -224,9 +253,9 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
       try {
         return JSON.stringify(obj);
       } catch (error) {
-        console.warn('[API] Failed to stringify JSON object:', { 
-          error: error instanceof Error ? error.message : 'Unknown error',
-          objectType: typeof obj
+        console.warn("[API] Failed to stringify JSON object:", {
+          error: error instanceof Error ? error.message : "Unknown error",
+          objectType: typeof obj,
         });
         return null;
       }
@@ -263,27 +292,33 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
       updateData.autoSnipeEnabled = data.autoSnipeEnabled;
     }
 
-  // Try to update first
-  const result = await withDatabaseErrorHandling(
-    () => db
-      .update(userPreferences)
-      .set(updateData)
-      .where(eq(userPreferences.userId, validatedUserId))
-      .returning(),
-    'update user preferences'
-  ) as any[];
+    // Try to update first
+    const result = (await withDatabaseErrorHandling(
+      () =>
+        db
+          .update(userPreferences)
+          .set(updateData)
+          .where(eq(userPreferences.userId, validatedUserId))
+          .returning(),
+      "update user preferences"
+    )) as any[];
 
-  if (result.length === 0) {
-    // If no rows were updated, create a new record
-    const newPrefs: NewUserPreferences = {
-      userId: validatedUserId,
+    if (result.length === 0) {
+      // If no rows were updated, create a new record
+      const newPrefs: NewUserPreferences = {
+        userId: validatedUserId,
         defaultBuyAmountUsdt: data.defaultBuyAmountUsdt || 100.0,
         maxConcurrentSnipes: data.maxConcurrentSnipes || 3,
-        takeProfitLevel1: data.takeProfitLevel1 || data.takeProfitLevels?.level1 || 5.0,
-        takeProfitLevel2: data.takeProfitLevel2 || data.takeProfitLevels?.level2 || 10.0,
-        takeProfitLevel3: data.takeProfitLevel3 || data.takeProfitLevels?.level3 || 15.0,
-        takeProfitLevel4: data.takeProfitLevel4 || data.takeProfitLevels?.level4 || 25.0,
-        takeProfitCustom: data.takeProfitCustom || data.takeProfitLevels?.custom,
+        takeProfitLevel1:
+          data.takeProfitLevel1 || data.takeProfitLevels?.level1 || 5.0,
+        takeProfitLevel2:
+          data.takeProfitLevel2 || data.takeProfitLevels?.level2 || 10.0,
+        takeProfitLevel3:
+          data.takeProfitLevel3 || data.takeProfitLevels?.level3 || 15.0,
+        takeProfitLevel4:
+          data.takeProfitLevel4 || data.takeProfitLevels?.level4 || 25.0,
+        takeProfitCustom:
+          data.takeProfitCustom || data.takeProfitLevels?.custom,
         defaultTakeProfitLevel: data.defaultTakeProfitLevel || 2,
         stopLossPercent: data.stopLossPercent || 5.0,
         riskTolerance: data.riskTolerance || "medium",
@@ -293,22 +328,26 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
         symbolsPollIntervalSeconds: data.symbolsPollIntervalSeconds || 30,
         // Exit Strategy Settings with defaults
         selectedExitStrategy: data.selectedExitStrategy || "balanced",
-        customExitStrategy: data.customExitStrategy ? safeJsonStringify(data.customExitStrategy) : null,
+        customExitStrategy: data.customExitStrategy
+          ? safeJsonStringify(data.customExitStrategy)
+          : null,
         autoBuyEnabled: data.autoBuyEnabled ?? true,
         autoSellEnabled: data.autoSellEnabled ?? true,
         autoSnipeEnabled: data.autoSnipeEnabled ?? true,
         ...updateData,
       };
 
-    await withDatabaseErrorHandling(
-      () => db.insert(userPreferences).values(newPrefs),
-      'insert user preferences'
-    );
-  }
+      await withDatabaseErrorHandling(
+        () => db.insert(userPreferences).values(newPrefs),
+        "insert user preferences"
+      );
+    }
 
-  return apiResponse(
-    createSuccessResponse(data, {
-      message: 'User preferences updated successfully'
-    })
-  );
-}, { operation: 'user-preferences-post' });
+    return apiResponse(
+      createSuccessResponse(data, {
+        message: "User preferences updated successfully",
+      })
+    );
+  },
+  { operation: "user-preferences-post" }
+);

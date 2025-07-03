@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server";
 
 // MEXC connectivity test endpoint with actual credential validation
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // Check if credentials are configured
     const hasApiKey = !!process.env.MEXC_API_KEY;
@@ -15,32 +15,40 @@ export async function GET(request: NextRequest) {
         connected: true,
         hasCredentials,
         credentialsValid,
-        credentialSource: hasCredentials ? 'environment' : 'none',
+        credentialSource: hasCredentials ? "environment" : "none",
         hasUserCredentials: false, // Not checking database for simplicity
         hasEnvironmentCredentials: hasCredentials,
-        status: credentialsValid ? 'fully_connected' : hasCredentials ? 'invalid_credentials' : 'no_credentials',
-        connectionHealth: credentialsValid ? 'excellent' : 'poor',
-        message: credentialsValid ? 'MEXC API connection successful' : 'MEXC API credentials invalid or missing',
+        status: credentialsValid
+          ? "fully_connected"
+          : hasCredentials
+            ? "invalid_credentials"
+            : "no_credentials",
+        connectionHealth: credentialsValid ? "excellent" : "poor",
+        message: credentialsValid
+          ? "MEXC API connection successful"
+          : "MEXC API credentials invalid or missing",
         timestamp: new Date().toISOString(),
         metrics: {
           responseTime: 150,
           lastCheck: new Date().toISOString(),
-          latency: 150
-        }
-      }
+          latency: 150,
+        },
+      },
     });
-
-  } catch (error) {
-    return NextResponse.json({
-      success: false,
-      error: 'Connectivity test failed',
-      data: {
-        connected: false,
-        hasCredentials: false,
-        credentialsValid: false,
-        status: 'error',
-        connectionHealth: 'failed'
-      }
-    }, { status: 500 });
+  } catch (_error) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Connectivity test failed",
+        data: {
+          connected: false,
+          hasCredentials: false,
+          credentialsValid: false,
+          status: "error",
+          connectionHealth: "failed",
+        },
+      },
+      { status: 500 }
+    );
   }
 }

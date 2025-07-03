@@ -1,20 +1,14 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
 import { AIEnhancedPatternDisplay } from "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
-import { AIServiceStatusPanel } from "@/src/components/dashboard/ai-intelligence/ai-service-status-panel";
-import { CacheWarmingControlPanel } from "@/src/components/dashboard/cache-warming/cache-warming-control-panel";
-import PerformanceMonitoringDashboard from "@/src/components/dashboard/performance-monitoring-dashboard";
-import { Phase3ConfigurationPanel } from "@/src/components/dashboard/phase3-config/phase3-configuration-panel";
-import { Phase3IntegrationSummary } from "@/src/components/dashboard/phase3-integration-summary";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import {
   CoinListingsBoard,
-  LazyCardWrapper,
   LazyChartWrapper,
   LazyDashboardWrapper,
   LazyTableWrapper,
@@ -39,7 +33,11 @@ import { useToast } from "@/src/components/ui/use-toast";
 import { useAccountBalance } from "@/src/hooks/use-account-balance";
 import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
 import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
-import { useDeleteSnipeTarget, usePortfolio, useSnipeTargets } from "@/src/hooks/use-portfolio";
+import {
+  useDeleteSnipeTarget,
+  usePortfolio,
+  useSnipeTargets,
+} from "@/src/hooks/use-portfolio";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -67,7 +65,7 @@ export default function DashboardPage() {
     switch (tabValue) {
       case "listings":
         import("@/src/components/dashboard/coin-listings-board").catch(
-          console.error,
+          console.error
         );
         break;
       case "ai-performance":
@@ -90,7 +88,7 @@ export default function DashboardPage() {
         break;
       case "trades":
         import("@/src/components/dashboard/recent-trades-table").catch(
-          console.error,
+          console.error
         );
         break;
     }
@@ -99,12 +97,13 @@ export default function DashboardPage() {
     {
       userId: userId || "system", // Always provide a userId fallback
       enabled: true, // Always enable the query
-    },
+    }
   );
   const { data: portfolio } = usePortfolio(userId || "");
   const { data: calendarData } = useMexcCalendar();
   const { data: readyLaunches } = useReadyLaunches();
-  const { data: snipeTargets, isLoading: snipeTargetsLoading } = useSnipeTargets(userId || "");
+  const { data: snipeTargets, isLoading: snipeTargetsLoading } =
+    useSnipeTargets(userId || "");
   const { data: enhancedPatterns, isLoading: patternsLoading } =
     useEnhancedPatterns({
       enableAI: true,
@@ -115,22 +114,22 @@ export default function DashboardPage() {
   // Handler functions for trading targets
   const handleExecuteSnipe = async (target: any) => {
     console.info("Executing snipe for target:", target);
-    
+
     try {
       // Execute snipe using the auto-sniping execution API
-      const response = await fetch('/api/auto-sniping/execution', {
-        method: 'POST',
+      const response = await fetch("/api/auto-sniping/execution", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({
-          action: 'execute_single_target',
+          action: "execute_single_target",
           targetId: target.id,
           symbol: target.symbolName,
           positionSizeUsdt: target.positionSizeUsdt,
           confidenceScore: target.confidenceScore,
-          strategy: target.entryStrategy || 'normal',
+          strategy: target.entryStrategy || "normal",
           stopLossPercent: target.stopLossPercent,
           takeProfitPercent: target.takeProfitCustom,
         }),
@@ -144,17 +143,18 @@ export default function DashboardPage() {
           description: `Target ${target.symbolName} executed successfully`,
           variant: "default",
         });
-        
+
         // Refresh portfolio and balance data
         window.location.reload();
       } else {
-        throw new Error(result.error || 'Failed to execute snipe');
+        throw new Error(result.error || "Failed to execute snipe");
       }
     } catch (error) {
-      console.error('Failed to execute snipe:', error);
+      console.error("Failed to execute snipe:", error);
       toast({
         title: "Snipe Execution Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
     }
@@ -162,20 +162,21 @@ export default function DashboardPage() {
 
   const handleRemoveTarget = async (targetId: string | number) => {
     console.info("Removing target:", { targetId });
-    
+
     try {
       await deleteSnipeTarget.mutateAsync(Number(targetId));
-      
+
       toast({
         title: "Target Removed",
         description: "Snipe target has been successfully removed",
         variant: "default",
       });
     } catch (error) {
-      console.error('Failed to remove target:', error);
+      console.error("Failed to remove target:", error);
       toast({
         title: "Removal Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
     }
@@ -183,16 +184,18 @@ export default function DashboardPage() {
 
   // Fetch execution history for calculating metrics
   const { data: executionHistoryData } = useQuery({
-    queryKey: ['execution-history', userId],
+    queryKey: ["execution-history", userId],
     queryFn: async () => {
       if (!userId) return null;
-      
-      const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
+
+      const thirtyDaysAgo = Math.floor(
+        (Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000
+      );
       const response = await fetch(
         `/api/execution-history?userId=${encodeURIComponent(userId)}&fromDate=${thirtyDaysAgo}&limit=1000`,
-        { credentials: 'include' }
+        { credentials: "include" }
       );
-      
+
       if (!response.ok) return null;
       const data = await response.json();
       return data.success ? data.data : null;
@@ -204,16 +207,18 @@ export default function DashboardPage() {
 
   // Fetch historical balance for balance change calculation
   const { data: historicalBalance } = useQuery({
-    queryKey: ['historical-balance', userId],
+    queryKey: ["historical-balance", userId],
     queryFn: async () => {
       if (!userId) return null;
-      
-      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+
+      const twentyFourHoursAgo = Math.floor(
+        (Date.now() - 24 * 60 * 60 * 1000) / 1000
+      );
       const response = await fetch(
         `/api/account/balance?userId=${encodeURIComponent(userId)}&timestamp=${twentyFourHoursAgo}`,
-        { credentials: 'include' }
+        { credentials: "include" }
       );
-      
+
       if (!response.ok) return null;
       const data = await response.json();
       return data.success ? data.data?.totalUsdtValue || 0 : 0;
@@ -225,22 +230,22 @@ export default function DashboardPage() {
 
   // Fetch historical calendar data for new listings change calculation
   const { data: historicalCalendarData } = useQuery({
-    queryKey: ['historical-calendar-data'],
+    queryKey: ["historical-calendar-data"],
     queryFn: async () => {
       try {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
+
         const response = await fetch(
           `/api/mexc/calendar?fromDate=${sevenDaysAgo.toISOString()}`,
-          { credentials: 'include' }
+          { credentials: "include" }
         );
-        
+
         if (!response.ok) return [];
         const data = await response.json();
         return data.success ? data.data || [] : [];
       } catch (error) {
-        console.error('Failed to fetch historical calendar data:', error);
+        console.error("Failed to fetch historical calendar data:", error);
         return [];
       }
     },
@@ -250,22 +255,22 @@ export default function DashboardPage() {
 
   // Fetch historical ready launches for active targets change calculation
   const { data: historicalReadyLaunches } = useQuery({
-    queryKey: ['historical-ready-launches'],
+    queryKey: ["historical-ready-launches"],
     queryFn: async () => {
       try {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
+
         const response = await fetch(
           `/api/ready-launches?fromDate=${sevenDaysAgo.toISOString()}`,
-          { credentials: 'include' }
+          { credentials: "include" }
         );
-        
+
         if (!response.ok) return [];
         const data = await response.json();
         return data.success ? data.data || [] : [];
       } catch (error) {
-        console.error('Failed to fetch historical ready launches:', error);
+        console.error("Failed to fetch historical ready launches:", error);
         return [];
       }
     },
@@ -276,19 +281,25 @@ export default function DashboardPage() {
   // Transform snipe targets for display
   const transformedReadyTargets = useMemo(() => {
     if (!Array.isArray(snipeTargets)) return [];
-    
+
     return snipeTargets
-      .filter((target: any) => target.status === 'pending' || target.status === 'ready')
+      .filter(
+        (target: any) =>
+          target.status === "pending" || target.status === "ready"
+      )
       .map((target: any) => ({
         vcoinId: target.vcoinId || target.id?.toString(),
         symbol: target.symbolName || target.symbol,
-        projectName: target.projectName || target.symbolName || 'Unknown Project',
-        launchTime: target.targetExecutionTime ? new Date(target.targetExecutionTime * 1000) : new Date(),
+        projectName:
+          target.projectName || target.symbolName || "Unknown Project",
+        launchTime: target.targetExecutionTime
+          ? new Date(target.targetExecutionTime * 1000)
+          : new Date(),
         hoursAdvanceNotice: target.hoursAdvanceNotice || 1,
         priceDecimalPlaces: target.priceDecimalPlaces || 8,
         quantityDecimalPlaces: target.quantityDecimalPlaces || 8,
         confidence: target.confidenceScore ? target.confidenceScore / 100 : 0.5,
-        status: target.status === 'ready' ? 'ready' : 'monitoring',
+        status: target.status === "ready" ? "ready" : "monitoring",
         // Include additional fields for execution
         id: target.id,
         positionSizeUsdt: target.positionSizeUsdt,
@@ -301,11 +312,11 @@ export default function DashboardPage() {
   // Transform calendar data for pending targets
   const transformedCalendarTargets = useMemo(() => {
     if (!Array.isArray(calendarData)) return [];
-    
+
     return calendarData.map((entry: any) => ({
       vcoinId: entry.vcoinId,
       symbol: entry.symbol,
-      projectName: entry.projectName || 'Unknown Project',
+      projectName: entry.projectName || "Unknown Project",
       firstOpenTime: new Date(entry.firstOpenTime).getTime(),
     }));
   }, [calendarData]);
@@ -315,37 +326,42 @@ export default function DashboardPage() {
   const balanceChange = totalBalance - (historicalBalance || totalBalance);
   const newListings = Array.isArray(calendarData) ? calendarData.length : 0;
   const activeTargets = transformedReadyTargets.length;
-  
+
   // Calculate new listings change percentage
   const newListingsChange = useMemo(() => {
-    if (!historicalCalendarData || historicalCalendarData.length === 0) return 0;
-    
+    if (!historicalCalendarData || historicalCalendarData.length === 0)
+      return 0;
+
     const currentWeekListings = newListings;
     const lastWeekListings = historicalCalendarData.length;
-    
+
     if (lastWeekListings === 0) return currentWeekListings > 0 ? 100 : 0;
-    
+
     return ((currentWeekListings - lastWeekListings) / lastWeekListings) * 100;
   }, [newListings, historicalCalendarData]);
 
-  // Calculate active targets change percentage  
+  // Calculate active targets change percentage
   const activeTargetsChange = useMemo(() => {
-    if (!historicalReadyLaunches || historicalReadyLaunches.length === 0) return 0;
-    
+    if (!historicalReadyLaunches || historicalReadyLaunches.length === 0)
+      return 0;
+
     const currentActiveTargets = activeTargets;
     const lastWeekActiveTargets = historicalReadyLaunches.length;
-    
+
     if (lastWeekActiveTargets === 0) return currentActiveTargets > 0 ? 100 : 0;
-    
-    return ((currentActiveTargets - lastWeekActiveTargets) / lastWeekActiveTargets) * 100;
+
+    return (
+      ((currentActiveTargets - lastWeekActiveTargets) / lastWeekActiveTargets) *
+      100
+    );
   }, [activeTargets, historicalReadyLaunches]);
-  
+
   // Calculate win rate from execution history
   const winRate = useMemo(() => {
     if (!executionHistoryData?.summary) return 0;
-    
+
     const { successRate } = executionHistoryData.summary;
-    return typeof successRate === 'number' ? successRate : 0;
+    return typeof successRate === "number" ? successRate : 0;
   }, [executionHistoryData]);
 
   // Debug logging
@@ -353,7 +369,7 @@ export default function DashboardPage() {
     accountBalance,
     totalBalance,
     balanceLoading,
-    userId
+    userId,
   });
 
   console.debug("[Dashboard] Calculated metrics:", {
@@ -363,7 +379,7 @@ export default function DashboardPage() {
     activeTargets,
     activeTargetsChange,
     historicalReadyLaunchesCount: historicalReadyLaunches?.length || 0,
-    winRate
+    winRate,
   });
 
   return (
@@ -385,23 +401,39 @@ export default function DashboardPage() {
             title="New Listings"
             value={newListings.toLocaleString()}
             change={Math.round(newListingsChange * 10) / 10}
-            changeLabel={`${newListingsChange >= 0 ? 'Up' : 'Down'} ${Math.abs(Math.round(newListingsChange * 10) / 10)}% vs last week`}
-            description={newListingsChange >= 0 ? "Strong listing growth" : "Listing acquisition needs attention"}
+            changeLabel={`${newListingsChange >= 0 ? "Up" : "Down"} ${Math.abs(Math.round(newListingsChange * 10) / 10)}% vs last week`}
+            description={
+              newListingsChange >= 0
+                ? "Strong listing growth"
+                : "Listing acquisition needs attention"
+            }
             trend={newListingsChange >= 0 ? "up" : "down"}
           />
           <MetricCard
             title="Active Targets"
             value={activeTargets.toLocaleString()}
             change={Math.round(activeTargetsChange * 10) / 10}
-            changeLabel={`${activeTargetsChange >= 0 ? 'Up' : 'Down'} ${Math.abs(Math.round(activeTargetsChange * 10) / 10)}% vs last week`}
-            description={activeTargetsChange >= 0 ? "Strong target retention" : "Target retention needs attention"}
+            changeLabel={`${activeTargetsChange >= 0 ? "Up" : "Down"} ${Math.abs(Math.round(activeTargetsChange * 10) / 10)}% vs last week`}
+            description={
+              activeTargetsChange >= 0
+                ? "Strong target retention"
+                : "Target retention needs attention"
+            }
             trend={activeTargetsChange >= 0 ? "up" : "down"}
           />
           <MetricCard
             title="Win Rate"
             value={`${winRate.toFixed(1)}%`}
-            change={winRate > 50 ? +(winRate - 50).toFixed(1) : -(50 - winRate).toFixed(1)}
-            changeLabel={winRate > 50 ? "Above average performance" : "Below average performance"}
+            change={
+              winRate > 50
+                ? +(winRate - 50).toFixed(1)
+                : -(50 - winRate).toFixed(1)
+            }
+            changeLabel={
+              winRate > 50
+                ? "Above average performance"
+                : "Below average performance"
+            }
             description={`Based on ${executionHistoryData?.summary?.totalExecutions || 0} trades`}
             trend={winRate > 50 ? "up" : "down"}
           />
@@ -473,7 +505,9 @@ export default function DashboardPage() {
                 <OptimizedAccountBalance userId={userId || "system"} />
                 <OptimizedTradingTargets
                   readyTargets={transformedReadyTargets}
-                  pendingDetection={transformedReadyTargets.filter(t => t.status === 'monitoring').map(t => t.vcoinId)}
+                  pendingDetection={transformedReadyTargets
+                    .filter((t) => t.status === "monitoring")
+                    .map((t) => t.vcoinId)}
                   calendarTargets={transformedCalendarTargets}
                   onExecuteSnipe={handleExecuteSnipe}
                   onRemoveTarget={handleRemoveTarget}

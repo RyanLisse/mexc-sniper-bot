@@ -18,7 +18,13 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Button } from "../../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../ui/card";
 import { Progress } from "../../ui/progress";
 import { Skeleton } from "../../ui/skeleton";
 import { useToast } from "../../ui/use-toast";
@@ -88,7 +94,11 @@ interface Connection {
 }
 
 // Helper component for performance metrics
-function PerformanceOverview({ metrics }: { metrics: CacheMetrics | undefined }) {
+function PerformanceOverview({
+  metrics,
+}: {
+  metrics: CacheMetrics | undefined;
+}) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div className="space-y-2">
@@ -99,7 +109,9 @@ function PerformanceOverview({ metrics }: { metrics: CacheMetrics | undefined })
         <Progress value={metrics?.successRate || 0} className="h-2" />
       </div>
       <div className="text-center">
-        <div className="text-2xl font-bold">{metrics?.totalExecutions || 0}</div>
+        <div className="text-2xl font-bold">
+          {metrics?.totalExecutions || 0}
+        </div>
         <div className="text-sm text-muted-foreground">Total Executions</div>
       </div>
       <div className="text-center">
@@ -133,7 +145,9 @@ function StrategyList({
         <div
           key={strategy.name}
           className={`border rounded-lg p-4 transition-colors ${
-            selectedStrategies.includes(strategy.name) ? "bg-blue-50 border-blue-200" : ""
+            selectedStrategies.includes(strategy.name)
+              ? "bg-blue-50 border-blue-200"
+              : ""
           }`}
         >
           <div className="flex items-center justify-between mb-3">
@@ -146,7 +160,9 @@ function StrategyList({
               />
               <StrategyStatusIcon status={strategy.status} />
               <div>
-                <div className="font-medium capitalize">{strategy.name.replace(/-/g, " ")}</div>
+                <div className="font-medium capitalize">
+                  {strategy.name.replace(/-/g, " ")}
+                </div>
                 <div className="text-sm text-muted-foreground">
                   Priority: {strategy.priority} • Frequency:{" "}
                   {Math.round(strategy.frequency / 60000)}m
@@ -158,7 +174,11 @@ function StrategyList({
                 variant="outline"
                 style={{
                   color: getCacheStrategyStatusColor(
-                    strategy.status as "pending" | "active" | "disabled" | "overdue"
+                    strategy.status as
+                      | "pending"
+                      | "active"
+                      | "disabled"
+                      | "overdue"
                   ),
                 }}
               >
@@ -181,13 +201,17 @@ function StrategyList({
             <div>
               <span className="text-muted-foreground">Last Run:</span>
               <div className="font-medium">
-                {strategy.lastRun ? new Date(strategy.lastRun).toLocaleString() : "Never"}
+                {strategy.lastRun
+                  ? new Date(strategy.lastRun).toLocaleString()
+                  : "Never"}
               </div>
             </div>
             <div>
               <span className="text-muted-foreground">Next Run:</span>
               <div className="font-medium">
-                {strategy.nextRun ? new Date(strategy.nextRun).toLocaleString() : "Not scheduled"}
+                {strategy.nextRun
+                  ? new Date(strategy.nextRun).toLocaleString()
+                  : "Not scheduled"}
               </div>
             </div>
           </div>
@@ -198,7 +222,11 @@ function StrategyList({
 }
 
 // Helper component for connection status
-function ConnectionStatus({ connection }: { connection: Connection | undefined }) {
+function ConnectionStatus({
+  connection,
+}: {
+  connection: Connection | undefined;
+}) {
   return (
     <div className="border-t pt-4">
       <h4 className="font-medium mb-3">Cache Connection Status</h4>
@@ -214,7 +242,9 @@ function ConnectionStatus({ connection }: { connection: Connection | undefined }
             ) : (
               <AlertTriangle className="h-4 w-4 text-red-500" />
             )}
-            <Badge variant={connection?.redis?.connected ? "default" : "destructive"}>
+            <Badge
+              variant={connection?.redis?.connected ? "default" : "destructive"}
+            >
               {connection?.redis?.status || "Unknown"}
             </Badge>
           </div>
@@ -230,7 +260,11 @@ function ConnectionStatus({ connection }: { connection: Connection | undefined }
             ) : (
               <AlertTriangle className="h-4 w-4 text-red-500" />
             )}
-            <Badge variant={connection?.valkey?.connected ? "default" : "destructive"}>
+            <Badge
+              variant={
+                connection?.valkey?.connected ? "default" : "destructive"
+              }
+            >
               {connection?.valkey?.status || "Unknown"}
             </Badge>
           </div>
@@ -241,7 +275,9 @@ function ConnectionStatus({ connection }: { connection: Connection | undefined }
         <Alert className="mt-3">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Fallback Mode Active</AlertTitle>
-          <AlertDescription>{connection?.gracefulDegradation?.message}</AlertDescription>
+          <AlertDescription>
+            {connection?.gracefulDegradation?.message}
+          </AlertDescription>
         </Alert>
       )}
     </div>
@@ -250,7 +286,8 @@ function ConnectionStatus({ connection }: { connection: Connection | undefined }
 
 export function CacheWarmingControlPanel() {
   const { data, isLoading, error } = useCacheMetrics();
-  const { mutate: triggerWarming, isPending: isTriggeringWarming } = useCacheWarmingTrigger();
+  const { mutate: triggerWarming, isPending: isTriggeringWarming } =
+    useCacheWarmingTrigger();
   const { toast } = useToast();
   const [selectedStrategies, setSelectedStrategies] = useState<string[]>([]);
 
@@ -268,7 +305,10 @@ export function CacheWarmingControlPanel() {
           onError: (error) => {
             toast({
               title: "Cache Warming Failed",
-              description: error instanceof Error ? error.message : "Unknown error occurred",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
               variant: "destructive",
             });
           },
@@ -305,7 +345,10 @@ export function CacheWarmingControlPanel() {
           onError: (error) => {
             toast({
               title: "Cache Warming Failed",
-              description: error instanceof Error ? error.message : "Unknown error occurred",
+              description:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown error occurred",
               variant: "destructive",
             });
           },
@@ -320,7 +363,9 @@ export function CacheWarmingControlPanel() {
 
   const toggleStrategySelection = (strategyName: string) => {
     setSelectedStrategies((prev) =>
-      prev.includes(strategyName) ? prev.filter((s) => s !== strategyName) : [...prev, strategyName]
+      prev.includes(strategyName)
+        ? prev.filter((s) => s !== strategyName)
+        : [...prev, strategyName]
     );
   };
 
@@ -353,7 +398,9 @@ export function CacheWarmingControlPanel() {
             )}
           </div>
         </div>
-        <CardDescription>Manage cache warming strategies for optimal performance</CardDescription>
+        <CardDescription>
+          Manage cache warming strategies for optimal performance
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <PerformanceOverview metrics={data.warming?.metrics} />
@@ -366,7 +413,10 @@ export function CacheWarmingControlPanel() {
         />
         <ConnectionStatus connection={data.connection} />
         <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-          Last updated: {data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : "Unknown"}
+          Last updated:{" "}
+          {data.lastUpdated
+            ? new Date(data.lastUpdated).toLocaleString()
+            : "Unknown"}
         </div>
       </CardContent>
     </Card>

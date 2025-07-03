@@ -24,7 +24,12 @@ const BatchInsertOptionsSchema = z.object({
 });
 
 const AggregationOptionsSchema = z.object({
-  groupBy: z.enum(["pattern_type", "symbol_name", "user_id", "confidence_range"]),
+  groupBy: z.enum([
+    "pattern_type",
+    "symbol_name",
+    "user_id",
+    "confidence_range",
+  ]),
   timeframe: z.enum(["1h", "6h", "24h", "7d", "30d"]).default("24h"),
   includeInactive: z.boolean().default(false),
   minConfidence: z.number().min(0).max(100).optional(),
@@ -90,7 +95,7 @@ class DatabaseExecutionUtils {
     logger: any
   ): Promise<T> {
     const startTime = performance.now();
-    
+
     try {
       return await monitoredQuery(
         operationName,
@@ -122,14 +127,11 @@ class DatabaseExecutionUtils {
     logger: any
   ): Promise<T> {
     const startTime = performance.now();
-    
+
     try {
-      return await databaseConnectionPool.executeWrite(
-        async () => {
-          return await db.transaction(operation);
-        },
-        invalidatePatterns
-      );
+      return await databaseConnectionPool.executeWrite(async () => {
+        return await db.transaction(operation);
+      }, invalidatePatterns);
     } catch (error) {
       const safeError = toSafeError(error);
       logger.error("Transaction execution failed", {
@@ -160,7 +162,7 @@ class BatchProcessingUtils {
     onError: (error: Error, chunkIndex: number, chunk: T[]) => void,
     errorStrategy: "throw" | "continue" = "continue"
   ): Promise<R[]> {
-    const chunks = this.chunkArray(items, chunkSize);
+    const chunks = BatchProcessingUtils.chunkArray(items, chunkSize);
     const results: R[] = [];
 
     for (let i = 0; i < chunks.length; i++) {
@@ -214,8 +216,12 @@ class PerformanceTrackingUtils {
     logger.info(`${operationName} completed`, {
       ...context,
       totalTimeMs: Math.round(totalTime),
-      avgTimePerRecord: context.recordCount ? Math.round(totalTime / context.recordCount) : 0,
-      recordsPerSecond: context.recordCount ? Math.round(context.recordCount / (totalTime / 1000)) : 0,
+      avgTimePerRecord: context.recordCount
+        ? Math.round(totalTime / context.recordCount)
+        : 0,
+      recordsPerSecond: context.recordCount
+        ? Math.round(context.recordCount / (totalTime / 1000))
+        : 0,
     });
   }
 
@@ -238,7 +244,7 @@ class DatabaseSchemaUtils {
   };
 
   static getTableReference(tableName: string): any {
-    const tableRef = this.TABLE_MAP[tableName];
+    const tableRef = DatabaseSchemaUtils.TABLE_MAP[tableName];
     if (!tableRef) {
       throw new Error(`Unknown table: ${tableName}`);
     }
@@ -258,19 +264,25 @@ class DatabaseSchemaUtils {
       }
     }
 
-    return whereConditions.length === 1 
-      ? whereConditions[0] 
+    return whereConditions.length === 1
+      ? whereConditions[0]
       : and(...whereConditions);
   }
 
-  static buildUpdateSetClause(update: PatternMetricUpdate): Record<string, any> {
+  static buildUpdateSetClause(
+    update: PatternMetricUpdate
+  ): Record<string, any> {
     const setClause: Record<string, any> = {};
 
-    if (update.successRate !== undefined) setClause.successRate = update.successRate;
+    if (update.successRate !== undefined)
+      setClause.successRate = update.successRate;
     if (update.avgProfit !== undefined) setClause.avgProfit = update.avgProfit;
-    if (update.occurrences !== undefined) setClause.occurrences = sql`occurrences + ${update.occurrences}`;
-    if (update.truePositives !== undefined) setClause.truePositives = sql`true_positives + ${update.truePositives}`;
-    if (update.falsePositives !== undefined) setClause.falsePositives = sql`false_positives + ${update.falsePositives}`;
+    if (update.occurrences !== undefined)
+      setClause.occurrences = sql`occurrences + ${update.occurrences}`;
+    if (update.truePositives !== undefined)
+      setClause.truePositives = sql`true_positives + ${update.truePositives}`;
+    if (update.falsePositives !== undefined)
+      setClause.falsePositives = sql`false_positives + ${update.falsePositives}`;
 
     return setClause;
   }
@@ -293,11 +305,14 @@ class QueryBuildingUtils {
 
   static getGroupByColumn(groupBy: string): string {
     switch (groupBy) {
-      case "pattern_type": return "pattern_type";
-      case "symbol_name": return "symbol_name";
-      case "confidence_range": 
+      case "pattern_type":
+        return "pattern_type";
+      case "symbol_name":
+        return "symbol_name";
+      case "confidence_range":
         return "CASE WHEN confidence >= 90 THEN '90-100' WHEN confidence >= 80 THEN '80-89' WHEN confidence >= 70 THEN '70-79' ELSE '<70' END";
-      default: return "pattern_type";
+      default:
+        return "pattern_type";
     }
   }
 
@@ -319,7 +334,7 @@ class QueryBuildingUtils {
       parameters.push(minConfidence);
     }
 
-    const groupByColumn = this.getGroupByColumn(groupBy);
+    const groupByColumn = QueryBuildingUtils.getGroupByColumn(groupBy);
 
     const query = `
       SELECT 
@@ -347,13 +362,30 @@ class QueryBuildingUtils {
 export class BatchDatabaseServiceRefactored {
   private logger = {
     info: (message: string, context?: unknown) =>
-      console.info("[batch-database-service-refactored]", message, context || ""),
+      console.info(
+        "[batch-database-service-refactored]",
+        message,
+        context || ""
+      ),
     warn: (message: string, context?: unknown) =>
-      console.warn("[batch-database-service-refactored]", message, context || ""),
+      console.warn(
+        "[batch-database-service-refactored]",
+        message,
+        context || ""
+      ),
     error: (message: string, context?: unknown, error?: Error) =>
-      console.error("[batch-database-service-refactored]", message, context || "", error || ""),
+      console.error(
+        "[batch-database-service-refactored]",
+        message,
+        context || "",
+        error || ""
+      ),
     debug: (message: string, context?: unknown) =>
-      console.debug("[batch-database-service-refactored]", message, context || ""),
+      console.debug(
+        "[batch-database-service-refactored]",
+        message,
+        context || ""
+      ),
   };
 
   private performanceMetrics = {
@@ -373,32 +405,38 @@ export class BatchDatabaseServiceRefactored {
     if (embeddings.length === 0) return 0;
 
     const validatedOptions = BatchInsertOptionsSchema.parse(options);
-    const { chunkSize, enableDeduplication, onConflictStrategy, validateData } = validatedOptions;
+    const { chunkSize, enableDeduplication, onConflictStrategy, validateData } =
+      validatedOptions;
     const startTime = performance.now();
 
-    PerformanceTrackingUtils.logOperationStart("batch pattern embedding insertion", {
-      totalEmbeddings: embeddings.length,
-      chunkSize,
-      enableDeduplication,
-      onConflictStrategy,
-    }, this.logger);
+    PerformanceTrackingUtils.logOperationStart(
+      "batch pattern embedding insertion",
+      {
+        totalEmbeddings: embeddings.length,
+        chunkSize,
+        enableDeduplication,
+        onConflictStrategy,
+      },
+      this.logger
+    );
 
     try {
       // Validate and deduplicate using utility
-      const processedEmbeddings = await BatchProcessingUtils.validateAndDeduplicate(
-        embeddings,
-        this.validateEmbeddingData.bind(this),
-        this.deduplicateEmbeddings.bind(this),
-        enableDeduplication,
-        validateData
-      );
+      const processedEmbeddings =
+        await BatchProcessingUtils.validateAndDeduplicate(
+          embeddings,
+          this.validateEmbeddingData.bind(this),
+          this.deduplicateEmbeddings.bind(this),
+          enableDeduplication,
+          validateData
+        );
 
       // Process in chunks using utility
       let insertedCount = 0;
       await BatchProcessingUtils.processBatches(
         processedEmbeddings,
         chunkSize,
-        async (chunk, index) => {
+        async (chunk, _index) => {
           const chunkResult = await DatabaseExecutionUtils.executeTransaction(
             async (tx) => {
               if (onConflictStrategy === "ignore") {
@@ -475,13 +513,19 @@ export class BatchDatabaseServiceRefactored {
   /**
    * Batch update pattern metrics using utilities
    */
-  async batchUpdatePatternMetrics(updates: PatternMetricUpdate[]): Promise<number> {
+  async batchUpdatePatternMetrics(
+    updates: PatternMetricUpdate[]
+  ): Promise<number> {
     if (updates.length === 0) return 0;
 
-    const startTime = performance.now();
-    PerformanceTrackingUtils.logOperationStart("batch pattern metrics update", {
-      updateCount: updates.length,
-    }, this.logger);
+    const _startTime = performance.now();
+    PerformanceTrackingUtils.logOperationStart(
+      "batch pattern metrics update",
+      {
+        updateCount: updates.length,
+      },
+      this.logger
+    );
 
     try {
       return await DatabaseExecutionUtils.executeTransaction(
@@ -511,7 +555,8 @@ export class BatchDatabaseServiceRefactored {
               25,
               async (chunk) => {
                 for (const update of chunk) {
-                  const setClause = DatabaseSchemaUtils.buildUpdateSetClause(update);
+                  const setClause =
+                    DatabaseSchemaUtils.buildUpdateSetClause(update);
                   if (Object.keys(setClause).length > 0) {
                     await tx
                       .update(patternEmbeddings)
@@ -527,7 +572,9 @@ export class BatchDatabaseServiceRefactored {
                 return chunk.length;
               },
               (error) => {
-                this.logger.error("Update batch failed", { error: error.message });
+                this.logger.error("Update batch failed", {
+                  error: error.message,
+                });
               }
             );
           }
@@ -550,7 +597,9 @@ export class BatchDatabaseServiceRefactored {
   /**
    * Batch check for snipe target duplicates using optimized query
    */
-  async batchCheckSnipeTargetDuplicates(targets: SnipeTargetCheck[]): Promise<SnipeTargetCheck[]> {
+  async batchCheckSnipeTargetDuplicates(
+    targets: SnipeTargetCheck[]
+  ): Promise<SnipeTargetCheck[]> {
     if (targets.length === 0) return [];
 
     const startTime = performance.now();
@@ -559,35 +608,39 @@ export class BatchDatabaseServiceRefactored {
       const userIds = [...new Set(targets.map((t) => t.userId))];
       const symbols = [...new Set(targets.map((t) => t.symbolName))];
 
-      const existingTargets = await DatabaseExecutionUtils.executeWithFullHandling(
-        async () => {
-          return await db
-            .select({
-              userId: snipeTargets.userId,
-              symbolName: snipeTargets.symbolName,
-            })
-            .from(snipeTargets)
-            .where(
-              and(
-                inArray(snipeTargets.userId, userIds),
-                inArray(snipeTargets.symbolName, symbols),
-                eq(snipeTargets.status, "pending")
-              )
-            );
-        },
-        "batch_check_snipe_target_duplicates",
-        {
-          tableName: "snipe_targets",
-          query: "SELECT userId, symbolName FROM snipe_targets WHERE userId IN (...) AND symbolName IN (...) AND status = pending",
-          parameters: [...userIds, ...symbols],
-          operationType: "select",
-        },
-        this.logger
-      );
+      const existingTargets =
+        await DatabaseExecutionUtils.executeWithFullHandling(
+          async () => {
+            return await db
+              .select({
+                userId: snipeTargets.userId,
+                symbolName: snipeTargets.symbolName,
+              })
+              .from(snipeTargets)
+              .where(
+                and(
+                  inArray(snipeTargets.userId, userIds),
+                  inArray(snipeTargets.symbolName, symbols),
+                  eq(snipeTargets.status, "pending")
+                )
+              );
+          },
+          "batch_check_snipe_target_duplicates",
+          {
+            tableName: "snipe_targets",
+            query:
+              "SELECT userId, symbolName FROM snipe_targets WHERE userId IN (...) AND symbolName IN (...) AND status = pending",
+            parameters: [...userIds, ...symbols],
+            operationType: "select",
+          },
+          this.logger
+        );
 
       // Filter duplicates using Set for O(1) lookup
       const existingCombinations = new Set(
-        existingTargets.map((target: any) => `${target.userId}:${target.symbolName}`)
+        existingTargets.map(
+          (target: any) => `${target.userId}:${target.symbolName}`
+        )
       );
 
       const nonDuplicates = targets.filter((target) => {
@@ -626,15 +679,20 @@ export class BatchDatabaseServiceRefactored {
     options: AggregationOptions
   ): Promise<AggregatedMetrics[]> {
     const validatedOptions = AggregationOptionsSchema.parse(options);
-    const { groupBy, timeframe, includeInactive, minConfidence } = validatedOptions;
+    const { groupBy, timeframe, includeInactive, minConfidence } =
+      validatedOptions;
     const startTime = performance.now();
 
-    PerformanceTrackingUtils.logOperationStart("pattern performance aggregation", {
-      groupBy,
-      timeframe,
-      includeInactive,
-      minConfidence,
-    }, this.logger);
+    PerformanceTrackingUtils.logOperationStart(
+      "pattern performance aggregation",
+      {
+        groupBy,
+        timeframe,
+        includeInactive,
+        minConfidence,
+      },
+      this.logger
+    );
 
     try {
       const timeRangeMs = QueryBuildingUtils.parseTimeframe(timeframe);
@@ -652,7 +710,8 @@ export class BatchDatabaseServiceRefactored {
           let queryWithParams = baseQuery.query;
           baseQuery.parameters.forEach((param, index) => {
             const placeholder = `$${index + 1}`;
-            const value = param instanceof Date ? `'${param.toISOString()}'` : `'${param}'`;
+            const value =
+              param instanceof Date ? `'${param.toISOString()}'` : `'${param}'`;
             queryWithParams = queryWithParams.replace(placeholder, value);
           });
           return await db.execute(sql.raw(queryWithParams));
@@ -710,12 +769,20 @@ export class BatchDatabaseServiceRefactored {
     try {
       const parsedEmbedding = JSON.parse(embedding.embedding);
       if (!Array.isArray(parsedEmbedding) || parsedEmbedding.length === 0) {
-        this.logger.warn("Invalid embedding format", { patternId: embedding.patternId });
+        this.logger.warn("Invalid embedding format", {
+          patternId: embedding.patternId,
+        });
         return false;
       }
 
-      if (!embedding.patternId || !embedding.symbolName || !embedding.patternType) {
-        this.logger.warn("Missing required fields", { patternId: embedding.patternId });
+      if (
+        !embedding.patternId ||
+        !embedding.symbolName ||
+        !embedding.patternType
+      ) {
+        this.logger.warn("Missing required fields", {
+          patternId: embedding.patternId,
+        });
         return false;
       }
 

@@ -1,6 +1,6 @@
 /**
  * Order Execution Helper
- * 
+ *
  * Consolidates order placement and retry logic to eliminate redundancy.
  * Provides standardized methods for executing trades with error handling and retries.
  */
@@ -84,7 +84,12 @@ export class OrderExecutionHelper {
         throw new Error(mexcResult.error || "Trade execution failed");
       }
 
-      return this.formatTradeResult(mexcResult.data, params, currentPrice, startTime);
+      return this.formatTradeResult(
+        mexcResult.data,
+        params,
+        currentPrice,
+        startTime
+      );
     } catch (error) {
       const safeError = toSafeError(error);
       this.config.logger.error("Real trade execution failed", {
@@ -122,7 +127,9 @@ export class OrderExecutionHelper {
   /**
    * Validate order parameters before execution
    */
-  private async validateOrderParameters(params: TradeParameters): Promise<void> {
+  private async validateOrderParameters(
+    params: TradeParameters
+  ): Promise<void> {
     // Validate symbol format
     if (!params.symbol || typeof params.symbol !== "string") {
       throw new Error("Invalid symbol format");
@@ -139,7 +146,10 @@ export class OrderExecutionHelper {
     }
 
     // Validate time in force
-    if (params.timeInForce && !["GTC", "IOC", "FOK"].includes(params.timeInForce)) {
+    if (
+      params.timeInForce &&
+      !["GTC", "IOC", "FOK"].includes(params.timeInForce)
+    ) {
       throw new Error("Invalid time in force");
     }
 
@@ -147,7 +157,9 @@ export class OrderExecutionHelper {
     if (params.quoteOrderQty) {
       const minOrderValue = 5; // USDT minimum
       if (params.quoteOrderQty < minOrderValue) {
-        throw new Error(`Order value too small. Minimum: ${minOrderValue} USDT`);
+        throw new Error(
+          `Order value too small. Minimum: ${minOrderValue} USDT`
+        );
       }
     }
 
@@ -164,7 +176,10 @@ export class OrderExecutionHelper {
   /**
    * Prepare MEXC order parameters
    */
-  private prepareMexcOrderParams(params: TradeParameters, currentPrice: number): any {
+  private prepareMexcOrderParams(
+    params: TradeParameters,
+    currentPrice: number
+  ): any {
     const mexcParams: any = {
       symbol: params.symbol,
       side: params.side,
@@ -198,7 +213,9 @@ export class OrderExecutionHelper {
   /**
    * Execute order with retry logic and exponential backoff
    */
-  private async executeOrderWithRetry(orderParams: any): Promise<ServiceResponse<any>> {
+  private async executeOrderWithRetry(
+    orderParams: any
+  ): Promise<ServiceResponse<any>> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.config.maxRetries!; attempt++) {
@@ -213,10 +230,13 @@ export class OrderExecutionHelper {
       } catch (error) {
         lastError = toSafeError(error);
 
-        this.config.logger.warn(`Order attempt ${attempt}/${this.config.maxRetries} failed`, {
-          symbol: orderParams.symbol,
-          error: lastError.message,
-        });
+        this.config.logger.warn(
+          `Order attempt ${attempt}/${this.config.maxRetries} failed`,
+          {
+            symbol: orderParams.symbol,
+            error: lastError.message,
+          }
+        );
 
         // Don't retry on certain errors
         if (this.isNonRetryableError(lastError)) {
@@ -225,7 +245,10 @@ export class OrderExecutionHelper {
 
         // Wait before retry (exponential backoff)
         if (attempt < this.config.maxRetries!) {
-          const delay = Math.min(this.config.retryDelay! * 2 ** (attempt - 1), 5000);
+          const delay = Math.min(
+            this.config.retryDelay! * 2 ** (attempt - 1),
+            5000
+          );
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
@@ -246,7 +269,7 @@ export class OrderExecutionHelper {
       "MIN_NOTIONAL",
     ];
 
-    return nonRetryableMessages.some(message => 
+    return nonRetryableMessages.some((message) =>
       error.message.toLowerCase().includes(message.toLowerCase())
     );
   }
@@ -273,7 +296,9 @@ export class OrderExecutionHelper {
         status: orderResult.status || "FILLED",
         executedQty: orderResult.executedQty || orderResult.quantity,
         cummulativeQuoteQty: orderResult.cummulativeQuoteQty,
-        timestamp: new Date(orderResult.transactTime || Date.now()).toISOString(),
+        timestamp: new Date(
+          orderResult.transactTime || Date.now()
+        ).toISOString(),
         autoSnipe: params.isAutoSnipe || false,
         confidenceScore: params.confidenceScore,
       },
@@ -293,7 +318,7 @@ export class OrderExecutionHelper {
   ): number {
     const entryValue = entryPrice * quantity;
     const exitValue = exitPrice * quantity;
-    
+
     return side === "BUY" ? exitValue - entryValue : entryValue - exitValue;
   }
 }

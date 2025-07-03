@@ -1,5 +1,12 @@
 "use client";
-import { forwardRef, HTMLAttributes, lazy, ReactElement, ReactNode, Suspense } from "react";
+import {
+  forwardRef,
+  type HTMLAttributes,
+  lazy,
+  type ReactElement,
+  type ReactNode,
+  Suspense,
+} from "react";
 import { ErrorBoundary } from "../error-boundary";
 
 export interface ChartConfig {
@@ -12,7 +19,10 @@ const _ResponsiveContainer = lazy(async () => {
     const module = await import("recharts");
     return { default: module.ResponsiveContainer };
   } catch (error) {
-    console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
+    console.warn(
+      "Failed to load Recharts ResponsiveContainer in chart.tsx:",
+      error
+    );
     // Return fallback component that renders safely with ResponsiveContainer-compatible interface
     const FallbackComponent = forwardRef<
       HTMLDivElement,
@@ -53,7 +63,11 @@ export function ChartContainer({
         </div>
       }
     >
-      <Suspense fallback={<div className="w-full h-96 animate-pulse bg-gray-100 rounded" />}>
+      <Suspense
+        fallback={
+          <div className="w-full h-96 animate-pulse bg-gray-100 rounded" />
+        }
+      >
         <div className={`w-full h-96 ${className || ""}`}>{children}</div>
       </Suspense>
     </ErrorBoundary>

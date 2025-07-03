@@ -6,7 +6,10 @@
 
 import type { PatternAnalysisResult } from "@/src/core/pattern-detection";
 import type { AgentResponse } from "@/src/mexc-agents/base-agent";
-import type { CalendarEntry, SymbolEntry } from "../../api/mexc-unified-exports";
+import type {
+  CalendarEntry,
+  SymbolEntry,
+} from "../../api/mexc-unified-exports";
 
 export interface PatternWorkflowRequest {
   type: "discovery" | "monitoring" | "validation" | "strategy_creation";
@@ -45,7 +48,12 @@ export interface PatternWorkflowResult {
 export interface StrategicRecommendation {
   vcoinId: string;
   symbol: string;
-  action: "immediate_trade" | "prepare_position" | "monitor_closely" | "wait" | "avoid";
+  action:
+    | "immediate_trade"
+    | "prepare_position"
+    | "monitor_closely"
+    | "wait"
+    | "avoid";
   confidence: number;
   reasoning: string;
   timing: {
@@ -88,7 +96,11 @@ export interface MonitoringSchedule {
 }
 
 export interface AlertConfiguration {
-  type: "ready_state" | "pattern_change" | "time_threshold" | "confidence_change";
+  type:
+    | "ready_state"
+    | "pattern_change"
+    | "time_threshold"
+    | "confidence_change";
   condition: string;
   urgency: "immediate" | "high" | "medium" | "low";
   recipients: string[];

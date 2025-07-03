@@ -56,7 +56,11 @@ export class Price extends ValueObject<PriceProps> {
   ): Price {
     const value = parseFloat(valueStr);
     if (Number.isNaN(value)) {
-      throw new DomainValidationError("value", valueStr, "Invalid numeric format");
+      throw new DomainValidationError(
+        "value",
+        valueStr,
+        "Invalid numeric format"
+      );
     }
     return Price.create(value, symbol, source, precision, timestamp);
   }
@@ -114,7 +118,10 @@ export class Price extends ValueObject<PriceProps> {
 
   isEqualTo(other: Price): boolean {
     this.ensureSameSymbol(other);
-    return Math.abs(this.props.value - other.props.value) < 10 ** -this.props.precision;
+    return (
+      Math.abs(this.props.value - other.props.value) <
+      10 ** -this.props.precision
+    );
   }
 
   // Calculate percentage difference
@@ -155,7 +162,11 @@ export class Price extends ValueObject<PriceProps> {
   }
 
   // Update price with new value (returns new instance)
-  updateValue(newValue: number, newTimestamp?: Date, newSource?: string): Price {
+  updateValue(
+    newValue: number,
+    newTimestamp?: Date,
+    newSource?: string
+  ): Price {
     return Price.create(
       newValue,
       this.props.symbol,
@@ -175,7 +186,12 @@ export class Price extends ValueObject<PriceProps> {
       );
     }
     const stopLossValue = this.props.value * (1 - percentage / 100);
-    return Price.create(stopLossValue, this.props.symbol, this.props.source, this.props.precision);
+    return Price.create(
+      stopLossValue,
+      this.props.symbol,
+      this.props.source,
+      this.props.precision
+    );
   }
 
   // Calculate take profit price
@@ -200,9 +216,17 @@ export class Price extends ValueObject<PriceProps> {
   calculateSlippage(expectedPrice: Price): number {
     this.ensureSameSymbol(expectedPrice);
     if (expectedPrice.props.value === 0) {
-      throw new DomainValidationError("expectedPrice", 0, "Expected price cannot be zero");
+      throw new DomainValidationError(
+        "expectedPrice",
+        0,
+        "Expected price cannot be zero"
+      );
     }
-    return ((this.props.value - expectedPrice.props.value) / expectedPrice.props.value) * 100;
+    return (
+      ((this.props.value - expectedPrice.props.value) /
+        expectedPrice.props.value) *
+      100
+    );
   }
 
   // Formatting methods
@@ -240,7 +264,9 @@ export class Price extends ValueObject<PriceProps> {
       );
     }
 
-    return prices.reduce((highest, current) => (current.isHigherThan(highest) ? current : highest));
+    return prices.reduce((highest, current) =>
+      current.isHigherThan(highest) ? current : highest
+    );
   }
 
   static findLowest(...prices: Price[]): Price {
@@ -252,7 +278,9 @@ export class Price extends ValueObject<PriceProps> {
       );
     }
 
-    return prices.reduce((lowest, current) => (current.isLowerThan(lowest) ? current : lowest));
+    return prices.reduce((lowest, current) =>
+      current.isLowerThan(lowest) ? current : lowest
+    );
   }
 
   static calculateAverage(...prices: Price[]): Price {

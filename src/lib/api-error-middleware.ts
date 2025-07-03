@@ -7,7 +7,10 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import type { ApiResponse } from "./api-response";
-import { handleApiError, type StandardizedErrorContext } from "./standardized-error-handler";
+import {
+  handleApiError,
+  type StandardizedErrorContext,
+} from "./standardized-error-handler";
 import { createLogger } from "./unified-logger";
 
 const logger = createLogger("api-error-middleware", {
@@ -77,7 +80,10 @@ function extractRequestContext(
  */
 function addCorsHeaders(response: NextResponse): void {
   response.headers.set("Access-Control-Allow-Origin", "*");
-  response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  response.headers.set(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
   response.headers.set(
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, X-Requested-With, X-Request-ID"
@@ -87,7 +93,10 @@ function addCorsHeaders(response: NextResponse): void {
 /**
  * Create standardized error response
  */
-function createErrorResponse<T>(error: unknown, context: StandardizedErrorContext): NextResponse {
+function createErrorResponse<T>(
+  error: unknown,
+  context: StandardizedErrorContext
+): NextResponse {
   const apiResponse = handleApiError<T>(error, context);
 
   const response = NextResponse.json(apiResponse, {
@@ -105,7 +114,10 @@ function createErrorResponse<T>(error: unknown, context: StandardizedErrorContex
 /**
  * Timeout wrapper for API handlers
  */
-function withTimeout<T>(handler: ApiHandler<T>, timeoutMs: number): ApiHandler<T> {
+function withTimeout<T>(
+  handler: ApiHandler<T>,
+  timeoutMs: number
+): ApiHandler<T> {
   return async (request, context) => {
     return Promise.race([
       handler(request, context),
@@ -154,7 +166,9 @@ export function withApiErrorHandling<T = any>(
       }
 
       // Create handler with timeout if specified
-      const handlerWithTimeout = config.timeout ? withTimeout(handler, config.timeout) : handler;
+      const handlerWithTimeout = config.timeout
+        ? withTimeout(handler, config.timeout)
+        : handler;
 
       // Execute the handler
       const result = await handlerWithTimeout(request, context);
@@ -170,7 +184,9 @@ export function withApiErrorHandling<T = any>(
           status: result.metadata?.statusCode || (result.success ? 200 : 500),
           headers: {
             "Content-Type": "application/json",
-            ...(requestContext.requestId && { "X-Request-ID": requestContext.requestId }),
+            ...(requestContext.requestId && {
+              "X-Request-ID": requestContext.requestId,
+            }),
           },
         });
       }
@@ -241,7 +257,9 @@ export function withApiErrorHandling<T = any>(
 /**
  * Public API routes (no authentication required)
  */
-export function withPublicApiErrorHandling<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
+export function withPublicApiErrorHandling<T = any>(
+  handler: ApiHandler<T>
+): ApiHandler<T> {
   return withApiErrorHandling(handler, {
     enableMetrics: true,
     enableCors: true,
@@ -252,7 +270,9 @@ export function withPublicApiErrorHandling<T = any>(handler: ApiHandler<T>): Api
 /**
  * Protected API routes (authentication required)
  */
-export function withProtectedApiErrorHandling<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
+export function withProtectedApiErrorHandling<T = any>(
+  handler: ApiHandler<T>
+): ApiHandler<T> {
   return withApiErrorHandling(handler, {
     enableMetrics: true,
     enableCors: true,
@@ -264,7 +284,9 @@ export function withProtectedApiErrorHandling<T = any>(handler: ApiHandler<T>): 
 /**
  * Internal API routes (service-to-service)
  */
-export function withInternalApiErrorHandling<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
+export function withInternalApiErrorHandling<T = any>(
+  handler: ApiHandler<T>
+): ApiHandler<T> {
   return withApiErrorHandling(handler, {
     enableMetrics: true,
     enableCors: false,
@@ -290,7 +312,9 @@ export function withHighPerformanceApiErrorHandling<T = any>(
 /**
  * Webhook API routes (external integrations)
  */
-export function withWebhookApiErrorHandling<T = any>(handler: ApiHandler<T>): ApiHandler<T> {
+export function withWebhookApiErrorHandling<T = any>(
+  handler: ApiHandler<T>
+): ApiHandler<T> {
   return withApiErrorHandling(handler, {
     enableMetrics: true,
     enableCors: false,
@@ -345,7 +369,10 @@ export function composeApiMiddleware<T = any>(
   ...middlewares: Array<(handler: ApiHandler<T>) => ApiHandler<T>>
 ): (handler: ApiHandler<T>) => ApiHandler<T> {
   return (handler: ApiHandler<T>) => {
-    return middlewares.reduceRight((acc, middleware) => middleware(acc), handler);
+    return middlewares.reduceRight(
+      (acc, middleware) => middleware(acc),
+      handler
+    );
   };
 }
 

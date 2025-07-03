@@ -34,7 +34,13 @@ import {
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -61,7 +67,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { generateChartCellKey, generateListKey, useSkeletonItems } from "../../lib/react-utilities";
+import {
+  generateChartCellKey,
+  generateListKey,
+  useSkeletonItems,
+} from "../../lib/react-utilities";
 
 interface Alert {
   id: string;
@@ -145,7 +155,8 @@ export function AlertCenter() {
     const params = new URLSearchParams();
     if (filters.severity) params.append("severity", filters.severity);
     if (filters.category) params.append("category", filters.category);
-    if (filters.acknowledged) params.append("acknowledged", filters.acknowledged);
+    if (filters.acknowledged)
+      params.append("acknowledged", filters.acknowledged);
     return params;
   }, [filters]);
 
@@ -179,7 +190,9 @@ export function AlertCenter() {
   const fetchAlerts = useCallback(async () => {
     try {
       const params = buildApiParams();
-      const response = await fetch(`/api/monitoring/alerts?${params.toString()}`);
+      const response = await fetch(
+        `/api/monitoring/alerts?${params.toString()}`
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch alerts");
@@ -204,7 +217,9 @@ export function AlertCenter() {
       eventSourceRef.current.close();
     }
 
-    const eventSource = new EventSource("/api/monitoring/real-time?type=alerts");
+    const eventSource = new EventSource(
+      "/api/monitoring/real-time?type=alerts"
+    );
     eventSourceRef.current = eventSource;
 
     eventSource.onopen = () => {
@@ -424,9 +439,11 @@ export function AlertCenter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {useSkeletonItems(4, "h-16 bg-gray-100 rounded animate-pulse").map((item) => (
-              <div key={item.key} className={item.className} />
-            ))}
+            {useSkeletonItems(4, "h-16 bg-gray-100 rounded animate-pulse").map(
+              (item) => (
+                <div key={item.key} className={item.className} />
+              )
+            )}
           </div>
         </CardContent>
       </Card>
@@ -499,7 +516,9 @@ export function AlertCenter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Alerts</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Alerts
+              </CardTitle>
               <Bell className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -516,7 +535,9 @@ export function AlertCenter() {
               <XCircle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{summary.critical}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {summary.critical}
+              </div>
             </CardContent>
           </Card>
 
@@ -526,7 +547,9 @@ export function AlertCenter() {
               <AlertTriangle className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-500">{summary.error}</div>
+              <div className="text-2xl font-bold text-red-500">
+                {summary.error}
+              </div>
             </CardContent>
           </Card>
 
@@ -536,7 +559,9 @@ export function AlertCenter() {
               <AlertCircle className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{summary.warning}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {summary.warning}
+              </div>
             </CardContent>
           </Card>
 
@@ -546,7 +571,9 @@ export function AlertCenter() {
               <Info className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{summary.info}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {summary.info}
+              </div>
             </CardContent>
           </Card>
 
@@ -557,7 +584,9 @@ export function AlertCenter() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{summary.lastHour}</div>
-              <p className="text-xs text-muted-foreground">{summary.last24Hours} in 24h</p>
+              <p className="text-xs text-muted-foreground">
+                {summary.last24Hours} in 24h
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -580,14 +609,21 @@ export function AlertCenter() {
                   <Input
                     placeholder="Search alerts..."
                     value={filters.search}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        search: e.target.value,
+                      }))
+                    }
                     className="w-64"
                   />
                 </div>
 
                 <Select
                   value={filters.severity}
-                  onValueChange={(value) => setFilters((prev) => ({ ...prev, severity: value }))}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, severity: value }))
+                  }
                 >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Severity" />
@@ -603,7 +639,9 @@ export function AlertCenter() {
 
                 <Select
                   value={filters.category}
-                  onValueChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
+                  onValueChange={(value) =>
+                    setFilters((prev) => ({ ...prev, category: value }))
+                  }
                 >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Category" />
@@ -657,7 +695,9 @@ export function AlertCenter() {
                           checked={selectedAlerts.size === alerts.length}
                           onCheckedChange={(checked) => {
                             if (checked) {
-                              setSelectedAlerts(new Set(alerts.map((a) => a.id)));
+                              setSelectedAlerts(
+                                new Set(alerts.map((a) => a.id))
+                              );
                             } else {
                               setSelectedAlerts(new Set());
                             }
@@ -677,7 +717,9 @@ export function AlertCenter() {
                     {alerts.map((alert) => (
                       <TableRow
                         key={alert.id}
-                        className={alert.severity === "critical" ? "bg-red-50" : ""}
+                        className={
+                          alert.severity === "critical" ? "bg-red-50" : ""
+                        }
                       >
                         <TableCell>
                           <Checkbox
@@ -702,14 +744,18 @@ export function AlertCenter() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm">{formatRelativeTime(alert.timestamp)}</div>
+                          <div className="text-sm">
+                            {formatRelativeTime(alert.timestamp)}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">{alert.source}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="max-w-xs">
-                            <p className="font-medium text-sm truncate">{alert.title}</p>
+                            <p className="font-medium text-sm truncate">
+                              {alert.title}
+                            </p>
                             <p className="text-xs text-muted-foreground truncate">
                               {alert.message}
                             </p>
@@ -751,30 +797,42 @@ export function AlertCenter() {
                                     {getSeverityIcon(alert.severity)}
                                     {alert.title}
                                   </DialogTitle>
-                                  <DialogDescription>Alert Details and Metadata</DialogDescription>
+                                  <DialogDescription>
+                                    Alert Details and Metadata
+                                  </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <p className="text-sm font-medium">Source</p>
+                                      <p className="text-sm font-medium">
+                                        Source
+                                      </p>
                                       <p className="text-sm text-muted-foreground">
                                         {alert.source}
                                       </p>
                                     </div>
                                     <div>
-                                      <p className="text-sm font-medium">Category</p>
+                                      <p className="text-sm font-medium">
+                                        Category
+                                      </p>
                                       <p className="text-sm text-muted-foreground">
                                         {alert.category}
                                       </p>
                                     </div>
                                     <div>
-                                      <p className="text-sm font-medium">Timestamp</p>
+                                      <p className="text-sm font-medium">
+                                        Timestamp
+                                      </p>
                                       <p className="text-sm text-muted-foreground">
-                                        {new Date(alert.timestamp).toLocaleString()}
+                                        {new Date(
+                                          alert.timestamp
+                                        ).toLocaleString()}
                                       </p>
                                     </div>
                                     <div>
-                                      <p className="text-sm font-medium">Count</p>
+                                      <p className="text-sm font-medium">
+                                        Count
+                                      </p>
                                       <p className="text-sm text-muted-foreground">
                                         {alert.count} occurrences
                                       </p>
@@ -782,28 +840,39 @@ export function AlertCenter() {
                                   </div>
 
                                   <div>
-                                    <p className="text-sm font-medium mb-2">Message</p>
+                                    <p className="text-sm font-medium mb-2">
+                                      Message
+                                    </p>
                                     <p className="text-sm text-muted-foreground p-3 bg-gray-50 rounded">
                                       {alert.message}
                                     </p>
                                   </div>
 
                                   <div>
-                                    <p className="text-sm font-medium mb-2">Affected Components</p>
+                                    <p className="text-sm font-medium mb-2">
+                                      Affected Components
+                                    </p>
                                     <div className="flex flex-wrap gap-2">
-                                      {alert.metadata.affectedComponents.map((component, index) => (
-                                        <Badge
-                                          key={generateListKey(component, index)}
-                                          variant="outline"
-                                        >
-                                          {component}
-                                        </Badge>
-                                      ))}
+                                      {alert.metadata.affectedComponents.map(
+                                        (component, index) => (
+                                          <Badge
+                                            key={generateListKey(
+                                              component,
+                                              index
+                                            )}
+                                            variant="outline"
+                                          >
+                                            {component}
+                                          </Badge>
+                                        )
+                                      )}
                                     </div>
                                   </div>
 
                                   <div>
-                                    <p className="text-sm font-medium mb-2">Tags</p>
+                                    <p className="text-sm font-medium mb-2">
+                                      Tags
+                                    </p>
                                     <div className="flex flex-wrap gap-2">
                                       {alert.tags.map((tag, index) => (
                                         <Badge
@@ -818,13 +887,17 @@ export function AlertCenter() {
 
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <p className="text-sm font-medium">Impact Level</p>
+                                      <p className="text-sm font-medium">
+                                        Impact Level
+                                      </p>
                                       <p className="text-sm text-muted-foreground capitalize">
                                         {alert.metadata.impactLevel}
                                       </p>
                                     </div>
                                     <div>
-                                      <p className="text-sm font-medium">Estimated Resolution</p>
+                                      <p className="text-sm font-medium">
+                                        Estimated Resolution
+                                      </p>
                                       <p className="text-sm text-muted-foreground">
                                         {alert.metadata.estimatedResolution}
                                       </p>
@@ -857,7 +930,9 @@ export function AlertCenter() {
               <Card>
                 <CardHeader>
                   <CardTitle>Top Alert Sources</CardTitle>
-                  <CardDescription>Components generating the most alerts</CardDescription>
+                  <CardDescription>
+                    Components generating the most alerts
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -912,7 +987,9 @@ export function AlertCenter() {
               <Card>
                 <CardHeader>
                   <CardTitle>Alert Trends (24 Hours)</CardTitle>
-                  <CardDescription>Hourly alert distribution by severity</CardDescription>
+                  <CardDescription>
+                    Hourly alert distribution by severity
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -921,10 +998,30 @@ export function AlertCenter() {
                       <XAxis dataKey="hour" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="critical" stroke="#dc2626" name="Critical" />
-                      <Line type="monotone" dataKey="error" stroke="#ea580c" name="Error" />
-                      <Line type="monotone" dataKey="warning" stroke="#ca8a04" name="Warning" />
-                      <Line type="monotone" dataKey="info" stroke="#2563eb" name="Info" />
+                      <Line
+                        type="monotone"
+                        dataKey="critical"
+                        stroke="#dc2626"
+                        name="Critical"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="error"
+                        stroke="#ea580c"
+                        name="Error"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="warning"
+                        stroke="#ca8a04"
+                        name="Warning"
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="info"
+                        stroke="#2563eb"
+                        name="Info"
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -934,7 +1031,9 @@ export function AlertCenter() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Detected Patterns</CardTitle>
-                    <CardDescription>AI-identified alert patterns</CardDescription>
+                    <CardDescription>
+                      AI-identified alert patterns
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -943,7 +1042,9 @@ export function AlertCenter() {
                           key={generateListKey(pattern, index, "pattern")}
                           className="flex items-center justify-between p-3 rounded-lg border"
                         >
-                          <span className="text-sm">{pattern.pattern.replace(/_/g, " ")}</span>
+                          <span className="text-sm">
+                            {pattern.pattern.replace(/_/g, " ")}
+                          </span>
                           <Badge variant="outline">
                             {(pattern.confidence * 100).toFixed(0)}% confidence
                           </Badge>
@@ -956,7 +1057,9 @@ export function AlertCenter() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Recommendations</CardTitle>
-                    <CardDescription>Suggested actions to reduce alerts</CardDescription>
+                    <CardDescription>
+                      Suggested actions to reduce alerts
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">

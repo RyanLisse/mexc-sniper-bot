@@ -17,7 +17,13 @@ import { queryKeys } from "../lib/query-client";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 
 // Zod schema for API response validation
 const UnifiedStatusSchema = z.object({
@@ -81,7 +87,9 @@ export function StreamlinedCredentialStatus({
   // Refresh mutation
   const refreshMutation = useMutation({
     mutationFn: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.status.unified() });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.status.unified(),
+      });
     },
   });
 
@@ -91,7 +99,8 @@ export function StreamlinedCredentialStatus({
         color: "red",
         icon: XCircle,
         text: "Connection Error",
-        bgClass: "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800",
+        bgClass:
+          "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800",
       };
     }
 
@@ -100,7 +109,8 @@ export function StreamlinedCredentialStatus({
         color: "blue",
         icon: RefreshCw,
         text: "Checking Status",
-        bgClass: "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800",
+        bgClass:
+          "bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800",
       };
     }
 
@@ -109,7 +119,8 @@ export function StreamlinedCredentialStatus({
         color: "yellow",
         icon: AlertTriangle,
         text: "Configuration Required",
-        bgClass: "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800",
+        bgClass:
+          "bg-yellow-50 border-yellow-200 dark:bg-yellow-950/20 dark:border-yellow-800",
       };
     }
 
@@ -118,7 +129,8 @@ export function StreamlinedCredentialStatus({
         color: "green",
         icon: CheckCircle,
         text: "System Ready",
-        bgClass: "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800",
+        bgClass:
+          "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800",
       };
     }
 
@@ -153,7 +165,11 @@ export function StreamlinedCredentialStatus({
         <StatusIcon
           className={`h-4 w-4 text-${statusConfig.color}-500 ${isFetching ? "animate-spin" : ""}`}
         />
-        <Badge variant={status?.overallStatus === "healthy" ? "default" : "secondary"}>
+        <Badge
+          variant={
+            status?.overallStatus === "healthy" ? "default" : "secondary"
+          }
+        >
           {statusConfig.text}
         </Badge>
         {status?.canTrade && (
@@ -176,8 +192,14 @@ export function StreamlinedCredentialStatus({
             <CardTitle>MEXC API Status</CardTitle>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge variant={status?.overallStatus === "healthy" ? "default" : "secondary"}>
-              <StatusIcon className={`h-3 w-3 mr-1 ${isFetching ? "animate-spin" : ""}`} />
+            <Badge
+              variant={
+                status?.overallStatus === "healthy" ? "default" : "secondary"
+              }
+            >
+              <StatusIcon
+                className={`h-3 w-3 mr-1 ${isFetching ? "animate-spin" : ""}`}
+              />
               {statusConfig.text}
             </Badge>
             <Button
@@ -186,7 +208,9 @@ export function StreamlinedCredentialStatus({
               onClick={() => refreshMutation.mutate()}
               disabled={refreshMutation.isPending || isLoading}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`}
+              />
             </Button>
           </div>
         </div>
@@ -200,7 +224,9 @@ export function StreamlinedCredentialStatus({
         <div className={`p-3 rounded-lg border ${statusConfig.bgClass}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <StatusIcon className={`h-5 w-5 text-${statusConfig.color}-500`} />
+              <StatusIcon
+                className={`h-5 w-5 text-${statusConfig.color}-500`}
+              />
               <div>
                 <div
                   className={`font-medium text-${statusConfig.color}-600 dark:text-${statusConfig.color}-400`}
@@ -209,15 +235,17 @@ export function StreamlinedCredentialStatus({
                 </div>
                 {status && (
                   <div className="text-sm text-muted-foreground">
-                    Connection: {status.connected ? "Active" : "Failed"} • Credentials:{" "}
-                    {status.credentialsValid ? "Valid" : "Invalid"} • Trading:{" "}
-                    {status.canTrade ? "Enabled" : "Disabled"}
+                    Connection: {status.connected ? "Active" : "Failed"} •
+                    Credentials: {status.credentialsValid ? "Valid" : "Invalid"}{" "}
+                    • Trading: {status.canTrade ? "Enabled" : "Disabled"}
                   </div>
                 )}
               </div>
             </div>
             {lastUpdate && (
-              <div className="text-xs text-muted-foreground">{lastUpdate.toLocaleTimeString()}</div>
+              <div className="text-xs text-muted-foreground">
+                {lastUpdate.toLocaleTimeString()}
+              </div>
             )}
           </div>
         </div>
@@ -242,7 +270,9 @@ export function StreamlinedCredentialStatus({
               <div className="text-muted-foreground">Credentials</div>
             </div>
             <div className="text-center p-2 border rounded">
-              <div className={`font-medium ${status.canTrade ? "text-green-600" : "text-red-600"}`}>
+              <div
+                className={`font-medium ${status.canTrade ? "text-green-600" : "text-red-600"}`}
+              >
                 {status.canTrade ? "✓" : "✗"}
               </div>
               <div className="text-muted-foreground">Trading</div>
@@ -254,7 +284,9 @@ export function StreamlinedCredentialStatus({
         {(error || status?.error) && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error?.message || status?.error}</AlertDescription>
+            <AlertDescription>
+              {error?.message || status?.error}
+            </AlertDescription>
           </Alert>
         )}
 
@@ -265,7 +297,9 @@ export function StreamlinedCredentialStatus({
             <AlertDescription>
               <div className="font-medium">
                 Using{" "}
-                {status.credentialSource === "database" ? "User Settings" : "Environment Variables"}
+                {status.credentialSource === "database"
+                  ? "User Settings"
+                  : "Environment Variables"}
               </div>
               <div className="text-sm text-muted-foreground mt-1">
                 {status.credentialSource === "database"
@@ -287,7 +321,8 @@ export function StreamlinedCredentialStatus({
             >
               <Info className="h-4 w-4" />
               <span>
-                {showDetails ? "Hide" : "Show"} Actions ({status.recommendations.length})
+                {showDetails ? "Hide" : "Show"} Actions (
+                {status.recommendations.length})
               </span>
             </Button>
 
@@ -326,7 +361,9 @@ export function StreamlinedCredentialStatus({
         {/* Update indicator */}
         {isFetching && (
           <div className="text-center">
-            <div className="text-xs text-muted-foreground animate-pulse">Updating status...</div>
+            <div className="text-xs text-muted-foreground animate-pulse">
+              Updating status...
+            </div>
           </div>
         )}
       </CardContent>

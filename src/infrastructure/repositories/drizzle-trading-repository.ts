@@ -32,7 +32,10 @@ export class DrizzleTradingRepository implements TradingRepository {
       const tradeData = this.tradeToDbFormat(trade);
 
       // Insert into snipe targets table (adapting existing schema)
-      const [insertedTrade] = await db.insert(snipeTargets).values(tradeData).returning();
+      const [insertedTrade] = await db
+        .insert(snipeTargets)
+        .values(tradeData)
+        .returning();
 
       // Also insert into transactions table for tracking
       if (trade.hasOrders()) {
@@ -90,7 +93,9 @@ export class DrizzleTradingRepository implements TradingRepository {
         .orderBy(desc(snipeTargets.createdAt))
         .limit(limit);
 
-      return results.map((row: any) => this.dbToTradeFormat(row)).filter(Boolean) as Trade[];
+      return results
+        .map((row: any) => this.dbToTradeFormat(row))
+        .filter(Boolean) as Trade[];
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find trades by user ID", {
@@ -110,7 +115,9 @@ export class DrizzleTradingRepository implements TradingRepository {
         .orderBy(desc(snipeTargets.createdAt))
         .limit(limit);
 
-      return results.map((row: any) => this.dbToTradeFormat(row)).filter(Boolean) as Trade[];
+      return results
+        .map((row: any) => this.dbToTradeFormat(row))
+        .filter(Boolean) as Trade[];
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find trades by symbol", {
@@ -126,7 +133,23 @@ export class DrizzleTradingRepository implements TradingRepository {
       const activeStatuses = ["ready", "executing", "pending"];
 
       const results = await db
-        .select()
+        .select({
+          id: snipeTargets.id,
+          vcoinId: snipeTargets.vcoinId,
+          symbolName: snipeTargets.symbolName,
+          targetPrice: snipeTargets.targetPrice,
+          positionSizeUsdt: snipeTargets.positionSizeUsdt,
+          status: snipeTargets.status,
+          priority: snipeTargets.priority,
+          riskLevel: snipeTargets.riskLevel,
+          errorMessage: snipeTargets.errorMessage,
+          createdAt: snipeTargets.createdAt,
+          updatedAt: snipeTargets.updatedAt,
+          entryPrice: snipeTargets.entryPrice,
+          executionStatus: snipeTargets.executionStatus,
+          executionPrice: snipeTargets.executionPrice,
+          confidenceScore: snipeTargets.confidenceScore
+        })
         .from(snipeTargets)
         .where(
           and(
@@ -136,7 +159,9 @@ export class DrizzleTradingRepository implements TradingRepository {
         )
         .orderBy(desc(snipeTargets.createdAt));
 
-      return results.map((row: any) => this.dbToTradeFormat(row)).filter(Boolean) as Trade[];
+      return results
+        .map((row: any) => this.dbToTradeFormat(row))
+        .filter(Boolean) as Trade[];
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to find active trades by user ID", {
@@ -158,7 +183,9 @@ export class DrizzleTradingRepository implements TradingRepository {
       const existing = await db
         .select()
         .from(snipeTargets)
-        .where(sql`${snipeTargets.errorMessage} LIKE ${`%tradeId:${trade.id}%`}`)
+        .where(
+          sql`${snipeTargets.errorMessage} LIKE ${`%tradeId:${trade.id}%`}`
+        )
         .limit(1);
 
       if (existing.length === 0) {
@@ -168,7 +195,10 @@ export class DrizzleTradingRepository implements TradingRepository {
       // Update with new trade data
       const updateData = this.tradeToDbUpdateFormat(trade);
 
-      await db.update(snipeTargets).set(updateData).where(eq(snipeTargets.id, existing[0].id));
+      await db
+        .update(snipeTargets)
+        .set(updateData)
+        .where(eq(snipeTargets.id, existing[0].id));
 
       // Update orders if any
       if (trade.hasOrders()) {
@@ -199,7 +229,9 @@ export class DrizzleTradingRepository implements TradingRepository {
         .where(sql`${snipeTargets.errorMessage} LIKE ${`%tradeId:${id}%`}`);
 
       // Delete related transactions
-      await db.delete(transactions).where(sql`${transactions.notes} LIKE ${`%tradeId:${id}%`}`);
+      await db
+        .delete(transactions)
+        .where(sql`${transactions.notes} LIKE ${`%tradeId:${id}%`}`);
 
       this.logger.info("Trade deleted successfully", { tradeId: id });
     } catch (error) {
@@ -224,7 +256,9 @@ export class DrizzleTradingRepository implements TradingRepository {
     averageExecutionTime: number;
   }> {
     try {
-      const whereConditions = [sql`${snipeTargets.errorMessage} LIKE ${`%userId:${userId}%`}`];
+      const whereConditions = [
+        sql`${snipeTargets.errorMessage} LIKE ${`%userId:${userId}%`}`,
+      ];
 
       if (fromDate) {
         whereConditions.push(gte(snipeTargets.createdAt, fromDate));
@@ -248,7 +282,8 @@ export class DrizzleTradingRepository implements TradingRepository {
       // Calculate basic metrics
       const totalTrades = totalResult.count;
       const successfulTrades = successfulResult.count;
-      const successRate = totalTrades > 0 ? (successfulTrades / totalTrades) * 100 : 0;
+      const successRate =
+        totalTrades > 0 ? (successfulTrades / totalTrades) * 100 : 0;
 
       // For now, return basic metrics
       // In a production system, you'd calculate actual PnL and execution times
@@ -408,15 +443,22 @@ export class DrizzleTradingRepository implements TradingRepository {
           vcoinId: trade.symbol.replace("USDT", ""), // Extract vcoin from symbol
           buyPrice: order.side === "BUY" ? order.price : null,
           buyQuantity: order.side === "BUY" ? order.quantity : null,
-          buyTotalCost: order.side === "BUY" ? (order.quantity || 0) * (order.price || 0) : null,
+          buyTotalCost:
+            order.side === "BUY"
+              ? (order.quantity || 0) * (order.price || 0)
+              : null,
           buyTimestamp: order.side === "BUY" ? order.createdAt : null,
-          buyOrderId: order.side === "BUY" ? order.exchangeOrderId || order.id : null,
+          buyOrderId:
+            order.side === "BUY" ? order.exchangeOrderId || order.id : null,
           sellPrice: order.side === "SELL" ? order.price : null,
           sellQuantity: order.side === "SELL" ? order.quantity : null,
           sellTotalRevenue:
-            order.side === "SELL" ? (order.quantity || 0) * (order.price || 0) : null,
+            order.side === "SELL"
+              ? (order.quantity || 0) * (order.price || 0)
+              : null,
           sellTimestamp: order.side === "SELL" ? order.createdAt : null,
-          sellOrderId: order.side === "SELL" ? order.exchangeOrderId || order.id : null,
+          sellOrderId:
+            order.side === "SELL" ? order.exchangeOrderId || order.id : null,
           fees: order.fees || 0,
           status: order.status === "FILLED" ? "completed" : "pending",
           snipeTargetId: null, // Would need to map this properly

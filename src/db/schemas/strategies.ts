@@ -41,14 +41,24 @@ export const strategyTemplates = pgTable(
     avgProfitPercent: real("avg_profit_percent").default(0.0),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    strategyIdIdx: index("strategy_templates_strategy_id_idx").on(table.strategyId),
+    strategyIdIdx: index("strategy_templates_strategy_id_idx").on(
+      table.strategyId
+    ),
     typeIdx: index("strategy_templates_type_idx").on(table.type),
-    riskLevelIdx: index("strategy_templates_risk_level_idx").on(table.riskLevel),
-    usageCountIdx: index("strategy_templates_usage_count_idx").on(table.usageCount),
+    riskLevelIdx: index("strategy_templates_risk_level_idx").on(
+      table.riskLevel
+    ),
+    usageCountIdx: index("strategy_templates_usage_count_idx").on(
+      table.usageCount
+    ),
   })
 );
 
@@ -60,9 +70,12 @@ export const tradingStrategies = pgTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    strategyTemplateId: integer("strategy_template_id").references(() => strategyTemplates.id, {
-      onDelete: "set null",
-    }),
+    strategyTemplateId: integer("strategy_template_id").references(
+      () => strategyTemplates.id,
+      {
+        onDelete: "set null",
+      }
+    ),
 
     // Strategy Identification
     name: text("name").notNull(),
@@ -113,18 +126,33 @@ export const tradingStrategies = pgTable(
     lastExecutionAt: timestamp("last_execution_at"),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
     userIdx: index("trading_strategies_user_idx").on(table.userId),
     symbolIdx: index("trading_strategies_symbol_idx").on(table.symbol),
     statusIdx: index("trading_strategies_status_idx").on(table.status),
-    templateIdx: index("trading_strategies_template_idx").on(table.strategyTemplateId),
+    templateIdx: index("trading_strategies_template_idx").on(
+      table.strategyTemplateId
+    ),
     // Compound indexes for optimization
-    userStatusIdx: index("trading_strategies_user_status_idx").on(table.userId, table.status),
-    symbolStatusIdx: index("trading_strategies_symbol_status_idx").on(table.symbol, table.status),
-    userSymbolIdx: index("trading_strategies_user_symbol_idx").on(table.userId, table.symbol),
+    userStatusIdx: index("trading_strategies_user_status_idx").on(
+      table.userId,
+      table.status
+    ),
+    symbolStatusIdx: index("trading_strategies_symbol_status_idx").on(
+      table.symbol,
+      table.status
+    ),
+    userSymbolIdx: index("trading_strategies_user_symbol_idx").on(
+      table.userId,
+      table.symbol
+    ),
   })
 );
 
@@ -173,23 +201,32 @@ export const strategyPhaseExecutions = pgTable(
     retryCount: integer("retry_count").notNull().default(0),
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    strategyIdx: index("strategy_phase_executions_strategy_idx").on(table.strategyId),
+    strategyIdx: index("strategy_phase_executions_strategy_idx").on(
+      table.strategyId
+    ),
     userIdx: index("strategy_phase_executions_user_idx").on(table.userId),
-    statusIdx: index("strategy_phase_executions_status_idx").on(table.executionStatus),
-    phaseIdx: index("strategy_phase_executions_phase_idx").on(table.phaseNumber),
+    statusIdx: index("strategy_phase_executions_status_idx").on(
+      table.executionStatus
+    ),
+    phaseIdx: index("strategy_phase_executions_phase_idx").on(
+      table.phaseNumber
+    ),
     // Compound indexes
     strategyPhaseIdx: index("strategy_phase_executions_strategy_phase_idx").on(
       table.strategyId,
       table.phaseNumber
     ),
-    strategyStatusIdx: index("strategy_phase_executions_strategy_status_idx").on(
-      table.strategyId,
-      table.executionStatus
-    ),
+    strategyStatusIdx: index(
+      "strategy_phase_executions_strategy_status_idx"
+    ).on(table.strategyId, table.executionStatus),
     userStrategyIdx: index("strategy_phase_executions_user_strategy_idx").on(
       table.userId,
       table.strategyId
@@ -243,22 +280,29 @@ export const strategyPerformanceMetrics = pgTable(
     marketVolatility: text("market_volatility"), // "low", "medium", "high"
 
     // Timestamps
-    calculatedAt: timestamp("calculated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    calculatedAt: timestamp("calculated_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    strategyIdx: index("strategy_performance_metrics_strategy_idx").on(table.strategyId),
+    strategyIdx: index("strategy_performance_metrics_strategy_idx").on(
+      table.strategyId
+    ),
     userIdx: index("strategy_performance_metrics_user_idx").on(table.userId),
     periodIdx: index("strategy_performance_metrics_period_idx").on(
       table.periodStart,
       table.periodEnd
     ),
-    periodTypeIdx: index("strategy_performance_metrics_period_type_idx").on(table.periodType),
-    // Compound indexes
-    strategyPeriodIdx: index("strategy_performance_metrics_strategy_period_idx").on(
-      table.strategyId,
-      table.periodStart
+    periodTypeIdx: index("strategy_performance_metrics_period_type_idx").on(
+      table.periodType
     ),
+    // Compound indexes
+    strategyPeriodIdx: index(
+      "strategy_performance_metrics_strategy_period_idx"
+    ).on(table.strategyId, table.periodStart),
     userPeriodIdx: index("strategy_performance_metrics_user_period_idx").on(
       table.userId,
       table.periodStart
@@ -287,13 +331,19 @@ export const strategyConfigBackups = pgTable(
     performanceSnapshot: text("performance_snapshot"), // JSON of performance metrics
 
     // Timestamps
-    createdAt: timestamp("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+    createdAt: timestamp("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
   },
   (table) => ({
-    strategyIdx: index("strategy_config_backups_strategy_idx").on(table.strategyId),
+    strategyIdx: index("strategy_config_backups_strategy_idx").on(
+      table.strategyId
+    ),
     versionIdx: index("strategy_config_backups_version_idx").on(table.version),
     activeIdx: index("strategy_config_backups_active_idx").on(table.isActive),
-    reasonIdx: index("strategy_config_backups_reason_idx").on(table.backupReason),
+    reasonIdx: index("strategy_config_backups_reason_idx").on(
+      table.backupReason
+    ),
   })
 );
 
@@ -304,11 +354,15 @@ export type NewStrategyTemplate = typeof strategyTemplates.$inferInsert;
 export type TradingStrategy = typeof tradingStrategies.$inferSelect;
 export type NewTradingStrategy = typeof tradingStrategies.$inferInsert;
 
-export type StrategyPhaseExecution = typeof strategyPhaseExecutions.$inferSelect;
-export type NewStrategyPhaseExecution = typeof strategyPhaseExecutions.$inferInsert;
+export type StrategyPhaseExecution =
+  typeof strategyPhaseExecutions.$inferSelect;
+export type NewStrategyPhaseExecution =
+  typeof strategyPhaseExecutions.$inferInsert;
 
-export type StrategyPerformanceMetrics = typeof strategyPerformanceMetrics.$inferSelect;
-export type NewStrategyPerformanceMetrics = typeof strategyPerformanceMetrics.$inferInsert;
+export type StrategyPerformanceMetrics =
+  typeof strategyPerformanceMetrics.$inferSelect;
+export type NewStrategyPerformanceMetrics =
+  typeof strategyPerformanceMetrics.$inferInsert;
 
 export type StrategyConfigBackup = typeof strategyConfigBackups.$inferSelect;
 export type NewStrategyConfigBackup = typeof strategyConfigBackups.$inferInsert;
