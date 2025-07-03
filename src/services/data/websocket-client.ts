@@ -13,7 +13,43 @@
  * - TypeScript type safety
  */
 
-import { EventEmitter } from "events";
+// Custom lightweight EventEmitter compatible with browsers
+type Listener = (...args: any[]) => void;
+
+class SimpleEventEmitter {
+  private listeners: Record<string, Set<Listener>> = {};
+
+  on(event: string, listener: Listener) {
+    if (!this.listeners[event]) {
+      this.listeners[event] = new Set();
+    }
+    this.listeners[event]!.add(listener);
+  }
+
+  off(event: string, listener: Listener) {
+    this.listeners[event]?.delete(listener);
+  }
+
+  once(event: string, listener: Listener) {
+    const wrapper: Listener = (...args) => {
+      this.off(event, wrapper);
+      listener(...args);
+    };
+    this.on(event, wrapper);
+  }
+
+  emit(event: string, ...args: any[]) {
+    this.listeners[event]?.forEach((listener) => listener(...args));
+  }
+
+  removeAllListeners(event?: string) {
+    if (event) {
+      delete this.listeners[event];
+    } else {
+      this.listeners = {};
+    }
+  }
+}
 import type {
   AgentStatusMessage,
   MessageHandler,
@@ -247,7 +283,7 @@ export interface WebSocketClientMetrics {
   lastActivity?: number;
 }
 
-export class WebSocketClientService extends EventEmitter {
+export class WebSocketClientService extends SimpleEventEmitter {
   private static instance: WebSocketClientService;
   private ws: WebSocket | null = null;
   private config: WebSocketClientConfig;

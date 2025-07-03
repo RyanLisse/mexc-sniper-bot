@@ -183,21 +183,17 @@ function createPostgresClient() {
 function createMockDatabase() {
   // Create a thenable mock that resolves to empty array
   const createThenable = (result: any[] = []) => {
-    const thenable = {
-      then: (resolve: any) => resolve(result),
-      catch: (reject: any) => reject,
-      finally: (fn: any) => fn(),
-      // Add common query methods that return themselves
-      where: () => thenable,
-      orderBy: () => thenable,
-      limit: () => thenable,
-      select: () => thenable,
-      from: () => thenable,
-      set: () => thenable,
-      values: () => thenable,
-      returning: () => thenable,
-    };
-    return thenable;
+    const promise: any = Promise.resolve(result);
+    // Attach common query builder stubs that return the promise for chaining
+    promise.where = () => promise;
+    promise.orderBy = () => promise;
+    promise.limit = () => promise;
+    promise.select = () => promise;
+    promise.from = () => promise;
+    promise.set = () => promise;
+    promise.values = () => promise;
+    promise.returning = () => promise;
+    return promise;
   };
 
   return {
