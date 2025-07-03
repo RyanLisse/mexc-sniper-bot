@@ -52,7 +52,6 @@ export interface TradingTargetDisplay {
 
 /**
  * Legacy type alias for backward compatibility
- * TODO: Remove after migration is complete
  */
 export type LegacySnipeTarget = TradingTargetDisplay;
 

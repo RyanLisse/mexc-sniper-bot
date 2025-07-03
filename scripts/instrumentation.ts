@@ -31,13 +31,14 @@ export async function register() {
                         (process.env.NODE_ENV === 'development' && process.env.CI !== 'true');
 
     if (shouldEnable) {
-      console.log('[Instrumentation] OpenTelemetry temporarily disabled due to bundling issues');
-      
-      // TODO: Re-enable OpenTelemetry after resolving GRPC bundling issues
-      // const { initializeEnhancedTelemetry } = await import('./src/lib/opentelemetry-setup');
-      // const result = await initializeEnhancedTelemetry();
-      
-      console.log('[Instrumentation] OpenTelemetry initialization skipped (bundling fix needed)');
+      const { initializeEnhancedTelemetry } = await import('../src/lib/opentelemetry-setup');
+      const result = await initializeEnhancedTelemetry();
+
+      if (result.success) {
+        console.log('[Instrumentation] OpenTelemetry initialized');
+      } else {
+        console.log('[Instrumentation] OpenTelemetry initialization skipped');
+      }
     } else {
       console.log('[Instrumentation] OpenTelemetry disabled by configuration');
     }

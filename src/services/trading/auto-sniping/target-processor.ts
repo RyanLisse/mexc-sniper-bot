@@ -7,6 +7,8 @@
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
+import { mexcTradingService } from "@/src/services/trading/mexc-trading-service";
+import type { TradingOrderRequest } from "@/src/schemas/mexc-api-validation-schemas";
 
 // Simple types to avoid complex dependencies
 export interface SimpleTarget {
@@ -206,28 +208,30 @@ export class TargetProcessor {
         throw new Error('Invalid quantity for execution');
       }
 
-      // TODO: Replace with actual MEXC API trading execution
-      // For now, simulate execution with validation
-      console.log(`Executing trade: ${side} ${quantity} ${symbol} at ${price || 'market price'}`);
-      
-      // Simulate execution delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate 90% success rate
-      const success = Math.random() > 0.1;
-      
-      if (success) {
+      const order: TradingOrderRequest = {
+        userId: 'system',
+        symbol,
+        side: side as 'BUY' | 'SELL',
+        type: (target.orderType?.toUpperCase() as TradingOrderRequest['type']) || 'MARKET',
+        quantity,
+        price: price || undefined,
+        timeInForce: target.timeInForce as 'GTC' | 'IOC' | 'FOK' | undefined,
+      };
+
+      const result = await mexcTradingService.executeTrade(order);
+
+      if (result.success && result.data) {
         return {
           success: true,
-          orderId: `mexc_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          symbol,
-          quantity,
-          price: price || Math.random() * 100, // Mock market price
-          side,
-          timestamp: new Date(),
+          orderId: result.data.orderId,
+          symbol: result.data.symbol,
+          quantity: parseFloat(result.data.executedQty ?? result.data.quantity),
+          price: result.data.price ? parseFloat(result.data.price) : undefined,
+          side: result.data.side,
+          timestamp: new Date(result.data.timestamp),
         };
       } else {
-        throw new Error('Order execution failed - market conditions');
+        throw new Error(result.error || 'Trade execution failed');
       }
     } catch (error: any) {
       return {
