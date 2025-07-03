@@ -8,7 +8,7 @@ echo ""
 echo "📦 TypeScript/JavaScript (Biome):"
 echo "================================="
 echo "Checking and formatting TypeScript/JavaScript code..."
-bun run lint
+bun x biome check --write || exit 1
 
 echo ""
 echo "✅ Linting and formatting complete!"

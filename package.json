@@ -67,7 +67,23 @@
     "sonner": "^2.0.5",
     "tailwind-merge": "^3.3.1",
     "ws": "^8.18.3",
-    "zod": "^3.25.67"
+    "zod": "^3.25.67",
+    "@tanstack/react-query": "^5.81.5",
+    "@tanstack/react-query-devtools": "^5.81.5",
+    "@supabase/supabase-js": "^2.50.3",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@supabase/auth-ui-shared": "^0.1.8",
+    "@supabase/ssr": "^0.6.1",
+    "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-scroll-area": "^1.2.9",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-tabs": "^1.1.12",
+    "@radix-ui/react-tooltip": "^1.2.7",
+    "@radix-ui/react-toggle": "^1.1.9",
+    "react-day-picker": "^9.7.0"
   },
   "engines": {
     "node": ">=20.11.0",
@@ -88,11 +104,14 @@
     "typescript": "^5.8.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4",
-    "istanbul-lib-coverage": "^3.2.1"
+    "istanbul-lib-coverage": "^3.2.1",
+    "@biomejs/cli-linux-x64": "^2.0.6"
   },
   "optionalDependencies": {
     "@tailwindcss/oxide-linux-x64-gnu": "^4.1.11",
-    "lightningcss-linux-x64-gnu": "^1.30.1"
+    "lightningcss-linux-x64-gnu": "^1.30.1",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@rollup/rollup-linux-x64-gnu": "^4.44.1"
   },
   "overrides": {
     "esbuild": "^0.25.5",

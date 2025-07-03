@@ -37,6 +37,50 @@ export class DatabaseConnectionPool {
       idleConnections: 1,
     };
   }
+
+  async executeWrite<T>(
+    queryFn: () => Promise<T>,
+    invalidatePatterns: string[] = []
+  ): Promise<T> {
+    const conn = await this.getConnection();
+    try {
+      const result = await queryFn();
+      void invalidatePatterns;
+      return result;
+    } finally {
+      await this.releaseConnection(conn);
+    }
+  }
+
+  async executeSelect<T>(
+    queryFn: () => Promise<T>,
+    _cacheKey: string,
+    _cacheTTL?: number
+  ): Promise<T> {
+    const conn = await this.getConnection();
+    try {
+      return await queryFn();
+    } finally {
+      await this.releaseConnection(conn);
+    }
+  }
+
+  async executeBatch<T>(
+    operations: (() => Promise<T>)[],
+    invalidatePatterns: string[] = []
+  ): Promise<T[]> {
+    const conn = await this.getConnection();
+    try {
+      const results: T[] = [];
+      for (const op of operations) {
+        results.push(await op());
+      }
+      void invalidatePatterns;
+      return results;
+    } finally {
+      await this.releaseConnection(conn);
+    }
+  }
 }
 
 export const connectionPool = new DatabaseConnectionPool();
