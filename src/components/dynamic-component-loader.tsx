@@ -6,7 +6,7 @@
 
 "use client";
 
-import { lazy, Suspense, type ComponentType, type LazyExoticComponent, type ReactNode } from "react";
+import { type ComponentType, type LazyExoticComponent, lazy, type ReactNode, Suspense } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 

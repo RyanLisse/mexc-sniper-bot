@@ -120,6 +120,7 @@ class ParameterManager {
 }
 
 export const parameterManager = new ParameterManager();
+export { ParameterManager };
 
 // Initialize default parameters
 parameterManager.createGroup('trading', 'Trading parameters');

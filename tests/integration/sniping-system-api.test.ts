@@ -365,11 +365,11 @@ describe("Sniping System API Integration", () => {
     it("should timeout long requests", async () => {
       // Mock a request that takes too long
       mockFetch.mockImplementationOnce(
-        () => new Promise((resolve) => setTimeout(resolve, 10000))
+        () => new Promise((resolve) => setTimeout(resolve, 2000))
       );
 
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Request timeout")), 5000)
+        setTimeout(() => reject(new Error("Request timeout")), 1000)
       );
 
       const fetchPromise = fetch("/api/auto-sniping/control");

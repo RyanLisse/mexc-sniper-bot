@@ -49,27 +49,11 @@ export function initializeDatabaseInstrumentation(config?: Partial<DatabaseInstr
   databaseInstrumentation.initialize(config);
 }
 
-// Missing functions for compatibility
-export function instrumentDatabase(operation: string): (target: any, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor {
-  return function(target: any, propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor {
-    const originalMethod = descriptor.value;
-    
-    descriptor.value = async function(...args: any[]) {
-      const startTime = Date.now();
-      try {
-        const result = await originalMethod.apply(this, args);
-        const duration = Date.now() - startTime;
-        console.debug(`Database operation ${operation} completed in ${duration}ms`);
-        return result;
-      } catch (error) {
-        const duration = Date.now() - startTime;
-        console.error(`Database operation ${operation} failed after ${duration}ms:`, error);
-        throw error;
-      }
-    };
-    
-    return descriptor;
-  };
+// Missing functions for compatibility - FIX: should return the database instance, not a decorator
+export function instrumentDatabase<T>(dbInstance: T): T {
+  // Simply return the database instance without decoration for now
+  // In a full implementation, this would wrap the instance with telemetry
+  return dbInstance;
 }
 
 export function instrumentConnectionHealth(): void {

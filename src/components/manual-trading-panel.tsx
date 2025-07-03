@@ -12,8 +12,8 @@ import {
   RefreshCw,
   Wallet,
 } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
 import type { FormEvent } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAccountBalance } from "../hooks/use-account-balance";
 import { TransactionDebugPanel } from "./transaction-debug-panel";

@@ -7,15 +7,15 @@ import {
   type SymbolV2Entry,
 } from "@/src/schemas/unified/mexc-api-schemas";
 import type { 
-  TradingTargetDisplay, 
-  OrderParameters 
+  OrderParameters, 
+  TradingTargetDisplay 
 } from "@/src/types/trading-display-types";
 import {
-  mergeCalendarAndSymbolData,
   createUnifiedTargetsList,
-  validateTradingTarget,
-  safeGetProperty,
+  mergeCalendarAndSymbolData,
   normalizeVcoinId,
+  safeGetProperty,
+  validateTradingTarget,
 } from "@/src/utils/trading-data-transformers";
 import type { UserTradingPreferences } from "./use-user-preferences";
 

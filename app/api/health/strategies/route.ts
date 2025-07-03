@@ -171,20 +171,36 @@ async function checkRiskManagement(): Promise<{
   positionSizeOptimal: boolean;
 }> {
   try {
-    // Check risk management system
+    // Check risk management system configuration
     const hasRiskConfig = !!process.env.RISK_MANAGEMENT_ENABLED;
     const hasEmergencyStops = !!process.env.EMERGENCY_STOP_ENABLED;
-    
-    // Simulate risk management status
-    // TODO: Replace with actual risk level calculation
-    const currentRiskLevel: 'low' | 'medium' | 'high' = 'low';
-    const stopLossActive = true;
-    const positionSizeOptimal = true;
-    
-    // Be more lenient - consider healthy in development mode even without emergency stops
-    const isHealthy = (hasEmergencyStops && stopLossActive) || (process.env.NODE_ENV !== 'production');
-    // Note: currentRiskLevel is currently hardcoded as 'low', so risk level warning is always false
-    const hasWarnings = !hasRiskConfig || !hasEmergencyStops;
+
+    // Basic risk score from environment variable (0-100)
+    const riskScore = parseFloat(process.env.RISK_SCORE || '50');
+
+    let currentRiskLevel: 'low' | 'medium' | 'high';
+    if (riskScore >= 70) {
+      currentRiskLevel = 'high';
+    } else if (riskScore >= 40) {
+      currentRiskLevel = 'medium';
+    } else {
+      currentRiskLevel = 'low';
+    }
+
+    const stopLossActive = process.env.STOP_LOSS_ACTIVE === 'true';
+    const positionSizeOptimal = process.env.POSITION_SIZE_SCORE
+      ? parseFloat(process.env.POSITION_SIZE_SCORE) >= 70
+      : true;
+
+    // Consider healthy in development mode even without emergency stops
+    const isHealthy =
+      (hasEmergencyStops && stopLossActive) ||
+      process.env.NODE_ENV !== 'production';
+
+    const hasWarnings =
+      !hasRiskConfig ||
+      !hasEmergencyStops ||
+      currentRiskLevel === 'high';
     
     return {
       healthy: isHealthy,

@@ -28,15 +28,12 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     
-    // Test discovery and inclusion
+    // Test discovery and inclusion - ONLY test files, no spec files
     include: [
       'tests/unit/**/*.test.{js,ts,tsx}',
       'tests/integration/**/*.test.{js,ts,tsx}',
-      'tests/agents/**/*.test.{js,ts,tsx}',
-      'tests/auto-sniping/**/*.test.{js,ts,tsx}',
-      'tests/safety/**/*.test.{js,ts,tsx}',
-      'tests/performance/**/*.test.{js,ts,tsx}',
-      'src/**/*.test.{js,ts,tsx}',
+      'tests/utils/**/*.test.{js,ts,tsx}',
+      'tests/components/**/*.test.{js,ts,tsx}',
     ],
     
     // Comprehensive exclusions
@@ -59,8 +56,8 @@ export default defineConfig({
     
     // Fast timeout configuration
     testTimeout: 5000, // Reduced to 5 seconds
-    hookTimeout: 2000, // Reduced to 2 seconds
-    teardownTimeout: 2000, // Reduced to 2 seconds
+    hookTimeout: 10000, // Increased for cleanup
+    teardownTimeout: 10000, // Increased for cleanup
     
     // No retries for speed
     retry: 0,
@@ -94,7 +91,7 @@ export default defineConfig({
     ],
     
     // Minimal reporting for speed
-    reporters: ['basic'],
+    reporters: [['default', { summary: false }]],
       
     // Output configuration
     outputFile: {

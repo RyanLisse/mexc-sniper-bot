@@ -1,9 +1,9 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import { useSupabaseAuth } from '@/src/components/auth/supabase-auth-provider-clean';
 import { Badge } from '@/src/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/components/ui/card';
-import { useEffect, useState } from 'react';
 
 interface AuthDiagnostics {
   supabaseConfigured: boolean;

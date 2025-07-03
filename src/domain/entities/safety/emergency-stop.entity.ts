@@ -10,11 +10,11 @@ import {
   DomainValidationError,
 } from "../../errors/trading-errors";
 import {
-  SafetyEventFactory,
   type EmergencyStopCompleted,
   type EmergencyStopCreated,
   type EmergencyStopFailed,
   type EmergencyStopTriggered,
+  SafetyEventFactory,
 } from "../../events/safety-events";
 
 // Emergency stop status enumeration

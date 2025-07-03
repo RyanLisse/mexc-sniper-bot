@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import type { ReactNode } from "react";
 import "./globals.css";
-import { SupabaseAuthProvider } from "../src/components/auth/supabase-auth-provider-clean";
 import { HydrationWrapper } from "../src/components/auth/hydration-wrapper";
+import { SupabaseAuthProvider } from "../src/components/auth/supabase-auth-provider-clean";
 import { StatusProviderWrapper } from "../src/components/providers/status-provider-wrapper";
 import { QueryProvider } from "../src/components/query-provider";
 import { Toaster } from "../src/components/ui/toaster";

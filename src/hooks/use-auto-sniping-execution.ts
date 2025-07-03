@@ -4,7 +4,7 @@
  * Connects to real API endpoints and provides proper error handling
  */
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // Enhanced types for execution data
 export interface ExecutionData {
