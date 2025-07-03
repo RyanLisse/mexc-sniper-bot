@@ -364,6 +364,9 @@ npm run test:profile
 - **Synthetic data**: Use generated data for predictable testing
 - **Data versioning**: Track test data changes over time
 - **Cleanup**: Always clean up test data after execution
+- **Credential cleanup**: Playwright and Stagehand tests must call
+  `DELETE /api/test-users?email=<email>` (or run `scripts/delete-test-user.ts`) in
+  teardown to remove any created test users
 - **Isolation**: Prevent test data conflicts
 
 ### Performance Testing

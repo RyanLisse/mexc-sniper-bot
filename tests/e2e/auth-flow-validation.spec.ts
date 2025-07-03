@@ -14,6 +14,17 @@ const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3008';
 const TEST_EMAIL = 'ryan@ryanlisse.com';
 const TEST_PASSWORD = 'Testing2025!';
 
+test.afterAll(async () => {
+  try {
+    await fetch(
+      `${BASE_URL}/api/test-users?email=${encodeURIComponent(TEST_EMAIL)}`,
+      { method: 'DELETE' }
+    );
+  } catch (err) {
+    console.warn('Failed to cleanup test user', err);
+  }
+});
+
 test.describe('Authentication Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to auth page before each test
