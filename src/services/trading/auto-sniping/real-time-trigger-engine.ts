@@ -60,6 +60,11 @@ export class RealTimeTriggerEngine extends EventEmitter {
   private websocketConnected = false;
   private preloadedMarketData = new Map<string, number>();
   private positionCache = new Map<string, Position>();
+  private volumeHistoryCache = new Map<string, Array<{
+    timestamp: number;
+    volume: number;
+    hour: number;
+  }>>();
 
   private logger = {
     info: (message: string, context?: any) => 
@@ -317,6 +322,50 @@ export class RealTimeTriggerEngine extends EventEmitter {
   }
 
   /**
+   * Get volume history cache statistics
+   */
+  getVolumeHistoryStats(): {
+    totalSymbols: number;
+    totalDataPoints: number;
+    oldestDataAge: number;
+    newestDataAge: number;
+    averageDataPointsPerSymbol: number;
+    memoryUsageEstimate: string;
+  } {
+    let totalDataPoints = 0;
+    let oldestTimestamp = Date.now();
+    let newestTimestamp = 0;
+    
+    for (const [symbol, data] of this.volumeHistoryCache.entries()) {
+      totalDataPoints += data.length;
+      
+      if (data.length > 0) {
+        const symbolOldest = Math.min(...data.map(d => d.timestamp));
+        const symbolNewest = Math.max(...data.map(d => d.timestamp));
+        
+        if (symbolOldest < oldestTimestamp) {
+          oldestTimestamp = symbolOldest;
+        }
+        if (symbolNewest > newestTimestamp) {
+          newestTimestamp = symbolNewest;
+        }
+      }
+    }
+    
+    const now = Date.now();
+    const symbolCount = this.volumeHistoryCache.size;
+    
+    return {
+      totalSymbols: symbolCount,
+      totalDataPoints,
+      oldestDataAge: symbolCount > 0 ? Math.round((now - oldestTimestamp) / (60 * 60 * 1000)) : 0,
+      newestDataAge: symbolCount > 0 ? Math.round((now - newestTimestamp) / (60 * 1000)) : 0,
+      averageDataPointsPerSymbol: symbolCount > 0 ? Math.round(totalDataPoints / symbolCount) : 0,
+      memoryUsageEstimate: `~${Math.round((totalDataPoints * 24) / 1024)}KB`, // Rough estimate
+    };
+  }
+
+  /**
    * Enable/disable real-time triggers
    */
   setRealTimeEnabled(enabled: boolean): void {
@@ -400,9 +449,31 @@ export class RealTimeTriggerEngine extends EventEmitter {
   }
 
   private shouldTriggerVolumeAlert(symbol: string, volume: number): boolean {
-    // Implement volume spike detection logic
-    // This would typically compare against historical volume averages
-    return volume > 1000000; // Placeholder threshold
+    // Get historical volume data for this symbol
+    const historicalVolume = this.getHistoricalAverageVolume(symbol);
+    
+    // No historical data available - use conservative threshold
+    if (!historicalVolume) {
+      // For new symbols, use minimum significant volume threshold
+      return volume > 100000; // 100K minimum volume for new listings
+    }
+    
+    // Calculate volume spike - trigger if current volume is 3x or more than average
+    const volumeMultiplier = volume / historicalVolume;
+    const isSignificantSpike = volumeMultiplier >= 3.0;
+    
+    // Also ensure minimum absolute volume threshold
+    const meetsMinimumVolume = volume > 50000;
+    
+    if (isSignificantSpike && meetsMinimumVolume) {
+      this.logger.debug(`Volume spike detected for ${symbol}`, {
+        currentVolume: volume,
+        historicalAverage: historicalVolume,
+        multiplier: volumeMultiplier.toFixed(2)
+      });
+    }
+    
+    return isSignificantSpike && meetsMinimumVolume;
   }
 
   private shouldTriggerPriceAlert(symbol: string, price: number): boolean {
@@ -416,12 +487,59 @@ export class RealTimeTriggerEngine extends EventEmitter {
 
   private async preloadCriticalMarketData(): Promise<void> {
     try {
-      // This would load critical market data for active symbols
-      // Implementation depends on available market data service
       this.logger.info('Preloading critical market data for speed optimization');
       
-      // Placeholder for actual market data loading
-      // await this.marketDataService.preloadActiveSymbols();
+      // Get active monitoring targets from database
+      const { db } = await import('@/src/db');
+      const { snipeTargets } = await import('@/src/db/schemas/trading');
+      const { eq, and, isNull } = await import('drizzle-orm');
+      
+      const activeTargets = await db
+        .select()
+        .from(snipeTargets)
+        .where(
+          and(
+            eq(snipeTargets.status, 'ready'),
+            isNull(snipeTargets.actualExecutionTime)
+          )
+        )
+        .limit(50); // Limit to 50 most critical symbols
+      
+      // Load current market prices for active targets
+      const { UnifiedMexcServiceV2 } = await import('../../api/unified-mexc-service-v2');
+      const mexcService = UnifiedMexcServiceV2.getInstance();
+      
+      const pricePromises = activeTargets.map(async (target) => {
+        try {
+          // Get 24hr ticker data which includes current price and volume
+          const tickerData = await mexcService.get24hrTicker(target.symbolName);
+          
+          if (tickerData && tickerData.lastPrice) {
+            const price = parseFloat(tickerData.lastPrice);
+            const volume = parseFloat(tickerData.volume || '0');
+            
+            // Cache current price for price movement detection
+            this.preloadedMarketData.set(target.symbolName, price);
+            
+            // Store volume data for historical comparison
+            this.storeVolumeHistory(target.symbolName, volume);
+            
+            this.logger.debug(`Preloaded market data for ${target.symbolName}`, {
+              price,
+              volume: volume.toLocaleString(),
+              priceChangePercent: tickerData.priceChangePercent
+            });
+          }
+        } catch (error) {
+          // Individual symbol failures shouldn't stop the entire preload
+          this.logger.debug(`Failed to preload data for ${target.symbolName}:`, error);
+        }
+      });
+      
+      // Execute all price fetches in parallel with timeout
+      await Promise.allSettled(pricePromises);
+      
+      this.logger.info(`Successfully preloaded market data for ${this.preloadedMarketData.size} symbols`);
       
     } catch (error) {
       this.logger.warn('Market data preloading failed', error);
@@ -438,10 +556,122 @@ export class RealTimeTriggerEngine extends EventEmitter {
     this.metrics.averageExecutionTime = 
       (currentAvg * (totalExecutions - 1) + executionTime) / totalExecutions;
     
-    // Update success rate (placeholder - would be calculated from actual results)
+    // Update success rate based on rapid executions vs total triggers
     this.metrics.successRate = this.metrics.rapidExecutions > 0 
       ? (this.metrics.rapidExecutions / this.metrics.totalTriggers) * 100 
       : 0;
+  }
+
+  /**
+   * Get historical average volume for a symbol
+   */
+  private getHistoricalAverageVolume(symbol: string): number | null {
+    try {
+      // Check if we have historical volume data stored
+      const key = `vol_hist_${symbol}`;
+      const historicalData = this.volumeHistoryCache.get(key);
+      
+      if (!historicalData || historicalData.length === 0) {
+        this.logger.debug(`No historical volume data available for ${symbol}`);
+        return null;
+      }
+      
+      // Calculate average from last 24 hours of data points
+      const now = Date.now();
+      const dayAgo = now - (24 * 60 * 60 * 1000);
+      
+      const recentData = historicalData.filter(entry => entry.timestamp >= dayAgo);
+      
+      if (recentData.length === 0) {
+        this.logger.debug(`No recent volume data available for ${symbol}`);
+        return null;
+      }
+      
+      const totalVolume = recentData.reduce((sum, entry) => sum + entry.volume, 0);
+      const averageVolume = totalVolume / recentData.length;
+      
+      this.logger.debug(`Historical average volume for ${symbol}:`, {
+        dataPoints: recentData.length,
+        averageVolume: averageVolume.toLocaleString(),
+        timeRange: '24 hours'
+      });
+      
+      return averageVolume;
+    } catch (error) {
+      this.logger.error(`Failed to get historical volume for ${symbol}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Store volume data for historical analysis
+   */
+  private storeVolumeHistory(symbol: string, volume: number): void {
+    try {
+      const key = `vol_hist_${symbol}`;
+      const timestamp = Date.now();
+      
+      // Get existing data or create new array
+      let historicalData = this.volumeHistoryCache.get(key) || [];
+      
+      // Add new data point
+      historicalData.push({
+        timestamp,
+        volume,
+        hour: new Date(timestamp).getHours()
+      });
+      
+      // Keep only last 48 hours of data (for trend analysis)
+      const cutoffTime = timestamp - (48 * 60 * 60 * 1000);
+      historicalData = historicalData.filter(entry => entry.timestamp >= cutoffTime);
+      
+      // Limit to maximum 1000 data points per symbol to prevent memory bloat
+      if (historicalData.length > 1000) {
+        historicalData = historicalData.slice(-1000);
+      }
+      
+      // Store back to cache
+      this.volumeHistoryCache.set(key, historicalData);
+      
+      this.logger.debug(`Stored volume data for ${symbol}:`, {
+        volume: volume.toLocaleString(),
+        totalDataPoints: historicalData.length,
+        oldestDataAge: Math.round((timestamp - Math.min(...historicalData.map(d => d.timestamp))) / (60 * 60 * 1000)) + ' hours'
+      });
+      
+      // Cleanup old cache entries if memory usage gets too high
+      if (this.volumeHistoryCache.size > 500) {
+        this.cleanupVolumeHistoryCache();
+      }
+    } catch (error) {
+      this.logger.error(`Failed to store volume history for ${symbol}:`, error);
+    }
+  }
+
+  /**
+   * Cleanup old volume history cache entries
+   */
+  private cleanupVolumeHistoryCache(): void {
+    try {
+      const now = Date.now();
+      const cutoffTime = now - (72 * 60 * 60 * 1000); // Keep max 72 hours
+      
+      let removedCount = 0;
+      for (const [key, data] of this.volumeHistoryCache.entries()) {
+        // Remove entries where all data is older than cutoff
+        if (data.length > 0 && Math.max(...data.map(d => d.timestamp)) < cutoffTime) {
+          this.volumeHistoryCache.delete(key);
+          removedCount++;
+        }
+      }
+      
+      this.logger.debug(`Volume history cache cleanup completed:`, {
+        removedEntries: removedCount,
+        remainingEntries: this.volumeHistoryCache.size
+      });
+    } catch (error) {
+      this.logger.error('Failed to cleanup volume history cache:', error);
+    }
   }
 
   /**
@@ -452,6 +682,11 @@ export class RealTimeTriggerEngine extends EventEmitter {
     
     this.setRealTimeEnabled(false);
     this.removeAllListeners();
+    
+    // Clear all caches
+    this.preloadedMarketData.clear();
+    this.positionCache.clear();
+    this.volumeHistoryCache.clear();
     
     this.logger.info('Real-Time Trigger Engine shutdown completed', {
       finalMetrics: this.metrics,

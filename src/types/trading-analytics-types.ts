@@ -5,6 +5,8 @@
  * Used across all trading analytics components for type safety.
  */
 
+import type { ComponentType, SVGProps } from "react";
+
 export interface TradingAnalyticsData {
   timestamp: string;
   tradingPerformance: {
@@ -239,7 +241,7 @@ export interface MetricCardProps {
   title: string;
   value: string | number;
   change?: number;
-  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
   className?: string;
 }
 

@@ -3,7 +3,7 @@
  * 
  * Manages different authentication environments and user lifecycle for testing.
  * Provides utilities for creating, managing, and cleaning up test users across
- * different Kinde applications (test, staging, production).
+ * different Supabase projects (test, staging, production).
  */
 
 import { afterEach, beforeEach, vi } from 'vitest';
@@ -14,34 +14,38 @@ import { afterEach, beforeEach, vi } from 'vitest';
 export const authEnvironments = {
   test: {
     name: 'test',
-    kindeIssuerUrl: 'https://test-mexcsniper.kinde.com',
-    kindeSiteUrl: 'http://localhost:3008',
-    kindeClientId: 'test_client_id_12345',
-    kindeClientSecret: 'test_client_secret_67890',
+    supabaseUrl: 'https://test-mexcsniper.supabase.co',
+    supabaseAnonKey: 'test_anon_key_12345',
+    supabaseServiceRoleKey: 'test_service_role_key_67890',
+    supabaseJwtSecret: 'test_jwt_secret_12345',
+    siteUrl: 'http://localhost:3008',
     description: 'Isolated test environment for unit and integration tests'
   },
   staging: {
     name: 'staging',
-    kindeIssuerUrl: 'https://staging-mexcsniper.kinde.com', 
-    kindeSiteUrl: 'https://staging.mexcsniper.com',
-    kindeClientId: 'staging_client_id_abcde',
-    kindeClientSecret: 'staging_client_secret_fghij',
+    supabaseUrl: 'https://staging-mexcsniper.supabase.co',
+    supabaseAnonKey: 'staging_anon_key_abcde',
+    supabaseServiceRoleKey: 'staging_service_role_key_fghij',
+    supabaseJwtSecret: 'staging_jwt_secret_abcde',
+    siteUrl: 'https://staging.mexcsniper.com',
     description: 'Staging environment for pre-production testing'
   },
   production: {
     name: 'production',
-    kindeIssuerUrl: 'https://mexcsniper.kinde.com',
-    kindeSiteUrl: 'https://mexcsniper.com',
-    kindeClientId: 'prod_client_id_real',
-    kindeClientSecret: 'prod_client_secret_real',
+    supabaseUrl: 'https://mexcsniper.supabase.co',
+    supabaseAnonKey: 'prod_anon_key_real',
+    supabaseServiceRoleKey: 'prod_service_role_key_real',
+    supabaseJwtSecret: 'prod_jwt_secret_real',
+    siteUrl: 'https://mexcsniper.com',
     description: 'Production environment (read-only for testing)'
   },
   e2e: {
     name: 'e2e',
-    kindeIssuerUrl: 'https://e2e-mexcsniper.kinde.com',
-    kindeSiteUrl: 'http://localhost:3008',
-    kindeClientId: 'e2e_client_id_xyz',
-    kindeClientSecret: 'e2e_client_secret_abc',
+    supabaseUrl: 'https://e2e-mexcsniper.supabase.co',
+    supabaseAnonKey: 'e2e_anon_key_xyz',
+    supabaseServiceRoleKey: 'e2e_service_role_key_abc',
+    supabaseJwtSecret: 'e2e_jwt_secret_xyz',
+    siteUrl: 'http://localhost:3008',
     description: 'Dedicated E2E testing environment with real auth flows'
   }
 };
@@ -109,12 +113,11 @@ export class AuthEnvironmentManager {
     this.currentEnvironment = environmentName;
 
     // Update environment variables
-    process.env.KINDE_ISSUER_URL = env.kindeIssuerUrl;
-    process.env.KINDE_SITE_URL = env.kindeSiteUrl;
-    process.env.KINDE_CLIENT_ID = env.kindeClientId;
-    process.env.KINDE_CLIENT_SECRET = env.kindeClientSecret;
-    process.env.KINDE_POST_LOGIN_REDIRECT_URL = `${env.kindeSiteUrl}/dashboard`;
-    process.env.KINDE_POST_LOGOUT_REDIRECT_URL = env.kindeSiteUrl;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = env.supabaseUrl;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = env.supabaseAnonKey;
+    process.env.SUPABASE_SERVICE_ROLE_KEY = env.supabaseServiceRoleKey;
+    process.env.SUPABASE_JWT_SECRET = env.supabaseJwtSecret;
+    process.env.NEXT_PUBLIC_SITE_URL = env.siteUrl;
 
     console.log(`🔄 Switched to ${env.name} environment: ${env.description}`);
   }
@@ -137,12 +140,11 @@ export class AuthEnvironmentManager {
       const env = authEnvironments[previousEnv as keyof typeof authEnvironments];
       
       // Update environment variables
-      process.env.KINDE_ISSUER_URL = env.kindeIssuerUrl;
-      process.env.KINDE_SITE_URL = env.kindeSiteUrl;
-      process.env.KINDE_CLIENT_ID = env.kindeClientId;
-      process.env.KINDE_CLIENT_SECRET = env.kindeClientSecret;
-      process.env.KINDE_POST_LOGIN_REDIRECT_URL = `${env.kindeSiteUrl}/dashboard`;
-      process.env.KINDE_POST_LOGOUT_REDIRECT_URL = env.kindeSiteUrl;
+      process.env.NEXT_PUBLIC_SUPABASE_URL = env.supabaseUrl;
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = env.supabaseAnonKey;
+      process.env.SUPABASE_SERVICE_ROLE_KEY = env.supabaseServiceRoleKey;
+      process.env.SUPABASE_JWT_SECRET = env.supabaseJwtSecret;
+      process.env.NEXT_PUBLIC_SITE_URL = env.siteUrl;
 
       console.log(`🔄 Rolled back to ${env.name} environment: ${env.description}`);
     }
@@ -214,7 +216,7 @@ export class AuthEnvironmentManager {
 
     for (const user of users) {
       console.log(`🧹 Cleaning up test user: ${user.email} from ${env} environment`);
-      // In a real implementation, this would call Kinde Management API to delete users
+      // In a real implementation, this would call Supabase Admin API to delete users
     }
 
     this.createdUsers.set(env, []);
@@ -263,10 +265,10 @@ export class AuthEnvironmentManager {
     const currentEnv = this.getCurrentEnvironment();
 
     const requiredEnvVars = [
-      'KINDE_ISSUER_URL',
-      'KINDE_SITE_URL', 
-      'KINDE_CLIENT_ID',
-      'KINDE_CLIENT_SECRET'
+      'NEXT_PUBLIC_SUPABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY', 
+      'SUPABASE_SERVICE_ROLE_KEY',
+      'SUPABASE_JWT_SECRET'
     ];
 
     for (const envVar of requiredEnvVars) {
@@ -276,19 +278,22 @@ export class AuthEnvironmentManager {
     }
 
     // Validate URL formats using actual environment variables
-    if (process.env.KINDE_ISSUER_URL) {
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
       try {
-        new URL(process.env.KINDE_ISSUER_URL);
+        new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL.includes('.supabase.co')) {
+          errors.push(`Invalid SUPABASE_URL format: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`);
+        }
       } catch {
-        errors.push(`Invalid KINDE_ISSUER_URL format: ${process.env.KINDE_ISSUER_URL}`);
+        errors.push(`Invalid SUPABASE_URL format: ${process.env.NEXT_PUBLIC_SUPABASE_URL}`);
       }
     }
 
-    if (process.env.KINDE_SITE_URL) {
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
       try {
-        new URL(process.env.KINDE_SITE_URL);
+        new URL(process.env.NEXT_PUBLIC_SITE_URL);
       } catch {
-        errors.push(`Invalid KINDE_SITE_URL format: ${process.env.KINDE_SITE_URL}`);
+        errors.push(`Invalid SITE_URL format: ${process.env.NEXT_PUBLIC_SITE_URL}`);
       }
     }
 

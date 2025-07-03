@@ -39,7 +39,7 @@ const SystemStatusEnum = z.enum(["healthy", "warning", "critical"]);
 // ============================================================================
 
 export const UserSchema = BaseEntitySchema.extend({
-  kindeId: z.string().min(1),
+  userId: z.string().min(1),
   email: z.string().email(),
   name: z.string().optional(),
   picture: z.string().url().optional(),

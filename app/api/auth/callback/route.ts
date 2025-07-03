@@ -1,5 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createSupabaseServerClient } from '@/src/lib/supabase-auth';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -7,15 +6,17 @@ export async function GET(request: NextRequest) {
   const code = requestUrl.searchParams.get('code');
 
   if (code) {
-    const cookieStore = cookies();
-    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
-    
     try {
-      await supabase.auth.exchangeCodeForSession(code);
+      const supabase = await createSupabaseServerClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      
+      if (error) {
+        console.error('Error exchanging code for session:', error);
+        return NextResponse.redirect(new URL('/auth/error?message=callback_error', request.url));
+      }
     } catch (error) {
-      console.error('Error exchanging code for session:', error);
-      // Redirect to error page or login page
-      return NextResponse.redirect(new URL('/auth/error', request.url));
+      console.error('Error in auth callback:', error);
+      return NextResponse.redirect(new URL('/auth/error?message=callback_error', request.url));
     }
   }
 

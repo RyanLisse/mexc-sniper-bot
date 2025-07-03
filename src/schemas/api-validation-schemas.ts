@@ -6,26 +6,37 @@ import { z } from "zod";
  */
 
 // ============================================================================
-// Common API Response Schemas
+// SIMPLIFIED API Response Schemas - NO COMPLEX UNIONS
 // ============================================================================
 
 export const ApiSuccessResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.unknown(),
+  success: z.boolean(),
+  data: z.unknown().optional(),
   message: z.string().optional(),
-  timestamp: z.string().datetime().optional(),
+  timestamp: z.string().optional(),
   meta: z.record(z.unknown()).optional(),
 });
 
 export const ApiErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.string(),
+  success: z.boolean(),
+  error: z.string().optional(),
   code: z.string().optional(),
-  details: z.record(z.unknown()).optional(),
-  timestamp: z.string().datetime().optional(),
+  details: z.any().optional(),
+  timestamp: z.string().optional(),
+  statusCode: z.number().optional(),
 });
 
-export const ApiResponseSchema = z.union([ApiSuccessResponseSchema, ApiErrorResponseSchema]);
+export const ApiResponseSchema = z.object({
+  success: z.boolean().optional(),
+  data: z.any().optional(),
+  error: z.string().optional(),
+  code: z.string().optional(),
+  details: z.any().optional(),
+  message: z.string().optional(),
+  timestamp: z.string().optional(),
+  meta: z.any().optional(),
+  statusCode: z.number().optional(),
+});
 
 // ============================================================================
 // Transaction Locks API Schemas
@@ -240,7 +251,7 @@ export const SortQuerySchema = z.object({
 export function validateApiQuery<T extends z.ZodSchema>(
   schema: T,
   searchParams: URLSearchParams
-): { success: true; data: z.infer<T> } | { success: false; error: string } {
+): { success?: boolean; data?: z.infer<T>; error?: string } {
   try {
     const params = Object.fromEntries(searchParams.entries());
     const result = schema.parse(params);
@@ -259,7 +270,7 @@ export function validateApiQuery<T extends z.ZodSchema>(
 export function validateApiBody<T extends z.ZodSchema>(
   schema: T,
   body: unknown
-): { success: true; data: z.infer<T> } | { success: false; error: string } {
+): { success?: boolean; data?: z.infer<T>; error?: string } {
   try {
     const result = schema.parse(body);
     return { success: true, data: result };
@@ -276,12 +287,12 @@ export function validateApiBody<T extends z.ZodSchema>(
 
 export function createValidatedApiResponse<T>(
   data: T,
-  schema: z.ZodSchema<T>,
+  schema?: z.ZodSchema<T>,
   message?: string
-): z.infer<typeof ApiSuccessResponseSchema> {
-  const validatedData = schema.parse(data);
+): { success?: boolean; data?: T; message?: string; timestamp?: string } {
+  const validatedData = schema ? schema.parse(data) : data;
   return {
-    success: true as const,
+    success: true,
     data: validatedData,
     message,
     timestamp: new Date().toISOString(),

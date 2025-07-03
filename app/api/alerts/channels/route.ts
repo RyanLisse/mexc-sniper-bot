@@ -1,10 +1,10 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { NotificationService } from "@/src/services/notification/notification-providers";
 
 // ==========================================

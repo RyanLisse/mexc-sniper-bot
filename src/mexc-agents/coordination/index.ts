@@ -17,9 +17,9 @@ export type {
 // Core coordination components
 export {
   AgentRegistry,
+  clearGlobalAgentRegistry,
   getGlobalAgentRegistry,
   initializeGlobalAgentRegistry,
-  clearGlobalAgentRegistry,
 } from "./agent-registry";
 export { EnhancedMexcOrchestrator } from "./enhanced-orchestrator";
 export type {

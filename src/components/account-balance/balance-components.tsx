@@ -1,7 +1,7 @@
 "use client";
 
 import { Eye, EyeOff, RefreshCw, TrendingUp, Wallet } from "lucide-react";
-import React from "react";
+import { memo } from "react";
 import { useCurrencyFormatting } from "../../hooks/use-currency-formatting";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -16,7 +16,7 @@ export interface BalanceItem {
 }
 
 // Balance Header Component
-export const BalanceHeader = React.memo(
+export const BalanceHeader = memo(
   ({
     isFetching,
     autoRefresh,
@@ -80,7 +80,7 @@ export const BalanceHeader = React.memo(
 BalanceHeader.displayName = "BalanceHeader";
 
 // Balance Item Component
-export const BalanceItemComponent = React.memo(
+export const BalanceItemComponent = memo(
   ({ balance, showBalances }: { balance: BalanceItem; showBalances: boolean }) => {
     const { formatTokenAmount, formatCurrency } = useCurrencyFormatting();
 
@@ -122,7 +122,7 @@ export const BalanceItemComponent = React.memo(
 BalanceItemComponent.displayName = "BalanceItemComponent";
 
 // Portfolio Summary Component
-export const PortfolioSummary = React.memo(
+export const PortfolioSummary = memo(
   ({
     totalValue,
     assetCount,
@@ -190,7 +190,7 @@ export const PortfolioSummary = React.memo(
 PortfolioSummary.displayName = "PortfolioSummary";
 
 // Empty State Component
-export const EmptyState = React.memo(() => (
+export const EmptyState = memo(() => (
   <div className="text-center py-8 text-muted-foreground">
     <Wallet className="h-8 w-8 mx-auto mb-2 opacity-50" />
     <p className="text-sm">No balance data available</p>
@@ -199,7 +199,7 @@ export const EmptyState = React.memo(() => (
 EmptyState.displayName = "EmptyState";
 
 // Loading Skeleton Component
-export const LoadingSkeleton = React.memo(() => (
+export const LoadingSkeleton = memo(() => (
   <div className="space-y-3">
     {Array.from({ length: 3 }, (_, i) => `balance-loading-${i}`).map((key) => (
       <div key={key} className="animate-pulse">

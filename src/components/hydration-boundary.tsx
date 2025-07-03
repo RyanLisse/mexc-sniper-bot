@@ -1,13 +1,14 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { SSRSafeErrorBoundary } from "./error-boundary";
 
 interface HydrationBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
   preserveSSR?: boolean;
-  errorFallback?: React.ReactNode;
+  errorFallback?: ReactNode;
 }
 
 /**
@@ -72,8 +73,8 @@ export function ClientOnly({
   children,
   fallback,
 }: {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
 }) {
   const { hasMounted } = useHydration();
 

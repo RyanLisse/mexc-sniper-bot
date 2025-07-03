@@ -1,2 +1,97 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="2.367833">
+<testsuites id="" name="" tests="4" failures="4" skipped="0" errors="0" time="23.716775">
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-03T08:39:13.069Z" hostname="auth-chrome" tests="1" failures="1" skipped="0" time="0.001" errors="0">
+<testcase name="Authentication Flow › should load the authentication page successfully" classname="auth-flow-validation.spec.ts" time="0.001">
+<failure message="auth-flow-validation.spec.ts:23:7 should load the authentication page successfully" type="FAILURE">
+<![CDATA[  [auth-chrome] › auth-flow-validation.spec.ts:23:7 › Authentication Flow › should load the authentication page successfully 
+
+    Error: browserType.launch: Executable doesn't exist at /Users/neo/Library/Caches/ms-playwright/chromium_headless_shell-1179/chrome-mac/headless_shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-03T08:39:13.069Z" hostname="auth-firefox" tests="1" failures="1" skipped="0" time="0.002" errors="0">
+<testcase name="Authentication Flow › should load the authentication page successfully" classname="auth-flow-validation.spec.ts" time="0.002">
+<failure message="auth-flow-validation.spec.ts:23:7 should load the authentication page successfully" type="FAILURE">
+<![CDATA[  [auth-firefox] › auth-flow-validation.spec.ts:23:7 › Authentication Flow › should load the authentication page successfully 
+
+    Error: browserType.launch: Executable doesn't exist at /Users/neo/Library/Caches/ms-playwright/firefox-1488/firefox/Nightly.app/Contents/MacOS/firefox
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-03T08:39:13.069Z" hostname="auth-webkit" tests="1" failures="1" skipped="0" time="14.453" errors="0">
+<testcase name="Authentication Flow › should load the authentication page successfully" classname="auth-flow-validation.spec.ts" time="14.453">
+<failure message="auth-flow-validation.spec.ts:23:7 should load the authentication page successfully" type="FAILURE">
+<![CDATA[  [auth-webkit] › auth-flow-validation.spec.ts:23:7 › Authentication Flow › should load the authentication page successfully 
+
+    TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for locator('[data-supabase-auth-ui]') to be visible
+
+
+      26 |     
+      27 |     // Wait for Supabase Auth UI to load
+    > 28 |     await page.waitForSelector('[data-supabase-auth-ui]', { timeout: 10000 });
+         |                ^
+      29 |     
+      30 |     // Check for Supabase auth container
+      31 |     const authContainer = page.locator('[data-supabase-auth-ui]').or(
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:28:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-9bea8-ntication-page-successfully-auth-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-9bea8-ntication-page-successfully-auth-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-9bea8-ntication-page-successfully-auth-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-9bea8-ntication-page-successfully-auth-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-9bea8-ntication-page-successfully-auth-webkit/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-9bea8-ntication-page-successfully-auth-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-03T08:39:13.069Z" hostname="auth-mobile" tests="1" failures="1" skipped="0" time="0.012" errors="0">
+<testcase name="Authentication Flow › should load the authentication page successfully" classname="auth-flow-validation.spec.ts" time="0.012">
+<failure message="auth-flow-validation.spec.ts:23:7 should load the authentication page successfully" type="FAILURE">
+<![CDATA[  [auth-mobile] › auth-flow-validation.spec.ts:23:7 › Authentication Flow › should load the authentication page successfully 
+
+    Error: browserType.launch: Executable doesn't exist at /Users/neo/Library/Caches/ms-playwright/chromium_headless_shell-1179/chrome-mac/headless_shell
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
 </testsuites>

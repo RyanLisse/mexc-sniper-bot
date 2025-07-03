@@ -396,9 +396,13 @@ export function setCurrentTestBranch(context: TestBranchContext | null): void {
   currentTestBranch = context;
 }
 
+// Alias for Vitest compatibility
+export const setupVitestBranch = setupTestBranch;
+
 export default {
   getTestBranchManager,
   setupTestBranch,
+  setupVitestBranch,
   cleanupTestBranch,
   seedTestDatabase,
   createTestDatabase,

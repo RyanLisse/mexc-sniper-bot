@@ -6,10 +6,10 @@
  * credential and connection status information.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { apiResponse, handleApiError } from "@/src/lib/api-response";
 import { toSafeError } from "@/src/lib/error-type-utils";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { getGlobalCredentialValidator } from "@/src/services/api/enhanced-mexc-credential-validator";
 import { getUserCredentials } from "@/src/services/api/user-credentials-service";
 import { getGlobalHealthMonitor } from "@/src/services/data/connection-health-monitor";
@@ -102,9 +102,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   try {
     // Get authentication context
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-    const userId = user?.id;
+    let user;
+    let userId;
+    try {
+      user = await requireAuth();
+      userId = user?.id;
+    } catch (error) {
+      // Continue without user for anonymous connectivity check
+      user = null;
+      userId = null;
+    }
 
     // Initialize services
     const credentialValidator = getGlobalCredentialValidator();
@@ -130,7 +137,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       healthMonitor.getConnectionQuality(),
       credentialValidator.getCircuitBreakerStatus(),
       realTimeMonitor.getCurrentStatus() || realTimeMonitor.checkStatus(),
-      getUserCredentialInfo(userId)
+      getUserCredentialInfo(userId || undefined)
     ]);
 
     // Extract results (handle any failures gracefully)

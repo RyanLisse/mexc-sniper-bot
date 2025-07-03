@@ -131,12 +131,11 @@ export const envTestUtils = {
   setupTestEnv: () => {
     process.env = {
       ...envTestUtils.originalEnv,
-      KINDE_CLIENT_ID: 'test-client-id',
-      KINDE_CLIENT_SECRET: 'test-client-secret',
-      KINDE_ISSUER_URL: 'https://test.kinde.com',
-      KINDE_SITE_URL: 'http://localhost:3008',
-      KINDE_POST_LOGOUT_REDIRECT_URL: 'http://localhost:3008',
-      KINDE_POST_LOGIN_REDIRECT_URL: 'http://localhost:3008/dashboard',
+      NEXT_PUBLIC_SUPABASE_URL: 'https://test-project.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'test-anon-key',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key',
+      SUPABASE_JWT_SECRET: 'test-jwt-secret',
+      NEXT_PUBLIC_SITE_URL: 'http://localhost:3008',
       NODE_ENV: 'test',
       SKIP_AUTH_IN_TESTS: 'true'
     };
@@ -161,83 +160,98 @@ export const envTestUtils = {
 };
 
 /**
- * Mock Kinde SDK for testing
+ * Mock Supabase SDK for testing
  */
-export const mockKindeSDK = {
+export const mockSupabaseSDK = {
   /**
-   * Create a successful Kinde session mock
+   * Create a successful Supabase session mock
    */
   createSuccessfulMock: () => ({
-    getUser: vi.fn().mockResolvedValue(currentTestUser),
-    isAuthenticated: vi.fn().mockResolvedValue(isCurrentlyAuthenticated),
-    getPermissions: vi.fn().mockResolvedValue(
-      currentTestUser ? mockPermissions[currentTestUser.id] || { permissions: [] } : { permissions: [] }
-    ),
-    getPermission: vi.fn().mockImplementation(async (permission: string) => {
-      if (!currentTestUser) return { isGranted: false };
-      const userPermissions = mockPermissions[currentTestUser.id]?.permissions || [];
-      return { isGranted: userPermissions.includes(permission) };
-    }),
-    getOrganization: vi.fn().mockResolvedValue(
-      currentTestUser ? { orgCode: mockPermissions[currentTestUser.id]?.orgCode } : null
-    ),
-    getUserOrganizations: vi.fn().mockResolvedValue(
-      currentTestUser ? { orgCodes: [mockPermissions[currentTestUser.id]?.orgCode || 'default-org'] } : { orgCodes: [] }
-    ),
-    getClaim: vi.fn().mockImplementation(async (claim: string) => {
-      if (!currentTestUser) return { name: claim, value: null };
-      const claims: Record<string, any> = {
-        email: currentTestUser.email,
-        given_name: currentTestUser.given_name,
-        family_name: currentTestUser.family_name,
-        picture: currentTestUser.picture,
-      };
-      return { name: claim, value: claims[claim] || null };
-    }),
-    getAccessToken: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-access-token' : null),
-    getAccessTokenRaw: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-access-token-raw' : null),
-    getRoles: vi.fn().mockResolvedValue(
-      currentTestUser ? { roles: mockPermissions[currentTestUser.id]?.roles || [] } : { roles: [] }
-    ),
-    refreshTokens: vi.fn().mockImplementation(async () => {
-      if (!isCurrentlyAuthenticated) {
-        throw new Error('Not authenticated');
-      }
-      return { access_token: 'new-mock-access-token' };
-    }),
-    getBooleanFlag: vi.fn().mockResolvedValue({ value: false, isDefault: true }),
-    getFlag: vi.fn().mockResolvedValue({ value: null, isDefault: true }),
-    getIdToken: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-id-token' : null),
-    getIdTokenRaw: vi.fn().mockResolvedValue(isCurrentlyAuthenticated ? 'mock-id-token-raw' : null),
-    getStringFlag: vi.fn().mockResolvedValue({ value: '', isDefault: true }),
-    getIntegerFlag: vi.fn().mockResolvedValue({ value: 0, isDefault: true }),
-    logout: vi.fn().mockResolvedValue(null),
-    createOrg: vi.fn().mockResolvedValue(null)
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: {
+          session: isCurrentlyAuthenticated ? {
+            user: {
+              id: currentTestUser?.id,
+              email: currentTestUser?.email,
+              user_metadata: {
+                full_name: `${currentTestUser?.given_name} ${currentTestUser?.family_name}`,
+                picture: currentTestUser?.picture
+              },
+              email_confirmed_at: '2024-01-01T00:00:00Z'
+            },
+            access_token: 'mock-access-token'
+          } : null
+        },
+        error: null
+      }),
+      getUser: vi.fn().mockResolvedValue({
+        data: {
+          user: isCurrentlyAuthenticated ? {
+            id: currentTestUser?.id,
+            email: currentTestUser?.email,
+            user_metadata: {
+              full_name: `${currentTestUser?.given_name} ${currentTestUser?.family_name}`,
+              picture: currentTestUser?.picture
+            },
+            email_confirmed_at: '2024-01-01T00:00:00Z'
+          } : null
+        },
+        error: null
+      }),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
+      signInWithOAuth: vi.fn().mockResolvedValue({ error: null, data: { url: 'mock-oauth-url' } }),
+      signInWithPassword: vi.fn().mockResolvedValue({
+        data: { user: currentTestUser, session: { access_token: 'mock-token' } },
+        error: null
+      }),
+      signUp: vi.fn().mockResolvedValue({
+        data: { user: currentTestUser, session: null },
+        error: null
+      })
+    },
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockResolvedValue({ data: currentTestUser, error: null })
+    })
   }),
 
   /**
-   * Create a failed Kinde session mock
+   * Create a failed Supabase session mock
    */
-  createFailedMock: (errorMessage = 'Kinde SDK error') => ({
-    getUser: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    isAuthenticated: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getPermissions: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getPermission: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getOrganization: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getUserOrganizations: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getClaim: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getAccessToken: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getAccessTokenRaw: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getRoles: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    refreshTokens: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getBooleanFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getIdToken: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getIdTokenRaw: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getStringFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    getIntegerFlag: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    logout: vi.fn().mockRejectedValue(new Error(errorMessage)),
-    createOrg: vi.fn().mockRejectedValue(new Error(errorMessage))
+  createFailedMock: (errorMessage = 'Supabase SDK error') => ({
+    auth: {
+      getSession: vi.fn().mockResolvedValue({
+        data: { session: null },
+        error: new Error(errorMessage)
+      }),
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: null },
+        error: new Error(errorMessage)
+      }),
+      signOut: vi.fn().mockResolvedValue({ error: new Error(errorMessage) }),
+      signInWithOAuth: vi.fn().mockResolvedValue({ error: new Error(errorMessage), data: null }),
+      signInWithPassword: vi.fn().mockResolvedValue({
+        data: null,
+        error: new Error(errorMessage)
+      }),
+      signUp: vi.fn().mockResolvedValue({
+        data: null,
+        error: new Error(errorMessage)
+      })
+    },
+    from: vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn().mockRejectedValue(new Error(errorMessage))
+    })
   })
 };
 
@@ -285,10 +299,11 @@ export const createAuthenticatedRequest = async (
   // Set up authentication state
   authTestUtils.setAuthenticated(userType);
 
-  // Add authentication headers (mock)
+  // Add authentication headers (mock Supabase session)
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer mock-token-${userType}`,
+    'Authorization': `Bearer supabase-mock-token-${userType}`,
+    'Cookie': `sb-test-auth-token=mock-session-${userType}`,
     ...options.headers
   };
 

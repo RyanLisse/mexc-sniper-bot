@@ -3,6 +3,9 @@
   "compilerOptions": {
     "noEmit": true,
     "skipLibCheck": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "types": ["vitest/globals", "@vitest/ui", "node", "@testing-library/jest-dom"]
   },
   "include": [

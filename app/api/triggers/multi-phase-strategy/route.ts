@@ -1,4 +1,3 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -8,6 +7,7 @@ import { inngest } from "@/src/inngest/client";
 import { apiResponse } from "@/src/lib/api-response";
 import { rateLimiter } from "@/src/lib/rate-limiter";
 import { ensureStartupInitialization } from "@/src/lib/startup-initialization";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
@@ -56,10 +56,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-    
-    if (!user?.id) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user?.id) {
+        return apiResponse.error("Unauthorized", 401);
+      }
+    } catch (error) {
       return apiResponse.error("Unauthorized", 401);
     }
 
@@ -353,10 +356,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-    
-    if (!user?.id) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user?.id) {
+        return apiResponse.error("Unauthorized", 401);
+      }
+    } catch (error) {
       return apiResponse.error("Unauthorized", 401);
     }
 

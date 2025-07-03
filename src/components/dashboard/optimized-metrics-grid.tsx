@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpRight, DollarSign, Eye, Target, TrendingUp, Zap } from "lucide-react";
-import React from "react";
+import { memo, ComponentType, ReactNode } from "react";
 import { useCurrencyFormatting } from "../../hooks/use-currency-formatting";
 import { Card, CardContent } from "../ui/card";
 
@@ -30,7 +30,7 @@ interface MetricsGridProps {
 }
 
 // Memoized MetricCard component to prevent unnecessary re-renders
-const MetricCard = React.memo(
+const MetricCard = memo(
   ({
     title,
     value,
@@ -43,7 +43,7 @@ const MetricCard = React.memo(
     title: string;
     value: string | number;
     subtitle?: string;
-    icon: React.ComponentType<{ className?: string }>;
+    icon: ComponentType<{ className?: string }>;
     trend?: "up" | "down" | "neutral";
     color?: "blue" | "green" | "red" | "yellow" | "purple";
     isLoading?: boolean;
@@ -89,7 +89,7 @@ const MetricCard = React.memo(
 MetricCard.displayName = "MetricCard";
 
 // Loading skeleton component
-const LoadingSkeleton = React.memo(() => (
+const LoadingSkeleton = memo(() => (
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     {Array.from({ length: 8 }, (_, i) => `metric-loading-${i}`).map((key) => (
       <Card key={key}>
@@ -107,8 +107,8 @@ const LoadingSkeleton = React.memo(() => (
 LoadingSkeleton.displayName = "LoadingSkeleton";
 
 // Section component for better organization
-const MetricsSection = React.memo(
-  ({ title, children }: { title: string; children: React.ReactNode }) => (
+const MetricsSection = memo(
+  ({ title, children }: { title: string; children: ReactNode }) => (
     <div>
       <h3 className="text-sm font-medium text-gray-700 mb-3">{title}</h3>
       {children}
@@ -118,7 +118,7 @@ const MetricsSection = React.memo(
 MetricsSection.displayName = "MetricsSection";
 
 // Main component with optimizations
-export const OptimizedMetricsGrid = React.memo(
+export const OptimizedMetricsGrid = memo(
   ({
     metrics,
     sniperStats,

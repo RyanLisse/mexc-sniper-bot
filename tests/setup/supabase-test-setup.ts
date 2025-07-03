@@ -25,7 +25,9 @@ beforeAll(async () => {
   }
   
   // Set up global test configuration
-  process.env.NODE_ENV = 'test';
+  if (!process.env.NODE_ENV || process.env.NODE_ENV !== 'test') {
+    Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', configurable: true });
+  }
   process.env.SUPABASE_TEST_MODE = 'true';
   
   // Configure mock behavior

@@ -7,7 +7,7 @@
 
 "use client";
 
-import { type ComponentType, type LazyExoticComponent, lazy, Suspense } from "react";
+import { type ComponentType, type LazyExoticComponent, lazy, Suspense, type ReactNode } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 
@@ -62,9 +62,9 @@ export function SafeLazyWrapper({
   fallback,
   errorFallback,
 }: {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-  errorFallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
+  errorFallback?: ReactNode;
 }) {
   return (
     <ErrorBoundary level="component" fallback={errorFallback || <CardSkeleton />}>
@@ -172,7 +172,7 @@ export const OptimizedAccountBalance = safeLazy(
 );
 
 // Wrapper components with safe loading
-export function LazyDashboardWrapper({ children }: { children: React.ReactNode }) {
+export function LazyDashboardWrapper({ children }: { children: ReactNode }) {
   return (
     <SafeLazyWrapper
       fallback={<CardSkeleton />}
@@ -187,7 +187,7 @@ export function LazyDashboardWrapper({ children }: { children: React.ReactNode }
   );
 }
 
-export function LazyChartWrapper({ children }: { children: React.ReactNode }) {
+export function LazyChartWrapper({ children }: { children: ReactNode }) {
   return (
     <SafeLazyWrapper
       fallback={
@@ -206,7 +206,7 @@ export function LazyChartWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function LazyCardWrapper({ children }: { children: React.ReactNode }) {
+export function LazyCardWrapper({ children }: { children: ReactNode }) {
   return (
     <SafeLazyWrapper
       fallback={<CardSkeleton />}
@@ -221,7 +221,7 @@ export function LazyCardWrapper({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function LazyTableWrapper({ children }: { children: React.ReactNode }) {
+export function LazyTableWrapper({ children }: { children: ReactNode }) {
   return (
     <SafeLazyWrapper
       fallback={<TableSkeleton />}

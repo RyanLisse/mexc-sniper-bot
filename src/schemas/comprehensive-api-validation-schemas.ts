@@ -14,27 +14,28 @@ import { z } from "zod";
 // ============================================================================
 
 const SuccessResponseSchema = z.object({
-  success: z.literal(true),
-  data: z.unknown(),
+  success: z.boolean().optional(),
+  data: z.any().optional(),
   message: z.string().optional(),
-  timestamp: z.string().datetime().optional(),
-  meta: z.record(z.unknown()).optional(),
+  timestamp: z.string().optional(),
+  meta: z.any().optional(),
 });
 
 const ErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.string(),
+  success: z.boolean().optional(),
+  error: z.string().optional(),
   code: z.string().optional(),
-  details: z.record(z.unknown()).optional(),
-  timestamp: z.string().datetime().optional(),
+  details: z.any().optional(),
+  timestamp: z.string().optional(),
+  statusCode: z.number().optional(),
 });
 
 const ValidationErrorResponseSchema = z.object({
-  success: z.literal(false),
-  error: z.literal("validation_error"),
-  message: z.string(),
+  success: z.boolean().optional(),
+  error: z.string().optional(),
+  message: z.string().optional(),
   field: z.string().optional(),
-  details: z.record(z.unknown()).optional(),
+  details: z.any().optional(),
 });
 
 // ============================================================================
@@ -352,7 +353,7 @@ export const QueryPerformanceRequestSchema = z.object({
 export function validateApiRequest<T extends z.ZodSchema>(
   schema: T,
   data: unknown
-): { success: true; data: z.infer<T> } | { success: false; error: string; details?: z.ZodError } {
+): { success?: boolean; data?: z.infer<T>; error?: string; details?: any } {
   try {
     const result = schema.parse(data);
     return { success: true, data: result };
@@ -374,7 +375,7 @@ export function validateApiRequest<T extends z.ZodSchema>(
 export function validateApiQuery<T extends z.ZodSchema>(
   schema: T,
   searchParams: URLSearchParams
-): { success: true; data: z.infer<T> } | { success: false; error: string } {
+): { success?: boolean; data?: z.infer<T>; error?: string } {
   try {
     const params = Object.fromEntries(searchParams.entries());
     const result = schema.parse(params);
@@ -392,8 +393,8 @@ export function validateApiQuery<T extends z.ZodSchema>(
 
 export function createValidationErrorResponse(field: string, message: string) {
   return {
-    success: false as const,
-    error: "validation_error" as const,
+    success: false,
+    error: "validation_error",
     message,
     field,
     timestamp: new Date().toISOString(),
@@ -407,7 +408,7 @@ export function createValidatedSuccessResponse<T>(
 ) {
   const validatedData = schema ? schema.parse(data) : data;
   return {
-    success: true as const,
+    success: true,
     data: validatedData,
     message,
     timestamp: new Date().toISOString(),

@@ -272,7 +272,7 @@ const MonitoringConfigSchema = z.object({
 const SecurityConfigSchema = z.object({
   // Authentication
   auth: z.object({
-    provider: z.enum(["kinde", "auth0", "supabase"]).default("kinde"),
+    provider: z.enum(["supabase", "auth0", "kinde"]).default("supabase"),
     sessionTimeout: z.number().default(3600),
     requireMfa: z.boolean().default(false),
   }),

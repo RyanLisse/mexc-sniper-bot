@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { SupabaseAuthProvider } from "../src/components/auth/supabase-auth-provider";
+import { SupabaseAuthProvider } from "../src/components/auth/supabase-auth-provider-clean";
+import { HydrationWrapper } from "../src/components/auth/hydration-wrapper";
 import { StatusProviderWrapper } from "../src/components/providers/status-provider-wrapper";
 import { QueryProvider } from "../src/components/query-provider";
 import { Toaster } from "../src/components/ui/toaster";
@@ -30,19 +32,21 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
     <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <SupabaseAuthProvider>
-          <QueryProvider>
-            <StatusProviderWrapper>
-              {children}
-              <Toaster />
-            </StatusProviderWrapper>
-          </QueryProvider>
-        </SupabaseAuthProvider>
+        <HydrationWrapper fallback={<div className="min-h-screen bg-background animate-pulse" />}>
+          <SupabaseAuthProvider>
+            <QueryProvider>
+              <StatusProviderWrapper>
+                {children}
+                <Toaster />
+              </StatusProviderWrapper>
+            </QueryProvider>
+          </SupabaseAuthProvider>
+        </HydrationWrapper>
       </body>
     </html>
   );

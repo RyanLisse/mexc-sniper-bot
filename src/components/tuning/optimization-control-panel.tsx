@@ -15,7 +15,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -167,7 +167,7 @@ export function OptimizationControlPanel({
     setIsConfigValid(errors.length === 0);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     validateConfiguration();
   }, [validateConfiguration]);
 

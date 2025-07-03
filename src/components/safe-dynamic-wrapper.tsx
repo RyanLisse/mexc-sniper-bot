@@ -8,14 +8,14 @@
 
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 
 interface SafeDynamicWrapperProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-  errorFallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
+  errorFallback?: ReactNode;
   className?: string;
   height?: string;
   componentName?: string;

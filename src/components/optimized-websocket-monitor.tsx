@@ -1,9 +1,9 @@
 /**
  * Optimized WebSocket Monitor Component
- * Uses React.memo, composition, and custom hooks for better performance
+ * Uses memo, composition, and custom hooks for better performance
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useCurrencyFormatting } from "../hooks/use-currency-formatting";
 import { webSocketPriceService } from "../services/data/websocket-price-service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -27,7 +27,7 @@ interface ServiceStatus {
 }
 
 // Status indicator component
-const StatusIndicator = React.memo(
+const StatusIndicator = memo(
   ({ isConnected, isConnecting }: { isConnected: boolean; isConnecting: boolean }) => {
     const statusColor = isConnected
       ? "text-green-500"
@@ -45,7 +45,7 @@ const StatusIndicator = React.memo(
 StatusIndicator.displayName = "StatusIndicator";
 
 // Memory stats component
-const MemoryStatsDisplay = React.memo(
+const MemoryStatsDisplay = memo(
   ({
     stats,
     formatBytes,
@@ -98,7 +98,7 @@ const MemoryStatsDisplay = React.memo(
 MemoryStatsDisplay.displayName = "MemoryStatsDisplay";
 
 // Active symbols display
-const ActiveSymbolsDisplay = React.memo(({ symbols }: { symbols: string[] }) => {
+const ActiveSymbolsDisplay = memo(({ symbols }: { symbols: string[] }) => {
   if (symbols.length === 0) return null;
 
   const displaySymbols = symbols.slice(0, 10);
@@ -123,7 +123,7 @@ const ActiveSymbolsDisplay = React.memo(({ symbols }: { symbols: string[] }) => 
 ActiveSymbolsDisplay.displayName = "ActiveSymbolsDisplay";
 
 // Action buttons component
-const ActionButtons = React.memo(
+const ActionButtons = memo(
   ({
     serviceStatus,
     memoryGrowthRate,
@@ -173,7 +173,7 @@ const ActionButtons = React.memo(
 ActionButtons.displayName = "ActionButtons";
 
 // Main component
-export const OptimizedWebSocketMonitor = React.memo(() => {
+export const OptimizedWebSocketMonitor = memo(() => {
   const [memoryStats, setMemoryStats] = useState<MemoryStats>({ current: null, growthRate: null });
   const [serviceStatus, setServiceStatus] = useState<ServiceStatus>({
     isConnected: false,

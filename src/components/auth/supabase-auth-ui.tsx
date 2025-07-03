@@ -1,15 +1,15 @@
 "use client";
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { getSupabaseBrowserClient } from '@/src/lib/supabase-browser-client';
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 
 export function SupabaseAuthUI() {
-  const supabase = createClientComponentClient();
+  const supabase = getSupabaseBrowserClient();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,10 +22,17 @@ export function SupabaseAuthUI() {
 
   // Get initial session and listen for auth changes
   useEffect(() => {
+    if (!supabase || !mounted) return;
+
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setIsLoading(false);
+      }
     };
 
     getSession();
@@ -40,7 +47,7 @@ export function SupabaseAuthUI() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  }, [supabase, router, mounted]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -50,6 +57,7 @@ export function SupabaseAuthUI() {
   }, [mounted, user, isLoading, router]);
 
   const handleSignOut = async () => {
+    if (!supabase) return;
     await supabase.auth.signOut();
     router.push('/auth');
   };
@@ -57,6 +65,17 @@ export function SupabaseAuthUI() {
   // Don't render anything until mounted to prevent hydration mismatch
   if (!mounted) {
     return null;
+  }
+
+  // Don't render if Supabase client is not available (SSR)
+  if (!supabase) {
+    return (
+      <Card className="bg-card border-border">
+        <CardContent className="p-6">
+          <div className="text-center text-muted-foreground">Authentication not available in SSR environment</div>
+        </CardContent>
+      </Card>
+    );
   }
 
   // Show loading state
@@ -173,7 +192,7 @@ export function SupabaseAuthUI() {
             },
           }}
           providers={['google', 'github']}
-          redirectTo={`${window.location.origin}/dashboard`}
+          redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/dashboard` : '/dashboard'}
           onlyThirdPartyProviders={false}
           magicLink={true}
           view="sign_in"

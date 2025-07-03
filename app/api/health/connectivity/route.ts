@@ -5,8 +5,8 @@
  * for real-time health monitoring and dashboard updates.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextResponse } from "next/server";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { getUserCredentials } from "@/src/services/api/user-credentials-service";
 
@@ -59,9 +59,16 @@ export async function GET() {
 
   try {
     // Get user credentials
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-    const userId = user?.id;
+    let user;
+    let userId;
+    try {
+      user = await requireAuth();
+      userId = user?.id;
+    } catch (error) {
+      // Continue without user for anonymous health check
+      user = null;
+      userId = null;
+    }
 
     let userCredentials = null;
     let hasCredentials = false;

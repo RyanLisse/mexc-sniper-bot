@@ -4,10 +4,10 @@
  * Provides access to trading analytics, performance metrics, and structured logging data.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 
 // ============================================================================
@@ -82,8 +82,19 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
+    let user;
+    try {
+      user = await requireAuth();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Authentication required",
+          message: "Authentication required to access this endpoint",
+        },
+        { status: 401 }
+      );
+    }
 
     if (!user?.id) {
       return NextResponse.json(
@@ -259,8 +270,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
+    let user;
+    try {
+      user = await requireAuth();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Authentication required",
+          message: "Authentication required to access this endpoint",
+        },
+        { status: 401 }
+      );
+    }
 
     if (!user?.id) {
       return NextResponse.json(
@@ -359,8 +381,19 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
+    let user;
+    try {
+      user = await requireAuth();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Authentication required",
+          message: "Authentication required to access this endpoint",
+        },
+        { status: 401 }
+      );
+    }
 
     if (!user?.id) {
       return NextResponse.json(

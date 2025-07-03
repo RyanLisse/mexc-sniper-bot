@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp, LogOut, Settings, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState, type KeyboardEvent } from "react";
 import { useAuth } from "./auth/supabase-auth-provider";
 import { Badge } from "./ui/badge";
 
@@ -35,7 +35,7 @@ export const UserMenu = memo(function UserMenu({ user }: UserMenuProps) {
     setIsOpen(false);
   }, []);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === "Escape") {
       setIsOpen(false);
     }

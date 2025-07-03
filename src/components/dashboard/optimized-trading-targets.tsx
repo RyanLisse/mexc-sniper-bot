@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, Clock, Eye, Target, Trash2, TrendingUp, Zap } from "lucide-react";
-import React, { useCallback, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { useTimeFormatting } from "../../hooks/use-time-formatting";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -37,7 +37,7 @@ interface TradingTargetsProps {
 }
 
 // Target details component
-const TargetDetails = React.memo(
+const TargetDetails = memo(
   ({
     launchTime,
     hoursAdvanceNotice,
@@ -70,7 +70,7 @@ const TargetDetails = React.memo(
 TargetDetails.displayName = "TargetDetails";
 
 // Ready target item component
-const ReadyTargetItem = React.memo(
+const ReadyTargetItem = memo(
   ({
     target,
     formatTimeRemaining,
@@ -130,7 +130,7 @@ const ReadyTargetItem = React.memo(
 ReadyTargetItem.displayName = "ReadyTargetItem";
 
 // Monitoring target item component
-const MonitoringTargetItem = React.memo(
+const MonitoringTargetItem = memo(
   ({
     target,
     formatTimeRemaining,
@@ -166,7 +166,7 @@ const MonitoringTargetItem = React.memo(
 MonitoringTargetItem.displayName = "MonitoringTargetItem";
 
 // Empty state component
-const EmptyState = React.memo(() => (
+const EmptyState = memo(() => (
   <Card className="border-dashed border-2 border-gray-300">
     <CardContent className="text-center py-12">
       <div className="space-y-4">
@@ -192,7 +192,7 @@ const EmptyState = React.memo(() => (
 EmptyState.displayName = "EmptyState";
 
 // High volume warning component
-const HighVolumeWarning = React.memo(({ count }: { count: number }) => (
+const HighVolumeWarning = memo(({ count }: { count: number }) => (
   <Card className="border-orange-200 bg-orange-50">
     <CardContent className="p-4">
       <div className="flex items-center space-x-2 text-orange-700">
@@ -209,7 +209,7 @@ const HighVolumeWarning = React.memo(({ count }: { count: number }) => (
 HighVolumeWarning.displayName = "HighVolumeWarning";
 
 // Loading skeleton
-const LoadingSkeleton = React.memo(() => (
+const LoadingSkeleton = memo(() => (
   <div className="space-y-6">
     {Array.from({ length: 2 }, (_, i) => `target-loading-${i}`).map((key) => (
       <Card key={key}>
@@ -233,7 +233,7 @@ const LoadingSkeleton = React.memo(() => (
 LoadingSkeleton.displayName = "LoadingSkeleton";
 
 // Main component
-export const OptimizedTradingTargets = React.memo(
+export const OptimizedTradingTargets = memo(
   ({
     readyTargets = [],
     pendingDetection = [],

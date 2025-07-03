@@ -57,6 +57,11 @@ export const UnifiedMexcConfigSchema = z.object({
   passphrase: z.string().optional(),
   baseUrl: z.string().default("https://api.mexc.com"),
   timeout: z.number().default(10000),
+  
+  // Retry Configuration
+  maxRetries: z.number().default(3),
+  retryDelay: z.number().default(1000),
+  rateLimitDelay: z.number().default(100),
 
   // Cache Configuration
   enableCaching: z.boolean().default(true),
@@ -70,10 +75,15 @@ export const UnifiedMexcConfigSchema = z.object({
   resetTimeout: z.number().default(60000),
 
   // Advanced reliability settings
-  circuitBreakerThreshold: z.number()
-    .default(10),
-  circuitBreakerResetTime: z.number()
-    .default(60000),
+  circuitBreakerThreshold: z.number().default(10),
+  circuitBreakerResetTime: z.number().default(60000),
+  
+  // Trading Configuration
+  enablePaperTrading: z.boolean().default(true),
+  
+  // Additional Configuration Properties
+  enableMetrics: z.boolean().default(true),
+  enableTestMode: z.boolean().default(false),
 });
 
 export type UnifiedMexcConfig = z.infer<typeof UnifiedMexcConfigSchema>;
@@ -177,6 +187,7 @@ export const MexcServiceResponseSchema = z.object({
   executionTimeMs: z.number().optional(),
   retryCount: z.number().optional(),
   metadata: z.record(z.unknown()).optional(),
+  source: z.string().optional(),
 });
 
 // ============================================================================
@@ -226,7 +237,7 @@ export type CalendarEntry = z.infer<typeof CalendarEntrySchema>;
 export type SymbolEntry = z.infer<typeof SymbolEntrySchema>;
 export type BalanceEntry = z.infer<typeof BalanceEntrySchema>;
 export type OrderResult = z.infer<typeof OrderResultSchema>;
-export type MexcServiceResponse<T = unknown> = z.infer<typeof MexcServiceResponseSchema> & {
+export type MexcServiceResponse<T = unknown> = Omit<z.infer<typeof MexcServiceResponseSchema>, 'data'> & {
   data?: T;
 };
 
@@ -321,6 +332,12 @@ export const ActivityDataSchema = z.object({
   currency: z.string(),
   currencyId: z.string(),
   activityType: z.string(), // Using string instead of enum for flexibility
+  symbol: z.string().optional(), // Symbol property for trading pairs
+  timestamp: z.number().optional(),
+  amount: z.number().optional(),
+  price: z.number().optional(),
+  volume: z.number().optional(),
+  significance: z.number().optional(),
 });
 
 export const ActivityResponseSchema = z.object({
@@ -367,9 +384,276 @@ export const hasHighPriorityActivity = (activities: ActivityData[]): boolean => 
   return activities.some((activity) => highPriorityTypes.includes(activity.activityType));
 };
 
+export const getUniqueActivityTypes = (activities: ActivityData[]): string[] => {
+  return [...new Set(activities.map((activity) => activity.activityType))];
+};
+
+// ============================================================================
+// Missing Function Exports and Aliases
+// ============================================================================
+
+// Re-export from trading-schemas with aliases for backward compatibility
+export { AutoSnipeTargetSchema as SnipeTargetSchema, TradeParametersSchema as OrderParametersSchema } from "./trading-schemas";
+export type OrderParameters = import("./trading-schemas").TradeParameters;
+export type SnipeTarget = import("./trading-schemas").AutoSnipeTarget;
+
+// Create alias for SymbolEntry
+export type SymbolV2Entry = SymbolEntry;
+export const SymbolV2EntrySchema = SymbolEntrySchema;
+
+// Add missing pattern constants
+export const READY_STATE_PATTERN = {
+  sts: 2,
+  st: 2, 
+  tt: 4
+} as const;
+
+export const ReadyStatePattern = READY_STATE_PATTERN;
+
+// ============================================================================
+// Validation Functions
+// ============================================================================
+
+/**
+ * Validate calendar entry data
+ */
+export function validateCalendarEntry(data: unknown): { isValid: boolean; data?: CalendarEntry; errors?: string[] } {
+  try {
+    const result = CalendarEntrySchema.parse(data);
+    return { isValid: true, data: result };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        isValid: false,
+        errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+      };
+    }
+    return {
+      isValid: false,
+      errors: [error instanceof Error ? error.message : 'Unknown validation error']
+    };
+  }
+}
+
+/**
+ * Validate symbol entry data (alias for SymbolV2Entry)
+ */
+export function validateSymbolV2Entry(data: unknown): { isValid: boolean; data?: SymbolEntry; errors?: string[] } {
+  try {
+    const result = SymbolEntrySchema.parse(data);
+    return { isValid: true, data: result };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        isValid: false,
+        errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+      };
+    }
+    return {
+      isValid: false,
+      errors: [error instanceof Error ? error.message : 'Unknown validation error']
+    };
+  }
+}
+
+/**
+ * Check if data has complete required fields
+ */
+export function hasCompleteData(data: any): boolean {
+  if (!data || typeof data !== 'object') return false;
+  
+  // For symbol data
+  if (data.cd && typeof data.sts === 'number' && typeof data.st === 'number' && typeof data.tt === 'number') {
+    return true;
+  }
+  
+  // For calendar data
+  if (data.vcoinId && data.symbol && data.projectName && data.firstOpenTime) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
+ * Check if symbol is valid for sniping
+ */
+export function isValidForSnipe(symbolData: SymbolEntry): boolean {
+  if (!symbolData || !hasCompleteData(symbolData)) return false;
+  
+  // Check ready state pattern
+  return symbolData.sts === 2 && symbolData.st === 2 && symbolData.tt === 4;
+}
+
+/**
+ * Check if symbol matches ready pattern
+ */
+export function matchesReadyPattern(symbolData: SymbolEntry): boolean {
+  return isValidForSnipe(symbolData);
+}
+
+// ============================================================================
+// Additional Missing Schemas
+// ============================================================================
+
+export const OrderBookEntrySchema = z.object({
+  price: z.string(),
+  quantity: z.string(),
+});
+
+export const OrderBookSchema = z.object({
+  symbol: z.string(),
+  bids: z.array(OrderBookEntrySchema),
+  asks: z.array(OrderBookEntrySchema),
+  lastUpdateId: z.number().optional(),
+});
+
+export const ExchangeInfoSchema = z.object({
+  timezone: z.string(),
+  serverTime: z.number(),
+  symbols: z.array(ExchangeSymbolSchema),
+  rateLimits: z.array(RateLimitInfoSchema).optional(),
+});
+
+export type OrderBook = z.infer<typeof OrderBookSchema>;
+export type ExchangeInfo = z.infer<typeof ExchangeInfoSchema>;
+
+// ============================================================================
+// Schema Collections for Export
+// ============================================================================
+
+export const MEXC_API_SCHEMAS = {
+  // Configuration
+  MexcApiConfigSchema,
+  MexcCacheConfigSchema, 
+  MexcReliabilityConfigSchema,
+  UnifiedMexcConfigSchema,
+  
+  // Accounts
+  AccountInfoSchema,
+  AccountBalanceSchema,
+  
+  // Core API
+  CalendarEntrySchema,
+  SymbolEntrySchema,
+  BalanceEntrySchema,
+  OrderResultSchema,
+  MexcServiceResponseSchema,
+  
+  // Market Data
+  SymbolInfoSchema,
+  ExchangeSymbolSchema,
+  TickerSchema,
+  OrderBookSchema,
+  ExchangeInfoSchema,
+  
+  // Trading
+  OrderSideSchema,
+  OrderTypeSchema,
+  OrderStatusSchema,
+  OrderRequestSchema,
+  OrderResponseSchema,
+  
+  // Activities
+  ActivityTypeSchema,
+  ActivityDataSchema,
+  ActivityResponseSchema,
+  
+  // Errors
+  ApiErrorSchema,
+  RateLimitInfoSchema,
+} as const;
+
+// ============================================================================
+// Activity Query Options
+// ============================================================================
+
+export const ActivityQueryOptionsSchema = z.object({
+  batchSize: z.number().optional().default(5),
+  maxRetries: z.number().optional().default(3),
+  rateLimitDelay: z.number().optional().default(200),
+});
+
+export type ActivityQueryOptions = z.infer<typeof ActivityQueryOptionsSchema>;
+export type ActivityQueryOptionsType = ActivityQueryOptions; // Legacy alias
+
+// ============================================================================
+// Portfolio Schemas
+// ============================================================================
+
+export const PortfolioSchema = z.object({
+  portfolioId: z.string().optional(),
+  userId: z.string().optional(),
+  totalValue: z.number(),
+  totalValueUsdt: z.number().optional(), // Additional field expected by code
+  availableBalance: z.number().optional(),
+  totalPnL: z.number(),
+  totalPnLPercent: z.number(),
+  assets: z.array(z.object({
+    asset: z.string(),
+    free: z.string(),
+    locked: z.string(),
+    total: z.number(),
+    usdtValue: z.number().optional(),
+  })),
+  balances: z.array(z.object({
+    asset: z.string(),
+    free: z.string(),
+    locked: z.string(),
+    total: z.number(),
+    usdtValue: z.number().optional(),
+  })).optional(), // Alias for backward compatibility
+  lastUpdated: z.string(),
+});
+
+export type Portfolio = z.infer<typeof PortfolioSchema>;
+
+// ============================================================================
+// K-line (Candlestick) Schemas
+// ============================================================================
+
+export const KlineSchema = z.object({
+  openTime: z.number(),
+  open: z.string(),
+  high: z.string(),
+  low: z.string(),
+  close: z.string(),
+  volume: z.string(),
+  closeTime: z.number(),
+  quoteAssetVolume: z.string(),
+  numberOfTrades: z.number(),
+});
+
+export type Kline = z.infer<typeof KlineSchema>;
+
+// ============================================================================
+// Validation Utilities
+// ============================================================================
+
+export const validateMexcData = <T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: boolean; data?: T; error?: string } => {
+  try {
+    const result = schema.parse(data);
+    return { success: true, data: result };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        error: `Validation failed: ${error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown validation error",
+    };
+  }
+};
+
 // ============================================================================
 // Exports
 // ============================================================================
 
-export * from "./trading-schemas";
 export * from "./pattern-detection-schemas";
+export * from "./trading-schemas";

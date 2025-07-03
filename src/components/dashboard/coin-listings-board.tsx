@@ -283,24 +283,24 @@ function useProcessedCoinData() {
   const enrichedCalendarData = enrichCalendarData(
     upcomingCoins,
     pendingDetection,
-    readyTargets,
+    readyTargets.map(target => ({ ...target, vcoinId: target.vcoinId?.toString() })),
     executedTargets
   );
 
   const calendarTargets = enrichedCalendarData.filter((c) => c.status === "calendar");
   const monitoringTargets = enrichedCalendarData.filter((c) => c.status === "monitoring");
   const readyTargetsEnriched = readyTargets.map((target) => ({
-    vcoinId: target.vcoinId || "",
-    symbol: target.symbol || "",
-    projectName: target.projectName,
-    launchTime: target.launchTime || new Date(),
+    vcoinId: target.vcoinId?.toString() || "",
+    symbol: (target as any).symbol || "",
+    projectName: (target as any).projectName || "",
+    launchTime: (target as any).launchTime || new Date(),
     status: "ready" as const,
-    confidence: target.confidence,
-    hoursAdvanceNotice: target.hoursAdvanceNotice,
-    priceDecimalPlaces: target.priceDecimalPlaces,
-    quantityDecimalPlaces: target.quantityDecimalPlaces,
-    discoveredAt: target.discoveredAt,
-    targetTime: target.launchTime?.toISOString() || new Date().toISOString(),
+    confidence: (target as any).confidence || 0,
+    hoursAdvanceNotice: (target as any).hoursAdvanceNotice || 0,
+    priceDecimalPlaces: (target as any).priceDecimalPlaces || 8,
+    quantityDecimalPlaces: (target as any).quantityDecimalPlaces || 8,
+    discoveredAt: (target as any).discoveredAt || new Date(),
+    targetTime: (target as any).launchTime?.toISOString() || new Date().toISOString(),
   }));
   const executedTargetsEnriched = processExecutedTargets(executedTargets, enrichedCalendarData);
 
@@ -588,7 +588,7 @@ const CoinListingsBoard = memo(function CoinListingsBoard() {
                     onExecute={
                       coin.status === "ready"
                         ? () => {
-                            const target = readyTargets.find((t) => t.vcoinId === coin.vcoinId);
+                            const target = readyTargets.find((t) => t.vcoinId?.toString() === coin.vcoinId);
                             if (target) executeSnipe(target);
                           }
                         : undefined

@@ -265,7 +265,7 @@ export class UseCaseMetricsCollector {
       throw new Error(`Invalid use case context: ${result.error.errors[0]?.message}`);
     }
 
-    return result.data;
+    return result.data as UseCaseExecutionContext;
   }
 
   private async validateInput<T>(input: T): Promise<UseCaseMetrics["inputValidation"]> {

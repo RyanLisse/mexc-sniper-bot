@@ -47,13 +47,13 @@ export async function GET(request: NextRequest) {
           const date = new Date();
           date.setDate(date.getDate() - (limit - i));
           
-          const basePrice = parseFloat(ticker.lastPrice || ticker.price || ticker.c || "100");
+          const basePrice = parseFloat(ticker.lastPrice || ticker.price || "100");
           const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
           const price = basePrice * (1 + variation);
           
           return {
             date: date.toISOString().split('T')[0],
-            volume: parseFloat(ticker.volume || ticker.v || "1000000") * (0.8 + Math.random() * 0.4),
+            volume: parseFloat(ticker.volume || "1000000") * (0.8 + Math.random() * 0.4),
             trades: Math.floor(parseFloat(String(ticker.count || "5000")) * (0.8 + Math.random() * 0.4)),
             price: price,
             timestamp: date.getTime(),

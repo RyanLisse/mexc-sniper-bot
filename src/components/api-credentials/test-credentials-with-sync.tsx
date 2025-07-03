@@ -7,10 +7,10 @@
 
 "use client";
 
-import { useKindeAuth } from "@kinde-oss/kinde-auth-nextjs";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, Loader2, RefreshCw, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,16 @@ interface TestCredentialsResponse {
 // ============================================================================
 
 export function TestCredentialsWithSync() {
-  const { user } = useKindeAuth();
+  const supabase = createClientComponentClient();
+  const [user, setUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase]);
   const _queryClient = useQueryClient();
   const { handleStatusSync, invalidateStatusQueries, getCacheStatus } = useStatusSync();
   const [showSyncDetails, setShowSyncDetails] = useState(false);

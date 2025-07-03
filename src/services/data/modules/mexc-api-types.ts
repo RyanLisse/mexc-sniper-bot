@@ -1,23 +1,76 @@
 /**
- * MEXC API Types and Query Keys
+ * MEXC API Types and Query Keys - Simplified Version
  *
- * Extracted from unified MEXC service for better modularity.
- * Contains optimized query keys and type definitions.
+ * Contains optimized query keys and simplified type definitions.
  */
 
-// Import RiskAssessment from its actual location
-import type { RiskAssessment } from "../../../schemas/safety-schemas-extracted";
-import type {
-  BalanceEntry,
-  CalendarEntry,
-  ExchangeInfo,
-  Kline,
-  MarketStats,
-  OrderBook,
-  Portfolio,
-  SymbolEntry,
-  Ticker,
-} from "../../../schemas/unified/mexc-api-schemas";
+// ============================================================================
+// Simple Type Definitions
+// ============================================================================
+
+export interface SimpleRiskAssessment {
+  level: string;
+  score: number;
+  factors: string[];
+}
+
+export interface SimpleBalanceEntry {
+  asset: string;
+  free: string;
+  locked: string;
+}
+
+export interface SimpleCalendarEntry {
+  vcoinId: string;
+  projectName: string;
+  launchTime: string;
+  status: string;
+}
+
+export interface SimpleExchangeInfo {
+  timezone: string;
+  serverTime: number;
+  symbols: SimpleSymbolEntry[];
+}
+
+export interface SimpleKline {
+  openTime: number;
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+  volume: string;
+}
+
+export interface SimpleMarketStats {
+  symbol: string;
+  priceChange: string;
+  priceChangePercent: string;
+  volume: string;
+}
+
+export interface SimpleOrderBook {
+  bids: [string, string][];
+  asks: [string, string][];
+}
+
+export interface SimplePortfolio {
+  totalValueUSDT: number;
+  balances: SimpleBalanceEntry[];
+}
+
+export interface SimpleSymbolEntry {
+  symbol: string;
+  baseAsset: string;
+  quoteAsset: string;
+  status: string;
+}
+
+export interface SimpleTicker {
+  symbol: string;
+  price: string;
+  time: number;
+}
 
 // ============================================================================
 // Optimized Query Key Factory
@@ -124,18 +177,23 @@ export interface MexcReliabilityConfig {
 }
 
 // ============================================================================
-// Exports
+// Exports (Using Simple Types)
 // ============================================================================
 
 export type {
-  CalendarEntry,
-  SymbolEntry,
-  BalanceEntry,
-  ExchangeInfo,
-  Ticker,
-  OrderBook,
-  Kline,
-  MarketStats,
-  Portfolio,
-  RiskAssessment,
+  SimpleCalendarEntry as CalendarEntry,
+  SimpleSymbolEntry as SymbolEntry,
+  SimpleBalanceEntry as BalanceEntry,
+  SimpleExchangeInfo as ExchangeInfo,
+  SimpleTicker as Ticker,
+  SimpleOrderBook as OrderBook,
+  SimpleKline as Kline,
+  SimpleMarketStats as MarketStats,
+  SimplePortfolio as Portfolio,
+  SimpleRiskAssessment as RiskAssessment,
+  MexcApiResponse,
+  MexcServiceResponse,
+  MexcApiConfig,
+  MexcCacheConfig,
+  MexcReliabilityConfig,
 };

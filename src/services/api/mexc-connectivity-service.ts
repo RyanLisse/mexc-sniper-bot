@@ -5,8 +5,8 @@
  * performance monitoring, error handling, and validation.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { ErrorFactory } from "@/src/lib/error-types";
+import { getUser } from "@/src/lib/supabase-auth";
 import {
   type ConnectivityMetrics,
   type ConnectivityTestRequest,
@@ -98,13 +98,18 @@ export class MexcConnectivityService {
 
     try {
       // Get authenticated user if available
-      const { getUser } = getKindeServerSession();
-      const user = await getUser();
-      const authenticatedUserId = user?.id;
+      let user = null;
+      let authenticatedUserId = null;
+      try {
+        user = await getUser();
+        authenticatedUserId = user?.id;
+      } catch (error) {
+        // Continue without user
+      }
 
       // Get credentials with fallback
       const credentials = await this.getUserCredentialsWithFallback(
-        context.userId || authenticatedUserId,
+        context.userId || authenticatedUserId || undefined,
         context
       );
 

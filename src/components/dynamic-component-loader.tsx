@@ -6,8 +6,7 @@
 
 "use client";
 
-import type React from "react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent, type ReactNode } from "react";
 import { ErrorBoundary } from "./error-boundary";
 import { Skeleton } from "./ui/optimized-exports";
 
@@ -143,11 +142,11 @@ const AlertSkeleton = () => (
 );
 
 // Safe lazy loader with comprehensive error handling
-function safeLazy<T extends React.ComponentType<any>>(
+function safeLazy<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T } | any>,
   fallbackName: string,
-  fallback?: React.ComponentType<any>
-): React.LazyExoticComponent<T> {
+  fallback?: ComponentType<any>
+): LazyExoticComponent<T> {
   return lazy(() =>
     factory().catch((error) => {
       console.warn(`Failed to load component ${fallbackName}:`, error);
@@ -463,9 +462,9 @@ export const OptimizationControlPanel = safeLazy(
 
 // Wrapper components with loading states and error boundaries
 interface LazyComponentWrapperProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-  errorFallback?: React.ReactNode;
+  children: ReactNode;
+  fallback?: ReactNode;
+  errorFallback?: ReactNode;
   className?: string;
 }
 

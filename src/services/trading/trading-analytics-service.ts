@@ -235,16 +235,21 @@ export class TradingAnalyticsService {
     error?: string,
     metadata?: Record<string, unknown>
   ): void {
+    // Validate inputs
+    const validResponseTime = typeof responseTimeMs === 'number' && !isNaN(responseTimeMs) ? responseTimeMs : 0;
+    const validOperation = typeof operation === 'string' && operation.trim() ? operation.trim() : 'unknown_operation';
+    
     this.logTradingEvent({
       eventType: "API_CALL",
       userId,
       metadata: {
-        operation,
+        operation: validOperation,
+        endpoint: validOperation, // Include endpoint for backward compatibility
         ...metadata,
       },
       performance: {
-        responseTimeMs,
-        retryCount: 0,
+        responseTimeMs: Math.max(0, validResponseTime), // Ensure non-negative
+        retryCount: metadata?.retryCount ? Number(metadata.retryCount) || 0 : 0,
       },
       success,
       error,
@@ -269,20 +274,26 @@ export class TradingAnalyticsService {
       CANCEL: "TRADE_CANCELLED" as const,
     };
 
+    // Validate inputs
+    const validResponseTime = typeof responseTimeMs === 'number' && !isNaN(responseTimeMs) ? responseTimeMs : 0;
+    const validSymbol = typeof symbol === 'string' && symbol.trim() ? symbol.trim() : 'UNKNOWN';
+    const validUserId = typeof userId === 'string' && userId.trim() ? userId.trim() : 'anonymous';
+    const validOperation = operation && eventTypeMap[operation] ? operation : 'PLACE';
+
     this.logTradingEvent({
-      eventType: success ? eventTypeMap[operation] : "TRADE_FAILED",
-      userId,
+      eventType: success ? eventTypeMap[validOperation] : "TRADE_FAILED",
+      userId: validUserId,
       metadata: {
-        operation,
-        symbol,
+        operation: validOperation,
+        symbol: validSymbol,
         ...metadata,
       },
       performance: {
-        responseTimeMs,
-        retryCount: 0,
+        responseTimeMs: Math.max(0, validResponseTime),
+        retryCount: metadata?.retryCount ? Number(metadata.retryCount) || 0 : 0,
       },
       success,
-      error,
+      error: success ? undefined : (error || 'Unknown error'),
     });
   }
 
@@ -340,10 +351,12 @@ export class TradingAnalyticsService {
 
     const errorRate = totalEvents > 0 ? failedEvents / totalEvents : 0;
 
-    // Calculate volume (if available in metadata)
+    // Calculate volume (if available in metadata) - only for successful trades
     const totalVolume = tradeEvents.reduce((sum, event) => {
+      // Only count volume for successful trades
+      if (!event.success) return sum;
       const volume = event.metadata.volume as number;
-      return sum + (typeof volume === "number" ? volume : 0);
+      return sum + (typeof volume === "number" && !isNaN(volume) ? volume : 0);
     }, 0);
 
     // Generate breakdowns
@@ -427,7 +440,10 @@ export class TradingAnalyticsService {
     // Calculate new metrics
     const relevantEvents = this.events.filter((event) => {
       const eventTime = new Date(event.timestamp).getTime();
-      return eventTime > since && (operation ? event.metadata.operation === operation : true);
+      const matchesTimeWindow = eventTime > since;
+      const matchesOperation = operation ? 
+        (event.metadata.operation === operation || event.eventType === operation) : true;
+      return matchesTimeWindow && matchesOperation;
     });
 
     if (relevantEvents.length === 0) {
@@ -450,21 +466,30 @@ export class TradingAnalyticsService {
       if (windowEvents.length > 0) {
         const successfulEvents = windowEvents.filter((event) => event.success);
         const errorRate = (windowEvents.length - successfulEvents.length) / windowEvents.length;
-        const avgResponseTime =
-          windowEvents.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) /
-          windowEvents.length;
-        const avgRetries =
-          windowEvents.reduce((sum, e) => sum + e.performance.retryCount, 0) / windowEvents.length;
+        
+        // Calculate average response time with validation
+        const validResponseTimes = windowEvents.filter(e => 
+          typeof e.performance.responseTimeMs === 'number' && !isNaN(e.performance.responseTimeMs)
+        );
+        const avgResponseTime = validResponseTimes.length > 0 ?
+          validResponseTimes.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / validResponseTimes.length : 0;
+        
+        // Calculate average retries with validation
+        const validRetries = windowEvents.filter(e => 
+          typeof e.performance.retryCount === 'number' && !isNaN(e.performance.retryCount)
+        );
+        const avgRetries = validRetries.length > 0 ?
+          validRetries.reduce((sum, e) => sum + e.performance.retryCount, 0) / validRetries.length : 0;
 
         metrics.push({
           operation: operation || "all",
           timestamp: new Date(windowEnd).toISOString(),
           metrics: {
-            responseTimeMs: avgResponseTime,
+            responseTimeMs: Math.max(0, avgResponseTime),
             throughputPerSecond: windowEvents.length / 60, // Events per second (window is 1 minute)
-            errorRate,
-            successRate: 1 - errorRate,
-            averageRetries: avgRetries,
+            errorRate: Math.max(0, Math.min(1, errorRate)), // Clamp between 0 and 1
+            successRate: Math.max(0, Math.min(1, 1 - errorRate)), // Clamp between 0 and 1
+            averageRetries: Math.max(0, avgRetries),
           },
           breakdown: {
             // Would calculate these in a more sophisticated implementation
@@ -706,27 +731,35 @@ export class TradingAnalyticsService {
     }> = [];
     const now = new Date().toISOString();
 
+    // Only check anomalies if we have events
+    if (events.length === 0) {
+      return anomalies;
+    }
+
     // High error rate anomaly
-    const errorRate = events.filter((e) => !e.success).length / Math.max(1, events.length);
+    const errorCount = events.filter((e) => !e.success).length;
+    const errorRate = errorCount / events.length;
     if (errorRate > 0.2) {
       anomalies.push({
         type: "HIGH_ERROR_RATE",
         description: `Error rate of ${(errorRate * 100).toFixed(1)}% detected`,
-        severity: errorRate > 0.5 ? "CRITICAL" : ("HIGH" as const),
+        severity: errorRate > 0.5 ? "CRITICAL" : "HIGH",
         detectedAt: now,
       });
     }
 
-    // Response time anomaly
-    const avgResponseTime =
-      events.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / Math.max(1, events.length);
-    if (avgResponseTime > 10000) {
-      anomalies.push({
-        type: "HIGH_RESPONSE_TIME",
-        description: `Average response time of ${avgResponseTime.toFixed(0)}ms detected`,
-        severity: avgResponseTime > 30000 ? "CRITICAL" : ("HIGH" as const),
-        detectedAt: now,
-      });
+    // Response time anomaly - only check if we have valid response times
+    const validResponseTimes = events.filter(e => typeof e.performance.responseTimeMs === 'number' && !isNaN(e.performance.responseTimeMs));
+    if (validResponseTimes.length > 0) {
+      const avgResponseTime = validResponseTimes.reduce((sum, e) => sum + e.performance.responseTimeMs, 0) / validResponseTimes.length;
+      if (avgResponseTime > 10000) {
+        anomalies.push({
+          type: "HIGH_RESPONSE_TIME",
+          description: `Average response time of ${avgResponseTime.toFixed(0)}ms detected`,
+          severity: avgResponseTime > 30000 ? "CRITICAL" : "HIGH",
+          detectedAt: now,
+        });
+      }
     }
 
     return anomalies;

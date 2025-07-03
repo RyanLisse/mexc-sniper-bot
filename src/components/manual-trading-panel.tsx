@@ -13,6 +13,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { useAccountBalance } from "../hooks/use-account-balance";
 import { TransactionDebugPanel } from "./transaction-debug-panel";
@@ -55,7 +56,7 @@ const TradingForm = ({
   onTrade,
   isLoading,
 }: {
-  availableAssets: Array<{ asset: string; free: string; total: number; usdtValue?: number }>;
+  availableAssets: Array<{ asset?: string; free?: string; total?: number; locked?: string; usdtValue?: number }>;
   onTrade: (order: TradeOrder) => void;
   isLoading: boolean;
 }) => {
@@ -66,12 +67,12 @@ const TradingForm = ({
   const [price, setPrice] = useState("");
 
   const selectedAssetData = useMemo(
-    () => availableAssets.find((a) => a.asset === selectedAsset),
+    () => availableAssets.find((a) => a.asset && a.asset === selectedAsset),
     [availableAssets, selectedAsset]
   );
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: FormEvent) => {
       e.preventDefault();
 
       if (!selectedAsset || !quantity) {
@@ -90,7 +91,7 @@ const TradingForm = ({
 
       // For sell orders, check if user has enough balance
       if (side === "SELL" && selectedAssetData) {
-        const availableBalance = Number.parseFloat(selectedAssetData.free);
+        const availableBalance = Number.parseFloat(selectedAssetData.free || "0");
         const requestedQuantity = Number.parseFloat(quantity);
 
         if (requestedQuantity > availableBalance) {
@@ -202,35 +203,35 @@ const TradingForm = ({
                     ? // For selling, only show non-USDT assets the user owns
                       availableAssets
                         .filter(
-                          (asset) => Number.parseFloat(asset.free) > 0 && asset.asset !== "USDT"
+                          (asset) => Number.parseFloat(asset.free || "0") > 0 && (asset.asset || "") !== "USDT"
                         )
                         .map((asset) => (
                           <SelectItem
-                            key={asset.asset}
-                            value={asset.asset}
+                            key={asset.asset || ""}
+                            value={asset.asset || ""}
                             className="focus:bg-accent focus:text-accent-foreground cursor-pointer min-h-[44px] sm:min-h-[32px]"
                           >
                             <div className="flex items-center justify-between w-full">
-                              <span className="font-medium">{asset.asset}</span>
+                              <span className="font-medium">{asset.asset || ""}</span>
                               <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                                {Number.parseFloat(asset.free).toFixed(4)} available
+                                {Number.parseFloat(asset.free || "0").toFixed(4)} available
                               </span>
                             </div>
                           </SelectItem>
                         ))
                     : // For buying, only show assets the user owns (they can trade between their holdings)
                       availableAssets
-                        .filter((asset) => Number.parseFloat(asset.free) > 0)
+                        .filter((asset) => Number.parseFloat(asset.free || "0") > 0)
                         .map((asset) => (
                           <SelectItem
-                            key={asset.asset}
-                            value={asset.asset}
+                            key={asset.asset || ""}
+                            value={asset.asset || ""}
                             className="focus:bg-accent focus:text-accent-foreground cursor-pointer min-h-[44px] sm:min-h-[32px]"
                           >
                             <div className="flex items-center justify-between w-full">
-                              <span className="font-medium">{asset.asset}</span>
+                              <span className="font-medium">{asset.asset || ""}</span>
                               <span className="text-xs text-muted-foreground ml-2 shrink-0">
-                                {Number.parseFloat(asset.free).toFixed(4)} available
+                                {Number.parseFloat(asset.free || "0").toFixed(4)} available
                               </span>
                             </div>
                           </SelectItem>
@@ -477,7 +478,7 @@ export function ManualTradingPanel({ userId, className }: ManualTradingPanelProp
   const availableAssets = useMemo(() => {
     return (
       balanceData?.balances?.filter(
-        (balance) => Number.parseFloat(balance.free) > 0 || Number.parseFloat(balance.locked) > 0
+        (balance) => Number.parseFloat(balance.free || "0") > 0 || Number.parseFloat(balance.locked || "0") > 0
       ) || []
     );
   }, [balanceData]);

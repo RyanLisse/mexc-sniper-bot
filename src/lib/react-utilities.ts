@@ -5,7 +5,7 @@
  * across the React codebase without losing functionality.
  */
 
-import { useMemo } from "react";
+import { useMemo, KeyboardEvent, ComponentType } from "react";
 
 /**
  * Generate stable keys for array rendering without using array indexes
@@ -76,7 +76,7 @@ export interface PerformanceMetrics {
 export function createKeyboardClickHandler(clickHandler: () => void) {
   return {
     onClick: clickHandler,
-    onKeyDown: (event: React.KeyboardEvent) => {
+    onKeyDown: (event: KeyboardEvent) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
         clickHandler();
@@ -151,7 +151,7 @@ export interface StatusIconProps {
 }
 
 export interface StatusConfig {
-  icon: React.ComponentType<StatusIconProps>;
+  icon: ComponentType<StatusIconProps>;
   color: string;
   label: string;
 }

@@ -213,6 +213,25 @@ export class AgentMonitoringService extends BaseService {
   }
 
   /**
+   * Force stop and cleanup (for testing)
+   */
+  public forceStop(): void {
+    this.stop();
+    this.alerts.clear();
+    this.reports = [];
+    this.alertIdCounter = 0;
+    this.reportIdCounter = 0;
+    this.isRunning = false;
+  }
+
+  /**
+   * Check if service is running
+   */
+  public isServiceRunning(): boolean {
+    return this.isRunning;
+  }
+
+  /**
    * Perform comprehensive health check
    */
   public async performHealthCheck(): Promise<void> {

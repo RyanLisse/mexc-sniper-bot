@@ -1,6 +1,5 @@
 "use client";
-import * as React from "react";
-import { lazy, Suspense } from "react";
+import { forwardRef, ReactNode, ReactElement, HTMLAttributes, lazy, Suspense } from "react";
 import { ErrorBoundary } from "../error-boundary";
 
 export interface ChartConfig {
@@ -15,10 +14,10 @@ const _ResponsiveContainer = lazy(async () => {
   } catch (error) {
     console.warn("Failed to load Recharts ResponsiveContainer in chart.tsx:", error);
     // Return fallback component that renders safely with ResponsiveContainer-compatible interface
-    const FallbackComponent = React.forwardRef<
+    const FallbackComponent = forwardRef<
       HTMLDivElement,
       {
-        children?: React.ReactNode;
+        children?: ReactNode;
         className?: string;
         width?: string | number;
         height?: string | number;
@@ -43,8 +42,8 @@ export function ChartContainer({
 }: {
   className?: string;
   config?: ChartConfig;
-  children: React.ReactNode;
-}): React.ReactElement {
+  children: ReactNode;
+}): ReactElement {
   return (
     <ErrorBoundary
       level="component"
@@ -61,16 +60,16 @@ export function ChartContainer({
   );
 }
 
-export function ChartTooltip(props: React.HTMLAttributes<HTMLDivElement>) {
+export function ChartTooltip(props: HTMLAttributes<HTMLDivElement>) {
   return <div {...props}>{props.children}</div>;
 }
 
 export function ChartTooltipContent({
   children,
 }: {
-  children?: React.ReactNode;
-  labelFormatter?: (value: unknown) => React.ReactNode;
+  children?: ReactNode;
+  labelFormatter?: (value: unknown) => ReactNode;
   indicator?: string;
-}): React.ReactElement | null {
+}): ReactElement | null {
   return <div>{children}</div>;
 }

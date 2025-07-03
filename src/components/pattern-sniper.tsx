@@ -15,9 +15,9 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import type React from "react";
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState, type FC } from "react";
 import { usePatternSniper } from "../hooks/use-pattern-sniper";
+import { normalizeVcoinId } from "../utils/trading-data-transformers";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -43,7 +43,7 @@ const formatTimeRemaining = (targetTime: Date): string => {
 };
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Component handles complex pattern detection UI with multiple conditional rendering paths
-export const PatternSniperComponent: React.FC = memo(function PatternSniperComponent() {
+export const PatternSniperComponent: FC = memo(function PatternSniperComponent() {
   const {
     isMonitoring,
     isConnected,
@@ -317,7 +317,7 @@ export const PatternSniperComponent: React.FC = memo(function PatternSniperCompo
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleRemoveTarget(target.vcoinId)}
+                        onClick={() => handleRemoveTarget(normalizeVcoinId(target.vcoinId))}
                         className="border-red-500 text-red-400 hover:bg-red-700"
                       >
                         <XCircle className="h-4 w-4" />

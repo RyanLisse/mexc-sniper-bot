@@ -1,47 +1,36 @@
 "use client";
 
-import type React from "react";
-import { useEffect, useState } from "react";
-import { StatusProvider } from "../../contexts/status-context-v2";
-
-/**
- * Status Provider Wrapper - Updated to use React Query-based StatusProvider
- *
- * This component wraps the application with the React Query-based StatusProvider (v2)
- * to ensure all components have access to synchronized status information with better
- * caching, error handling, and automatic refresh capabilities.
- *
- * FIXED: Migrated from reducer-based v1 to React Query-based v2 for better performance
- * and status synchronization.
- */
+import { type ReactNode, createContext, useContext, useState } from "react";
 
 interface StatusProviderWrapperProps {
-  children: React.ReactNode;
-  autoRefreshInterval?: number;
-  enableRealTimeUpdates?: boolean;
+  children: ReactNode;
 }
 
-export function StatusProviderWrapper({
-  children,
-  autoRefreshInterval = 30000, // 30 seconds
-  enableRealTimeUpdates = true,
-}: StatusProviderWrapperProps) {
-  const [isHydrated, setIsHydrated] = useState(false);
+interface StatusContextType {
+  status: string;
+  updateStatus: (status: string) => void;
+}
 
-  useEffect(() => {
-    // Prevent hydration mismatches by only enabling after client-side hydration
-    setIsHydrated(true);
-  }, []);
+const StatusContext = createContext<StatusContextType | undefined>(undefined);
 
-  // Render the same content during SSR and hydration to prevent mismatches
+export function StatusProviderWrapper({ children }: StatusProviderWrapperProps) {
+  const [status, setStatus] = useState("ready");
+
+  const updateStatus = (newStatus: string) => {
+    setStatus(newStatus);
+  };
+
   return (
-    <StatusProvider
-      autoRefreshInterval={isHydrated ? autoRefreshInterval : 0}
-      enableRealTimeUpdates={isHydrated && enableRealTimeUpdates}
-    >
+    <StatusContext.Provider value={{ status, updateStatus }}>
       {children}
-    </StatusProvider>
+    </StatusContext.Provider>
   );
 }
 
-export default StatusProviderWrapper;
+export function useStatusProvider() {
+  const context = useContext(StatusContext);
+  if (!context) {
+    throw new Error("useStatusProvider must be used within StatusProviderWrapper");
+  }
+  return context;
+}

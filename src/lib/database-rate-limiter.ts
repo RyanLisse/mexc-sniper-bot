@@ -42,15 +42,18 @@ export class DatabaseRateLimiter {
       throw error;
     }
     
-    // Warn when approaching limit
+    this.queryCount++;
+    
+    // Warn when approaching limit (check after incrementing)
     if (this.queryCount >= (this.maxQueriesPerMinute * this.emergencyThreshold / 100)) {
-      console.warn(`⚠️ [COST WARNING] Approaching query limit: ${this.queryCount}/${this.maxQueriesPerMinute}`, {
+      console.warn(`⚠️ [COST WARNING] Approaching query limit`, {
         operation: operationName,
-        remaining: this.maxQueriesPerMinute - this.queryCount
+        currentCount: this.queryCount,
+        limit: this.maxQueriesPerMinute,
+        remaining: this.maxQueriesPerMinute - this.queryCount,
+        percentUsed: Math.round((this.queryCount / this.maxQueriesPerMinute) * 100)
       });
     }
-    
-    this.queryCount++;
     const startTime = Date.now();
     
     try {

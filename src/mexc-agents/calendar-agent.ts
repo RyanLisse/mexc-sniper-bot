@@ -407,7 +407,13 @@ Focus on actionable intelligence for cryptocurrency trading preparation.
       const validatedEntries = (Array.isArray(response.data) ? response.data : [])
         .map((entry: unknown) => {
           try {
-            return validateCalendarEntry(entry);
+            const validation = validateCalendarEntry(entry);
+            if (validation.isValid && validation.data) {
+              return validation.data;
+            } else {
+              this.agentLogger.warn(`[CalendarAgent] Invalid calendar entry:`, validation.errors);
+              return null;
+            }
           } catch (_error) {
             this.agentLogger.warn(`[CalendarAgent] Invalid calendar entry:`, entry);
             return null;

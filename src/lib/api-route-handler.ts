@@ -143,18 +143,19 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
 
         const queryValidation = validateMexcApiRequest(options.querySchema, queryParams);
         if (!queryValidation.success) {
+          const errorResult = queryValidation as { success: false; error: string; details: string[] };
           logger.warn("Query validation failed", {
             requestId,
             operation: "query_validation",
             routeName,
-            validationError: queryValidation.error,
-            validationDetails: queryValidation.details,
+            validationError: errorResult.error,
+            validationDetails: errorResult.details,
           });
 
           return apiResponse(
-            createErrorResponse(queryValidation.error, {
+            createErrorResponse(errorResult.error, {
               code: "VALIDATION_ERROR",
-              details: queryValidation.details,
+              details: errorResult.details,
               requestId,
               requestDuration: `${Date.now() - startTime}ms`,
             }),
@@ -172,16 +173,17 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
           const bodyValidation = validateMexcApiRequest(options.bodySchema, rawBody);
 
           if (!bodyValidation.success) {
+            const errorResult = bodyValidation as { success: false; error: string; details: string[] };
             console.warn(`[${routeName.toUpperCase()}] Body validation failed`, {
               requestId,
-              error: bodyValidation.error,
-              details: bodyValidation.details,
+              error: errorResult.error,
+              details: errorResult.details,
             });
 
             return apiResponse(
-              createErrorResponse(bodyValidation.error, {
+              createErrorResponse(errorResult.error, {
                 code: "VALIDATION_ERROR",
-                details: bodyValidation.details,
+                details: errorResult.details,
                 requestId,
                 requestDuration: `${Date.now() - startTime}ms`,
               }),
@@ -233,9 +235,10 @@ export function createApiRouteHandler<TQuery = any, TBody = any, TResponse = any
         );
 
         if (!responseValidation.success) {
+          const errorResult = responseValidation as { success: false; error: string };
           console.warn(`[${routeName.toUpperCase()}] Response validation failed`, {
             requestId,
-            error: responseValidation.error,
+            error: errorResult.error,
             result: typeof result,
           });
           // Log warning but don't fail the request

@@ -14,106 +14,66 @@ import { performance } from "perf_hooks";
 
 const SETUP_TIMEOUT = 30000; // 30 seconds
 
-// Type definitions for global test objects
-declare global {
-  var testBranchContext: any;
-  var testPerformance: {
-    startTime: number;
-    marks: Map<string, number>;
-    measurements: Map<string, number>;
-    mark: (name: string) => number;
-    measure: (name: string, startMark?: string, endMark?: string) => number;
-    getReport: () => {
-      totalTime: number;
-      marks: Record<string, number>;
-      measurements: Record<string, number>;
+interface TestBranchContext {
+  branchName: string;
+  branchId: string;
+  connectionString: string;
+}
+
+interface TestFixtures {
+  users: Record<string, any>;
+  apiCredentials: Record<string, any>;
+  marketData: {
+    symbols: any[];
+    prices: Record<string, string>;
+    calendar: any[];
+  };
+  transactions: Record<string, any>;
+}
+
+interface MockApiResponses {
+  mexc: {
+    serverTime: { serverTime: number };
+    symbols: any[];
+    account: {
+      balances: Array<{ asset: string; free: string; locked: string }>;
     };
   };
-  var testFixtures: {
-    users: {
-      testUser: {
-        id: string;
-        email: string;
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-      };
-      adminUser: {
-        id: string;
-        email: string;
-        name: string;
-        role: string;
-        createdAt: Date;
-        updatedAt: Date;
-      };
-    };
-    apiCredentials: {
-      valid: {
-        id: string;
-        userId: string;
-        mexcApiKey: string;
-        mexcSecretKey: string;
-        isActive: boolean;
-        createdAt: Date;
-        updatedAt: Date;
-      };
-    };
-    marketData: {
-      symbols: Array<{
-        symbol: string;
-        status: string;
-        baseAsset: string;
-        quoteAsset: string;
+  openai: {
+    chat: {
+      id: string;
+      object: string;
+      choices: Array<{
+        message: {
+          role: string;
+          content: string;
+        };
       }>;
-      prices: Record<string, string>;
-      calendar: Array<{
-        id: string;
-        symbol: string;
-        launchTime: Date;
-        status: string;
-      }>;
-    };
-    transactions: {
-      successful: {
-        id: string;
-        userId: string;
-        symbol: string;
-        side: string;
-        quantity: string;
-        price: string;
-        status: string;
-        createdAt: Date;
-      };
-    };
-  };
-  var mockApiResponses: {
-    mexc: {
-      serverTime: { serverTime: number };
-      symbols: Array<any>;
-      account: {
-        balances: Array<{
-          asset: string;
-          free: string;
-          locked: string;
-        }>;
-      };
-    };
-    openai: {
-      chat: {
-        id: string;
-        object: string;
-        choices: Array<{
-          message: {
-            role: string;
-            content: string;
-          };
-        }>;
-      };
     };
   };
 }
 
-export default async function globalSetup(): Promise<(() => Promise<void>) | void> {
+interface TestPerformance {
+  startTime: number;
+  marks: Map<string, number>;
+  measurements: Map<string, number>;
+  mark: (name: string) => number;
+  measure: (name: string, startMark: string, endMark?: string) => number;
+  getReport: () => {
+    totalTime: number;
+    marks: Record<string, number>;
+    measurements: Record<string, number>;
+  };
+}
+
+declare global {
+  var testBranchContext: TestBranchContext | undefined;
+  var testFixtures: TestFixtures;
+  var mockApiResponses: MockApiResponses;
+  var testPerformance: TestPerformance;
+}
+
+export default async function globalSetup(): Promise<() => Promise<void>> {
   const startTime = performance.now();
   console.log("🌍 Starting global test environment setup...");
 
@@ -157,7 +117,9 @@ async function validateEnvironment(): Promise<void> {
   if (missingVars.length > 0) {
     console.warn(`⚠️ Missing environment variables: ${missingVars.join(", ")}`);
     // Set defaults for testing
-    if (!process.env.NODE_ENV) process.env.NODE_ENV = "test";
+    if (!process.env.NODE_ENV) {
+      Object.defineProperty(process.env, 'NODE_ENV', { value: 'test', configurable: true });
+    }
     if (!process.env.DATABASE_URL)
       process.env.DATABASE_URL =
         "postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
@@ -210,9 +172,10 @@ async function prepareDatabaseForTesting(): Promise<void> {
       } catch (error) {
         console.warn(
           "⚠️ Failed to setup test branch, falling back to main database:",
-          (error as Error).message,
+          error.message,
         );
         // Fall back to main database connection
+        useTestBranches = false;
       }
     }
 
@@ -234,11 +197,11 @@ async function prepareDatabaseForTesting(): Promise<void> {
           }
         }
       } catch (dbError) {
-        console.warn("⚠️ Database connection warning:", (dbError as Error).message);
+        console.warn("⚠️ Database connection warning:", dbError.message);
       }
     }
   } catch (error) {
-    console.warn("⚠️ Database preparation warning:", (error as Error).message);
+    console.warn("⚠️ Database preparation warning:", error.message);
     // Don't fail setup if database is not available
   }
 
@@ -263,8 +226,8 @@ async function createTestDirectories(): Promise<void> {
     try {
       await fs.mkdir(dir, { recursive: true });
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
-        console.warn(`⚠️ Could not create directory ${dir}:`, (error as Error).message);
+      if (error.code !== "EEXIST") {
+        console.warn(`⚠️ Could not create directory ${dir}:`, error.message);
       }
     }
   }
@@ -284,18 +247,18 @@ function initializePerformanceMonitoring(): void {
     marks: new Map(),
     measurements: new Map(),
 
-    mark: (name: string): number => {
+    mark: (name) => {
       const time = performance.now();
       global.testPerformance.marks.set(name, time);
       return time;
     },
 
-    measure: (name: string, startMark?: string, endMark?: string): number => {
-      const startTime = global.testPerformance.marks.get(startMark || '') || 0;
+    measure: (name, startMark, endMark) => {
+      const startTime = global.testPerformance.marks.get(startMark) || 0;
       const endTime = endMark
         ? global.testPerformance.marks.get(endMark)
         : performance.now();
-      const duration = (endTime || performance.now()) - startTime;
+      const duration = endTime - startTime;
       global.testPerformance.measurements.set(name, duration);
       return duration;
     },
@@ -454,7 +417,7 @@ export async function globalTeardown(): Promise<void> {
         global.testBranchContext = null;
         console.log("✅ Test branch cleanup completed");
       } catch (error) {
-        console.warn("⚠️ Test branch cleanup warning:", (error as Error).message);
+        console.warn("⚠️ Test branch cleanup warning:", error.message);
       }
     }
 
@@ -467,7 +430,7 @@ export async function globalTeardown(): Promise<void> {
         await cleanupAllTestBranches();
         console.log("🧹 Emergency branch cleanup completed");
       } catch (error) {
-        console.warn("⚠️ Emergency branch cleanup warning:", (error as Error).message);
+        console.warn("⚠️ Emergency branch cleanup warning:", error.message);
       }
     }
 
@@ -501,14 +464,14 @@ export async function globalTeardown(): Promise<void> {
 
     console.log("✅ Global cleanup completed");
   } catch (error) {
-    console.warn("⚠️ Global cleanup warning:", (error as Error).message);
+    console.warn("⚠️ Global cleanup warning:", error.message);
   }
 }
 
 /**
  * Utility function to check version compatibility
  */
-function isVersionCompatible(current: string, required: string): boolean {
+function isVersionCompatible(current, required) {
   const currentParts = current.split(".").map(Number);
   const requiredParts = required.split(".").map(Number);
 

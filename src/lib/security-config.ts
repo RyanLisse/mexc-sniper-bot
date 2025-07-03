@@ -32,9 +32,9 @@ export const SECURITY_CONFIG = {
       "style-src 'self' 'unsafe-inline'", // Required for Tailwind CSS
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://api.mexc.com wss://wbs.mexc.com https://*.kinde.com https://ryanlisse.kinde.com",
+      "connect-src 'self' https://api.mexc.com wss://wbs.mexc.com https://*.supabase.co",
       "frame-ancestors 'none'",
-      "form-action 'self' https://*.kinde.com https://ryanlisse.kinde.com",
+      "form-action 'self' https://*.supabase.co",
       "base-uri 'self'",
     ].join("; "),
 

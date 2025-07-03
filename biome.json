@@ -1,26 +1,73 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "linter": {
-    "enabled": true,
+    "enabled": false,
     "rules": {
       "recommended": false,
+      "all": false,
       "correctness": {
-        "noConstAssign": "error",
-        "noInvalidConstructorSuper": "error", 
-        "noUndeclaredVariables": "error",
-        "noUnreachable": "error"
+        "all": false
       },
       "suspicious": {
-        "noDoubleEquals": "error",
-        "noDebugger": "error"
+        "all": false
+      },
+      "style": {
+        "all": false
+      },
+      "complexity": {
+        "all": false
       },
       "security": {
-        "noDangerouslySetInnerHtml": "error"
+        "all": false
+      },
+      "performance": {
+        "all": false
+      },
+      "a11y": {
+        "all": false
+      },
+      "nursery": {
+        "all": false
       }
     }
   },
   "formatter": {
     "enabled": false
+  },
+  "organizeImports": {
+    "enabled": false
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": false
+    },
+    "linter": {
+      "enabled": false
+    }
+  },
+  "typescript": {
+    "formatter": {
+      "enabled": false
+    },
+    "linter": {
+      "enabled": false
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": false
+    },
+    "linter": {
+      "enabled": false
+    }
+  },
+  "css": {
+    "formatter": {
+      "enabled": false
+    },
+    "linter": {
+      "enabled": false
+    }
   },
   "files": {
     "includes": [

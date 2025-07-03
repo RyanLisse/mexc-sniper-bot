@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
+import type { ReactNode } from "react";
 import { ArrowDownRight, ArrowUpRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
@@ -26,9 +27,9 @@ interface Trade {
 
 interface TradeRowsProps {
   trades: Trade[];
-  getProfitLossIcon: (percentage: number | null) => React.ReactNode;
+  getProfitLossIcon: (percentage: number | null) => ReactNode;
   getProfitLossColor: (percentage: number | null) => string;
-  getStatusBadge: (status: string, profitLoss: number | null) => React.ReactNode;
+  getStatusBadge: (status: string, profitLoss: number | null) => ReactNode;
 }
 
 function TradeRows({

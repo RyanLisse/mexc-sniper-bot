@@ -1,10 +1,10 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { AlertCorrelationEngine } from "@/src/services/notification/alert-correlation-engine";
 import { AnomalyDetectionService } from "@/src/services/notification/anomaly-detection-service";
 import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";

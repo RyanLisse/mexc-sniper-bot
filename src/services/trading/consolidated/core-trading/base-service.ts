@@ -870,6 +870,11 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
    * Calculate current risk level based on performance metrics
    */
   private calculateRiskLevel(metrics: PerformanceMetrics): "low" | "medium" | "high" | "critical" {
+    // Handle initial state when no trades have been executed
+    if (metrics.totalTrades === 0 || metrics.totalTrades === undefined) {
+      return "low"; // Safe initial state
+    }
+    
     // Simple risk calculation based on drawdown and success rate
     if (metrics.maxDrawdown > 25 || metrics.successRate < 30) {
       return "critical";

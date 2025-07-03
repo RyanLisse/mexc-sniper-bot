@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useAccountBalance } from "../hooks/use-account-balance";
 import {
   BalanceHeader,
@@ -20,7 +20,7 @@ interface AccountBalanceProps {
 }
 
 // Main component (internal)
-const OptimizedAccountBalanceInternal = React.memo(({ userId, className }: AccountBalanceProps) => {
+const OptimizedAccountBalanceInternal = memo(({ userId, className }: AccountBalanceProps) => {
   const [showBalances, setShowBalances] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
@@ -196,7 +196,7 @@ const BalanceLoadingFallback = () => (
 );
 
 // Exported component with hydration boundary
-export const OptimizedAccountBalance = React.memo(({ userId, className }: AccountBalanceProps) => (
+export const OptimizedAccountBalance = memo(({ userId, className }: AccountBalanceProps) => (
   <HydrationBoundary fallback={<BalanceLoadingFallback />}>
     <OptimizedAccountBalanceInternal userId={userId} className={className} />
   </HydrationBoundary>

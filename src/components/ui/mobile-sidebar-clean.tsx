@@ -1,15 +1,15 @@
 "use client";
 
+import React from "react";
 import { Menu, X } from "lucide-react";
-import type React from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, ReactNode } from "react";
 import { useIsMobile } from "../../hooks/use-mobile-clean";
 import { cn } from "../../lib/utils";
 
 export interface MobileSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 
@@ -20,7 +20,7 @@ export interface MobileSidebarTriggerProps {
 }
 
 export interface MobileSidebarContentProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 

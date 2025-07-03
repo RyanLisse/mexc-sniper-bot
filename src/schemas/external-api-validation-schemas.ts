@@ -24,17 +24,17 @@ export const MexcBaseResponseSchema = z.object({
  * MEXC Server Time Response Schema
  */
 export const MexcServerTimeResponseSchema = z.object({
-  code: z.literal(200),
+  code: z.number().optional(),
   data: z.object({
     serverTime: z.number(),
-  }),
+  }).optional(),
 });
 
 /**
  * MEXC Exchange Info Response Schema
  */
 export const MexcExchangeInfoResponseSchema = z.object({
-  code: z.literal(200),
+  code: z.number().optional(),
   data: z.object({
     timezone: z.string(),
     serverTime: z.number(),
@@ -70,26 +70,26 @@ export const MexcExchangeInfoResponseSchema = z.object({
  * MEXC Account Balance Response Schema
  */
 export const MexcAccountBalanceResponseSchema = z.object({
-  code: z.literal(200),
+  code: z.number().optional(),
   data: z.object({
-    accountType: z.string(),
-    canTrade: z.boolean(),
-    canWithdraw: z.boolean(),
-    canDeposit: z.boolean(),
-    updateTime: z.number(),
+    accountType: z.string().optional(),
+    canTrade: z.boolean().optional(),
+    canWithdraw: z.boolean().optional(),
+    canDeposit: z.boolean().optional(),
+    updateTime: z.number().optional(),
     balances: z.array(z.object({
       asset: z.string(),
       free: z.string(),
       locked: z.string(),
-    })),
-  }),
+    })).optional(),
+  }).optional(),
 });
 
 /**
  * MEXC Order Response Schema
  */
 export const MexcOrderResponseSchema = z.object({
-  code: z.literal(200),
+  code: z.number().optional(),
   data: z.object({
     symbol: z.string(),
     orderId: z.string(),
@@ -330,7 +330,7 @@ export function validateMexcResponse<T extends z.ZodSchema>(
   schema: T,
   response: unknown,
   apiEndpoint: string = "unknown"
-): { success: true; data: z.infer<T> } | { success: false; error: string; details?: z.ZodError } {
+): { success?: boolean; data?: z.infer<T>; error?: string; details?: any } {
   try {
     // First check if it's a MEXC error response
     const errorCheck = MexcErrorResponseSchema.safeParse(response);

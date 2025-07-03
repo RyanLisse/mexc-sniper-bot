@@ -5,9 +5,9 @@
  * Integrates with the trading analytics service to deliver real-time performance data.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 
 // Request validation schemas
@@ -29,10 +29,16 @@ const timeframeToMs = {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-    
-    if (!user) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }
@@ -132,10 +138,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-    
-    if (!user) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user) {
+        return NextResponse.json(
+          { error: "Authentication required" },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
       return NextResponse.json(
         { error: "Authentication required" },
         { status: 401 }

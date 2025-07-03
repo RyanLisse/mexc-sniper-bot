@@ -12,7 +12,6 @@
  * - Standardized response format
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import OpenAI from "openai";
 import { getRecommendedMexcService } from "../services/api/mexc-unified-exports";
 import { getUserCredentials } from "../services/api/user-credentials-service";
@@ -23,6 +22,7 @@ import type {
   SystemOverviewResult,
 } from "./api-response";
 import { checkAuthTables, checkDatabaseHealth } from "./db-health-check";
+import { getSession } from "./supabase-auth";
 
 // ============================================================================
 // Health Check Cache
@@ -131,7 +131,7 @@ export class HealthCheckComponents {
   }
 
   /**
-   * Authentication system health check (Kinde)
+   * Authentication system health check (Supabase)
    */
   static async checkAuthentication(): Promise<HealthCheckResult> {
     const cacheKey = "auth-health";
@@ -160,21 +160,21 @@ export class HealthCheckComponents {
         return result;
       }
 
-      // Test Kinde SDK functionality
-      let kindeStatus = "unknown";
+      // Test Supabase auth functionality
+      let authStatus = "unknown";
       let authTestResult = null;
 
       try {
-        const { isAuthenticated } = getKindeServerSession();
-        const authResult = await isAuthenticated();
-        kindeStatus = "initialized";
+        const session = await getSession();
+        const authResult = session.isAuthenticated;
+        authStatus = "initialized";
         authTestResult = {
           sdk_accessible: true,
           session_check_working: true,
           auth_status: authResult || false,
         };
       } catch (sdkError) {
-        kindeStatus = "error";
+        authStatus = "error";
         authTestResult = {
           sdk_accessible: false,
           error: sdkError instanceof Error ? sdkError.message : "Unknown SDK error",
@@ -199,22 +199,22 @@ export class HealthCheckComponents {
       };
 
       const allConfigValid = Object.values(configValidation).every(Boolean);
-      const isHealthy = kindeStatus === "initialized" && allConfigValid;
+      const isHealthy = authStatus === "initialized" && allConfigValid;
 
       const result: HealthCheckResult = {
         status:
-          kindeStatus === "error" || !allConfigValid
+          authStatus === "error" || !allConfigValid
             ? "error"
-            : kindeStatus === "unknown"
+            : authStatus === "unknown"
               ? "warning"
               : "healthy",
         message: isHealthy
           ? "Authentication system fully operational"
-          : kindeStatus === "error" || !allConfigValid
+          : authStatus === "error" || !allConfigValid
             ? "Authentication system has critical issues"
             : "Authentication system partially functional",
         details: {
-          kindeStatus,
+          authStatus,
           configValidation,
           authTestResult,
           environmentVariables: {

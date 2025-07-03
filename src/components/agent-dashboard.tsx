@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ComponentType } from "react";
 import {
   Activity,
   AlertCircle,
@@ -41,7 +42,7 @@ interface AgentStatus {
   };
 }
 
-const agentIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const agentIcons: Record<string, ComponentType<{ className?: string }>> = {
   "mexc-api": Bot,
   calendar: Calendar,
   pattern: TrendingUp,

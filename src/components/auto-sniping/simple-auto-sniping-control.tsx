@@ -1,376 +1,220 @@
 "use client";
 
-import {
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  type LucideIcon,
-  Pause,
-  Play,
-  Settings,
-  Zap,
-} from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { useStatus } from "../../contexts/status-context-v2";
-import { useAutoSnipingExecution } from "../../hooks/use-auto-sniping-execution";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Badge } from "../ui/badge";
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Switch } from "../ui/switch";
-
-/**
- * Simple Auto-Sniping Control Component
- *
- * This replaces the complex technical dashboard with a user-friendly control panel.
- * Features:
- * - Clear on/off status with visual indicators
- * - Auto-enabled by default
- * - Simple connection status (green/red)
- * - Essential information only
- * - User-friendly error messages
- */
+import { Badge } from "../ui/badge";
+import { AlertCircle, Loader2, Play, Square } from "lucide-react";
 
 interface SimpleAutoSnipingControlProps {
   className?: string;
-  showAdvancedSettings?: boolean;
 }
 
-interface ConnectionStatus {
-  status: string;
-  label: string;
-  description: string;
-  color: string;
-  bgColor: string;
-  icon: LucideIcon;
-}
-
-interface StatusType {
-  network: { connected: boolean };
-  credentials: { hasCredentials: boolean; isValid: boolean };
-  trading: { canTrade: boolean };
-}
-
-// Extract connection status logic to reduce complexity
-function getConnectionStatus(status: StatusType): ConnectionStatus {
-  const { network, credentials, trading } = status;
-
-  if (!network.connected) {
-    return {
-      status: "error",
-      label: "Network Disconnected",
-      description: "Check your internet connection",
-      color: "text-red-600",
-      bgColor: "bg-red-50 border-red-200",
-      icon: AlertTriangle,
-    };
-  }
-
-  if (!credentials.hasCredentials || !credentials.isValid) {
-    return {
-      status: "warning",
-      label: "API Setup Required",
-      description: "Configure your MEXC API credentials",
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50 border-yellow-200",
-      icon: Settings,
-    };
-  }
-
-  if (!trading.canTrade) {
-    return {
-      status: "warning",
-      label: "Trading Unavailable",
-      description: "Check your MEXC account permissions",
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50 border-yellow-200",
-      icon: AlertTriangle,
-    };
-  }
-
-  return {
-    status: "ready",
-    label: "Ready to Trade",
-    description: "All systems operational",
-    color: "text-green-600",
-    bgColor: "bg-green-50 border-green-200",
-    icon: CheckCircle,
-  };
-}
-
-// Trading stats component to reduce complexity
-function TradingStats({
-  totalPnl,
-  activePositionsCount,
-  successRate,
-}: {
-  totalPnl: string;
-  activePositionsCount: number;
-  successRate: number;
-}) {
-  const pnlValue = Number.parseFloat(totalPnl);
-
-  return (
-    <div className="grid grid-cols-3 gap-4 p-3 bg-muted/50 rounded-lg">
-      <div className="text-center">
-        <div className={`text-lg font-bold ${pnlValue >= 0 ? "text-green-600" : "text-red-600"}`}>
-          {pnlValue >= 0 ? "+" : ""}
-          {pnlValue.toFixed(2)} USDT
-        </div>
-        <div className="text-xs text-muted-foreground">Total P&L</div>
-      </div>
-      <div className="text-center">
-        <div className="text-lg font-bold text-blue-600">{activePositionsCount}</div>
-        <div className="text-xs text-muted-foreground">Active Trades</div>
-      </div>
-      <div className="text-center">
-        <div className="text-lg font-bold text-purple-600">{successRate.toFixed(0)}%</div>
-        <div className="text-xs text-muted-foreground">Success Rate</div>
-      </div>
-    </div>
-  );
-}
-
-// Status badge component to reduce complexity
-function StatusBadge({
-  autoSnipingEnabled,
-  isExecutionActive,
-  isStartingExecution,
-}: {
+interface AutoSnipingStatus {
+  isActive: boolean;
   autoSnipingEnabled: boolean;
-  isExecutionActive: boolean;
-  isStartingExecution: boolean;
-}) {
-  if (autoSnipingEnabled && isExecutionActive) {
-    return (
-      <Badge variant="default" className="flex items-center gap-1">
-        <Play className="h-3 w-3" />
-        Running
-      </Badge>
-    );
-  }
-
-  if (autoSnipingEnabled && isStartingExecution) {
-    return (
-      <Badge variant="secondary" className="flex items-center gap-1">
-        <div className="h-3 w-3 animate-spin rounded-full border border-current border-t-transparent" />
-        Starting
-      </Badge>
-    );
-  }
-
-  return (
-    <Badge variant="secondary" className="flex items-center gap-1">
-      <Pause className="h-3 w-3" />
-      Stopped
-    </Badge>
-  );
+  activePositions: number;
+  isHealthy: boolean;
 }
 
-export function SimpleAutoSnipingControl({
-  className = "",
-  showAdvancedSettings = false,
+export function SimpleAutoSnipingControl({ 
+  className 
 }: SimpleAutoSnipingControlProps) {
-  const { status, getOverallStatus } = useStatus();
-  const overallStatus = getOverallStatus();
-
-  const {
-    config,
-    isExecutionActive,
-    activePositionsCount,
-    totalPnl,
-    successRate,
-    dailyTradeCount,
-    isLoading,
-    isStartingExecution,
-    isStoppingExecution,
-    error,
-    startExecution,
-    stopExecution,
-    updateConfig,
-    refreshData,
-    clearError,
-  } = useAutoSnipingExecution({
-    autoRefresh: true,
-    refreshInterval: 30000,
-    loadOnMount: true,
-    includePositions: true,
-    includeHistory: false,
-    includeAlerts: false,
+  const [status, setStatus] = useState<AutoSnipingStatus>({
+    isActive: false,
+    autoSnipingEnabled: false,
+    activePositions: 0,
+    isHealthy: true,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const [autoSnipingEnabled, setAutoSnipingEnabled] = useState(true);
-
-  // Sync config with local state
-  useEffect(() => {
-    if (config?.enabled !== undefined) {
-      setAutoSnipingEnabled(config.enabled);
-    }
-  }, [config?.enabled]);
-
-  // Auto-start execution when component mounts if auto-sniping is enabled - FIXED: Proper dependencies
-  useEffect(() => {
-    // Only run once on mount and when core dependencies change
-    if (autoSnipingEnabled && !isExecutionActive && !isLoading && overallStatus === "healthy") {
-      const autoStartExecution = async () => {
-        try {
-          await startExecution();
-        } catch (error) {
-          console.info("Auto-start execution skipped:", {
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
-      };
-
-      // Delay auto-start to allow status to stabilize
-      const timer = setTimeout(autoStartExecution, 2000);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [autoSnipingEnabled, overallStatus, isExecutionActive, isLoading, startExecution]);
-
-  const handleToggleAutoSniping = useCallback(
-    async (enabled: boolean) => {
-      setAutoSnipingEnabled(enabled);
-
-      // Update config first
-      if (config) {
-        await updateConfig({ enabled });
+  // Fetch current status
+  const fetchStatus = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auto-sniping/control");
+      const result = await response.json();
+      
+      if (result.success) {
+        setStatus({
+          isActive: result.data.status.autoSnipingEnabled || false,
+          autoSnipingEnabled: result.data.status.autoSnipingEnabled || false,
+          activePositions: result.data.status.activePositions || 0,
+          isHealthy: result.data.status.isHealthy || false,
+        });
+        setError(null);
+      } else {
+        throw new Error(result.error || "Failed to fetch status");
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    }
+  }, []);
 
-      // Then control execution
-      if (enabled && !isExecutionActive) {
-        await startExecution();
-      } else if (!enabled && isExecutionActive) {
-        await stopExecution();
+  // Load status on mount
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+
+  // Toggle auto-sniping
+  const toggleAutoSniping = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const action = status.isActive ? "stop" : "start";
+      const response = await fetch("/api/auto-sniping/control", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update status based on action
+        setStatus(prev => ({
+          ...prev,
+          isActive: action === "start",
+          autoSnipingEnabled: action === "start",
+        }));
+        
+        // Refresh full status after a short delay
+        setTimeout(fetchStatus, 1000);
+      } else {
+        throw new Error(result.error || `Failed to ${action} auto-sniping`);
       }
-    },
-    [config, isExecutionActive, updateConfig, startExecution, stopExecution]
-  );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const connectionStatus = getConnectionStatus(status);
-  const isReadyToTrade = connectionStatus.status === "ready";
+  // Emergency stop
+  const emergencyStop = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/auto-sniping/control", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          action: "emergency_stop",
+          reason: "User requested emergency stop" 
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setStatus(prev => ({
+          ...prev,
+          isActive: false,
+          autoSnipingEnabled: false,
+          activePositions: 0,
+        }));
+        
+        // Refresh status
+        setTimeout(fetchStatus, 1000);
+      } else {
+        throw new Error(result.error || "Failed to execute emergency stop");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>
-              {error && typeof error === "object" && "message" in error
-                ? (error as Error).message
-                : String(error)}
-            </span>
-            <Button variant="outline" size="sm" onClick={clearError}>
-              Dismiss
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Main Control Card */}
+    <div className={className}>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Auto-Sniping
-              </CardTitle>
-              <CardDescription>
-                Automatically trade new MEXC listings when patterns are detected
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-sm font-medium">
-                  {autoSnipingEnabled ? (isExecutionActive ? "Active" : "Starting...") : "Stopped"}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {isExecutionActive && `${activePositionsCount} positions`}
-                </div>
-              </div>
-              <Switch
-                checked={autoSnipingEnabled}
-                onCheckedChange={handleToggleAutoSniping}
-                disabled={isLoading || isStartingExecution || isStoppingExecution}
-                className="data-[state=checked]:bg-green-600"
-              />
-            </div>
-          </div>
+          <CardTitle className="flex items-center justify-between">
+            Auto-Sniping Control
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchStatus}
+              disabled={isLoading}
+            >
+              <Loader2 className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            </Button>
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Connection Status */}
-          <div className={`p-3 rounded-lg border ${connectionStatus.bgColor}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <connectionStatus.icon className={`h-5 w-5 ${connectionStatus.color}`} />
-                <div>
-                  <div className={`font-medium ${connectionStatus.color}`}>
-                    {connectionStatus.label}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {connectionStatus.description}
-                  </div>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" onClick={refreshData}>
-                <Activity className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Trading Status - Only show if ready */}
-          {isReadyToTrade && autoSnipingEnabled && (
-            <TradingStats
-              totalPnl={totalPnl}
-              activePositionsCount={activePositionsCount}
-              successRate={successRate}
-            />
-          )}
-
-          {/* Status Badge */}
-          <div className="flex items-center justify-between">
+        <CardContent>
+          <div className="space-y-4">
+            {/* Status Display */}
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Status:</span>
-              <StatusBadge
-                autoSnipingEnabled={autoSnipingEnabled}
-                isExecutionActive={isExecutionActive}
-                isStartingExecution={isStartingExecution}
-              />
+              <Badge variant={status.isActive ? "default" : "secondary"}>
+                {status.isActive ? "Active" : "Inactive"}
+              </Badge>
+              {!status.isHealthy && (
+                <Badge variant="destructive">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Unhealthy
+                </Badge>
+              )}
+              {status.activePositions > 0 && (
+                <Badge variant="outline">
+                  {status.activePositions} Active Positions
+                </Badge>
+              )}
             </div>
-            <div className="text-xs text-muted-foreground">Today: {dailyTradeCount} trades</div>
-          </div>
 
-          {/* Quick Help */}
-          {!isReadyToTrade && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="text-sm font-medium text-blue-800">
-                {connectionStatus.status === "warning" ? "Setup Required" : "Connection Issue"}
+            {/* Error Display */}
+            {error && (
+              <div className="text-sm text-red-500 bg-red-50 p-2 rounded">
+                <AlertCircle className="h-4 w-4 inline mr-1" />
+                {error}
               </div>
-              <div className="text-sm text-blue-600 mt-1">
-                {connectionStatus.status === "warning"
-                  ? "Go to Settings → API Configuration to set up your MEXC credentials"
-                  : "Check your internet connection and try refreshing"}
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Advanced Settings Link */}
-          {showAdvancedSettings && (
-            <div className="pt-2 border-t">
-              <Button variant="ghost" size="sm" className="w-full justify-start">
-                <Settings className="h-4 w-4 mr-2" />
-                Advanced Settings
+            {/* Controls */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={toggleAutoSniping}
+                disabled={isLoading}
+                variant={status.isActive ? "destructive" : "default"}
+                className="flex-1"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : status.isActive ? (
+                  <Square className="h-4 w-4 mr-2" />
+                ) : (
+                  <Play className="h-4 w-4 mr-2" />
+                )}
+                {status.isActive ? "Stop" : "Start"}
               </Button>
+              
+              {status.isActive && (
+                <Button 
+                  onClick={emergencyStop}
+                  disabled={isLoading}
+                  variant="destructive"
+                  size="sm"
+                >
+                  Emergency Stop
+                </Button>
+              )}
             </div>
-          )}
+
+            {/* Status Info */}
+            <div className="text-xs text-gray-500 space-y-1">
+              <div>System Health: {status.isHealthy ? "Good" : "Poor"}</div>
+              <div>Auto-Sniping: {status.autoSnipingEnabled ? "Enabled" : "Disabled"}</div>
+              <div>Active Positions: {status.activePositions}</div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
-export default SimpleAutoSnipingControl;

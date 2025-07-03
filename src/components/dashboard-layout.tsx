@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
 import { useAuth } from "../components/auth/supabase-auth-provider";
 import { useAuthCacheManager } from "../hooks/use-auth-cache-manager";
 import {
@@ -43,7 +44,7 @@ import {
 } from "./ui/optimized-icons";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {

@@ -39,7 +39,7 @@ import { useToast } from "@/src/components/ui/use-toast";
 import { useAccountBalance } from "@/src/hooks/use-account-balance";
 import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
 import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
-import { useDeleteSnipeTarget, usePortfolio } from "@/src/hooks/use-portfolio";
+import { useDeleteSnipeTarget, usePortfolio, useSnipeTargets } from "@/src/hooks/use-portfolio";
 
 export default function DashboardPage() {
   const { user, isLoading: userLoading } = useAuth();
@@ -104,6 +104,7 @@ export default function DashboardPage() {
   const { data: portfolio } = usePortfolio(userId || "");
   const { data: calendarData } = useMexcCalendar();
   const { data: readyLaunches } = useReadyLaunches();
+  const { data: snipeTargets, isLoading: snipeTargetsLoading } = useSnipeTargets(userId || "");
   const { data: enhancedPatterns, isLoading: patternsLoading } =
     useEnhancedPatterns({
       enableAI: true,
@@ -231,7 +232,7 @@ export default function DashboardPage() {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         
         const response = await fetch(
-          `/api/mexc-calendar?fromDate=${sevenDaysAgo.toISOString()}`,
+          `/api/mexc/calendar?fromDate=${sevenDaysAgo.toISOString()}`,
           { credentials: 'include' }
         );
         
@@ -272,11 +273,48 @@ export default function DashboardPage() {
     placeholderData: [],
   });
 
+  // Transform snipe targets for display
+  const transformedReadyTargets = useMemo(() => {
+    if (!Array.isArray(snipeTargets)) return [];
+    
+    return snipeTargets
+      .filter((target: any) => target.status === 'pending' || target.status === 'ready')
+      .map((target: any) => ({
+        vcoinId: target.vcoinId || target.id?.toString(),
+        symbol: target.symbolName || target.symbol,
+        projectName: target.projectName || target.symbolName || 'Unknown Project',
+        launchTime: target.targetExecutionTime ? new Date(target.targetExecutionTime * 1000) : new Date(),
+        hoursAdvanceNotice: target.hoursAdvanceNotice || 1,
+        priceDecimalPlaces: target.priceDecimalPlaces || 8,
+        quantityDecimalPlaces: target.quantityDecimalPlaces || 8,
+        confidence: target.confidenceScore ? target.confidenceScore / 100 : 0.5,
+        status: target.status === 'ready' ? 'ready' : 'monitoring',
+        // Include additional fields for execution
+        id: target.id,
+        positionSizeUsdt: target.positionSizeUsdt,
+        entryStrategy: target.entryStrategy,
+        stopLossPercent: target.stopLossPercent,
+        takeProfitCustom: target.takeProfitCustom,
+      }));
+  }, [snipeTargets]);
+
+  // Transform calendar data for pending targets
+  const transformedCalendarTargets = useMemo(() => {
+    if (!Array.isArray(calendarData)) return [];
+    
+    return calendarData.map((entry: any) => ({
+      vcoinId: entry.vcoinId,
+      symbol: entry.symbol,
+      projectName: entry.projectName || 'Unknown Project',
+      firstOpenTime: new Date(entry.firstOpenTime).getTime(),
+    }));
+  }, [calendarData]);
+
   // Calculate metrics
   const totalBalance = accountBalance?.totalUsdtValue || 0;
   const balanceChange = totalBalance - (historicalBalance || totalBalance);
   const newListings = Array.isArray(calendarData) ? calendarData.length : 0;
-  const activeTargets = Array.isArray(readyLaunches) ? readyLaunches.length : 0;
+  const activeTargets = transformedReadyTargets.length;
   
   // Calculate new listings change percentage
   const newListingsChange = useMemo(() => {
@@ -434,8 +472,12 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <OptimizedAccountBalance userId={userId || "system"} />
                 <OptimizedTradingTargets
+                  readyTargets={transformedReadyTargets}
+                  pendingDetection={transformedReadyTargets.filter(t => t.status === 'monitoring').map(t => t.vcoinId)}
+                  calendarTargets={transformedCalendarTargets}
                   onExecuteSnipe={handleExecuteSnipe}
                   onRemoveTarget={handleRemoveTarget}
+                  isLoading={snipeTargetsLoading}
                 />
               </div>
             </div>

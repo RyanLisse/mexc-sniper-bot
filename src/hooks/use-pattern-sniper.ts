@@ -4,10 +4,19 @@ import type { SniperStats } from "@/src/schemas/mexc-schemas";
 import {
   type CalendarEntry,
   isValidForSnipe,
-  type OrderParameters as SchemaOrderParameters,
-  type SnipeTarget,
   type SymbolV2Entry,
 } from "@/src/schemas/unified/mexc-api-schemas";
+import type { 
+  TradingTargetDisplay, 
+  OrderParameters 
+} from "@/src/types/trading-display-types";
+import {
+  mergeCalendarAndSymbolData,
+  createUnifiedTargetsList,
+  validateTradingTarget,
+  safeGetProperty,
+  normalizeVcoinId,
+} from "@/src/utils/trading-data-transformers";
 import type { UserTradingPreferences } from "./use-user-preferences";
 
 // API client functions that use backend routes
@@ -75,7 +84,7 @@ export const usePatternSniper = () => {
   // State management
   const [calendarTargets, setCalendarTargets] = useState<Map<string, CalendarEntry>>(new Map());
   const [pendingDetection, setPendingDetection] = useState<Set<string>>(new Set());
-  const [readyTargets, setReadyTargets] = useState<Map<string, SnipeTarget>>(new Map());
+  const [readyTargets, setReadyTargets] = useState<Map<string, TradingTargetDisplay>>(new Map());
   const [executedTargets, setExecutedTargets] = useState<Set<string>>(new Set());
   const [isMonitoring, setIsMonitoring] = useState(() => {
     // Auto-snipe enabled by default - restore from localStorage if available
@@ -159,9 +168,9 @@ export const usePatternSniper = () => {
     setPendingDetection(newPending);
   }, [calendarData, isMonitoring, calendarTargets, pendingDetection]);
 
-  // Convert ready token to snipe target
+  // Convert ready token to unified trading target
   const processReadyToken = useCallback(
-    (vcoinId: string, symbol: SymbolV2Entry, calendar: CalendarEntry): SnipeTarget => {
+    (vcoinId: string, symbol: SymbolV2Entry, calendar: CalendarEntry): TradingTargetDisplay => {
       if (!symbol.ot || !symbol.ca) {
         throw new Error(`Missing required symbol data for ${vcoinId}`);
       }
@@ -171,22 +180,22 @@ export const usePatternSniper = () => {
       );
       const hoursAdvance = (launchTime.getTime() - Date.now()) / (1000 * 60 * 60);
 
-      const orderParams: SchemaOrderParameters = {
-        symbol: String(symbol.ca),
-        side: "BUY",
-        type: "MARKET",
-        quantity: "100", // Default $100 USDT (as string)
+      const orderParams: OrderParameters = {
+        orderType: "market",
+        timeInForce: "IOC",
+        reduceOnly: false,
       };
 
       return {
         vcoinId,
         symbol: String(symbol.ca),
-        projectName: calendar.projectName,
-        priceDecimalPlaces: symbol.ps || 2,
+        projectName: calendar.projectName || 'Unknown Project',
+        priceDecimalPlaces: symbol.ps || 8,
         quantityDecimalPlaces: symbol.qs || 6,
         launchTime,
         discoveredAt: new Date(),
         hoursAdvanceNotice: hoursAdvance,
+        confidence: 0,
         orderParameters: orderParams,
       };
     },
@@ -211,7 +220,7 @@ export const usePatternSniper = () => {
         const calendar = calendarTargets.get(vcoinId);
         if (calendar && symbol.ca) {
           const target = processReadyToken(vcoinId, symbol, calendar);
-          newReady.set(symbol.ca, target);
+          newReady.set(normalizeVcoinId(target.vcoinId), target);
           newPending.delete(vcoinId);
           newReadyCount++;
 
@@ -244,11 +253,22 @@ export const usePatternSniper = () => {
 
   // Execute snipe order with auto exit manager integration
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex snipe execution logic with multiple error handling and state management
-  const executeSnipe = useCallback(async (target: SnipeTarget, userId?: string) => {
-    console.info(`🚀 EXECUTING SNIPE: ${target.symbol}`);
-    console.info(`   Project: ${target.projectName}`);
-    console.info(`   Launch Time: ${target.launchTime.toLocaleString()}`);
-    console.info(`   Order Parameters:`, target.orderParameters);
+  const executeSnipe = useCallback(async (target: TradingTargetDisplay, userId?: string) => {
+    // Validate target before execution
+    if (!validateTradingTarget(target)) {
+      console.error('❌ Invalid trading target provided to executeSnipe:', target);
+      return;
+    }
+
+    const symbol = safeGetProperty(target, 'symbol', 'UNKNOWN');
+    const projectName = safeGetProperty(target, 'projectName', 'Unknown Project');
+    const launchTime = safeGetProperty(target, 'launchTime', new Date());
+    const orderParameters = safeGetProperty(target, 'orderParameters', {});
+
+    console.info(`🚀 EXECUTING SNIPE: ${symbol}`);
+    console.info(`   Project: ${projectName}`);
+    console.info(`   Launch Time: ${launchTime.toLocaleString()}`);
+    console.info(`   Order Parameters:`, orderParameters);
 
     const actualUserId = userId || "anonymous";
 
@@ -351,10 +371,10 @@ export const usePatternSniper = () => {
         console.info(`   - Snipe Target ID: ${snipeTargetId}`);
 
         // Mark target as executed in local state
-        setExecutedTargets((prev) => new Set([...prev, target.vcoinId]));
+        setExecutedTargets((prev) => new Set([...prev, normalizeVcoinId(target.vcoinId)]));
         setReadyTargets((prev) => {
           const updated = new Map(prev);
-          updated.delete(target.vcoinId);
+          updated.delete(normalizeVcoinId(target.vcoinId));
           return updated;
         });
 
@@ -395,15 +415,16 @@ export const usePatternSniper = () => {
       const now = new Date();
       const newExecuted = new Set(executedTargets);
 
-      for (const [symbol, target] of Array.from(readyTargets)) {
-        if (executedTargets.has(symbol)) continue;
+      for (const [vcoinId, target] of Array.from(readyTargets)) {
+        const normalizedVcoinId = normalizeVcoinId(target.vcoinId);
+        if (executedTargets.has(normalizedVcoinId)) continue;
 
         const timeUntil = target.launchTime.getTime() - now.getTime();
 
         // Execute within 5 seconds of launch time
         if (timeUntil <= 0 && timeUntil > -5000) {
           executeSnipe(target);
-          newExecuted.add(symbol);
+          newExecuted.add(normalizedVcoinId);
         }
       }
 
@@ -495,7 +516,7 @@ export const usePatternSniper = () => {
     forceRefresh,
 
     // Advanced actions
-    executeSnipe: (target: SnipeTarget, userId?: string) => executeSnipe(target, userId),
+    executeSnipe: (target: TradingTargetDisplay, userId?: string) => executeSnipe(target, userId),
     removeTarget: (vcoinId: string) => {
       const newTargets = new Map(calendarTargets);
       const newPending = new Set(pendingDetection);

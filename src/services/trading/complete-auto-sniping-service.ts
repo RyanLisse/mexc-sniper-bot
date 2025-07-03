@@ -98,6 +98,11 @@ export class CompleteAutoSnipingService extends EventEmitter {
   private totalExecuted = 0;
   private totalSuccessful = 0;
   private totalFailed = 0;
+  
+  // Interval tracking for proper cleanup
+  private patternMonitorInterval?: NodeJS.Timeout;
+  private priceMonitorInterval?: NodeJS.Timeout;
+  private executionQueueInterval?: NodeJS.Timeout;
 
   constructor(config: Partial<SnipeConfiguration> = {}) {
     super();
@@ -239,6 +244,20 @@ export class CompleteAutoSnipingService extends EventEmitter {
 
       // Stop core trading auto-sniping
       await this.coreTrading.stopAutoSniping();
+
+      // Clear all intervals to prevent memory leaks and hanging tests
+      if (this.patternMonitorInterval) {
+        clearInterval(this.patternMonitorInterval);
+        this.patternMonitorInterval = undefined;
+      }
+      if (this.priceMonitorInterval) {
+        clearInterval(this.priceMonitorInterval);
+        this.priceMonitorInterval = undefined;
+      }
+      if (this.executionQueueInterval) {
+        clearInterval(this.executionQueueInterval);
+        this.executionQueueInterval = undefined;
+      }
 
       // Clear execution queue
       this.executionQueue = [];
@@ -692,7 +711,7 @@ export class CompleteAutoSnipingService extends EventEmitter {
     // This would integrate with the pattern detection service
     // For now, we'll set up periodic checking
     
-    setInterval(async () => {
+    this.patternMonitorInterval = setInterval(async () => {
       if (this.isActive) {
         try {
           // Check for new patterns and triggers
@@ -714,7 +733,7 @@ export class CompleteAutoSnipingService extends EventEmitter {
     // This would set up websocket connections for real-time price monitoring
     // For now, we'll use periodic polling
     
-    setInterval(async () => {
+    this.priceMonitorInterval = setInterval(async () => {
       if (this.isActive && this.priceMonitor.size > 0) {
         try {
           await this.updatePriceAlerts();
@@ -729,7 +748,7 @@ export class CompleteAutoSnipingService extends EventEmitter {
    * Start execution queue processor
    */
   private startExecutionQueueProcessor(): void {
-    setInterval(async () => {
+    this.executionQueueInterval = setInterval(async () => {
       if (this.isActive && this.executionQueue.length > 0) {
         const target = this.executionQueue.shift();
         if (target) {

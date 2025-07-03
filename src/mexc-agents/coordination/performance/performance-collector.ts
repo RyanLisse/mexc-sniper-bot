@@ -239,13 +239,37 @@ export class PerformanceCollector {
   /**
    * Get current performance summary
    */
-  getCurrentSummary(): any {
+  getCurrentSummary(): {
+    agentCount: number;
+    workflowCount: number;
+    systemSnapshots: number;
+    isCollecting: boolean;
+    lastUpdated: string;
+    system: {
+      avgResponseTime: number;
+      throughput: number;
+      errorRate: number;
+    };
+  } {
+    // Get latest system snapshot or create defaults
+    const latestSnapshot = this.storage.systemSnapshotHistory.length > 0
+      ? this.storage.systemSnapshotHistory[this.storage.systemSnapshotHistory.length - 1]
+      : null;
+
+    // Calculate system metrics
+    const systemMetrics = {
+      avgResponseTime: latestSnapshot?.averageResponseTime || 0,
+      throughput: latestSnapshot?.throughput || 0,
+      errorRate: latestSnapshot?.errorRate || 0,
+    };
+
     return {
       agentCount: this.storage.agentMetricsHistory.size,
       workflowCount: this.storage.workflowMetricsHistory.length,
       systemSnapshots: this.storage.systemSnapshotHistory.length,
       isCollecting: this.isCollecting,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      system: systemMetrics,
     };
   }
 

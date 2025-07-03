@@ -56,7 +56,7 @@ export class MexcPortfolioService extends BaseMexcService implements PortfolioSe
       }
 
       // Map Portfolio assets to interface format
-      const balances = portfolioResponse.data.assets.map((asset) => ({
+      const balances = portfolioResponse.data.assets.map((asset: any) => ({
         asset: asset.asset,
         free: asset.free,
         locked: asset.locked,

@@ -1,7 +1,7 @@
 "use client";
 
 import { addDays, format, isSameDay, isToday, isTomorrow } from "date-fns";
-import * as React from "react";
+import { useState } from "react";
 
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -21,7 +21,7 @@ export function CoinDateSelector({
   highlightDates = [],
   className,
 }: CoinDateSelectorProps) {
-  const [date, setDate] = React.useState<Date | undefined>(selectedDate || new Date());
+  const [date, setDate] = useState<Date | undefined>(selectedDate || new Date());
 
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);

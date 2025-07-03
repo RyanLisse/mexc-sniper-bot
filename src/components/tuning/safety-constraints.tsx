@@ -8,7 +8,7 @@
  */
 
 import { AlertTriangle, CheckCircle2, Lock, Settings, Shield, XCircle } from "lucide-react";
-import React, { useState } from "react";
+import { useState, useMemo } from "react";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -71,7 +71,7 @@ export function SafetyConstraints({
     {} as Record<string, SafetyConstraint[]>
   );
 
-  const overallStatus = React.useMemo(() => {
+  const overallStatus = useMemo(() => {
     const violationCount = constraints.filter((c) => c.currentStatus === "violation").length;
     const warningCount = constraints.filter((c) => c.currentStatus === "warning").length;
     const _enabledCount = constraints.filter((c) => c.enabled).length;

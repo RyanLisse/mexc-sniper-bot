@@ -7,7 +7,12 @@ export default defineConfig({
     testTimeout: 5000,
     include: ['tests/unit/user-preferences.test.ts'],
     // Disable all threading and worker functionality for Bun
-    threads: false,
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true,
+      },
+    },
     isolate: false,
     setupFiles: [],
     sequence: {

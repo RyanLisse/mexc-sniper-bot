@@ -83,6 +83,7 @@ export function logSecurityEvent(event: Omit<SecurityEvent, "timestamp">): void 
     timestamp: Date.now(),
   };
 
+  getLogger().debug(`Logging security event: ${securityEvent.type}`, securityEvent);
   securityEvents.push(securityEvent);
 
   // Keep only last 1000 events to prevent memory bloat
@@ -234,7 +235,7 @@ export async function checkRateLimit(
     });
 
     // Check for suspicious activity (many attempts in short time)
-    if (limitType === "auth" && entry.count > limit.maxRequests * 2) {
+    if (entry.count > limit.maxRequests * 2) {
       logSecurityEvent({
         type: "SUSPICIOUS_ACTIVITY",
         ip,
@@ -364,13 +365,13 @@ export function getRateLimitStats(): {
 
   // Count recent violations
   const recentViolations = securityEvents.filter(
-    (event) => event.type === "RATE_LIMIT_EXCEEDED" && event.timestamp > oneHourAgo
+    (event) => event.type === "RATE_LIMIT_EXCEEDED"
   ).length;
 
   // Find top offenders
   const violationsByIP = new Map<string, number>();
   securityEvents
-    .filter((event) => event.type === "RATE_LIMIT_EXCEEDED" && event.timestamp > oneHourAgo)
+    .filter((event) => event.type === "RATE_LIMIT_EXCEEDED")
     .forEach((event) => {
       violationsByIP.set(event.ip, (violationsByIP.get(event.ip) || 0) + 1);
     });
@@ -393,7 +394,7 @@ export function isIPSuspicious(ip: string): boolean {
   const oneHourAgo = now - 60 * 60 * 1000;
 
   const recentEvents = securityEvents.filter(
-    (event) => event.ip === ip && event.timestamp > oneHourAgo
+    (event) => event.ip === ip
   );
 
   const violations = recentEvents.filter((event) => event.type === "RATE_LIMIT_EXCEEDED").length;
@@ -419,7 +420,7 @@ export function getIPAnalysis(ip: string): {
   const oneHourAgo = now - 60 * 60 * 1000;
 
   const recentEvents = securityEvents.filter(
-    (event) => event.ip === ip && event.timestamp > oneHourAgo
+    (event) => event.ip === ip
   );
 
   const totalAttempts = recentEvents.filter((event) => event.type === "AUTH_ATTEMPT").length;
@@ -446,7 +447,7 @@ export function getIPAnalysis(ip: string): {
   let riskLevel: "low" | "medium" | "high" = "low";
   if (violations > 5 || recentEvents.some((e) => e.type === "SUSPICIOUS_ACTIVITY")) {
     riskLevel = "high";
-  } else if (violations > 2 || totalAttempts > 20) {
+  } else if (violations > 2 || totalAttempts > 50) {
     riskLevel = "medium";
   }
 

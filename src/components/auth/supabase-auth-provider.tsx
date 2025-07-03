@@ -1,9 +1,9 @@
 "use client";
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { getSupabaseBrowserClient } from '@/src/lib/supabase-browser-client';
 
 type SupabaseAuthContextType = {
   user: User | null;
@@ -26,14 +26,24 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
       setIsLoading(false);
+      return;
+    }
+
+    const getSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setIsLoading(false);
+      }
     };
 
     getSession();
@@ -67,9 +77,13 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
     );
 
     return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  }, [router]);
 
   const signOut = async () => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return new Error('Supabase client not available (SSR environment)');
+    }
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error);
@@ -78,6 +92,10 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   };
 
   const signIn = async (email: string, password: string) => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return { error: new Error('Supabase client not available (SSR environment)') };
+    }
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -86,21 +104,29 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   };
 
   const signUp = async (email: string, password: string) => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return { error: new Error('Supabase client not available (SSR environment)') };
+    }
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback',
       },
     });
     return { error };
   };
 
   const signInWithProvider = async (provider: 'google' | 'github') => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return { error: new Error('Supabase client not available (SSR environment)') };
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : '/auth/callback',
       },
     });
     return { error };

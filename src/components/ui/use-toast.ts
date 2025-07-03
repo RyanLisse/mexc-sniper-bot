@@ -1,14 +1,14 @@
-import * as React from "react";
+import { ReactNode, ReactElement, useState, useEffect } from "react";
 
 type ToastProps = {
   id: string;
   title?: string;
   description?: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
   variant?: "default" | "destructive";
 };
 
-type ToastActionElement = React.ReactElement;
+type ToastActionElement = ReactElement;
 
 const TOAST_LIMIT = 3;
 const TOAST_REMOVE_DELAY = 1000000;
@@ -166,9 +166,9 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState);
+  const [state, setState] = useState<State>(memoryState);
 
-  React.useEffect(() => {
+  useEffect(() => {
     listeners.push(setState);
     return () => {
       const index = listeners.indexOf(setState);

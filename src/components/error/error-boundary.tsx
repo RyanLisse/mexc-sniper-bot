@@ -8,8 +8,7 @@
  */
 
 import { AlertTriangle, HelpCircle, Home, RefreshCw } from "lucide-react";
-import type React from "react";
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, type ComponentType } from "react";
 import { errorHandler, type StandardizedErrorContext } from "../../lib/standardized-error-handler";
 import { createLogger } from "../../lib/unified-logger";
 import { Button } from "../ui/button";
@@ -250,7 +249,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  * Higher-order component for wrapping components with error boundary
  */
 export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">
 ) {
   const WrappedComponent = (props: P) => (

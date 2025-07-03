@@ -1,135 +1,93 @@
-import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schema";
-import { 
-  apiResponse, 
-  createErrorResponse, 
-  createSuccessResponse, 
-  createValidationErrorResponse, 
-  HTTP_STATUS
-} from "@/src/lib/api-response";
-import { validateQueryParams, validateRequestBody } from "@/src/lib/api-validation-middleware";
-import { handleApiError } from "@/src/lib/error-handler";
-import { 
-  CreateSnipeTargetRequestSchema, 
-  SnipeTargetQuerySchema 
-} from "@/src/schemas/comprehensive-api-validation-schemas";
+import { snipeTargets } from "@/src/db/schemas/trading";
+import { eq, and, desc } from "drizzle-orm";
 
+// Create snipe target endpoint
 export async function POST(request: NextRequest) {
   try {
-    // Validate request body
-    const bodyValidation = await validateRequestBody(request, CreateSnipeTargetRequestSchema);
-    if (!bodyValidation.success) {
-      console.warn('[API] ⚠️ Snipe target creation validation failed:', bodyValidation.error);
-      return apiResponse(
-        createErrorResponse(bodyValidation.error),
-        bodyValidation.statusCode
-      );
+    const body = await request.json();
+    
+    // Basic validation
+    if (!body.userId || !body.symbolName) {
+      return NextResponse.json({
+        success: false,
+        error: 'userId and symbolName are required'
+      }, { status: 400 });
     }
 
-    const {
-      userId,
-      vcoinId,
-      symbolName,
-      entryStrategy,
-      entryPrice,
-      positionSizeUsdt,
-      takeProfitLevel,
-      takeProfitCustom,
-      stopLossPercent,
-      status,
-      priority,
-      maxRetries,
-      targetExecutionTime,
-      confidenceScore,
-      riskLevel,
-    } = bodyValidation.data;
-
+    // Insert into database
     const result = await db.insert(snipeTargets).values({
-      userId,
-      vcoinId,
-      symbolName,
-      entryStrategy,
-      entryPrice,
-      positionSizeUsdt,
-      takeProfitLevel,
-      takeProfitCustom,
-      stopLossPercent,
-      status,
-      priority,
-      maxRetries,
-      currentRetries: 0,
-      targetExecutionTime,
-      confidenceScore,
-      riskLevel,
+      userId: body.userId,
+      vcoinId: body.vcoinId || body.symbolName,
+      symbolName: body.symbolName,
+      entryStrategy: body.entryStrategy || 'normal',
+      entryPrice: body.entryPrice || null,
+      positionSizeUsdt: body.positionSizeUsdt || 100,
+      takeProfitLevel: body.takeProfitLevel || null,
+      takeProfitCustom: body.takeProfitCustom || null,
+      stopLossPercent: body.stopLossPercent || null,
+      status: body.status || 'pending',
+      priority: body.priority || 1,
+      targetExecutionTime: body.targetExecutionTime || null,
+      confidenceScore: body.confidenceScore || null,
+      riskLevel: body.riskLevel || 'medium',
+      createdAt: Math.floor(Date.now() / 1000),
+      updatedAt: Math.floor(Date.now() / 1000),
     }).returning();
 
-    return apiResponse(
-      createSuccessResponse(result[0], {
-        message: "Snipe target created successfully",
-      }),
-      HTTP_STATUS.CREATED
-    );
+    return NextResponse.json({
+      success: true,
+      data: result[0]
+    }, { status: 201 });
+    
   } catch (error) {
-    console.error("❌ Error creating snipe target:", { error: error });
-    return apiResponse(
-      createErrorResponse(
-        error instanceof Error ? error.message : "Unknown error occurred"
-      ),
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
-    );
+    console.error('Error creating snipe target:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to create snipe target'
+    }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Validate query parameters
-    const queryValidation = validateQueryParams(request, SnipeTargetQuerySchema);
-    if (!queryValidation.success) {
-      console.warn('[API] ⚠️ Snipe target query validation failed:', queryValidation.error);
-      return apiResponse(
-        createErrorResponse(queryValidation.error),
-        queryValidation.statusCode
-      );
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const status = searchParams.get('status');
+    
+    if (!userId) {
+      return NextResponse.json({
+        success: false,
+        error: 'userId is required'
+      }, { status: 400 });
     }
 
-    const { userId, status, limit, offset } = queryValidation.data;
-
-    let query = db.select().from(snipeTargets).where(eq(snipeTargets.userId, userId));
-
+    // Build query conditions
+    const conditions = [eq(snipeTargets.userId, userId)];
     if (status) {
-      query = db.select()
-        .from(snipeTargets)
-        .where(and(
-          eq(snipeTargets.userId, userId),
-          eq(snipeTargets.status, status)
-        ));
+      conditions.push(eq(snipeTargets.status, status));
     }
 
-    // Apply pagination if provided
-    if (limit) {
-      query = query.limit(limit);
-    }
-    if (offset) {
-      query = query.offset(offset);
-    }
+    // Fetch targets from database
+    const targets = await db
+      .select()
+      .from(snipeTargets)
+      .where(and(...conditions))
+      .orderBy(desc(snipeTargets.createdAt))
+      .limit(100);
 
-    const targets = await query;
-
-    return apiResponse(
-      createSuccessResponse(targets, {
-        count: targets.length,
-        status: status || 'all'
-      })
-    );
+    return NextResponse.json({
+      success: true,
+      data: targets,
+      count: targets.length
+    });
+    
   } catch (error) {
-    console.error("❌ Error fetching snipe targets:", { error: error });
-    return apiResponse(
-      createErrorResponse(
-        error instanceof Error ? error.message : "Unknown error occurred"
-      ),
-      HTTP_STATUS.INTERNAL_SERVER_ERROR
-    );
+    console.error('Error fetching snipe targets:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch snipe targets'
+    }, { status: 500 });
   }
 }

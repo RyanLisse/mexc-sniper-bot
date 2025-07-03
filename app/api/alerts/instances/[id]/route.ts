@@ -1,4 +1,3 @@
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -6,6 +5,7 @@ import { db } from "@/src/db";
 import { alertInstances } from "@/src/db/schemas/alerts";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
 
 const alertingService = new AutomatedAlertingService(db);

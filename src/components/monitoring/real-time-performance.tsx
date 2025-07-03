@@ -282,9 +282,7 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
         </CardHeader>
         <CardContent>
           <p className="text-red-600 mb-4">
-            {error && typeof error === "object" && "message" in error
-              ? (error as Error).message
-              : String(error)}
+            {error ? (error as any)?.message || String(error) : "Unknown error"}
           </p>
           <Button onClick={fetchPerformanceData} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />

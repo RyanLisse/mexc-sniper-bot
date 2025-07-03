@@ -1,21 +1,7 @@
 "use client";
 
-import { createClient } from '@supabase/supabase-js';
 import { useCallback, useEffect, useState } from "react";
-
-// Create Supabase client for browser-side operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_key',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      flowType: 'pkce'
-    }
-  }
-);
+import { getSupabaseBrowserClient } from './supabase-browser-client';
 
 interface AuthUser {
   id: string;
@@ -48,6 +34,11 @@ export const useAuth = () => {
     try {
       setIsPending(true);
       setError(null);
+
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        throw new Error('Supabase client not available (SSR environment)');
+      }
 
       const { data: { session: supabaseSession }, error: sessionError } = await supabase.auth.getSession();
 
@@ -91,6 +82,13 @@ export const useAuth = () => {
     fetchSession();
 
     // Listen for auth changes
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      setSession({ isAuthenticated: false });
+      setIsPending(false);
+      return () => {};
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         await fetchSession();
@@ -106,6 +104,10 @@ export const useAuth = () => {
   }, [fetchSession]);
 
   const getToken = useCallback(async () => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) {
+      return null;
+    }
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token || null;
   }, []);
@@ -140,6 +142,11 @@ export const useSession = () => {
  * Sign in with email and password
  */
 export const signInWithEmail = async (email: string, password: string) => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -159,6 +166,11 @@ export const signUpWithEmail = async (email: string, password: string, options?:
   name?: string;
   username?: string;
 }) => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -181,6 +193,11 @@ export const signUpWithEmail = async (email: string, password: string, options?:
  * Sign in with OAuth providers
  */
 export const signInWithOAuth = async (provider: 'google' | 'github' | 'discord') => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
@@ -199,6 +216,11 @@ export const signInWithOAuth = async (provider: 'google' | 'github' | 'discord')
  * Sign out
  */
 export const signOut = async () => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { error } = await supabase.auth.signOut();
   
   if (error) {
@@ -210,6 +232,11 @@ export const signOut = async () => {
  * Reset password
  */
 export const resetPassword = async (email: string) => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${window.location.origin}/auth/reset-password`
   });
@@ -225,6 +252,11 @@ export const resetPassword = async (email: string) => {
  * Update password
  */
 export const updatePassword = async (newPassword: string) => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { data, error } = await supabase.auth.updateUser({
     password: newPassword
   });
@@ -244,6 +276,11 @@ export const updateProfile = async (updates: {
   username?: string;
   picture?: string;
 }) => {
+  const supabase = getSupabaseBrowserClient();
+  if (!supabase) {
+    throw new Error('Supabase client not available (SSR environment)');
+  }
+
   const { data, error } = await supabase.auth.updateUser({
     data: {
       full_name: updates.name,
@@ -260,7 +297,7 @@ export const updateProfile = async (updates: {
 };
 
 // Export supabase client for direct access if needed
-export { supabase };
+export const supabase = getSupabaseBrowserClient();
 
 // Export for compatibility with existing code
 export { 

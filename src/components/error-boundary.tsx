@@ -1,8 +1,7 @@
 "use client";
 
 import { AlertCircle, ChevronDown, ChevronUp, Home, RefreshCcw } from "lucide-react";
-import type React from "react";
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode, type ComponentType } from "react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -363,9 +362,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  * Higher-order component to wrap components with error boundary
  */
 export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">
-): React.ComponentType<P> {
+): ComponentType<P> {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary {...errorBoundaryProps}>
       <Component {...props} />

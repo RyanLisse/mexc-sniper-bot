@@ -134,11 +134,11 @@ export const GET = createPublicApiRoute(
     const testResult = await mexcConnectivityService.testConnectivity(connectivityRequest);
 
     if (!testResult.success) {
+      const errorResult = testResult as { success: false; error: string };
       console.error("Connectivity test failed", {
-        error: testResult.error,
-        code: testResult.code,
+        error: errorResult.error,
       });
-      throw new Error(testResult.error);
+      throw new Error(errorResult.error);
     }
 
     console.info("Connectivity test completed successfully", {

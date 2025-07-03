@@ -145,26 +145,27 @@ export const TradeParametersSchema = z.object({
 
 export interface TradeResult {
   success: boolean;
-  data?: {
-    orderId: string;
-    clientOrderId?: string;
-    symbol: string;
-    side: string;
-    type: string;
-    quantity: string;
-    price: string;
-    status: string;
-    executedQty: string;
-    cummulativeQuoteQty?: string;
-    timestamp: string;
-    autoSnipe?: boolean;
-    confidenceScore?: number;
-    paperTrade?: boolean;
-    simulatedPrice?: number;
-  };
-  error?: string;
+  orderId?: string | null;
+  clientOrderId?: string;
+  symbol?: string;
+  side?: string;
+  type?: string;
+  quantity?: string;
+  price?: string;
+  status?: string;
+  executedPrice?: number;
+  executedQuantity?: number;
+  executedQty?: string;
+  cummulativeQuoteQty?: string;
+  fees?: number;
+  timestamp?: Date | string;
+  autoSnipe?: boolean;
+  confidenceScore?: number;
+  paperTrade?: boolean;
+  simulatedPrice?: number;
+  error?: Error | string;
   executionTime?: number;
-  timestamp?: string;
+  data?: any;
 }
 
 // ============================================================================
@@ -439,9 +440,12 @@ export interface AutoSnipeTarget extends SnipeTarget {
   side?: "BUY" | "SELL" | "buy" | "sell";  // Defaults to "buy"
   orderType?: "MARKET" | "LIMIT" | "STOP_LIMIT";  // Maps to entryStrategy
   quantity: number;  // Maps to positionSizeUsdt
+  amount: number;  // Alias for quantity for compatibility
+  price?: number;  // Maps to entryPrice
   targetPrice?: number;  // Maps to entryPrice
   stopLoss?: number;  // Calculated from stopLossPercent
   takeProfit?: number;  // Calculated from takeProfitLevel/takeProfitCustom
+  takeProfitPercent?: number;  // Maps to takeProfitCustom from database
   timeInForce?: "GTC" | "IOC" | "FOK";  // Default "GTC"
   strategy?: {
     name: string;
@@ -465,8 +469,9 @@ export interface ServiceResponse<T = unknown> {
   message?: string;
   status?: string;
   finalStatus?: string;
-  timestamp: string;
+  timestamp?: string;
   requestId?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -507,6 +512,8 @@ export interface ModuleContext {
     setupPositionMonitoring: (position: Position, result: TradeResult) => Promise<void>;
     updatePositionStopLoss: (positionId: string, newStopLoss: number) => Promise<ServiceResponse<void>>;
     updatePositionTakeProfit: (positionId: string, newTakeProfit: number) => Promise<ServiceResponse<void>>;
+    getActivePositions: () => Map<string, Position>;
+    createPositionEntry: (tradeParams: any, symbol: string, stopLoss?: any, takeProfit?: any) => Promise<Position>;
   };
   marketDataService: {
     getCurrentPrice: (symbol: string) => Promise<{ price: number } | null>;

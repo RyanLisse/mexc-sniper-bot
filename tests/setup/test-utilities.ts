@@ -46,5 +46,16 @@ export function initializeTestUtilities(): void {
         ...customHeaders,
       }),
     }),
+
+    mockApiError: (status = 500, message = 'API Error') => ({
+      ok: false,
+      status,
+      statusText: 'Error',
+      json: () => Promise.resolve({ error: message }),
+      text: () => Promise.resolve(JSON.stringify({ error: message })),
+      headers: new Headers({
+        'content-type': 'application/json',
+      }),
+    }),
   };
 }

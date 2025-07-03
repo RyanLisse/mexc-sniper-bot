@@ -29,15 +29,16 @@ const DatabaseConfigSchema = z.object({
   DATABASE_SSL: z.coerce.boolean().default(true),
 });
 
-// Authentication Configuration (Kinde)
+// Authentication Configuration (Supabase)
 const AuthConfigSchema = z.object({
-  KINDE_CLIENT_ID: z.string().min(1, "Kinde Client ID is required"),
-  KINDE_CLIENT_SECRET: z.string().min(1, "Kinde Client Secret is required"),
-  KINDE_ISSUER_URL: z.string().url("Invalid Kinde Issuer URL"),
-  KINDE_SITE_URL: z.string().url("Invalid Kinde Site URL"),
-  KINDE_POST_LOGOUT_REDIRECT_URL: z.string().url("Invalid logout redirect URL"),
-  KINDE_POST_LOGIN_REDIRECT_URL: z.string().url("Invalid login redirect URL"),
+  SUPABASE_URL: z.string().url("Invalid Supabase URL"),
+  SUPABASE_ANON_KEY: z.string().min(1, "Supabase Anonymous Key is required"),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "Supabase Service Role Key is required").optional(),
   AUTH_SECRET: z.string().min(32, "Auth secret must be at least 32 characters").optional(),
+  // Legacy Kinde config (commented out)
+  // KINDE_CLIENT_ID: z.string().optional(),
+  // KINDE_CLIENT_SECRET: z.string().optional(),
+  // KINDE_ISSUER_URL: z.string().optional(),
 });
 
 // MEXC API Configuration
@@ -358,7 +359,7 @@ export class UnifiedConfigService {
         schema: DatabaseConfigSchema,
         description: "Database connection and pool settings",
       },
-      { name: "Authentication", schema: AuthConfigSchema, description: "Kinde Auth configuration" },
+      { name: "Authentication", schema: AuthConfigSchema, description: "Supabase Auth configuration" },
       { name: "MEXC API", schema: MexcConfigSchema, description: "MEXC exchange API settings" },
       {
         name: "OpenAI",

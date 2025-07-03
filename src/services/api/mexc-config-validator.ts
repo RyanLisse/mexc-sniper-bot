@@ -199,7 +199,7 @@ export class MexcConfigValidator {
         sts: 2, // status (required for ready state pattern)
         st: 2, // state (required for ready state pattern)
         tt: 4, // type (required for ready state pattern)
-        ca: 1000, // market cap indicator (optional)
+        ca: "0x1000", // contract address (optional)
         ps: 100, // price score (optional)
         qs: 50, // quality score (optional)
       };

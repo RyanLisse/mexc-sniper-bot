@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +18,7 @@ interface CoinCalendarProps {
 }
 
 // Calendar listing item component
-const ListingItem = React.memo(({ listing }: { listing: CoinListing }) => (
+const ListingItem = memo(({ listing }: { listing: CoinListing }) => (
   <div className="flex items-center justify-between p-3 border rounded-lg">
     <div className="flex flex-col">
       <Badge variant="outline" className="text-sm font-mono w-fit">
@@ -36,7 +36,7 @@ const ListingItem = React.memo(({ listing }: { listing: CoinListing }) => (
 ListingItem.displayName = "ListingItem";
 
 // Loading state component
-const LoadingState = React.memo(() => (
+const LoadingState = memo(() => (
   <div className="flex items-center justify-center p-8">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
     <span className="ml-2 text-sm text-muted-foreground">Loading MEXC data...</span>
@@ -45,7 +45,7 @@ const LoadingState = React.memo(() => (
 LoadingState.displayName = "LoadingState";
 
 // Error state component
-const ErrorState = React.memo(({ error }: { error: Error }) => (
+const ErrorState = memo(({ error }: { error: Error }) => (
   <div className="text-center text-red-400 p-8">
     <p>Error loading calendar data:</p>
     <p className="text-sm">{error.message}</p>
@@ -54,7 +54,7 @@ const ErrorState = React.memo(({ error }: { error: Error }) => (
 ErrorState.displayName = "ErrorState";
 
 // Empty state component
-const EmptyState = React.memo(
+const EmptyState = memo(
   ({ date, totalListings }: { date: string; totalListings: number }) => (
     <div className="text-center text-muted-foreground p-8">
       <p>No listings for {date}</p>
@@ -90,7 +90,7 @@ const useDateFormatting = () => {
 };
 
 // Main component with optimizations
-export const OptimizedCoinCalendar = React.memo(({ onDateSelect }: CoinCalendarProps) => {
+export const OptimizedCoinCalendar = memo(({ onDateSelect }: CoinCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { data: mexcCalendarData, isLoading, error } = useMexcCalendar();
   const { isToday, isTomorrow, formatDate } = useDateFormatting();

@@ -281,12 +281,9 @@ export class MexcAuthenticationService {
     this.status.blockReason = undefined;
 
     // Update API client if available
-    if (this.apiClient && this.apiClient.setCredentials) {
-      this.apiClient.setCredentials(
-        this.config.apiKey,
-        this.config.secretKey,
-        this.config.passphrase
-      );
+    if (this.apiClient) {
+      // API client is configured with credentials at construction time
+      // No need to set credentials again
     }
 
     // Test new credentials immediately

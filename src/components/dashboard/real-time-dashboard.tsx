@@ -16,8 +16,8 @@
 
 "use client";
 
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
-import { memo, useCallback, useMemo } from "react";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useLiveTradingData } from "../../hooks/use-live-trading-data";
 import { useRealTimePatterns } from "../../hooks/use-real-time-patterns";
 import {
@@ -113,9 +113,7 @@ const ConnectionStatus = memo(function ConnectionStatus({
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Connection Error</AlertTitle>
             <AlertDescription>
-              {error && typeof error === "object" && "message" in error
-                ? (error as Error).message
-                : String(error)}
+              {error ? (error as any)?.message || String(error) : "Unknown error"}
             </AlertDescription>
           </Alert>
         )}
@@ -581,7 +579,16 @@ const WorkflowPanel = memo(function WorkflowPanel() {
 // ======================
 
 export default function RealTimeDashboard() {
-  const { user } = useKindeBrowserClient();
+  const supabase = createClientComponentClient();
+  const [user, setUser] = useState<any>(null);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase]);
   const { isConnected, state, metrics, error, reconnect } = useWebSocket({
     autoConnect: true,
     debug: false,

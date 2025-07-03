@@ -5,9 +5,9 @@
  * anomaly detection, and security recommendations.
  */
 
-import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, getClientIP } from "@/src/lib/rate-limiter";
+import { requireAuth } from "@/src/lib/supabase-auth";
 import { securityMonitoring } from "@/src/services/risk/security-monitoring-service";
 
 // ============================================================================
@@ -35,10 +35,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-
-    if (!user?.id) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user?.id) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Authentication required",
+            message: "You must be logged in to access security monitoring",
+          },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
       return NextResponse.json(
         {
           success: false,
@@ -119,10 +129,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-
-    if (!user?.id) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user?.id) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Authentication required",
+            message: "You must be logged in to perform security actions",
+          },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
       return NextResponse.json(
         {
           success: false,
@@ -242,10 +262,20 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check authentication
-    const { getUser } = getKindeServerSession();
-    const user = await getUser();
-
-    if (!user?.id) {
+    let user;
+    try {
+      user = await requireAuth();
+      if (!user?.id) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Authentication required",
+            message: "You must be logged in to update security configuration",
+          },
+          { status: 401 }
+        );
+      }
+    } catch (error) {
       return NextResponse.json(
         {
           success: false,

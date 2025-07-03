@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity, ArrowUpRight, Bot, Clock, Eye, Zap } from "lucide-react";
-import React, { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useTimeFormatting } from "../../hooks/use-time-formatting";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
@@ -47,7 +47,7 @@ const ACTIVITY_CONFIG = {
 } as const;
 
 // Memoized activity item component
-const ActivityListItem = React.memo(({ activity }: { activity: ActivityItem }) => {
+const ActivityListItem = memo(({ activity }: { activity: ActivityItem }) => {
   const { formatTimeAgo } = useTimeFormatting();
   const config = ACTIVITY_CONFIG[activity.type] || ACTIVITY_CONFIG.analysis;
   const Icon = config.icon;
@@ -77,7 +77,7 @@ const ActivityListItem = React.memo(({ activity }: { activity: ActivityItem }) =
 ActivityListItem.displayName = "ActivityListItem";
 
 // Loading skeleton component
-const LoadingSkeleton = React.memo(() => (
+const LoadingSkeleton = memo(() => (
   <>
     {Array.from({ length: 5 }, (_, i) => `loading-${i}`).map((key) => (
       <div key={key} className="animate-pulse">
@@ -96,7 +96,7 @@ const LoadingSkeleton = React.memo(() => (
 LoadingSkeleton.displayName = "LoadingSkeleton";
 
 // Empty state component
-const EmptyState = React.memo(() => (
+const EmptyState = memo(() => (
   <div className="text-center text-gray-500 py-8">
     <Activity className="h-12 w-12 mx-auto mb-3 opacity-30" />
     <p className="text-sm font-medium">No recent activity</p>
@@ -106,7 +106,7 @@ const EmptyState = React.memo(() => (
 EmptyState.displayName = "EmptyState";
 
 // Header component
-const FeedHeader = React.memo(({ activityCount }: { activityCount: number }) => (
+const FeedHeader = memo(({ activityCount }: { activityCount: number }) => (
   <CardTitle className="flex items-center justify-between">
     <div className="flex items-center space-x-2">
       <Clock className="h-5 w-5 text-blue-500" />
@@ -122,7 +122,7 @@ const FeedHeader = React.memo(({ activityCount }: { activityCount: number }) => 
 FeedHeader.displayName = "FeedHeader";
 
 // Main component with optimizations
-export const OptimizedActivityFeed = React.memo(
+export const OptimizedActivityFeed = memo(
   ({ activities = [], isLoading = false, className }: ActivityFeedProps) => {
     // Memoize sorted activities to prevent recalculation
     const sortedActivities = useMemo(

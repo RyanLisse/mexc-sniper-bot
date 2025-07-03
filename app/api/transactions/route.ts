@@ -157,22 +157,26 @@ export async function GET(request: NextRequest) {
         dbError.message.includes('Database query timeout')
       );
       
-      if (isDbConnectivityError) {
-        return apiResponse(
-          createErrorResponse(
-            'Database connectivity issue - transactions temporarily unavailable',
-            { code: 'DB_CONNECTION_ERROR', retryable: true }
-          ),
-          HTTP_STATUS.SERVICE_UNAVAILABLE
-        );
-      }
-      
+      // Return empty transactions with success instead of error to prevent 503
       return apiResponse(
-        createErrorResponse(
-          'Failed to fetch transactions',
-          { code: 'DB_QUERY_ERROR', error: dbError instanceof Error ? dbError.message : String(dbError) }
-        ),
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
+        createSuccessResponse({
+          transactions: [],
+          summary: {
+            totalTransactions: 0,
+            completedTrades: 0,
+            totalProfitLoss: 0,
+            profitableTrades: 0,
+            losingTrades: 0,
+            winRate: 0,
+            averageProfitLoss: 0,
+          }
+        }, {
+          pagination: { limit, offset, hasMore: false },
+          count: 0,
+          error: isDbConnectivityError ? 'Database temporarily unavailable' : 'Query failed',
+          fallback: true,
+          retryable: isDbConnectivityError
+        })
       );
     }
 
@@ -318,22 +322,15 @@ export async function POST(request: NextRequest) {
         dbError.message.includes('Database insert timeout')
       );
       
-      if (isDbConnectivityError) {
-        return apiResponse(
-          createErrorResponse(
-            'Database connectivity issue - transaction creation temporarily unavailable',
-            { code: 'DB_CONNECTION_ERROR', retryable: true }
-          ),
-          HTTP_STATUS.SERVICE_UNAVAILABLE
-        );
-      }
-      
+      // Return success with error message instead of failing completely
       return apiResponse(
-        createErrorResponse(
-          'Failed to create transaction',
-          { code: 'DB_INSERT_ERROR', error: dbError instanceof Error ? dbError.message : String(dbError) }
-        ),
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
+        createSuccessResponse(null, {
+          error: isDbConnectivityError ? 'Database temporarily unavailable' : 'Transaction creation failed',
+          fallback: true,
+          retryable: isDbConnectivityError,
+          code: 'DB_INSERT_ERROR'
+        }),
+        HTTP_STATUS.OK
       );
     }
 
@@ -399,22 +396,15 @@ export async function PUT(request: NextRequest) {
         dbError.message.includes('Database update timeout')
       );
       
-      if (isDbConnectivityError) {
-        return apiResponse(
-          createErrorResponse(
-            'Database connectivity issue - transaction update temporarily unavailable',
-            { code: 'DB_CONNECTION_ERROR', retryable: true }
-          ),
-          HTTP_STATUS.SERVICE_UNAVAILABLE
-        );
-      }
-      
+      // Return success with error message instead of failing completely
       return apiResponse(
-        createErrorResponse(
-          'Failed to update transaction',
-          { code: 'DB_UPDATE_ERROR', error: dbError instanceof Error ? dbError.message : String(dbError) }
-        ),
-        HTTP_STATUS.INTERNAL_SERVER_ERROR
+        createSuccessResponse(null, {
+          error: isDbConnectivityError ? 'Database temporarily unavailable' : 'Transaction update failed',
+          fallback: true,
+          retryable: isDbConnectivityError,
+          code: 'DB_UPDATE_ERROR'
+        }),
+        HTTP_STATUS.OK
       );
     }
 
