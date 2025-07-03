@@ -262,7 +262,7 @@ This configuration ensures optimal use of Claude Code's batch tools for swarm or
 Updates should focus especially on `activeContext.md` (current focus/next steps) and `progress.md` (status/known issues).
 
 Automate where possible:
-- Add a Taskmaster pre-task hook to load Memory Bank into context.
+- Use `scripts/pre-task-load-memory.ts` as a Taskmaster pre-task hook to load the Memory Bank into context.
 - Add a commit hook that reminds contributors to update relevant Memory Bank files.
 
 ---
