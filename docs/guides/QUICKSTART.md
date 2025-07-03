@@ -4,11 +4,7 @@
 
 ### 1. Install Dependencies
 ```bash
-# Install Node.js dependencies
-npm install
-
-# Install Python dependencies (for legacy support)
-pip install -r requirements.txt
+bun install && bun run db:migrate:safe
 ```
 
 ### 2. Configure Environment
@@ -32,7 +28,7 @@ VALKEY_URL=redis://localhost:6379/0
 
 **Terminal 1 - Next.js + TypeScript Agents:**
 ```bash
-npm run dev
+bun run dev
 # Frontend: http://localhost:3000
 # TypeScript agents integrated
 ```
@@ -44,12 +40,6 @@ npx inngest-cli dev -u http://localhost:3000/api/inngest
 # 🤖 4 specialized MEXC workflows available
 ```
 
-**Terminal 3 - Python API (Legacy):**
-```bash
-npm run mexc-agent-dev
-# API: http://localhost:8001
-# Docs: http://localhost:8001/docs
-```
 
 ## 🎯 What the Multi-Agent System Does
 
@@ -74,14 +64,6 @@ npm run mexc-agent-dev
 - **📈 Confidence Scoring**: 0-100% reliability metrics
 - **🎯 Smart Timing**: 3.5+ hour advance detection
 - **🛡️ Risk Management**: AI-powered risk assessment
-
-## ⚙️ Configuration Options
-
-Edit `src/config.py` to customize:
-- `DEFAULT_BUY_AMOUNT`: USDT per trade (default: 100)
-- `MAX_CONCURRENT_SNIPES`: Parallel trades (default: 3)
-- `READY_STATE_PATTERN`: Token readiness pattern
-- `STOP_LOSS_PERCENT`: Stop loss trigger (default: -10)
 
 ## 🔍 Quick Commands
 
@@ -113,12 +95,6 @@ curl -X POST http://localhost:3000/api/inngest \
   }'
 ```
 
-### Legacy Python API Commands
-
-Check system status:
-```bash
-curl -X GET http://localhost:8001/api/agents/mexc/status
-```
 
 ## ⚠️ Important Notes
 
