@@ -11,7 +11,15 @@ export interface ValidationResult<T> {
   error?: string;
 }
 
-export type EnhancedValidationResult = ValidationResult<any>;
+export interface EnhancedValidationResult<T> extends ValidationResult<T> {
+  statusCode?: number;
+  metrics?: {
+    validationTime: number;
+    schemaSize: number;
+    errorCount: number;
+    validatedFields: string[];
+  };
+}
 
 export class ValidationError extends Error {
   constructor(message: string, public details?: any) {
@@ -23,6 +31,24 @@ export class ValidationError extends Error {
 export class ValidationHealthMonitor {
   static checkHealth(): boolean {
     return true;
+  }
+
+  static getHealthMetrics(): any {
+    return {
+      totalValidations: 0,
+      successfulValidations: 0,
+      failedValidations: 0,
+      averageResponseTime: 0
+    };
+  }
+
+  static resetMetrics(): void {
+    // Reset validation metrics
+  }
+
+  static recordValidation(success: boolean, duration: number, error?: string): void {
+    // Record validation metrics
+    // Implementation would track success/failure rates and performance
   }
 }
 
