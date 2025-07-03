@@ -71,6 +71,9 @@ KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
 # Test environment
 PLAYWRIGHT_TEST=true
 NODE_ENV=test
+# Optional credentials for automated E2E tests
+TEST_USER_EMAIL=your_test_email@example.com
+TEST_USER_PASSWORD=your_test_password
 ```
 
 ### Stagehand Configuration
