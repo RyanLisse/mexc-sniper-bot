@@ -1,0 +1,441 @@
+{
+  "b3026895e8569547cd02ea3c0ddfd0f7a673f36059868dc9223b39e3f72a53e9": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-104",
+          "description": "Sign In button to access user account",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580090376,
+    "requestId": "wfcamyogr4"
+  },
+  "6b58a6796a7f061d06fbdd01a9748c318bfcc1af91fa573461ecba0c4a42c5c2": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-605",
+          "description": "Email address input field where the user can enter their email.",
+          "method": "fill",
+          "arguments": [
+            "ryan@ryanlisse.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580159971,
+    "requestId": "1ckbg1nox1f"
+  },
+  "465f0eb06e75c9d8010bc9ea5e05ea989391c2f56e9f36317eea7908cc4fa2cd": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-609",
+          "description": "textbox: Password - the input field for entering the password during sign in",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580021918,
+    "requestId": "onlq480lqtl"
+  },
+  "50a47845493044eaef6a247f27733e252ad33038a44d406c43bc61998f8e2299": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-6",
+          "description": "Sign In button located in the banner section of the page",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580035731,
+    "requestId": "jltabm49yt"
+  },
+  "786cdd00444f14efca79c7eda5d4742b01dd6100373ba9d2bed158c480dda1d9": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-612",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580024737,
+    "requestId": "uuv5a27w5m"
+  },
+  "2e39faff3dba6751a27b73f573bf750d4e88d62dc4ddd5f7ca72bb5134131757": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-606",
+          "description": "Email address input field where the user can enter their email",
+          "method": "fill",
+          "arguments": [
+            "ryan@ryanlisse.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580027854,
+    "requestId": "n4i0cv336t9"
+  },
+  "706fbd74817b809134b95ffe7a76d26acbfe751eeff3d9a739ee56200a35edc1": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-610",
+          "description": "textbox: Password - the field where the user can enter their password",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580030155,
+    "requestId": "338mj6blt8j"
+  },
+  "373a02a74f61465ef0644f6f29ea4c0522095284840fef3e9c24227f3db0330b": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-106",
+          "description": "Sign In button to access user account",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580142004,
+    "requestId": "4xth9awl0qv"
+  },
+  "f4c803914167f3762e4e2ba72f079e1ddb9c8886422cc266b4094ee899de36a1": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-613",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580032124,
+    "requestId": "u1eb5aa1qy8"
+  },
+  "fdce77a87cfa34db66929ba049934cbd8afb684419e9b46ea9cd1395d40642c4": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1094",
+          "description": "Password textbox for entering the password during sign in",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580120885,
+    "requestId": "beto10y4lko"
+  },
+  "39a01d3bcb2f03012839259cf7b329236633c03748db9c94a3826c8d5efcaf11": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1150",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580071928,
+    "requestId": "byai9quvji7"
+  },
+  "65cdbb4c19ea97b282e95492bd722ff3fa01c0da2c6f7b884bc8b7c89b26f72b": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1150",
+          "description": "Button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580089456,
+    "requestId": "atesncdjrl"
+  },
+  "15c4b354ef083dc513a1a2b9483a1ebc2a50b709219522783c268954c8ed7add": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-605",
+          "description": "Email address input field where the user can enter their email.",
+          "method": "fill",
+          "arguments": [
+            "ryan@ryanlisse.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580146727,
+    "requestId": "jhr67hjtwed"
+  },
+  "b9108a216fd679255ebf86faae3ad4a764ee5751c16ae3d6f2037572cd5d613f": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1095",
+          "description": "Password textbox for entering the password during sign-in",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580149212,
+    "requestId": "01renlxv43id"
+  },
+  "4aee0863f96f3bff004f4ada57702e2174180397fbad842d121c37d5dd8738d1": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1151",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580151415,
+    "requestId": "jbdbf69wbn"
+  },
+  "6514dd337fa16f7722f5e45889c46cb9a616c4b7fcb3b597cc2a2227ae890c17": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1164",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580125169,
+    "requestId": "kxu8sd0gn0r"
+  },
+  "3a9ef0a1d473b6d975c1bdd8f8282ed6b0df17398384e9747318028824074e5b": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-5",
+          "description": "Sign In button located in the banner section of the page",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580155071,
+    "requestId": "4a480k1bpz9"
+  },
+  "57773d77861e3f553687181d2edcc51e17b40e9dbb104e1f037afb206226a550": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-104",
+          "description": "Sign In button located in the banner section of the page",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580155405,
+    "requestId": "q49abgr49z"
+  },
+  "62da4f802f9bb36e059ac4fec79a9494d423cb954698442ec05d10062e4e510a": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1751580159059,
+    "requestId": "orbg9p9wu6r"
+  },
+  "70590ee9f54b94bc48c4913b8ff40c4a25dac8612ddc315035e25c10f57cd177": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-605",
+          "description": "Email address input field where the user can enter their email",
+          "method": "fill",
+          "arguments": [
+            "ryan@ryanlisse.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580159726,
+    "requestId": "wzagils7sz"
+  },
+  "b319b5c06e970e29afc077daccc47917a013b42547dd5cf0206027ce7a661f0b": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1751580160128,
+    "requestId": "ov2ijq2ubn"
+  },
+  "5e8e4b8d1589907f9485322019bbfb2df310759d9522f20b5fa0a8ebeb7d061e": {
+    "data": {
+      "elements": []
+    },
+    "timestamp": 1751580161408,
+    "requestId": "zroiksnuv2h"
+  },
+  "22574375527748d7e9568240c25946cc49e83f381d5445341b0eeb8e4e0d8581": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1103",
+          "description": "Password field where the user can enter their password",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580162881,
+    "requestId": "ev4fd3oxt8i"
+  },
+  "31413546829b33191b59b196da69ecd119fa53d8133de5c3706d41a2c9f087d2": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1102",
+          "description": "Password field for entering the user's password",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580162904,
+    "requestId": "lojk15w72zn"
+  },
+  "e87008041fd1ad2dfcccf30d6c79423a66810c0cdd961cd4ecb181264709e30d": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1108",
+          "description": "Password textbox for entering the password during sign-in",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580163486,
+    "requestId": "tpt3rkbuumg"
+  },
+  "fef6bffbb2a414954b2e35b228c86c4a14855d08c3b7229f954504bc195d8583": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1172",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580165749,
+    "requestId": "mbgjizfmp5g"
+  },
+  "5f931aad8a1728ad3181fb12ffa17e164c3b9080e6958f843208cd438ddfd04a": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1173",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580165754,
+    "requestId": "du0wjqkd2c7"
+  },
+  "2424b812576e3f8514015858fd4eb43c351be8d637446b467c3c748f021ca1ac": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1171",
+          "description": "Sign In button to submit the sign in form",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580165890,
+    "requestId": "6q7v6y8s1mo"
+  },
+  "61ab4234f4c25960d5f0218a4cf29f77cbb2efab93aee22366e28cba4742ebc8": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-104",
+          "description": "Sign In button to access user account",
+          "method": "click",
+          "arguments": []
+        }
+      ]
+    },
+    "timestamp": 1751580199735,
+    "requestId": "a4p3q85gxlf"
+  },
+  "5684449b29adb1e68f1f731f8dcdd734527713b8140011efc20eaf8e08b62234": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-624",
+          "description": "Email address input field",
+          "method": "fill",
+          "arguments": [
+            "ryan@ryanlisse.com"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580205283,
+    "requestId": "o69x9uxi18"
+  },
+  "a5a7594730662a5de5f856e535265ea196171747bec749b4b26b5d5b0b1f5dd3": {
+    "data": {
+      "elements": [
+        {
+          "elementId": "0-1115",
+          "description": "textbox: Password - the input field where the user can enter their password",
+          "method": "fill",
+          "arguments": [
+            "Testing2025!"
+          ]
+        }
+      ]
+    },
+    "timestamp": 1751580207957,
+    "requestId": "4jceqcdjbri"
+  }
+}
