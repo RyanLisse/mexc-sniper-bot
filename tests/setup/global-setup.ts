@@ -148,7 +148,7 @@ async function prepareDatabaseForTesting(): Promise<void> {
 
   try {
     // Check if we should use test branches
-    const useTestBranches = process.env.USE_TEST_BRANCHES === "true";
+    let useTestBranches = process.env.USE_TEST_BRANCHES === "true";
 
     if (useTestBranches && process.env.NEON_API_KEY) {
       console.log("🌿 Setting up isolated NeonDB test branch...");
@@ -158,7 +158,7 @@ async function prepareDatabaseForTesting(): Promise<void> {
         const { setupVitestBranch } = await import("../../src/lib/test-branch-setup.js");
 
         // Create isolated test branch for this test run
-        global.testBranchContext = await setupVitestBranch();
+        global.testBranchContext = await setupVitestBranch() as any;
         console.log(
           `✅ Test branch created: ${global.testBranchContext.branchName}`,
         );
@@ -167,7 +167,7 @@ async function prepareDatabaseForTesting(): Promise<void> {
         const { migrateTestBranch } = await import(
           "../../src/lib/test-branch-setup.js"
         );
-        await migrateTestBranch(global.testBranchContext);
+        await migrateTestBranch(global.testBranchContext as any);
         console.log("📦 Test branch migrations completed");
       } catch (error) {
         console.warn(
@@ -413,7 +413,7 @@ export async function globalTeardown(): Promise<void> {
         const { cleanupTestBranch } = await import(
           "../../src/lib/test-branch-setup.js"
         );
-        await cleanupTestBranch(global.testBranchContext);
+        await cleanupTestBranch(global.testBranchContext as any);
         global.testBranchContext = null;
         console.log("✅ Test branch cleanup completed");
       } catch (error) {

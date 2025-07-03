@@ -2,9 +2,11 @@
  * Simple Date Utilities
  */
 
-export { format } from "date-fns/format";
-export { formatDistanceToNow } from "date-fns/formatDistanceToNow";
-export { parseISO } from "date-fns/parseISO";
+import { format } from "date-fns/format";
+import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
+import { parseISO } from "date-fns/parseISO";
+
+export { format, formatDistanceToNow, parseISO };
 
 export function formatTradingTime(date: Date | string): string {
   const d = typeof date === "string" ? parseISO(date) : date;
