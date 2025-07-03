@@ -4,7 +4,7 @@
  * Handles processing and execution of snipe targets with minimal complexity.
  */
 
-import { and, eq, isNull, lt, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
 
@@ -266,8 +266,22 @@ export class TargetProcessor {
     }
   }
 
-  getActivePositionsCount(): number {
-    // Simple implementation
-    return 0;
+  async getActivePositionsCount(): Promise<number> {
+    try {
+      const result = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(snipeTargets)
+        .where(
+          and(
+            inArray(snipeTargets.status, ["executing", "completed"]),
+            or(isNull(snipeTargets.executionStatus), eq(snipeTargets.executionStatus, "success"))
+          )
+        );
+
+      return result[0]?.count ?? 0;
+    } catch (error) {
+      console.error("Error fetching active positions count:", error);
+      return 0;
+    }
   }
 }
