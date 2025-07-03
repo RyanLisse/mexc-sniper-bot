@@ -249,18 +249,20 @@ export class ComprehensiveValidationService {
     try {
       const validated = CriticalDataValidator.validateCriticalData(
         CRITICAL_DATA_SCHEMAS.tradingOrder,
-        orderData,
-        "trading-order",
-        true // Required
+        orderData
       );
       
+      if (!validated.success || !validated.data) {
+        throw new ValidationError("Trading order validation failed", validated.error);
+      }
+
       this.logger.info("Trading order validation successful", {
-        symbol: validated.symbol,
-        side: validated.side,
-        type: validated.type,
+        symbol: validated.data.symbol,
+        side: validated.data.side,
+        type: validated.data.type,
       });
       
-      return validated;
+      return validated.data;
     } catch (error) {
       this.logger.error("Critical trading order validation failed", error);
       throw error;
@@ -273,17 +275,19 @@ export class ComprehensiveValidationService {
     try {
       const validated = CriticalDataValidator.validateCriticalData(
         CRITICAL_DATA_SCHEMAS.accountBalance,
-        balanceData,
-        "account-balance",
-        true // Required
+        balanceData
       );
       
+      if (!validated.success || !validated.data) {
+        throw new ValidationError("Account balance validation failed", validated.error);
+      }
+      
       this.logger.debug("Account balance validation successful", {
-        asset: validated.asset,
-        total: validated.total,
+        asset: validated.data.asset,
+        total: validated.data.total,
       });
       
-      return validated;
+      return validated.data;
     } catch (error) {
       this.logger.error("Critical account balance validation failed", error);
       throw error;
@@ -296,17 +300,19 @@ export class ComprehensiveValidationService {
     try {
       const validated = CriticalDataValidator.validateCriticalData(
         CRITICAL_DATA_SCHEMAS.portfolioSummary,
-        portfolioData,
-        "portfolio-summary",
-        true // Required
+        portfolioData
       );
       
+      if (!validated.success || !validated.data) {
+        throw new ValidationError("Portfolio validation failed", validated.error);
+      }
+      
       this.logger.info("Portfolio validation successful", {
-        totalValue: validated.totalValue,
-        balancesCount: validated.balances.length,
+        totalValue: validated.data.totalValue,
+        balancesCount: validated.data.balances?.length || 0,
       });
       
-      return validated;
+      return validated.data;
     } catch (error) {
       this.logger.error("Critical portfolio validation failed", error);
       throw error;
