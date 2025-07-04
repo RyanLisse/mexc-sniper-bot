@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
  * Transform user preferences to Core Trading Service configuration
  */
 function transformPreferencesToCoreConfig(
-  preferences: any
+  preferences: Partial<typeof userPreferences.$inferSelect>
 ): Record<string, unknown> {
   const config: Record<string, unknown> = {
     // Position and risk management
@@ -349,7 +349,7 @@ function transformPreferencesToCoreConfig(
  */
 function transformCoreConfigToPreferences(
   coreConfig: Record<string, unknown>
-): Partial<any> {
+): Partial<typeof userPreferences.$inferSelect> {
   return {
     maxConcurrentSnipes: coreConfig.maxConcurrentPositions,
     defaultBuyAmountUsdt:
@@ -367,7 +367,7 @@ function transformCoreConfigToPreferences(
  */
 async function updateUserPreferencesInDatabase(
   userId: string,
-  updates: Partial<any>
+  updates: Partial<typeof userPreferences.$inferSelect>
 ): Promise<void> {
   await db
     .update(userPreferences)

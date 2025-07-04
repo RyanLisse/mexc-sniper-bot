@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { db } from "@/src/db";
 import {
@@ -9,6 +8,7 @@ import {
   workflowActivity,
   workflowSystemStatus,
 } from "@/src/db/schema";
+import { UniversalCrypto } from "@/src/lib/browser-compatible-events";
 import { databaseBreaker } from "@/src/services/risk/circuit-breaker";
 
 export interface WorkflowMetrics {
@@ -262,7 +262,7 @@ export class WorkflowStatusService {
   async addActivity(activity: ActivityEntry): Promise<WorkflowActivity> {
     const activityData: NewWorkflowActivity = {
       userId: this.userId,
-      activityId: randomUUID(),
+      activityId: UniversalCrypto.randomUUID(),
       type: activity.type,
       message: activity.message,
       level: activity.level || "info",

@@ -7,6 +7,10 @@ import {
   type SelectAlertInstance,
   type SelectNotificationChannel,
 } from "@/src/db/schemas/alerts";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 import { EmailProvider } from "./email-provider";
 import { SlackProvider } from "./slack-provider";
 import { SMSProvider } from "./sms-provider";

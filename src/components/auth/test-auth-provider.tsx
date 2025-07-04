@@ -1,13 +1,13 @@
 "use client";
 
 import type { User } from "@supabase/supabase-js";
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 
 // Mock test user data
 const mockTestUser: User = {
   id: "test-user-123",
   aud: "authenticated",
-  role: "authenticated", 
+  role: "authenticated",
   email: "ryan@ryanlisse.com",
   email_confirmed_at: new Date().toISOString(),
   phone: "",
@@ -31,10 +31,14 @@ type TestAuthContextType = {
   signOut: () => Promise<any>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithProvider: (provider: "google" | "github") => Promise<{ error: any }>;
+  signInWithProvider: (
+    provider: "google" | "github"
+  ) => Promise<{ error: any }>;
 };
 
-const TestAuthContext = createContext<TestAuthContextType | undefined>(undefined);
+const TestAuthContext = createContext<TestAuthContextType | undefined>(
+  undefined
+);
 
 interface TestAuthProviderProps {
   children: ReactNode;

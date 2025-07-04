@@ -1,11 +1,11 @@
+"use client";
+
 /**
  * Configuration Status Panel Component
  *
  * Displays real-time system readiness status for auto-sniping functionality.
  * Shows validation results for each component and overall system health.
  */
-
-"use client";
 
 import {
   AlertTriangle,

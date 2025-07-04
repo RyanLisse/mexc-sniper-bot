@@ -108,6 +108,15 @@ beforeAll(async () => {
 afterAll(async () => {
   console.log('🧹 Cleaning up test environment...')
   
+  // Clean up process event handlers first
+  try {
+    processEventManager.unregisterHandler('vitest-setup-rejection')
+    processEventManager.unregisterHandler('vitest-setup-exception')
+    console.log('✅ Process event handlers cleaned up')
+  } catch (error) {
+    console.warn('⚠️ Process handler cleanup warning:', error?.message || 'Unknown error')
+  }
+  
   // Run registered cleanup functions
   if (global.testCleanupFunctions && global.testCleanupFunctions.length > 0) {
     for (const cleanup of global.testCleanupFunctions) {
@@ -207,15 +216,31 @@ global.testUtils = {
   }
 }
 
-// Error handling for uncaught exceptions in tests
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection in test:', reason)
-  console.error('Promise:', promise)
-})
+// Error handling for uncaught exceptions in tests using centralized manager
+import { processEventManager } from '../../src/lib/process-event-manager'
 
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception in test:', error)
-})
+// Initialize process event handling with increased limits for test environment
+processEventManager.increaseMaxListeners(30)
+
+// Register test-specific error handlers
+processEventManager.registerHandler(
+  'vitest-setup-rejection',
+  'unhandledRejection',
+  (reason: any, promise: Promise<any>) => {
+    console.error('❌ Unhandled Rejection in test:', reason)
+    console.error('Promise:', promise)
+  },
+  'vitest-setup'
+)
+
+processEventManager.registerHandler(
+  'vitest-setup-exception',
+  'uncaughtException',
+  (error: Error) => {
+    console.error('❌ Uncaught Exception in test:', error)
+  },
+  'vitest-setup'
+)
 
 console.log('🚀 Vitest setup completed successfully with UNIFIED MOCK SYSTEM')
 

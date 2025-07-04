@@ -10,6 +10,25 @@ import { z } from "zod";
 import { requireAuth } from "@/src/lib/supabase-auth";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 
+// Type definitions for performance metrics
+interface PerformanceMetric {
+  timestamp: string;
+  operation: string;
+  metrics: {
+    responseTimeMs: number;
+    throughputPerSecond: number;
+    errorRate: number;
+    successRate: number;
+  };
+}
+
+interface AnalyticsStats {
+  totalEvents: number;
+  eventsLast24h: number;
+  averageEventSize: number;
+  cacheSize: number;
+}
+
 // Request validation schemas
 const PerformanceQuerySchema = z.object({
   timeframe: z.enum(["1h", "24h", "7d", "30d"]).optional().default("24h"),
@@ -29,7 +48,7 @@ const timeframeToMs = {
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user) {
@@ -144,7 +163,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user) {
@@ -218,7 +237,7 @@ export async function POST(request: NextRequest) {
 // Helper Functions
 // ============================================================================
 
-function calculateTrends(metrics: any[]): {
+function calculateTrends(metrics: PerformanceMetric[]): {
   responseTime: { trend: "up" | "down" | "stable"; change: number };
   throughput: { trend: "up" | "down" | "stable"; change: number };
   errorRate: { trend: "up" | "down" | "stable"; change: number };
@@ -299,7 +318,7 @@ function calculateTrends(metrics: any[]): {
   };
 }
 
-async function getSystemHealthScore(metrics: any[]): Promise<{
+async function getSystemHealthScore(metrics: PerformanceMetric[]): Promise<{
   score: number;
   status: "excellent" | "good" | "fair" | "poor" | "critical";
   factors: Record<string, number>;
@@ -338,7 +357,7 @@ async function getSystemHealthScore(metrics: any[]): Promise<{
   return { score: Math.round(score), status, factors };
 }
 
-function calculateStability(metrics: any[]): number {
+function calculateStability(metrics: PerformanceMetric[]): number {
   const responseTimes = metrics.map((m) => m.metrics.responseTimeMs);
   const mean =
     responseTimes.reduce((sum, val) => sum + val, 0) / responseTimes.length;
@@ -352,7 +371,7 @@ function calculateStability(metrics: any[]): number {
   return Math.max(0, 100 - coefficientOfVariation * 100);
 }
 
-function identifyBottlenecks(metrics: any[]): Array<{
+function identifyBottlenecks(metrics: PerformanceMetric[]): Array<{
   type: string;
   severity: "low" | "medium" | "high";
   description: string;
@@ -403,8 +422,8 @@ function identifyBottlenecks(metrics: any[]): Array<{
 }
 
 function generatePerformanceRecommendations(
-  metrics: any[],
-  stats: any
+  metrics: PerformanceMetric[],
+  stats: AnalyticsStats
 ): string[] {
   const recommendations: string[] = [];
 
@@ -457,7 +476,9 @@ function generatePerformanceRecommendations(
   return recommendations;
 }
 
-function convertToCSV(data: any): string {
+function convertToCSV(data: {
+  metrics: { historical: PerformanceMetric[] };
+}): string {
   const headers = [
     "Timestamp",
     "Operation",

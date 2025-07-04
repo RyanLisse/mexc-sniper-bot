@@ -102,14 +102,51 @@ interface EnhancedConnectivityResponse {
   };
 }
 
+// Additional type interfaces for enhanced type safety
+interface ValidationResult {
+  hasCredentials: boolean;
+  isValid: boolean;
+  source: "database" | "environment" | "none";
+  isTestCredentials: boolean;
+  canAuthenticate: boolean;
+  error?: string;
+  responseTime?: number;
+}
+
+interface CircuitBreakerStatus {
+  isOpen: boolean;
+  failures: number;
+  nextAttemptTime?: Date;
+  reason?: string;
+}
+
+interface MetricsData {
+  totalChecks: number;
+  successRate: number;
+  averageLatency: number;
+  consecutiveFailures: number;
+  uptime: number;
+}
+
+interface QualityData {
+  score: number;
+  status: "excellent" | "good" | "fair" | "poor";
+  reasons: string[];
+  recommendations: string[];
+}
+
+interface AlertSeverity {
+  severity: "none" | "info" | "warning" | "critical";
+}
+
 export async function GET(_request: NextRequest): Promise<NextResponse> {
   const requestId = `enhanced_conn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
   const startTime = Date.now();
 
   try {
     // Get authentication context
-    let user;
-    let userId;
+    let user: unknown;
+    let userId: unknown;
     try {
       user = await requireAuth();
       userId = user?.id;
@@ -224,15 +261,18 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         averageLatency: metrics.averageLatency,
         consecutiveFailures: metrics.consecutiveFailures,
         uptime: metrics.uptime,
-        responseTime: (validation as any).responseTime || responseTime,
+        responseTime:
+          (validation as ValidationResult).responseTime || responseTime,
       },
 
       // Circuit Breaker Status
       circuitBreaker: {
         isOpen: circuitBreaker.isOpen,
         failures: circuitBreaker.failures,
-        nextAttemptTime: (circuitBreaker as any).nextAttemptTime?.toISOString(),
-        reason: (circuitBreaker as any).reason,
+        nextAttemptTime: (
+          circuitBreaker as CircuitBreakerStatus
+        ).nextAttemptTime?.toISOString(),
+        reason: (circuitBreaker as CircuitBreakerStatus).reason,
       },
 
       // Alerts and Issues
@@ -242,7 +282,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
         severity:
           rtStatus?.alerts?.severity ||
           (recentAlerts.length > 0
-            ? (recentAlerts[0].severity as any)
+            ? (recentAlerts[0] as AlertSeverity).severity
             : "none"),
         recent: recentAlerts,
       },
@@ -330,9 +370,9 @@ async function getUserCredentialInfo(userId?: string): Promise<{
 }
 
 function determineOverallStatus(
-  validation: any,
-  metrics: any,
-  quality: any
+  validation: ValidationResult,
+  metrics: MetricsData,
+  quality: QualityData
 ): EnhancedConnectivityResponse["status"] {
   if (!validation.hasCredentials) {
     return "no_credentials";
@@ -357,7 +397,10 @@ function determineOverallStatus(
   return "fully_connected";
 }
 
-function generateStatusMessage(validation: any, status: string): string {
+function generateStatusMessage(
+  validation: ValidationResult,
+  status: string
+): string {
   switch (status) {
     case "fully_connected":
       return "MEXC API fully connected with valid credentials";

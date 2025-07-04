@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { RateLimitNotice } from "./rate-limit-notice";
 import { SupabaseRateLimitHandler } from "@/src/lib/supabase-rate-limit-handler";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { RateLimitNotice } from "./rate-limit-notice";
 
 /**
  * Demo component to showcase rate limit integration functionality
@@ -21,8 +27,8 @@ export function RateLimitDemo() {
       message: "email rate limit exceeded",
       status: 429,
       headers: {
-        'retry-after': '1800'
-      }
+        "retry-after": "1800",
+      },
     };
 
     const analysis = SupabaseRateLimitHandler.analyzeRateLimitError(mockError);
@@ -34,8 +40,8 @@ export function RateLimitDemo() {
       message: "otp rate limit exceeded",
       status: 429,
       headers: {
-        'retry-after': '60'
-      }
+        "retry-after": "60",
+      },
     };
 
     const analysis = SupabaseRateLimitHandler.analyzeRateLimitError(mockError);
@@ -47,8 +53,8 @@ export function RateLimitDemo() {
       message: "mfa rate limit exceeded",
       status: 429,
       headers: {
-        'retry-after': '300'
-      }
+        "retry-after": "300",
+      },
     };
 
     const analysis = SupabaseRateLimitHandler.analyzeRateLimitError(mockError);
@@ -78,7 +84,8 @@ export function RateLimitDemo() {
         <CardHeader>
           <CardTitle>Rate Limit Integration Demo</CardTitle>
           <CardDescription>
-            This demonstrates how the authentication UI handles different rate limit scenarios
+            This demonstrates how the authentication UI handles different rate
+            limit scenarios
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -96,21 +103,21 @@ export function RateLimitDemo() {
             <div className="space-y-2">
               <h3 className="font-semibold">Simulate Rate Limits</h3>
               <div className="space-y-2">
-                <Button 
+                <Button
                   onClick={simulateEmailRateLimit}
                   variant="outline"
                   className="w-full"
                 >
                   Email Rate Limit (30 min)
                 </Button>
-                <Button 
+                <Button
                   onClick={simulateOTPRateLimit}
                   variant="outline"
                   className="w-full"
                 >
                   OTP Rate Limit (1 min)
                 </Button>
-                <Button 
+                <Button
                   onClick={simulateMFARateLimit}
                   variant="outline"
                   className="w-full"
@@ -122,7 +129,7 @@ export function RateLimitDemo() {
 
             <div className="space-y-2">
               <h3 className="font-semibold">Controls</h3>
-              <Button 
+              <Button
                 onClick={clearRateLimit}
                 variant="destructive"
                 className="w-full"
@@ -180,7 +187,9 @@ export function RateLimitDemo() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-500">✓</span>
-              <span>Different handling for email, OTP, and MFA rate limits</span>
+              <span>
+                Different handling for email, OTP, and MFA rate limits
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-green-500">✓</span>

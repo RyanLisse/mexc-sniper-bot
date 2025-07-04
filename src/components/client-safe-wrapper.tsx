@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Client-Safe Wrapper Component
  *
@@ -5,8 +7,6 @@
  * server and client. This component addresses the client-side exception
  * "Application error: a client-side exception has occurred"
  */
-
-"use client";
 
 import { type ReactNode, useEffect, useState } from "react";
 import { ErrorBoundary } from "./error-boundary";

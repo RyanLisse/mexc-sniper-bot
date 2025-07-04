@@ -11,6 +11,79 @@ import { getSession } from "@/src/lib/supabase-auth";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 import { tradingAnalytics } from "@/src/services/trading/trading-analytics-service";
 
+// Type definitions for health check responses
+interface HealthCheckIssue {
+  severity: "critical" | "warning" | "info";
+  message: string;
+  component: string;
+  timestamp?: string;
+}
+
+interface HealthCheckRecommendation {
+  priority: "high" | "medium" | "low";
+  message: string;
+  action: string;
+  component: string;
+}
+
+interface HealthCheckResult {
+  status: "healthy" | "degraded" | "critical";
+  score: number;
+  issues?: HealthCheckIssue[];
+  recommendations?: HealthCheckRecommendation[];
+  metrics?: Record<string, unknown>;
+  lastChecked?: string;
+}
+
+interface CacheHealthResult {
+  status: "healthy" | "degraded" | "critical";
+  score: number;
+  size?: number;
+  efficiency?: string;
+  error?: string;
+  issues?: HealthCheckIssue[];
+  recommendations?: string[];
+}
+
+interface MexcHealthResult {
+  status: "healthy" | "degraded" | "critical";
+  score: number;
+  connectivity?: string;
+  latency?: string;
+  lastUpdated?: string;
+  credentialSource?: string;
+  error?: string;
+  issues?: HealthCheckIssue[];
+  recommendations?: string[];
+}
+
+interface DatabaseHealthResult {
+  status: "healthy" | "degraded" | "critical";
+  score: number;
+  responseTime?: string;
+  connectionStatus?: string;
+  error?: string;
+  issues?: HealthCheckIssue[];
+  recommendations?: string[];
+}
+
+interface AuthHealthResult {
+  status: "healthy" | "degraded" | "critical";
+  score: number;
+  provider?: string;
+  configured?: boolean;
+  error?: string;
+  issues?: HealthCheckIssue[];
+  recommendations?: string[];
+}
+
+interface PrometheusHealthData {
+  overall: {
+    score: number;
+  };
+  components: Record<string, { score: number } & Record<string, unknown>>;
+}
+
 // Request validation schemas
 const HealthQuerySchema = z.object({
   includeDetails: z.coerce.boolean().optional().default(false),
@@ -177,7 +250,28 @@ async function performComprehensiveHealthCheck(
   includeRecommendations: boolean,
   checkExternal: boolean,
   userId?: string
-): Promise<any> {
+): Promise<{
+  overall: {
+    status: string;
+    score: number;
+    checkTime: number;
+    timestamp: string;
+  };
+  components: Record<
+    string,
+    HealthCheckResult | { status: string; score: number }
+  >;
+  summary: {
+    totalComponents: number;
+    healthyComponents: number;
+    degradedComponents: number;
+    criticalComponents: number;
+    totalIssues: number;
+    criticalIssues: number;
+  };
+  issues?: HealthCheckIssue[];
+  recommendations?: HealthCheckRecommendation[];
+}> {
   const startTime = Date.now();
 
   // Core system health components
@@ -256,7 +350,7 @@ async function performComprehensiveHealthCheck(
   return healthData;
 }
 
-async function checkAnalyticsHealth(): Promise<any> {
+async function checkAnalyticsHealth(): Promise<HealthCheckResult> {
   try {
     const stats = tradingAnalytics.getAnalyticsStats();
     const isHealthy = stats.totalEvents > 0;
@@ -306,7 +400,7 @@ async function checkAnalyticsHealth(): Promise<any> {
   }
 }
 
-async function checkMemoryHealth(): Promise<any> {
+async function checkMemoryHealth(): Promise<HealthCheckResult> {
   try {
     const usage = process.memoryUsage();
     const usedMB = Math.round(usage.heapUsed / 1024 / 1024);
@@ -370,7 +464,7 @@ async function checkMemoryHealth(): Promise<any> {
   }
 }
 
-async function checkPerformanceHealth(): Promise<any> {
+async function checkPerformanceHealth(): Promise<HealthCheckResult> {
   try {
     const metrics = tradingAnalytics.getPerformanceMetrics(undefined, 300000); // Last 5 minutes
 
@@ -455,7 +549,7 @@ async function checkPerformanceHealth(): Promise<any> {
   }
 }
 
-async function checkCacheHealth(): Promise<any> {
+async function checkCacheHealth(): Promise<CacheHealthResult> {
   try {
     // Basic cache health check (would be more sophisticated in real implementation)
     const stats = tradingAnalytics.getAnalyticsStats();
@@ -505,7 +599,7 @@ async function checkCacheHealth(): Promise<any> {
   }
 }
 
-async function checkMexcApiHealth(userId?: string): Promise<any> {
+async function checkMexcApiHealth(userId?: string): Promise<MexcHealthResult> {
   try {
     // Try to get user-specific service if userId provided, otherwise fall back to environment
     const mexcService = userId
@@ -561,7 +655,7 @@ async function checkMexcApiHealth(userId?: string): Promise<any> {
   }
 }
 
-async function checkDatabaseHealth(): Promise<any> {
+async function checkDatabaseHealth(): Promise<DatabaseHealthResult> {
   try {
     // Basic database health check (would need actual database connection in real implementation)
     const startTime = Date.now();
@@ -602,7 +696,7 @@ async function checkDatabaseHealth(): Promise<any> {
   }
 }
 
-async function checkAuthHealth(): Promise<any> {
+async function checkAuthHealth(): Promise<AuthHealthResult> {
   try {
     // Basic auth health check for Supabase
     const isConfigured = !!(
@@ -640,7 +734,7 @@ async function checkAuthHealth(): Promise<any> {
   }
 }
 
-function convertToPrometheusFormat(healthData: any): string {
+function convertToPrometheusFormat(healthData: PrometheusHealthData): string {
   const metrics = [];
 
   // Overall health score

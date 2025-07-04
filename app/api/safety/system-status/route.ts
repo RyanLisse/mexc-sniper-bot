@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, parameters } = body;
 
-    let result;
+    let result: unknown;
 
     switch (action) {
       case "emergency_halt":

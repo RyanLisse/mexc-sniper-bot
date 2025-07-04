@@ -6,6 +6,48 @@ import { AlertCorrelationEngine } from "@/src/services/notification/alert-correl
 import { AnomalyDetectionService } from "@/src/services/notification/anomaly-detection-service";
 import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
 
+// Type definitions for analytics data
+interface AlertAnalyticsItem {
+  timestamp: string | Date;
+  totalAlerts: number;
+  resolvedAlerts: number;
+  falsePositives: number;
+  mttr: number;
+  averageSeverity: number;
+  notificationChannels: Record<string, number>;
+  criticalAlerts?: number;
+  highAlerts?: number;
+  mediumAlerts?: number;
+  lowAlerts?: number;
+  infoAlerts?: number;
+  emailNotifications?: number;
+  slackNotifications?: number;
+  webhookNotifications?: number;
+  smsNotifications?: number;
+  teamsNotifications?: number;
+  failedNotifications?: number;
+}
+
+interface ModelStatistic {
+  metricName: string;
+  modelType: string;
+  accuracy: number;
+  precision: number;
+  recall: number;
+  f1Score: number;
+  lastTraining: string;
+  status: string;
+  sampleCount?: number;
+  queuedSamples?: number;
+}
+
+interface FormattedAnalyticsItem extends Omit<AlertAnalyticsItem, "timestamp"> {
+  timestamp: string;
+  alertRate: number;
+  resolutionRate: number;
+  falsePositiveRate: number;
+}
+
 // ==========================================
 // GET /api/alerts/analytics - Get alerting analytics
 // ==========================================
@@ -15,7 +57,7 @@ export async function GET(request: NextRequest) {
     const _user = await validateRequest(request);
     // validateRequest already throws if not authenticated, so if we reach here, user is authenticated
 
-    const { searchParams } = new URL(request.url!);
+    const { searchParams } = new URL(request.url);
     const bucket =
       (searchParams.get("bucket") as "hourly" | "daily") || "hourly";
     const limit = parseInt(searchParams.get("limit") || "24");
@@ -47,31 +89,33 @@ export async function GET(request: NextRequest) {
       timeSeries: {
         bucket,
         limit,
-        data: analytics.map((item: any) => ({
-          ...item,
-          timestamp: new Date(item.timestamp).toISOString(),
-          alertRate:
-            item.totalAlerts > 0
-              ? item.totalAlerts / (bucket === "hourly" ? 1 : 24)
-              : 0,
-          resolutionRate:
-            item.totalAlerts > 0 ? item.resolvedAlerts / item.totalAlerts : 0,
-          falsePositiveRate:
-            item.totalAlerts > 0 ? item.falsePositives / item.totalAlerts : 0,
-        })),
+        data: analytics.map(
+          (item: AlertAnalyticsItem): FormattedAnalyticsItem => ({
+            ...item,
+            timestamp: new Date(item.timestamp).toISOString(),
+            alertRate:
+              item.totalAlerts > 0
+                ? item.totalAlerts / (bucket === "hourly" ? 1 : 24)
+                : 0,
+            resolutionRate:
+              item.totalAlerts > 0 ? item.resolvedAlerts / item.totalAlerts : 0,
+            falsePositiveRate:
+              item.totalAlerts > 0 ? item.falsePositives / item.totalAlerts : 0,
+          })
+        ),
       },
 
       summary: {
         totalAlerts: analytics.reduce(
-          (sum: number, item: any) => sum + item.totalAlerts,
+          (sum: number, item: AlertAnalyticsItem) => sum + item.totalAlerts,
           0
         ),
         totalResolved: analytics.reduce(
-          (sum: number, item: any) => sum + item.resolvedAlerts,
+          (sum: number, item: AlertAnalyticsItem) => sum + item.resolvedAlerts,
           0
         ),
         totalFalsePositives: analytics.reduce(
-          (sum: number, item: any) => sum + item.falsePositives,
+          (sum: number, item: AlertAnalyticsItem) => sum + item.falsePositives,
           0
         ),
         averageMTTR: calculateAverageMTTR(analytics),
@@ -81,15 +125,20 @@ export async function GET(request: NextRequest) {
 
       anomalyDetection: {
         modelsActive: modelStats.length,
-        models: modelStats.map((model: any) => ({
+        models: modelStats.map((model: ModelStatistic) => ({
           metricName: model.metricName,
           modelType: model.modelType,
-          sampleCount: model.sampleCount,
-          lastTrained: model.lastTrained,
-          performance: model.performance,
-          queuedSamples: model.queuedSamples,
-          accuracy: model.performance.accuracy,
-          falsePositiveRate: model.performance.falsePositiveRate,
+          sampleCount: model.sampleCount || 0,
+          lastTrained: model.lastTraining,
+          performance: {
+            accuracy: model.accuracy,
+            precision: model.precision,
+            recall: model.recall,
+            f1Score: model.f1Score,
+          },
+          queuedSamples: model.queuedSamples || 0,
+          accuracy: model.accuracy,
+          falsePositiveRate: 1 - model.precision, // Approximation
         })),
         overallPerformance: calculateOverallMLPerformance(modelStats),
       },
@@ -131,7 +180,7 @@ export async function GET(request: NextRequest) {
 // Helper Functions
 // ==========================================
 
-function calculateAverageMTTR(analytics: any[]): number {
+function calculateAverageMTTR(analytics: AlertAnalyticsItem[]): number {
   const validMTTRs = analytics
     .filter((item) => item.mttr > 0)
     .map((item) => item.mttr);
@@ -140,7 +189,9 @@ function calculateAverageMTTR(analytics: any[]): number {
     : 0;
 }
 
-function calculateAlertDistribution(analytics: any[]): Record<string, number> {
+function calculateAlertDistribution(
+  analytics: AlertAnalyticsItem[]
+): Record<string, number> {
   const distribution = {
     critical: 0,
     high: 0,
@@ -160,7 +211,9 @@ function calculateAlertDistribution(analytics: any[]): Record<string, number> {
   return distribution;
 }
 
-function calculateNotificationStats(analytics: any[]): Record<string, number> {
+function calculateNotificationStats(
+  analytics: AlertAnalyticsItem[]
+): Record<string, number> {
   const stats = {
     email: 0,
     slack: 0,
@@ -182,7 +235,7 @@ function calculateNotificationStats(analytics: any[]): Record<string, number> {
   return stats;
 }
 
-function calculateOverallMLPerformance(modelStats: any[]): {
+function calculateOverallMLPerformance(modelStats: ModelStatistic[]): {
   averageAccuracy: number;
   averagePrecision: number;
   averageRecall: number;
@@ -201,11 +254,11 @@ function calculateOverallMLPerformance(modelStats: any[]): {
 
   const totals = modelStats.reduce(
     (acc, model) => {
-      acc.accuracy += model.performance.accuracy || 0;
-      acc.precision += model.performance.precision || 0;
-      acc.recall += model.performance.recall || 0;
-      acc.f1Score += model.performance.f1Score || 0;
-      acc.falsePositiveRate += model.performance.falsePositiveRate || 0;
+      acc.accuracy += model.accuracy || 0;
+      acc.precision += model.precision || 0;
+      acc.recall += model.recall || 0;
+      acc.f1Score += model.f1Score || 0;
+      acc.falsePositiveRate += 1 - model.precision || 0; // Approximation
       return acc;
     },
     { accuracy: 0, precision: 0, recall: 0, f1Score: 0, falsePositiveRate: 0 }
@@ -221,7 +274,7 @@ function calculateOverallMLPerformance(modelStats: any[]): {
 }
 
 async function calculateAdditionalMetrics(
-  alertingService: any,
+  alertingService: AutomatedAlertingService,
   startDate?: string,
   endDate?: string
 ): Promise<{
@@ -247,29 +300,29 @@ async function calculateAdditionalMetrics(
   ]);
 
   const currentTotalAlerts = currentPeriodAnalytics.reduce(
-    (sum: number, item: any) => sum + item.totalAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.totalAlerts,
     0
   );
   const previousTotalAlerts = previousPeriodAnalytics.reduce(
-    (sum: number, item: any) => sum + item.totalAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.totalAlerts,
     0
   );
 
   const currentResolved = currentPeriodAnalytics.reduce(
-    (sum: number, item: any) => sum + item.resolvedAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.resolvedAlerts,
     0
   );
   const previousResolved = previousPeriodAnalytics.reduce(
-    (sum: number, item: any) => sum + item.resolvedAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.resolvedAlerts,
     0
   );
 
   const currentFalsePositives = currentPeriodAnalytics.reduce(
-    (sum: number, item: any) => sum + item.falsePositives,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.falsePositives,
     0
   );
   const previousFalsePositives = previousPeriodAnalytics.reduce(
-    (sum: number, item: any) => sum + item.falsePositives,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.falsePositives,
     0
   );
 
@@ -299,14 +352,14 @@ function calculatePercentageChange(current: number, previous: number): number {
   return ((current - previous) / previous) * 100;
 }
 
-function calculateSystemReliability(analytics: any[]): number {
+function calculateSystemReliability(analytics: AlertAnalyticsItem[]): number {
   // Calculate based on critical alert frequency and resolution time
   const criticalAlerts = analytics.reduce(
-    (sum: number, item: any) => sum + item.criticalAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + (item.criticalAlerts || 0),
     0
   );
   const totalAlerts = analytics.reduce(
-    (sum, item) => sum + item.totalAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.totalAlerts,
     0
   );
   const avgMTTR = calculateAverageMTTR(analytics);
@@ -319,22 +372,22 @@ function calculateSystemReliability(analytics: any[]): number {
 }
 
 function generateInsights(
-  analytics: any[],
-  modelStats: any[],
-  correlations: any[]
+  analytics: AlertAnalyticsItem[],
+  modelStats: ModelStatistic[],
+  correlations: Array<{ id: string; alertCount: number; confidence: number }>
 ): string[] {
   const insights: string[] = [];
 
   const totalAlerts = analytics.reduce(
-    (sum, item) => sum + item.totalAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.totalAlerts,
     0
   );
   const criticalAlerts = analytics.reduce(
-    (sum, item) => sum + item.criticalAlerts,
+    (sum: number, item: AlertAnalyticsItem) => sum + (item.criticalAlerts || 0),
     0
   );
   const falsePositives = analytics.reduce(
-    (sum, item) => sum + item.falsePositives,
+    (sum: number, item: AlertAnalyticsItem) => sum + item.falsePositives,
     0
   );
 
@@ -364,9 +417,7 @@ function generateInsights(
   }
 
   // ML model insights
-  const lowPerformingModels = modelStats.filter(
-    (m) => m.performance.f1Score < 0.7
-  );
+  const lowPerformingModels = modelStats.filter((m) => m.f1Score < 0.7);
   if (lowPerformingModels.length > 0) {
     insights.push(
       `${lowPerformingModels.length} ML models have low performance. Consider retraining with more data.`
@@ -387,7 +438,7 @@ function generateInsights(
     );
   }
 
-  if (modelStats.every((m) => m.performance.f1Score > 0.8)) {
+  if (modelStats.every((m) => m.f1Score > 0.8)) {
     insights.push("All ML models are performing well with high accuracy.");
   }
 

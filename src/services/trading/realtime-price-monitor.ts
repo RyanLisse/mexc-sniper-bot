@@ -9,8 +9,11 @@
  * 5. Integration with MEXC websocket streams
  */
 
-import { EventEmitter } from "node:events";
-import WebSocket from "ws";
+import {
+  BrowserCompatibleEventEmitter,
+  type UniversalWebSocket,
+} from "@/src/lib/browser-compatible-events";
+
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { getCompleteAutoSnipingService } from "./complete-auto-sniping-service";
 import {
@@ -71,7 +74,7 @@ export interface RealtimeMonitorConfig {
  *
  * Provides real-time price monitoring and triggering for auto-sniping
  */
-export class RealtimePriceMonitor extends EventEmitter {
+export class RealtimePriceMonitor extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[realtime-price-monitor]", message, context || ""),
@@ -85,9 +88,17 @@ export class RealtimePriceMonitor extends EventEmitter {
 
   private isActive = false;
   private config: RealtimeMonitorConfig;
-  private websocket: WebSocket | null = null;
+  private websocket: InstanceType<typeof UniversalWebSocket> | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
+
+  // Store WebSocket event handlers for proper cleanup
+  private websocketHandlers: {
+    open?: () => void;
+    message?: (data: any) => void;
+    error?: (error: Error) => void;
+    close?: (code: number, reason: Buffer) => void;
+  } = {};
 
   // Price data storage
   private priceData: Map<string, PriceData> = new Map();
@@ -138,6 +149,27 @@ export class RealtimePriceMonitor extends EventEmitter {
     });
 
     this.setupEventListeners();
+
+    // Register cleanup handler with memory manager
+    import("@/src/lib/memory-leak-cleanup-manager")
+      .then(({ memoryLeakCleanupManager }) => {
+        memoryLeakCleanupManager.registerEventEmitter(
+          this,
+          "RealtimePriceMonitor"
+        );
+        memoryLeakCleanupManager.registerCleanupHandler(
+          "RealtimePriceMonitor",
+          async () => {
+            await this.stop();
+          }
+        );
+      })
+      .catch(() => {
+        // Fallback if memory manager is not available
+        console.warn(
+          "Memory leak cleanup manager not available for RealtimePriceMonitor"
+        );
+      });
   }
 
   /**
@@ -191,6 +223,9 @@ export class RealtimePriceMonitor extends EventEmitter {
 
       this.isActive = false;
 
+      // Clean up WebSocket listeners first
+      this.cleanupWebSocketListeners();
+
       // Close websocket connection
       if (this.websocket) {
         this.websocket.close();
@@ -211,6 +246,12 @@ export class RealtimePriceMonitor extends EventEmitter {
       // Clear data
       this.priceData.clear();
       this.priceTriggers.clear();
+      this.priceHistory.clear();
+      this.supportResistanceLevels.clear();
+      this.volumeAverages.clear();
+
+      // Clean up EventEmitter listeners
+      this.removeAllListeners();
 
       this.emit("monitor_stopped");
 
@@ -365,9 +406,17 @@ export class RealtimePriceMonitor extends EventEmitter {
         symbols: this.config.symbols.length,
       });
 
+      // Clean up existing websocket if present
+      if (this.websocket) {
+        this.cleanupWebSocketListeners();
+        this.websocket.close();
+        this.websocket = null;
+      }
+
       this.websocket = new WebSocket(this.config.websocketUrl);
 
-      this.websocket.on("open", () => {
+      // Store event handler references for proper cleanup
+      const handleOpen = () => {
         this.logger.info("WebSocket connected successfully");
         this.connectionState.connected = true;
         this.connectionState.reconnectAttempts = 0;
@@ -379,23 +428,23 @@ export class RealtimePriceMonitor extends EventEmitter {
         this.startHeartbeat();
 
         this.emit("websocket_connected");
-      });
+      };
 
-      this.websocket.on("message", (data: WebSocket.Data) => {
+      const handleMessage = (data: any) => {
         try {
           this.handleWebSocketMessage(data);
         } catch (error) {
           this.logger.error("WebSocket message handling error", error);
         }
-      });
+      };
 
-      this.websocket.on("error", (error: Error) => {
+      const handleError = (error: Error) => {
         this.logger.error("WebSocket error", error);
         this.connectionState.connected = false;
         this.emit("websocket_error", error);
-      });
+      };
 
-      this.websocket.on("close", (code: number, reason: Buffer) => {
+      const handleClose = (code: number, reason: Buffer) => {
         this.logger.warn("WebSocket connection closed", {
           code,
           reason: reason.toString(),
@@ -408,6 +457,9 @@ export class RealtimePriceMonitor extends EventEmitter {
           reason: reason.toString(),
         });
 
+        // Clean up listeners
+        this.cleanupWebSocketListeners();
+
         // Attempt reconnection if active
         if (
           this.isActive &&
@@ -416,11 +468,55 @@ export class RealtimePriceMonitor extends EventEmitter {
         ) {
           this.scheduleReconnect();
         }
-      });
+      };
+
+      // Store handler references for cleanup
+      this.websocketHandlers = {
+        open: handleOpen,
+        message: handleMessage,
+        error: handleError,
+        close: handleClose,
+      };
+
+      // Add event listeners
+      this.websocket.on("open", handleOpen);
+      this.websocket.on("message", handleMessage);
+      this.websocket.on("error", handleError);
+      this.websocket.on("close", handleClose);
     } catch (error) {
       const safeError = toSafeError(error);
       this.logger.error("Failed to connect to websocket", safeError);
       throw safeError;
+    }
+  }
+
+  /**
+   * Clean up WebSocket event listeners to prevent memory leaks
+   */
+  private cleanupWebSocketListeners(): void {
+    if (this.websocket && this.websocketHandlers) {
+      try {
+        // Remove all event listeners
+        if (this.websocketHandlers.open) {
+          this.websocket.off("open", this.websocketHandlers.open);
+        }
+        if (this.websocketHandlers.message) {
+          this.websocket.off("message", this.websocketHandlers.message);
+        }
+        if (this.websocketHandlers.error) {
+          this.websocket.off("error", this.websocketHandlers.error);
+        }
+        if (this.websocketHandlers.close) {
+          this.websocket.off("close", this.websocketHandlers.close);
+        }
+
+        // Clear handler references
+        this.websocketHandlers = {};
+
+        this.logger.debug("WebSocket event listeners cleaned up");
+      } catch (error) {
+        this.logger.error("Error cleaning up WebSocket listeners", error);
+      }
     }
   }
 
@@ -461,7 +557,7 @@ export class RealtimePriceMonitor extends EventEmitter {
   /**
    * Handle incoming websocket messages
    */
-  private handleWebSocketMessage(data: WebSocket.Data): void {
+  private handleWebSocketMessage(data: string | Buffer): void {
     try {
       const message = JSON.parse(data.toString());
 

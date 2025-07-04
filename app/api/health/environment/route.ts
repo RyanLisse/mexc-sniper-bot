@@ -19,7 +19,9 @@ export async function GET(_request: NextRequest) {
 
   try {
     // Get comprehensive environment validation with error handling
-    let validation, healthSummary, missingByCategory;
+    let validation: unknown;
+    let healthSummary: unknown;
+    let missingByCategory: unknown;
 
     try {
       validation = environmentValidation.validateEnvironment();

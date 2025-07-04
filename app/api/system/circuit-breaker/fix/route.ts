@@ -30,7 +30,6 @@ const FixResponseSchema = z.object({
   nextSteps: z.array(z.string()).optional(),
 });
 
-type FixRequest = z.infer<typeof FixRequestSchema>;
 type FixResponse = z.infer<typeof FixResponseSchema>;
 
 // ============================================================================
@@ -52,7 +51,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const reliabilityManager = mexcApiBreaker;
 
     const timestamp = new Date().toISOString();
-    let result: any;
+    let result: unknown;
     let recommendations: string[] = [];
     let nextSteps: string[] = [];
 
@@ -234,7 +233,7 @@ async function handleDiagnose(safetyService: CircuitBreakerSafetyService) {
 
 async function handleFix(
   safetyService: CircuitBreakerSafetyService,
-  reliabilityManager: any,
+  reliabilityManager: unknown,
   forceReset: boolean
 ) {
   // First diagnose the issue

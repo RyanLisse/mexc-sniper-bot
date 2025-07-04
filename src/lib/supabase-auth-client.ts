@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "./supabase-browser-client";
-import { 
-  SupabaseRateLimitHandler, 
-  withRateLimitHandling, 
+import {
   bypassRateLimitInDev,
   type RateLimitInfo,
-  type RetryConfig 
+  type RetryConfig,
+  SupabaseRateLimitHandler,
+  withRateLimitHandling,
 } from "./supabase-rate-limit-handler";
 
 interface AuthUser {
@@ -170,7 +170,7 @@ export const useSession = () => {
  * Enhanced sign in with email and password with rate limit handling
  */
 export const signInWithEmail = async (
-  email: string, 
+  email: string,
   password: string,
   options: AuthOptions = {}
 ) => {
@@ -189,13 +189,14 @@ export const signInWithEmail = async (
 
     if (error) {
       const authError = new Error(error.message) as AuthError;
-      
+
       // Analyze rate limit info
-      const rateLimitInfo = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitInfo =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitInfo.isRateLimited) {
         authError.rateLimitInfo = rateLimitInfo;
       }
-      
+
       throw authError;
     }
 
@@ -216,7 +217,7 @@ export const signInWithEmail = async (
             return operation();
           }
         }
-      }
+      },
     });
   }
 
@@ -256,13 +257,14 @@ export const signUpWithEmail = async (
 
     if (error) {
       const authError = new Error(error.message) as AuthError;
-      
+
       // Analyze rate limit info
-      const rateLimitInfo = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitInfo =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitInfo.isRateLimited) {
         authError.rateLimitInfo = rateLimitInfo;
       }
-      
+
       throw authError;
     }
 
@@ -283,7 +285,7 @@ export const signUpWithEmail = async (
             return operation();
           }
         }
-      }
+      },
     });
   }
 
@@ -314,13 +316,14 @@ export const signInWithOAuth = async (
 
     if (error) {
       const authError = new Error(error.message) as AuthError;
-      
+
       // Analyze rate limit info
-      const rateLimitInfo = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitInfo =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitInfo.isRateLimited) {
         authError.rateLimitInfo = rateLimitInfo;
       }
-      
+
       throw authError;
     }
 
@@ -357,7 +360,10 @@ export const signOut = async () => {
 /**
  * Enhanced reset password with rate limit handling
  */
-export const resetPassword = async (email: string, authOptions: AuthOptions = {}) => {
+export const resetPassword = async (
+  email: string,
+  authOptions: AuthOptions = {}
+) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
     throw new Error("Supabase client not available (SSR environment)");
@@ -372,13 +378,14 @@ export const resetPassword = async (email: string, authOptions: AuthOptions = {}
 
     if (error) {
       const authError = new Error(error.message) as AuthError;
-      
+
       // Analyze rate limit info
-      const rateLimitInfo = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitInfo =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitInfo.isRateLimited) {
         authError.rateLimitInfo = rateLimitInfo;
       }
-      
+
       throw authError;
     }
 
@@ -399,7 +406,7 @@ export const resetPassword = async (email: string, authOptions: AuthOptions = {}
             return operation();
           }
         }
-      }
+      },
     });
   }
 
@@ -409,7 +416,10 @@ export const resetPassword = async (email: string, authOptions: AuthOptions = {}
 /**
  * Enhanced update password with rate limit handling
  */
-export const updatePassword = async (newPassword: string, authOptions: AuthOptions = {}) => {
+export const updatePassword = async (
+  newPassword: string,
+  authOptions: AuthOptions = {}
+) => {
   const supabase = getSupabaseBrowserClient();
   if (!supabase) {
     throw new Error("Supabase client not available (SSR environment)");
@@ -424,13 +434,14 @@ export const updatePassword = async (newPassword: string, authOptions: AuthOptio
 
     if (error) {
       const authError = new Error(error.message) as AuthError;
-      
+
       // Analyze rate limit info
-      const rateLimitInfo = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitInfo =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitInfo.isRateLimited) {
         authError.rateLimitInfo = rateLimitInfo;
       }
-      
+
       throw authError;
     }
 
@@ -477,13 +488,14 @@ export const updateProfile = async (
 
     if (error) {
       const authError = new Error(error.message) as AuthError;
-      
+
       // Analyze rate limit info
-      const rateLimitInfo = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitInfo =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitInfo.isRateLimited) {
         authError.rateLimitInfo = rateLimitInfo;
       }
-      
+
       throw authError;
     }
 
@@ -509,26 +521,33 @@ export const supabase = getSupabaseBrowserClient();
  */
 export const useAuthWithRateLimit = () => {
   const auth = useAuth();
-  const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitInfo | null>(null);
+  const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitInfo | null>(
+    null
+  );
   const [isRetrying, setIsRetrying] = useState(false);
 
-  const authWithRateLimit = useCallback((operation: string) => ({
-    onRateLimit: (rateLimitInfo: RateLimitInfo) => {
-      setRateLimitStatus(rateLimitInfo);
-      console.warn(`Rate limit detected for ${operation}:`, rateLimitInfo);
-    },
-    onRetry: (attempt: number, delay: number) => {
-      setIsRetrying(true);
-      console.info(`Retrying ${operation} (attempt ${attempt}) after ${delay}ms`);
-    },
-    onSuccess: () => {
-      setRateLimitStatus(null);
-      setIsRetrying(false);
-    },
-    onFailure: () => {
-      setIsRetrying(false);
-    }
-  }), []);
+  const authWithRateLimit = useCallback(
+    (operation: string) => ({
+      onRateLimit: (rateLimitInfo: RateLimitInfo) => {
+        setRateLimitStatus(rateLimitInfo);
+        console.warn(`Rate limit detected for ${operation}:`, rateLimitInfo);
+      },
+      onRetry: (attempt: number, delay: number) => {
+        setIsRetrying(true);
+        console.info(
+          `Retrying ${operation} (attempt ${attempt}) after ${delay}ms`
+        );
+      },
+      onSuccess: () => {
+        setRateLimitStatus(null);
+        setIsRetrying(false);
+      },
+      onFailure: () => {
+        setIsRetrying(false);
+      },
+    }),
+    []
+  );
 
   return {
     ...auth,
@@ -544,8 +563,10 @@ export const useAuthWithRateLimit = () => {
  * Get rate limit status for monitoring dashboards
  */
 export const useRateLimitStatus = () => {
-  const [status, setStatus] = useState(() => SupabaseRateLimitHandler.getMetrics());
-  
+  const [status, setStatus] = useState(() =>
+    SupabaseRateLimitHandler.getMetrics()
+  );
+
   useEffect(() => {
     const interval = setInterval(() => {
       setStatus(SupabaseRateLimitHandler.getMetrics());

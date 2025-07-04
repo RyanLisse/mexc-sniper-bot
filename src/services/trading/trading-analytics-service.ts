@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Trading Analytics and Logging Service
  *

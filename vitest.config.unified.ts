@@ -13,8 +13,9 @@ config({ path: '.env.test', override: true })
 
 // Verify critical environment variables are loaded
 if (!process.env.DATABASE_URL) {
-  // Set fallback for DATABASE_URL if not loaded from .env.test
-  process.env.DATABASE_URL = 'postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
+  // Set fallback to use mock database for testing
+  process.env.USE_MOCK_DATABASE = 'true'
+  process.env.DATABASE_URL = 'postgresql://postgres:password@localhost:5432/mexc_sniper_test'
 }
 
 /**

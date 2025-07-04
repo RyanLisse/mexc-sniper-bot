@@ -4,7 +4,7 @@
  * Handles real-time streaming of agent status and workflow updates
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   AgentStatusMessage,
   AgentWorkflowMessage,
@@ -12,7 +12,7 @@ import type {
 import { webSocketServer } from "@/src/services/data/websocket-server";
 import type { AgentStatusTracker, WorkflowTracker } from "../types";
 
-export class RealTimeDataStreamer extends EventEmitter {
+export class RealTimeDataStreamer extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[real-time-data-streamer]", message, context || ""),

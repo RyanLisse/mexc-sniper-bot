@@ -2,11 +2,15 @@
 
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getSupabaseBrowserClient } from "@/src/lib/supabase-browser-client";
-import { SupabaseRateLimitHandler, bypassRateLimitInDev } from "@/src/lib/supabase-rate-limit-handler";
-import { RateLimitNotice } from "./rate-limit-notice";
+import {
+  bypassRateLimitInDev,
+  SupabaseRateLimitHandler,
+} from "@/src/lib/supabase-rate-limit-handler";
+import { Alert, AlertDescription } from "../ui/alert";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -15,8 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
-import { Alert, AlertDescription } from "../ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { RateLimitNotice } from "./rate-limit-notice";
 
 export function SupabaseAuthUI() {
   const supabase = getSupabaseBrowserClient();
@@ -25,16 +28,15 @@ export function SupabaseAuthUI() {
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [rateLimitInfo, setRateLimitInfo] = useState<any>(null);
-  const [lastEmail, setLastEmail] = useState<string>("");
+  const [lastEmail, _setLastEmail] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
-  
+
   // Detect test environment to disable OAuth providers
-  const isTestEnvironment = 
-    typeof window !== "undefined" && (
-      window.location.hostname === "localhost" ||
+  const isTestEnvironment =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
       process.env.NODE_ENV === "test" ||
-      process.env.PLAYWRIGHT_TEST === "true"
-    );
+      process.env.PLAYWRIGHT_TEST === "true");
 
   // Fix hydration by ensuring consistent rendering
   useEffect(() => {
@@ -75,25 +77,27 @@ export function SupabaseAuthUI() {
         setRateLimitInfo(null); // Clear any rate limit notices on success
         setAuthError(null); // Clear any auth errors on success
       }
-      
+
       // Handle auth errors that might indicate rate limiting
       if (event === "TOKEN_REFRESHED" && !session) {
         // Token refresh failed, might be rate limited
         try {
           const { error } = await supabase.auth.getSession();
           if (error && SupabaseRateLimitHandler.isRateLimitError(error)) {
-            const rateLimitAnalysis = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+            const rateLimitAnalysis =
+              SupabaseRateLimitHandler.analyzeRateLimitError(error);
             setRateLimitInfo(rateLimitAnalysis);
           }
         } catch (err) {
-          console.error('Error checking session after token refresh:', err);
+          console.error("Error checking session after token refresh:", err);
         }
       }
     });
 
     // Listen for auth errors globally
     const handleAuthError = (error: any) => {
-      const rateLimitAnalysis = SupabaseRateLimitHandler.analyzeRateLimitError(error);
+      const rateLimitAnalysis =
+        SupabaseRateLimitHandler.analyzeRateLimitError(error);
       if (rateLimitAnalysis.isRateLimited) {
         setRateLimitInfo(rateLimitAnalysis);
         setIsLoading(false);
@@ -101,24 +105,29 @@ export function SupabaseAuthUI() {
     };
 
     // Add global error listener for auth-related errors
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const handleGlobalError = (event: any) => {
         const error = event.reason || event.error;
-        if (error && (error.message?.includes('rate') || error.message?.includes('limit') || error.message?.includes('too many'))) {
+        if (
+          error &&
+          (error.message?.includes("rate") ||
+            error.message?.includes("limit") ||
+            error.message?.includes("too many"))
+        ) {
           handleAuthError(error);
         }
       };
-      
-      window.addEventListener('unhandledrejection', handleGlobalError);
-      window.addEventListener('error', handleGlobalError);
-      
+
+      window.addEventListener("unhandledrejection", handleGlobalError);
+      window.addEventListener("error", handleGlobalError);
+
       // Also listen for fetch errors that might be rate limits
       const originalFetch = window.fetch;
       window.fetch = async (...args) => {
         try {
           const response = await originalFetch(...args);
           if (response.status === 429) {
-            const error = new Error('Rate limit exceeded');
+            const error = new Error("Rate limit exceeded");
             handleAuthError(error);
           }
           return response;
@@ -129,11 +138,11 @@ export function SupabaseAuthUI() {
           throw error;
         }
       };
-      
+
       // Cleanup function
       return () => {
-        window.removeEventListener('unhandledrejection', handleGlobalError);
-        window.removeEventListener('error', handleGlobalError);
+        window.removeEventListener("unhandledrejection", handleGlobalError);
+        window.removeEventListener("error", handleGlobalError);
         window.fetch = originalFetch;
       };
     }
@@ -174,14 +183,16 @@ export function SupabaseAuthUI() {
       }, 1000);
     }
   };
-  
+
   // Extract email from input fields for bypass functionality
   const extractEmailFromForm = (): string => {
     if (lastEmail) return lastEmail;
-    
+
     // Try to get email from form inputs or global tracking
-    const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement;
-    return emailInput?.value || (window as any).lastAuthEmail || '';
+    const emailInput = document.querySelector(
+      'input[type="email"]'
+    ) as HTMLInputElement;
+    return emailInput?.value || (window as any).lastAuthEmail || "";
   };
 
   // Don't render anything until mounted to prevent hydration mismatch
@@ -238,13 +249,13 @@ export function SupabaseAuthUI() {
   if (rateLimitInfo?.isRateLimited) {
     return (
       <div className="space-y-4">
-        <RateLimitNotice 
+        <RateLimitNotice
           rateLimitInfo={rateLimitInfo}
           onRetry={handleRetry}
           onBypassEmail={handleBypassEmail}
           userEmail={extractEmailFromForm()}
         />
-        
+
         {/* Show simplified auth form below rate limit notice */}
         <Card className="bg-card border-border shadow-lg opacity-50">
           <CardHeader>
@@ -284,7 +295,7 @@ export function SupabaseAuthUI() {
             </AlertDescription>
           </Alert>
         )}
-        
+
         <Auth
           supabaseClient={supabase}
           appearance={{
@@ -407,7 +418,7 @@ export function SupabaseAuthUI() {
             },
           }}
         />
-        
+
         {/* Add JavaScript to track email input for bypass functionality */}
         <script
           dangerouslySetInnerHTML={{
@@ -421,7 +432,7 @@ export function SupabaseAuthUI() {
                   });
                 }
               }, 100);
-            `
+            `,
           }}
         />
       </CardContent>

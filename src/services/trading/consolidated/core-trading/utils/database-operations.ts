@@ -156,7 +156,10 @@ export class DatabaseOperations {
         );
       }
 
-      const targets = await query.orderBy(snipeTargets.createdAt).limit(limit).execute();
+      const targets = await query
+        .orderBy(snipeTargets.createdAt)
+        .limit(limit)
+        .execute();
 
       return targets as AutoSnipeTarget[];
     } catch (error) {
@@ -252,10 +255,11 @@ export class DatabaseOperations {
         .execute();
 
       // For Drizzle, result contains metadata about the operation
-      const deletedCount = typeof result === 'object' && result && 'rowCount' in result 
-        ? (result as any).rowCount 
-        : 0;
-      
+      const deletedCount =
+        typeof result === "object" && result && "rowCount" in result
+          ? (result as any).rowCount
+          : 0;
+
       DatabaseOperations.logger.info("Cleanup completed", {
         deletedTargets: deletedCount,
         olderThanDays,

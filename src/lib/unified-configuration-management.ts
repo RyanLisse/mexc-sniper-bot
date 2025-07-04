@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Unified Configuration Management System
  *
@@ -547,7 +551,7 @@ export class ConfigurationManager {
         },
       },
       database: {
-        url: process.env.DATABASE_URL || process.env.NEON_DATABASE_URL,
+        url: process.env.DATABASE_URL,
         queryTimeout: process.env.DB_QUERY_TIMEOUT
           ? Number.parseInt(process.env.DB_QUERY_TIMEOUT, 10)
           : undefined,

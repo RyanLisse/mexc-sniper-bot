@@ -4,19 +4,20 @@ import { inngest } from "@/src/inngest/client";
 
 export async function POST(request: NextRequest) {
   // Simple console logger to avoid webpack bundling issues
+  type LogContext = string | number | boolean | object | undefined;
   const _logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[schedule-control]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[schedule-control]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[schedule-control]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[schedule-control]", message, context || ""),
   };
   try {
     const body = await request.json();
-    const { action, scheduleType, data } = body;
+    const { action, scheduleType: _scheduleType, data } = body;
 
     switch (action) {
       case "start_monitoring":

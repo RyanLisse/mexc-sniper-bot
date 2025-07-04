@@ -9,6 +9,12 @@ import { z } from "zod";
 import { getParameterManager } from "@/src/lib/parameter-management";
 import { logger } from "@/src/lib/utils";
 
+interface ParametersResponse {
+  parameters: Record<string, unknown>;
+  definitions?: Record<string, unknown>;
+  changeHistory?: unknown[];
+}
+
 // Validation schemas
 const ParameterUpdateSchema = z.object({
   parameters: z.record(z.string(), z.any()),
@@ -34,14 +40,14 @@ export async function GET(request: NextRequest) {
     const includeHistory = searchParams.get("includeHistory") === "true";
 
     const parameterManager = getParameterManager();
-    let parameters;
+    let parameters: Record<string, unknown>;
     if (category) {
       parameters = parameterManager.getParametersByCategory(category);
     } else {
       parameters = parameterManager.getCurrentParameters();
     }
 
-    const response: any = { parameters };
+    const response: ParametersResponse = { parameters };
 
     if (includeDefinitions) {
       const definitions = Object.fromEntries(

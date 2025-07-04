@@ -25,10 +25,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify NeonDB configuration
-    if (!process.env.DATABASE_URL?.startsWith("postgresql://")) {
+    // Verify Supabase configuration
+    if (
+      !process.env.DATABASE_URL?.startsWith("postgresql://") ||
+      !process.env.DATABASE_URL?.includes("supabase.co")
+    ) {
       return apiResponse(
-        createErrorResponse("NeonDB configuration missing"),
+        createErrorResponse("Supabase configuration missing"),
         HTTP_STATUS.INTERNAL_SERVER_ERROR
       );
     }
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
         message: "Database migrations completed successfully",
         timestamp: new Date().toISOString(),
         environment: "production",
-        database: "neondb",
+        database: "supabase",
       })
     );
   } catch (error) {

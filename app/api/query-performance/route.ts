@@ -7,16 +7,18 @@ import {
 // Build-safe imports - avoid structured logger to prevent webpack bundling issues
 import { queryPerformanceMonitor } from "@/src/services/query-performance-monitor";
 
+type LogContext = string | number | boolean | object | undefined;
+
 export async function GET(request: NextRequest) {
   // Simple console logger to avoid webpack bundling issues
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[query-performance]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[query-performance]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[query-performance]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[query-performance]", message, context || ""),
   };
   try {
@@ -78,13 +80,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // Simple console logger to avoid webpack bundling issues
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[query-performance]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[query-performance]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[query-performance]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[query-performance]", message, context || ""),
   };
   try {

@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Adaptive Rate Limiter Service
  *

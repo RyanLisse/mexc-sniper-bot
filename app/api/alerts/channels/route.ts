@@ -89,8 +89,52 @@ export async function POST(request: NextRequest) {
   }
 }
 
+interface NotificationConfig {
+  // Email config
+  smtpHost?: string;
+  fromAddress?: string;
+  toAddresses?: string[];
+
+  // Slack/Teams config
+  webhookUrl?: string;
+  channel?: string;
+  username?: string;
+  mentionUsers?: string[];
+  mentionTeams?: string[];
+
+  // Webhook config
+  url?: string;
+  method?: string;
+  authentication?: Record<string, unknown>;
+
+  // SMS config
+  provider?: string;
+  fromPhoneNumber?: string;
+  toPhoneNumbers?: string[];
+
+  [key: string]: unknown;
+}
+
+interface ConfigSummary {
+  smtpHost?: string;
+  fromAddress?: string;
+  recipients?: number;
+  hasWebhook?: boolean;
+  channel?: string;
+  username?: string;
+  url?: string | null;
+  method?: string;
+  hasAuth?: boolean;
+  provider?: string;
+  fromNumber?: string;
+  mentions?: number;
+}
+
 // Helper function to get configuration summary without sensitive data
-function getConfigSummary(type: string, config: any): any {
+function getConfigSummary(
+  type: string,
+  config: NotificationConfig
+): ConfigSummary {
   switch (type) {
     case "email":
       return {

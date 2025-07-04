@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user?.id) {
@@ -76,8 +76,8 @@ export async function GET(request: NextRequest) {
     const metrics = await securityMonitoring.getSecurityMetrics();
 
     // Get additional data if requested
-    let recommendations;
-    let anomalies;
+    let recommendations: unknown;
+    let anomalies: unknown;
 
     if (includeRecommendations) {
       recommendations =
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user?.id) {
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { action, parameters = {} } = body;
+    const { action, parameters: _parameters = {} } = body;
 
     if (!action) {
       return NextResponse.json(
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result;
+    let result: unknown;
 
     switch (action) {
       case "rotate_credentials":
@@ -293,7 +293,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user?.id) {

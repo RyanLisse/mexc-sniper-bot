@@ -2,6 +2,25 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 import { getUserCredentials } from "@/src/services/api/user-credentials-service";
 
+// MEXC Service interface
+interface MexcAccountService {
+  getAccountBalances(): Promise<MexcBalancesResponse>;
+}
+
+// MEXC Balances response interface
+interface MexcBalancesResponse {
+  success: boolean;
+  error?: string;
+  timestamp: string;
+  data?: {
+    balances: unknown[];
+    totalUsdtValue: number;
+    lastUpdated?: string;
+  };
+  executionTimeMs?: number;
+  cached?: boolean;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -45,7 +64,7 @@ export async function GET(request: NextRequest) {
       // For other errors, userCredentials remains null and we'll fall back to environment
     }
 
-    let mexcService;
+    let mexcService: MexcAccountService;
     if (userCredentials) {
       // Create service with user's credentials
       mexcService = getRecommendedMexcService({
@@ -117,7 +136,7 @@ export async function GET(request: NextRequest) {
           error: balancesResponse.error,
           message: "API credentials configured but account access failed",
           serviceLayer: true,
-          executionTimeMs: (balancesResponse as any).executionTimeMs || 0,
+          executionTimeMs: balancesResponse.executionTimeMs || 0,
           timestamp: balancesResponse.timestamp,
         },
         { status: statusCode }
@@ -139,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     const { balances, totalUsdtValue } = balancesResponse.data;
     const lastUpdated =
-      (balancesResponse.data as any).lastUpdated || new Date().toISOString();
+      balancesResponse.data?.lastUpdated || new Date().toISOString();
     console.info(
       `✅ MEXC Account Service Success - Found ${balances.length} balances with total value: ${totalUsdtValue.toFixed(2)} USDT`
     );
@@ -157,8 +176,8 @@ export async function GET(request: NextRequest) {
       lastUpdated,
       message,
       serviceLayer: true,
-      cached: (balancesResponse as any).cached || false,
-      executionTimeMs: (balancesResponse as any).executionTimeMs || 0,
+      cached: balancesResponse.cached || false,
+      executionTimeMs: balancesResponse.executionTimeMs || 0,
       timestamp: balancesResponse.timestamp,
     });
   } catch (error) {

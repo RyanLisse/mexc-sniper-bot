@@ -1,12 +1,19 @@
 "use client";
 
 import { AlertTriangle, Clock, Mail, RefreshCw } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
+import {
+  type RateLimitInfo,
+  SupabaseRateLimitHandler,
+} from "@/src/lib/supabase-rate-limit-handler";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Progress } from "../ui/progress";
-import { SupabaseRateLimitHandler, type RateLimitInfo } from "@/src/lib/supabase-rate-limit-handler";
 
 interface RateLimitNoticeProps {
   rateLimitInfo: RateLimitInfo;
@@ -15,20 +22,22 @@ interface RateLimitNoticeProps {
   userEmail?: string;
 }
 
-export function RateLimitNotice({ 
-  rateLimitInfo, 
-  onRetry, 
+export function RateLimitNotice({
+  rateLimitInfo,
+  onRetry,
   onBypassEmail,
-  userEmail 
+  userEmail,
 }: RateLimitNoticeProps) {
-  const [timeRemaining, setTimeRemaining] = useState(rateLimitInfo.retryAfter || 0);
+  const [timeRemaining, setTimeRemaining] = useState(
+    rateLimitInfo.retryAfter || 0
+  );
   const [canRetry, setCanRetry] = useState(false);
 
   useEffect(() => {
     if (!rateLimitInfo.retryAfter) return;
 
     const interval = setInterval(() => {
-      setTimeRemaining(prev => {
+      setTimeRemaining((prev) => {
         if (prev <= 1) {
           setCanRetry(true);
           clearInterval(interval);
@@ -48,9 +57,9 @@ export function RateLimitNotice({
 
   const getIcon = () => {
     switch (rateLimitInfo.limitType) {
-      case 'email':
+      case "email":
         return <Mail className="h-5 w-5" />;
-      case 'mfa':
+      case "mfa":
         return <AlertTriangle className="h-5 w-5" />;
       default:
         return <Clock className="h-5 w-5" />;
@@ -59,10 +68,13 @@ export function RateLimitNotice({
 
   const getProgressValue = () => {
     if (!rateLimitInfo.retryAfter) return 0;
-    return ((rateLimitInfo.retryAfter - timeRemaining) / rateLimitInfo.retryAfter) * 100;
+    return (
+      ((rateLimitInfo.retryAfter - timeRemaining) / rateLimitInfo.retryAfter) *
+      100
+    );
   };
 
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
     <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
@@ -107,31 +119,38 @@ export function RateLimitNotice({
             </Button>
           )}
 
-          {isDevelopment && userEmail && onBypassEmail && rateLimitInfo.limitType === 'email' && (
-            <Button 
-              onClick={handleBypassEmail} 
-              variant="outline" 
-              className="w-full"
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Bypass Email Confirmation (Dev Only)
-            </Button>
-          )}
+          {isDevelopment &&
+            userEmail &&
+            onBypassEmail &&
+            rateLimitInfo.limitType === "email" && (
+              <Button
+                onClick={handleBypassEmail}
+                variant="outline"
+                className="w-full"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Bypass Email Confirmation (Dev Only)
+              </Button>
+            )}
         </div>
 
         {isDevelopment && (
           <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
             <AlertDescription className="text-xs">
-              <strong>Development Mode:</strong> You can use the bypass tools to work around rate limits.
-              This is not available in production.
+              <strong>Development Mode:</strong> You can use the bypass tools to
+              work around rate limits. This is not available in production.
             </AlertDescription>
           </Alert>
         )}
 
         <div className="text-xs text-muted-foreground space-y-1">
-          <div><strong>Limit Type:</strong> {rateLimitInfo.limitType || 'Unknown'}</div>
-          <div><strong>Environment:</strong> {process.env.NODE_ENV}</div>
-          {rateLimitInfo.limitType === 'email' && (
+          <div>
+            <strong>Limit Type:</strong> {rateLimitInfo.limitType || "Unknown"}
+          </div>
+          <div>
+            <strong>Environment:</strong> {process.env.NODE_ENV}
+          </div>
+          {rateLimitInfo.limitType === "email" && (
             <div className="text-yellow-600 dark:text-yellow-400">
               ⚠️ Supabase allows only 2 emails per hour without custom SMTP
             </div>

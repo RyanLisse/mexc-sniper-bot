@@ -17,14 +17,15 @@ const safetyMonitor = new SafetyMonitorAgent();
 
 export async function GET(request: NextRequest) {
   // Build-safe logger - simple console implementation
+  type LogContext = string | number | boolean | object | undefined;
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[risk-assessment]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[risk-assessment]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[risk-assessment]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[risk-assessment]", message, context || ""),
   };
 
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
     const healthStatus = riskEngine.getHealthStatus();
     const activeAlerts = riskEngine.getActiveAlerts();
 
-    let stressTestResults;
+    let stressTestResults: unknown;
     if (includeStressTest) {
       stressTestResults = await riskEngine.performStressTest();
     }
@@ -98,14 +99,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // Build-safe logger - simple console implementation
+  type LogContext = string | number | boolean | object | undefined;
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[risk-assessment]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[risk-assessment]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[risk-assessment]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[risk-assessment]", message, context || ""),
   };
 
@@ -121,7 +123,7 @@ export async function POST(request: NextRequest) {
     const { action, symbol, side, quantity, price, marketData, patternData } =
       body;
 
-    let result;
+    let result: unknown;
 
     switch (action) {
       case "assess_trade": {
@@ -138,7 +140,7 @@ export async function POST(request: NextRequest) {
         );
 
         // Also validate through safety monitor if risk is high
-        let patternValidation;
+        let patternValidation: unknown;
         if (tradeAssessment.riskScore > 50) {
           patternValidation = await safetyMonitor.validatePatternDiscovery(
             `pattern-${Date.now()}`,

@@ -12,6 +12,49 @@ import { strategyPerformanceMetrics, tradingStrategies } from "@/src/db/schema";
 import { logger } from "@/src/lib/utils";
 import { getParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
 
+interface PerformanceMetrics {
+  profitability: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  winRate?: number;
+  totalReturn?: number;
+  volatility?: number;
+  calmarRatio?: number;
+  riskAdjustedReturn?: number;
+}
+
+interface OptimizationRequest {
+  parameterCategories: string[];
+  backtestingPeriod: {
+    start: Date;
+    end: Date;
+  };
+  objectives: Array<{
+    name: string;
+    weight: number;
+    direction: "maximize" | "minimize";
+    metric: (performance: PerformanceMetrics) => number;
+  }>;
+  strategy: {
+    algorithm: "simple" | "grid_search" | "random_search";
+    maxIterations: number;
+    convergenceThreshold: number;
+    parallelEvaluations: number;
+    explorationRate: number;
+  };
+  safetyConstraints: {
+    maxRiskLevel: number;
+    minSharpeRatio: number;
+    maxDrawdown: number;
+    requireHumanApproval: boolean;
+  };
+  abTestConfig?: {
+    trafficSplit: number;
+    minSampleSize: number;
+    significanceLevel: number;
+  };
+}
+
 // Validation schemas
 const OptimizationRequestSchema = z.object({
   parameterCategories: z.array(z.string()).min(1),
@@ -136,19 +179,22 @@ export async function POST(request: NextRequest) {
             name: "profitability",
             weight: 0.4,
             direction: "maximize" as const,
-            metric: (performance: any) => performance.profitability,
+            metric: (performance: PerformanceMetrics) =>
+              performance.profitability,
           },
           {
             name: "sharpeRatio",
             weight: 0.3,
             direction: "maximize" as const,
-            metric: (performance: any) => performance.sharpeRatio,
+            metric: (performance: PerformanceMetrics) =>
+              performance.sharpeRatio,
           },
           {
             name: "maxDrawdown",
             weight: 0.3,
             direction: "minimize" as const,
-            metric: (performance: any) => performance.maxDrawdown,
+            metric: (performance: PerformanceMetrics) =>
+              performance.maxDrawdown,
           },
         ],
         strategy: {
@@ -183,7 +229,7 @@ export async function POST(request: NextRequest) {
     const validatedRequest = OptimizationRequestSchema.parse(body);
 
     // Convert string dates to Date objects and transform for OptimizationRequest
-    const optimizationRequest: any = {
+    const optimizationRequest: OptimizationRequest = {
       parameterCategories: validatedRequest.parameterCategories || [],
       backtestingPeriod: {
         start: new Date(validatedRequest.backtestingPeriod.start),
@@ -193,7 +239,7 @@ export async function POST(request: NextRequest) {
         name: obj.name || "performance",
         weight: obj.weight || 1,
         direction: obj.direction || "maximize",
-        metric: (performance: any) => {
+        metric: (performance: PerformanceMetrics) => {
           switch (obj.metric) {
             case "profitability":
               return performance.profitability;

@@ -8,7 +8,7 @@
  * Part of the modular refactoring of advanced-risk-engine.ts
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   MarketConditions,
   PortfolioRiskMetrics,
@@ -54,7 +54,7 @@ export interface RiskThresholdEvent {
   [key: string]: unknown;
 }
 
-export class EventManagementHealth extends EventEmitter {
+export class EventManagementHealth extends BrowserCompatibleEventEmitter {
   private _logger?: {
     info: (message: string, context?: any) => void;
     warn: (message: string, context?: any) => void;

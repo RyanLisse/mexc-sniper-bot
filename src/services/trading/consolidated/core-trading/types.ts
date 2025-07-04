@@ -5,8 +5,8 @@
  * Extracted from the original monolithic implementation for better maintainability.
  */
 
-import type { EventEmitter } from "node:events";
 import { z } from "zod";
+import type { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import type { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
 
@@ -546,7 +546,7 @@ export interface ModuleContext {
     error: (message: string, context?: Record<string, unknown>) => void;
     debug: (message: string, context?: Record<string, unknown>) => void;
   };
-  eventEmitter: EventEmitter;
+  eventEmitter: BrowserCompatibleEventEmitter;
 }
 
 export interface ModuleState {

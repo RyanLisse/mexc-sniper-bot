@@ -82,7 +82,7 @@ export async function GET() {
 async function processHealthCheck(
   response: PromiseSettledResult<Response>,
   componentName: string
-): Promise<{ status: string; message: string; details?: any }> {
+): Promise<{ status: string; message: string; details?: unknown }> {
   if (response.status === "rejected") {
     return {
       status: "error",

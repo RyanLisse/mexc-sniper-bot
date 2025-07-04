@@ -13,6 +13,10 @@
  * - TypeScript type safety
  */
 
+import {
+  BrowserCompatibleEventEmitter,
+  UniversalWebSocket,
+} from "@/src/lib/browser-compatible-events";
 import type {
   AgentStatusMessage,
   MessageHandler,
@@ -24,44 +28,6 @@ import type {
   WebSocketClientConfig,
   WebSocketMessage,
 } from "@/src/lib/websocket-types";
-
-// Browser-compatible EventEmitter replacement using EventTarget
-class BrowserEventEmitter extends EventTarget {
-  emit(eventName: string, ...args: any[]): boolean {
-    const event = new CustomEvent(eventName, { detail: args });
-    this.dispatchEvent(event);
-    return true;
-  }
-
-  on(eventName: string, listener: (...args: any[]) => void): this {
-    const wrappedListener = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      listener(...(customEvent.detail || []));
-    };
-    this.addEventListener(eventName, wrappedListener);
-    return this;
-  }
-
-  off(eventName: string, listener: (...args: any[]) => void): this {
-    this.removeEventListener(eventName, listener);
-    return this;
-  }
-
-  once(eventName: string, listener: (...args: any[]) => void): this {
-    const wrappedListener = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      listener(...(customEvent.detail || []));
-    };
-    this.addEventListener(eventName, wrappedListener, { once: true });
-    return this;
-  }
-
-  removeAllListeners(eventName?: string): this {
-    // EventTarget doesn't have a direct way to remove all listeners
-    // This is a limitation, but for WebSocket client usage, explicit cleanup is preferred
-    return this;
-  }
-}
 
 // ======================
 // Message Queue
@@ -291,9 +257,9 @@ export interface WebSocketClientMetrics {
   lastActivity?: number;
 }
 
-export class WebSocketClientService extends BrowserEventEmitter {
+export class WebSocketClientService extends BrowserCompatibleEventEmitter {
   private static instance: WebSocketClientService;
-  private ws: WebSocket | null = null;
+  private ws: InstanceType<typeof UniversalWebSocket> | null = null;
   private config: WebSocketClientConfig;
   private state: WebSocketClientState = "disconnected";
   private connectionId?: string;
@@ -373,7 +339,7 @@ export class WebSocketClientService extends BrowserEventEmitter {
         console.info("[WebSocket Client] Connecting to:", url);
       }
 
-      this.ws = new WebSocket(url);
+      this.ws = new UniversalWebSocket(url);
       this.setupEventHandlers();
 
       // Wait for connection to open or fail
@@ -425,10 +391,34 @@ export class WebSocketClientService extends BrowserEventEmitter {
       this.ws = null;
     }
 
+    // Clear all message handlers and subscriptions
+    this.subscriptionManager.clear();
+    this.messageQueue.clear();
+
     this.setState("disconnected");
     this.metrics.disconnectedAt = Date.now();
     this.connectionId = undefined;
     this.emit("disconnected");
+  }
+
+  /**
+   * MEMORY LEAK FIX: Complete shutdown with EventEmitter cleanup
+   */
+  shutdown(): void {
+    this.disconnect();
+
+    // Remove all EventEmitter listeners to prevent memory leaks
+    this.removeAllListeners();
+
+    // Clear all internal state
+    this.subscriptionManager.clear();
+    this.messageQueue.clear();
+    this.connectionManager.cancelReconnect();
+
+    // Reset singleton instance if needed
+    if (WebSocketClientService.instance === this) {
+      WebSocketClientService.instance = null as any;
+    }
   }
 
   reconnect(): void {

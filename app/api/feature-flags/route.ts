@@ -39,7 +39,7 @@ export async function GET(request: NextRequest): Promise<Response> {
         );
       }
 
-      let analytics;
+      let analytics: unknown;
       if (includeAnalytics) {
         analytics = enhancedFeatureFlagManager.getAnalytics(flagName);
       }
@@ -54,13 +54,13 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     // Get all flags
     const flags = enhancedFeatureFlagManager.getAllFlags();
-    let analytics: any;
+    let analytics: unknown;
 
     if (includeAnalytics) {
       const baseAnalytics = enhancedFeatureFlagManager.getAnalytics();
 
       // Get analytics for each flag
-      const flagAnalytics: Record<string, any> = {};
+      const flagAnalytics: Record<string, unknown> = {};
       for (const flagName of Object.keys(flags)) {
         flagAnalytics[flagName] =
           enhancedFeatureFlagManager.getAnalytics(flagName);
@@ -214,7 +214,7 @@ export async function DELETE(_request: NextRequest): Promise<Response> {
 
 // Helper functions
 
-async function handleCreateFlag(data: any): Promise<Response> {
+async function handleCreateFlag(data: unknown): Promise<Response> {
   try {
     const config = EnhancedFeatureFlagConfigSchema.parse({
       ...data,
@@ -241,7 +241,7 @@ async function handleCreateFlag(data: any): Promise<Response> {
   }
 }
 
-async function handleEvaluateFlag(data: any): Promise<Response> {
+async function handleEvaluateFlag(data: unknown): Promise<Response> {
   try {
     const { flagName, userContext, defaultValue = false } = data;
 
@@ -271,7 +271,7 @@ async function handleEvaluateFlag(data: any): Promise<Response> {
   }
 }
 
-async function handleBulkEvaluate(data: any): Promise<Response> {
+async function handleBulkEvaluate(data: unknown): Promise<Response> {
   try {
     const { flagNames, userContext, defaultValues = {} } = data;
 
@@ -283,7 +283,7 @@ async function handleBulkEvaluate(data: any): Promise<Response> {
     }
 
     const validatedUserContext = UserContextSchema.parse(userContext);
-    const evaluations: Record<string, any> = {};
+    const evaluations: Record<string, unknown> = {};
 
     // Evaluate all flags
     for (const flagName of flagNames) {

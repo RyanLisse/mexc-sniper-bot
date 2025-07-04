@@ -125,7 +125,7 @@ interface MemoryMetrics {
 
 export class WebSocketPriceService {
   private static instance: WebSocketPriceService;
-  private ws: WebSocket | null = null;
+  private ws: InstanceType<typeof UniversalWebSocket> | null = null;
   private subscriptions = new Map<string, Set<PriceCallback>>();
   private priceCache: LRUCache<string, PriceUpdate>;
   private reconnectAttempts = 0;

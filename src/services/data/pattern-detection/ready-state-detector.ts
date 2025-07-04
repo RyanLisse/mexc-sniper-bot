@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Ready State Detection Module
  *
@@ -5,7 +9,7 @@
  * Preserves the competitive advantage with 3.5+ hour advance detection.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import {
   calculateActivityBoost,
   getUniqueActivityTypes,
@@ -33,7 +37,7 @@ export interface PreReadyScore {
  * Core Ready State Pattern Detector
  * Handles detection of ready state, advance opportunities, and pre-ready patterns
  */
-export class ReadyStateDetector extends EventEmitter {
+export class ReadyStateDetector extends BrowserCompatibleEventEmitter {
   private readonly MIN_ADVANCE_HOURS = PATTERN_CONSTANTS.MIN_ADVANCE_HOURS;
   private logger = {
     info: (message: string, context?: any) =>

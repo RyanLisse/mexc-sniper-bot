@@ -5,7 +5,7 @@
  * Part of Phase 3 Production Readiness - Event Sourcing and CQRS patterns.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import {
   type DomainEvent,
   eventStoreManager,
@@ -69,7 +69,7 @@ export interface ReadModelProjection {
 /**
  * Query Bus Implementation
  */
-export class QueryBus extends EventEmitter {
+export class QueryBus extends BrowserCompatibleEventEmitter {
   private handlers: Map<string, QueryHandler<any, any>> = new Map();
   private cache: Map<string, { result: QueryResult; expiry: Date }> = new Map();
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes default

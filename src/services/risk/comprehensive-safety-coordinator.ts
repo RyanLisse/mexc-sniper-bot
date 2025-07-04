@@ -16,7 +16,7 @@
  * - emergency-management.ts: Emergency procedures and crisis response
  */
 
-import EventEmitter from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 
 export { EmergencyManager } from "./safety/emergency-management";
@@ -50,7 +50,7 @@ import type {
  * Orchestrates all safety modules while maintaining the same public interface
  * for backward compatibility with existing code.
  */
-export class ComprehensiveSafetyCoordinator extends EventEmitter {
+export class ComprehensiveSafetyCoordinator extends BrowserCompatibleEventEmitter {
   private config: SafetyCoordinatorConfig;
   private alertsManager: SafetyAlertsManager;
   private emergencyManager: EmergencyManager;

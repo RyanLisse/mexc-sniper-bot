@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
     } catch (_error) {
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
     } catch (_error) {
@@ -412,7 +412,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
     } catch (_error) {

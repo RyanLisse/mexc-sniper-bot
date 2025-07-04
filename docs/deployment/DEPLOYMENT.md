@@ -1,11 +1,11 @@
 # MEXC Sniper Bot - Production Deployment Guide
 
-This comprehensive guide covers deploying the MEXC Sniper Bot with TypeScript multi-agent system to multiple platforms including Vercel (primary) and Railway (alternative), with TursoDB as the distributed database and Inngest for workflow orchestration.
+This comprehensive guide covers deploying the MEXC Sniper Bot with TypeScript multi-agent system to multiple platforms including Vercel (primary) and Railway (alternative), with Supabase as the managed PostgreSQL database and Inngest for workflow orchestration.
 
 ## 🚀 Quick Deployment Checklist
 
-- [ ] Install Turso CLI and login
-- [ ] Set up TursoDB production database  
+- [ ] Create Supabase account and project
+- [ ] Set up Supabase production database  
 - [ ] Configure Vercel environment variables
 - [ ] Install Inngest Vercel integration
 - [ ] Deploy to Vercel
@@ -15,11 +15,20 @@ This comprehensive guide covers deploying the MEXC Sniper Bot with TypeScript mu
 ## 📋 Prerequisites
 
 1. **Vercel Account**: [vercel.com](https://vercel.com)
-2. **TursoDB Account**: [turso.tech](https://turso.tech)
+2. **Supabase Account**: [supabase.com](https://supabase.com)
 3. **Inngest Account**: [inngest.com](https://inngest.com)
 4. **OpenAI API Key**: [platform.openai.com](https://platform.openai.com)
 
-## 🗄️ Database Setup (TursoDB)
+## 🗄️ Database Setup (Supabase)
+
+**⚠️ Migration Notice**: This guide has been updated to reflect the migration from TursoDB to Supabase. For the most current setup instructions, please refer to the Supabase documentation at [supabase.com/docs](https://supabase.com/docs).
+
+### Setup Steps
+
+1. Create a Supabase account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Get your connection string from Settings > Database
+4. Configure environment variables (see below)
 
 ### Option 1: Automated Setup (Recommended)
 

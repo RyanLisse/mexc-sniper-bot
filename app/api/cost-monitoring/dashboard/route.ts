@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, data } = body;
 
-    let response;
+    let response: { success: boolean; data?: unknown; error?: string };
 
     switch (action) {
       case "addAlert":

@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Core Trading Service - Base Service
  *
@@ -5,7 +9,10 @@
  * This replaces the original monolithic core-trading.service.ts implementation.
  */
 
-import { EventEmitter } from "node:events";
+import {
+  BrowserCompatibleEventEmitter,
+  createTypedEventEmitter,
+} from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
@@ -39,7 +46,7 @@ import { validateConfig } from "./types";
  * Consolidated trading service that provides a unified interface for all
  * trading operations, auto-sniping, strategy management, and analytics.
  */
-export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
+export class CoreTradingService extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) => {
       import("@/src/services/notification/error-logging-service")
@@ -179,7 +186,12 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
           timestamp: new Date().toISOString(),
         }),
         getActivePositions: () => new Map<string, Position>(),
-        createPositionEntry: async (tradeParams, symbol, stopLoss?, takeProfit?) => ({
+        createPositionEntry: async (
+          tradeParams,
+          symbol,
+          stopLoss?,
+          takeProfit?
+        ) => ({
           id: `${symbol}-${Date.now()}`,
           symbol: symbol,
           side: tradeParams.side || "BUY",
@@ -1025,11 +1037,41 @@ export class CoreTradingService extends EventEmitter<CoreTradingEvents> {
   }
 
   /**
-   * Clean up resources
+   * MEMORY LEAK FIX: Enhanced cleanup with comprehensive resource management
    */
   private cleanup(): void {
     this.isInitialized = false;
+
+    // Remove all EventEmitter listeners to prevent memory leaks
     this.removeAllListeners();
+
+    // Clear active positions and pending operations
+    this.activePositions?.clear();
+    this.pendingStopLosses?.forEach((timer) => clearTimeout(timer));
+    this.pendingTakeProfits?.forEach((timer) => clearTimeout(timer));
+    this.pendingStopLosses?.clear();
+    this.pendingTakeProfits?.clear();
+
+    // Additional cleanup for any intervals or timeouts
+    if (this.autoSnipingInterval) {
+      clearInterval(this.autoSnipingInterval);
+      this.autoSnipingInterval = null;
+    }
+  }
+
+  /**
+   * MEMORY LEAK FIX: Force cleanup all modules
+   */
+  private async forceCleanupModules(): Promise<void> {
+    const cleanupTasks = [
+      this.manualTrading?.shutdown(),
+      this.autoSniping?.shutdown(),
+      this.positionManager?.shutdown(),
+      this.performanceTracker?.shutdown(),
+      this.strategyManager?.shutdown(),
+    ].filter(Boolean);
+
+    await Promise.allSettled(cleanupTasks);
   }
 }
 

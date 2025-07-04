@@ -20,10 +20,18 @@ import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2
 import { circuitBreakerRegistry } from "@/src/services/risk/circuit-breaker";
 import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
+interface ValidationResult {
+  isValid: boolean;
+  component?: string;
+  status?: string;
+  message?: string;
+  errors?: string[];
+}
+
 interface SystemFixReport {
   timestamp: string;
   fixesApplied: string[];
-  validationResults: any[];
+  validationResults: ValidationResult[];
   systemStatus: {
     mexcApi: "fixed" | "healthy" | "failed";
     patternDetection: "fixed" | "healthy" | "failed";
@@ -37,7 +45,7 @@ interface SystemFixReport {
 export async function POST(_request: NextRequest) {
   try {
     const fixesApplied: string[] = [];
-    const validationResults: any[] = [];
+    const validationResults: ValidationResult[] = [];
     const recommendations: string[] = [];
 
     // Initialize services

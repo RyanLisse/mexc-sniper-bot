@@ -35,7 +35,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
     const report = await getPatternMonitoringService().getMonitoringReport();
 
     // Optionally include recent patterns
-    let recentPatterns;
+    let recentPatterns: unknown;
     if (includePatterns) {
       recentPatterns =
         getPatternMonitoringService().getRecentPatterns(patternLimit);
@@ -174,7 +174,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           await patternStrategyOrchestrator.executePatternWorkflow({
             type: "monitoring",
             input: {
-              symbolData: symbolsResponse.data as any[],
+              symbolData: symbolsResponse.data as unknown[],
             },
             options: {
               confidenceThreshold: body.confidenceThreshold || 75,
@@ -298,8 +298,8 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
  */
 export const PUT = apiAuthWrapper(async (request: NextRequest) => {
   try {
-    const body = await request.json();
-    const { config } = body;
+    const _body = await request.json();
+    // Note: config from body would be used for runtime configuration changes in the future
 
     // For now, we'll just return success as the configuration is handled internally
     // In the future, this could be expanded to allow runtime configuration changes

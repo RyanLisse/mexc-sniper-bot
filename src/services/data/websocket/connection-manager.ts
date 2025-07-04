@@ -12,8 +12,8 @@
  * - Real-time performance tracking
  */
 
-import { EventEmitter } from "node:events";
 import WebSocket, { type RawData } from "ws";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 
 export interface ConnectionManagerOptions {
   url: string;
@@ -52,8 +52,8 @@ interface QueuedMessage {
   retryCount: number;
 }
 
-export class MexcConnectionManager extends EventEmitter {
-  private ws: WebSocket | null = null;
+export class MexcConnectionManager extends BrowserCompatibleEventEmitter {
+  private ws: InstanceType<typeof UniversalWebSocket> | null = null;
   private connectionId?: string;
   private reconnectAttempts = 0;
   private reconnectDelay: number;

@@ -49,6 +49,8 @@ const TriggerSchema = z.object({
   test: z.boolean().optional(),
 });
 
+type TriggerData = z.infer<typeof TriggerSchema>;
+
 // POST /api/triggers/multi-phase-strategy - Trigger multi-phase strategy workflows
 export async function POST(request: NextRequest) {
   try {
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user?.id) {
@@ -92,7 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result: any = {};
+    let result: unknown = {};
 
     switch (data.action) {
       case "create":
@@ -132,7 +134,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Handle strategy creation with AI assistance
-async function handleStrategyCreation(data: any, userId: string) {
+async function handleStrategyCreation(data: TriggerData, userId: string) {
   const strategyAgent = new StrategyAgent();
 
   if (!data.symbol || !data.marketData) {
@@ -189,7 +191,7 @@ async function handleStrategyCreation(data: any, userId: string) {
 }
 
 // Handle strategy analysis for existing strategies
-async function handleStrategyAnalysis(data: any, userId: string) {
+async function handleStrategyAnalysis(data: TriggerData, userId: string) {
   const strategyAgent = new StrategyAgent();
 
   if (!data.symbol || !data.marketData) {
@@ -235,7 +237,7 @@ async function handleStrategyAnalysis(data: any, userId: string) {
 }
 
 // Handle strategy optimization
-async function handleStrategyOptimization(data: any, userId: string) {
+async function handleStrategyOptimization(data: TriggerData, userId: string) {
   const strategyAgent = new StrategyAgent();
 
   if (!data.strategyId) {
@@ -311,7 +313,7 @@ async function handleStrategyOptimization(data: any, userId: string) {
 }
 
 // Handle strategy recommendation
-async function handleStrategyRecommendation(data: any, userId: string) {
+async function handleStrategyRecommendation(data: TriggerData, userId: string) {
   const strategyAgent = new StrategyAgent();
 
   if (!data.symbol || !data.marketData || !data.userPreferences) {
@@ -389,7 +391,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user?.id) {

@@ -7,16 +7,18 @@ import {
 import { AgentManager } from "@/src/mexc-agents/agent-manager";
 import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 
+type LogContext = string | number | boolean | object | undefined;
+
 export async function GET(_request: NextRequest) {
   // Build-safe logger - simple console implementation to avoid webpack issues
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[system-overview]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[system-overview]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[system-overview]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[system-overview]", message, context || ""),
   };
 
@@ -148,17 +150,29 @@ export async function GET(_request: NextRequest) {
       infrastructureHealth: {
         database: {
           status: dbHealth.status,
-          responseTime: (dbHealth as any).responseTime || 0,
+          responseTime:
+            "responseTime" in dbHealth &&
+            typeof dbHealth.responseTime === "number"
+              ? dbHealth.responseTime
+              : 0,
           details: dbHealth.details || {},
         },
         mexcApi: {
           status: mexcHealth.status,
-          responseTime: (mexcHealth as any).responseTime || 0,
+          responseTime:
+            "responseTime" in mexcHealth &&
+            typeof mexcHealth.responseTime === "number"
+              ? mexcHealth.responseTime
+              : 0,
           details: mexcHealth.details || {},
         },
         openAi: {
           status: openAiHealth.status,
-          responseTime: (openAiHealth as any).responseTime || 0,
+          responseTime:
+            "responseTime" in openAiHealth &&
+            typeof openAiHealth.responseTime === "number"
+              ? openAiHealth.responseTime
+              : 0,
           details: openAiHealth.details || {},
         },
       },

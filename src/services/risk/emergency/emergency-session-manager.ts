@@ -5,7 +5,7 @@
  * escalation, de-escalation, and resolution.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { createTimer } from "@/src/lib/structured-logger";
 import type {
   CommunicationEntry,
@@ -33,7 +33,7 @@ interface SessionState {
 /**
  * Emergency session manager
  */
-export class EmergencySessionManager extends EventEmitter {
+export class EmergencySessionManager extends BrowserCompatibleEventEmitter {
   private sessions: Map<string, EmergencySession> = new Map();
   private sessionStates: Map<string, SessionState> = new Map();
   private sessionHistory: EmergencySession[] = [];

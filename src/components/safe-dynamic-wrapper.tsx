@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Safe Dynamic Wrapper Component
  *
@@ -5,8 +7,6 @@
  * with Suspense boundaries and error boundaries. This ensures that dynamic component
  * failures don't crash parent components.
  */
-
-"use client";
 
 import { type ReactNode, Suspense } from "react";
 import { ErrorBoundary } from "./error-boundary";

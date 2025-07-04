@@ -7,6 +7,91 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/src/lib/utils";
 
+type HealthStatus = "healthy" | "degraded" | "down";
+type OverallHealth = "excellent" | "good" | "degraded" | "critical";
+
+interface ComponentHealth {
+  optimizationEngine: HealthStatus;
+  parameterManager: HealthStatus;
+  backtesting: HealthStatus;
+  abTesting: HealthStatus;
+}
+
+interface ComponentDetailedHealth {
+  status: HealthStatus;
+  lastActivity: Date;
+  activeOptimizations?: number;
+  totalOptimizations?: number;
+  averageResponseTime?: number;
+  memoryUsage?: string;
+  cpuUsage?: string;
+  issues: string[];
+  snapshots?: number;
+  lastSnapshot?: Date;
+  runningTests?: number;
+  completedTests?: number;
+  successRate?: string;
+}
+
+interface DetailedHealthResponse {
+  optimizationEngine: ComponentDetailedHealth;
+  parameterManager: ComponentDetailedHealth;
+  backtesting: ComponentDetailedHealth;
+  abTesting: ComponentDetailedHealth;
+}
+
+interface HealthMetricsResponse {
+  system: {
+    uptime: number;
+    memoryUsage: NodeJS.MemoryUsage;
+    cpuUsage: number;
+    diskUsage: string;
+    networkLatency: number;
+    databaseConnections: number;
+    activeConnections: number;
+  };
+  performance: {
+    requestsPerSecond: number;
+    averageResponseTime: number;
+    errorRate: number;
+    throughput: string;
+    cacheHitRate: number;
+    queueLength: number;
+  };
+  optimization: {
+    optimizationsPerHour: number;
+    averageOptimizationTime: number;
+    successRate: number;
+    parameterUpdateFrequency: number;
+    backtestingLoad: number;
+    mlModelAccuracy: number;
+  };
+  alerts: Array<{
+    level: string;
+    message: string;
+    timestamp: Date;
+    component: string;
+  }>;
+}
+
+interface SystemHealthResponse {
+  overallHealth: OverallHealth;
+  components: ComponentHealth;
+  activeOptimizations: number;
+  lastOptimization: Date;
+  timestamp: Date;
+  uptime: number;
+  status: {
+    optimizationEngineOnline: boolean;
+    parameterManagerOnline: boolean;
+    backtestingOnline: boolean;
+    abTestingOnline: boolean;
+    allSystemsOperational: boolean;
+  };
+  details?: DetailedHealthResponse;
+  metrics?: HealthMetricsResponse;
+}
+
 /**
  * GET /api/tuning/system-health
  * Get comprehensive system health status
@@ -23,7 +108,7 @@ export async function GET(request: NextRequest) {
     // Determine overall health based on component status
     const overallHealth = determineOverallHealth(componentHealth);
 
-    const response: any = {
+    const response: SystemHealthResponse = {
       overallHealth,
       components: componentHealth,
       activeOptimizations: 2, // Mock data
@@ -64,18 +149,8 @@ export async function GET(request: NextRequest) {
 /**
  * Check health of individual components
  */
-async function checkComponentHealth(): Promise<{
-  optimizationEngine: "healthy" | "degraded" | "down";
-  parameterManager: "healthy" | "degraded" | "down";
-  backtesting: "healthy" | "degraded" | "down";
-  abTesting: "healthy" | "degraded" | "down";
-}> {
-  const results: {
-    optimizationEngine: "healthy" | "degraded" | "down";
-    parameterManager: "healthy" | "degraded" | "down";
-    backtesting: "healthy" | "degraded" | "down";
-    abTesting: "healthy" | "degraded" | "down";
-  } = {
+async function checkComponentHealth(): Promise<ComponentHealth> {
+  const results: ComponentHealth = {
     optimizationEngine: "healthy",
     parameterManager: "healthy",
     backtesting: "healthy",
@@ -135,7 +210,9 @@ function determineOverallHealth(components: {
 /**
  * Get detailed health information for each component
  */
-async function getHealthDetails(componentHealth: any): Promise<any> {
+async function getHealthDetails(
+  componentHealth: ComponentHealth
+): Promise<DetailedHealthResponse> {
   return {
     optimizationEngine: {
       status: componentHealth.optimizationEngine,
@@ -195,7 +272,7 @@ async function getHealthDetails(componentHealth: any): Promise<any> {
 /**
  * Get system health metrics
  */
-async function getHealthMetrics(): Promise<any> {
+async function getHealthMetrics(): Promise<HealthMetricsResponse> {
   return {
     system: {
       uptime: Math.floor(process.uptime()),

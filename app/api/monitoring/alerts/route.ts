@@ -378,7 +378,13 @@ async function getAlertTrends() {
 }
 
 // Action handlers
-async function acknowledgeAlert(data: any) {
+interface AcknowledgeAlertData {
+  alertId: string;
+  acknowledgedBy: string;
+  notes?: string;
+}
+
+async function acknowledgeAlert(data: AcknowledgeAlertData) {
   const { alertId, acknowledgedBy, notes } = data;
 
   // Mock acknowledgment - replace with actual database update
@@ -392,8 +398,17 @@ async function acknowledgeAlert(data: any) {
   });
 }
 
-async function createAlert(data: any) {
-  const { severity, category, source, title, message, metadata } = data;
+interface CreateAlertData {
+  severity: string;
+  category: string;
+  source: string;
+  title: string;
+  message: string;
+  metadata?: Record<string, unknown>;
+}
+
+async function createAlert(data: CreateAlertData) {
+  const { severity, category, source, title, message } = data;
 
   // Mock alert creation - replace with actual database insert
   const alertId = `alert-${Date.now()}`;
@@ -413,7 +428,13 @@ async function createAlert(data: any) {
   });
 }
 
-async function dismissAlert(data: any) {
+interface DismissAlertData {
+  alertId: string;
+  dismissedBy: string;
+  reason?: string;
+}
+
+async function dismissAlert(data: DismissAlertData) {
   const { alertId, dismissedBy, reason } = data;
 
   // Mock dismissal - replace with actual database update
@@ -427,8 +448,14 @@ async function dismissAlert(data: any) {
   });
 }
 
-async function bulkAcknowledgeAlerts(data: any) {
-  const { alertIds, acknowledgedBy, notes } = data;
+interface BulkAcknowledgeAlertsData {
+  alertIds: string[];
+  acknowledgedBy: string;
+  notes?: string;
+}
+
+async function bulkAcknowledgeAlerts(data: BulkAcknowledgeAlertsData) {
+  const { alertIds, acknowledgedBy } = data;
 
   // Mock bulk acknowledgment - replace with actual database update
   console.info(
@@ -443,7 +470,7 @@ async function bulkAcknowledgeAlerts(data: any) {
   });
 }
 
-async function updateAlert(alertId: string, updates: any) {
+async function updateAlert(alertId: string, updates: Record<string, unknown>) {
   // Mock alert update - replace with actual database update
   console.info(`Updating alert ${alertId}:`, updates);
 

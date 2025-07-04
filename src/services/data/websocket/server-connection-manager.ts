@@ -45,7 +45,7 @@ export class ServerConnectionManager {
 
   private connections = new Map<
     string,
-    WebSocketConnection & { ws: WebSocket }
+    WebSocketConnection & { ws: InstanceType<typeof UniversalWebSocket> }
   >();
   private userConnections = new Map<string, Set<string>>();
   private channelSubscriptions = new Map<string, Set<string>>();
@@ -60,7 +60,9 @@ export class ServerConnectionManager {
     userId?: string,
     clientType: WebSocketConnection["clientType"] = "dashboard"
   ): void {
-    const connection: WebSocketConnection & { ws: WebSocket } = {
+    const connection: WebSocketConnection & {
+      ws: InstanceType<typeof UniversalWebSocket>;
+    } = {
       id: connectionId,
       userId,
       clientType,
@@ -148,7 +150,9 @@ export class ServerConnectionManager {
    */
   getConnection(
     connectionId: string
-  ): (WebSocketConnection & { ws: WebSocket }) | undefined {
+  ):
+    | (WebSocketConnection & { ws: InstanceType<typeof UniversalWebSocket> })
+    | undefined {
     return this.connections.get(connectionId);
   }
 
@@ -157,11 +161,13 @@ export class ServerConnectionManager {
    */
   getUserConnections(
     userId: string
-  ): (WebSocketConnection & { ws: WebSocket })[] {
+  ): (WebSocketConnection & { ws: InstanceType<typeof UniversalWebSocket> })[] {
     const connectionIds = this.userConnections.get(userId) || new Set();
     return Array.from(connectionIds)
       .map((id) => this.connections.get(id))
-      .filter(Boolean) as (WebSocketConnection & { ws: WebSocket })[];
+      .filter(Boolean) as (WebSocketConnection & {
+      ws: InstanceType<typeof UniversalWebSocket>;
+    })[];
   }
 
   /**
@@ -169,11 +175,13 @@ export class ServerConnectionManager {
    */
   getChannelSubscribers(
     channel: string
-  ): (WebSocketConnection & { ws: WebSocket })[] {
+  ): (WebSocketConnection & { ws: InstanceType<typeof UniversalWebSocket> })[] {
     const connectionIds = this.channelSubscriptions.get(channel) || new Set();
     return Array.from(connectionIds)
       .map((id) => this.connections.get(id))
-      .filter(Boolean) as (WebSocketConnection & { ws: WebSocket })[];
+      .filter(Boolean) as (WebSocketConnection & {
+      ws: InstanceType<typeof UniversalWebSocket>;
+    })[];
   }
 
   /**
@@ -270,7 +278,9 @@ export class ServerConnectionManager {
   /**
    * Get all active connections
    */
-  getAllConnections(): (WebSocketConnection & { ws: WebSocket })[] {
+  getAllConnections(): (WebSocketConnection & {
+    ws: InstanceType<typeof UniversalWebSocket>;
+  })[] {
     return Array.from(this.connections.values());
   }
 
@@ -327,7 +337,7 @@ export class ServerConnectionManager {
    */
   getConnectionsByType(
     clientType: WebSocketConnection["clientType"]
-  ): (WebSocketConnection & { ws: WebSocket })[] {
+  ): (WebSocketConnection & { ws: InstanceType<typeof UniversalWebSocket> })[] {
     return Array.from(this.connections.values()).filter(
       (c) => c.clientType === clientType
     );

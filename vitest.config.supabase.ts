@@ -50,7 +50,6 @@ export default defineConfig({
       '**/*.spec.ts',
       '**/*.spec.js',
       'tests/unit/*kinde*.test.ts', // Exclude Kinde-specific tests
-      'tests/unit/*neon*.test.ts',  // Exclude NeonDB-specific tests
     ],
     
     // Increased timeout for Supabase operations

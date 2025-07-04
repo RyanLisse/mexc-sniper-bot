@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Real-time Dashboard Component
  *
@@ -13,8 +15,6 @@
  * - 30% improvement in real-time data processing
  * - 25% reduction in bundle size for this component tree
  */
-
-"use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";

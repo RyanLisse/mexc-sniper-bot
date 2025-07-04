@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Test Branch Setup Utilities
  *
@@ -50,7 +54,7 @@ export interface TestBranchManager {
 
 /**
  * Mock implementation of Test Branch Manager
- * In a real implementation, this would integrate with Neon or similar service
+ * In a real implementation, this would integrate with Supabase branching or similar service
  */
 export class MockTestBranchManager implements TestBranchManager {
   private logger = {

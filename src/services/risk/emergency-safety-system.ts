@@ -9,7 +9,7 @@
  * - System-wide emergency protocols
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type { AdvancedRiskEngine } from "./advanced-risk-engine";
 import { type CircuitBreaker, circuitBreakerRegistry } from "./circuit-breaker";
 
@@ -144,7 +144,7 @@ export interface EmergencyConfig {
  * situations and execute automated responses to protect capital
  * and system integrity.
  */
-export class EmergencySafetySystem extends EventEmitter {
+export class EmergencySafetySystem extends BrowserCompatibleEventEmitter {
   private _logger?: {
     info: (message: string, context?: any) => void;
     warn: (message: string, context?: any) => void;

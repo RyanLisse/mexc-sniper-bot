@@ -42,11 +42,11 @@ setup: install ## Complete project setup
 	@$(MAKE) db-migrate
 	@echo -e "${GREEN}✓ Project setup complete${NC}"
 
-.PHONY: setup-turso
-setup-turso: ## Setup TursoDB (interactive)
-	@echo -e "${BLUE}Setting up TursoDB...${NC}"
-	@chmod +x scripts/setup-turso.sh
-	@./scripts/setup-turso.sh
+.PHONY: setup-supabase
+setup-supabase: ## Setup Supabase (interactive)
+	@echo -e "${BLUE}Setting up Supabase...${NC}"
+	@echo -e "${YELLOW}Please visit https://supabase.com to create your project${NC}"
+	@echo -e "${YELLOW}Then configure your DATABASE_URL in .env.local${NC}"
 
 # ==================== Development Commands ====================
 
@@ -380,7 +380,7 @@ db-reset: ## Reset database (WARNING: destroys all data)
 		echo -e "${YELLOW}Database reset cancelled${NC}"; \
 	fi
 
-# ==================== NeonDB Branch Management ====================
+# ==================== Database Branch Management (Legacy) ====================
 
 .PHONY: branch-create
 branch-create: ## Create a new test branch
@@ -458,7 +458,7 @@ status: ## Show project status
 	@echo -e "Git branch: $$(git branch --show-current)"
 	@echo -e "Git status: $$(git status --porcelain | wc -l) uncommitted changes"
 	@echo -e "Node version: $$(bun --version)"
-	@echo -e "Database: $$(if [ -n "$$TURSO_DATABASE_URL" ]; then echo "TursoDB"; else echo "SQLite"; fi)"
+	@echo -e "Database: $$(if [ -n "$$DATABASE_URL" ] && [[ "$$DATABASE_URL" == *"supabase"* ]]; then echo "Supabase"; else echo "Local PostgreSQL"; fi)"
 
 # ==================== Docker Commands ====================
 
@@ -478,19 +478,73 @@ docker-down: ## Stop Docker services
 docker-logs: ## Show Docker logs
 	@docker-compose logs -f
 
+# ==================== Railway Setup Commands ====================
+
+.PHONY: railway-init
+railway-init: ## Initialize Railway project
+	@echo -e "${BLUE}Initializing Railway project...${NC}"
+	@bun run scripts/railway-init.ts
+	@echo -e "${GREEN}✓ Railway initialization complete${NC}"
+
+.PHONY: railway-status
+railway-status: ## Show Railway project status
+	@echo -e "${BLUE}Railway project status:${NC}"
+	@railway status
+
+.PHONY: railway-vars
+railway-vars: ## Show Railway environment variables
+	@echo -e "${BLUE}Railway environment variables:${NC}"
+	@railway variables
+
+.PHONY: railway-logs
+railway-logs: ## Show Railway deployment logs
+	@echo -e "${BLUE}Railway deployment logs:${NC}"
+	@railway logs
+
 # ==================== Production Commands ====================
 
 .PHONY: deploy
-deploy: ## Deploy to production (Vercel)
+deploy: ## Deploy to production (Railway)
 	@echo -e "${BLUE}Deploying to production...${NC}"
-	@vercel --prod
+	@railway deploy --environment production
 	@echo -e "${GREEN}✓ Deployment complete${NC}"
 
 .PHONY: deploy-preview
 deploy-preview: ## Deploy preview build
 	@echo -e "${BLUE}Deploying preview build...${NC}"
-	@vercel
+	@railway deploy --environment staging
 	@echo -e "${GREEN}✓ Preview deployment complete${NC}"
+
+.PHONY: deploy-verify
+deploy-verify: ## Deploy and verify production deployment
+	@echo -e "${BLUE}Deploying and verifying production...${NC}"
+	@$(MAKE) production-readiness-check
+	@$(MAKE) deploy
+	@sleep 30
+	@$(MAKE) verify-deployment
+	@echo -e "${GREEN}✅ Production deployment verified and ready${NC}"
+
+.PHONY: verify-deployment
+verify-deployment: ## Verify production deployment health
+	@echo -e "${BLUE}Verifying production deployment...${NC}"
+	@bun run deployment/production-verification.ts --url $${RAILWAY_PUBLIC_DOMAIN:-https://mexc-sniper-bot-production.up.railway.app}
+	@echo -e "${GREEN}✓ Deployment verification complete${NC}"
+
+.PHONY: monitor-production
+monitor-production: ## Start production monitoring
+	@echo -e "${BLUE}Starting production monitoring...${NC}"
+	@bun run scripts/production-monitoring.ts --url $${RAILWAY_PUBLIC_DOMAIN:-https://mexc-sniper-bot-production.up.railway.app}
+
+.PHONY: monitor-dashboard
+monitor-dashboard: ## Show production readiness dashboard
+	@echo -e "${BLUE}Opening production readiness dashboard...${NC}"
+	@bun run scripts/production-readiness-dashboard.ts --url $${RAILWAY_PUBLIC_DOMAIN:-https://mexc-sniper-bot-production.up.railway.app}
+
+.PHONY: validate-config
+validate-config: ## Validate production configuration
+	@echo -e "${BLUE}Validating production configuration...${NC}"
+	@bun run scripts/production-config-validator.ts
+	@echo -e "${GREEN}✓ Configuration validation complete${NC}"
 
 # ==================== Production Testing Automation ====================
 
@@ -579,19 +633,24 @@ test-production-resilience: kill-ports ## Run system resilience and recovery tes
 production-readiness-check: ## Complete production readiness validation
 	@echo -e "${BLUE}Complete production readiness check...${NC}"
 	@echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-	@echo -e "${YELLOW}1/7: Code quality and type checking...${NC}"
+	@echo -e "${YELLOW}1/9: Configuration validation...${NC}"
+	@$(MAKE) validate-config
+	@echo -e "${YELLOW}2/9: Code quality and type checking...${NC}"
 	@$(MAKE) lint type-check
-	@echo -e "${YELLOW}2/7: Unit and integration tests...${NC}"
+	@echo -e "${YELLOW}3/9: Unit and integration tests...${NC}"
 	@$(MAKE) test-unit test-integration
-	@echo -e "${YELLOW}3/7: Build verification...${NC}"
+	@echo -e "${YELLOW}4/9: Build verification...${NC}"
 	@$(MAKE) build
-	@echo -e "${YELLOW}4/7: E2E functional tests...${NC}"
+	@echo -e "${YELLOW}5/9: E2E functional tests...${NC}"
 	@$(MAKE) test-e2e
-	@echo -e "${YELLOW}5/7: Stagehand user journey tests...${NC}"
+	@echo -e "${YELLOW}6/9: Stagehand user journey tests...${NC}"
 	@$(MAKE) test-stagehand
-	@echo -e "${YELLOW}6/7: Production testing automation...${NC}"
+	@echo -e "${YELLOW}7/9: Production testing automation...${NC}"
 	@$(MAKE) test-production
-	@echo -e "${YELLOW}7/7: Generating final readiness report...${NC}"
+	@echo -e "${YELLOW}8/9: Production readiness validation...${NC}"
+	@bun run scripts/production-readiness-validator.ts
+	@echo -e "${YELLOW}9/9: Generating final readiness report...${NC}"
+	@bun run scripts/production-readiness-dashboard.ts --report
 	@echo -e "${GREEN}✓ Production readiness check completed${NC}"
 	@echo -e "${GREEN}🚀 System ready for production deployment${NC}"
 
@@ -636,6 +695,36 @@ ti: test-integration ## Alias for test-integration
 .PHONY: ta
 ta: test-all ## Alias for test-all
 
+.PHONY: prc
+prc: production-readiness-check ## Alias for production-readiness-check
+
+.PHONY: dv
+dv: deploy-verify ## Alias for deploy-verify
+
+.PHONY: vd
+vd: verify-deployment ## Alias for verify-deployment
+
+.PHONY: mp
+mp: monitor-production ## Alias for monitor-production
+
+.PHONY: md
+md: monitor-dashboard ## Alias for monitor-dashboard
+
+.PHONY: vc
+vc: validate-config ## Alias for validate-config
+
+.PHONY: ri
+ri: railway-init ## Alias for railway-init
+
+.PHONY: rs
+rs: railway-status ## Alias for railway-status
+
+.PHONY: rv
+rv: railway-vars ## Alias for railway-vars
+
+.PHONY: rl
+rl: railway-logs ## Alias for railway-logs
+
 # ==================== Complete Workflows ====================
 
 .PHONY: workflow-dev
@@ -645,7 +734,10 @@ workflow-dev: kill-ports lint type-check test dev ## Complete development workfl
 workflow-ci: install lint type-check test build ## Complete CI workflow
 
 .PHONY: workflow-deploy
-workflow-deploy: workflow-ci deploy ## Complete deployment workflow
+workflow-deploy: workflow-ci deploy-verify ## Complete deployment workflow with verification
+
+.PHONY: workflow-production
+workflow-production: production-readiness-check deploy verify-deployment ## Complete production deployment workflow
 
 # ==================== Special Targets ====================
 

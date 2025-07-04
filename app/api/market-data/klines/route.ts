@@ -1,6 +1,35 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 
+// MEXC Kline data structure: [openTime, open, high, low, close, volume, closeTime, quoteAssetVolume, trades]
+type MexcKlineData = [
+  number, // openTime
+  string, // open
+  string, // high
+  string, // low
+  string, // close
+  string, // volume
+  number, // closeTime
+  string, // quoteAssetVolume
+  number, // trades
+];
+
+interface MexcKlinesResponse {
+  success: boolean;
+  data?: MexcKlineData[];
+}
+
+interface MexcServiceWithKlines {
+  getKlines?: (
+    symbol: string,
+    interval: string,
+    limit: number
+  ) => Promise<MexcKlinesResponse>;
+  get24hrTicker: (
+    symbol: string
+  ) => Promise<{ success: boolean; data?: unknown[] }>;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,15 +42,13 @@ export async function GET(request: NextRequest) {
     const mexcService = await getUnifiedMexcService();
 
     // Use the getKlines method to get actual historical candlestick data
-    const klinesResponse = await (mexcService as any).getKlines?.(
-      symbol,
-      interval,
-      limit
-    );
+    const klinesResponse = await (
+      mexcService as MexcServiceWithKlines
+    ).getKlines?.(symbol, interval, limit);
 
     if (klinesResponse?.success && klinesResponse.data?.length > 0) {
       // Transform MEXC kline data to chart format
-      const chartData = klinesResponse.data.map((kline: any) => {
+      const chartData = klinesResponse.data.map((kline: MexcKlineData) => {
         const [
           openTime,
           _open,

@@ -8,9 +8,9 @@
  * 4. Providing real-time pattern monitoring
  */
 
-import { EventEmitter } from "node:events";
 import { db } from "@/src/db";
 import { snipeTargets } from "@/src/db/schemas/trading";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import {
   getCompleteAutoSnipingService,
@@ -76,7 +76,7 @@ export interface PatternSnipeResult {
  *
  * Connects pattern detection system with auto-sniping execution
  */
-export class PatternSnipeIntegration extends EventEmitter {
+export class PatternSnipeIntegration extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[pattern-snipe-integration]", message, context || ""),

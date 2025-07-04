@@ -1,6 +1,13 @@
 import { apiResponse, createSuccessResponse } from "@/src/lib/api-response";
 import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-exports";
 
+// Calendar response interface
+interface CalendarResponse {
+  data?: unknown[];
+  cached?: boolean;
+  executionTimeMs?: number;
+}
+
 export async function GET() {
   try {
     // Add timeout wrapper for service call
@@ -11,7 +18,7 @@ export async function GET() {
       new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Service timeout")), 8000)
       ),
-    ])) as any;
+    ])) as CalendarResponse;
 
     // Ensure data is always an array
     const calendarData = Array.isArray(calendarResponse?.data)

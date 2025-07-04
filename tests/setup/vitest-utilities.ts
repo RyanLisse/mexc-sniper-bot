@@ -178,15 +178,10 @@ export function configureEnvironmentVariables(isIntegrationTest: boolean): void 
 // ============================================================================
 
 /**
- * Set up error handling for uncaught exceptions in tests
+ * Set up error handling for uncaught exceptions in tests using centralized manager
  */
 export function setupErrorHandling(): void {
-  process.on('unhandledRejection', (reason, promise) => {
-    console.error('❌ Unhandled Rejection in test:', reason);
-    console.error('Promise:', promise);
-  });
-
-  process.on('uncaughtException', (error) => {
-    console.error('❌ Uncaught Exception in test:', error);
-  });
+  // Error handling is now managed centrally by vitest-setup.ts
+  // This function is kept for backwards compatibility but no longer adds duplicate listeners
+  console.log('🔧 Error handling delegated to centralized process event manager');
 }

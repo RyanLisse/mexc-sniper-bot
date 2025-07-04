@@ -27,13 +27,13 @@ export const GET = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
     // Build-safe logger - simple console implementation
     const _logger = {
-      info: (message: string, context?: any) =>
+      info: (message: string, context?: unknown) =>
         console.info("[auto-sniping-execution]", message, context || ""),
-      warn: (message: string, context?: any) =>
+      warn: (message: string, context?: unknown) =>
         console.warn("[auto-sniping-execution]", message, context || ""),
-      error: (message: string, context?: any) =>
+      error: (message: string, context?: unknown) =>
         console.error("[auto-sniping-execution]", message, context || ""),
-      debug: (message: string, context?: any) =>
+      debug: (message: string, context?: unknown) =>
         console.debug("[auto-sniping-execution]", message, context || ""),
     };
 
@@ -89,19 +89,19 @@ export const POST = instrumentedTradingRoute(
   apiAuthWrapper(async (request: NextRequest) => {
     // Build-safe logger - simple console implementation
     const _logger = {
-      info: (message: string, context?: any) =>
+      info: (message: string, context?: unknown) =>
         console.info("[auto-sniping-execution]", message, context || ""),
-      warn: (message: string, context?: any) =>
+      warn: (message: string, context?: unknown) =>
         console.warn("[auto-sniping-execution]", message, context || ""),
-      error: (message: string, context?: any) =>
+      error: (message: string, context?: unknown) =>
         console.error("[auto-sniping-execution]", message, context || ""),
-      debug: (message: string, context?: any) =>
+      debug: (message: string, context?: unknown) =>
         console.debug("[auto-sniping-execution]", message, context || ""),
     };
 
     try {
       const body = await request.json();
-      const { action, positionId, reason, config } = body;
+      const { action, positionId, config } = body;
 
       switch (action) {
         case "start_execution":

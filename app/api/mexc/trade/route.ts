@@ -15,6 +15,46 @@ import { getRecommendedMexcService } from "@/src/services/api/mexc-unified-expor
 import { transactionLockService } from "@/src/services/data/transaction-lock-service";
 import { enhancedRiskManagementService } from "@/src/services/risk/enhanced-risk-management-service";
 
+// Risk metadata interface
+interface RiskMetadata {
+  riskLevel: string;
+  riskScore: number;
+  assessmentTime: string;
+  portfolioImpact: number;
+  emergencyTrade?: boolean;
+}
+
+// Extended order parameters interface
+interface OrderParametersWithRisk extends OrderParameters {
+  riskMetadata?: RiskMetadata;
+}
+
+// MEXC order response interface
+interface MexcOrderResponse {
+  success: boolean;
+  executedQty?: string;
+  orderId?: string;
+  clientOrderId?: string;
+  transactTime?: number;
+  price?: string;
+  origQty?: string;
+  status?: string;
+  timeInForce?: string;
+  type?: string;
+  side?: string;
+  fills?: Array<{
+    price: string;
+    qty: string;
+    commission: string;
+    commissionAsset: string;
+  }>;
+  cached?: boolean;
+  requestId?: string;
+  timestamp?: string;
+  data?: unknown;
+  error?: string;
+}
+
 // Create logger at module level like other working routes
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +86,7 @@ export async function POST(request: NextRequest) {
         encryptedPassphrase: apiCredentials.encryptedPassphrase,
         userId: apiCredentials.userId,
         provider: apiCredentials.provider,
-        isActive: apiCredentials.isActive
+        isActive: apiCredentials.isActive,
       })
       .from(apiCredentials)
       .where(
@@ -175,7 +215,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Add risk metadata to order for tracking
-        (orderParams as any).riskMetadata = {
+        (orderParams as OrderParametersWithRisk).riskMetadata = {
           riskLevel: riskAssessment.riskLevel,
           riskScore: riskAssessment.riskScore,
           assessmentTime: riskAssessment.metadata.assessmentTime,
@@ -204,7 +244,7 @@ export async function POST(request: NextRequest) {
       console.info(`⚠️ Risk Assessment: Skipped for ${symbol} (skipLock=true)`);
 
       // Add minimal risk metadata for emergency trades
-      (orderParams as any).riskMetadata = {
+      (orderParams as OrderParametersWithRisk).riskMetadata = {
         riskLevel: "unknown",
         riskScore: 0,
         assessmentTime: new Date().toISOString(),
@@ -244,7 +284,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Execute with or without lock
-    let result;
+    let result: MexcOrderResponse;
     if (skipLock) {
       result = await executeTrade();
     } else {
@@ -293,7 +333,7 @@ export async function POST(request: NextRequest) {
 
       // Save execution history
       try {
-        const orderData = orderResult as any; // Type assertion for MEXC order response
+        const orderData = orderResult as MexcOrderResponse; // Type assertion for MEXC order response
         const executionRecord: NewExecutionHistory = {
           userId,
           snipeTargetId: snipeTargetId || null,

@@ -14,20 +14,78 @@ import {
 import { enhancedPerformanceMonitor } from "@/src/lib/monitoring/enhanced-performance-monitor";
 import { tradingMetricsCollector } from "@/src/lib/monitoring/trading-metrics-collector";
 
+// Detailed type interfaces for enhanced metrics
+interface TradingPerformanceData {
+  successRate: number;
+  averageExecutionTime: number;
+  totalTrades: number;
+  failedTrades: number;
+}
+
+interface SystemPerformanceData {
+  memoryUsageMB: number;
+  cpuUsagePercent: number;
+  uptime: number;
+}
+
+interface AlertsData {
+  active: number;
+  resolved: number;
+  pending: number;
+}
+
+interface PerformanceReport {
+  trading: TradingPerformanceData;
+  system: SystemPerformanceData;
+  alerts: AlertsData;
+}
+
+interface ExecutionMetrics {
+  successRate: number;
+  averageExecutionTime: number;
+  totalExecutions: number;
+  failedExecutions: number;
+}
+
+interface ProfitabilityMetrics {
+  totalPnL: number;
+  unrealizedPnL: number;
+  winRate: number;
+  averageProfit: number;
+}
+
+interface RiskMetrics {
+  currentExposure: number;
+  maxDrawdown: number;
+  riskScore: number;
+  openPositions: number;
+}
+
+interface PatternsMetrics {
+  detectedPatterns: number;
+  successfulPatterns: number;
+  averageConfidence: number;
+}
+
+interface TradingPerformance {
+  execution: ExecutionMetrics;
+  profitability: ProfitabilityMetrics;
+  risk: RiskMetrics;
+  patterns: PatternsMetrics;
+}
+
+interface RealtimeMetrics {
+  currentPrice: number;
+  volume24h: number;
+  activeConnections: number;
+  latestUpdate: string;
+}
+
 export interface MetricsResponse {
   timestamp: string;
-  performance: {
-    trading: any;
-    system: any;
-    alerts: any;
-  };
-  trading: {
-    execution: any;
-    profitability: any;
-    risk: any;
-    patterns: any;
-  };
-  realtime: any;
+  performance: PerformanceReport;
+  trading: TradingPerformance;
+  realtime: RealtimeMetrics;
   health: {
     status: "healthy" | "degraded" | "unhealthy";
     issues: string[];
@@ -168,8 +226,8 @@ export async function POST(request: NextRequest): Promise<Response> {
  * Calculate overall system health based on metrics
  */
 function calculateSystemHealth(
-  performance: any,
-  trading: any
+  performance: PerformanceReport,
+  trading: TradingPerformance
 ): {
   status: "healthy" | "degraded" | "unhealthy";
   issues: string[];

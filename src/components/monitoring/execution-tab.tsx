@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Execution Tab Component
  *

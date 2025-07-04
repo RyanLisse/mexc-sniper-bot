@@ -121,37 +121,74 @@ async function getStatsHandler(_request: NextRequest): Promise<NextResponse> {
   }
 }
 
+interface CostStatsData {
+  emergency: {
+    mode: boolean;
+  };
+  cost: {
+    hourlyRate: number;
+    hourlyLimit: number;
+  };
+  connections: {
+    current: number;
+    limit: number;
+  };
+}
+
+interface CacheStatsData {
+  cache: {
+    hitRate: number;
+  };
+}
+
+interface BatchStatsData {
+  metrics: {
+    batchingRate: number;
+  };
+}
+
 function generateQuickRecommendations(
-  costStats: any,
-  cacheStats: any,
-  batchStats: any
+  costStats: unknown,
+  cacheStats: unknown,
+  batchStats: unknown
 ): string[] {
   const recommendations: string[] = [];
 
-  if (costStats.emergency.mode) {
-    recommendations.push(
-      "System in emergency mode - reduce non-essential operations"
-    );
+  // Type-safe property access with proper type guards
+  if (isValidCostStats(costStats)) {
+    if (costStats.emergency.mode) {
+      recommendations.push(
+        "System in emergency mode - reduce non-essential operations"
+      );
+    }
+
+    if (costStats.cost.hourlyRate > costStats.cost.hourlyLimit * 0.7) {
+      recommendations.push(
+        "Approaching cost limits - implement additional caching"
+      );
+    }
+
+    if (costStats.connections.current > costStats.connections.limit * 0.8) {
+      recommendations.push(
+        "High connection usage - optimize connection pooling"
+      );
+    }
   }
 
-  if (cacheStats.cache.hitRate < 50) {
-    recommendations.push("Low cache hit rate - consider increasing TTL values");
+  if (isValidCacheStats(cacheStats)) {
+    if (cacheStats.cache.hitRate < 50) {
+      recommendations.push(
+        "Low cache hit rate - consider increasing TTL values"
+      );
+    }
   }
 
-  if (batchStats.metrics.batchingRate < 30) {
-    recommendations.push(
-      "Low batching efficiency - enable query batching for read operations"
-    );
-  }
-
-  if (costStats.cost.hourlyRate > costStats.cost.hourlyLimit * 0.7) {
-    recommendations.push(
-      "Approaching cost limits - implement additional caching"
-    );
-  }
-
-  if (costStats.connections.current > costStats.connections.limit * 0.8) {
-    recommendations.push("High connection usage - optimize connection pooling");
+  if (isValidBatchStats(batchStats)) {
+    if (batchStats.metrics.batchingRate < 30) {
+      recommendations.push(
+        "Low batching efficiency - enable query batching for read operations"
+      );
+    }
   }
 
   if (recommendations.length === 0) {
@@ -159,6 +196,54 @@ function generateQuickRecommendations(
   }
 
   return recommendations;
+}
+
+function isValidCostStats(data: unknown): data is CostStatsData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "emergency" in data &&
+    typeof (data as Record<string, unknown>).emergency === "object" &&
+    (data as Record<string, unknown>).emergency !== null &&
+    "mode" in (data as Record<string, unknown>).emergency &&
+    "cost" in data &&
+    typeof (data as Record<string, unknown>).cost === "object" &&
+    (data as Record<string, unknown>).cost !== null &&
+    "hourlyRate" in (data as Record<string, unknown>).cost &&
+    "hourlyLimit" in (data as Record<string, unknown>).cost &&
+    "connections" in data &&
+    typeof (data as Record<string, unknown>).connections === "object" &&
+    (data as Record<string, unknown>).connections !== null &&
+    "current" in (data as Record<string, unknown>).connections &&
+    "limit" in (data as Record<string, unknown>).connections
+  );
+}
+
+function isValidCacheStats(data: unknown): data is CacheStatsData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "cache" in data &&
+    typeof (data as Record<string, unknown>).cache === "object" &&
+    (data as Record<string, unknown>).cache !== null &&
+    "hitRate" in (data as Record<string, unknown>).cache &&
+    typeof ((data as Record<string, unknown>).cache as Record<string, unknown>)
+      .hitRate === "number"
+  );
+}
+
+function isValidBatchStats(data: unknown): data is BatchStatsData {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    "metrics" in data &&
+    typeof (data as Record<string, unknown>).metrics === "object" &&
+    (data as Record<string, unknown>).metrics !== null &&
+    "batchingRate" in (data as Record<string, unknown>).metrics &&
+    typeof (
+      (data as Record<string, unknown>).metrics as Record<string, unknown>
+    ).batchingRate === "number"
+  );
 }
 
 // Export with short cache time for frequently accessed stats

@@ -5,7 +5,7 @@
  * Provides persistent event storage, replay capabilities, and snapshot management.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 
 // Core Event Sourcing Types
 export interface DomainEvent {
@@ -52,7 +52,7 @@ export interface EventStoreConfig {
  *
  * Production implementation would use PostgreSQL, EventStore, or similar
  */
-export class InMemoryEventStore extends EventEmitter {
+export class InMemoryEventStore extends BrowserCompatibleEventEmitter {
   private events: Map<string, DomainEvent[]> = new Map();
   private snapshots: Map<string, AggregateSnapshot> = new Map();
   private eventCounter: number = 0;

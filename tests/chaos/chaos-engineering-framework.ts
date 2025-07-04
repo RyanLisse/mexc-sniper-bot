@@ -5,7 +5,7 @@
 
 import { performance } from 'node:perf_hooks'
 import { randomBytes } from 'crypto'
-import { EventEmitter } from 'events'
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events"
 
 // ===================== CHAOS ENGINEERING TYPES =====================
 

@@ -22,9 +22,11 @@ process.env.USE_REAL_DATABASE = "true";
 process.env.FORCE_MOCK_DB = "false";
 process.env.USE_MOCK_DATABASE = "false";
 
-// Ensure we have a valid DATABASE_URL for testing
-if (!process.env.DATABASE_URL || !process.env.DATABASE_URL.startsWith("postgresql://")) {
-  process.env.DATABASE_URL = "postgresql://neondb_owner:npg_oTv5qIQYX6lb@ep-silent-firefly-a1l3mkrm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require";
+// Ensure we have a valid DATABASE_URL for testing (must be Supabase)
+if (!process.env.DATABASE_URL || 
+    !process.env.DATABASE_URL.startsWith("postgresql://") ||
+    !process.env.DATABASE_URL.includes("supabase.co")) {
+  throw new Error("DATABASE_URL must be configured with a valid Supabase PostgreSQL connection string for integration tests");
 }
 
 describe("Database Integration Tests", () => {

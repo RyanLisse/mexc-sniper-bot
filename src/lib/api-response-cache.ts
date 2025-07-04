@@ -30,7 +30,7 @@ export interface CachedResponse {
 export interface CacheGetOptions {
   method?: string;
   acceptStale?: boolean;
-  requiredFreshness?: 'strict' | 'moderate' | 'relaxed';
+  requiredFreshness?: "strict" | "moderate" | "relaxed";
 }
 
 export interface CacheSetOptions {
@@ -145,24 +145,33 @@ class GlobalApiResponseCache {
   }
 
   // Generate cache key from endpoint and parameters
-  private generateCacheKey(endpoint: string, parameters: Record<string, any>, options: CacheGetOptions | CacheSetOptions = {}): string {
-    const paramStr = Object.keys(parameters).length > 0 ? JSON.stringify(parameters) : '';
-    const method = options.method || 'GET';
+  private generateCacheKey(
+    endpoint: string,
+    parameters: Record<string, any>,
+    options: CacheGetOptions | CacheSetOptions = {}
+  ): string {
+    const paramStr =
+      Object.keys(parameters).length > 0 ? JSON.stringify(parameters) : "";
+    const method = options.method || "GET";
     return `${method}:${endpoint}:${paramStr}`;
   }
 
   // Enhanced get method for middleware compatibility
-  async get(endpoint: string, parameters: Record<string, any> = {}, options: CacheGetOptions = {}): Promise<CachedResponse | null> {
+  async get(
+    endpoint: string,
+    parameters: Record<string, any> = {},
+    options: CacheGetOptions = {}
+  ): Promise<CachedResponse | null> {
     if (!this.config.enabled) return null;
 
     const cacheKey = this.generateCacheKey(endpoint, parameters, options);
     const entry = this.cache.get(cacheKey);
-    
+
     if (!entry) return null;
 
     const now = Date.now();
     const age = now - entry.timestamp;
-    
+
     // Check if entry is expired
     if (age > entry.ttl) {
       this.cache.delete(cacheKey);
@@ -170,10 +179,14 @@ class GlobalApiResponseCache {
     }
 
     // Determine freshness based on age and requirements
-    const freshness = this.calculateFreshness(age, entry.ttl, options.requiredFreshness);
-    
+    const freshness = this.calculateFreshness(
+      age,
+      entry.ttl,
+      options.requiredFreshness
+    );
+
     // If freshness requirement is strict and data is stale, return null
-    if (options.requiredFreshness === 'strict' && age > entry.ttl * 0.5) {
+    if (options.requiredFreshness === "strict" && age > entry.ttl * 0.5) {
       if (!options.acceptStale) {
         return null;
       }
@@ -182,19 +195,24 @@ class GlobalApiResponseCache {
     return {
       data: entry.data,
       metadata: {
-        cacheLevel: 'memory',
+        cacheLevel: "memory",
         timestamp: entry.timestamp,
-        freshness
-      }
+        freshness,
+      },
     };
   }
 
   // Enhanced set method for middleware compatibility
-  async set(endpoint: string, data: any, parameters: Record<string, any> = {}, options: CacheSetOptions = {}): Promise<void> {
+  async set(
+    endpoint: string,
+    data: any,
+    parameters: Record<string, any> = {},
+    options: CacheSetOptions = {}
+  ): Promise<void> {
     if (!this.config.enabled) return;
 
     const cacheKey = this.generateCacheKey(endpoint, parameters, options);
-    
+
     // Clean up old entries if cache is full
     if (this.cache.size >= this.config.maxSize && !this.cache.has(cacheKey)) {
       this.cleanup();
@@ -210,13 +228,17 @@ class GlobalApiResponseCache {
     this.cache.set(cacheKey, entry);
   }
 
-  private calculateFreshness(age: number, ttl: number, requiredFreshness?: string): string {
+  private calculateFreshness(
+    age: number,
+    ttl: number,
+    _requiredFreshness?: string
+  ): string {
     const ratio = age / ttl;
-    
-    if (ratio < 0.2) return 'fresh';
-    if (ratio < 0.5) return 'good';
-    if (ratio < 0.8) return 'stale';
-    return 'expired';
+
+    if (ratio < 0.2) return "fresh";
+    if (ratio < 0.5) return "good";
+    if (ratio < 0.8) return "stale";
+    return "expired";
   }
 
   private cleanup(): void {

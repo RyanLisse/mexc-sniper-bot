@@ -5,7 +5,7 @@
  * while using the new modular WebSocket services architecture
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -22,7 +22,7 @@ export type { NotificationMessage, TradingPriceMessage, TradingSignalMessage };
  * Provides a unified interface to the modular WebSocket services
  * while maintaining backward compatibility with existing code
  */
-export class MexcWebSocketStreamService extends EventEmitter {
+export class MexcWebSocketStreamService extends BrowserCompatibleEventEmitter {
   private static instance: MexcWebSocketStreamService;
 
   private constructor() {

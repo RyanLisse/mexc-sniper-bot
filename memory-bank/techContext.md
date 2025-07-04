@@ -6,7 +6,7 @@
 | **Frontend** | Next.js 15 (React 19, App Router) | UI, SSR/SSG, API routes |
 | **Language** | TypeScript 5.5 | Static typing, modern ECMAScript |
 | **Package Mgr** | **Bun** 1.x | Fast installs & script runner (see `CLAUDE.md`) |
-| **Database** | SQLite (dev) / NeonDB (prod) via **Drizzle ORM** | Flexible local dev & serverless Postgres prod |
+| **Database** | Supabase PostgreSQL via **Drizzle ORM** | Serverless Postgres with auth integration |
 | **Auth** | Supabase | Complete auth system with rate limit handling, SMTP bypass |
 | **Background Jobs** | Inngest | Durable event-driven workflows |
 | **AI Integration** | OpenAI GPT-4 (agents) | Pattern recognition & strategy generation |

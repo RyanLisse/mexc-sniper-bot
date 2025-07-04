@@ -7,7 +7,7 @@
  * This completes the missing bridge: Pattern Detection → Event Emission → Target Creation
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type { SymbolEntry } from "@/src/services/api/mexc-unified-exports";
 import { toSafeError } from "../../lib/error-type-utils";
 import { ConfidenceCalculator } from "./confidence-calculator";
@@ -48,7 +48,7 @@ export interface PatternDetectionEventData {
 /**
  * Enhanced Pattern Detection Core with Event Emission
  */
-export class EnhancedPatternDetectionCore extends EventEmitter {
+export class EnhancedPatternDetectionCore extends BrowserCompatibleEventEmitter {
   private static instance: EnhancedPatternDetectionCore;
   private _logger?: {
     info: (message: string, context?: any) => void;
@@ -713,6 +713,36 @@ export class EnhancedPatternDetectionCore extends EventEmitter {
       });
       return [];
     }
+  }
+
+  /**
+   * MEMORY LEAK FIX: Proper shutdown method with EventEmitter cleanup
+   */
+  shutdown(): void {
+    this.logger.info("Shutting down Enhanced Pattern Detection Core...");
+
+    // Remove all EventEmitter listeners to prevent memory leaks
+    this.removeAllListeners();
+
+    // Clear any internal state/caches if they exist
+    // (Additional cleanup can be added here based on implementation)
+
+    // Reset singleton instance
+    if (EnhancedPatternDetectionCore.instance === this) {
+      EnhancedPatternDetectionCore.instance = null as any;
+    }
+
+    this.logger.info("Enhanced Pattern Detection Core shutdown complete");
+  }
+
+  /**
+   * Reset singleton instance with proper cleanup
+   */
+  static async resetInstance(): Promise<void> {
+    if (EnhancedPatternDetectionCore.instance) {
+      EnhancedPatternDetectionCore.instance.shutdown();
+    }
+    EnhancedPatternDetectionCore.instance = null as any;
   }
 }
 

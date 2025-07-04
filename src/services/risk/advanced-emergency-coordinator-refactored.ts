@@ -5,7 +5,7 @@
  * Reduced from 1232 lines to under 500 lines by consolidating repetitive patterns.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { createTimer } from "@/src/lib/structured-logger";
 import type { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
 import type { EmergencySafetySystem } from "./emergency-safety-system";
@@ -146,7 +146,7 @@ class EmergencyOperationUtils {
     operation: () => Promise<T>,
     context: Record<string, any>,
     logger: any,
-    eventEmitter?: EventEmitter,
+    eventEmitter?: BrowserCompatibleEventEmitter,
     eventData?: Record<string, any>
   ): Promise<T> {
     const timer = createTimer(operationName, "advanced-emergency-coordinator");
@@ -509,7 +509,7 @@ class EmergencyActionUtils {
 // Advanced Emergency Coordinator (Refactored)
 // ============================================================================
 
-export class AdvancedEmergencyCoordinatorRefactored extends EventEmitter {
+export class AdvancedEmergencyCoordinatorRefactored extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info(

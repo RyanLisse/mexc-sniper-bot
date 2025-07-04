@@ -9,7 +9,7 @@
  * - Order execution
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { getRecommendedMexcService } from "../api/mexc-unified-exports";
 import { EmergencySafetySystem } from "../risk/emergency-safety-system";
 import { enhancedRiskManagementService } from "../risk/enhanced-risk-management-service";
@@ -71,7 +71,7 @@ export interface DashboardAlert {
   data?: any;
 }
 
-export class IntegratedTradingDashboard extends EventEmitter {
+export class IntegratedTradingDashboard extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[trading-dashboard]", message, context || ""),

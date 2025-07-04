@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Unified Auto-Sniping Orchestrator
  *
@@ -9,7 +13,7 @@
  * 5. Implementing safety checks and risk management
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import {
   getCompleteAutoSnipingService,
@@ -102,7 +106,7 @@ export interface ExecutionCommand {
  *
  * Master controller for the complete auto-sniping system
  */
-export class UnifiedAutoSnipingOrchestrator extends EventEmitter {
+export class UnifiedAutoSnipingOrchestrator extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[unified-orchestrator]", message, context || ""),

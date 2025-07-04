@@ -12,7 +12,7 @@
  * - Event emission for pattern-target bridge integration
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "../../lib/error-type-utils";
 import type { ActivityData } from "../../schemas/unified/mexc-api-schemas";
 import type {
@@ -65,7 +65,7 @@ interface AIEnhancement {
  * Provides the same interface as the original engine but with improved architecture.
  * Extends EventEmitter to enable pattern-target bridge integration.
  */
-export class PatternDetectionCore extends EventEmitter {
+export class PatternDetectionCore extends BrowserCompatibleEventEmitter {
   private static instance: PatternDetectionCore;
   // OPTIMIZATION: Use shared logger to eliminate redundant code
   private logger = createPatternLogger("pattern-detection-core");

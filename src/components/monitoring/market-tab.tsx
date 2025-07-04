@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Market Tab Component
  *

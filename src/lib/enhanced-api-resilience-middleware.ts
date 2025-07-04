@@ -1,6 +1,10 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Enhanced API Resilience Middleware
- * 
+ *
  * Integrates circuit breakers, retries, fallbacks, and graceful degradation
  * to address the 400-500% error rate increases in chaos scenarios
  */
@@ -8,7 +12,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { ApiResponse } from "./api-response";
 import { apiResponse } from "./api-response";
-import { executeWithResilience, globalResilienceCoordinator, type FallbackStrategy } from "./enhanced-resilience-manager";
+import {
+  executeWithResilience,
+  type FallbackStrategy,
+  globalResilienceCoordinator,
+} from "./enhanced-resilience-manager";
 import { createLogger } from "./unified-logger";
 
 const logger = createLogger("enhanced-api-resilience", {
@@ -23,29 +31,29 @@ export type ResilientApiHandler<T = any> = (
 
 export interface ResilientApiOptions {
   // Resilience settings
-  enableCircuitBreaker?: boolean
-  enableRetries?: boolean
-  enableFallbacks?: boolean
-  enableGracefulDegradation?: boolean
-  
+  enableCircuitBreaker?: boolean;
+  enableRetries?: boolean;
+  enableFallbacks?: boolean;
+  enableGracefulDegradation?: boolean;
+
   // Circuit breaker configuration
-  failureThreshold?: number
-  resetTimeout?: number
-  
+  failureThreshold?: number;
+  resetTimeout?: number;
+
   // Retry configuration
-  maxRetries?: number
-  retryDelay?: number
-  
+  maxRetries?: number;
+  retryDelay?: number;
+
   // Timeout settings
-  operationTimeout?: number
-  
+  operationTimeout?: number;
+
   // Fallback strategies
-  fallbackStrategies?: Array<() => Promise<any>>
-  degradedModeResponse?: any
-  
+  fallbackStrategies?: Array<() => Promise<any>>;
+  degradedModeResponse?: any;
+
   // Monitoring
-  enableMetrics?: boolean
-  enableRequestLogging?: boolean
+  enableMetrics?: boolean;
+  enableRequestLogging?: boolean;
 }
 
 const defaultResilientOptions: Required<ResilientApiOptions> = {
@@ -59,7 +67,9 @@ const defaultResilientOptions: Required<ResilientApiOptions> = {
   retryDelay: 1000,
   operationTimeout: 30000,
   fallbackStrategies: [],
-  degradedModeResponse: { message: "Service temporarily degraded, using cached data" },
+  degradedModeResponse: {
+    message: "Service temporarily degraded, using cached data",
+  },
   enableMetrics: true,
   enableRequestLogging: process.env.NODE_ENV === "development",
 };
@@ -68,86 +78,102 @@ const defaultResilientOptions: Required<ResilientApiOptions> = {
  * Create default fallback strategies for different endpoint types
  */
 function createDefaultFallbacks(endpointType: string): FallbackStrategy<any>[] {
-  const fallbacks: FallbackStrategy<any>[] = []
+  const fallbacks: FallbackStrategy<any>[] = [];
 
   switch (endpointType) {
-    case 'health':
+    case "health":
       fallbacks.push(
         // Fallback 1: Basic health status
-        async () => apiResponse.success({
-          status: "degraded",
-          message: "Health check using fallback mode",
-          timestamp: new Date().toISOString(),
-          services: {
-            core: "operational",
-            api: "degraded"
-          }
-        }),
-        
-        // Fallback 2: Minimal status
-        async () => apiResponse.success({
-          status: "minimal",
-          timestamp: new Date().toISOString()
-        })
-      )
-      break
+        async () =>
+          apiResponse.success({
+            status: "degraded",
+            message: "Health check using fallback mode",
+            timestamp: new Date().toISOString(),
+            services: {
+              core: "operational",
+              api: "degraded",
+            },
+          }),
 
-    case 'data':
+        // Fallback 2: Minimal status
+        async () =>
+          apiResponse.success({
+            status: "minimal",
+            timestamp: new Date().toISOString(),
+          })
+      );
+      break;
+
+    case "data":
       fallbacks.push(
         // Fallback 1: Cached data
-        async () => apiResponse.success({
-          data: [],
-          source: "cache",
-          message: "Using cached data due to service degradation"
-        }),
-        
-        // Fallback 2: Empty but valid response
-        async () => apiResponse.success({
-          data: [],
-          source: "fallback",
-          message: "Service temporarily unavailable"
-        })
-      )
-      break
+        async () =>
+          apiResponse.success({
+            data: [],
+            source: "cache",
+            message: "Using cached data due to service degradation",
+          }),
 
-    case 'trading':
+        // Fallback 2: Empty but valid response
+        async () =>
+          apiResponse.success({
+            data: [],
+            source: "fallback",
+            message: "Service temporarily unavailable",
+          })
+      );
+      break;
+
+    case "trading":
       fallbacks.push(
         // Fallback 1: Safe mode
-        async () => apiResponse.success({
-          mode: "safe",
-          message: "Trading in safe mode - limited functionality",
-          available_operations: ["view", "status"]
-        }),
-        
+        async () =>
+          apiResponse.success({
+            mode: "safe",
+            message: "Trading in safe mode - limited functionality",
+            available_operations: ["view", "status"],
+          }),
+
         // Fallback 2: Read-only mode
-        async () => apiResponse.success({
-          mode: "readonly",
-          message: "Trading suspended - monitoring only"
-        })
-      )
-      break
+        async () =>
+          apiResponse.success({
+            mode: "readonly",
+            message: "Trading suspended - monitoring only",
+          })
+      );
+      break;
 
     default:
       // Generic fallbacks
-      fallbacks.push(
-        async () => apiResponse.success({
+      fallbacks.push(async () =>
+        apiResponse.success({
           status: "degraded",
-          message: "Service operating in degraded mode"
+          message: "Service operating in degraded mode",
         })
-      )
+      );
   }
 
-  return fallbacks
+  return fallbacks;
 }
 
 /**
  * Determine endpoint type from URL for appropriate fallback strategies
  */
 function getEndpointType(url: string): string {
-  if (url.includes('/health')) return 'health'
-  if (url.includes('/trading') || url.includes('/portfolio') || url.includes('/mexc')) return 'trading'
-  if (url.includes('/data') || url.includes('/analytics') || url.includes('/monitoring')) return 'data'
-  return 'generic'
+  if (url.includes("/health")) return "health";
+  if (
+    url.includes("/trading") ||
+    url.includes("/portfolio") ||
+    url.includes("/mexc")
+  )
+    return "trading";
+  if (
+    url.includes("/data") ||
+    url.includes("/analytics") ||
+    url.includes("/monitoring")
+  )
+    return "data";
+  return "generic";
 }
 
 /**
@@ -157,14 +183,15 @@ export function withResilientApiHandling<T = any>(
   handler: ResilientApiHandler<T>,
   options: ResilientApiOptions = {}
 ): ResilientApiHandler<T> {
-  const config = { ...defaultResilientOptions, ...options }
+  const config = { ...defaultResilientOptions, ...options };
 
   return async (request: NextRequest, context) => {
-    const startTime = performance.now()
-    const url = new URL(request.url)
-    const operationName = `${request.method}:${url.pathname}`
-    const endpointType = getEndpointType(url.pathname)
-    const requestId = request.headers.get("x-request-id") || crypto.randomUUID()
+    const startTime = performance.now();
+    const url = new URL(request.url);
+    const operationName = `${request.method}:${url.pathname}`;
+    const endpointType = getEndpointType(url.pathname);
+    const requestId =
+      request.headers.get("x-request-id") || crypto.randomUUID();
 
     if (config.enableRequestLogging) {
       logger.info("Resilient API request started", {
@@ -172,32 +199,37 @@ export function withResilientApiHandling<T = any>(
         url: request.url,
         requestId,
         operationName,
-        endpointType
+        endpointType,
       });
     }
 
     try {
       // Handle OPTIONS requests immediately
       if (request.method === "OPTIONS") {
-        return new NextResponse(null, { 
+        return new NextResponse(null, {
           status: 200,
           headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, X-Request-ID",
-            "X-Request-ID": requestId
-          }
+            "Access-Control-Allow-Headers":
+              "Content-Type, Authorization, X-Requested-With, X-Request-ID",
+            "X-Request-ID": requestId,
+          },
         });
       }
 
       // Prepare fallback strategies
-      const fallbackStrategies: FallbackStrategy<ApiResponse<T> | NextResponse>[] = [
-        ...config.fallbackStrategies.map(strategy => async () => {
-          const result = await strategy()
-          return result instanceof NextResponse ? result : apiResponse.success(result)
+      const fallbackStrategies: FallbackStrategy<
+        ApiResponse<T> | NextResponse
+      >[] = [
+        ...config.fallbackStrategies.map((strategy) => async () => {
+          const result = await strategy();
+          return result instanceof NextResponse
+            ? result
+            : apiResponse.success(result);
         }),
-        ...createDefaultFallbacks(endpointType)
-      ]
+        ...createDefaultFallbacks(endpointType),
+      ];
 
       // Execute with comprehensive resilience
       const result = await executeWithResilience(
@@ -207,41 +239,53 @@ export function withResilientApiHandling<T = any>(
             handler(request, context),
             new Promise<never>((_, reject) => {
               setTimeout(() => {
-                reject(new Error(`Operation timeout after ${config.operationTimeout}ms`))
-              }, config.operationTimeout)
-            })
-          ])
+                reject(
+                  new Error(
+                    `Operation timeout after ${config.operationTimeout}ms`
+                  )
+                );
+              }, config.operationTimeout);
+            }),
+          ]);
         },
         operationName,
         {
           enableRetries: config.enableRetries,
           enableCircuitBreaker: config.enableCircuitBreaker,
-          customFallbacks: config.enableFallbacks ? fallbackStrategies : undefined
+          customFallbacks: config.enableFallbacks
+            ? fallbackStrategies
+            : undefined,
         }
-      )
+      );
 
       // Convert result to NextResponse if needed
-      let response: NextResponse
+      let response: NextResponse;
       if (result instanceof NextResponse) {
-        response = result
+        response = result;
       } else {
         response = NextResponse.json(result, {
           status: result.metadata?.statusCode || (result.success ? 200 : 500),
           headers: {
             "Content-Type": "application/json",
             "X-Request-ID": requestId,
-            "X-Operation-Name": operationName
-          }
-        })
+            "X-Operation-Name": operationName,
+          },
+        });
       }
 
       // Add CORS headers
-      response.headers.set("Access-Control-Allow-Origin", "*")
-      response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-      response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Request-ID")
+      response.headers.set("Access-Control-Allow-Origin", "*");
+      response.headers.set(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, OPTIONS"
+      );
+      response.headers.set(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization, X-Requested-With, X-Request-ID"
+      );
 
       // Log successful request
-      const duration = performance.now() - startTime
+      const duration = performance.now() - startTime;
       if (config.enableRequestLogging) {
         logger.info("Resilient API request completed", {
           method: request.method,
@@ -249,14 +293,13 @@ export function withResilientApiHandling<T = any>(
           requestId,
           operationName,
           statusCode: response.status,
-          duration: Math.round(duration)
+          duration: Math.round(duration),
         });
       }
 
-      return response
-
+      return response;
     } catch (error) {
-      const duration = performance.now() - startTime
+      const duration = performance.now() - startTime;
 
       // Even in error case, try graceful degradation
       if (config.enableGracefulDegradation) {
@@ -268,9 +311,9 @@ export function withResilientApiHandling<T = any>(
               ...config.degradedModeResponse,
               error: error instanceof Error ? error.message : String(error),
               requestId,
-              duration: Math.round(duration)
+              duration: Math.round(duration),
             }
-          )
+          );
 
           const response = NextResponse.json(degradedResponse, {
             status: 503,
@@ -279,9 +322,9 @@ export function withResilientApiHandling<T = any>(
               "X-Request-ID": requestId,
               "X-Operation-Name": operationName,
               "X-Degraded-Mode": "true",
-              "Access-Control-Allow-Origin": "*"
-            }
-          })
+              "Access-Control-Allow-Origin": "*",
+            },
+          });
 
           logger.warn("API request failed, returning degraded response", {
             method: request.method,
@@ -289,31 +332,26 @@ export function withResilientApiHandling<T = any>(
             requestId,
             operationName,
             error: error instanceof Error ? error.message : String(error),
-            duration: Math.round(duration)
-          })
+            duration: Math.round(duration),
+          });
 
-          return response
-
+          return response;
         } catch (degradationError) {
           logger.error("Graceful degradation also failed", {
             originalError: error,
             degradationError,
-            requestId
-          })
+            requestId,
+          });
         }
       }
 
       // Final error response
-      const errorResponse = apiResponse.error(
-        "Internal server error",
-        500,
-        {
-          requestId,
-          error: error instanceof Error ? error.message : String(error),
-          duration: Math.round(duration),
-          operationName
-        }
-      )
+      const errorResponse = apiResponse.error("Internal server error", 500, {
+        requestId,
+        error: error instanceof Error ? error.message : String(error),
+        duration: Math.round(duration),
+        operationName,
+      });
 
       const response = NextResponse.json(errorResponse, {
         status: 500,
@@ -321,22 +359,26 @@ export function withResilientApiHandling<T = any>(
           "Content-Type": "application/json",
           "X-Request-ID": requestId,
           "X-Operation-Name": operationName,
-          "Access-Control-Allow-Origin": "*"
-        }
-      })
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
 
-      logger.error("Resilient API request failed completely", {
-        method: request.method,
-        url: request.url,
-        requestId,
-        operationName,
-        error: error instanceof Error ? error.message : String(error),
-        duration: Math.round(duration)
-      }, error instanceof Error ? error : new Error(String(error)))
+      logger.error(
+        "Resilient API request failed completely",
+        {
+          method: request.method,
+          url: request.url,
+          requestId,
+          operationName,
+          error: error instanceof Error ? error.message : String(error),
+          duration: Math.round(duration),
+        },
+        error instanceof Error ? error : new Error(String(error))
+      );
 
-      return response
+      return response;
     }
-  }
+  };
 }
 
 /**
@@ -360,10 +402,10 @@ export function withResilientHealthCheck<T = any>(
         status: "degraded",
         message: "Health check fallback",
         timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-      })
-    ]
-  })
+        uptime: process.uptime(),
+      }),
+    ],
+  });
 }
 
 export function withResilientTradingApi<T = any>(
@@ -382,10 +424,10 @@ export function withResilientTradingApi<T = any>(
       async () => ({
         mode: "safe",
         message: "Trading API in safe mode",
-        available_operations: ["status", "view"]
-      })
-    ]
-  })
+        available_operations: ["status", "view"],
+      }),
+    ],
+  });
 }
 
 export function withResilientDataApi<T = any>(
@@ -404,41 +446,41 @@ export function withResilientDataApi<T = any>(
       async () => ({
         data: [],
         source: "cache",
-        message: "Using cached data due to service degradation"
-      })
-    ]
-  })
+        message: "Using cached data due to service degradation",
+      }),
+    ],
+  });
 }
 
 /**
  * Get system-wide resilience metrics
  */
 export function getApiResilienceMetrics(): {
-  systemHealth: number
-  circuitBreakers: any[]
-  recommendations: string[]
-  degradedEndpoints: string[]
+  systemHealth: number;
+  circuitBreakers: any[];
+  recommendations: string[];
+  degradedEndpoints: string[];
 } {
-  const metrics = globalResilienceCoordinator.getSystemResilienceMetrics()
-  
+  const metrics = globalResilienceCoordinator.getSystemResilienceMetrics();
+
   const degradedEndpoints = metrics.circuitBreakers
-    .filter(cb => cb.state !== 'CLOSED' || cb.metrics.successRate < 90)
-    .map(cb => cb.name)
+    .filter((cb) => cb.state !== "CLOSED" || cb.metrics.successRate < 90)
+    .map((cb) => cb.name);
 
   return {
     systemHealth: metrics.overallHealth,
     circuitBreakers: metrics.circuitBreakers,
     recommendations: metrics.recommendations,
-    degradedEndpoints
-  }
+    degradedEndpoints,
+  };
 }
 
 /**
  * Reset all circuit breakers (useful for testing or emergency recovery)
  */
 export function resetAllApiCircuitBreakers(): void {
-  globalResilienceCoordinator.resetAllCircuitBreakers()
-  logger.info("All API circuit breakers have been reset")
+  globalResilienceCoordinator.resetAllCircuitBreakers();
+  logger.info("All API circuit breakers have been reset");
 }
 
 /**
@@ -446,28 +488,32 @@ export function resetAllApiCircuitBreakers(): void {
  */
 export function createResilientEndpoint<T = any>(
   handler: (request: NextRequest, context?: any) => Promise<T>,
-  endpointType: 'health' | 'trading' | 'data' | 'generic' = 'generic'
+  endpointType: "health" | "trading" | "data" | "generic" = "generic"
 ): ResilientApiHandler<T> {
   const wrappedHandler: ResilientApiHandler<T> = async (request, context) => {
-    const result = await handler(request, context)
-    
+    const result = await handler(request, context);
+
     // If result is already an ApiResponse or NextResponse, return it
-    if (result && (typeof result === 'object') && ('success' in result || result instanceof NextResponse)) {
-      return result as any
+    if (
+      result &&
+      typeof result === "object" &&
+      ("success" in result || result instanceof NextResponse)
+    ) {
+      return result as any;
     }
-    
+
     // Otherwise, wrap in success response
-    return apiResponse.success(result)
-  }
+    return apiResponse.success(result);
+  };
 
   switch (endpointType) {
-    case 'health':
-      return withResilientHealthCheck(wrappedHandler)
-    case 'trading':
-      return withResilientTradingApi(wrappedHandler)
-    case 'data':
-      return withResilientDataApi(wrappedHandler)
+    case "health":
+      return withResilientHealthCheck(wrappedHandler);
+    case "trading":
+      return withResilientTradingApi(wrappedHandler);
+    case "data":
+      return withResilientDataApi(wrappedHandler);
     default:
-      return withResilientApiHandling(wrappedHandler)
+      return withResilientApiHandling(wrappedHandler);
   }
 }

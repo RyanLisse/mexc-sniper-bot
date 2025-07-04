@@ -5,7 +5,7 @@
  * Extracted from the original monolithic implementation for better maintainability.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "../../../lib/error-type-utils";
 import { PatternProcessor } from "./pattern-processor";
 import { PositionMonitor } from "./position-monitor";
@@ -31,7 +31,7 @@ export class AutoSnipingOrchestrator {
   private isRunning = false;
   private isInitialized = false;
   private startTime: Date | null = null;
-  private eventEmitter = new EventEmitter();
+  private eventEmitter = new BrowserCompatibleEventEmitter();
 
   // Module components
   private patternProcessor: PatternProcessor;

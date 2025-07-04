@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result;
+    let result: unknown;
 
     switch (action) {
       case "comprehensive-safety-check":

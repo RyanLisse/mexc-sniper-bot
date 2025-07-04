@@ -13,7 +13,7 @@
  * - Advanced Emergency Coordinator (sophisticated emergency protocols)
  */
 
-import EventEmitter from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type { SafetyConfiguration } from "@/src/schemas/safety-monitoring-schemas";
 import { validateSafetyConfiguration } from "@/src/schemas/safety-monitoring-schemas";
 import { AdvancedEmergencyCoordinator } from "./advanced-emergency-coordinator";
@@ -123,7 +123,7 @@ export interface SafetySystemMetrics {
 // Integrated Safety Monitoring System
 // ============================================================================
 
-export class IntegratedSafetyMonitoringSystem extends EventEmitter {
+export class IntegratedSafetyMonitoringSystem extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[integrated-safety-system]", message, context || ""),

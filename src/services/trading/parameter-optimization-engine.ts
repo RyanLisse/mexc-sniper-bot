@@ -6,7 +6,7 @@
  * This maintains API compatibility while reducing code overhead.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import {
   getParameterManager,
   type ParameterManager,
@@ -70,7 +70,7 @@ export interface OptimizationResult {
   };
 }
 
-export class ParameterOptimizationEngine extends EventEmitter {
+export class ParameterOptimizationEngine extends BrowserCompatibleEventEmitter {
   private parameterManager: ParameterManager;
   private activeOptimizations = new Map<string, any>();
   private optimizationHistory: any[] = [];

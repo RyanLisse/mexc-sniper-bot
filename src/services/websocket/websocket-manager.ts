@@ -4,8 +4,11 @@
  * Manages WebSocket connections for real-time market data
  */
 
-import { EventEmitter } from "node:events";
 import { z } from "zod";
+import {
+  BrowserCompatibleEventEmitter,
+  type UniversalWebSocket,
+} from "@/src/lib/browser-compatible-events";
 
 // WebSocket connection state
 export const ConnectionState = z.enum([
@@ -46,8 +49,8 @@ export const SubscriptionSchema = z.object({
 export type Subscription = z.infer<typeof SubscriptionSchema>; /**
  * WebSocket Manager Class
  */
-export class WebSocketManager extends EventEmitter {
-  private ws: WebSocket | null = null;
+export class WebSocketManager extends BrowserCompatibleEventEmitter {
+  private ws: InstanceType<typeof UniversalWebSocket> | null = null;
   private state: ConnectionStateType = "disconnected";
   private subscriptions = new Map<string, Subscription>();
   private reconnectAttempts = 0;

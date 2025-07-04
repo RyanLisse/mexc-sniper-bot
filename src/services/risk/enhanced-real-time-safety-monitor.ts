@@ -12,7 +12,7 @@
  * - Comprehensive safety metrics aggregation
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { createTimer } from "@/src/lib/structured-logger";
 import type { SafetyAlert } from "@/src/schemas/safety-monitoring-schemas";
 import type { ComprehensiveSafetyCoordinator } from "./comprehensive-safety-coordinator";
@@ -129,7 +129,7 @@ export interface SafetyDashboardData {
   };
 }
 
-export class EnhancedRealTimeSafetyMonitor extends EventEmitter {
+export class EnhancedRealTimeSafetyMonitor extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[enhanced-safety-monitor]", message, context || ""),

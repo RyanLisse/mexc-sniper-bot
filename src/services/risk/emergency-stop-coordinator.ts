@@ -11,7 +11,7 @@
  * - Provides centralized emergency management
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import {
   CircuitBreakerCoordinator,
   CoordinatedCircuitBreakerRegistry,
@@ -77,7 +77,7 @@ export interface SystemState {
 // Emergency Stop Coordinator Implementation
 // ============================================================================
 
-export class EmergencyStopCoordinator extends EventEmitter {
+export class EmergencyStopCoordinator extends BrowserCompatibleEventEmitter {
   private static instance: EmergencyStopCoordinator;
   private circuitBreakerCoordinator: CircuitBreakerCoordinator;
   private circuitBreakerRegistry: CoordinatedCircuitBreakerRegistry;

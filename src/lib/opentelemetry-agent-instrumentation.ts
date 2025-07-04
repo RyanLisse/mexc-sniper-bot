@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * OpenTelemetry Agent Instrumentation
  * Minimal implementation for build optimization

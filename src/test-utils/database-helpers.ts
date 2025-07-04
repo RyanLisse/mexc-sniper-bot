@@ -51,7 +51,8 @@ export async function createTestUser(userId: string): Promise<void> {
         // In test mode, mock the user verification
         if (
           process.env.NODE_ENV === "test" ||
-          (globalThis as any).__TEST_ENV__
+          ("__TEST_ENV__" in globalThis &&
+            (globalThis as { __TEST_ENV__: unknown }).__TEST_ENV__)
         ) {
           console.log(`🧪 Mock user verification for test: ${userId}`);
           return;
@@ -60,7 +61,11 @@ export async function createTestUser(userId: string): Promise<void> {
       }
     } catch (dbError) {
       // If database verification fails in test mode, skip it
-      if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+      if (
+        process.env.NODE_ENV === "test" ||
+        ("__TEST_ENV__" in globalThis &&
+          (globalThis as { __TEST_ENV__: unknown }).__TEST_ENV__)
+      ) {
         console.log(
           `🧪 Skipping user verification in test mode for: ${userId}`
         );
@@ -216,10 +221,10 @@ export async function waitForDatabase(ms: number = 100): Promise<void> {
  */
 export async function countRecords(
   tableName: "snipe_targets" | "user_preferences" | "user",
-  whereClause?: any
+  whereClause?: unknown
 ): Promise<number> {
   try {
-    let query;
+    let query: ReturnType<typeof db.select>;
 
     switch (tableName) {
       case "snipe_targets":
@@ -292,9 +297,9 @@ export function createTestPatterns(count: number, baseSymbol: string = "TEST") {
  * Verifies that a pattern was correctly converted to a database record
  */
 export function verifyPatternToRecordConversion(
-  pattern: any,
-  record: any,
-  userPrefs: any = null
+  pattern: Record<string, unknown>,
+  record: Record<string, unknown>,
+  userPrefs: Record<string, unknown> | null = null
 ): boolean {
   try {
     // Check basic mapping

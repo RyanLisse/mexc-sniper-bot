@@ -47,7 +47,7 @@ async function getInngestSetup() {
 }
 
 // Build-safe inngest handler
-let inngestHandler: any = null;
+let inngestHandler: unknown = null;
 
 // Only initialize during runtime, not build time
 if (typeof window === "undefined" && process.env.NODE_ENV !== "test") {

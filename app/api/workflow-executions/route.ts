@@ -3,6 +3,27 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { workflowActivity } from "@/src/db/schemas/workflows";
 
+interface WorkflowExecution {
+  id: string | null;
+  workflowId: string;
+  status: string;
+  startTime: string;
+  duration?: number;
+  error?: string;
+  result?: {
+    message: string;
+    symbolName: string | null;
+    vcoinId: string | null;
+  };
+  metadata: {
+    type: string;
+    message: string;
+    symbolName: string | null;
+    vcoinId: string | null;
+    level: string;
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -53,58 +74,66 @@ export async function GET(request: NextRequest) {
       .offset(offset);
 
     // Transform activities to workflow executions format
-    const executions = activities.map((activity: any) => {
-      const startTime = activity.timestamp.toISOString();
-      const status = mapActivityLevelToStatus(activity.level);
+    const executions = activities.map(
+      (activity: typeof workflowActivity.$inferSelect) => {
+        const startTime = activity.timestamp.toISOString();
+        const status = mapActivityLevelToStatus(activity.level);
 
-      // Calculate duration for completed executions (mock for now, can be enhanced)
-      const duration =
-        status !== "running"
-          ? Math.floor(Math.random() * 20000) + 5000
-          : undefined;
+        // Calculate duration for completed executions (mock for now, can be enhanced)
+        const duration =
+          status !== "running"
+            ? Math.floor(Math.random() * 20000) + 5000
+            : undefined;
 
-      return {
-        id: activity.activityId,
-        workflowId: activity.workflowId || workflowId,
-        status,
-        startTime,
-        duration,
-        error: activity.level === "error" ? activity.message : undefined,
-        result:
-          activity.level === "success"
-            ? {
-                message: activity.message,
-                symbolName: activity.symbolName,
-                vcoinId: activity.vcoinId,
-              }
-            : undefined,
-        metadata: {
-          type: activity.type,
-          message: activity.message,
-          symbolName: activity.symbolName,
-          vcoinId: activity.vcoinId,
-          level: activity.level,
-        },
-      };
-    });
+        return {
+          id: activity.activityId,
+          workflowId: activity.workflowId || workflowId,
+          status,
+          startTime,
+          duration,
+          error: activity.level === "error" ? activity.message : undefined,
+          result:
+            activity.level === "success"
+              ? {
+                  message: activity.message,
+                  symbolName: activity.symbolName,
+                  vcoinId: activity.vcoinId,
+                }
+              : undefined,
+          metadata: {
+            type: activity.type,
+            message: activity.message,
+            symbolName: activity.symbolName,
+            vcoinId: activity.vcoinId,
+            level: activity.level,
+          },
+        };
+      }
+    );
 
     // Calculate execution statistics
     const totalExecutions = executions.length;
     const successfulExecutions = executions.filter(
-      (e: any) => e.status === "success"
+      (e: WorkflowExecution) => e.status === "success"
     ).length;
     const failedExecutions = executions.filter(
-      (e: any) => e.status === "failed"
+      (e: WorkflowExecution) => e.status === "failed"
     ).length;
     const runningExecutions = executions.filter(
-      (e: any) => e.status === "running"
+      (e: WorkflowExecution) => e.status === "running"
     ).length;
 
     const avgDuration =
       executions
-        .filter((e: any) => e.duration)
-        .reduce((sum: number, e: any) => sum + (e.duration || 0), 0) /
-      Math.max(1, executions.filter((e: any) => e.duration).length);
+        .filter((e: WorkflowExecution) => e.duration)
+        .reduce(
+          (sum: number, e: WorkflowExecution) => sum + (e.duration || 0),
+          0
+        ) /
+      Math.max(
+        1,
+        executions.filter((e: WorkflowExecution) => e.duration).length
+      );
 
     const response = {
       executions,

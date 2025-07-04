@@ -8,7 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { strategy, strategies, force = false } = body;
+    const { strategy, strategies } = body;
 
     if (!strategy && !strategies) {
       return NextResponse.json(
@@ -21,7 +21,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let results: any[] = [];
+    let results: Array<{
+      strategy: string;
+      success: boolean;
+      message: string;
+      executionTime: number;
+      triggeredAt: string;
+    }> = [];
 
     if (strategy) {
       // Mock single strategy trigger

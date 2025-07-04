@@ -1,3 +1,8 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
+
 /**
  * Complete Auto-Sniping Service
  *
@@ -9,7 +14,6 @@
  * 5. Enhanced safety and risk management
  */
 
-import { EventEmitter } from "node:events";
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import type { SnipeTarget } from "@/src/db/schemas/trading";
@@ -18,6 +22,7 @@ import {
   snipeTargets,
   transactions,
 } from "@/src/db/schemas/trading";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { UnifiedMexcServiceV2 } from "../api/unified-mexc-service-v2";
 import { getCoreTrading } from "./consolidated/core-trading/base-service";
@@ -81,7 +86,7 @@ export interface SnipeExecutionResult {
  *
  * Orchestrates the entire auto-sniping workflow from pattern detection to trade execution
  */
-export class CompleteAutoSnipingService extends EventEmitter {
+export class CompleteAutoSnipingService extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[complete-auto-sniping]", message, context || ""),
@@ -146,6 +151,27 @@ export class CompleteAutoSnipingService extends EventEmitter {
       maxConcurrentSnipes: this.config.maxConcurrentSnipes,
       minConfidenceScore: this.config.minConfidenceScore,
     });
+
+    // Register cleanup handler with memory manager
+    import("@/src/lib/memory-leak-cleanup-manager")
+      .then(({ memoryLeakCleanupManager }) => {
+        memoryLeakCleanupManager.registerEventEmitter(
+          this,
+          "CompleteAutoSnipingService"
+        );
+        memoryLeakCleanupManager.registerCleanupHandler(
+          "CompleteAutoSnipingService",
+          async () => {
+            await this.stop();
+          }
+        );
+      })
+      .catch(() => {
+        // Fallback if memory manager is not available
+        this.logger.warn(
+          "Memory leak cleanup manager not available for CompleteAutoSnipingService"
+        );
+      });
   }
 
   /**
@@ -279,9 +305,13 @@ export class CompleteAutoSnipingService extends EventEmitter {
       // Clear execution queue
       this.executionQueue = [];
       this.activeSnipes.clear();
+      this.priceMonitor.clear();
 
       this.isActive = false;
+
+      // Clean up EventEmitter listeners to prevent memory leaks
       this.emit("sniping_stopped");
+      this.removeAllListeners();
 
       this.logger.info("Auto-sniping operations stopped successfully");
 

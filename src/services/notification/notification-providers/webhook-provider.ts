@@ -2,6 +2,10 @@ import type {
   SelectAlertInstance,
   SelectNotificationChannel,
 } from "@/src/db/schemas/alerts";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 import type {
   NotificationMessage,
   NotificationProvider,

@@ -5,7 +5,7 @@
  * Provides centralized alert processing with real-time notifications.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type { WebSocketServerService } from "../../data/websocket/websocket-server-service";
 import type {
   SafetyAction,
@@ -13,7 +13,7 @@ import type {
   SafetyCoordinatorConfig,
 } from "./safety-types";
 
-export class SafetyAlertsManager extends EventEmitter {
+export class SafetyAlertsManager extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[safety-alerts]", message, context || ""),

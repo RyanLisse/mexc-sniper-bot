@@ -13,7 +13,7 @@ Build an intelligent, automated cryptocurrency trading platform that detects new
 4. Maintain modular, extensible, file-size-limited (<500 LOC) code that follows SPARC workflow, Taskmaster task tracking, and Memory-Bank documentation.
 
 ## Success Criteria
-- Stable end-to-end pipeline from discovery to trade execution in production (Vercel + NeonDB).
+- Stable end-to-end pipeline from discovery to trade execution in production (Vercel + Supabase).
 - <300 ms average API latency and <5 s end-to-end strategy cycle.
 - 0 critical errors during a 7-day continuous paper-trading run.
 - Documentation and Memory-Bank kept fully up-to-date so new engineers can contribute within 1 hour of onboarding.

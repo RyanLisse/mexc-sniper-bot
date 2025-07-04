@@ -13,10 +13,19 @@ import {
 } from "@/src/lib/api-response";
 import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
 
-// Function defined at bottom of file
+// Auto-sniping configuration interface
+interface AutoSnipingConfig {
+  maxPositions?: number;
+  maxDailyTrades?: number;
+  positionSizeUSDT?: number;
+  minConfidence?: number;
+  stopLossPercentage?: number;
+  maxDrawdownPercentage?: number;
+  allowedPatternTypes?: string[];
+}
 
 // Configuration validation function
-async function validateAutoSnipingConfig(config: any): Promise<{
+async function validateAutoSnipingConfig(config: AutoSnipingConfig): Promise<{
   isValid: boolean;
   errors: string[];
   warnings: string[];
@@ -97,7 +106,7 @@ async function validateAutoSnipingConfig(config: any): Promise<{
         "risk_warning",
       ];
       const invalidTypes = config.allowedPatternTypes.filter(
-        (type: any) => !validTypes.includes(type)
+        (type: string) => !validTypes.includes(type)
       );
       if (invalidTypes.length > 0) {
         errors.push(
@@ -194,7 +203,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           );
         }
 
-        let validationResult;
+        let validationResult: unknown;
         switch (component) {
           case "mexc_credentials":
             validationResult = await validator.validateMexcCredentials();

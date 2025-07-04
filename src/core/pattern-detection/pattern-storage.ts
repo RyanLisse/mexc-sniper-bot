@@ -180,7 +180,7 @@ export class PatternStorage implements IPatternStorage {
           similarityScore: patternEmbeddings.similarityScore,
           discoveredAt: patternEmbeddings.discoveredAt,
           createdAt: patternEmbeddings.createdAt,
-          patternData: patternEmbeddings.patternData
+          patternData: patternEmbeddings.patternData,
         })
         .from(patternEmbeddings)
         .where(
@@ -266,7 +266,7 @@ export class PatternStorage implements IPatternStorage {
     try {
       // Build the where conditions array
       const whereConditions = [eq(patternEmbeddings.isActive, true)];
-      
+
       // Apply type filter if requested
       if (sameTypeOnly && pattern.type) {
         whereConditions.push(eq(patternEmbeddings.patternType, pattern.type));

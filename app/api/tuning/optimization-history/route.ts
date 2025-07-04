@@ -10,6 +10,23 @@ import { db } from "@/src/db";
 import { strategyPerformanceMetrics, tradingStrategies } from "@/src/db/schema";
 import { logger } from "@/src/lib/utils";
 
+interface OptimizationRun {
+  id: number;
+  name: string;
+  algorithm: string;
+  status: string;
+  startTime: Date;
+  endTime: Date | null;
+  progress: number;
+  currentIteration: number;
+  maxIterations: number;
+  bestScore: number | null;
+  improvementPercent: number | null;
+  parameters: string;
+  objective: string;
+  metadata: string;
+}
+
 /**
  * GET /api/tuning/optimization-history
  * Get optimization history with filtering and pagination
@@ -66,18 +83,20 @@ export async function GET(request: NextRequest) {
     let filteredRuns = allRuns;
 
     if (status) {
-      filteredRuns = filteredRuns.filter((run: any) => run.status === status);
+      filteredRuns = filteredRuns.filter(
+        (run: OptimizationRun) => run.status === status
+      );
     }
 
     if (algorithm) {
-      filteredRuns = filteredRuns.filter((run: any) =>
+      filteredRuns = filteredRuns.filter((run: OptimizationRun) =>
         run.algorithm.toLowerCase().includes(algorithm.toLowerCase())
       );
     }
 
     // Sort results
-    filteredRuns.sort((a: any, b: any) => {
-      let aValue, bValue;
+    filteredRuns.sort((a: OptimizationRun, b: OptimizationRun) => {
+      let aValue: unknown, bValue: unknown;
 
       switch (sortBy) {
         case "startTime":
@@ -117,17 +136,18 @@ export async function GET(request: NextRequest) {
 
     // Calculate statistics
     const completedRuns = filteredRuns.filter(
-      (run: any) => run.status === "completed"
+      (run: OptimizationRun) => run.status === "completed"
     );
     const avgImprovement =
       completedRuns.length > 0
         ? completedRuns.reduce(
-            (sum: number, run: any) => sum + run.improvementPercent,
+            (sum: number, run: OptimizationRun) =>
+              sum + (run.improvementPercent || 0),
             0
           ) / completedRuns.length
         : 0;
 
-    const response: any = {
+    const response = {
       runs: paginatedRuns,
       pagination: {
         total: filteredRuns.length,
@@ -137,19 +157,24 @@ export async function GET(request: NextRequest) {
       },
       statistics: {
         totalRuns: allRuns.length,
-        completedRuns: allRuns.filter((run: any) => run.status === "completed")
-          .length,
-        runningRuns: allRuns.filter((run: any) => run.status === "running")
-          .length,
-        failedRuns: allRuns.filter((run: any) => run.status === "failed")
-          .length,
+        completedRuns: allRuns.filter(
+          (run: OptimizationRun) => run.status === "completed"
+        ).length,
+        runningRuns: allRuns.filter(
+          (run: OptimizationRun) => run.status === "running"
+        ).length,
+        failedRuns: allRuns.filter(
+          (run: OptimizationRun) => run.status === "failed"
+        ).length,
         averageImprovement: Math.round(avgImprovement * 100) / 100,
         bestImprovement: Math.max(
-          ...completedRuns.map((run: any) => run.improvementPercent),
+          ...completedRuns.map(
+            (run: OptimizationRun) => run.improvementPercent || 0
+          ),
           0
         ),
         totalOptimizationTime: completedRuns.reduce(
-          (sum: number, run: any) =>
+          (sum: number, run: OptimizationRun) =>
             sum + (JSON.parse(run.metadata || "{}")?.executionTime || 0),
           0
         ),
@@ -166,25 +191,33 @@ export async function GET(request: NextRequest) {
     // Add metadata if requested
     if (includeMetadata) {
       response.metadata = {
-        algorithms: [...new Set(allRuns.map((run: any) => run.algorithm))],
+        algorithms: [
+          ...new Set(allRuns.map((run: OptimizationRun) => run.algorithm)),
+        ],
         statusCounts: {
-          running: allRuns.filter((run: any) => run.status === "running")
-            .length,
-          completed: allRuns.filter((run: any) => run.status === "completed")
-            .length,
-          failed: allRuns.filter((run: any) => run.status === "failed").length,
-          paused: allRuns.filter((run: any) => run.status === "paused").length,
+          running: allRuns.filter(
+            (run: OptimizationRun) => run.status === "running"
+          ).length,
+          completed: allRuns.filter(
+            (run: OptimizationRun) => run.status === "completed"
+          ).length,
+          failed: allRuns.filter(
+            (run: OptimizationRun) => run.status === "failed"
+          ).length,
+          paused: allRuns.filter(
+            (run: OptimizationRun) => run.status === "paused"
+          ).length,
         },
         dateRange: {
           earliest: allRuns.reduce(
-            (earliest: any, run: any) =>
+            (earliest: Date, run: OptimizationRun) =>
               run.startTime < earliest ? run.startTime : earliest,
-            allRuns[0]?.startTime || new Date().toISOString()
+            allRuns[0]?.startTime || new Date()
           ),
           latest: allRuns.reduce(
-            (latest: any, run: any) =>
+            (latest: Date, run: OptimizationRun) =>
               run.startTime > latest ? run.startTime : latest,
-            allRuns[0]?.startTime || new Date().toISOString()
+            allRuns[0]?.startTime || new Date()
           ),
         },
       };

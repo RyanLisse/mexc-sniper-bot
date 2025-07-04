@@ -1,10 +1,10 @@
+"use client";
+
 /**
  * Dynamic Component Loader
  * Implements lazy loading for dashboard components to reduce initial bundle size
  * Part of Task 5.1: Bundle Size Optimization
  */
-
-"use client";
 
 import {
   type ComponentType,

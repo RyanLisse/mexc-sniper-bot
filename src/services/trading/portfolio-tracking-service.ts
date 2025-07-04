@@ -5,7 +5,7 @@
  * position tracking, and performance analytics.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { getRecommendedMexcService } from "../api/mexc-unified-exports";
 
 export interface Position {
@@ -52,7 +52,7 @@ export interface PriceAlert {
   userId: string;
 }
 
-export class PortfolioTrackingService extends EventEmitter {
+export class PortfolioTrackingService extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[portfolio-tracking]", message, context || ""),

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Risk Tab Component
  *

@@ -109,7 +109,7 @@ export class DatabaseConnectionPool {
     return tracer.startActiveSpan("db_pool_write", async (span) => {
       try {
         this.activeConnections++;
-        
+
         // Execute the write operation
         const result = await queryFn();
 
@@ -147,13 +147,13 @@ export class DatabaseConnectionPool {
     return tracer.startActiveSpan("db_pool_batch", async (span) => {
       try {
         this.activeConnections++;
-        
+
         span.setAttributes({
           "db.batch_size": operations.length,
         });
 
         // Execute all operations in parallel
-        const results = await Promise.all(operations.map(op => op()));
+        const results = await Promise.all(operations.map((op) => op()));
 
         // Invalidate cache patterns
         if (invalidatePatterns.length > 0) {
@@ -232,7 +232,7 @@ export class DatabaseConnectionPool {
   async shutdown(): Promise<void> {
     // Clear cache
     this.cache.clear();
-    
+
     // Close all connections
     await Promise.all(
       this.connections.map(async (conn) => {

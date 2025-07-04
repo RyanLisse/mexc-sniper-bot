@@ -157,17 +157,19 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[SafetyMonitoringAPI] GET action failed:", {
-      error: error.message || "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error",
       action: action || "unknown",
       url: request.url,
     });
 
     // Handle service initialization errors specifically
     if (
-      error.message?.includes("service unavailable") ||
-      error.message?.includes("not properly initialized")
+      (error instanceof Error &&
+        error.message?.includes("service unavailable")) ||
+      (error instanceof Error &&
+        error.message?.includes("not properly initialized"))
     ) {
       return NextResponse.json(
         createErrorResponse("Safety monitoring service is not available", {
@@ -195,7 +197,7 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
  * Handle safety monitoring actions
  */
 export const POST = apiAuthWrapper(async (request: NextRequest) => {
-  let body: any;
+  let body: unknown;
 
   try {
     // Use centralized JSON parsing with consistent error handling
@@ -444,9 +446,9 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           { status: 400 }
         );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[SafetyMonitoringAPI] POST action failed:", {
-      error: error.message || "Unknown error",
+      error: error instanceof Error ? error.message : "Unknown error",
       action:
         typeof body === "object" && body ? body.action || "unknown" : "unknown",
       url: request.url,
@@ -454,8 +456,10 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
 
     // Handle service initialization errors specifically
     if (
-      error.message?.includes("service unavailable") ||
-      error.message?.includes("not properly initialized")
+      (error instanceof Error &&
+        error.message?.includes("service unavailable")) ||
+      (error instanceof Error &&
+        error.message?.includes("not properly initialized"))
     ) {
       return NextResponse.json(
         createErrorResponse("Safety monitoring service is not available", {

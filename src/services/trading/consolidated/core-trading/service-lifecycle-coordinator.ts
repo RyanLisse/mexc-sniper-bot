@@ -8,7 +8,7 @@
  * - Cascading service failures
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { CoreTradingService } from "./base-service";
 import { ServiceInitializationManager } from "./service-initialization-manager";
@@ -70,7 +70,7 @@ export interface ServiceCoordinationConfig {
  * - Emergency response
  * - Auto-recovery
  */
-export class ServiceLifecycleCoordinator extends EventEmitter<ServiceLifecycleEvents> {
+export class ServiceLifecycleCoordinator extends BrowserCompatibleEventEmitter {
   private static instance: ServiceLifecycleCoordinator | null = null;
 
   private state: ServiceLifecycleState = "stopped";

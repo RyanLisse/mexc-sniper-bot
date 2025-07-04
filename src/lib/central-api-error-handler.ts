@@ -100,7 +100,7 @@ export function withDatabaseErrorHandling<T extends any[], R>(
   operationName?: string
 ): ((...args: T) => Promise<R | NextResponse>) | Promise<R> {
   if (operationName !== undefined) {
-    // Called with operationName - execute immediately 
+    // Called with operationName - execute immediately
     return (async (): Promise<R> => {
       try {
         return await (handler as () => Promise<R>)();
@@ -113,7 +113,9 @@ export function withDatabaseErrorHandling<T extends any[], R>(
             error.message.includes("connection") ||
             error.message.includes("Unknown table"))
         ) {
-          throw new Error(`Database operation failed for ${operationName}: ${error.message}`);
+          throw new Error(
+            `Database operation failed for ${operationName}: ${error.message}`
+          );
         }
         throw error;
       }

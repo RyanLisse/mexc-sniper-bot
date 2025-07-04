@@ -1,4 +1,8 @@
 import { Inngest } from "inngest";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 
 // Initialize the Inngest client for MEXC Sniper Bot
 export const inngest = new Inngest({

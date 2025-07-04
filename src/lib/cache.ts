@@ -151,9 +151,11 @@ export class LRUCache<T = any> extends Cache<T> {
 export const globalCacheManager = new CacheManager();
 
 // Cache key generation utility
-export function generateCacheKey(...components: (string | number | undefined)[]): string {
+export function generateCacheKey(
+  ...components: (string | number | undefined)[]
+): string {
   return components
-    .filter(component => component !== undefined && component !== null)
-    .map(component => String(component))
-    .join(':');
+    .filter((component) => component !== undefined && component !== null)
+    .map((component) => String(component))
+    .join(":");
 }

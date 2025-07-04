@@ -8,6 +8,14 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getParameterManager } from "@/src/lib/parameter-management";
 import { logger } from "@/src/lib/utils";
 
+interface EmergencyReport {
+  timestamp: Date;
+  reason: string;
+  actionsPerformed: string[];
+  errors: string[];
+  success: boolean;
+}
+
 /**
  * POST /api/tuning/emergency-stop
  * Emergency stop all optimization processes and revert to safe parameters
@@ -232,7 +240,7 @@ export async function GET() {
  * Send emergency notifications to relevant stakeholders
  */
 async function sendEmergencyNotifications(
-  report: any,
+  report: EmergencyReport,
   reason?: string
 ): Promise<void> {
   try {
@@ -261,7 +269,7 @@ async function sendEmergencyNotifications(
  * Log emergency event to audit trail
  */
 async function logEmergencyEvent(
-  report: any,
+  report: EmergencyReport,
   request: NextRequest
 ): Promise<void> {
   try {

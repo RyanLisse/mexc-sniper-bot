@@ -6,7 +6,7 @@ import {
   patternSimilarityCache,
 } from "./schema";
 
-// Vector similarity functions for PostgreSQL/NeonDB
+// Vector similarity functions for PostgreSQL/Supabase
 export class VectorUtils {
   private logger = {
     info: (message: string, context?: any) =>
@@ -122,7 +122,7 @@ export class VectorUtils {
           patternData: patternEmbeddings.patternData,
           confidenceScore: patternEmbeddings.confidenceScore,
           similarityScore: patternEmbeddings.similarityScore,
-          createdAt: patternEmbeddings.createdAt
+          createdAt: patternEmbeddings.createdAt,
         })
         .from(patternEmbeddings)
         .where(sql`${sql.join(conditions, sql` AND `)}`)
@@ -217,7 +217,7 @@ export class VectorUtils {
           cosineSimilarity: patternSimilarityCache.cosineSimilarity,
           euclideanDistance: patternSimilarityCache.euclideanDistance,
           calculatedAt: patternSimilarityCache.calculatedAt,
-          expiresAt: patternSimilarityCache.expiresAt
+          expiresAt: patternSimilarityCache.expiresAt,
         })
         .from(patternSimilarityCache)
         .where(
@@ -447,7 +447,7 @@ export class VectorUtils {
           discoveredAt: patternEmbeddings.discoveredAt,
           createdAt: patternEmbeddings.createdAt,
           updatedAt: patternEmbeddings.updatedAt,
-          isActive: patternEmbeddings.isActive
+          isActive: patternEmbeddings.isActive,
         })
         .from(patternEmbeddings)
         .where(sql.join(conditions, sql` AND `))

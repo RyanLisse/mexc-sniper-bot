@@ -59,8 +59,8 @@ export async function GET() {
 
   try {
     // Get user credentials
-    let user;
-    let userId;
+    let user: unknown;
+    let userId: unknown;
     try {
       user = await requireAuth();
       userId = user?.id;

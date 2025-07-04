@@ -1,10 +1,14 @@
-# NeonDB Branch Testing Guide
+# Database Testing Guide (DEPRECATED)
 
-This guide explains how to use NeonDB branches for isolated database testing in the MEXC Sniper Bot project.
+**⚠️ DEPRECATED**: This guide covered NeonDB branch testing functionality that has been fully migrated to Supabase. 
 
-## Overview
+**Current Status**: The MEXC Sniper Bot now uses Supabase for all database operations. NeonDB and Turso references have been completely removed.
 
-NeonDB branching allows us to create isolated database copies for testing, ensuring that:
+**For current testing practices**: Use Supabase's built-in testing features and preview environments. Refer to the Supabase documentation and our main testing setup in `tests/setup/supabase-test-setup.ts`.
+
+## Overview (Historical)
+
+Database branching allows us to create isolated database copies for testing, ensuring that:
 
 - Each test run gets its own clean database
 - Tests don't interfere with each other
@@ -14,18 +18,19 @@ NeonDB branching allows us to create isolated database copies for testing, ensur
 
 ## Setup
 
-### 1. Prerequisites
+### 1. Prerequisites (Historical)
 
-- NeonDB account with API access
+- ~~NeonDB account with API access~~ (Migrated to Supabase)
 - Node.js 18+ installed
-- Environment configured with DATABASE_URL
+- Environment configured with DATABASE_URL (now pointing to Supabase)
 
-### 2. Get Your Neon API Key
+### 2. Migration Notice
 
-1. Go to [Neon Console](https://console.neon.tech/)
-2. Navigate to **Settings** → **API Keys**
-3. Create a new API key
-4. Copy the key for use in your environment
+This functionality has been migrated to Supabase. For current database testing:
+
+1. Go to [Supabase Console](https://supabase.com/dashboard)
+2. Use Supabase's built-in testing features
+3. Configure environment with Supabase connection string
 
 ### 3. Environment Configuration
 

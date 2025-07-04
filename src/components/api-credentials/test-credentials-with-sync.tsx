@@ -1,11 +1,11 @@
+"use client";
+
 /**
  * Test Credentials Component with Status Synchronization
  *
  * Demonstrates how to properly handle status synchronization when testing
  * API credentials, ensuring UI state remains consistent across all components.
  */
-
-"use client";
 
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useMutation, useQueryClient } from "@tanstack/react-query";

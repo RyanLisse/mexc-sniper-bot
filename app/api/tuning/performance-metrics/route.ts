@@ -14,6 +14,77 @@ import {
 import { logger } from "@/src/lib/utils";
 import { ParameterOptimizationEngine } from "@/src/services/trading/parameter-optimization-engine";
 
+interface CurrentMetrics {
+  systemLatency: number;
+  errorRate: number;
+  throughput: number;
+  uptime: number;
+  agentResponseTime: number;
+  agentSuccessRate: number;
+  agentCacheHitRate: number;
+  totalAgents: number;
+  healthyAgents: number;
+  systemMemoryUsage: number;
+  systemCpuUsage: number;
+  profitability: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  winRate: number;
+  avgTradeDuration: number;
+  patternAccuracy: number;
+  riskAdjustedReturn: number;
+  volatility: number;
+  calmarRatio: number;
+  beta: number;
+  alpha: number;
+  informationRatio: number;
+  sortinoRatio: number;
+  treynorRatio: number;
+  trackingError: number;
+  downsideDeviation: number;
+  timestamp: Date;
+  activePositions: number;
+  totalTrades: number;
+  successfulTrades: number;
+  averageWin: number;
+  averageLoss: number;
+  profitFactor: number;
+  expectancy: number;
+  patternDetectionRate: number;
+  falsePositiveRate: number;
+  advanceDetectionTime: number;
+  portfolioRisk: number;
+  concentrationRisk: number;
+  liquidityRisk: number;
+  marketRisk: number;
+}
+
+interface HistoricalSnapshot {
+  timestamp: Date;
+  systemLatency: number;
+  errorRate: number;
+  throughput: number;
+  systemMemoryUsage: number;
+  systemCpuUsage: number;
+  totalAgents: number;
+  healthyAgents: number;
+  uptime: number;
+}
+
+interface MetricsResponse {
+  current: CurrentMetrics;
+  timestamp: Date;
+  period: string;
+  baseline?: unknown;
+  improvement?: {
+    profitabilityImprovement: number;
+    sharpeRatioImprovement: number;
+    drawdownImprovement: number;
+    patternAccuracyImprovement: number;
+  };
+  history?: HistoricalSnapshot[];
+}
+
 // Initialize optimization engine
 const optimizationEngine = new ParameterOptimizationEngine();
 
@@ -103,7 +174,7 @@ export async function GET(request: NextRequest) {
       marketRisk: 0.234,
     };
 
-    const response: any = {
+    const response: MetricsResponse = {
       current: currentMetrics,
       timestamp: new Date(),
       period,
@@ -152,17 +223,19 @@ export async function GET(request: NextRequest) {
         .orderBy(desc(systemPerformanceSnapshots.timestamp))
         .limit(100);
 
-      response.history = historicalSnapshots.map((snapshot: any) => ({
-        timestamp: snapshot.timestamp,
-        systemLatency: snapshot.averageResponseTime,
-        errorRate: snapshot.errorRate,
-        throughput: snapshot.throughput,
-        systemMemoryUsage: snapshot.systemMemoryUsage,
-        systemCpuUsage: snapshot.systemCpuUsage,
-        totalAgents: snapshot.totalAgents,
-        healthyAgents: snapshot.healthyAgents,
-        uptime: snapshot.uptime,
-      }));
+      response.history = historicalSnapshots.map(
+        (snapshot: typeof systemPerformanceSnapshots.$inferSelect) => ({
+          timestamp: snapshot.timestamp,
+          systemLatency: snapshot.averageResponseTime,
+          errorRate: snapshot.errorRate,
+          throughput: snapshot.throughput,
+          systemMemoryUsage: snapshot.systemMemoryUsage,
+          systemCpuUsage: snapshot.systemCpuUsage,
+          totalAgents: snapshot.totalAgents,
+          healthyAgents: snapshot.healthyAgents,
+          uptime: snapshot.uptime,
+        })
+      );
     }
 
     return NextResponse.json(response);

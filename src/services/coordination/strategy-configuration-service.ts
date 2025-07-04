@@ -10,8 +10,8 @@
  * 4. Provide real-time strategy performance feedback
  */
 
-import { EventEmitter } from "node:events";
 import type { UserTradingPreferences } from "@/src/hooks/use-user-preferences";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "../../lib/error-type-utils";
 import type { EnhancedMexcOrchestrator } from "../../mexc-agents/coordination/enhanced-orchestrator";
 import { getCoreTrading } from "../trading/consolidated/core-trading/base-service";
@@ -64,7 +64,7 @@ export interface StrategyPerformanceMetrics {
  *
  * Coordinates strategy settings across all system components
  */
-export class StrategyConfigurationService extends EventEmitter {
+export class StrategyConfigurationService extends BrowserCompatibleEventEmitter {
   private static instance: StrategyConfigurationService;
   private coreTrading: Record<string, unknown>;
   private orchestrator: EnhancedMexcOrchestrator;

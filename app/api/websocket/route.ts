@@ -29,13 +29,13 @@ export const GET = publicHandler({
 })(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
   const _logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: Record<string, unknown>) =>
       console.info("[websocket-api]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: Record<string, unknown>) =>
       console.warn("[websocket-api]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: Record<string, unknown>) =>
       console.error("[websocket-api]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: Record<string, unknown>) =>
       console.debug("[websocket-api]", message, context || ""),
   };
   try {
@@ -102,13 +102,13 @@ export const POST = authenticatedHandler({
 })(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
   const _logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: Record<string, unknown>) =>
       console.info("[websocket-api]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: Record<string, unknown>) =>
       console.warn("[websocket-api]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: Record<string, unknown>) =>
       console.error("[websocket-api]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: Record<string, unknown>) =>
       console.debug("[websocket-api]", message, context || ""),
   };
   try {
@@ -253,13 +253,13 @@ export const PUT = authenticatedHandler({
 })(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
   const _logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: Record<string, unknown>) =>
       console.info("[websocket-api]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: Record<string, unknown>) =>
       console.warn("[websocket-api]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: Record<string, unknown>) =>
       console.error("[websocket-api]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: Record<string, unknown>) =>
       console.debug("[websocket-api]", message, context || ""),
   };
   try {
@@ -336,13 +336,13 @@ export const PATCH = authenticatedHandler({
 })(async (_request, context) => {
   // Simple console logger to avoid webpack bundling issues
   const _logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: Record<string, unknown>) =>
       console.info("[websocket-api]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: Record<string, unknown>) =>
       console.warn("[websocket-api]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: Record<string, unknown>) =>
       console.error("[websocket-api]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: Record<string, unknown>) =>
       console.debug("[websocket-api]", message, context || ""),
   };
   try {
@@ -491,8 +491,8 @@ export const PATCH = authenticatedHandler({
 // ======================
 
 function generatePerformanceRecommendations(
-  serverMetrics: any,
-  connectionMetrics: any[]
+  serverMetrics: Record<string, unknown>,
+  connectionMetrics: Record<string, unknown>[]
 ): string[] {
   const recommendations: string[] = [];
 

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Exit Strategy Selector Component
  *

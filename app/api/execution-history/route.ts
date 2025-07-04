@@ -3,6 +3,18 @@ import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { executionHistory } from "@/src/db/schemas/trading";
 
+interface ExecutionRecord {
+  action: string;
+  status: string;
+  totalCost?: number;
+  fees?: number;
+  executionLatencyMs?: number;
+  slippagePercent?: number;
+  symbolName?: string;
+  executedAt?: number;
+  price?: number;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -53,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get execution history with pagination and error handling
-    let executions;
+    let executions: unknown[];
     try {
       executions = await Promise.race([
         db
@@ -109,45 +121,55 @@ export async function GET(request: NextRequest) {
     const totalCount = executions.length;
 
     // Calculate summary statistics
-    const buyExecutions = executions.filter(
-      (exec: any) => exec.action === "buy" && exec.status === "success"
+    const buyExecutions = (executions as ExecutionRecord[]).filter(
+      (exec: ExecutionRecord) =>
+        exec.action === "buy" && exec.status === "success"
     );
-    const sellExecutions = executions.filter(
-      (exec: any) => exec.action === "sell" && exec.status === "success"
+    const sellExecutions = (executions as ExecutionRecord[]).filter(
+      (exec: ExecutionRecord) =>
+        exec.action === "sell" && exec.status === "success"
     );
 
     const totalBuyVolume = buyExecutions.reduce(
-      (sum: number, exec: any) => sum + (exec.totalCost || 0),
+      (sum: number, exec: ExecutionRecord) => sum + (exec.totalCost || 0),
       0
     );
     const totalSellVolume = sellExecutions.reduce(
-      (sum: number, exec: any) => sum + (exec.totalCost || 0),
+      (sum: number, exec: ExecutionRecord) => sum + (exec.totalCost || 0),
       0
     );
-    const totalFees = executions.reduce(
-      (sum: number, exec: any) => sum + (exec.fees || 0),
+    const totalFees = (executions as ExecutionRecord[]).reduce(
+      (sum: number, exec: ExecutionRecord) => sum + (exec.fees || 0),
       0
     );
 
-    const avgExecutionLatency = executions
-      .filter((exec: any) => exec.executionLatencyMs)
+    const avgExecutionLatency = (executions as ExecutionRecord[])
+      .filter((exec: ExecutionRecord) => exec.executionLatencyMs)
       .reduce(
-        (sum: number, exec: any, _: number, arr: any[]) =>
-          sum + (exec.executionLatencyMs || 0) / arr.length,
+        (
+          sum: number,
+          exec: ExecutionRecord,
+          _: number,
+          arr: ExecutionRecord[]
+        ) => sum + (exec.executionLatencyMs || 0) / arr.length,
         0
       );
 
-    const avgSlippage = executions
-      .filter((exec: any) => exec.slippagePercent)
+    const avgSlippage = (executions as ExecutionRecord[])
+      .filter((exec: ExecutionRecord) => exec.slippagePercent)
       .reduce(
-        (sum: number, exec: any, _: number, arr: any[]) =>
-          sum + (exec.slippagePercent || 0) / arr.length,
+        (
+          sum: number,
+          exec: ExecutionRecord,
+          _: number,
+          arr: ExecutionRecord[]
+        ) => sum + (exec.slippagePercent || 0) / arr.length,
         0
       );
 
     // Group executions by symbol for analysis
-    const symbolStats = executions.reduce(
-      (acc: any, exec: any) => {
+    const symbolStats = (executions as ExecutionRecord[]).reduce(
+      (acc: Record<string, unknown>, exec: ExecutionRecord) => {
         const symbol = exec.symbolName;
         if (!acc[symbol]) {
           acc[symbol] = {
@@ -176,26 +198,28 @@ export async function GET(request: NextRequest) {
 
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<string, unknown>
     );
 
     const response = {
-      executions: executions.map((exec: any) => ({
-        ...exec,
-        // Add human-readable timestamps
-        executedAtFormatted: exec.executedAt
-          ? exec.executedAt instanceof Date
-            ? exec.executedAt.toISOString()
-            : new Date((exec.executedAt as number) * 1000).toISOString()
-          : null,
-        requestedAtFormatted: exec.requestedAt
-          ? exec.requestedAt instanceof Date
-            ? exec.requestedAt.toISOString()
-            : new Date((exec.requestedAt as number) * 1000).toISOString()
-          : null,
-        // Calculate profit/loss for matched buy/sell pairs
-        profitLoss: null, // This would require more complex matching logic
-      })),
+      executions: (executions as ExecutionRecord[]).map(
+        (exec: ExecutionRecord) => ({
+          ...exec,
+          // Add human-readable timestamps
+          executedAtFormatted: exec.executedAt
+            ? exec.executedAt instanceof Date
+              ? exec.executedAt.toISOString()
+              : new Date((exec.executedAt as number) * 1000).toISOString()
+            : null,
+          requestedAtFormatted: exec.requestedAt
+            ? exec.requestedAt instanceof Date
+              ? exec.requestedAt.toISOString()
+              : new Date((exec.requestedAt as number) * 1000).toISOString()
+            : null,
+          // Calculate profit/loss for matched buy/sell pairs
+          profitLoss: null, // This would require more complex matching logic
+        })
+      ),
       pagination: {
         total: totalCount,
         limit,
@@ -204,11 +228,11 @@ export async function GET(request: NextRequest) {
       },
       summary: {
         totalExecutions: executions.length,
-        successfulExecutions: executions.filter(
-          (exec: any) => exec.status === "success"
+        successfulExecutions: (executions as ExecutionRecord[]).filter(
+          (exec: ExecutionRecord) => exec.status === "success"
         ).length,
-        failedExecutions: executions.filter(
-          (exec: any) => exec.status === "failed"
+        failedExecutions: (executions as ExecutionRecord[]).filter(
+          (exec: ExecutionRecord) => exec.status === "failed"
         ).length,
         totalBuyVolume,
         totalSellVolume,
@@ -217,8 +241,9 @@ export async function GET(request: NextRequest) {
         avgSlippagePercent: Number(avgSlippage.toFixed(3)),
         successRate:
           executions.length > 0
-            ? (executions.filter((exec: any) => exec.status === "success")
-                .length /
+            ? ((executions as ExecutionRecord[]).filter(
+                (exec: ExecutionRecord) => exec.status === "success"
+              ).length /
                 executions.length) *
               100
             : 0,

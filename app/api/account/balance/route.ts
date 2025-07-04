@@ -106,7 +106,7 @@ async function balanceHandler(request: NextRequest) {
     }
 
     // Get MEXC account balances using appropriate credentials
-    let mexcClient;
+    let mexcClient: Awaited<ReturnType<typeof getUnifiedMexcService>>;
     try {
       mexcClient = await getUnifiedMexcService(userId ? { userId } : {});
       console.info(
@@ -148,7 +148,9 @@ async function balanceHandler(request: NextRequest) {
       );
     });
 
-    let balanceResponse;
+    let balanceResponse: Awaited<
+      ReturnType<typeof mexcClient.getAccountBalances>
+    >;
     try {
       const startTime = Date.now();
 

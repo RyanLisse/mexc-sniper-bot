@@ -5,7 +5,7 @@
  * Provides centralized emergency coordination with automated responses.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   AgentConsensusRequest,
   SafetyMonitorAgent,
@@ -47,7 +47,7 @@ export interface EmergencyState {
   procedures: string[];
 }
 
-export class EmergencyManager extends EventEmitter {
+export class EmergencyManager extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[emergency-management]", message, context || ""),

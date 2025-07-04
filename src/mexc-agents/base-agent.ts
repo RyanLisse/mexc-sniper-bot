@@ -1,5 +1,9 @@
-import { createHash } from "node:crypto";
 import OpenAI from "openai";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+  UniversalCrypto,
+} from "@/src/lib/browser-compatible-events";
 import { CACHE_CONSTANTS, TIME_CONSTANTS } from "@/src/lib/constants";
 import {
   globalEnhancedAgentCache,
@@ -121,7 +125,9 @@ export class BaseAgent {
       messages,
       options,
     };
-    return createHash("sha256").update(JSON.stringify(keyData)).digest("hex");
+    return UniversalCrypto.createHash("sha256")
+      .update(JSON.stringify(keyData))
+      .digest("hex");
   }
 
   /**

@@ -10,22 +10,25 @@ import { AgentManager } from "@/src/mexc-agents/agent-manager";
 // Build-safe imports
 import { MexcOrchestrator } from "@/src/mexc-agents/orchestrator";
 
+type LogContext = string | number | boolean | object | undefined;
+
 // Simple console logger to avoid webpack bundling issues
 const logger = {
-  info: (message: string, context?: any) =>
+  info: (message: string, context?: LogContext) =>
     console.info("[performance-metrics]", message, context || ""),
-  warn: (message: string, context?: any) =>
+  warn: (message: string, context?: LogContext) =>
     console.warn("[performance-metrics]", message, context || ""),
-  error: (message: string, context?: any) =>
+  error: (message: string, context?: LogContext) =>
     console.error("[performance-metrics]", message, context || ""),
-  debug: (message: string, context?: any) =>
+  debug: (message: string, context?: LogContext) =>
     console.debug("[performance-metrics]", message, context || ""),
 };
 
 export async function GET(_request: NextRequest) {
   try {
     // Build-safe initialization with try-catch to prevent webpack issues
-    let orchestrator, _agentManager;
+    let orchestrator: MexcOrchestrator | undefined,
+      _agentManager: AgentManager | undefined;
     try {
       orchestrator = new MexcOrchestrator({ useEnhancedCoordination: true });
       _agentManager = new AgentManager();
@@ -228,13 +231,23 @@ async function getRecentExecutions() {
       .orderBy(desc(executionHistory.createdAt))
       .limit(50);
 
-    return executions.map((exec: any) => ({
+    interface ExecutionRecord {
+      id: string;
+      action: string;
+      status: string;
+      createdAt: string;
+      executionType?: string;
+      executionTime?: number;
+      agentId?: string;
+    }
+
+    return executions.map((exec: ExecutionRecord) => ({
       id: exec.id,
-      type: (exec as any).executionType || exec.action,
+      type: exec.executionType || exec.action,
       status: exec.status,
-      duration: (exec as any).executionTime || 0,
+      duration: exec.executionTime || 0,
       timestamp: exec.createdAt,
-      agentUsed: (exec as any).agentId || "unknown",
+      agentUsed: exec.agentId || "unknown",
     }));
   } catch (error) {
     logger.error("Error fetching recent executions:", { error });
@@ -276,7 +289,10 @@ async function getPatternAnalyticsMetrics() {
       total: result[0]?.total || 0,
       averageConfidence: result[0]?.averageConfidence || 0,
       successful: result[0]?.successful || 0,
-      types: types.map((t: any) => ({ type: t.type, count: t.count })),
+      types: types.map((t: { type: string; count: number }) => ({
+        type: t.type,
+        count: t.count,
+      })),
     };
   } catch (error) {
     logger.error("Error fetching pattern analytics:", { error });
@@ -301,10 +317,12 @@ async function getWorkflowMetrics() {
       .groupBy(workflowActivity.type);
 
     return {
-      distribution: distribution.map((d: any) => ({
-        type: d.workflowType,
-        count: d.count,
-      })),
+      distribution: distribution.map(
+        (d: { workflowType: string; count: number }) => ({
+          type: d.workflowType,
+          count: d.count,
+        })
+      ),
     };
   } catch (error) {
     logger.error("Error fetching workflow metrics:", { error });
@@ -482,7 +500,13 @@ async function getAdvanceDetectionAccuracy(): Promise<number> {
   return Math.random() * 10 + 90; // 90-100% accuracy
 }
 
-async function getPerformanceTrends(): Promise<any[]> {
+interface PerformanceTrend {
+  metric: string;
+  trend: string;
+  change: number;
+}
+
+async function getPerformanceTrends(): Promise<PerformanceTrend[]> {
   return [
     { metric: "responseTime", trend: "improving", change: -5.2 },
     { metric: "successRate", trend: "stable", change: 0.1 },
@@ -490,7 +514,13 @@ async function getPerformanceTrends(): Promise<any[]> {
   ];
 }
 
-async function getPerformanceAlerts(): Promise<any[]> {
+interface PerformanceAlert {
+  level: string;
+  message: string;
+  timestamp: string;
+}
+
+async function getPerformanceAlerts(): Promise<PerformanceAlert[]> {
   return [
     {
       level: "warning",

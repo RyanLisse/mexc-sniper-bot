@@ -19,14 +19,22 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status") || undefined;
     const severity = searchParams.get("severity") || undefined;
     const source = searchParams.get("source") || undefined;
-    const limit = searchParams.get("limit")
-      ? parseInt(searchParams.get("limit")!)
-      : 50;
-    const hours = searchParams.get("hours")
-      ? parseInt(searchParams.get("hours")!)
-      : 24;
+    const limitParam = searchParams.get("limit");
+    const limit = limitParam ? parseInt(limitParam) : 50;
+    const hoursParam = searchParams.get("hours");
+    const hours = hoursParam ? parseInt(hoursParam) : 24;
 
-    let alerts;
+    let alerts: Array<{
+      id: string;
+      severity: string;
+      source: string;
+      status: string;
+      labels?: string;
+      additionalData?: string;
+      firstTriggeredAt: Date | string;
+      lastTriggeredAt: Date | string;
+      resolvedAt?: Date | string;
+    }>;
 
     if (status === "active" || !status) {
       // Get active alerts

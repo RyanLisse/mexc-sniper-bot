@@ -148,7 +148,7 @@ export class DrizzleTradingRepository implements TradingRepository {
           entryPrice: snipeTargets.entryPrice,
           executionStatus: snipeTargets.executionStatus,
           executionPrice: snipeTargets.executionPrice,
-          confidenceScore: snipeTargets.confidenceScore
+          confidenceScore: snipeTargets.confidenceScore,
         })
         .from(snipeTargets)
         .where(

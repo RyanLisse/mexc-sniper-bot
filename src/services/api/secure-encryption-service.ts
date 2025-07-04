@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Secure Encryption Service for API Credentials
  *
@@ -10,12 +14,7 @@
  * - Secure key storage patterns
  */
 
-import {
-  createCipheriv,
-  createDecipheriv,
-  pbkdf2Sync,
-  randomBytes,
-} from "node:crypto";
+import { UniversalCrypto } from "@/src/lib/browser-compatible-events";
 
 // Constants for cryptographic operations
 const ALGORITHM = "aes-256-gcm";

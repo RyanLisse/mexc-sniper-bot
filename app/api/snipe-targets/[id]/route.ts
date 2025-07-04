@@ -23,7 +23,7 @@ export async function PATCH(
     }
 
     // Prepare update data - only include fields that are provided
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       updatedAt: Math.floor(Date.now() / 1000),
     };
 

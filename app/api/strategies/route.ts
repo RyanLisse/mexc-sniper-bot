@@ -13,6 +13,29 @@ import {
   TradingStrategyManager,
 } from "@/src/services/trading/trading-strategy-manager";
 
+// Type definitions for strategy analytics
+interface StrategyPerformance {
+  strategyId: string;
+  successRate: number;
+  averageProfit: number;
+  totalTrades: number;
+  winRate: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+}
+
+interface Position {
+  entryPrice?: number;
+  currentPrice?: number;
+}
+
+interface StrategyStats {
+  trades: number;
+  averagePnL: number;
+  maxDrawdown: number;
+  successRate: number;
+}
+
 const coreTrading = getCoreTrading();
 const strategyManager = new TradingStrategyManager();
 
@@ -56,7 +79,7 @@ export async function GET() {
 
         return acc;
       },
-      {} as Record<string, any>
+      {} as Record<string, StrategyPerformance>
     );
 
     // Get current active positions from Core Trading Service
@@ -321,7 +344,7 @@ function calculatePnLPercentage(
  * Calculate triggered levels for a position based on active strategy
  */
 function calculateTriggeredLevels(
-  position: any,
+  position: Position,
   strategy: MultiPhaseStrategy
 ): number {
   if (!position.entryPrice || !position.currentPrice) return 0;
@@ -338,7 +361,7 @@ function calculateTriggeredLevels(
  * Calculate next target for a position
  */
 function calculateNextTarget(
-  position: any,
+  position: Position,
   strategy: MultiPhaseStrategy
 ): number {
   if (!position.entryPrice || !position.currentPrice) return 0;
@@ -363,7 +386,7 @@ function calculateNextTarget(
 /**
  * Calculate simplified Sharpe ratio
  */
-function calculateSharpeRatio(strategyStats: any): number {
+function calculateSharpeRatio(strategyStats: StrategyStats): number {
   // Simplified calculation - in reality this would need more data
   if (strategyStats.trades < 10) return 0;
 

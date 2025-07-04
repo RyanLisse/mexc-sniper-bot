@@ -9,6 +9,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 
 interface AuthDiagnostics {
   supabaseConfigured: boolean;

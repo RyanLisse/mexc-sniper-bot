@@ -13,7 +13,7 @@ export async function GET() {
     console.info("[API] Auto-sniping status request received");
 
     // Get current execution report which includes unified status
-    let report;
+    let report: unknown;
     try {
       report = await coreTrading.getExtendedServiceStatus();
     } catch (error) {

@@ -11,16 +11,18 @@ import { SafetyMonitorAgent } from "@/src/mexc-agents/safety-monitor-agent";
  * POST /api/safety/agent-monitoring - Update agent metrics or trigger monitoring actions
  */
 
+type LogContext = string | number | boolean | object | undefined;
+
 export async function GET(request: NextRequest) {
   // Build-safe initialization - use console logger to avoid webpack bundling issues
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[agent-monitoring]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[agent-monitoring]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[agent-monitoring]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[agent-monitoring]", message, context || ""),
   };
   const safetyMonitor = new SafetyMonitorAgent();
@@ -210,13 +212,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // Build-safe initialization - use console logger to avoid webpack bundling issues
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[agent-monitoring-post]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[agent-monitoring-post]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: LogContext) =>
       console.error("[agent-monitoring-post]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[agent-monitoring-post]", message, context || ""),
   };
   const safetyMonitor = new SafetyMonitorAgent();
@@ -232,7 +234,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { action, agentId, parameters } = body;
 
-    let result;
+    let result: unknown;
 
     switch (action) {
       case "validate_pattern": {

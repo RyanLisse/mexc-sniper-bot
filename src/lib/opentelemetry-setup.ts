@@ -1,3 +1,8 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
+
 /**
  * OpenTelemetry Setup and Configuration
  *

@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Cost Monitoring Middleware - Real-time Database Cost Tracking
  *
@@ -155,7 +159,7 @@ class CostMonitor {
     duration: number,
     dataTransfer: number
   ): number {
-    // Rough cost estimation based on Neon pricing
+    // Rough cost estimation based on Supabase pricing
     const queryCost = queryCount * 0.001; // $0.001 per query
     const timeCost = (duration / 1000) * 0.01; // $0.01 per second
     const transferCost = (dataTransfer / (1024 * 1024)) * 0.05; // $0.05 per MB

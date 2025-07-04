@@ -5,7 +5,7 @@
  * and stakeholder communications across multiple channels.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   CommunicationEntry,
   CommunicationPlan,
@@ -55,7 +55,7 @@ interface CommunicationResult {
 /**
  * Emergency communication manager
  */
-export class EmergencyCommunicationManager extends EventEmitter {
+export class EmergencyCommunicationManager extends BrowserCompatibleEventEmitter {
   private channels: Map<string, Channel> = new Map();
   private contacts: Map<string, EmergencyContact> = new Map();
   private communicationHistory: CommunicationEntry[] = [];

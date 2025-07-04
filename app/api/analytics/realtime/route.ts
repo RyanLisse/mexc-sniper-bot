@@ -21,7 +21,7 @@ const RealtimeQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user) {
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    let user;
+    let user: unknown;
     try {
       user = await requireAuth();
       if (!user) {
@@ -222,6 +222,63 @@ export async function POST(request: NextRequest) {
 }
 
 // ============================================================================
+// Type definitions for realtime analytics
+interface PerformanceMetric {
+  timestamp: string;
+  operation: string;
+  metrics: {
+    responseTimeMs: number;
+    throughputPerSecond: number;
+    errorRate: number;
+    successRate: number;
+  };
+}
+
+interface OperationMetrics {
+  operation: string;
+  current: {
+    responseTime: number;
+    throughput: number;
+    errorRate: number;
+    successRate: number;
+  } | null;
+  trend: {
+    direction: "up" | "down" | "stable";
+    strength: "weak" | "moderate" | "strong";
+  };
+  healthStatus: {
+    status: "healthy" | "degraded" | "critical";
+    score: number;
+  };
+}
+
+interface RealtimeAnalyticsData {
+  type: string;
+  timestamp: string;
+  metrics: OperationMetrics[];
+  system: {
+    totalEvents: number;
+    eventsLast24h: number;
+    cacheSize: number;
+    memoryUsage: unknown;
+    uptime: unknown;
+  };
+  healthScore?: {
+    overall: number;
+    components: Record<string, number>;
+  };
+  recentEvents?: unknown[];
+}
+
+interface LatestMetricsData {
+  metrics: {
+    responseTimeMs: number;
+    throughputPerSecond: number;
+    errorRate: number;
+    successRate: number;
+  };
+}
+
 // Helper Functions
 // ============================================================================
 
@@ -229,7 +286,7 @@ async function generateRealtimeData(
   operations?: string[],
   includeHealthScore = true,
   includeEvents = false
-): Promise<any> {
+): Promise<RealtimeAnalyticsData> {
   const now = new Date().toISOString();
   const timeWindow = 60000; // Last 1 minute
 
@@ -253,7 +310,7 @@ async function generateRealtimeData(
   const stats = tradingAnalytics.getAnalyticsStats();
 
   // Calculate real-time indicators
-  const realtimeData: any = {
+  const realtimeData: RealtimeAnalyticsData = {
     type: "analytics_update",
     timestamp: now,
     metrics: allMetrics.map(({ operation, metrics }) => {
@@ -294,7 +351,7 @@ async function generateRealtimeData(
   return realtimeData;
 }
 
-function calculateShortTermTrend(metrics: any[]): {
+function calculateShortTermTrend(metrics: PerformanceMetric[]): {
   direction: "up" | "down" | "stable";
   strength: "weak" | "moderate" | "strong";
 } {
@@ -328,7 +385,7 @@ function calculateShortTermTrend(metrics: any[]): {
   return { direction, strength };
 }
 
-function getOperationHealthStatus(latest: any | null): {
+function getOperationHealthStatus(latest: LatestMetricsData | null): {
   status: "healthy" | "degraded" | "critical";
   score: number;
 } {
@@ -359,7 +416,9 @@ function getOperationHealthStatus(latest: any | null): {
   return { status, score: Math.max(0, score) };
 }
 
-async function calculateSystemHealthScore(allMetrics: any[]): Promise<{
+async function calculateSystemHealthScore(
+  allMetrics: { operation: string; metrics: PerformanceMetric[] }[]
+): Promise<{
   overall: number;
   components: Record<string, number>;
   status: "excellent" | "good" | "fair" | "poor" | "critical";

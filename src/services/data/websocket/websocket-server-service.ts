@@ -13,10 +13,12 @@
  * - Graceful error handling and recovery
  */
 
-import crypto from "node:crypto";
-import { EventEmitter } from "node:events";
 import type { IncomingMessage } from "node:http";
 import { WebSocket, WebSocketServer } from "ws";
+import {
+  BrowserCompatibleEventEmitter,
+  UniversalCrypto as crypto,
+} from "@/src/lib/browser-compatible-events";
 
 // OpenTelemetry WebSocket instrumentation
 import {
@@ -45,7 +47,7 @@ export interface WebSocketServerStats extends ServerMetrics {
   messageRouterStats: any;
 }
 
-export class WebSocketServerService extends EventEmitter {
+export class WebSocketServerService extends BrowserCompatibleEventEmitter {
   private static instance: WebSocketServerService;
   private wss: WebSocketServer | null = null;
 
@@ -137,6 +139,27 @@ export class WebSocketServerService extends EventEmitter {
         rateLimitingEnabled: this.config.rateLimiting.enabled,
       },
     });
+
+    // Register cleanup handler with memory manager
+    import("@/src/lib/memory-leak-cleanup-manager")
+      .then(({ memoryLeakCleanupManager }) => {
+        memoryLeakCleanupManager.registerEventEmitter(
+          this,
+          "WebSocketServerService"
+        );
+        memoryLeakCleanupManager.registerCleanupHandler(
+          "WebSocketServerService",
+          async () => {
+            await this.stop();
+          }
+        );
+      })
+      .catch(() => {
+        // Fallback if memory manager is not available
+        this.logger.warn(
+          "Memory leak cleanup manager not available for WebSocketServerService"
+        );
+      });
   }
 
   static getInstance(
@@ -235,11 +258,15 @@ export class WebSocketServerService extends EventEmitter {
 
       this.isRunning = false;
 
+      // Clean up EventEmitter listeners to prevent memory leaks
+      this.removeAllListeners();
+
       this.logger.info("WebSocket server stopped", {
         uptime: Date.now() - this.startTime,
         totalConnectionsServed: this.serverMetrics.totalConnections,
       });
 
+      // Note: We emit this BEFORE removing all listeners
       this.emit("server:stopped");
     } catch (error) {
       this.logger.error("Error stopping WebSocket server", {}, error as Error);

@@ -12,8 +12,8 @@
  * - Memory-efficient streaming data management
  */
 
-import { EventEmitter } from "node:events";
-import * as WebSocket from "ws";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
+
 import type { CoordinatedCircuitBreaker } from "./coordinated-circuit-breaker";
 import { createCoordinatedMexcWebSocketBreaker } from "./coordinated-circuit-breaker";
 
@@ -376,9 +376,9 @@ export class RealTimePatternDetector {
 // Enhanced MEXC WebSocket Service
 // ============================================================================
 
-export class EnhancedMexcWebSocketService extends EventEmitter {
+export class EnhancedMexcWebSocketService extends BrowserCompatibleEventEmitter {
   private static instance: EnhancedMexcWebSocketService;
-  private ws: WebSocket.default | null = null;
+  private ws: InstanceType<typeof UniversalWebSocket> | null = null;
   private circuitBreaker: CoordinatedCircuitBreaker;
   private patternDetector: RealTimePatternDetector;
   private isConnected = false;
@@ -457,7 +457,9 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
       console.info("🔗 Connecting to MEXC WebSocket...");
 
       // Create WebSocket connection
-      this.ws = new WebSocket.default(this.MEXC_WS_URL) as WebSocket.default;
+      this.ws = new InstanceType<typeof UniversalWebSocket>(
+        this.MEXC_WS_URL
+      ) as InstanceType<typeof UniversalWebSocket>;
 
       // Set up event handlers
       this.ws.on("open", this.handleOpen.bind(this));
@@ -894,7 +896,7 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
    * Check if connected
    */
   isWebSocketConnected(): boolean {
-    return this.isConnected && this.ws?.readyState === WebSocket.default.OPEN;
+    return this.isConnected && this.ws?.readyState === 1; // WebSocket.OPEN = 1
   }
 
   /**
@@ -947,7 +949,30 @@ export class EnhancedMexcWebSocketService extends EventEmitter {
 
     this.disconnect();
 
+    // MEMORY LEAK FIX: Remove all EventEmitter listeners
+    this.removeAllListeners();
+
+    // Clear pattern detector
+    if (this.patternDetector) {
+      this.patternDetector.clear();
+    }
+
+    // Reset singleton instance
+    if (EnhancedMexcWebSocketService.instance === this) {
+      EnhancedMexcWebSocketService.instance = null as any;
+    }
+
     console.info("✅ Enhanced MEXC WebSocket Service shutdown complete");
+  }
+
+  /**
+   * MEMORY LEAK FIX: Reset singleton with proper cleanup
+   */
+  static async resetInstance(): Promise<void> {
+    if (EnhancedMexcWebSocketService.instance) {
+      await EnhancedMexcWebSocketService.instance.shutdown();
+    }
+    EnhancedMexcWebSocketService.instance = null as any;
   }
 }
 

@@ -1,6 +1,10 @@
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 import { db, hasSupabaseConfig } from "../db";
 import { user as originalUser } from "../db/schemas/auth";
 import { users as supabaseUsers } from "../db/schemas/supabase-auth";

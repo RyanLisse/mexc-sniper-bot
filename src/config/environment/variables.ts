@@ -100,17 +100,10 @@ export const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
   // Database Configuration
   {
     key: "DATABASE_URL",
-    description: "PostgreSQL database connection URL",
+    description: "Supabase PostgreSQL database connection URL",
     required: true,
     category: "database",
-    example: "postgresql://user:password@localhost:5432/mexc_sniper",
-  },
-  {
-    key: "NEON_DATABASE_URL",
-    description: "Neon PostgreSQL database URL",
-    required: false,
-    category: "database",
-    example: "postgresql://user:password@region.neon.tech/db",
+    example: "postgresql://user:password@region.supabase.co:5432/postgres",
   },
 
   // Cache Configuration

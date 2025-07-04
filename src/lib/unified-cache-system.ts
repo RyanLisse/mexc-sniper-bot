@@ -1,11 +1,11 @@
 /**
  * Unified Cache System
- * 
+ *
  * Provides a unified caching interface across the application with support for
  * multiple cache strategies, TTL management, and category-based organization.
  */
 
-import { Cache, CacheOptions } from './cache';
+import { Cache, type CacheOptions } from "./cache";
 
 export interface UnifiedCacheOptions extends CacheOptions {
   categories?: string[];
@@ -42,13 +42,13 @@ export class UnifiedCacheSystem {
       ttl: options.ttl || 5 * 60 * 1000, // 5 minutes
       maxSize: options.maxSize || 1000,
       onEvict: options.onEvict || (() => {}),
-      categories: options.categories || ['default'],
+      categories: options.categories || ["default"],
       globalTTL: options.globalTTL || 5 * 60 * 1000,
       categoryTTLs: options.categoryTTLs || {},
     };
 
     // Initialize default cache
-    this.getOrCreateCache('default');
+    this.getOrCreateCache("default");
   }
 
   /**
@@ -56,12 +56,17 @@ export class UnifiedCacheSystem {
    */
   private getOrCreateCache(category: string): Cache {
     if (!this.caches.has(category)) {
-      const categoryTTL = this.globalOptions.categoryTTLs[category] || this.globalOptions.globalTTL;
-      this.caches.set(category, new Cache({
-        ttl: categoryTTL,
-        maxSize: this.globalOptions.maxSize,
-        onEvict: this.globalOptions.onEvict,
-      }));
+      const categoryTTL =
+        this.globalOptions.categoryTTLs[category] ||
+        this.globalOptions.globalTTL;
+      this.caches.set(
+        category,
+        new Cache({
+          ttl: categoryTTL,
+          maxSize: this.globalOptions.maxSize,
+          onEvict: this.globalOptions.onEvict,
+        })
+      );
     }
     return this.caches.get(category)!;
   }
@@ -69,7 +74,12 @@ export class UnifiedCacheSystem {
   /**
    * Store a value in the cache
    */
-  async set<T>(key: string, value: T, category: string = 'default', ttl?: number): Promise<void> {
+  async set<T>(
+    key: string,
+    value: T,
+    category: string = "default",
+    ttl?: number
+  ): Promise<void> {
     const cache = this.getOrCreateCache(category);
     cache.set(key, value, ttl);
     this.stats.sets++;
@@ -78,23 +88,26 @@ export class UnifiedCacheSystem {
   /**
    * Retrieve a value from the cache
    */
-  async get<T>(key: string, category: string = 'default'): Promise<T | undefined> {
+  async get<T>(
+    key: string,
+    category: string = "default"
+  ): Promise<T | undefined> {
     const cache = this.getOrCreateCache(category);
     const value = cache.get(key);
-    
+
     if (value !== undefined) {
       this.stats.hits++;
     } else {
       this.stats.misses++;
     }
-    
+
     return value;
   }
 
   /**
    * Check if a key exists in the cache
    */
-  async has(key: string, category: string = 'default'): Promise<boolean> {
+  async has(key: string, category: string = "default"): Promise<boolean> {
     const cache = this.getOrCreateCache(category);
     return cache.has(key);
   }
@@ -102,7 +115,7 @@ export class UnifiedCacheSystem {
   /**
    * Delete a value from the cache
    */
-  async delete(key: string, category: string = 'default'): Promise<boolean> {
+  async delete(key: string, category: string = "default"): Promise<boolean> {
     const cache = this.getOrCreateCache(category);
     const deleted = cache.delete(key);
     if (deleted) {
@@ -147,9 +160,10 @@ export class UnifiedCacheSystem {
       totalSize += cache.size();
     }
 
-    const hitRate = this.stats.hits + this.stats.misses > 0 
-      ? this.stats.hits / (this.stats.hits + this.stats.misses) 
-      : 0;
+    const hitRate =
+      this.stats.hits + this.stats.misses > 0
+        ? this.stats.hits / (this.stats.hits + this.stats.misses)
+        : 0;
 
     return {
       global: { ...this.stats },
@@ -223,7 +237,9 @@ export function getUnifiedCache(): UnifiedCacheSystem {
 /**
  * Helper function to create a new cache instance
  */
-export function createUnifiedCache(options?: UnifiedCacheOptions): UnifiedCacheSystem {
+export function createUnifiedCache(
+  options?: UnifiedCacheOptions
+): UnifiedCacheSystem {
   return new UnifiedCacheSystem(options);
 }
 

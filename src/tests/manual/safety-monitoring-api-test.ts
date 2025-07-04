@@ -18,20 +18,22 @@ interface TestResult {
   details?: Record<string, unknown>;
 }
 
+type LogContext = string | number | boolean | object | undefined;
+
 class SafetyMonitoringAPITester {
   private logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: LogContext) =>
       console.info("[safety-monitoring-api-test]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: LogContext) =>
       console.warn("[safety-monitoring-api-test]", message, context || ""),
-    error: (message: string, context?: any, error?: Error) =>
+    error: (message: string, context?: LogContext, error?: Error) =>
       console.error(
         "[safety-monitoring-api-test]",
         message,
         context || "",
         error || ""
       ),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: LogContext) =>
       console.debug("[safety-monitoring-api-test]", message, context || ""),
   };
 
@@ -398,7 +400,9 @@ class SafetyMonitoringAPITester {
 
         case "update_configuration": {
           const { configuration } = body;
-          this.safetyService.updateConfiguration(configuration as Partial<any>);
+          this.safetyService.updateConfiguration(
+            configuration as Record<string, unknown>
+          );
           return {
             success: true,
             data: {
@@ -414,7 +418,10 @@ class SafetyMonitoringAPITester {
           const { thresholds } = body;
           const currentConfig = this.safetyService.getConfiguration();
           this.safetyService.updateConfiguration({
-            thresholds: { ...currentConfig.thresholds, ...(thresholds as any) },
+            thresholds: {
+              ...currentConfig.thresholds,
+              ...(thresholds as Record<string, unknown>),
+            },
           });
           return {
             success: true,

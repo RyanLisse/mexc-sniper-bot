@@ -16,7 +16,7 @@
  * improved modularity, testability, and maintainability.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type { TradeRiskAssessment } from "@/src/mexc-agents/risk-manager-agent";
 // Import schemas and types
 import type {
@@ -96,7 +96,7 @@ export type {
  * This modular implementation maintains full backward compatibility
  * while providing improved architecture and maintainability.
  */
-export class AdvancedRiskEngine extends EventEmitter {
+export class AdvancedRiskEngine extends BrowserCompatibleEventEmitter {
   private _logger?: {
     info: (message: string, context?: any) => void;
     warn: (message: string, context?: any) => void;

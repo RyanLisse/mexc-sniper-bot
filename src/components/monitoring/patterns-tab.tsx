@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Patterns Tab Component
  *

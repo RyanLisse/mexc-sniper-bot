@@ -5,12 +5,10 @@
  * to maintain availability during chaos scenarios
  */
 
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
-import { createResilientEndpoint } from "@/src/lib/enhanced-api-resilience-middleware";
-import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
 import { getSystemResilienceStatus } from "@/src/lib/enhanced-resilience-manager";
+import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
 
 /**
  * GET /api/health
@@ -38,49 +36,49 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       responseTime,
       version: process.env.npm_package_version || "1.0.0",
       environment: process.env.NODE_ENV || "development",
-      
+
       // Core system health
       system: {
         healthy: healthCheck.healthy,
         score: healthCheck.score,
         issues: healthCheck.issues,
       },
-      
+
       // Resilience system health
       resilience: {
         healthy: resilienceHealthy,
         overallScore: resilienceStatus.overallScore,
         circuitBreakerCount: resilienceStatus.circuitBreakerCount,
         openCircuitCount: resilienceStatus.openCircuitCount,
-        recommendations: resilienceStatus.recommendations
+        recommendations: resilienceStatus.recommendations,
       },
-      
+
       // Service health with fallback indicators
       services: {
         database: {
           status: "operational",
           responseTime: responseTime,
-          circuitBreakerProtected: true
+          circuitBreakerProtected: true,
         },
         mexcApi: {
           status: healthCheck.issues.includes("MEXC API connectivity failed")
             ? "degraded"
             : "operational",
           lastCheck: new Date().toISOString(),
-          circuitBreakerProtected: true
+          circuitBreakerProtected: true,
         },
         patternEngine: {
           status: "operational",
           lastExecution: new Date().toISOString(),
-          fallbacksEnabled: true
+          fallbacksEnabled: true,
         },
         safetyCoordinator: {
           status: "operational",
           monitoring: true,
-          resilientOperations: true
+          resilientOperations: true,
         },
       },
-      
+
       deployment: {
         platform: process.platform,
         nodeVersion: process.version,
@@ -90,22 +88,25 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
     };
 
     return isHealthy
-      ? apiResponse.success(healthData, { 
+      ? apiResponse.success(healthData, {
           message: "System is healthy with resilience protection active",
           resilience: {
             circuitBreakers: resilienceStatus.circuitBreakerCount,
-            openCircuits: resilienceStatus.openCircuitCount
-          }
+            openCircuits: resilienceStatus.openCircuitCount,
+          },
         })
       : apiResponse.error("System health degraded", 503, healthData);
-
   } catch (error) {
     const responseTime = Date.now() - startTime;
 
-    return apiResponse.error(`Health check failed: ${error instanceof Error ? error.message : String(error)}`, 500, {
-      responseTime,
-      timestamp: new Date().toISOString()
-    });
+    return apiResponse.error(
+      `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
+      500,
+      {
+        responseTime,
+        timestamp: new Date().toISOString(),
+      }
+    );
   }
 }
 

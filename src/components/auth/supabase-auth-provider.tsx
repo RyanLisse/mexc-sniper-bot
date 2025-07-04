@@ -33,13 +33,12 @@ interface SupabaseAuthProviderProps {
 
 export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
   // Detect test environment
-  const isTestEnvironment = 
-    typeof window !== "undefined" && (
-      window.location.hostname === "localhost" ||
+  const isTestEnvironment =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
       process.env.NODE_ENV === "test" ||
       process.env.PLAYWRIGHT_TEST === "true" ||
-      window.navigator.userAgent?.includes('Playwright')
-    );
+      window.navigator.userAgent?.includes("Playwright"));
 
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -52,7 +51,7 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
       const mockUser: User = {
         id: "test-user-123",
         aud: "authenticated",
-        role: "authenticated", 
+        role: "authenticated",
         email: "ryan@ryanlisse.com",
         email_confirmed_at: new Date().toISOString(),
         phone: "",
@@ -142,7 +141,7 @@ export function SupabaseAuthProvider({ children }: SupabaseAuthProviderProps) {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, [router, isTestEnvironment]);
 
   const signOut = async () => {
     // Mock implementation in test environment

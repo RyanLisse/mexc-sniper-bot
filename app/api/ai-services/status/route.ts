@@ -171,7 +171,24 @@ async function checkOpenAIStatus() {
   }
 }
 
-function determineOverallStatus(services: any[]) {
+interface ServiceStatus {
+  name: string;
+  status: string;
+  available: boolean;
+  message: string;
+  capabilities: string[];
+  lastCheck: string;
+  metrics?: Record<string, unknown>;
+}
+
+interface OverallStatus {
+  status: "healthy" | "degraded" | "critical";
+  message: string;
+  availableServices: number;
+  totalServices: number;
+}
+
+function determineOverallStatus(services: ServiceStatus[]): OverallStatus {
   const availableServices = services.filter((s) => s.available).length;
   const totalServices = services.length;
 

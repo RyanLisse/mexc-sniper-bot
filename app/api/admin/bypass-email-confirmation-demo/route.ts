@@ -3,9 +3,9 @@ import { apiResponse } from "@/src/lib/api-response";
 
 /**
  * Email Confirmation Bypass API Demo
- * 
+ *
  * POST /api/admin/bypass-email-confirmation-demo - Demo version for testing
- * 
+ *
  * This is a demo version that shows the API structure without requiring
  * valid Supabase credentials. Use this for testing the API endpoint structure.
  */
@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
       return apiResponse.badRequest("Invalid email format");
     }
 
-    console.log(`[EMAIL BYPASS DEMO] Simulating email confirmation bypass for: ${email}`);
+    console.log(
+      `[EMAIL BYPASS DEMO] Simulating email confirmation bypass for: ${email}`
+    );
 
     // Simulate the API behavior without actually connecting to Supabase
     const mockResponse = {
@@ -39,19 +41,18 @@ export async function POST(request: NextRequest) {
         id: "demo-user-id-123",
         email: email,
         emailConfirmed: true,
-        emailConfirmedAt: new Date().toISOString()
+        emailConfirmedAt: new Date().toISOString(),
       },
       bypassed: true,
       timestamp: new Date().toISOString(),
-      note: "This is a demo response. To use the real API, ensure valid Supabase credentials are configured."
+      note: "This is a demo response. To use the real API, ensure valid Supabase credentials are configured.",
     };
 
     return apiResponse.success(mockResponse);
-
   } catch (error) {
     console.error("[EMAIL BYPASS DEMO] Error:", error);
-    return apiResponse.error("Failed to process demo request", 500, { 
-      error: error instanceof Error ? error.message : "Unknown error"
+    return apiResponse.error("Failed to process demo request", 500, {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 }
@@ -61,7 +62,7 @@ export async function GET() {
   return apiResponse.success({
     message: "Email Confirmation Bypass Demo API",
     usage: "Send POST request with { email: 'user@example.com' }",
-    note: "This is a demo endpoint. Use POST /api/admin/bypass-email-confirmation for production."
+    note: "This is a demo endpoint. Use POST /api/admin/bypass-email-confirmation for production.",
   });
 }
 

@@ -1,17 +1,16 @@
 #!/usr/bin/env tsx
 /**
- * NeonDB Test Branch Management CLI
+ * DEPRECATED: NeonDB Test Branch Management CLI
  * 
- * Provides command-line utilities for managing NeonDB test branches.
+ * ⚠️ This script is deprecated and no longer functional.
+ * The system has been migrated to Supabase, which handles database testing differently.
  * 
- * Usage:
- *   tsx scripts/manage-test-branches.ts create [name]
- *   tsx scripts/manage-test-branches.ts list
- *   tsx scripts/manage-test-branches.ts delete <branch-id>
- *   tsx scripts/manage-test-branches.ts cleanup [max-age-hours]
- *   tsx scripts/manage-test-branches.ts connection <branch-id>
- *   tsx scripts/manage-test-branches.ts health <branch-id>
- *   tsx scripts/manage-test-branches.ts migrate <branch-id>
+ * For current database testing:
+ * - Use Supabase's built-in preview environments
+ * - Refer to tests/setup/supabase-test-setup.ts for current testing setup
+ * - Use the Supabase Dashboard or CLI for environment management
+ * 
+ * This file is kept for historical reference only.
  */
 
 import { neonBranchManager } from "../src/lib/neon-branch-manager";

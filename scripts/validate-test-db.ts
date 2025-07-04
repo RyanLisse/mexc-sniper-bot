@@ -148,8 +148,8 @@ async function validateTestDatabase(): Promise<void> {
     
     console.error('\n💡 Troubleshooting suggestions:');
     console.error('   1. Verify DATABASE_URL is correct');
-    console.error('   2. Check if your IP is allowlisted in NeonDB');
-    console.error('   3. Ensure network connectivity to NeonDB');
+    console.error('   2. Check if your IP is allowlisted in Supabase');
+    console.error('   3. Ensure network connectivity to Supabase');
     console.error('   4. Try running: npm run db:check');
     
     process.exit(1);

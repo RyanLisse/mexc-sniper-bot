@@ -1,7 +1,7 @@
-import crypto from "node:crypto";
 import { and, eq, gte, lte, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import { transactionLocks, transactionQueue } from "@/src/db/schema";
+import { UniversalCrypto as crypto } from "@/src/lib/browser-compatible-events";
 export interface TransactionLockConfig {
   resourceId: string;
   ownerId: string;

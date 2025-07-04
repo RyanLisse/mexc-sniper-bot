@@ -5,8 +5,8 @@
  * Extracted from mexc-websocket-stream.ts for modularity
  */
 
-import { randomUUID } from "node:crypto";
 import { PatternDetectionCore } from "@/src/core/pattern-detection";
+import { UniversalCrypto } from "@/src/lib/browser-compatible-events";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -272,7 +272,7 @@ export class MarketDataManager {
 
       // Create pattern notification
       const notification: NotificationMessage = {
-        notificationId: randomUUID(),
+        notificationId: UniversalCrypto.randomUUID(),
         type: "success",
         title: "Ready State Pattern Detected",
         message: `Ready state pattern detected for ${status.symbol} (sts:${status.sts}, st:${status.st}, tt:${status.tt})`,
@@ -418,7 +418,7 @@ export class MarketDataManager {
         if (bestMatch.confidence > 70) {
           // High confidence pattern found
           const notification: NotificationMessage = {
-            notificationId: randomUUID(),
+            notificationId: UniversalCrypto.randomUUID(),
             type: "info",
             title: "Enhanced Pattern Detected",
             message: `Enhanced analysis found ${bestMatch.patternType} pattern for ${status.symbol}`,

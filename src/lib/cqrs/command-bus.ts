@@ -5,7 +5,7 @@
  * Part of Phase 3 Production Readiness - Event Sourcing and CQRS patterns.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import {
   type DomainEvent,
   EventFactory,
@@ -52,7 +52,7 @@ export interface CommandValidator<T extends Command> {
 /**
  * Command Bus Implementation
  */
-export class CommandBus extends EventEmitter {
+export class CommandBus extends BrowserCompatibleEventEmitter {
   private handlers: Map<string, CommandHandler<any>> = new Map();
   private validators: Map<string, CommandValidator<any>> = new Map();
   private middleware: CommandMiddleware[] = [];

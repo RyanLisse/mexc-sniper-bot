@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * Performance Tab Component
  *

@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
 import { AlertConfigurationService } from "@/src/lib/alert-configuration";
@@ -113,7 +112,13 @@ export async function GET(request: NextRequest) {
 // Helper Functions
 // ==========================================
 
-function calculateOverallHealth(healthChecks: any[]): {
+interface HealthCheck {
+  isRunning?: boolean;
+  modelsLoaded?: number;
+  patternsLoaded?: number;
+}
+
+function calculateOverallHealth(healthChecks: HealthCheck[]): {
   status: string;
   score: number;
 } {

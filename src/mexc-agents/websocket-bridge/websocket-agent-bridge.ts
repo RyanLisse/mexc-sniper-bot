@@ -4,7 +4,7 @@
  * Orchestrates real-time communication between the agent system and WebSocket clients
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   AgentErrorMessage,
   AgentHealthMessage,
@@ -27,7 +27,7 @@ import type {
   WorkflowExecutionRequest,
 } from "./types";
 
-export class WebSocketAgentBridge extends EventEmitter {
+export class WebSocketAgentBridge extends BrowserCompatibleEventEmitter {
   private static instance: WebSocketAgentBridge;
   private dataStreamer: RealTimeDataStreamer;
   private patternStreamer: PatternDiscoveryStreamer;

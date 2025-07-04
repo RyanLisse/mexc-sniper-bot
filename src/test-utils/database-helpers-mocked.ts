@@ -8,8 +8,8 @@
 import { vi } from "vitest";
 
 // Use dynamic imports to avoid initialization issues with mocks
-let dbModule: any = null;
-let schemaModule: any = null;
+let dbModule: unknown = null;
+let schemaModule: unknown = null;
 
 /**
  * Get database module with lazy loading to avoid initialization issues
@@ -88,7 +88,7 @@ async function getEqFunction() {
     console.warn(
       "[Database Helpers] Failed to import eq function, using mock fallback"
     );
-    return vi.fn().mockImplementation((column: any, value: any) => ({
+    return vi.fn().mockImplementation((column: unknown, value: unknown) => ({
       _type: "eq",
       column,
       value,
@@ -165,7 +165,7 @@ export async function createTestUser(userId: string): Promise<void> {
         // In test mode, mock the user verification
         if (
           process.env.NODE_ENV === "test" ||
-          (globalThis as any).__TEST_ENV__
+          (globalThis as Record<string, unknown>).__TEST_ENV__
         ) {
           console.log(`🧪 Mock user verification for test: ${userId}`);
           return;
@@ -174,7 +174,10 @@ export async function createTestUser(userId: string): Promise<void> {
       }
     } catch (dbError) {
       // If database verification fails in test mode, skip it
-      if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+      if (
+        process.env.NODE_ENV === "test" ||
+        (globalThis as Record<string, unknown>).__TEST_ENV__
+      ) {
         console.log(
           `🧪 Skipping user verification in test mode for: ${userId}`
         );
@@ -186,7 +189,10 @@ export async function createTestUser(userId: string): Promise<void> {
   } catch (error) {
     console.error(`❌ Test user creation failed for ${userId}:`, error);
     // In test mode, don't fail hard - just log and continue
-    if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+    if (
+      process.env.NODE_ENV === "test" ||
+      (globalThis as Record<string, unknown>).__TEST_ENV__
+    ) {
       console.warn(
         `🧪 Test user creation failed in test mode, continuing: ${userId}`
       );
@@ -245,7 +251,10 @@ export async function createTestUserPreferences(
       error
     );
     // In test mode, don't fail hard
-    if (process.env.NODE_ENV === "test" || (globalThis as any).__TEST_ENV__) {
+    if (
+      process.env.NODE_ENV === "test" ||
+      (globalThis as Record<string, unknown>).__TEST_ENV__
+    ) {
       console.warn(
         `🧪 Test user preferences creation failed in test mode, continuing: ${userId}`
       );
@@ -387,7 +396,7 @@ export async function waitForDatabase(ms: number = 100): Promise<void> {
  */
 export async function countRecords(
   tableName: "snipe_targets" | "user_preferences" | "user",
-  whereClause?: any
+  whereClause?: unknown
 ): Promise<number> {
   try {
     const dbModule = await getDbModule();
@@ -396,7 +405,7 @@ export async function countRecords(
     const { db } = dbModule;
     const { snipeTargets, userPreferences, user } = schemaModule;
 
-    let query;
+    let query: unknown;
 
     switch (tableName) {
       case "snipe_targets":
@@ -469,9 +478,9 @@ export function createTestPatterns(count: number, baseSymbol: string = "TEST") {
  * Verifies that a pattern was correctly converted to a database record
  */
 export function verifyPatternToRecordConversion(
-  pattern: any,
-  record: any,
-  userPrefs: any = null
+  pattern: unknown,
+  record: unknown,
+  userPrefs: unknown = null
 ): boolean {
   try {
     // Check basic mapping
@@ -524,5 +533,8 @@ export function resetMockData() {
  * Check if we're using mocked database
  */
 export function isUsingMockDatabase(): boolean {
-  return !!(globalThis as any).__TEST_ENV__ || process.env.NODE_ENV === "test";
+  return (
+    !!(globalThis as Record<string, unknown>).__TEST_ENV__ ||
+    process.env.NODE_ENV === "test"
+  );
 }

@@ -1,32 +1,33 @@
-# NeonDB Best Practices for MEXC Sniper Bot
+# Supabase Best Practices for MEXC Sniper Bot
 
 ## Overview
 
-This guide provides best practices for using NeonDB (serverless PostgreSQL) with the MEXC Sniper Bot system for optimal performance, reliability, and cost efficiency.
+This guide provides best practices for using Supabase (serverless PostgreSQL) with the MEXC Sniper Bot system for optimal performance, reliability, and cost efficiency.
 
 ## Database Configuration
 
 ### Connection Settings
 
 ```typescript
-// Recommended connection pool settings
+// Recommended connection pool settings for Supabase
 const client = postgres(process.env.DATABASE_URL, {
-  max: 10,              // Maximum connections
+  max: 10,              // Maximum connections (Supabase optimized)
   idle_timeout: 300,    // 5 minutes
   connect_timeout: 30,  // 30 seconds
-  ssl: 'require'        // Always use SSL
+  ssl: 'require'        // Always use SSL with Supabase
 });
 ```
 
 ### Environment Variables
 
 ```bash
-# Production NeonDB connection
-DATABASE_URL=postgresql://username:password@hostname/database?sslmode=require
+# Production Supabase connection
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres?sslmode=require
 
-# Connection pooling optimization
-NEON_MAX_CONNECTIONS=10
-NEON_IDLE_TIMEOUT=300
+# Supabase-specific configuration
+NEXT_PUBLIC_SUPABASE_URL=https://[YOUR-PROJECT-REF].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
 ## Performance Optimization
@@ -34,7 +35,7 @@ NEON_IDLE_TIMEOUT=300
 ### Connection Pooling
 
 1. **Use Connection Pooling**: Always use postgres.js built-in connection pooling
-2. **Limit Connections**: Keep max connections under your NeonDB plan limits
+2. **Limit Connections**: Keep max connections under your Supabase plan limits
 3. **Connection Cleanup**: Properly close connections after use
 
 ### Query Optimization
@@ -83,8 +84,8 @@ try {
 
 ### Production Migrations
 
-1. **Test First**: Always test migrations on a branch database
-2. **Backup**: Create snapshots before major schema changes  
+1. **Test First**: Always test migrations on a preview environment
+2. **Backup**: Create point-in-time recovery snapshots before major schema changes  
 3. **Zero Downtime**: Use `CREATE INDEX CONCURRENTLY` for large tables
 4. **Monitor**: Watch performance during and after migrations
 
@@ -104,7 +105,7 @@ GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_user;
 1. **SSL Only**: Always use `sslmode=require`
 2. **Environment Variables**: Never hardcode credentials
 3. **Rotation**: Regularly rotate database passwords
-4. **VPC**: Use NeonDB's IP allowlist for production
+4. **VPC**: Use Supabase's IP allowlist for production
 
 ## Monitoring and Alerts
 
@@ -177,35 +178,35 @@ INSERT INTO execution_history_archive
 SELECT * FROM moved_rows;
 ```
 
-## Branch Strategy
+## Development Strategy
 
 ### Development Workflow
 
 ```bash
-# Create development branch
-neonctl branches create --name development
+# Create development environment in Supabase
+# Use Supabase Dashboard or CLI to create preview environments
 
-# Test migrations on branch
-DATABASE_URL=postgresql://...branch-connection... npm run db:migrate
+# Test migrations on preview environment
+DATABASE_URL=postgresql://...preview-connection... npm run db:migrate
 
 # Run tests
 npm test
 
-# Merge to main when ready
-neonctl branches delete development
+# Deploy to production when ready
+# Use Supabase's built-in CI/CD integration
 ```
 
 ### Testing
 
-1. **Branch per Feature**: Create branches for testing new features
-2. **Reset for Tests**: Use fresh branches for each test suite
+1. **Environment per Feature**: Create preview environments for testing new features  
+2. **Fresh Environments**: Use fresh preview databases for each test suite
 3. **Data Isolation**: Keep test data separate from production
 
 ## Backup and Recovery
 
 ### Automated Backups
 
-NeonDB provides automatic backups, but for critical data:
+Supabase provides automatic backups, but for critical data:
 
 ```typescript
 // Export critical configuration
@@ -295,4 +296,4 @@ const debugClient = postgres(url, {
 -- BLOB → BYTEA
 ```
 
-This guide ensures optimal performance and reliability when using NeonDB with the MEXC Sniper Bot system.
+This guide ensures optimal performance and reliability when using Supabase with the MEXC Sniper Bot system.

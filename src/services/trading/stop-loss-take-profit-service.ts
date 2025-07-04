@@ -4,7 +4,7 @@
  * Automated position management with minimal complexity.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 
 // Simple types to avoid complex dependencies
 export interface SimpleStopLossOrder {
@@ -67,7 +67,7 @@ export interface SimplePortfolioSummary {
   positions: SimplePosition[];
 }
 
-export class StopLossTakeProfitService extends EventEmitter {
+export class StopLossTakeProfitService extends BrowserCompatibleEventEmitter {
   private logger = {
     info: (message: string, context?: any) =>
       console.info("[stop-loss-tp]", message, context || ""),

@@ -4,7 +4,7 @@
  * Manages system recovery with minimal complexity.
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 
 // Simple types to avoid complex dependencies
 export interface SimpleRecoveryPlan {
@@ -54,7 +54,7 @@ export interface SimpleRecoveryExecution {
 /**
  * Emergency recovery manager - simplified
  */
-export class EmergencyRecoveryManager extends EventEmitter {
+export class EmergencyRecoveryManager extends BrowserCompatibleEventEmitter {
   private recoveryPlans: Map<string, SimpleRecoveryPlan> = new Map();
   private activeRecoveries: Map<string, SimpleRecoveryExecution> = new Map();
   private recoveryHistory: SimpleRecoveryExecution[] = [];

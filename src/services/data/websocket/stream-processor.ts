@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Stream Processor
  *
@@ -5,7 +9,7 @@
  * Extracted from mexc-websocket-stream.ts for modularity
  */
 
-import { EventEmitter } from "node:events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import type {
   NotificationMessage,
   TradingPriceMessage,
@@ -40,7 +44,7 @@ interface MessageStats {
 // Stream Processor
 // ======================
 
-export class MexcWebSocketStreamService extends EventEmitter {
+export class MexcWebSocketStreamService extends BrowserCompatibleEventEmitter {
   private static instance: MexcWebSocketStreamService;
 
   private logger = {

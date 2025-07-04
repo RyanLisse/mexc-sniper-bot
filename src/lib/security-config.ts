@@ -1,3 +1,7 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Security Configuration for MEXC Sniper Bot
  *
@@ -5,7 +9,7 @@
  * Implements security best practices and headers for web application protection.
  */
 
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { UniversalCrypto } from "@/src/lib/browser-compatible-events";
 
 export const SECURITY_CONFIG = {
   // Security Headers for Production
@@ -321,7 +325,7 @@ export const SecurityUtils = {
 
   // Hash sensitive data
   hashSensitiveData: (data: string): string => {
-    return createHash("sha256").update(data).digest("hex");
+    return UniversalCrypto.createHash("sha256").update(data).digest("hex");
   },
 
   // Time-safe string comparison

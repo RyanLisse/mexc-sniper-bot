@@ -50,7 +50,7 @@ const DEFAULT_CONFIG: ValidationConfig = {
 // ============================================================================
 
 interface ValidationCacheEntry {
-  result: any;
+  result: EnhancedValidationResult;
   timestamp: number;
   schemaHash: string;
 }
@@ -63,7 +63,7 @@ class ValidationCache {
     this.maxSize = maxSize;
   }
 
-  set(key: string, result: any, schemaHash: string): void {
+  set(key: string, result: EnhancedValidationResult, schemaHash: string): void {
     if (this.cache.size >= this.maxSize) {
       // Remove oldest entries
       const entries = Array.from(this.cache.entries());
@@ -79,7 +79,7 @@ class ValidationCache {
     });
   }
 
-  get(key: string, schemaHash: string): any | null {
+  get(key: string, schemaHash: string): EnhancedValidationResult | null {
     const entry = this.cache.get(key);
     if (!entry) return null;
 
@@ -115,10 +115,10 @@ export class ComprehensiveValidationService {
   private config: ValidationConfig;
   private cache: ValidationCache;
   private logger: {
-    debug: (message: string, context?: any) => void;
-    info: (message: string, context?: any) => void;
-    warn: (message: string, context?: any) => void;
-    error: (message: string, context?: any) => void;
+    debug: (message: string, context?: Record<string, unknown>) => void;
+    info: (message: string, context?: Record<string, unknown>) => void;
+    warn: (message: string, context?: Record<string, unknown>) => void;
+    error: (message: string, context?: Record<string, unknown>) => void;
   };
 
   constructor(config: Partial<ValidationConfig> = {}) {
@@ -126,22 +126,22 @@ export class ComprehensiveValidationService {
     this.cache = new ValidationCache(this.config.maxCacheSize);
 
     this.logger = {
-      debug: (message: string, context?: any) => {
+      debug: (message: string, context?: Record<string, unknown>) => {
         if (this.config.logLevel === "debug") {
           console.debug(`[ValidationService] ${message}`, context || "");
         }
       },
-      info: (message: string, context?: any) => {
+      info: (message: string, context?: Record<string, unknown>) => {
         if (["debug", "info"].includes(this.config.logLevel)) {
           console.info(`[ValidationService] ${message}`, context || "");
         }
       },
-      warn: (message: string, context?: any) => {
+      warn: (message: string, context?: Record<string, unknown>) => {
         if (["debug", "info", "warn"].includes(this.config.logLevel)) {
           console.warn(`[ValidationService] ${message}`, context || "");
         }
       },
-      error: (message: string, context?: any) => {
+      error: (message: string, context?: Record<string, unknown>) => {
         console.error(`[ValidationService] ${message}`, context || "");
       },
     };
@@ -201,7 +201,9 @@ export class ComprehensiveValidationService {
           schemaSize: 0,
           errorCount: validationResult.success ? 0 : 1,
           validatedFields: validationResult.success
-            ? Object.keys((validationResult.data as any) || {})
+            ? Object.keys(
+                (validationResult.data as Record<string, unknown>) || {}
+              )
             : [],
         },
       };
@@ -337,7 +339,10 @@ export class ComprehensiveValidationService {
   // Safe Validation with Fallbacks
   // ============================================================================
 
-  safeValidateMarketData(marketData: unknown, fallback: any = null): any {
+  safeValidateMarketData(
+    marketData: unknown,
+    fallback: unknown = null
+  ): unknown {
     this.logger.debug("Safe validation of market data");
 
     try {
@@ -354,13 +359,13 @@ export class ComprehensiveValidationService {
 
   safeValidateRiskParameters(
     riskData: unknown,
-    fallback: any = {
+    fallback: Record<string, unknown> = {
       maxPositionSize: 1000,
       stopLossPercentage: 5,
       takeProfitPercentage: 15,
       riskLevel: "medium" as const,
     }
-  ): any {
+  ): unknown {
     this.logger.debug("Safe validation of risk parameters");
 
     try {

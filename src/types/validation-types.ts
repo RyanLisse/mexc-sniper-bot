@@ -8,29 +8,29 @@
 // UNIVERSAL VALIDATION RESULT TYPES
 // ============================================================================
 
-export interface ValidationResult<T = any> {
+export interface ValidationResult<T = unknown> {
   success?: boolean;
   data?: T;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   statusCode?: number;
   code?: string;
   message?: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success?: boolean;
   data?: T;
   error?: string;
   code?: string;
-  details?: any;
+  details?: Record<string, unknown>;
   message?: string;
   timestamp?: string;
-  meta?: any;
+  meta?: Record<string, unknown>;
   statusCode?: number;
 }
 
-export interface SimpleResponse<T = any> {
+export interface SimpleResponse<T = unknown> {
   success?: boolean;
   data?: T;
   error?: string;
@@ -122,10 +122,30 @@ export interface AutoSnipeConfig {
 }
 
 export interface Phase3Configuration {
-  performance?: any;
-  aiIntelligence?: any;
-  patternDetection?: any;
-  cacheWarming?: any;
+  performance?: {
+    enabled?: boolean;
+    maxConcurrency?: number;
+    timeoutMs?: number;
+    retryAttempts?: number;
+  };
+  aiIntelligence?: {
+    enabled?: boolean;
+    confidenceThreshold?: number;
+    maxProcessingTime?: number;
+    modelConfig?: Record<string, unknown>;
+  };
+  patternDetection?: {
+    enabled?: boolean;
+    sensitivity?: number;
+    minimumSamples?: number;
+    algorithms?: string[];
+  };
+  cacheWarming?: {
+    enabled?: boolean;
+    preloadMarkets?: boolean;
+    warmupDuration?: number;
+    prioritySymbols?: string[];
+  };
 }
 
 // ============================================================================
@@ -133,7 +153,7 @@ export interface Phase3Configuration {
 // ============================================================================
 
 // These provide compatibility with existing code that expects specific types
-export type ApiSuccessResponse<T = any> = ApiResponse<T>;
+export type ApiSuccessResponse<T = unknown> = ApiResponse<T>;
 export type ApiErrorResponse = ApiResponse;
-export type ValidationSuccess<T = any> = ValidationResult<T>;
+export type ValidationSuccess<T = unknown> = ValidationResult<T>;
 export type ValidationError = ValidationResult;

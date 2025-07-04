@@ -4,11 +4,12 @@ import { defineConfig } from 'drizzle-kit';
 // Load environment variables from .env.local
 config({ path: '.env.local' });
 
-// Force PostgreSQL usage - no SQLite fallback
-const hasNeonConfig = process.env.DATABASE_URL?.startsWith('postgresql://');
+// Force PostgreSQL usage - Supabase only
+const hasSupabaseConfig = process.env.DATABASE_URL?.startsWith('postgresql://') && 
+  process.env.DATABASE_URL?.includes('supabase.co');
 
-if (!hasNeonConfig) {
-  throw new Error('DATABASE_URL must be configured with a PostgreSQL connection string');
+if (!hasSupabaseConfig) {
+  throw new Error('DATABASE_URL must be configured with a Supabase PostgreSQL connection string');
 }
 
 export default defineConfig({

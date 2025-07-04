@@ -1,11 +1,11 @@
+"use client";
+
 /**
  * Safe Dynamic Component Loader
  *
  * Prevents client-side exceptions from failed dynamic imports by providing
  * comprehensive error handling and fallbacks for dashboard components.
  */
-
-"use client";
 
 import {
   type ComponentType,

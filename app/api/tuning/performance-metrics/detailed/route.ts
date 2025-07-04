@@ -7,6 +7,68 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { logger } from "@/src/lib/utils";
 
+interface PerformanceMetric {
+  timestamp: string;
+  operation: string;
+  responseTime: number;
+  throughput: number;
+  errorRate: number;
+  successRate: number;
+  cpuUsage: number;
+  memoryUsage: number;
+  activeConnections: number;
+  tradeExecutionTime: number;
+  patternDetectionLatency: number;
+  orderBookUpdateRate: number;
+  websocketLatency: number;
+  dbQueryTime: number;
+  cacheHitRate: number;
+  components: {
+    patternDetection: {
+      responseTime: number;
+      accuracy: number;
+      throughput: number;
+    };
+    tradingEngine: {
+      responseTime: number;
+      successRate: number;
+      throughput: number;
+    };
+    riskManagement: {
+      responseTime: number;
+      violationRate: number;
+      coverage: number;
+    };
+  };
+}
+
+interface DetailedMetricsResponse {
+  timeRange: string;
+  dataPoints: number;
+  generatedAt: string;
+  metrics: PerformanceMetric[];
+  summary: {
+    avgResponseTime: number;
+    avgThroughput: number;
+    avgErrorRate: number;
+    avgSuccessRate: number;
+    peakCpuUsage: number;
+    peakMemoryUsage: number;
+    trends: {
+      responseTimeChange: number;
+      throughputChange: number;
+      errorRateChange: number;
+      cpuUsageChange: number;
+    };
+  };
+  rawData?: {
+    sampleRate: string;
+    totalDataPoints: number;
+    compression: string;
+    accuracy: string;
+  };
+}
+
 /**
  * GET /api/tuning/performance-metrics/detailed
  * Get detailed performance metrics data for the performance tab
@@ -104,7 +166,7 @@ function generateDetailedPerformanceMetrics(
     });
   }
 
-  const response: any = {
+  const response: DetailedMetricsResponse = {
     timeRange,
     dataPoints: metrics.length,
     generatedAt: now.toISOString(),

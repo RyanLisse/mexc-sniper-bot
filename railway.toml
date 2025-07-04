@@ -1,0 +1,29 @@
+[build]
+builder = "bun"
+buildCommand = "bun run build"
+
+[deploy]
+startCommand = "bun start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[environments.production]
+[environments.production.variables]
+NODE_ENV = "production"
+RAILWAY_ENVIRONMENT = "production"
+
+[environments.staging]
+[environments.staging.variables]
+NODE_ENV = "staging"
+RAILWAY_ENVIRONMENT = "staging"
+
+[environments.development]
+[environments.development.variables]
+NODE_ENV = "development"
+RAILWAY_ENVIRONMENT = "development"
+
+[services]
+[services.web]
+source = "."

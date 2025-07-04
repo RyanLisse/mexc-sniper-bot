@@ -1,11 +1,15 @@
+import {
+  isBrowserEnvironment,
+  isNodeEnvironment,
+} from "@/src/lib/browser-compatible-events";
 /**
  * Performance Monitoring Service
- * 
+ *
  * Simplified performance monitoring service that provides essential metrics
  * tracking and monitoring capabilities for the trading system.
  */
 
-import { performance } from 'node:perf_hooks';
+import { performance } from "node:perf_hooks";
 
 export interface PerformanceMetrics {
   responseTime: number;
@@ -19,7 +23,7 @@ export interface PerformanceMetrics {
 
 export interface PerformanceAlert {
   type: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   data: any;
   timestamp: number;
@@ -28,7 +32,7 @@ export interface PerformanceAlert {
 export interface PerformanceThreshold {
   metric: keyof PerformanceMetrics;
   threshold: number;
-  condition: 'gt' | 'lt' | 'eq';
+  condition: "gt" | "lt" | "eq";
 }
 
 export interface PerformanceMonitoringConfig {
@@ -111,17 +115,20 @@ export class PerformanceMonitoringService {
   /**
    * Measure execution time of a function
    */
-  async measureAsync<T>(operation: string, fn: () => Promise<T>): Promise<{ result: T; duration: number }> {
+  async measureAsync<T>(
+    _operation: string,
+    fn: () => Promise<T>
+  ): Promise<{ result: T; duration: number }> {
     const startTime = performance.now();
     try {
       const result = await fn();
       const duration = performance.now() - startTime;
-      this.recordMetric('executionTime', duration);
+      this.recordMetric("executionTime", duration);
       return { result, duration };
     } catch (error) {
       const duration = performance.now() - startTime;
-      this.recordMetric('executionTime', duration);
-      this.incrementCounter('errors');
+      this.recordMetric("executionTime", duration);
+      this.incrementCounter("errors");
       throw error;
     }
   }
@@ -129,17 +136,17 @@ export class PerformanceMonitoringService {
   /**
    * Measure execution time of a synchronous function
    */
-  measure<T>(operation: string, fn: () => T): { result: T; duration: number } {
+  measure<T>(_operation: string, fn: () => T): { result: T; duration: number } {
     const startTime = performance.now();
     try {
       const result = fn();
       const duration = performance.now() - startTime;
-      this.recordMetric('executionTime', duration);
+      this.recordMetric("executionTime", duration);
       return { result, duration };
     } catch (error) {
       const duration = performance.now() - startTime;
-      this.recordMetric('executionTime', duration);
-      this.incrementCounter('errors');
+      this.recordMetric("executionTime", duration);
+      this.incrementCounter("errors");
       throw error;
     }
   }
@@ -168,10 +175,10 @@ export class PerformanceMonitoringService {
     const now = Date.now();
 
     return {
-      responseTime: this.counters.get('responseTime') || 0,
-      executionTime: this.counters.get('executionTime') || 0,
+      responseTime: this.counters.get("responseTime") || 0,
+      executionTime: this.counters.get("executionTime") || 0,
       memoryUsage: memoryUsage.heapUsed / 1024 / 1024, // MB
-      cpuUsage: this.counters.get('cpuUsage') || 0,
+      cpuUsage: this.counters.get("cpuUsage") || 0,
       errorRate: this.calculateErrorRate(),
       throughput: this.calculateThroughput(),
       timestamp: now,
@@ -198,7 +205,7 @@ export class PerformanceMonitoringService {
   getPerformanceSummary(): {
     current: PerformanceMetrics;
     averages: Partial<PerformanceMetrics>;
-    trends: Record<string, 'up' | 'down' | 'stable'>;
+    trends: Record<string, "up" | "down" | "stable">;
     alertCount: number;
   } {
     const current = this.getCurrentMetrics();
@@ -227,7 +234,7 @@ export class PerformanceMonitoringService {
    */
   updateConfig(config: Partial<PerformanceMonitoringConfig>): void {
     this.config = { ...this.config, ...config };
-    
+
     if (this.config.enabled && !this.isRunning) {
       this.start();
     } else if (!this.config.enabled && this.isRunning) {
@@ -266,10 +273,10 @@ export class PerformanceMonitoringService {
    */
   private collectMetrics(): void {
     const metrics = this.getCurrentMetrics();
-    
+
     // Add to history
     this.metrics.push(metrics);
-    
+
     // Trim history if needed
     if (this.metrics.length > this.config.historySize) {
       this.metrics.shift();
@@ -290,13 +297,13 @@ export class PerformanceMonitoringService {
       let violated = false;
 
       switch (threshold.condition) {
-        case 'gt':
+        case "gt":
           violated = value > threshold.threshold;
           break;
-        case 'lt':
+        case "lt":
           violated = value < threshold.threshold;
           break;
-        case 'eq':
+        case "eq":
           violated = value === threshold.threshold;
           break;
       }
@@ -312,7 +319,7 @@ export class PerformanceMonitoringService {
    */
   private generateAlert(threshold: PerformanceThreshold, value: number): void {
     const alert: PerformanceAlert = {
-      type: 'threshold_violation',
+      type: "threshold_violation",
       severity: this.determineSeverity(threshold.metric, value),
       message: `${threshold.metric} threshold violated: ${value} ${threshold.condition} ${threshold.threshold}`,
       data: {
@@ -325,7 +332,7 @@ export class PerformanceMonitoringService {
     };
 
     this.alerts.push(alert);
-    
+
     // Trim alerts if needed
     if (this.alerts.length > this.config.historySize) {
       this.alerts.shift();
@@ -336,8 +343,8 @@ export class PerformanceMonitoringService {
    * Calculate error rate
    */
   private calculateErrorRate(): number {
-    const errors = this.counters.get('errors') || 0;
-    const total = this.counters.get('requests') || 1;
+    const errors = this.counters.get("errors") || 0;
+    const total = this.counters.get("requests") || 1;
     return (errors / total) * 100;
   }
 
@@ -345,7 +352,7 @@ export class PerformanceMonitoringService {
    * Calculate throughput
    */
   private calculateThroughput(): number {
-    const requests = this.counters.get('requests') || 0;
+    const requests = this.counters.get("requests") || 0;
     const timeWindow = this.config.samplingInterval / 1000; // Convert to seconds
     return requests / timeWindow;
   }
@@ -356,15 +363,25 @@ export class PerformanceMonitoringService {
   private calculateAverages(): Partial<PerformanceMetrics> {
     if (this.metrics.length === 0) return {};
 
-    const sums = this.metrics.reduce((acc, metric) => {
-      acc.responseTime += metric.responseTime;
-      acc.executionTime += metric.executionTime;
-      acc.memoryUsage += metric.memoryUsage;
-      acc.cpuUsage += metric.cpuUsage;
-      acc.errorRate += metric.errorRate;
-      acc.throughput += metric.throughput;
-      return acc;
-    }, { responseTime: 0, executionTime: 0, memoryUsage: 0, cpuUsage: 0, errorRate: 0, throughput: 0 });
+    const sums = this.metrics.reduce(
+      (acc, metric) => {
+        acc.responseTime += metric.responseTime;
+        acc.executionTime += metric.executionTime;
+        acc.memoryUsage += metric.memoryUsage;
+        acc.cpuUsage += metric.cpuUsage;
+        acc.errorRate += metric.errorRate;
+        acc.throughput += metric.throughput;
+        return acc;
+      },
+      {
+        responseTime: 0,
+        executionTime: 0,
+        memoryUsage: 0,
+        cpuUsage: 0,
+        errorRate: 0,
+        throughput: 0,
+      }
+    );
 
     const count = this.metrics.length;
     return {
@@ -380,7 +397,7 @@ export class PerformanceMonitoringService {
   /**
    * Calculate performance trends
    */
-  private calculateTrends(): Record<string, 'up' | 'down' | 'stable'> {
+  private calculateTrends(): Record<string, "up" | "down" | "stable"> {
     if (this.metrics.length < 2) return {};
 
     const recent = this.metrics.slice(-10); // Last 10 measurements
@@ -388,36 +405,42 @@ export class PerformanceMonitoringService {
 
     if (recent.length === 0 || older.length === 0) return {};
 
-    const recentAvg = recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
-    const olderAvg = older.reduce((sum, m) => sum + m.responseTime, 0) / older.length;
+    const recentAvg =
+      recent.reduce((sum, m) => sum + m.responseTime, 0) / recent.length;
+    const olderAvg =
+      older.reduce((sum, m) => sum + m.responseTime, 0) / older.length;
 
     const diff = recentAvg - olderAvg;
     const threshold = olderAvg * 0.1; // 10% threshold
 
     return {
-      responseTime: Math.abs(diff) < threshold ? 'stable' : (diff > 0 ? 'up' : 'down'),
+      responseTime:
+        Math.abs(diff) < threshold ? "stable" : diff > 0 ? "up" : "down",
     };
   }
 
   /**
    * Determine alert severity
    */
-  private determineSeverity(metric: keyof PerformanceMetrics, value: number): 'low' | 'medium' | 'high' | 'critical' {
+  private determineSeverity(
+    metric: keyof PerformanceMetrics,
+    value: number
+  ): "low" | "medium" | "high" | "critical" {
     // Simple severity rules - can be made more sophisticated
-    if (metric === 'memoryUsage' && value > 1000) return 'critical';
-    if (metric === 'responseTime' && value > 5000) return 'high';
-    if (metric === 'errorRate' && value > 10) return 'high';
-    if (metric === 'errorRate' && value > 5) return 'medium';
-    return 'low';
+    if (metric === "memoryUsage" && value > 1000) return "critical";
+    if (metric === "responseTime" && value > 5000) return "high";
+    if (metric === "errorRate" && value > 10) return "high";
+    if (metric === "errorRate" && value > 5) return "medium";
+    return "low";
   }
 }
 
 // Global performance monitoring service instance
 export const performanceMonitoringService = new PerformanceMonitoringService({
-  enabled: process.env.NODE_ENV !== 'test',
+  enabled: process.env.NODE_ENV !== "test",
   samplingInterval: Number(process.env.PERF_SAMPLING_INTERVAL) || 10000,
   historySize: Number(process.env.PERF_HISTORY_SIZE) || 1000,
-  enableAlerts: process.env.PERF_ALERTS_ENABLED !== 'false',
+  enableAlerts: process.env.PERF_ALERTS_ENABLED !== "false",
 });
 
 // Types are already exported inline above

@@ -138,7 +138,8 @@ export class TargetProcessor {
       return {
         success: result.success,
         data: result,
-        error: result.error instanceof Error ? result.error.message : result.error,
+        error:
+          result.error instanceof Error ? result.error.message : result.error,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {

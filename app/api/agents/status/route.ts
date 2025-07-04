@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   // Build-safe logger - simple console implementation
   const logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: Record<string, unknown> | string) =>
       console.info("[agents-status]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: Record<string, unknown> | string) =>
       console.warn("[agents-status]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: Record<string, unknown> | string) =>
       console.error("[agents-status]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: Record<string, unknown> | string) =>
       console.debug("[agents-status]", message, context || ""),
   };
 
@@ -86,8 +86,14 @@ export async function GET() {
   }
 }
 
+interface RegistryStats {
+  totalAgents: number;
+  unhealthyAgents: number;
+  degradedAgents: number;
+}
+
 function getSystemHealthStatus(
-  stats: any
+  stats: RegistryStats
 ): "healthy" | "degraded" | "unhealthy" | "unknown" {
   if (stats.totalAgents === 0) return "unknown";
 
