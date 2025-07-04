@@ -1,2 +1,1506 @@
-<testsuites id="" name="" tests="0" failures="0" skipped="0" errors="0" time="0.140466">
+<testsuites id="" name="" tests="75" failures="38" skipped="0" errors="0" time="237.03862800000002">
+<testsuite name="auth-credentials-login.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="1" skipped="0" time="18.885" errors="0">
+<testcase name="Authentication with provided credentials › should sign in and reach dashboard" classname="auth-credentials-login.spec.ts" time="18.885">
+<failure message="auth-credentials-login.spec.ts:25:7 should sign in and reach dashboard" type="FAILURE">
+<![CDATA[  [chromium] › auth-credentials-login.spec.ts:25:7 › Authentication with provided credentials › should sign in and reach dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      37 |     await page.click('button:has-text("Sign In")');
+      38 |
+    > 39 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      40 |     expect(page.url()).toMatch(/\/dashboard$/);
+      41 |     await expect(page.locator('text=Dashboard')).toBeVisible();
+      42 |   });
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-credentials-login.spec.ts:39:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-mock.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="3" failures="0" skipped="0" time="25.739" errors="0">
+<testcase name="Mock Authentication Flow › Mock authentication allows dashboard access" classname="auth-flow-mock.spec.ts" time="8.434">
+</testcase>
+<testcase name="Mock Authentication Flow › Auth page shows user is authenticated with mock data" classname="auth-flow-mock.spec.ts" time="8.817">
+</testcase>
+<testcase name="Mock Authentication Flow › Dashboard loads with mock user data" classname="auth-flow-mock.spec.ts" time="8.488">
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="5" failures="3" skipped="0" time="59.965" errors="0">
+<testcase name="Authentication Flow Validation › Authentication page loads correctly" classname="auth-flow-validation.spec.ts" time="3.374">
+</testcase>
+<testcase name="Authentication Flow Validation › Successfully authenticates with valid credentials" classname="auth-flow-validation.spec.ts" time="18.805">
+<failure message="auth-flow-validation.spec.ts:38:7 Successfully authenticates with valid credentials" type="FAILURE">
+<![CDATA[  [chromium] › auth-flow-validation.spec.ts:38:7 › Authentication Flow Validation › Successfully authenticates with valid credentials 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      51 |     
+      52 |     // Wait for redirect to dashboard
+    > 53 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      54 |     expect(page.url()).toMatch(/\/dashboard$/);
+      55 |     
+      56 |     // Verify we're on the dashboard
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:53:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Shows error for invalid credentials" classname="auth-flow-validation.spec.ts" time="3.113">
+</testcase>
+<testcase name="Authentication Flow Validation › Redirects authenticated user to dashboard" classname="auth-flow-validation.spec.ts" time="17.409">
+<failure message="auth-flow-validation.spec.ts:81:7 Redirects authenticated user to dashboard" type="FAILURE">
+<![CDATA[  [chromium] › auth-flow-validation.spec.ts:81:7 › Authentication Flow Validation › Redirects authenticated user to dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      90 |     
+      91 |     // Wait for dashboard
+    > 92 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      93 |     
+      94 |     // Now try to go back to auth page - should redirect to dashboard
+      95 |     await page.goto(`${BASE_URL}/auth`);
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Can sign out and return to auth page" classname="auth-flow-validation.spec.ts" time="17.264">
+<failure message="auth-flow-validation.spec.ts:100:7 Can sign out and return to auth page" type="FAILURE">
+<![CDATA[  [chromium] › auth-flow-validation.spec.ts:100:7 › Authentication Flow Validation › Can sign out and return to auth page 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      109 |     
+      110 |     // Wait for dashboard
+    > 111 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+          |                ^
+      112 |     
+      113 |     // Look for and click sign out button
+      114 |     const signOutButton = page.locator('button:has-text("Sign Out"), [data-testid="sign-out"], button:has-text("Logout")').first();
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:111:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-login-with-credentials.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="1" skipped="0" time="16.842" errors="0">
+<testcase name="Login With Credentials › should log in, reach dashboard and log out" classname="auth-login-with-credentials.spec.ts" time="16.842">
+<failure message="auth-login-with-credentials.spec.ts:24:7 should log in, reach dashboard and log out" type="FAILURE">
+<![CDATA[  [chromium] › auth-login-with-credentials.spec.ts:24:7 › Login With Credentials › should log in, reach dashboard and log out 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      38 |
+      39 |     // Wait for dashboard to load
+    > 40 |     await page.waitForURL('**/dashboard', { timeout: 15000 })
+         |                ^
+      41 |     await expect(page).toHaveURL(/.*\/dashboard/)
+      42 |
+      43 |     // Sign out
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-login-with-credentials.spec.ts:40:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-chromium/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-chromium/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-api-trading.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="0" skipped="0" time="1.911" errors="0">
+<testcase name="Stagehand Trading API › rejects trade without credentials" classname="stagehand-api-trading.spec.ts" time="1.911">
+</testcase>
+</testsuite>
+<testsuite name="stagehand-auth.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="1" skipped="0" time="30.002" errors="0">
+<testcase name="stagehand can sign in" classname="stagehand-auth.spec.ts" time="30.002">
+<failure message="stagehand-auth.spec.ts:20:5 stagehand can sign in" type="FAILURE">
+<![CDATA[  [chromium] › stagehand-auth.spec.ts:20:5 › stagehand can sign in ─────────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+      24 |   await page.act(`Fill the password field with ${TEST_PASSWORD}`);
+      25 |   await page.act('Click the submit button to sign in');
+    > 26 |   await page.waitForURL(/.*\/dashboard/);
+         |              ^
+      27 |   expect(page.url()).toContain('/dashboard');
+      28 | });
+      29 |
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-auth.spec.ts:26:14
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-critical-flows.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="1" skipped="0" time="30.003" errors="0">
+<testcase name="Critical flow smoke test (Stagehand) › login and verify dashboard access" classname="stagehand-critical-flows.spec.ts" time="30.003">
+<failure message="stagehand-critical-flows.spec.ts:22:7 login and verify dashboard access" type="FAILURE">
+<![CDATA[  [chromium] › stagehand-critical-flows.spec.ts:22:7 › Critical flow smoke test (Stagehand) › login and verify dashboard access 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      30 |     await page.act('Click the submit button to sign in');
+      31 |
+    > 32 |     await page.waitForURL('**/dashboard');
+         |                ^
+      33 |     const result = await page.extract({
+      34 |       instruction: 'Confirm user landed on dashboard',
+      35 |       schema: z.object({ dashboard: z.boolean() })
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-critical-flows.spec.ts:32:16
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-pattern-discovery.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="1" skipped="0" time="2.812" errors="0">
+<testcase name="Stagehand Pattern Discovery › analyzes patterns on the dashboard" classname="stagehand-pattern-discovery.spec.ts" time="2.812">
+<failure message="stagehand-pattern-discovery.spec.ts:24:7 analyzes patterns on the dashboard" type="FAILURE">
+<![CDATA[  [chromium] › stagehand-pattern-discovery.spec.ts:24:7 › Stagehand Pattern Discovery › analyzes patterns on the dashboard 
+
+    StagehandDefaultError: 
+    Hey! We're sorry you ran into an error. 
+    Stagehand version: 2.4.0 
+    If you need help, please open a Github issue or reach out to us on Slack: https://stagehand.dev/slack
+
+    Full error:
+    Cannot read properties of undefined (reading 'replace')
+        at _StagehandPage.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3918:15)
+        at rejected (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:73:29)
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-safety-checks.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="chromium" tests="1" failures="0" skipped="0" time="2.012" errors="0">
+<testcase name="Stagehand Safety Checks › fetches safety constraint list" classname="stagehand-safety-checks.spec.ts" time="2.012">
+</testcase>
+</testsuite>
+<testsuite name="auth-credentials-login.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="1" skipped="0" time="19.356" errors="0">
+<testcase name="Authentication with provided credentials › should sign in and reach dashboard" classname="auth-credentials-login.spec.ts" time="19.356">
+<failure message="auth-credentials-login.spec.ts:25:7 should sign in and reach dashboard" type="FAILURE">
+<![CDATA[  [firefox] › auth-credentials-login.spec.ts:25:7 › Authentication with provided credentials › should sign in and reach dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      37 |     await page.click('button:has-text("Sign In")');
+      38 |
+    > 39 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      40 |     expect(page.url()).toMatch(/\/dashboard$/);
+      41 |     await expect(page.locator('text=Dashboard')).toBeVisible();
+      42 |   });
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-credentials-login.spec.ts:39:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-firefox/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-mock.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="3" failures="0" skipped="0" time="7.54" errors="0">
+<testcase name="Mock Authentication Flow › Mock authentication allows dashboard access" classname="auth-flow-mock.spec.ts" time="2.894">
+</testcase>
+<testcase name="Mock Authentication Flow › Auth page shows user is authenticated with mock data" classname="auth-flow-mock.spec.ts" time="3.043">
+</testcase>
+<testcase name="Mock Authentication Flow › Dashboard loads with mock user data" classname="auth-flow-mock.spec.ts" time="1.603">
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="5" failures="3" skipped="0" time="56.748" errors="0">
+<testcase name="Authentication Flow Validation › Authentication page loads correctly" classname="auth-flow-validation.spec.ts" time="2.492">
+</testcase>
+<testcase name="Authentication Flow Validation › Successfully authenticates with valid credentials" classname="auth-flow-validation.spec.ts" time="17.123">
+<failure message="auth-flow-validation.spec.ts:38:7 Successfully authenticates with valid credentials" type="FAILURE">
+<![CDATA[  [firefox] › auth-flow-validation.spec.ts:38:7 › Authentication Flow Validation › Successfully authenticates with valid credentials 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      51 |     
+      52 |     // Wait for redirect to dashboard
+    > 53 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      54 |     expect(page.url()).toMatch(/\/dashboard$/);
+      55 |     
+      56 |     // Verify we're on the dashboard
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:53:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-firefox/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Shows error for invalid credentials" classname="auth-flow-validation.spec.ts" time="2.442">
+</testcase>
+<testcase name="Authentication Flow Validation › Redirects authenticated user to dashboard" classname="auth-flow-validation.spec.ts" time="17.111">
+<failure message="auth-flow-validation.spec.ts:81:7 Redirects authenticated user to dashboard" type="FAILURE">
+<![CDATA[  [firefox] › auth-flow-validation.spec.ts:81:7 › Authentication Flow Validation › Redirects authenticated user to dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      90 |     
+      91 |     // Wait for dashboard
+    > 92 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      93 |     
+      94 |     // Now try to go back to auth page - should redirect to dashboard
+      95 |     await page.goto(`${BASE_URL}/auth`);
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-firefox/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Can sign out and return to auth page" classname="auth-flow-validation.spec.ts" time="17.58">
+<failure message="auth-flow-validation.spec.ts:100:7 Can sign out and return to auth page" type="FAILURE">
+<![CDATA[  [firefox] › auth-flow-validation.spec.ts:100:7 › Authentication Flow Validation › Can sign out and return to auth page 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      109 |     
+      110 |     // Wait for dashboard
+    > 111 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+          |                ^
+      112 |     
+      113 |     // Look for and click sign out button
+      114 |     const signOutButton = page.locator('button:has-text("Sign Out"), [data-testid="sign-out"], button:has-text("Logout")').first();
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:111:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-firefox/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-login-with-credentials.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="1" skipped="0" time="17.514" errors="0">
+<testcase name="Login With Credentials › should log in, reach dashboard and log out" classname="auth-login-with-credentials.spec.ts" time="17.514">
+<failure message="auth-login-with-credentials.spec.ts:24:7 should log in, reach dashboard and log out" type="FAILURE">
+<![CDATA[  [firefox] › auth-login-with-credentials.spec.ts:24:7 › Login With Credentials › should log in, reach dashboard and log out 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      38 |
+      39 |     // Wait for dashboard to load
+    > 40 |     await page.waitForURL('**/dashboard', { timeout: 15000 })
+         |                ^
+      41 |     await expect(page).toHaveURL(/.*\/dashboard/)
+      42 |
+      43 |     // Sign out
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-login-with-credentials.spec.ts:40:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-firefox/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-firefox/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-firefox/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-firefox/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-firefox/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-firefox/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-api-trading.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="0" skipped="0" time="0.274" errors="0">
+<testcase name="Stagehand Trading API › rejects trade without credentials" classname="stagehand-api-trading.spec.ts" time="0.274">
+</testcase>
+</testsuite>
+<testsuite name="stagehand-auth.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="1" skipped="0" time="30.003" errors="0">
+<testcase name="stagehand can sign in" classname="stagehand-auth.spec.ts" time="30.003">
+<failure message="stagehand-auth.spec.ts:20:5 stagehand can sign in" type="FAILURE">
+<![CDATA[  [firefox] › stagehand-auth.spec.ts:20:5 › stagehand can sign in ──────────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      24 |   await page.act(`Fill the password field with ${TEST_PASSWORD}`);
+      25 |   await page.act('Click the submit button to sign in');
+    > 26 |   await page.waitForURL(/.*\/dashboard/);
+         |              ^
+      27 |   expect(page.url()).toContain('/dashboard');
+      28 | });
+      29 |
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-auth.spec.ts:26:14
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-critical-flows.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="1" skipped="0" time="30.001" errors="0">
+<testcase name="Critical flow smoke test (Stagehand) › login and verify dashboard access" classname="stagehand-critical-flows.spec.ts" time="30.001">
+<failure message="stagehand-critical-flows.spec.ts:22:7 login and verify dashboard access" type="FAILURE">
+<![CDATA[  [firefox] › stagehand-critical-flows.spec.ts:22:7 › Critical flow smoke test (Stagehand) › login and verify dashboard access 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      30 |     await page.act('Click the submit button to sign in');
+      31 |
+    > 32 |     await page.waitForURL('**/dashboard');
+         |                ^
+      33 |     const result = await page.extract({
+      34 |       instruction: 'Confirm user landed on dashboard',
+      35 |       schema: z.object({ dashboard: z.boolean() })
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-critical-flows.spec.ts:32:16
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-pattern-discovery.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="1" skipped="0" time="3.36" errors="0">
+<testcase name="Stagehand Pattern Discovery › analyzes patterns on the dashboard" classname="stagehand-pattern-discovery.spec.ts" time="3.36">
+<failure message="stagehand-pattern-discovery.spec.ts:24:7 analyzes patterns on the dashboard" type="FAILURE">
+<![CDATA[  [firefox] › stagehand-pattern-discovery.spec.ts:24:7 › Stagehand Pattern Discovery › analyzes patterns on the dashboard 
+
+    StagehandDefaultError: 
+    Hey! We're sorry you ran into an error. 
+    Stagehand version: 2.4.0 
+    If you need help, please open a Github issue or reach out to us on Slack: https://stagehand.dev/slack
+
+    Full error:
+    Cannot read properties of undefined (reading 'replace')
+        at _StagehandPage.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3918:15)
+        at rejected (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:73:29)
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-safety-checks.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="firefox" tests="1" failures="0" skipped="0" time="0.033" errors="0">
+<testcase name="Stagehand Safety Checks › fetches safety constraint list" classname="stagehand-safety-checks.spec.ts" time="0.033">
+</testcase>
+</testsuite>
+<testsuite name="auth-credentials-login.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="1" skipped="0" time="17.023" errors="0">
+<testcase name="Authentication with provided credentials › should sign in and reach dashboard" classname="auth-credentials-login.spec.ts" time="17.023">
+<failure message="auth-credentials-login.spec.ts:25:7 should sign in and reach dashboard" type="FAILURE">
+<![CDATA[  [webkit] › auth-credentials-login.spec.ts:25:7 › Authentication with provided credentials › should sign in and reach dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      37 |     await page.click('button:has-text("Sign In")');
+      38 |
+    > 39 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      40 |     expect(page.url()).toMatch(/\/dashboard$/);
+      41 |     await expect(page.locator('text=Dashboard')).toBeVisible();
+      42 |   });
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-credentials-login.spec.ts:39:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-webkit/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-mock.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="3" failures="0" skipped="0" time="4.652" errors="0">
+<testcase name="Mock Authentication Flow › Mock authentication allows dashboard access" classname="auth-flow-mock.spec.ts" time="1.597">
+</testcase>
+<testcase name="Mock Authentication Flow › Auth page shows user is authenticated with mock data" classname="auth-flow-mock.spec.ts" time="1.493">
+</testcase>
+<testcase name="Mock Authentication Flow › Dashboard loads with mock user data" classname="auth-flow-mock.spec.ts" time="1.562">
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="5" failures="3" skipped="0" time="54.326" errors="0">
+<testcase name="Authentication Flow Validation › Authentication page loads correctly" classname="auth-flow-validation.spec.ts" time="1.887">
+</testcase>
+<testcase name="Authentication Flow Validation › Successfully authenticates with valid credentials" classname="auth-flow-validation.spec.ts" time="16.703">
+<failure message="auth-flow-validation.spec.ts:38:7 Successfully authenticates with valid credentials" type="FAILURE">
+<![CDATA[  [webkit] › auth-flow-validation.spec.ts:38:7 › Authentication Flow Validation › Successfully authenticates with valid credentials 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      51 |     
+      52 |     // Wait for redirect to dashboard
+    > 53 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      54 |     expect(page.url()).toMatch(/\/dashboard$/);
+      55 |     
+      56 |     // Verify we're on the dashboard
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:53:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-webkit/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Shows error for invalid credentials" classname="auth-flow-validation.spec.ts" time="2.04">
+</testcase>
+<testcase name="Authentication Flow Validation › Redirects authenticated user to dashboard" classname="auth-flow-validation.spec.ts" time="16.97">
+<failure message="auth-flow-validation.spec.ts:81:7 Redirects authenticated user to dashboard" type="FAILURE">
+<![CDATA[  [webkit] › auth-flow-validation.spec.ts:81:7 › Authentication Flow Validation › Redirects authenticated user to dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      90 |     
+      91 |     // Wait for dashboard
+    > 92 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      93 |     
+      94 |     // Now try to go back to auth page - should redirect to dashboard
+      95 |     await page.goto(`${BASE_URL}/auth`);
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-webkit/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Can sign out and return to auth page" classname="auth-flow-validation.spec.ts" time="16.726">
+<failure message="auth-flow-validation.spec.ts:100:7 Can sign out and return to auth page" type="FAILURE">
+<![CDATA[  [webkit] › auth-flow-validation.spec.ts:100:7 › Authentication Flow Validation › Can sign out and return to auth page 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      109 |     
+      110 |     // Wait for dashboard
+    > 111 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+          |                ^
+      112 |     
+      113 |     // Look for and click sign out button
+      114 |     const signOutButton = page.locator('button:has-text("Sign Out"), [data-testid="sign-out"], button:has-text("Logout")').first();
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:111:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-webkit/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-login-with-credentials.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="1" skipped="0" time="16.887" errors="0">
+<testcase name="Login With Credentials › should log in, reach dashboard and log out" classname="auth-login-with-credentials.spec.ts" time="16.887">
+<failure message="auth-login-with-credentials.spec.ts:24:7 should log in, reach dashboard and log out" type="FAILURE">
+<![CDATA[  [webkit] › auth-login-with-credentials.spec.ts:24:7 › Login With Credentials › should log in, reach dashboard and log out 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      38 |
+      39 |     // Wait for dashboard to load
+    > 40 |     await page.waitForURL('**/dashboard', { timeout: 15000 })
+         |                ^
+      41 |     await expect(page).toHaveURL(/.*\/dashboard/)
+      42 |
+      43 |     // Sign out
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-login-with-credentials.spec.ts:40:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-webkit/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-webkit/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-webkit/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-webkit/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-webkit/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-webkit/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-api-trading.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="0" skipped="0" time="1.075" errors="0">
+<testcase name="Stagehand Trading API › rejects trade without credentials" classname="stagehand-api-trading.spec.ts" time="1.075">
+</testcase>
+</testsuite>
+<testsuite name="stagehand-auth.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="1" skipped="0" time="30.003" errors="0">
+<testcase name="stagehand can sign in" classname="stagehand-auth.spec.ts" time="30.003">
+<failure message="stagehand-auth.spec.ts:20:5 stagehand can sign in" type="FAILURE">
+<![CDATA[  [webkit] › stagehand-auth.spec.ts:20:5 › stagehand can sign in ───────────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      24 |   await page.act(`Fill the password field with ${TEST_PASSWORD}`);
+      25 |   await page.act('Click the submit button to sign in');
+    > 26 |   await page.waitForURL(/.*\/dashboard/);
+         |              ^
+      27 |   expect(page.url()).toContain('/dashboard');
+      28 | });
+      29 |
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-auth.spec.ts:26:14
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-critical-flows.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="1" skipped="0" time="30.005" errors="0">
+<testcase name="Critical flow smoke test (Stagehand) › login and verify dashboard access" classname="stagehand-critical-flows.spec.ts" time="30.005">
+<failure message="stagehand-critical-flows.spec.ts:22:7 login and verify dashboard access" type="FAILURE">
+<![CDATA[  [webkit] › stagehand-critical-flows.spec.ts:22:7 › Critical flow smoke test (Stagehand) › login and verify dashboard access 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      30 |     await page.act('Click the submit button to sign in');
+      31 |
+    > 32 |     await page.waitForURL('**/dashboard');
+         |                ^
+      33 |     const result = await page.extract({
+      34 |       instruction: 'Confirm user landed on dashboard',
+      35 |       schema: z.object({ dashboard: z.boolean() })
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-critical-flows.spec.ts:32:16
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-pattern-discovery.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="0" skipped="0" time="7.139" errors="0">
+<testcase name="Stagehand Pattern Discovery › analyzes patterns on the dashboard" classname="stagehand-pattern-discovery.spec.ts" time="7.139">
+<system-err>
+<![CDATA[Zod field at `#/definitions/Extraction/properties/patterns` uses `.optional()` without `.nullable()` which is not supported by the API. See: https://platform.openai.com/docs/guides/structured-outputs?api-mode=responses#all-fields-must-be-required
+This will become an error in a future version of the SDK.
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-safety-checks.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="webkit" tests="1" failures="0" skipped="0" time="0.132" errors="0">
+<testcase name="Stagehand Safety Checks › fetches safety constraint list" classname="stagehand-safety-checks.spec.ts" time="0.132">
+</testcase>
+</testsuite>
+<testsuite name="auth-credentials-login.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="1" skipped="0" time="16.884" errors="0">
+<testcase name="Authentication with provided credentials › should sign in and reach dashboard" classname="auth-credentials-login.spec.ts" time="16.884">
+<failure message="auth-credentials-login.spec.ts:25:7 should sign in and reach dashboard" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › auth-credentials-login.spec.ts:25:7 › Authentication with provided credentials › should sign in and reach dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      37 |     await page.click('button:has-text("Sign In")');
+      38 |
+    > 39 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      40 |     expect(page.url()).toMatch(/\/dashboard$/);
+      41 |     await expect(page.locator('text=Dashboard')).toBeVisible();
+      42 |   });
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-credentials-login.spec.ts:39:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-mock.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="3" failures="0" skipped="0" time="4.195" errors="0">
+<testcase name="Mock Authentication Flow › Mock authentication allows dashboard access" classname="auth-flow-mock.spec.ts" time="1.365">
+</testcase>
+<testcase name="Mock Authentication Flow › Auth page shows user is authenticated with mock data" classname="auth-flow-mock.spec.ts" time="1.093">
+</testcase>
+<testcase name="Mock Authentication Flow › Dashboard loads with mock user data" classname="auth-flow-mock.spec.ts" time="1.737">
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="5" failures="3" skipped="0" time="53.774" errors="0">
+<testcase name="Authentication Flow Validation › Authentication page loads correctly" classname="auth-flow-validation.spec.ts" time="1.622">
+</testcase>
+<testcase name="Authentication Flow Validation › Successfully authenticates with valid credentials" classname="auth-flow-validation.spec.ts" time="16.94">
+<failure message="auth-flow-validation.spec.ts:38:7 Successfully authenticates with valid credentials" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › auth-flow-validation.spec.ts:38:7 › Authentication Flow Validation › Successfully authenticates with valid credentials 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      51 |     
+      52 |     // Wait for redirect to dashboard
+    > 53 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      54 |     expect(page.url()).toMatch(/\/dashboard$/);
+      55 |     
+      56 |     // Verify we're on the dashboard
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:53:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Shows error for invalid credentials" classname="auth-flow-validation.spec.ts" time="1.744">
+</testcase>
+<testcase name="Authentication Flow Validation › Redirects authenticated user to dashboard" classname="auth-flow-validation.spec.ts" time="16.675">
+<failure message="auth-flow-validation.spec.ts:81:7 Redirects authenticated user to dashboard" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › auth-flow-validation.spec.ts:81:7 › Authentication Flow Validation › Redirects authenticated user to dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      90 |     
+      91 |     // Wait for dashboard
+    > 92 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      93 |     
+      94 |     // Now try to go back to auth page - should redirect to dashboard
+      95 |     await page.goto(`${BASE_URL}/auth`);
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Can sign out and return to auth page" classname="auth-flow-validation.spec.ts" time="16.793">
+<failure message="auth-flow-validation.spec.ts:100:7 Can sign out and return to auth page" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › auth-flow-validation.spec.ts:100:7 › Authentication Flow Validation › Can sign out and return to auth page 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      109 |     
+      110 |     // Wait for dashboard
+    > 111 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+          |                ^
+      112 |     
+      113 |     // Look for and click sign out button
+      114 |     const signOutButton = page.locator('button:has-text("Sign Out"), [data-testid="sign-out"], button:has-text("Logout")').first();
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:111:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-login-with-credentials.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="1" skipped="0" time="16.768" errors="0">
+<testcase name="Login With Credentials › should log in, reach dashboard and log out" classname="auth-login-with-credentials.spec.ts" time="16.768">
+<failure message="auth-login-with-credentials.spec.ts:24:7 should log in, reach dashboard and log out" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › auth-login-with-credentials.spec.ts:24:7 › Login With Credentials › should log in, reach dashboard and log out 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      38 |
+      39 |     // Wait for dashboard to load
+    > 40 |     await page.waitForURL('**/dashboard', { timeout: 15000 })
+         |                ^
+      41 |     await expect(page).toHaveURL(/.*\/dashboard/)
+      42 |
+      43 |     // Sign out
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-login-with-credentials.spec.ts:40:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Chrome/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Chrome/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Chrome/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Chrome/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Chrome/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Chrome/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-api-trading.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="0" skipped="0" time="1.049" errors="0">
+<testcase name="Stagehand Trading API › rejects trade without credentials" classname="stagehand-api-trading.spec.ts" time="1.049">
+</testcase>
+</testsuite>
+<testsuite name="stagehand-auth.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="1" skipped="0" time="30.003" errors="0">
+<testcase name="stagehand can sign in" classname="stagehand-auth.spec.ts" time="30.003">
+<failure message="stagehand-auth.spec.ts:20:5 stagehand can sign in" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › stagehand-auth.spec.ts:20:5 › stagehand can sign in ────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      24 |   await page.act(`Fill the password field with ${TEST_PASSWORD}`);
+      25 |   await page.act('Click the submit button to sign in');
+    > 26 |   await page.waitForURL(/.*\/dashboard/);
+         |              ^
+      27 |   expect(page.url()).toContain('/dashboard');
+      28 | });
+      29 |
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-auth.spec.ts:26:14
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-critical-flows.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="1" skipped="0" time="30.003" errors="0">
+<testcase name="Critical flow smoke test (Stagehand) › login and verify dashboard access" classname="stagehand-critical-flows.spec.ts" time="30.003">
+<failure message="stagehand-critical-flows.spec.ts:22:7 login and verify dashboard access" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › stagehand-critical-flows.spec.ts:22:7 › Critical flow smoke test (Stagehand) › login and verify dashboard access 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      30 |     await page.act('Click the submit button to sign in');
+      31 |
+    > 32 |     await page.waitForURL('**/dashboard');
+         |                ^
+      33 |     const result = await page.extract({
+      34 |       instruction: 'Confirm user landed on dashboard',
+      35 |       schema: z.object({ dashboard: z.boolean() })
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-critical-flows.spec.ts:32:16
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-pattern-discovery.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="1" skipped="0" time="2.843" errors="0">
+<testcase name="Stagehand Pattern Discovery › analyzes patterns on the dashboard" classname="stagehand-pattern-discovery.spec.ts" time="2.843">
+<failure message="stagehand-pattern-discovery.spec.ts:24:7 analyzes patterns on the dashboard" type="FAILURE">
+<![CDATA[  [Mobile Chrome] › stagehand-pattern-discovery.spec.ts:24:7 › Stagehand Pattern Discovery › analyzes patterns on the dashboard 
+
+    StagehandDefaultError: 
+    Hey! We're sorry you ran into an error. 
+    Stagehand version: 2.4.0 
+    If you need help, please open a Github issue or reach out to us on Slack: https://stagehand.dev/slack
+
+    Full error:
+    Cannot read properties of undefined (reading 'replace')
+        at _StagehandPage.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3918:15)
+        at rejected (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:73:29)
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-safety-checks.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Chrome" tests="1" failures="0" skipped="0" time="0.088" errors="0">
+<testcase name="Stagehand Safety Checks › fetches safety constraint list" classname="stagehand-safety-checks.spec.ts" time="0.088">
+</testcase>
+</testsuite>
+<testsuite name="auth-credentials-login.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="1" skipped="0" time="17.237" errors="0">
+<testcase name="Authentication with provided credentials › should sign in and reach dashboard" classname="auth-credentials-login.spec.ts" time="17.237">
+<failure message="auth-credentials-login.spec.ts:25:7 should sign in and reach dashboard" type="FAILURE">
+<![CDATA[  [Mobile Safari] › auth-credentials-login.spec.ts:25:7 › Authentication with provided credentials › should sign in and reach dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      37 |     await page.click('button:has-text("Sign In")');
+      38 |
+    > 39 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      40 |     expect(page.url()).toMatch(/\/dashboard$/);
+      41 |     await expect(page.locator('text=Dashboard')).toBeVisible();
+      42 |   });
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-credentials-login.spec.ts:39:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-credentials-login-Aut-788a6-sign-in-and-reach-dashboard-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-mock.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="3" failures="0" skipped="0" time="4.853" errors="0">
+<testcase name="Mock Authentication Flow › Mock authentication allows dashboard access" classname="auth-flow-mock.spec.ts" time="1.656">
+</testcase>
+<testcase name="Mock Authentication Flow › Auth page shows user is authenticated with mock data" classname="auth-flow-mock.spec.ts" time="1.44">
+</testcase>
+<testcase name="Mock Authentication Flow › Dashboard loads with mock user data" classname="auth-flow-mock.spec.ts" time="1.757">
+</testcase>
+</testsuite>
+<testsuite name="auth-flow-validation.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="5" failures="3" skipped="0" time="54.896" errors="0">
+<testcase name="Authentication Flow Validation › Authentication page loads correctly" classname="auth-flow-validation.spec.ts" time="1.665">
+</testcase>
+<testcase name="Authentication Flow Validation › Successfully authenticates with valid credentials" classname="auth-flow-validation.spec.ts" time="16.743">
+<failure message="auth-flow-validation.spec.ts:38:7 Successfully authenticates with valid credentials" type="FAILURE">
+<![CDATA[  [Mobile Safari] › auth-flow-validation.spec.ts:38:7 › Authentication Flow Validation › Successfully authenticates with valid credentials 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      51 |     
+      52 |     // Wait for redirect to dashboard
+    > 53 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      54 |     expect(page.url()).toMatch(/\/dashboard$/);
+      55 |     
+      56 |     // Verify we're on the dashboard
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:53:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-f682b-ates-with-valid-credentials-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Shows error for invalid credentials" classname="auth-flow-validation.spec.ts" time="2.148">
+</testcase>
+<testcase name="Authentication Flow Validation › Redirects authenticated user to dashboard" classname="auth-flow-validation.spec.ts" time="17.428">
+<failure message="auth-flow-validation.spec.ts:81:7 Redirects authenticated user to dashboard" type="FAILURE">
+<![CDATA[  [Mobile Safari] › auth-flow-validation.spec.ts:81:7 › Authentication Flow Validation › Redirects authenticated user to dashboard 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      90 |     
+      91 |     // Wait for dashboard
+    > 92 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+         |                ^
+      93 |     
+      94 |     // Now try to go back to auth page - should redirect to dashboard
+      95 |     await page.goto(`${BASE_URL}/auth`);
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:92:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-badc2-enticated-user-to-dashboard-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="Authentication Flow Validation › Can sign out and return to auth page" classname="auth-flow-validation.spec.ts" time="16.912">
+<failure message="auth-flow-validation.spec.ts:100:7 Can sign out and return to auth page" type="FAILURE">
+<![CDATA[  [Mobile Safari] › auth-flow-validation.spec.ts:100:7 › Authentication Flow Validation › Can sign out and return to auth page 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      109 |     
+      110 |     // Wait for dashboard
+    > 111 |     await page.waitForURL('**/dashboard', { timeout: 15000 });
+          |                ^
+      112 |     
+      113 |     // Look for and click sign out button
+      114 |     const signOutButton = page.locator('button:has-text("Sign Out"), [data-testid="sign-out"], button:has-text("Logout")').first();
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-flow-validation.spec.ts:111:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-flow-validation-Authe-37cf8-out-and-return-to-auth-page-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="auth-login-with-credentials.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="1" skipped="0" time="17.359" errors="0">
+<testcase name="Login With Credentials › should log in, reach dashboard and log out" classname="auth-login-with-credentials.spec.ts" time="17.359">
+<failure message="auth-login-with-credentials.spec.ts:24:7 should log in, reach dashboard and log out" type="FAILURE">
+<![CDATA[  [Mobile Safari] › auth-login-with-credentials.spec.ts:24:7 › Login With Credentials › should log in, reach dashboard and log out 
+
+    TimeoutError: page.waitForURL: Timeout 15000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      38 |
+      39 |     // Wait for dashboard to load
+    > 40 |     await page.waitForURL('**/dashboard', { timeout: 15000 })
+         |                ^
+      41 |     await expect(page).toHaveURL(/.*\/dashboard/)
+      42 |
+      43 |     // Sign out
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/auth-login-with-credentials.spec.ts:40:16
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Safari/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Safari/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Safari/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Safari/test-failed-1.png]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Safari/video.webm]]
+
+[[ATTACHMENT|../test-results/auth-login-with-credential-3c86b-reach-dashboard-and-log-out-Mobile-Safari/error-context.md]]
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-api-trading.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="0" skipped="0" time="1.027" errors="0">
+<testcase name="Stagehand Trading API › rejects trade without credentials" classname="stagehand-api-trading.spec.ts" time="1.027">
+</testcase>
+</testsuite>
+<testsuite name="stagehand-auth.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="1" skipped="0" time="30.003" errors="0">
+<testcase name="stagehand can sign in" classname="stagehand-auth.spec.ts" time="30.003">
+<failure message="stagehand-auth.spec.ts:20:5 stagehand can sign in" type="FAILURE">
+<![CDATA[  [Mobile Safari] › stagehand-auth.spec.ts:20:5 › stagehand can sign in ────────────────────────────
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation until "load"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+      navigated to "http://localhost:3008/auth"
+    ============================================================
+
+      24 |   await page.act(`Fill the password field with ${TEST_PASSWORD}`);
+      25 |   await page.act('Click the submit button to sign in');
+    > 26 |   await page.waitForURL(/.*\/dashboard/);
+         |              ^
+      27 |   expect(page.url()).toContain('/dashboard');
+      28 | });
+      29 |
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-auth.spec.ts:26:14
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-critical-flows.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="1" skipped="0" time="30.002" errors="0">
+<testcase name="Critical flow smoke test (Stagehand) › login and verify dashboard access" classname="stagehand-critical-flows.spec.ts" time="30.002">
+<failure message="stagehand-critical-flows.spec.ts:22:7 login and verify dashboard access" type="FAILURE">
+<![CDATA[  [Mobile Safari] › stagehand-critical-flows.spec.ts:22:7 › Critical flow smoke test (Stagehand) › login and verify dashboard access 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: page.waitForURL: Target page, context or browser has been closed
+    =========================== logs ===========================
+    waiting for navigation to "**/dashboard" until "load"
+    ============================================================
+
+      30 |     await page.act('Click the submit button to sign in');
+      31 |
+    > 32 |     await page.waitForURL('**/dashboard');
+         |                ^
+      33 |     const result = await page.extract({
+      34 |       instruction: 'Confirm user landed on dashboard',
+      35 |       schema: z.object({ dashboard: z.boolean() })
+        at Proxy.<anonymous> (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at Proxy.waitForURL (/Users/neo/Developer/mexc-sniper-bot/node_modules/@browserbasehq/stagehand/dist/index.js:3679:30)
+        at /Users/neo/Developer/mexc-sniper-bot/tests/e2e/stagehand-critical-flows.spec.ts:32:16
+]]>
+</failure>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-pattern-discovery.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="0" skipped="0" time="7.454" errors="0">
+<testcase name="Stagehand Pattern Discovery › analyzes patterns on the dashboard" classname="stagehand-pattern-discovery.spec.ts" time="7.454">
+<system-err>
+<![CDATA[Zod field at `#/definitions/Extraction/properties/patterns` uses `.optional()` without `.nullable()` which is not supported by the API. See: https://platform.openai.com/docs/guides/structured-outputs?api-mode=responses#all-fields-must-be-required
+This will become an error in a future version of the SDK.
+]]>
+</system-err>
+</testcase>
+</testsuite>
+<testsuite name="stagehand-safety-checks.spec.ts" timestamp="2025-07-04T04:42:48.047Z" hostname="Mobile Safari" tests="1" failures="0" skipped="0" time="0.026" errors="0">
+<testcase name="Stagehand Safety Checks › fetches safety constraint list" classname="stagehand-safety-checks.spec.ts" time="0.026">
+</testcase>
+</testsuite>
 </testsuites>

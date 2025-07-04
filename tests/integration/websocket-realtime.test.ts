@@ -186,8 +186,15 @@ describe("WebSocket and Real-time Integration", () => {
 
       for (const service of services) {
         try {
-          // Simulate service call
-          const response = await fetch(`http://localhost:3008${service.endpoint}`);
+          // Simulate service call with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout
+          
+          const response = await fetch(`http://localhost:3008${service.endpoint}`, {
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
           
           communicationResults.push({
             service: service.name,

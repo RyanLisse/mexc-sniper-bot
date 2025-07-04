@@ -1,36 +1,40 @@
 import { test, expect } from '@playwright/test'
 
-const EMAIL = process.env.TEST_USER_EMAIL
-const PASSWORD = process.env.TEST_USER_PASSWORD
+const EMAIL = process.env.TEST_USER_EMAIL || process.env.AUTH_EMAIL || 'ryan@ryanlisse.com'
+const PASSWORD = process.env.TEST_USER_PASSWORD || process.env.AUTH_PASSWORD || 'Testing2025!'
 
 // These tests rely on the baseURL configured in playwright.config.ts
 
 test.describe('Login With Credentials', () => {
-  test('should log in, reach dashboard and log out', async ({ page }) => {
-    test.skip(!EMAIL || !PASSWORD, 'TEST_USER_EMAIL and TEST_USER_PASSWORD must be set')
+  test.beforeEach(async ({ page }) => {
+    // Ensure we start with clean auth state
+    await page.goto('/auth');
+    
+    // Clear any existing auth state
+    try {
+      await page.evaluate(() => {
+        localStorage.clear();
+        sessionStorage.clear();
+      });
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  });
 
+  test('should log in, reach dashboard and log out', async ({ page }) => {
     // Navigate to the auth page using configured baseURL
     await page.goto('/auth')
+    await page.waitForLoadState('networkidle');
 
-    // Locate input fields
-    const emailInput = page.locator('input[name="email"]').or(
-      page.locator('input[type="email"]')
-    )
-    const passwordInput = page.locator('input[name="password"]').or(
-      page.locator('input[type="password"]')
-    )
+    // Wait for Supabase Auth UI to load
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    // Fill credentials
-    await emailInput.first().fill(EMAIL!)
-    await passwordInput.first().fill(PASSWORD!)
+    // Fill credentials using proper Supabase Auth UI selectors
+    await page.fill('input[type="email"]', EMAIL)
+    await page.fill('input[type="password"]', PASSWORD)
 
     // Submit form
-    const submitButton = page.locator('button:has-text("Sign In")').or(
-      page.locator('button[type="submit"]')
-    ).or(
-      page.locator('button:has-text("Log in")')
-    )
-    await submitButton.first().click()
+    await page.click('button[type="submit"]')
 
     // Wait for dashboard to load
     await page.waitForURL('**/dashboard', { timeout: 15000 })

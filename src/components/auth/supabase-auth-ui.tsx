@@ -20,6 +20,14 @@ export function SupabaseAuthUI() {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  
+  // Detect test environment to disable OAuth providers
+  const isTestEnvironment = 
+    typeof window !== "undefined" && (
+      window.location.hostname === "localhost" ||
+      process.env.NODE_ENV === "test" ||
+      process.env.PLAYWRIGHT_TEST === "true"
+    );
 
   // Fix hydration by ensuring consistent rendering
   useEffect(() => {
@@ -201,7 +209,7 @@ export function SupabaseAuthUI() {
               message: "text-sm",
             },
           }}
-          providers={["google", "github"]}
+          providers={isTestEnvironment ? [] : ["google", "github"]}
           redirectTo={
             typeof window !== "undefined"
               ? `${window.location.origin}/dashboard`

@@ -1,0 +1,5723 @@
+{
+  "summary": {
+    "totalFiles": 813,
+    "testedFiles": 0,
+    "untestedFiles": 813,
+    "coveragePercentage": "0.0"
+  },
+  "categories": {
+    "critical": {
+      "total": 161,
+      "tested": 0,
+      "untested": 161
+    },
+    "businessLogic": {
+      "total": 185,
+      "tested": 0,
+      "untested": 185
+    },
+    "utility": {
+      "total": 231,
+      "tested": 0,
+      "untested": 231
+    },
+    "ui": {
+      "total": 236,
+      "tested": 0,
+      "untested": 236
+    }
+  },
+  "untestedFiles": [
+    {
+      "path": "app/agents/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/agents/page.test.tsx",
+      "size": 699
+    },
+    {
+      "path": "app/alerts/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/alerts/page.test.tsx",
+      "size": 445
+    },
+    {
+      "path": "app/api/account/balance/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/account/balance/route.test.tsx",
+      "size": 13818
+    },
+    {
+      "path": "app/api/admin/rls/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/admin/rls/route.test.tsx",
+      "size": 5334
+    },
+    {
+      "path": "app/api/agents/health/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/agents/health/route.test.tsx",
+      "size": 11038
+    },
+    {
+      "path": "app/api/agents/monitoring/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/agents/monitoring/route.test.tsx",
+      "size": 5955
+    },
+    {
+      "path": "app/api/agents/status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/agents/status/route.test.tsx",
+      "size": 3672
+    },
+    {
+      "path": "app/api/ai-services/status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/ai-services/status/route.test.tsx",
+      "size": 5615
+    },
+    {
+      "path": "app/api/alerts/analytics/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/analytics/route.test.tsx",
+      "size": 12417
+    },
+    {
+      "path": "app/api/alerts/channels/[id]/test/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/channels/[id]/test/route.test.tsx",
+      "size": 1555
+    },
+    {
+      "path": "app/api/alerts/channels/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/channels/route.test.tsx",
+      "size": 4096
+    },
+    {
+      "path": "app/api/alerts/deploy/built-in/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/deploy/built-in/route.test.tsx",
+      "size": 6531
+    },
+    {
+      "path": "app/api/alerts/instances/[id]/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/instances/[id]/route.test.tsx",
+      "size": 5196
+    },
+    {
+      "path": "app/api/alerts/instances/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/instances/route.test.tsx",
+      "size": 4331
+    },
+    {
+      "path": "app/api/alerts/rules/[id]/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/rules/[id]/route.test.tsx",
+      "size": 4017
+    },
+    {
+      "path": "app/api/alerts/rules/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/rules/route.test.tsx",
+      "size": 3798
+    },
+    {
+      "path": "app/api/alerts/system/status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/alerts/system/status/route.test.tsx",
+      "size": 6446
+    },
+    {
+      "path": "app/api/analytics/health/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/analytics/health/route.test.tsx",
+      "size": 19627
+    },
+    {
+      "path": "app/api/analytics/performance/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/analytics/performance/route.test.tsx",
+      "size": 13725
+    },
+    {
+      "path": "app/api/analytics/realtime/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/analytics/realtime/route.test.tsx",
+      "size": 13271
+    },
+    {
+      "path": "app/api/analytics/trading/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/analytics/trading/route.test.tsx",
+      "size": 12955
+    },
+    {
+      "path": "app/api/api-credentials/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/api-credentials/route.test.tsx",
+      "size": 3634
+    },
+    {
+      "path": "app/api/api-credentials/test/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/api-credentials/test/route.test.tsx",
+      "size": 860
+    },
+    {
+      "path": "app/api/auth/callback/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auth/callback/route.test.tsx",
+      "size": 1061
+    },
+    {
+      "path": "app/api/auth/session/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auth/session/route.test.tsx",
+      "size": 879
+    },
+    {
+      "path": "app/api/auth/signout/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auth/signout/route.test.tsx",
+      "size": 604
+    },
+    {
+      "path": "app/api/auth/supabase-session/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auth/supabase-session/route.test.tsx",
+      "size": 910
+    },
+    {
+      "path": "app/api/auto-exit-manager/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-exit-manager/route.test.tsx",
+      "size": 1769
+    },
+    {
+      "path": "app/api/auto-sniping/config-validation/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/config-validation/route.test.tsx",
+      "size": 10173
+    },
+    {
+      "path": "app/api/auto-sniping/config/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/config/route.test.tsx",
+      "size": 2089
+    },
+    {
+      "path": "app/api/auto-sniping/control/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/control/route.test.tsx",
+      "size": 9261
+    },
+    {
+      "path": "app/api/auto-sniping/execution/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/execution/route.test.tsx",
+      "size": 15230
+    },
+    {
+      "path": "app/api/auto-sniping/pattern-monitoring/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/pattern-monitoring/route.test.tsx",
+      "size": 10702
+    },
+    {
+      "path": "app/api/auto-sniping/safety-monitoring/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/safety-monitoring/route.test.tsx",
+      "size": 14897
+    },
+    {
+      "path": "app/api/auto-sniping/status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/auto-sniping/status/route.test.tsx",
+      "size": 5855
+    },
+    {
+      "path": "app/api/cache-warming/status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/cache-warming/status/route.test.tsx",
+      "size": 1929
+    },
+    {
+      "path": "app/api/cache-warming/trigger/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/cache-warming/trigger/route.test.tsx",
+      "size": 3616
+    },
+    {
+      "path": "app/api/configuration/phase3/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/configuration/phase3/route.test.tsx",
+      "size": 1632
+    },
+    {
+      "path": "app/api/cost-monitoring/dashboard/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/cost-monitoring/dashboard/route.test.tsx",
+      "size": 2842
+    },
+    {
+      "path": "app/api/cost-monitoring/stats/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/cost-monitoring/stats/route.test.tsx",
+      "size": 5320
+    },
+    {
+      "path": "app/api/data-archival/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/data-archival/route.test.tsx",
+      "size": 2542
+    },
+    {
+      "path": "app/api/database/migrate/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/database/migrate/route.test.tsx",
+      "size": 2203
+    },
+    {
+      "path": "app/api/database/optimize/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/database/optimize/route.test.tsx",
+      "size": 988
+    },
+    {
+      "path": "app/api/database/quota-status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/database/quota-status/route.test.tsx",
+      "size": 895
+    },
+    {
+      "path": "app/api/debug/clear-rate-limits/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/debug/clear-rate-limits/route.test.tsx",
+      "size": 1210
+    },
+    {
+      "path": "app/api/debug/my-ip/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/debug/my-ip/route.test.tsx",
+      "size": 615
+    },
+    {
+      "path": "app/api/debug/rate-limit-status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/debug/rate-limit-status/route.test.tsx",
+      "size": 1023
+    },
+    {
+      "path": "app/api/errors/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/errors/route.test.tsx",
+      "size": 2642
+    },
+    {
+      "path": "app/api/execution-history/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/execution-history/route.test.tsx",
+      "size": 7973
+    },
+    {
+      "path": "app/api/feature-flags/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/feature-flags/route.test.tsx",
+      "size": 8399
+    },
+    {
+      "path": "app/api/health/auth/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/auth/route.test.tsx",
+      "size": 5384
+    },
+    {
+      "path": "app/api/health/connectivity/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/connectivity/route.test.tsx",
+      "size": 8509
+    },
+    {
+      "path": "app/api/health/db/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/db/route.test.tsx",
+      "size": 8128
+    },
+    {
+      "path": "app/api/health/environment/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/environment/route.test.tsx",
+      "size": 8841
+    },
+    {
+      "path": "app/api/health/openai/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/openai/route.test.tsx",
+      "size": 1667
+    },
+    {
+      "path": "app/api/health/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/route.test.tsx",
+      "size": 3204
+    },
+    {
+      "path": "app/api/health/strategies/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/strategies/route.test.tsx",
+      "size": 10624
+    },
+    {
+      "path": "app/api/health/system/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/health/system/route.test.tsx",
+      "size": 3484
+    },
+    {
+      "path": "app/api/inngest/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/inngest/route.test.tsx",
+      "size": 3055
+    },
+    {
+      "path": "app/api/ip-info/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/ip-info/route.test.tsx",
+      "size": 3662
+    },
+    {
+      "path": "app/api/market-data/klines/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/market-data/klines/route.test.tsx",
+      "size": 4065
+    },
+    {
+      "path": "app/api/mexc/account/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/account/route.test.tsx",
+      "size": 5948
+    },
+    {
+      "path": "app/api/mexc/calendar/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/calendar/route.test.tsx",
+      "size": 1370
+    },
+    {
+      "path": "app/api/mexc/connectivity/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/connectivity/route.test.tsx",
+      "size": 1731
+    },
+    {
+      "path": "app/api/mexc/enhanced-connectivity/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/enhanced-connectivity/route.test.tsx",
+      "size": 14161
+    },
+    {
+      "path": "app/api/mexc/exchange-info/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/exchange-info/route.test.tsx",
+      "size": 2022
+    },
+    {
+      "path": "app/api/mexc/server-time/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/server-time/route.test.tsx",
+      "size": 791
+    },
+    {
+      "path": "app/api/mexc/symbols/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/symbols/route.test.tsx",
+      "size": 1883
+    },
+    {
+      "path": "app/api/mexc/test-credentials/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/test-credentials/route.test.tsx",
+      "size": 1058
+    },
+    {
+      "path": "app/api/mexc/ticker/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/ticker/route.test.tsx",
+      "size": 4465
+    },
+    {
+      "path": "app/api/mexc/trade/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/trade/route.test.tsx",
+      "size": 12291
+    },
+    {
+      "path": "app/api/mexc/unified-status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/mexc/unified-status/route.test.tsx",
+      "size": 1853
+    },
+    {
+      "path": "app/api/monitoring/alerts/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/alerts/route.test.tsx",
+      "size": 13645
+    },
+    {
+      "path": "app/api/monitoring/auth/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/auth/route.test.tsx",
+      "size": 10029
+    },
+    {
+      "path": "app/api/monitoring/enhanced-metrics/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/enhanced-metrics/route.test.tsx",
+      "size": 7994
+    },
+    {
+      "path": "app/api/monitoring/performance-metrics/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/performance-metrics/route.test.tsx",
+      "size": 16845
+    },
+    {
+      "path": "app/api/monitoring/real-time/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/real-time/route.test.tsx",
+      "size": 1488
+    },
+    {
+      "path": "app/api/monitoring/system-overview/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/system-overview/route.test.tsx",
+      "size": 6308
+    },
+    {
+      "path": "app/api/monitoring/trading-analytics/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/monitoring/trading-analytics/route.test.tsx",
+      "size": 22938
+    },
+    {
+      "path": "app/api/pattern-detection/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/pattern-detection/route.test.tsx",
+      "size": 1634
+    },
+    {
+      "path": "app/api/portfolio/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/portfolio/route.test.tsx",
+      "size": 1594
+    },
+    {
+      "path": "app/api/query-performance/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/query-performance/route.test.tsx",
+      "size": 4619
+    },
+    {
+      "path": "app/api/ready-launches/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/ready-launches/route.test.tsx",
+      "size": 3657
+    },
+    {
+      "path": "app/api/realtime/broadcast/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/realtime/broadcast/route.test.tsx",
+      "size": 5941
+    },
+    {
+      "path": "app/api/safety/agent-monitoring/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/safety/agent-monitoring/route.test.tsx",
+      "size": 12581
+    },
+    {
+      "path": "app/api/safety/risk-assessment/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/safety/risk-assessment/route.test.tsx",
+      "size": 8780
+    },
+    {
+      "path": "app/api/safety/system-status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/safety/system-status/route.test.tsx",
+      "size": 6818
+    },
+    {
+      "path": "app/api/schedule/control/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/schedule/control/route.test.tsx",
+      "size": 6101
+    },
+    {
+      "path": "app/api/security/monitoring/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/security/monitoring/route.test.tsx",
+      "size": 10019
+    },
+    {
+      "path": "app/api/snipe-targets/[id]/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/snipe-targets/[id]/route.test.tsx",
+      "size": 4148
+    },
+    {
+      "path": "app/api/snipe-targets/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/snipe-targets/route.test.tsx",
+      "size": 2937
+    },
+    {
+      "path": "app/api/snipe-targets/test/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/snipe-targets/test/route.test.tsx",
+      "size": 3167
+    },
+    {
+      "path": "app/api/strategies/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/strategies/route.test.tsx",
+      "size": 13131
+    },
+    {
+      "path": "app/api/sync/calendar-to-database/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/sync/calendar-to-database/route.test.tsx",
+      "size": 2049
+    },
+    {
+      "path": "app/api/system/circuit-breaker/fix/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/system/circuit-breaker/fix/route.test.tsx",
+      "size": 9730
+    },
+    {
+      "path": "app/api/system/fix/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/system/fix/route.test.tsx",
+      "size": 10975
+    },
+    {
+      "path": "app/api/system/validation/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/system/validation/route.test.tsx",
+      "size": 5990
+    },
+    {
+      "path": "app/api/test-users/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/test-users/route.test.tsx",
+      "size": 4297
+    },
+    {
+      "path": "app/api/trading-settings/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/trading-settings/route.test.tsx",
+      "size": 11810
+    },
+    {
+      "path": "app/api/transaction-locks/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/transaction-locks/route.test.tsx",
+      "size": 2691
+    },
+    {
+      "path": "app/api/transactions/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/transactions/route.test.tsx",
+      "size": 15709
+    },
+    {
+      "path": "app/api/triggers/calendar-poll/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/calendar-poll/route.test.tsx",
+      "size": 797
+    },
+    {
+      "path": "app/api/triggers/emergency/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/emergency/route.test.tsx",
+      "size": 2926
+    },
+    {
+      "path": "app/api/triggers/multi-phase-strategy/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/multi-phase-strategy/route.test.tsx",
+      "size": 13157
+    },
+    {
+      "path": "app/api/triggers/pattern-analysis/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/pattern-analysis/route.test.tsx",
+      "size": 3333
+    },
+    {
+      "path": "app/api/triggers/safety/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/safety/route.test.tsx",
+      "size": 7508
+    },
+    {
+      "path": "app/api/triggers/symbol-watch/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/symbol-watch/route.test.tsx",
+      "size": 1611
+    },
+    {
+      "path": "app/api/triggers/trading-strategy/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/triggers/trading-strategy/route.test.tsx",
+      "size": 904
+    },
+    {
+      "path": "app/api/tuning/ab-tests/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/ab-tests/route.test.tsx",
+      "size": 10460
+    },
+    {
+      "path": "app/api/tuning/emergency-stop/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/emergency-stop/route.test.tsx",
+      "size": 9290
+    },
+    {
+      "path": "app/api/tuning/optimization-history/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/optimization-history/route.test.tsx",
+      "size": 8611
+    },
+    {
+      "path": "app/api/tuning/optimizations/[id]/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/optimizations/[id]/route.test.tsx",
+      "size": 5293
+    },
+    {
+      "path": "app/api/tuning/optimizations/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/optimizations/route.test.tsx",
+      "size": 9755
+    },
+    {
+      "path": "app/api/tuning/parameters/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/parameters/route.test.tsx",
+      "size": 6343
+    },
+    {
+      "path": "app/api/tuning/performance-metrics/detailed/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/performance-metrics/detailed/route.test.tsx",
+      "size": 5697
+    },
+    {
+      "path": "app/api/tuning/performance-metrics/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/performance-metrics/route.test.tsx",
+      "size": 8298
+    },
+    {
+      "path": "app/api/tuning/safety-constraints/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/safety-constraints/route.test.tsx",
+      "size": 12072
+    },
+    {
+      "path": "app/api/tuning/system-health/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/tuning/system-health/route.test.tsx",
+      "size": 8427
+    },
+    {
+      "path": "app/api/user-preferences/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/user-preferences/route.test.tsx",
+      "size": 12582
+    },
+    {
+      "path": "app/api/websocket/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/websocket/route.test.tsx",
+      "size": 16722
+    },
+    {
+      "path": "app/api/workflow-executions/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/workflow-executions/route.test.tsx",
+      "size": 5987
+    },
+    {
+      "path": "app/api/workflow-status/route.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/api/workflow-status/route.test.tsx",
+      "size": 7728
+    },
+    {
+      "path": "app/auth/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/auth/page.test.tsx",
+      "size": 1272
+    },
+    {
+      "path": "app/auth/test/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/auth/test/page.test.tsx",
+      "size": 7250
+    },
+    {
+      "path": "app/config/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/config/page.test.tsx",
+      "size": 1642
+    },
+    {
+      "path": "app/dashboard-test/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/dashboard-test/page.test.tsx",
+      "size": 449
+    },
+    {
+      "path": "app/dashboard/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/dashboard/page.test.tsx",
+      "size": 19353
+    },
+    {
+      "path": "app/error.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/components/error.test.tsx",
+      "size": 483
+    },
+    {
+      "path": "app/layout.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/components/layout.test.tsx",
+      "size": 1760
+    },
+    {
+      "path": "app/monitoring/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/monitoring/page.test.tsx",
+      "size": 31120
+    },
+    {
+      "path": "app/page.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/components/page.test.tsx",
+      "size": 10872
+    },
+    {
+      "path": "app/safety/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/safety/page.test.tsx",
+      "size": 570
+    },
+    {
+      "path": "app/settings/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/settings/page.test.tsx",
+      "size": 14925
+    },
+    {
+      "path": "app/strategies/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/strategies/page.test.tsx",
+      "size": 282
+    },
+    {
+      "path": "app/workflows/page.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/components/workflows/page.test.tsx",
+      "size": 567
+    },
+    {
+      "path": "src/application/interfaces/trading-repository.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/application/interfaces/trading-repository.test.ts",
+      "size": 5806
+    },
+    {
+      "path": "src/application/use-cases/trading/execute-trade-use-case.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/application/use-cases/trading/execute-trade-use-case.test.ts",
+      "size": 12575
+    },
+    {
+      "path": "src/application/use-cases/trading/start-sniping-use-case.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/application/use-cases/trading/start-sniping-use-case.test.ts",
+      "size": 7899
+    },
+    {
+      "path": "src/components/account-balance/balance-components.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/account-balance/balance-components.test.ts",
+      "size": 7947
+    },
+    {
+      "path": "src/components/agent-dashboard.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/agent-dashboard.test.ts",
+      "size": 15939
+    },
+    {
+      "path": "src/components/alerts/alerts-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/alerts/alerts-dashboard.test.ts",
+      "size": 22355
+    },
+    {
+      "path": "src/components/api-credentials-form.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/api-credentials-form.test.ts",
+      "size": 1125
+    },
+    {
+      "path": "src/components/api-credentials/test-credentials-with-sync.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/api-credentials/test-credentials-with-sync.test.ts",
+      "size": 12195
+    },
+    {
+      "path": "src/components/auth/auth-status-checker.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auth/auth-status-checker.test.ts",
+      "size": 5965
+    },
+    {
+      "path": "src/components/auth/hydration-wrapper.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auth/hydration-wrapper.test.ts",
+      "size": 571
+    },
+    {
+      "path": "src/components/auth/supabase-auth-provider-clean.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auth/supabase-auth-provider-clean.test.ts",
+      "size": 6271
+    },
+    {
+      "path": "src/components/auth/supabase-auth-provider.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auth/supabase-auth-provider.test.ts",
+      "size": 4839
+    },
+    {
+      "path": "src/components/auth/supabase-auth-ui.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auth/supabase-auth-ui.test.ts",
+      "size": 9644
+    },
+    {
+      "path": "src/components/auto-sniping-control-panel.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/auto-sniping-control-panel.test.ts",
+      "size": 13947
+    },
+    {
+      "path": "src/components/auto-sniping/auto-sniping-execution-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/auto-sniping-execution-dashboard.test.ts",
+      "size": 1158
+    },
+    {
+      "path": "src/components/auto-sniping/components/alerts-list.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/alerts-list.test.ts",
+      "size": 3976
+    },
+    {
+      "path": "src/components/auto-sniping/components/config-editor.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/config-editor.test.ts",
+      "size": 14628
+    },
+    {
+      "path": "src/components/auto-sniping/components/execution-controls.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/execution-controls.test.ts",
+      "size": 2557
+    },
+    {
+      "path": "src/components/auto-sniping/components/execution-stats.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/execution-stats.test.ts",
+      "size": 3391
+    },
+    {
+      "path": "src/components/auto-sniping/components/performance-metrics.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/performance-metrics.test.ts",
+      "size": 3171
+    },
+    {
+      "path": "src/components/auto-sniping/components/pnl-indicator.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/pnl-indicator.test.ts",
+      "size": 1764
+    },
+    {
+      "path": "src/components/auto-sniping/components/positions-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/positions-tab.test.ts",
+      "size": 5416
+    },
+    {
+      "path": "src/components/auto-sniping/components/recent-executions.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/recent-executions.test.ts",
+      "size": 3010
+    },
+    {
+      "path": "src/components/auto-sniping/components/status-indicator.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/components/status-indicator.test.ts",
+      "size": 1243
+    },
+    {
+      "path": "src/components/auto-sniping/config-status-panel.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/config-status-panel.test.ts",
+      "size": 15550
+    },
+    {
+      "path": "src/components/auto-sniping/enhanced-auto-sniping-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/enhanced-auto-sniping-dashboard.test.ts",
+      "size": 21680
+    },
+    {
+      "path": "src/components/auto-sniping/pattern-monitoring-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/pattern-monitoring-dashboard.test.ts",
+      "size": 1182
+    },
+    {
+      "path": "src/components/auto-sniping/real-time-safety-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/real-time-safety-dashboard.test.ts",
+      "size": 25631
+    },
+    {
+      "path": "src/components/auto-sniping/schemas/validation-schemas.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/schemas/validation-schemas.test.ts",
+      "size": 4240
+    },
+    {
+      "path": "src/components/auto-sniping/simple-auto-sniping-control.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/simple-auto-sniping-control.test.ts",
+      "size": 6614
+    },
+    {
+      "path": "src/components/auto-sniping/utils/helpers.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/auto-sniping/utils/helpers.test.ts",
+      "size": 4700
+    },
+    {
+      "path": "src/components/client-safe-wrapper.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/client-safe-wrapper.test.ts",
+      "size": 3621
+    },
+    {
+      "path": "src/components/coin-date-selector.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/coin-date-selector.test.ts",
+      "size": 3811
+    },
+    {
+      "path": "src/components/dashboard-layout.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/dashboard-layout.test.ts",
+      "size": 7084
+    },
+    {
+      "path": "src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/ai-intelligence/ai-enhanced-pattern-display.test.ts",
+      "size": 12495
+    },
+    {
+      "path": "src/components/dashboard/ai-intelligence/ai-service-status-panel.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/ai-intelligence/ai-service-status-panel.test.ts",
+      "size": 8187
+    },
+    {
+      "path": "src/components/dashboard/cache-warming/cache-warming-control-panel.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/cache-warming/cache-warming-control-panel.test.ts",
+      "size": 15134
+    },
+    {
+      "path": "src/components/dashboard/coin-listings-board.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/coin-listings-board.test.ts",
+      "size": 23182
+    },
+    {
+      "path": "src/components/dashboard/metric-card.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/metric-card.test.ts",
+      "size": 2153
+    },
+    {
+      "path": "src/components/dashboard/optimized-activity-feed.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/optimized-activity-feed.test.ts",
+      "size": 5231
+    },
+    {
+      "path": "src/components/dashboard/optimized-metrics-grid.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/optimized-metrics-grid.test.ts",
+      "size": 7394
+    },
+    {
+      "path": "src/components/dashboard/optimized-trading-targets.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/optimized-trading-targets.test.ts",
+      "size": 11982
+    },
+    {
+      "path": "src/components/dashboard/performance-monitoring-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/performance-monitoring-dashboard.test.ts",
+      "size": 15192
+    },
+    {
+      "path": "src/components/dashboard/phase3-config/phase3-configuration-panel.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/phase3-config/phase3-configuration-panel.test.ts",
+      "size": 18210
+    },
+    {
+      "path": "src/components/dashboard/phase3-integration-summary.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/phase3-integration-summary.test.ts",
+      "size": 13427
+    },
+    {
+      "path": "src/components/dashboard/real-time-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/real-time-dashboard.test.ts",
+      "size": 26149
+    },
+    {
+      "path": "src/components/dashboard/recent-trades-table.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/recent-trades-table.test.ts",
+      "size": 8931
+    },
+    {
+      "path": "src/components/dashboard/simplified-trading-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/simplified-trading-dashboard.test.ts",
+      "size": 1762
+    },
+    {
+      "path": "src/components/dashboard/system-validation-card.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/system-validation-card.test.ts",
+      "size": 15588
+    },
+    {
+      "path": "src/components/dashboard/trading-chart.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/trading-chart.test.ts",
+      "size": 14574
+    },
+    {
+      "path": "src/components/dashboard/upcoming-coins-section.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/upcoming-coins-section.test.ts",
+      "size": 13456
+    },
+    {
+      "path": "src/components/dashboard/workflow-status-card.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/dashboard/workflow-status-card.test.ts",
+      "size": 6101
+    },
+    {
+      "path": "src/components/dynamic-component-loader.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/dynamic-component-loader.test.ts",
+      "size": 23590
+    },
+    {
+      "path": "src/components/editable-take-profit-table.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/editable-take-profit-table.test.ts",
+      "size": 20889
+    },
+    {
+      "path": "src/components/enhanced-credential-status-consolidated.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/enhanced-credential-status-consolidated.test.ts",
+      "size": 1375
+    },
+    {
+      "path": "src/components/enhanced-profit-settings.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/enhanced-profit-settings.test.ts",
+      "size": 8932
+    },
+    {
+      "path": "src/components/enhanced-take-profit-config.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/enhanced-take-profit-config.test.ts",
+      "size": 18228
+    },
+    {
+      "path": "src/components/error-boundary.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/error-boundary.test.ts",
+      "size": 14796
+    },
+    {
+      "path": "src/components/error/error-boundary.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/error/error-boundary.test.ts",
+      "size": 10408
+    },
+    {
+      "path": "src/components/exit-strategy-selector.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/exit-strategy-selector.test.ts",
+      "size": 8117
+    },
+    {
+      "path": "src/components/feature-flags/feature-flag-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/feature-flags/feature-flag-dashboard.test.ts",
+      "size": 26783
+    },
+    {
+      "path": "src/components/hydration-boundary.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/hydration-boundary.test.ts",
+      "size": 3132
+    },
+    {
+      "path": "src/components/manual-sniping-control.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/manual-sniping-control.test.ts",
+      "size": 17101
+    },
+    {
+      "path": "src/components/manual-trading-panel.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/manual-trading-panel.test.ts",
+      "size": 18985
+    },
+    {
+      "path": "src/components/mobile-test-dashboard.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/mobile-test-dashboard.test.ts",
+      "size": 998
+    },
+    {
+      "path": "src/components/monitoring/alert-center.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/alert-center.test.ts",
+      "size": 38374
+    },
+    {
+      "path": "src/components/monitoring/enhanced-metrics-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/enhanced-metrics-dashboard.test.ts",
+      "size": 16457
+    },
+    {
+      "path": "src/components/monitoring/execution-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/execution-tab.test.ts",
+      "size": 9745
+    },
+    {
+      "path": "src/components/monitoring/market-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/market-tab.test.ts",
+      "size": 8034
+    },
+    {
+      "path": "src/components/monitoring/patterns-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/patterns-tab.test.ts",
+      "size": 9253
+    },
+    {
+      "path": "src/components/monitoring/performance-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/performance-tab.test.ts",
+      "size": 8535
+    },
+    {
+      "path": "src/components/monitoring/portfolio-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/portfolio-tab.test.ts",
+      "size": 8461
+    },
+    {
+      "path": "src/components/monitoring/real-time-performance.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/real-time-performance.test.ts",
+      "size": 38119
+    },
+    {
+      "path": "src/components/monitoring/risk-tab.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/risk-tab.test.ts",
+      "size": 10005
+    },
+    {
+      "path": "src/components/monitoring/system-architecture-overview.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/system-architecture-overview.test.ts",
+      "size": 25739
+    },
+    {
+      "path": "src/components/monitoring/trading-analytics-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/trading-analytics-dashboard.test.ts",
+      "size": 6975
+    },
+    {
+      "path": "src/components/monitoring/trading-metrics-cards.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/monitoring/trading-metrics-cards.test.ts",
+      "size": 4273
+    },
+    {
+      "path": "src/components/optimized-account-balance.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/optimized-account-balance.test.ts",
+      "size": 6821
+    },
+    {
+      "path": "src/components/optimized-agents-dashboard.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/optimized-agents-dashboard.test.ts",
+      "size": 15487
+    },
+    {
+      "path": "src/components/optimized-coin-calendar.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/optimized-coin-calendar.test.ts",
+      "size": 6706
+    },
+    {
+      "path": "src/components/optimized-dynamic-loader.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/optimized-dynamic-loader.test.ts",
+      "size": 343
+    },
+    {
+      "path": "src/components/optimized-websocket-monitor.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/optimized-websocket-monitor.test.ts",
+      "size": 10814
+    },
+    {
+      "path": "src/components/pattern-sniper.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/pattern-sniper.test.ts",
+      "size": 19933
+    },
+    {
+      "path": "src/components/providers/status-provider-wrapper.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/providers/status-provider-wrapper.test.ts",
+      "size": 895
+    },
+    {
+      "path": "src/components/query-provider.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/query-provider.test.ts",
+      "size": 1356
+    },
+    {
+      "path": "src/components/realtime-demo.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/realtime-demo.test.ts",
+      "size": 15724
+    },
+    {
+      "path": "src/components/safe-dynamic-loader.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/safe-dynamic-loader.test.ts",
+      "size": 8691
+    },
+    {
+      "path": "src/components/safe-dynamic-wrapper.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/safe-dynamic-wrapper.test.ts",
+      "size": 4813
+    },
+    {
+      "path": "src/components/safety-monitoring-dashboard.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/safety-monitoring-dashboard.test.ts",
+      "size": 21577
+    },
+    {
+      "path": "src/components/safety/comprehensive-safety-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/safety/comprehensive-safety-dashboard.test.ts",
+      "size": 31952
+    },
+    {
+      "path": "src/components/safety/control-panel-section.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/safety/control-panel-section.test.ts",
+      "size": 5183
+    },
+    {
+      "path": "src/components/safety/real-time-risk-monitor.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/safety/real-time-risk-monitor.test.ts",
+      "size": 21970
+    },
+    {
+      "path": "src/components/safety/risk-metrics-section.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/safety/risk-metrics-section.test.ts",
+      "size": 3357
+    },
+    {
+      "path": "src/components/safety/system-health-section.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/safety/system-health-section.test.ts",
+      "size": 4617
+    },
+    {
+      "path": "src/components/settings/simplified-automation-settings.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/settings/simplified-automation-settings.test.ts",
+      "size": 6052
+    },
+    {
+      "path": "src/components/status/status-migration-helper.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/status/status-migration-helper.test.ts",
+      "size": 9539
+    },
+    {
+      "path": "src/components/status/unified-status-display.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/status/unified-status-display.test.ts",
+      "size": 1444
+    },
+    {
+      "path": "src/components/strategy-manager.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/strategy-manager.test.ts",
+      "size": 31020
+    },
+    {
+      "path": "src/components/streamlined-credential-status.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/streamlined-credential-status.test.ts",
+      "size": 12263
+    },
+    {
+      "path": "src/components/streamlined-workflow-status.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/streamlined-workflow-status.test.ts",
+      "size": 15889
+    },
+    {
+      "path": "src/components/take-profit-help.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/take-profit-help.test.ts",
+      "size": 9257
+    },
+    {
+      "path": "src/components/take-profit-levels.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/take-profit-levels.test.ts",
+      "size": 7679
+    },
+    {
+      "path": "src/components/trading-configuration.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/trading-configuration.test.ts",
+      "size": 3654
+    },
+    {
+      "path": "src/components/transaction-debug-panel.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/transaction-debug-panel.test.ts",
+      "size": 16690
+    },
+    {
+      "path": "src/components/transaction-lock-monitor.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/transaction-lock-monitor.test.ts",
+      "size": 11919
+    },
+    {
+      "path": "src/components/tuning/ab-test-results.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/ab-test-results.test.ts",
+      "size": 15139
+    },
+    {
+      "path": "src/components/tuning/optimization-control-panel.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/optimization-control-panel.test.ts",
+      "size": 21219
+    },
+    {
+      "path": "src/components/tuning/optimization-history.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/optimization-history.test.ts",
+      "size": 21001
+    },
+    {
+      "path": "src/components/tuning/parameter-monitor.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/parameter-monitor.test.ts",
+      "size": 21057
+    },
+    {
+      "path": "src/components/tuning/parameter-optimization-dashboard.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/parameter-optimization-dashboard.test.ts",
+      "size": 24991
+    },
+    {
+      "path": "src/components/tuning/performance-metrics-view.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/performance-metrics-view.test.ts",
+      "size": 18033
+    },
+    {
+      "path": "src/components/tuning/safety-constraints.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/tuning/safety-constraints.test.ts",
+      "size": 18319
+    },
+    {
+      "path": "src/components/ui/alert.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/alert.test.ts",
+      "size": 1587
+    },
+    {
+      "path": "src/components/ui/avatar.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/avatar.test.ts",
+      "size": 1104
+    },
+    {
+      "path": "src/components/ui/badge.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/badge.test.ts",
+      "size": 1145
+    },
+    {
+      "path": "src/components/ui/button.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/button.test.ts",
+      "size": 2143
+    },
+    {
+      "path": "src/components/ui/calendar.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/calendar.test.ts",
+      "size": 7669
+    },
+    {
+      "path": "src/components/ui/card.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/card.test.ts",
+      "size": 1974
+    },
+    {
+      "path": "src/components/ui/chart.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/chart.test.ts",
+      "size": 2408
+    },
+    {
+      "path": "src/components/ui/checkbox.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/checkbox.test.ts",
+      "size": 1244
+    },
+    {
+      "path": "src/components/ui/dialog.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/dialog.test.ts",
+      "size": 3954
+    },
+    {
+      "path": "src/components/ui/dropdown-menu.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/dropdown-menu.test.ts",
+      "size": 8232
+    },
+    {
+      "path": "src/components/ui/input.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/input.test.ts",
+      "size": 982
+    },
+    {
+      "path": "src/components/ui/label.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/label.test.ts",
+      "size": 628
+    },
+    {
+      "path": "src/components/ui/mobile-sidebar-clean.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/mobile-sidebar-clean.test.ts",
+      "size": 3897
+    },
+    {
+      "path": "src/components/ui/optimized-exports.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/optimized-exports.test.ts",
+      "size": 2162
+    },
+    {
+      "path": "src/components/ui/optimized-icons.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/optimized-icons.test.ts",
+      "size": 1532
+    },
+    {
+      "path": "src/components/ui/progress.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/progress.test.ts",
+      "size": 843
+    },
+    {
+      "path": "src/components/ui/scroll-area.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/scroll-area.test.ts",
+      "size": 1692
+    },
+    {
+      "path": "src/components/ui/select.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/select.test.ts",
+      "size": 6416
+    },
+    {
+      "path": "src/components/ui/separator.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/separator.test.ts",
+      "size": 716
+    },
+    {
+      "path": "src/components/ui/sheet.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/sheet.test.ts",
+      "size": 4062
+    },
+    {
+      "path": "src/components/ui/sidebar.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/sidebar.test.ts",
+      "size": 21729
+    },
+    {
+      "path": "src/components/ui/skeleton.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/skeleton.test.ts",
+      "size": 322
+    },
+    {
+      "path": "src/components/ui/slider.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/slider.test.ts",
+      "size": 2020
+    },
+    {
+      "path": "src/components/ui/switch.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/switch.test.ts",
+      "size": 1214
+    },
+    {
+      "path": "src/components/ui/table.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/table.test.ts",
+      "size": 2425
+    },
+    {
+      "path": "src/components/ui/tabs.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/tabs.test.ts",
+      "size": 1971
+    },
+    {
+      "path": "src/components/ui/textarea.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/textarea.test.ts",
+      "size": 803
+    },
+    {
+      "path": "src/components/ui/toaster.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/toaster.test.ts",
+      "size": 442
+    },
+    {
+      "path": "src/components/ui/toggle.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/toggle.test.ts",
+      "size": 1589
+    },
+    {
+      "path": "src/components/ui/tooltip.tsx",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/tooltip.test.ts",
+      "size": 1891
+    },
+    {
+      "path": "src/components/ui/use-toast.ts",
+      "category": "ui",
+      "priority": "low",
+      "expectedTestPath": "tests/unit/components/ui/use-toast.test.ts",
+      "size": 3844
+    },
+    {
+      "path": "src/components/unified-automation-settings.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/unified-automation-settings.test.ts",
+      "size": 3454
+    },
+    {
+      "path": "src/components/unified-risk-management.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/unified-risk-management.test.ts",
+      "size": 5106
+    },
+    {
+      "path": "src/components/unified-system-check.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/unified-system-check.test.ts",
+      "size": 1938
+    },
+    {
+      "path": "src/components/unified-take-profit-levels.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/unified-take-profit-levels.test.ts",
+      "size": 16352
+    },
+    {
+      "path": "src/components/unified-take-profit-settings.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/unified-take-profit-settings.test.ts",
+      "size": 26138
+    },
+    {
+      "path": "src/components/user-menu.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/user-menu.test.ts",
+      "size": 4441
+    },
+    {
+      "path": "src/components/user-preferences.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/user-preferences.test.ts",
+      "size": 2467
+    },
+    {
+      "path": "src/components/workflow-manager.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/components/workflow-manager.test.ts",
+      "size": 22685
+    },
+    {
+      "path": "src/config/environment/types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/config/environment/types.test.ts",
+      "size": 1141
+    },
+    {
+      "path": "src/config/environment/variables.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/config/environment/variables.test.ts",
+      "size": 6764
+    },
+    {
+      "path": "src/contexts/status-context-v2.tsx",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/contexts/status-context-v2.test.ts",
+      "size": 4982
+    },
+    {
+      "path": "src/core/pattern-detection/confidence-calculator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/confidence-calculator.test.ts",
+      "size": 18378
+    },
+    {
+      "path": "src/core/pattern-detection/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/index.test.ts",
+      "size": 1032
+    },
+    {
+      "path": "src/core/pattern-detection/interfaces.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/interfaces.test.ts",
+      "size": 10019
+    },
+    {
+      "path": "src/core/pattern-detection/pattern-analyzer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/pattern-analyzer.test.ts",
+      "size": 20066
+    },
+    {
+      "path": "src/core/pattern-detection/pattern-detection-core-enhanced.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/pattern-detection-core-enhanced.test.ts",
+      "size": 21281
+    },
+    {
+      "path": "src/core/pattern-detection/pattern-detection-core.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/pattern-detection-core.test.ts",
+      "size": 18442
+    },
+    {
+      "path": "src/core/pattern-detection/pattern-storage.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/pattern-storage.test.ts",
+      "size": 11326
+    },
+    {
+      "path": "src/core/pattern-detection/pattern-validator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/pattern-validator.test.ts",
+      "size": 14699
+    },
+    {
+      "path": "src/core/pattern-detection/shared/algorithm-utils.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/shared/algorithm-utils.test.ts",
+      "size": 8164
+    },
+    {
+      "path": "src/core/pattern-detection/shared/logger-utils.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/shared/logger-utils.test.ts",
+      "size": 2767
+    },
+    {
+      "path": "src/core/pattern-detection/shared/validation-utils.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/core/pattern-detection/shared/validation-utils.test.ts",
+      "size": 7620
+    },
+    {
+      "path": "src/db/index.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/db/index.test.ts",
+      "size": 21863
+    },
+    {
+      "path": "src/db/migrations/relations.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/migrations/relations.test.ts",
+      "size": 7503
+    },
+    {
+      "path": "src/db/migrations/schema.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/migrations/schema.test.ts",
+      "size": 68115
+    },
+    {
+      "path": "src/db/schema.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/db/schema.test.ts",
+      "size": 4612
+    },
+    {
+      "path": "src/db/schemas/alerts.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/alerts.test.ts",
+      "size": 16362
+    },
+    {
+      "path": "src/db/schemas/auth.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/auth.test.ts",
+      "size": 6578
+    },
+    {
+      "path": "src/db/schemas/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/index.test.ts",
+      "size": 5670
+    },
+    {
+      "path": "src/db/schemas/patterns.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/patterns.test.ts",
+      "size": 9228
+    },
+    {
+      "path": "src/db/schemas/performance.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/performance.test.ts",
+      "size": 8868
+    },
+    {
+      "path": "src/db/schemas/safety.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/safety.test.ts",
+      "size": 16988
+    },
+    {
+      "path": "src/db/schemas/strategies.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/strategies.test.ts",
+      "size": 12273
+    },
+    {
+      "path": "src/db/schemas/supabase-auth.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/supabase-auth.test.ts",
+      "size": 9637
+    },
+    {
+      "path": "src/db/schemas/supabase-schema.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/supabase-schema.test.ts",
+      "size": 1939
+    },
+    {
+      "path": "src/db/schemas/supabase-trading.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/supabase-trading.test.ts",
+      "size": 13346
+    },
+    {
+      "path": "src/db/schemas/trading.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/trading.test.ts",
+      "size": 18692
+    },
+    {
+      "path": "src/db/schemas/workflows.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/db/schemas/workflows.test.ts",
+      "size": 3210
+    },
+    {
+      "path": "src/db/test-database-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/db/test-database-manager.test.ts",
+      "size": 8563
+    },
+    {
+      "path": "src/db/transaction-helpers.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/db/transaction-helpers.test.ts",
+      "size": 6809
+    },
+    {
+      "path": "src/db/vector-utils.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/db/vector-utils.test.ts",
+      "size": 16072
+    },
+    {
+      "path": "src/domain/base/aggregate-root.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/base/aggregate-root.test.ts",
+      "size": 510
+    },
+    {
+      "path": "src/domain/base/entity.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/base/entity.test.ts",
+      "size": 1076
+    },
+    {
+      "path": "src/domain/base/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/base/index.test.ts",
+      "size": 139
+    },
+    {
+      "path": "src/domain/base/value-object.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/base/value-object.test.ts",
+      "size": 1021
+    },
+    {
+      "path": "src/domain/entities/safety/emergency-stop.entity.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/entities/safety/emergency-stop.entity.test.ts",
+      "size": 25505
+    },
+    {
+      "path": "src/domain/entities/safety/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/entities/safety/index.test.ts",
+      "size": 797
+    },
+    {
+      "path": "src/domain/entities/safety/risk-profile.entity.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/entities/safety/risk-profile.entity.test.ts",
+      "size": 22633
+    },
+    {
+      "path": "src/domain/entities/trading/trade.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/entities/trading/trade.test.ts",
+      "size": 15851
+    },
+    {
+      "path": "src/domain/errors/trading-errors.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/errors/trading-errors.test.ts",
+      "size": 8165
+    },
+    {
+      "path": "src/domain/events/domain-event.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/events/domain-event.test.ts",
+      "size": 1726
+    },
+    {
+      "path": "src/domain/events/safety-events.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/events/safety-events.test.ts",
+      "size": 9618
+    },
+    {
+      "path": "src/domain/events/trading-events.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/events/trading-events.test.ts",
+      "size": 8299
+    },
+    {
+      "path": "src/domain/trading/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/trading/index.test.ts",
+      "size": 5167
+    },
+    {
+      "path": "src/domain/value-objects/safety/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/value-objects/safety/index.test.ts",
+      "size": 140
+    },
+    {
+      "path": "src/domain/value-objects/safety/safety-rule.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/value-objects/safety/safety-rule.test.ts",
+      "size": 17119
+    },
+    {
+      "path": "src/domain/value-objects/trading/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/value-objects/trading/index.test.ts",
+      "size": 117
+    },
+    {
+      "path": "src/domain/value-objects/trading/money.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/value-objects/trading/money.test.ts",
+      "size": 6916
+    },
+    {
+      "path": "src/domain/value-objects/trading/order.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/value-objects/trading/order.test.ts",
+      "size": 10620
+    },
+    {
+      "path": "src/domain/value-objects/trading/price.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/domain/value-objects/trading/price.test.ts",
+      "size": 8063
+    },
+    {
+      "path": "src/hooks/use-account-balance.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-account-balance.test.ts",
+      "size": 4304
+    },
+    {
+      "path": "src/hooks/use-ai-services.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-ai-services.test.ts",
+      "size": 5306
+    },
+    {
+      "path": "src/hooks/use-api-credentials.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-api-credentials.test.ts",
+      "size": 10829
+    },
+    {
+      "path": "src/hooks/use-auth-cache-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-auth-cache-manager.test.ts",
+      "size": 2425
+    },
+    {
+      "path": "src/hooks/use-auto-sniping-execution.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-auto-sniping-execution.test.ts",
+      "size": 9441
+    },
+    {
+      "path": "src/hooks/use-cache-metrics.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-cache-metrics.test.ts",
+      "size": 7217
+    },
+    {
+      "path": "src/hooks/use-config-validation.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-config-validation.test.ts",
+      "size": 7619
+    },
+    {
+      "path": "src/hooks/use-connectivity-monitor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-connectivity-monitor.test.ts",
+      "size": 7785
+    },
+    {
+      "path": "src/hooks/use-currency-formatting.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-currency-formatting.test.ts",
+      "size": 1499
+    },
+    {
+      "path": "src/hooks/use-dashboard-state.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-dashboard-state.test.ts",
+      "size": 5835
+    },
+    {
+      "path": "src/hooks/use-enhanced-connectivity.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-enhanced-connectivity.test.ts",
+      "size": 2840
+    },
+    {
+      "path": "src/hooks/use-enhanced-patterns.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-enhanced-patterns.test.ts",
+      "size": 9246
+    },
+    {
+      "path": "src/hooks/use-error-handling.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-error-handling.test.ts",
+      "size": 9340
+    },
+    {
+      "path": "src/hooks/use-execution-history.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-execution-history.test.ts",
+      "size": 6286
+    },
+    {
+      "path": "src/hooks/use-live-trading-data.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-live-trading-data.test.ts",
+      "size": 26960
+    },
+    {
+      "path": "src/hooks/use-mexc-data.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-mexc-data.test.ts",
+      "size": 15066
+    },
+    {
+      "path": "src/hooks/use-mobile-clean.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-mobile-clean.test.ts",
+      "size": 11030
+    },
+    {
+      "path": "src/hooks/use-pattern-monitoring.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-pattern-monitoring.test.ts",
+      "size": 2612
+    },
+    {
+      "path": "src/hooks/use-pattern-sniper.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-pattern-sniper.test.ts",
+      "size": 19388
+    },
+    {
+      "path": "src/hooks/use-phase3-config.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-phase3-config.test.ts",
+      "size": 8116
+    },
+    {
+      "path": "src/hooks/use-portfolio.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-portfolio.test.ts",
+      "size": 11868
+    },
+    {
+      "path": "src/hooks/use-real-time-patterns.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-real-time-patterns.test.ts",
+      "size": 19120
+    },
+    {
+      "path": "src/hooks/use-real-time-safety-monitoring.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-real-time-safety-monitoring.test.ts",
+      "size": 2406
+    },
+    {
+      "path": "src/hooks/use-safety-monitoring.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-safety-monitoring.test.ts",
+      "size": 11807
+    },
+    {
+      "path": "src/hooks/use-status-sync.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-status-sync.test.ts",
+      "size": 7495
+    },
+    {
+      "path": "src/hooks/use-strategy-management.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-strategy-management.test.ts",
+      "size": 9395
+    },
+    {
+      "path": "src/hooks/use-supabase-realtime.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-supabase-realtime.test.ts",
+      "size": 9566
+    },
+    {
+      "path": "src/hooks/use-time-formatting.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-time-formatting.test.ts",
+      "size": 1911
+    },
+    {
+      "path": "src/hooks/use-trading-settings-sync.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-trading-settings-sync.test.ts",
+      "size": 10879
+    },
+    {
+      "path": "src/hooks/use-user-preferences.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-user-preferences.test.ts",
+      "size": 11478
+    },
+    {
+      "path": "src/hooks/use-websocket-price.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-websocket-price.test.ts",
+      "size": 11631
+    },
+    {
+      "path": "src/hooks/use-websocket.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/hooks/use-websocket.test.ts",
+      "size": 17053
+    },
+    {
+      "path": "src/infrastructure/adapters/notifications/trading-notification-service-adapter.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/infrastructure/adapters/notifications/trading-notification-service-adapter.test.ts",
+      "size": 8526
+    },
+    {
+      "path": "src/infrastructure/adapters/trading/mexc-trading-service-adapter.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/infrastructure/adapters/trading/mexc-trading-service-adapter.test.ts",
+      "size": 9973
+    },
+    {
+      "path": "src/infrastructure/repositories/drizzle-trading-repository.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/infrastructure/repositories/drizzle-trading-repository.test.ts",
+      "size": 15466
+    },
+    {
+      "path": "src/inngest/client.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/inngest/client.test.ts",
+      "size": 282
+    },
+    {
+      "path": "src/inngest/functions.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/inngest/functions.test.ts",
+      "size": 17421
+    },
+    {
+      "path": "src/inngest/multi-phase-strategy-functions.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/inngest/multi-phase-strategy-functions.test.ts",
+      "size": 41875
+    },
+    {
+      "path": "src/inngest/safety-functions.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/inngest/safety-functions.test.ts",
+      "size": 28744
+    },
+    {
+      "path": "src/inngest/scheduled-functions.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/inngest/scheduled-functions.test.ts",
+      "size": 15339
+    },
+    {
+      "path": "src/lib/alert-configuration.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/alert-configuration.test.ts",
+      "size": 26399
+    },
+    {
+      "path": "src/lib/api-auth.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-auth.test.ts",
+      "size": 15594
+    },
+    {
+      "path": "src/lib/api-client.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-client.test.ts",
+      "size": 2965
+    },
+    {
+      "path": "src/lib/api-error-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-error-middleware.test.ts",
+      "size": 10328
+    },
+    {
+      "path": "src/lib/api-json-parser.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-json-parser.test.ts",
+      "size": 6535
+    },
+    {
+      "path": "src/lib/api-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-middleware.test.ts",
+      "size": 24892
+    },
+    {
+      "path": "src/lib/api-rate-limiter.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-rate-limiter.test.ts",
+      "size": 2191
+    },
+    {
+      "path": "src/lib/api-response-cache.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-response-cache.test.ts",
+      "size": 6063
+    },
+    {
+      "path": "src/lib/api-response.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-response.test.ts",
+      "size": 15230
+    },
+    {
+      "path": "src/lib/api-route-handler.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-route-handler.test.ts",
+      "size": 13307
+    },
+    {
+      "path": "src/lib/api-route-migration-example.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-route-migration-example.test.ts",
+      "size": 6946
+    },
+    {
+      "path": "src/lib/api-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/api-schemas.test.ts",
+      "size": 11006
+    },
+    {
+      "path": "src/lib/app-constants.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/app-constants.test.ts",
+      "size": 127
+    },
+    {
+      "path": "src/lib/auth-decorators.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/auth-decorators.test.ts",
+      "size": 963
+    },
+    {
+      "path": "src/lib/build-safe-logger.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/build-safe-logger.test.ts",
+      "size": 3754
+    },
+    {
+      "path": "src/lib/bypass-rate-limit.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/bypass-rate-limit.test.ts",
+      "size": 2185
+    },
+    {
+      "path": "src/lib/cache-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/cache-manager.test.ts",
+      "size": 519
+    },
+    {
+      "path": "src/lib/cache.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/cache.test.ts",
+      "size": 3368
+    },
+    {
+      "path": "src/lib/central-api-error-handler.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/central-api-error-handler.test.ts",
+      "size": 2691
+    },
+    {
+      "path": "src/lib/constants.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/constants.test.ts",
+      "size": 442
+    },
+    {
+      "path": "src/lib/cost-monitoring-dashboard-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/cost-monitoring-dashboard-service.test.ts",
+      "size": 21701
+    },
+    {
+      "path": "src/lib/cqrs/command-bus.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/cqrs/command-bus.test.ts",
+      "size": 7593
+    },
+    {
+      "path": "src/lib/cqrs/query-bus.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/cqrs/query-bus.test.ts",
+      "size": 8969
+    },
+    {
+      "path": "src/lib/cqrs/trading-commands.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/cqrs/trading-commands.test.ts",
+      "size": 18945
+    },
+    {
+      "path": "src/lib/credential-cache.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/credential-cache.test.ts",
+      "size": 1439
+    },
+    {
+      "path": "src/lib/database-circuit-breaker.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-circuit-breaker.test.ts",
+      "size": 692
+    },
+    {
+      "path": "src/lib/database-connection-pool.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-connection-pool.test.ts",
+      "size": 6435
+    },
+    {
+      "path": "src/lib/database-cost-protector.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-cost-protector.test.ts",
+      "size": 2259
+    },
+    {
+      "path": "src/lib/database-index-optimizer.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-index-optimizer.test.ts",
+      "size": 934
+    },
+    {
+      "path": "src/lib/database-optimization-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-optimization-manager.test.ts",
+      "size": 1001
+    },
+    {
+      "path": "src/lib/database-performance-analyzer.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-performance-analyzer.test.ts",
+      "size": 646
+    },
+    {
+      "path": "src/lib/database-query-batching-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-query-batching-service.test.ts",
+      "size": 1917
+    },
+    {
+      "path": "src/lib/database-query-cache-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-query-cache-middleware.test.ts",
+      "size": 1943
+    },
+    {
+      "path": "src/lib/database-query-optimizer.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-query-optimizer.test.ts",
+      "size": 759
+    },
+    {
+      "path": "src/lib/database-quota-monitor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-quota-monitor.test.ts",
+      "size": 686
+    },
+    {
+      "path": "src/lib/database-rate-limiter.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/database-rate-limiter.test.ts",
+      "size": 5544
+    },
+    {
+      "path": "src/lib/db-health-check.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/db-health-check.test.ts",
+      "size": 11284
+    },
+    {
+      "path": "src/lib/emergency-recovery.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/emergency-recovery.test.ts",
+      "size": 19895
+    },
+    {
+      "path": "src/lib/enhanced-agent-cache.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/enhanced-agent-cache.test.ts",
+      "size": 3983
+    },
+    {
+      "path": "src/lib/enhanced-unified-cache.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/enhanced-unified-cache.test.ts",
+      "size": 18448
+    },
+    {
+      "path": "src/lib/enhanced-validation-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/enhanced-validation-middleware.test.ts",
+      "size": 2635
+    },
+    {
+      "path": "src/lib/error-handler-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/error-handler-service.test.ts",
+      "size": 10242
+    },
+    {
+      "path": "src/lib/error-handler.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/error-handler.test.ts",
+      "size": 9584
+    },
+    {
+      "path": "src/lib/error-type-utils.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/error-type-utils.test.ts",
+      "size": 8103
+    },
+    {
+      "path": "src/lib/error-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/error-types.test.ts",
+      "size": 10522
+    },
+    {
+      "path": "src/lib/error-utils.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/error-utils.test.ts",
+      "size": 7882
+    },
+    {
+      "path": "src/lib/errors.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/errors.test.ts",
+      "size": 10606
+    },
+    {
+      "path": "src/lib/event-sourcing/event-store.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/event-sourcing/event-store.test.ts",
+      "size": 9459
+    },
+    {
+      "path": "src/lib/feature-flags/enhanced-feature-flag-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/feature-flags/enhanced-feature-flag-manager.test.ts",
+      "size": 5128
+    },
+    {
+      "path": "src/lib/health-checks.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/health-checks.test.ts",
+      "size": 8714
+    },
+    {
+      "path": "src/lib/logger-injection.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/logger-injection.test.ts",
+      "size": 4974
+    },
+    {
+      "path": "src/lib/middleware/throttling-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/middleware/throttling-middleware.test.ts",
+      "size": 1759
+    },
+    {
+      "path": "src/lib/monitoring/enhanced-performance-monitor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/monitoring/enhanced-performance-monitor.test.ts",
+      "size": 15173
+    },
+    {
+      "path": "src/lib/monitoring/trading-metrics-collector.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/monitoring/trading-metrics-collector.test.ts",
+      "size": 11037
+    },
+    {
+      "path": "src/lib/monitoring/use-case-metrics.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/monitoring/use-case-metrics.test.ts",
+      "size": 16073
+    },
+    {
+      "path": "src/lib/openai-client.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/openai-client.test.ts",
+      "size": 2722
+    },
+    {
+      "path": "src/lib/opentelemetry-agent-instrumentation.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/opentelemetry-agent-instrumentation.test.ts",
+      "size": 2378
+    },
+    {
+      "path": "src/lib/opentelemetry-api-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/opentelemetry-api-middleware.test.ts",
+      "size": 10267
+    },
+    {
+      "path": "src/lib/opentelemetry-database-instrumentation.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/opentelemetry-database-instrumentation.test.ts",
+      "size": 1965
+    },
+    {
+      "path": "src/lib/opentelemetry-production-config.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/opentelemetry-production-config.test.ts",
+      "size": 18230
+    },
+    {
+      "path": "src/lib/opentelemetry-setup.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/opentelemetry-setup.test.ts",
+      "size": 12847
+    },
+    {
+      "path": "src/lib/opentelemetry-websocket-instrumentation.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/opentelemetry-websocket-instrumentation.test.ts",
+      "size": 2540
+    },
+    {
+      "path": "src/lib/parameter-management.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/parameter-management.test.ts",
+      "size": 3755
+    },
+    {
+      "path": "src/lib/performance-monitoring-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/performance-monitoring-service.test.ts",
+      "size": 11312
+    },
+    {
+      "path": "src/lib/query-client.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/query-client.test.ts",
+      "size": 6699
+    },
+    {
+      "path": "src/lib/rate-limiter.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/rate-limiter.test.ts",
+      "size": 13964
+    },
+    {
+      "path": "src/lib/react-utilities.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/react-utilities.test.ts",
+      "size": 4917
+    },
+    {
+      "path": "src/lib/request-throttling-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/request-throttling-service.test.ts",
+      "size": 1999
+    },
+    {
+      "path": "src/lib/risk-calculation-modules.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/lib/risk-calculation-modules.test.ts",
+      "size": 17266
+    },
+    {
+      "path": "src/lib/security-config.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/security-config.test.ts",
+      "size": 8508
+    },
+    {
+      "path": "src/lib/shared/console-logger.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/shared/console-logger.test.ts",
+      "size": 1340
+    },
+    {
+      "path": "src/lib/standardized-error-handler.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/standardized-error-handler.test.ts",
+      "size": 16831
+    },
+    {
+      "path": "src/lib/startup-initialization.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/startup-initialization.test.ts",
+      "size": 2036
+    },
+    {
+      "path": "src/lib/structured-logger.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/structured-logger.test.ts",
+      "size": 27153
+    },
+    {
+      "path": "src/lib/supabase-auth-client.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/supabase-auth-client.test.ts",
+      "size": 7158
+    },
+    {
+      "path": "src/lib/supabase-auth.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/supabase-auth.test.ts",
+      "size": 7221
+    },
+    {
+      "path": "src/lib/supabase-browser-client.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/supabase-browser-client.test.ts",
+      "size": 2647
+    },
+    {
+      "path": "src/lib/supabase-middleware.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/supabase-middleware.test.ts",
+      "size": 3216
+    },
+    {
+      "path": "src/lib/supabase-realtime.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/supabase-realtime.test.ts",
+      "size": 13616
+    },
+    {
+      "path": "src/lib/supabase-rls.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/supabase-rls.test.ts",
+      "size": 9897
+    },
+    {
+      "path": "src/lib/test-branch-setup.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/test-branch-setup.test.ts",
+      "size": 11635
+    },
+    {
+      "path": "src/lib/trigger-handler.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/trigger-handler.test.ts",
+      "size": 4538
+    },
+    {
+      "path": "src/lib/unified-cache-system.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-cache-system.test.ts",
+      "size": 5635
+    },
+    {
+      "path": "src/lib/unified-config-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-config-service.test.ts",
+      "size": 18835
+    },
+    {
+      "path": "src/lib/unified-configuration-management.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-configuration-management.test.ts",
+      "size": 24508
+    },
+    {
+      "path": "src/lib/unified-error-handler.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-error-handler.test.ts",
+      "size": 21216
+    },
+    {
+      "path": "src/lib/unified-error-handling.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-error-handling.test.ts",
+      "size": 12572
+    },
+    {
+      "path": "src/lib/unified-health-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-health-service.test.ts",
+      "size": 21872
+    },
+    {
+      "path": "src/lib/unified-logger.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-logger.test.ts",
+      "size": 13305
+    },
+    {
+      "path": "src/lib/unified-mexc-validation.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/unified-mexc-validation.test.ts",
+      "size": 19988
+    },
+    {
+      "path": "src/lib/utils.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/utils.test.ts",
+      "size": 622
+    },
+    {
+      "path": "src/lib/validators.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/validators.test.ts",
+      "size": 9420
+    },
+    {
+      "path": "src/lib/websocket-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/lib/websocket-types.test.ts",
+      "size": 15465
+    },
+    {
+      "path": "src/mexc-agents/agent-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/agent-manager.test.ts",
+      "size": 15205
+    },
+    {
+      "path": "src/mexc-agents/analysis-utils.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/analysis-utils.test.ts",
+      "size": 5481
+    },
+    {
+      "path": "src/mexc-agents/base-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/base-agent.test.ts",
+      "size": 13650
+    },
+    {
+      "path": "src/mexc-agents/calendar-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/calendar-agent.test.ts",
+      "size": 22475
+    },
+    {
+      "path": "src/mexc-agents/calendar-workflow.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/calendar-workflow.test.ts",
+      "size": 10191
+    },
+    {
+      "path": "src/mexc-agents/coordination-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination-manager.test.ts",
+      "size": 9212
+    },
+    {
+      "path": "src/mexc-agents/coordination/agent-health-monitor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/agent-health-monitor.test.ts",
+      "size": 10632
+    },
+    {
+      "path": "src/mexc-agents/coordination/agent-recovery-strategies.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/agent-recovery-strategies.test.ts",
+      "size": 8857
+    },
+    {
+      "path": "src/mexc-agents/coordination/agent-registry-core.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/agent-registry-core.test.ts",
+      "size": 6725
+    },
+    {
+      "path": "src/mexc-agents/coordination/agent-registry.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/agent-registry.test.ts",
+      "size": 11510
+    },
+    {
+      "path": "src/mexc-agents/coordination/enhanced-orchestrator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/enhanced-orchestrator.test.ts",
+      "size": 28110
+    },
+    {
+      "path": "src/mexc-agents/coordination/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/index.test.ts",
+      "size": 12133
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance-collector.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance-collector.test.ts",
+      "size": 645
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/collectors/agent-metrics-collector.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/collectors/agent-metrics-collector.test.ts",
+      "size": 6483
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/collectors/system-metrics-collector.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/collectors/system-metrics-collector.test.ts",
+      "size": 4967
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/collectors/workflow-metrics-collector.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/collectors/workflow-metrics-collector.test.ts",
+      "size": 4095
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/index.test.ts",
+      "size": 926
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/performance-collector.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/performance-collector.test.ts",
+      "size": 8990
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/reporters/performance-report-generator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/reporters/performance-report-generator.test.ts",
+      "size": 9505
+    },
+    {
+      "path": "src/mexc-agents/coordination/performance/types/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/performance/types/index.test.ts",
+      "size": 2964
+    },
+    {
+      "path": "src/mexc-agents/coordination/workflow-dependency-resolver.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/workflow-dependency-resolver.test.ts",
+      "size": 5514
+    },
+    {
+      "path": "src/mexc-agents/coordination/workflow-engine-types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/workflow-engine-types.test.ts",
+      "size": 2335
+    },
+    {
+      "path": "src/mexc-agents/coordination/workflow-engine.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/workflow-engine.test.ts",
+      "size": 9171
+    },
+    {
+      "path": "src/mexc-agents/coordination/workflow-execution-tracker.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/workflow-execution-tracker.test.ts",
+      "size": 5772
+    },
+    {
+      "path": "src/mexc-agents/coordination/workflow-step-executor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/workflow-step-executor.test.ts",
+      "size": 6490
+    },
+    {
+      "path": "src/mexc-agents/coordination/workflow-validator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/coordination/workflow-validator.test.ts",
+      "size": 7422
+    },
+    {
+      "path": "src/mexc-agents/data-fetcher.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/data-fetcher.test.ts",
+      "size": 5702
+    },
+    {
+      "path": "src/mexc-agents/dynamic-loader.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/dynamic-loader.test.ts",
+      "size": 5209
+    },
+    {
+      "path": "src/mexc-agents/error-recovery-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/error-recovery-agent.test.ts",
+      "size": 25152
+    },
+    {
+      "path": "src/mexc-agents/health-check.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/health-check.test.ts",
+      "size": 7689
+    },
+    {
+      "path": "src/mexc-agents/metrics-manager.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/metrics-manager.test.ts",
+      "size": 2634
+    },
+    {
+      "path": "src/mexc-agents/mexc-api-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api-agent.test.ts",
+      "size": 623
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/analyzers/calendar-analyzer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/analyzers/calendar-analyzer.test.ts",
+      "size": 3203
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/analyzers/data-quality-analyzer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/analyzers/data-quality-analyzer.test.ts",
+      "size": 4586
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/analyzers/symbol-analyzer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/analyzers/symbol-analyzer.test.ts",
+      "size": 2691
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/enhancers/response-enhancer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/enhancers/response-enhancer.test.ts",
+      "size": 8827
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/index.test.ts",
+      "size": 1011
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/mexc-api-agent.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/mexc-api-agent.test.ts",
+      "size": 10419
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/types/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/types/index.test.ts",
+      "size": 1701
+    },
+    {
+      "path": "src/mexc-agents/mexc-api/validators/response-validator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/mexc-api/validators/response-validator.test.ts",
+      "size": 3345
+    },
+    {
+      "path": "src/mexc-agents/multi-agent-orchestrator.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/multi-agent-orchestrator.test.ts",
+      "size": 16011
+    },
+    {
+      "path": "src/mexc-agents/orchestrator-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/orchestrator-types.test.ts",
+      "size": 1117
+    },
+    {
+      "path": "src/mexc-agents/orchestrator.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/orchestrator.test.ts",
+      "size": 9928
+    },
+    {
+      "path": "src/mexc-agents/pattern-analysis-workflow.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/pattern-analysis-workflow.test.ts",
+      "size": 21659
+    },
+    {
+      "path": "src/mexc-agents/pattern-discovery-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/pattern-discovery-agent.test.ts",
+      "size": 25804
+    },
+    {
+      "path": "src/mexc-agents/performance-monitor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/performance-monitor.test.ts",
+      "size": 21949
+    },
+    {
+      "path": "src/mexc-agents/reconciliation-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/reconciliation-agent.test.ts",
+      "size": 23399
+    },
+    {
+      "path": "src/mexc-agents/risk-manager-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/risk-manager-agent.test.ts",
+      "size": 19162
+    },
+    {
+      "path": "src/mexc-agents/safety-base-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/safety-base-agent.test.ts",
+      "size": 6998
+    },
+    {
+      "path": "src/mexc-agents/safety-monitor-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/safety-monitor-agent.test.ts",
+      "size": 479
+    },
+    {
+      "path": "src/mexc-agents/safety/behavior-monitor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/safety/behavior-monitor.test.ts",
+      "size": 9328
+    },
+    {
+      "path": "src/mexc-agents/safety/consensus-manager.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/safety/consensus-manager.test.ts",
+      "size": 6233
+    },
+    {
+      "path": "src/mexc-agents/safety/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/safety/index.test.ts",
+      "size": 498
+    },
+    {
+      "path": "src/mexc-agents/safety/pattern-validator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/safety/pattern-validator.test.ts",
+      "size": 7009
+    },
+    {
+      "path": "src/mexc-agents/safety/safety-monitor-agent.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/safety/safety-monitor-agent.test.ts",
+      "size": 13848
+    },
+    {
+      "path": "src/mexc-agents/safety/types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/safety/types.test.ts",
+      "size": 3012
+    },
+    {
+      "path": "src/mexc-agents/simulation-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/simulation-agent.test.ts",
+      "size": 12678
+    },
+    {
+      "path": "src/mexc-agents/strategy-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/strategy-agent.test.ts",
+      "size": 25580
+    },
+    {
+      "path": "src/mexc-agents/symbol-analysis-agent.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/symbol-analysis-agent.test.ts",
+      "size": 11188
+    },
+    {
+      "path": "src/mexc-agents/symbol-analysis-workflow.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/symbol-analysis-workflow.test.ts",
+      "size": 13721
+    },
+    {
+      "path": "src/mexc-agents/trading-strategy-workflow.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/trading-strategy-workflow.test.ts",
+      "size": 11251
+    },
+    {
+      "path": "src/mexc-agents/websocket-agent-bridge.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-agent-bridge.test.ts",
+      "size": 640
+    },
+    {
+      "path": "src/mexc-agents/websocket-bridge/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-bridge/index.test.ts",
+      "size": 1055
+    },
+    {
+      "path": "src/mexc-agents/websocket-bridge/streamers/pattern-discovery-streamer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-bridge/streamers/pattern-discovery-streamer.test.ts",
+      "size": 5138
+    },
+    {
+      "path": "src/mexc-agents/websocket-bridge/streamers/real-time-data-streamer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-bridge/streamers/real-time-data-streamer.test.ts",
+      "size": 5891
+    },
+    {
+      "path": "src/mexc-agents/websocket-bridge/streamers/trading-signal-streamer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-bridge/streamers/trading-signal-streamer.test.ts",
+      "size": 2650
+    },
+    {
+      "path": "src/mexc-agents/websocket-bridge/types/index.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-bridge/types/index.test.ts",
+      "size": 1903
+    },
+    {
+      "path": "src/mexc-agents/websocket-bridge/websocket-agent-bridge.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/mexc-agents/websocket-bridge/websocket-agent-bridge.test.ts",
+      "size": 13838
+    },
+    {
+      "path": "src/mexc-agents/workflow-execution-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/workflow-execution-service.test.ts",
+      "size": 7392
+    },
+    {
+      "path": "src/mexc-agents/workflow-executor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/mexc-agents/workflow-executor.test.ts",
+      "size": 13422
+    },
+    {
+      "path": "src/middleware/cost-monitor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/middleware/cost-monitor.test.ts",
+      "size": 18273
+    },
+    {
+      "path": "src/schemas/agent-cache-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/agent-cache-schemas-extracted.test.ts",
+      "size": 10146
+    },
+    {
+      "path": "src/schemas/agent-registry-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/agent-registry-schemas-extracted.test.ts",
+      "size": 12349
+    },
+    {
+      "path": "src/schemas/api-validation-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/api-validation-schemas.test.ts",
+      "size": 11151
+    },
+    {
+      "path": "src/schemas/cache-manager-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/cache-manager-schemas-extracted.test.ts",
+      "size": 10516
+    },
+    {
+      "path": "src/schemas/comprehensive-api-validation-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/comprehensive-api-validation-schemas.test.ts",
+      "size": 17836
+    },
+    {
+      "path": "src/schemas/database-validation-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/database-validation-schemas.test.ts",
+      "size": 14197
+    },
+    {
+      "path": "src/schemas/enhanced-component-validation-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/enhanced-component-validation-schemas.test.ts",
+      "size": 15249
+    },
+    {
+      "path": "src/schemas/external-api-validation-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/external-api-validation-schemas.test.ts",
+      "size": 15246
+    },
+    {
+      "path": "src/schemas/mexc-api-validation-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/mexc-api-validation-schemas.test.ts",
+      "size": 12973
+    },
+    {
+      "path": "src/schemas/mexc-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/mexc-schemas-extracted.test.ts",
+      "size": 7627
+    },
+    {
+      "path": "src/schemas/mexc-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/mexc-schemas.test.ts",
+      "size": 12523
+    },
+    {
+      "path": "src/schemas/mobile-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/mobile-schemas.test.ts",
+      "size": 1665
+    },
+    {
+      "path": "src/schemas/pattern-detection-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/pattern-detection-schemas-extracted.test.ts",
+      "size": 9323
+    },
+    {
+      "path": "src/schemas/risk-engine-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/risk-engine-schemas-extracted.test.ts",
+      "size": 8655
+    },
+    {
+      "path": "src/schemas/safety-monitoring-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/safety-monitoring-schemas.test.ts",
+      "size": 11392
+    },
+    {
+      "path": "src/schemas/safety-schemas-extracted.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/safety-schemas-extracted.test.ts",
+      "size": 12340
+    },
+    {
+      "path": "src/schemas/simplified-api-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/simplified-api-schemas.test.ts",
+      "size": 3013
+    },
+    {
+      "path": "src/schemas/unified/index.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/unified/index.test.ts",
+      "size": 9734
+    },
+    {
+      "path": "src/schemas/unified/mexc-api-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/unified/mexc-api-schemas.test.ts",
+      "size": 20835
+    },
+    {
+      "path": "src/schemas/unified/pattern-detection-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/unified/pattern-detection-schemas.test.ts",
+      "size": 15359
+    },
+    {
+      "path": "src/schemas/unified/trading-schemas.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/unified/trading-schemas.test.ts",
+      "size": 18939
+    },
+    {
+      "path": "src/schemas/user-preferences-schema.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/schemas/user-preferences-schema.test.ts",
+      "size": 4084
+    },
+    {
+      "path": "src/scripts/check-account-data.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/scripts/check-account-data.test.ts",
+      "size": 6791
+    },
+    {
+      "path": "src/scripts/debug-ui-status.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/scripts/debug-ui-status.test.ts",
+      "size": 4701
+    },
+    {
+      "path": "src/scripts/simple-account-summary.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/scripts/simple-account-summary.test.ts",
+      "size": 5086
+    },
+    {
+      "path": "src/services/ai/ai-intelligence-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/ai/ai-intelligence-service.test.ts",
+      "size": 9640
+    },
+    {
+      "path": "src/services/ai/embeddings-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/ai/embeddings-service.test.ts",
+      "size": 2438
+    },
+    {
+      "path": "src/services/ai/intelligence-orchestrator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/ai/intelligence-orchestrator.test.ts",
+      "size": 4221
+    },
+    {
+      "path": "src/services/ai/research-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/ai/research-service.test.ts",
+      "size": 1466
+    },
+    {
+      "path": "src/services/analysis/pattern-analysis-workflow.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/analysis/pattern-analysis-workflow.test.ts",
+      "size": 16007
+    },
+    {
+      "path": "src/services/api/adaptive-rate-limiter.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/adaptive-rate-limiter.test.ts",
+      "size": 538
+    },
+    {
+      "path": "src/services/api/api-credentials-test-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/api-credentials-test-service.test.ts",
+      "size": 14823
+    },
+    {
+      "path": "src/services/api/enhanced-api-validation-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/enhanced-api-validation-service.test.ts",
+      "size": 27156
+    },
+    {
+      "path": "src/services/api/enhanced-mexc-credential-validator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/enhanced-mexc-credential-validator.test.ts",
+      "size": 23728
+    },
+    {
+      "path": "src/services/api/mexc-account-api.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-account-api.test.ts",
+      "size": 16987
+    },
+    {
+      "path": "src/services/api/mexc-api-client.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-api-client.test.ts",
+      "size": 7409
+    },
+    {
+      "path": "src/services/api/mexc-api-types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-api-types.test.ts",
+      "size": 3037
+    },
+    {
+      "path": "src/services/api/mexc-auth-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-auth-service.test.ts",
+      "size": 4876
+    },
+    {
+      "path": "src/services/api/mexc-authentication-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-authentication-service.test.ts",
+      "size": 19495
+    },
+    {
+      "path": "src/services/api/mexc-client-core.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-client-core.test.ts",
+      "size": 15817
+    },
+    {
+      "path": "src/services/api/mexc-client-factory.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-client-factory.test.ts",
+      "size": 10072
+    },
+    {
+      "path": "src/services/api/mexc-client-types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-client-types.test.ts",
+      "size": 6248
+    },
+    {
+      "path": "src/services/api/mexc-config-validator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-config-validator.test.ts",
+      "size": 15843
+    },
+    {
+      "path": "src/services/api/mexc-configuration-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-configuration-service.test.ts",
+      "size": 19105
+    },
+    {
+      "path": "src/services/api/mexc-connectivity-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-connectivity-service.test.ts",
+      "size": 17327
+    },
+    {
+      "path": "src/services/api/mexc-connectivity-validator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-connectivity-validator.test.ts",
+      "size": 17596
+    },
+    {
+      "path": "src/services/api/mexc-market-data.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-market-data.test.ts",
+      "size": 22247
+    },
+    {
+      "path": "src/services/api/mexc-request-cache.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-request-cache.test.ts",
+      "size": 7770
+    },
+    {
+      "path": "src/services/api/mexc-request-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-request-service.test.ts",
+      "size": 10141
+    },
+    {
+      "path": "src/services/api/mexc-retry-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-retry-service.test.ts",
+      "size": 10778
+    },
+    {
+      "path": "src/services/api/mexc-schemas.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-schemas.test.ts",
+      "size": 13488
+    },
+    {
+      "path": "src/services/api/mexc-trading-api.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-trading-api.test.ts",
+      "size": 16844
+    },
+    {
+      "path": "src/services/api/mexc-trading-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-trading-service.test.ts",
+      "size": 12721
+    },
+    {
+      "path": "src/services/api/mexc-unified-exports.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/api/mexc-unified-exports.test.ts",
+      "size": 4931
+    },
+    {
+      "path": "src/services/api/secure-encryption-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/secure-encryption-service.test.ts",
+      "size": 8368
+    },
+    {
+      "path": "src/services/api/unified-mexc-config.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-config.test.ts",
+      "size": 3217
+    },
+    {
+      "path": "src/services/api/unified-mexc-core.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-core.test.ts",
+      "size": 26020
+    },
+    {
+      "path": "src/services/api/unified-mexc-portfolio-refactored.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-portfolio-refactored.test.ts",
+      "size": 20755
+    },
+    {
+      "path": "src/services/api/unified-mexc-portfolio.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-portfolio.test.ts",
+      "size": 35722
+    },
+    {
+      "path": "src/services/api/unified-mexc-service-factory.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-service-factory.test.ts",
+      "size": 24702
+    },
+    {
+      "path": "src/services/api/unified-mexc-service-v2.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-service-v2.test.ts",
+      "size": 30143
+    },
+    {
+      "path": "src/services/api/unified-mexc-trading.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/unified-mexc-trading.test.ts",
+      "size": 22082
+    },
+    {
+      "path": "src/services/api/user-credentials-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/api/user-credentials-service.test.ts",
+      "size": 3472
+    },
+    {
+      "path": "src/services/calendar-to-database-sync.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/calendar-to-database-sync.test.ts",
+      "size": 9921
+    },
+    {
+      "path": "src/services/coordination/strategy-configuration-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/coordination/strategy-configuration-service.test.ts",
+      "size": 19216
+    },
+    {
+      "path": "src/services/data/balance-persistence-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/balance-persistence-service.test.ts",
+      "size": 9560
+    },
+    {
+      "path": "src/services/data/base-mexc-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/base-mexc-service.test.ts",
+      "size": 4357
+    },
+    {
+      "path": "src/services/data/batch-database-service-refactored.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/batch-database-service-refactored.test.ts",
+      "size": 24888
+    },
+    {
+      "path": "src/services/data/batch-database-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/batch-database-service.test.ts",
+      "size": 37831
+    },
+    {
+      "path": "src/services/data/batch-insert-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/batch-insert-service.test.ts",
+      "size": 15935
+    },
+    {
+      "path": "src/services/data/batch-update-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/batch-update-service.test.ts",
+      "size": 15837
+    },
+    {
+      "path": "src/services/data/connection-health-monitor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/connection-health-monitor.test.ts",
+      "size": 19597
+    },
+    {
+      "path": "src/services/data/coordinated-circuit-breaker.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/coordinated-circuit-breaker.test.ts",
+      "size": 12239
+    },
+    {
+      "path": "src/services/data/data-archival-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/data-archival-service.test.ts",
+      "size": 10571
+    },
+    {
+      "path": "src/services/data/enhanced-mexc-websocket-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/enhanced-mexc-websocket-service.test.ts",
+      "size": 27720
+    },
+    {
+      "path": "src/services/data/enhanced-vector-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/enhanced-vector-service.test.ts",
+      "size": 20523
+    },
+    {
+      "path": "src/services/data/mexc-api-client.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/mexc-api-client.test.ts",
+      "size": 298
+    },
+    {
+      "path": "src/services/data/mexc-cache-manager.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/mexc-cache-manager.test.ts",
+      "size": 11243
+    },
+    {
+      "path": "src/services/data/mexc-market-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/mexc-market-service.test.ts",
+      "size": 15386
+    },
+    {
+      "path": "src/services/data/mexc-portfolio-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/mexc-portfolio-service.test.ts",
+      "size": 18080
+    },
+    {
+      "path": "src/services/data/mexc-websocket-stream.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/mexc-websocket-stream.test.ts",
+      "size": 4467
+    },
+    {
+      "path": "src/services/data/modules/calendar-listings.service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/calendar-listings.service.test.ts",
+      "size": 10637
+    },
+    {
+      "path": "src/services/data/modules/exchange-info.service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/exchange-info.service.test.ts",
+      "size": 13049
+    },
+    {
+      "path": "src/services/data/modules/mexc-api-types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-api-types.test.ts",
+      "size": 5113
+    },
+    {
+      "path": "src/services/data/modules/mexc-cache-layer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-cache-layer.test.ts",
+      "size": 9950
+    },
+    {
+      "path": "src/services/data/modules/mexc-core-account.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-core-account.test.ts",
+      "size": 8185
+    },
+    {
+      "path": "src/services/data/modules/mexc-core-client.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-core-client.test.ts",
+      "size": 8922
+    },
+    {
+      "path": "src/services/data/modules/mexc-core-http.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-core-http.test.ts",
+      "size": 9151
+    },
+    {
+      "path": "src/services/data/modules/mexc-core-market.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-core-market.test.ts",
+      "size": 12597
+    },
+    {
+      "path": "src/services/data/modules/mexc-core-trading.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/mexc-core-trading.test.ts",
+      "size": 11276
+    },
+    {
+      "path": "src/services/data/modules/portfolio.service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/modules/portfolio.service.test.ts",
+      "size": 14869
+    },
+    {
+      "path": "src/services/data/pattern-detection/activity-integration.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/activity-integration.test.ts",
+      "size": 3773
+    },
+    {
+      "path": "src/services/data/pattern-detection/calendar-pattern-bridge-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/calendar-pattern-bridge-service.test.ts",
+      "size": 14627
+    },
+    {
+      "path": "src/services/data/pattern-detection/correlation-analyzer.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/correlation-analyzer.test.ts",
+      "size": 28471
+    },
+    {
+      "path": "src/services/data/pattern-detection/optimized-pattern-monitor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/optimized-pattern-monitor.test.ts",
+      "size": 18592
+    },
+    {
+      "path": "src/services/data/pattern-detection/optimized-pattern-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/optimized-pattern-service.test.ts",
+      "size": 17447
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-detection-engine.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-detection-engine.test.ts",
+      "size": 2693
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-strategy-orchestrator-streamlined.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-strategy-orchestrator-streamlined.test.ts",
+      "size": 26004
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-strategy-orchestrator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-strategy-orchestrator.test.ts",
+      "size": 33569
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-target-bridge-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-target-bridge-service.test.ts",
+      "size": 11972
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-target-integration-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-target-integration-service.test.ts",
+      "size": 12886
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-to-database-bridge.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-to-database-bridge.test.ts",
+      "size": 24999
+    },
+    {
+      "path": "src/services/data/pattern-detection/pattern-types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/pattern-types.test.ts",
+      "size": 3776
+    },
+    {
+      "path": "src/services/data/pattern-detection/ready-state-detector.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-detection/ready-state-detector.test.ts",
+      "size": 28754
+    },
+    {
+      "path": "src/services/data/pattern-embedding-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-embedding-service.test.ts",
+      "size": 26341
+    },
+    {
+      "path": "src/services/data/pattern-orchestrator/monitoring-plan-creator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-orchestrator/monitoring-plan-creator.test.ts",
+      "size": 4860
+    },
+    {
+      "path": "src/services/data/pattern-orchestrator/recommendation-generator.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-orchestrator/recommendation-generator.test.ts",
+      "size": 4820
+    },
+    {
+      "path": "src/services/data/pattern-orchestrator/types.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/pattern-orchestrator/types.test.ts",
+      "size": 2739
+    },
+    {
+      "path": "src/services/data/query-performance-monitor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/query-performance-monitor.test.ts",
+      "size": 11910
+    },
+    {
+      "path": "src/services/data/transaction-lock-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/transaction-lock-service.test.ts",
+      "size": 21607
+    },
+    {
+      "path": "src/services/data/websocket-client.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket-client.test.ts",
+      "size": 21605
+    },
+    {
+      "path": "src/services/data/websocket-price-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket-price-service.test.ts",
+      "size": 20443
+    },
+    {
+      "path": "src/services/data/websocket-server.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket-server.test.ts",
+      "size": 33056
+    },
+    {
+      "path": "src/services/data/websocket/connection-manager.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/connection-manager.test.ts",
+      "size": 23669
+    },
+    {
+      "path": "src/services/data/websocket/market-data-manager.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/market-data-manager.test.ts",
+      "size": 14533
+    },
+    {
+      "path": "src/services/data/websocket/message-router.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/message-router.test.ts",
+      "size": 8814
+    },
+    {
+      "path": "src/services/data/websocket/rate-limiter.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/rate-limiter.test.ts",
+      "size": 9222
+    },
+    {
+      "path": "src/services/data/websocket/server-connection-manager.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/server-connection-manager.test.ts",
+      "size": 9856
+    },
+    {
+      "path": "src/services/data/websocket/stream-processor.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/stream-processor.test.ts",
+      "size": 11897
+    },
+    {
+      "path": "src/services/data/websocket/websocket-server-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/data/websocket/websocket-server-service.test.ts",
+      "size": 26063
+    },
+    {
+      "path": "src/services/execution/execution-order-service.ts",
+      "category": "critical",
+      "priority": "high",
+      "expectedTestPath": "tests/unit/services/execution/execution-order-service.test.ts",
+      "size": 12203
+    },
+    {
+      "path": "src/services/intelligence/market-intelligence-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/intelligence/market-intelligence-service.test.ts",
+      "size": 7032
+    },
+    {
+      "path": "src/services/mexc-unified-exports.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/mexc-unified-exports.test.ts",
+      "size": 615
+    },
+    {
+      "path": "src/services/multi-phase-executor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/multi-phase-executor.test.ts",
+      "size": 1582
+    },
+    {
+      "path": "src/services/multi-phase-strategy-builder.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/multi-phase-strategy-builder.test.ts",
+      "size": 8651
+    },
+    {
+      "path": "src/services/multi-phase-trading-service.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/multi-phase-trading-service.test.ts",
+      "size": 4909
+    },
+    {
+      "path": "src/services/notification/agent-monitoring-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/agent-monitoring-service.test.ts",
+      "size": 23808
+    },
+    {
+      "path": "src/services/notification/alert-correlation-engine.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/alert-correlation-engine.test.ts",
+      "size": 26284
+    },
+    {
+      "path": "src/services/notification/anomaly-detection-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/anomaly-detection-service.test.ts",
+      "size": 26075
+    },
+    {
+      "path": "src/services/notification/automated-alerting-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/automated-alerting-service.test.ts",
+      "size": 26018
+    },
+    {
+      "path": "src/services/notification/error-logging-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/error-logging-service.test.ts",
+      "size": 29034
+    },
+    {
+      "path": "src/services/notification/notification-providers/email-provider.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/notification-providers/email-provider.test.ts",
+      "size": 8597
+    },
+    {
+      "path": "src/services/notification/notification-providers/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/notification-providers/index.test.ts",
+      "size": 24535
+    },
+    {
+      "path": "src/services/notification/notification-providers/slack-provider.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/notification-providers/slack-provider.test.ts",
+      "size": 8420
+    },
+    {
+      "path": "src/services/notification/notification-providers/sms-provider.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/notification-providers/sms-provider.test.ts",
+      "size": 10038
+    },
+    {
+      "path": "src/services/notification/notification-providers/teams-provider.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/notification-providers/teams-provider.test.ts",
+      "size": 7468
+    },
+    {
+      "path": "src/services/notification/notification-providers/webhook-provider.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/notification-providers/webhook-provider.test.ts",
+      "size": 11013
+    },
+    {
+      "path": "src/services/notification/pattern-monitoring-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/pattern-monitoring-service.test.ts",
+      "size": 18584
+    },
+    {
+      "path": "src/services/notification/real-time-credential-monitor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/real-time-credential-monitor.test.ts",
+      "size": 20853
+    },
+    {
+      "path": "src/services/notification/status-synchronization-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/status-synchronization-service.test.ts",
+      "size": 9329
+    },
+    {
+      "path": "src/services/notification/unified-status-resolver.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/unified-status-resolver.test.ts",
+      "size": 15130
+    },
+    {
+      "path": "src/services/notification/workflow-status-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/notification/workflow-status-service.test.ts",
+      "size": 11815
+    },
+    {
+      "path": "src/services/query-performance-monitor.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/query-performance-monitor.test.ts",
+      "size": 8145
+    },
+    {
+      "path": "src/services/rate-limiter/adaptive-rate-limiter-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/rate-limiter/adaptive-rate-limiter-service.test.ts",
+      "size": 16584
+    },
+    {
+      "path": "src/services/rate-limiter/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/rate-limiter/index.test.ts",
+      "size": 671
+    },
+    {
+      "path": "src/services/rate-limiter/mexc-rate-limiter.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/rate-limiter/mexc-rate-limiter.test.ts",
+      "size": 11175
+    },
+    {
+      "path": "src/services/rate-limiter/sliding-window.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/rate-limiter/sliding-window.test.ts",
+      "size": 3561
+    },
+    {
+      "path": "src/services/rate-limiter/token-bucket.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/rate-limiter/token-bucket.test.ts",
+      "size": 3046
+    },
+    {
+      "path": "src/services/rate-limiter/types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/rate-limiter/types.test.ts",
+      "size": 1833
+    },
+    {
+      "path": "src/services/risk/advanced-emergency-coordinator-refactored.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-emergency-coordinator-refactored.test.ts",
+      "size": 30939
+    },
+    {
+      "path": "src/services/risk/advanced-emergency-coordinator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-emergency-coordinator.test.ts",
+      "size": 37565
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine-modules/core-risk-assessment.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine-modules/core-risk-assessment.test.ts",
+      "size": 11315
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine-modules/dynamic-calculations.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine-modules/dynamic-calculations.test.ts",
+      "size": 16449
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine-modules/event-management-health.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine-modules/event-management-health.test.ts",
+      "size": 15216
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine-modules/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine-modules/index.test.ts",
+      "size": 21732
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine-modules/market-conditions-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine-modules/market-conditions-manager.test.ts",
+      "size": 16275
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine-modules/stress-testing-validation.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine-modules/stress-testing-validation.test.ts",
+      "size": 15663
+    },
+    {
+      "path": "src/services/risk/advanced-risk-engine.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/advanced-risk-engine.test.ts",
+      "size": 4514
+    },
+    {
+      "path": "src/services/risk/circuit-breaker-safety-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/circuit-breaker-safety-service.test.ts",
+      "size": 27442
+    },
+    {
+      "path": "src/services/risk/circuit-breaker.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/circuit-breaker.test.ts",
+      "size": 12458
+    },
+    {
+      "path": "src/services/risk/comprehensive-safety-coordinator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/comprehensive-safety-coordinator.test.ts",
+      "size": 19781
+    },
+    {
+      "path": "src/services/risk/coordinated-circuit-breaker.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/coordinated-circuit-breaker.test.ts",
+      "size": 16068
+    },
+    {
+      "path": "src/services/risk/emergency-safety-system.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency-safety-system.test.ts",
+      "size": 33196
+    },
+    {
+      "path": "src/services/risk/emergency-stop-coordinator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency-stop-coordinator.test.ts",
+      "size": 16894
+    },
+    {
+      "path": "src/services/risk/emergency/emergency-communication.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency/emergency-communication.test.ts",
+      "size": 17739
+    },
+    {
+      "path": "src/services/risk/emergency/emergency-config.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency/emergency-config.test.ts",
+      "size": 9823
+    },
+    {
+      "path": "src/services/risk/emergency/emergency-protocol-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency/emergency-protocol-manager.test.ts",
+      "size": 19710
+    },
+    {
+      "path": "src/services/risk/emergency/emergency-recovery-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency/emergency-recovery-manager.test.ts",
+      "size": 16074
+    },
+    {
+      "path": "src/services/risk/emergency/emergency-session-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency/emergency-session-manager.test.ts",
+      "size": 17540
+    },
+    {
+      "path": "src/services/risk/emergency/emergency-types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/emergency/emergency-types.test.ts",
+      "size": 5588
+    },
+    {
+      "path": "src/services/risk/enhanced-environment-validation.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/enhanced-environment-validation.test.ts",
+      "size": 586
+    },
+    {
+      "path": "src/services/risk/enhanced-real-time-safety-monitor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/enhanced-real-time-safety-monitor.test.ts",
+      "size": 30643
+    },
+    {
+      "path": "src/services/risk/enhanced-risk-management-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/enhanced-risk-management-service.test.ts",
+      "size": 31773
+    },
+    {
+      "path": "src/services/risk/environment-validation.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/environment-validation.test.ts",
+      "size": 12450
+    },
+    {
+      "path": "src/services/risk/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/index.test.ts",
+      "size": 3497
+    },
+    {
+      "path": "src/services/risk/integrated-safety-monitoring-system.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/integrated-safety-monitoring-system.test.ts",
+      "size": 27424
+    },
+    {
+      "path": "src/services/risk/mexc-error-recovery-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/mexc-error-recovery-service.test.ts",
+      "size": 13673
+    },
+    {
+      "path": "src/services/risk/optimized-risk-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/optimized-risk-manager.test.ts",
+      "size": 22675
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-modules/alert-management.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-modules/alert-management.test.ts",
+      "size": 18498
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-modules/configuration-management.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-modules/configuration-management.test.ts",
+      "size": 16241
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-modules/core-safety-monitoring.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-modules/core-safety-monitoring.test.ts",
+      "size": 21054
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-modules/event-handling.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-modules/event-handling.test.ts",
+      "size": 13186
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-modules/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-modules/index.test.ts",
+      "size": 31127
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-modules/risk-assessment.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-modules/risk-assessment.test.ts",
+      "size": 26609
+    },
+    {
+      "path": "src/services/risk/real-time-safety-monitoring-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/real-time-safety-monitoring-service.test.ts",
+      "size": 1760
+    },
+    {
+      "path": "src/services/risk/safety/emergency-management.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/safety/emergency-management.test.ts",
+      "size": 15821
+    },
+    {
+      "path": "src/services/risk/safety/safety-alerts.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/safety/safety-alerts.test.ts",
+      "size": 10840
+    },
+    {
+      "path": "src/services/risk/safety/safety-types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/safety/safety-types.test.ts",
+      "size": 6376
+    },
+    {
+      "path": "src/services/risk/security-monitoring-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/security-monitoring-service.test.ts",
+      "size": 27222
+    },
+    {
+      "path": "src/services/risk/system-readiness-validator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/risk/system-readiness-validator.test.ts",
+      "size": 17253
+    },
+    {
+      "path": "src/services/schemas/risk-engine-schemas-extracted.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/schemas/risk-engine-schemas-extracted.test.ts",
+      "size": 14871
+    },
+    {
+      "path": "src/services/trading/advanced-trading-strategy.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/advanced-trading-strategy.test.ts",
+      "size": 9244
+    },
+    {
+      "path": "src/services/trading/auto-sniping/auto-sniping-core.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/auto-sniping-core.test.ts",
+      "size": 7707
+    },
+    {
+      "path": "src/services/trading/auto-sniping/configuration-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/configuration-manager.test.ts",
+      "size": 3075
+    },
+    {
+      "path": "src/services/trading/auto-sniping/enhanced-monitoring-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/enhanced-monitoring-service.test.ts",
+      "size": 22186
+    },
+    {
+      "path": "src/services/trading/auto-sniping/execution-engine.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/execution-engine.test.ts",
+      "size": 604
+    },
+    {
+      "path": "src/services/trading/auto-sniping/position-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/position-manager.test.ts",
+      "size": 4497
+    },
+    {
+      "path": "src/services/trading/auto-sniping/real-time-trigger-engine.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/real-time-trigger-engine.test.ts",
+      "size": 22662
+    },
+    {
+      "path": "src/services/trading/auto-sniping/schemas.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/schemas.test.ts",
+      "size": 2323
+    },
+    {
+      "path": "src/services/trading/auto-sniping/target-processor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/target-processor.test.ts",
+      "size": 8477
+    },
+    {
+      "path": "src/services/trading/auto-sniping/trade-executor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/auto-sniping/trade-executor.test.ts",
+      "size": 2238
+    },
+    {
+      "path": "src/services/trading/complete-auto-sniping-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/complete-auto-sniping-service.test.ts",
+      "size": 30574
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading.service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading.service.test.ts",
+      "size": 4666
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading.types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading.types.test.ts",
+      "size": 15633
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/advanced-order-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/advanced-order-manager.test.ts",
+      "size": 24731
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/auto-sniping-coordinator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/auto-sniping-coordinator.test.ts",
+      "size": 9659
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/auto-sniping-refactored.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/auto-sniping-refactored.test.ts",
+      "size": 21895
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/auto-sniping-stats.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/auto-sniping-stats.test.ts",
+      "size": 8802
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/auto-sniping.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/auto-sniping.test.ts",
+      "size": 59155
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/base-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/base-service.test.ts",
+      "size": 35189
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/enhanced-risk-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/enhanced-risk-manager.test.ts",
+      "size": 36188
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/index.test.ts",
+      "size": 3713
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/manual-trading.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/manual-trading.test.ts",
+      "size": 15930
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/modules/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/modules/index.test.ts",
+      "size": 155
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/modules/order-executor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/modules/order-executor.test.ts",
+      "size": 12367
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/modules/position-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/modules/position-manager.test.ts",
+      "size": 14400
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/modules/target-processor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/modules/target-processor.test.ts",
+      "size": 15253
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/performance-tracker.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/performance-tracker.test.ts",
+      "size": 12313
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/position-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/position-manager.test.ts",
+      "size": 17275
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/service-initialization-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/service-initialization-manager.test.ts",
+      "size": 11509
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/service-lifecycle-coordinator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/service-lifecycle-coordinator.test.ts",
+      "size": 18219
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/strategy-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/strategy-manager.test.ts",
+      "size": 21362
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/target-processor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/target-processor.test.ts",
+      "size": 7801
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/types.test.ts",
+      "size": 17933
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/utils/database-operations.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/utils/database-operations.test.ts",
+      "size": 9061
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/utils/index.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/utils/index.test.ts",
+      "size": 217
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/utils/order-execution-helper.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/utils/order-execution-helper.test.ts",
+      "size": 9271
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/utils/position-monitoring-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/utils/position-monitoring-manager.test.ts",
+      "size": 5719
+    },
+    {
+      "path": "src/services/trading/consolidated/core-trading/utils/service-response-utils.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/core-trading/utils/service-response-utils.test.ts",
+      "size": 2901
+    },
+    {
+      "path": "src/services/trading/consolidated/market-data.types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/consolidated/market-data.types.test.ts",
+      "size": 18414
+    },
+    {
+      "path": "src/services/trading/enhanced-mexc-config.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/enhanced-mexc-config.test.ts",
+      "size": 18918
+    },
+    {
+      "path": "src/services/trading/integrated-trading-dashboard.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/integrated-trading-dashboard.test.ts",
+      "size": 16518
+    },
+    {
+      "path": "src/services/trading/mexc-trading-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/mexc-trading-service.test.ts",
+      "size": 21451
+    },
+    {
+      "path": "src/services/trading/multi-phase-trading-bot.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/multi-phase-trading-bot.test.ts",
+      "size": 25842
+    },
+    {
+      "path": "src/services/trading/optimized-auto-exit-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/optimized-auto-exit-manager.test.ts",
+      "size": 3572
+    },
+    {
+      "path": "src/services/trading/optimized-auto-sniping-execution-engine.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/optimized-auto-sniping-execution-engine.test.ts",
+      "size": 3443
+    },
+    {
+      "path": "src/services/trading/orchestrator/core-orchestrator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/orchestrator/core-orchestrator.test.ts",
+      "size": 22278
+    },
+    {
+      "path": "src/services/trading/orchestrator/pattern-processor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/orchestrator/pattern-processor.test.ts",
+      "size": 15994
+    },
+    {
+      "path": "src/services/trading/orchestrator/position-monitor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/orchestrator/position-monitor.test.ts",
+      "size": 17363
+    },
+    {
+      "path": "src/services/trading/orchestrator/safety-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/orchestrator/safety-manager.test.ts",
+      "size": 19180
+    },
+    {
+      "path": "src/services/trading/orchestrator/trade-executor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/orchestrator/trade-executor.test.ts",
+      "size": 16307
+    },
+    {
+      "path": "src/services/trading/orchestrator/types.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/orchestrator/types.test.ts",
+      "size": 12367
+    },
+    {
+      "path": "src/services/trading/parameter-optimization-engine.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/parameter-optimization-engine.test.ts",
+      "size": 8897
+    },
+    {
+      "path": "src/services/trading/pattern-snipe-integration.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/pattern-snipe-integration.test.ts",
+      "size": 20004
+    },
+    {
+      "path": "src/services/trading/portfolio-tracking-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/portfolio-tracking-service.test.ts",
+      "size": 12979
+    },
+    {
+      "path": "src/services/trading/realtime-price-monitor.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/realtime-price-monitor.test.ts",
+      "size": 27162
+    },
+    {
+      "path": "src/services/trading/stop-loss-take-profit-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/stop-loss-take-profit-service.test.ts",
+      "size": 17550
+    },
+    {
+      "path": "src/services/trading/strategy-initialization-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/strategy-initialization-service.test.ts",
+      "size": 8156
+    },
+    {
+      "path": "src/services/trading/strategy-performance-optimizer.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/strategy-performance-optimizer.test.ts",
+      "size": 9754
+    },
+    {
+      "path": "src/services/trading/trading-analytics-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/trading-analytics-service.test.ts",
+      "size": 30145
+    },
+    {
+      "path": "src/services/trading/trading-strategy-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/trading-strategy-manager.test.ts",
+      "size": 9379
+    },
+    {
+      "path": "src/services/trading/unified-auto-sniping-orchestrator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/trading/unified-auto-sniping-orchestrator.test.ts",
+      "size": 21445
+    },
+    {
+      "path": "src/services/user/user-preferences-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/user/user-preferences-service.test.ts",
+      "size": 2632
+    },
+    {
+      "path": "src/services/validation/backend-integration-validator.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/validation/backend-integration-validator.test.ts",
+      "size": 17332
+    },
+    {
+      "path": "src/services/validation/comprehensive-validation-service.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/validation/comprehensive-validation-service.test.ts",
+      "size": 17064
+    },
+    {
+      "path": "src/services/websocket/websocket-manager.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/websocket/websocket-manager.test.ts",
+      "size": 8317
+    },
+    {
+      "path": "src/services/workflow/execution-logger.ts",
+      "category": "business-logic",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/services/workflow/execution-logger.test.ts",
+      "size": 4319
+    },
+    {
+      "path": "src/test-utils/database-helpers-mocked.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/test-utils/database-helpers-mocked.test.ts",
+      "size": 14727
+    },
+    {
+      "path": "src/test-utils/database-helpers.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/test-utils/database-helpers.test.ts",
+      "size": 9021
+    },
+    {
+      "path": "src/tests/manual/safety-monitoring-api-test.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/tests/manual/safety-monitoring-api-test.test.ts",
+      "size": 20457
+    },
+    {
+      "path": "src/types/agent-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/agent-types.test.ts",
+      "size": 963
+    },
+    {
+      "path": "src/types/common-interfaces.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/common-interfaces.test.ts",
+      "size": 11470
+    },
+    {
+      "path": "src/types/database-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/database-types.test.ts",
+      "size": 3686
+    },
+    {
+      "path": "src/types/exit-strategies.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/exit-strategies.test.ts",
+      "size": 3548
+    },
+    {
+      "path": "src/types/logger-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/logger-types.test.ts",
+      "size": 1954
+    },
+    {
+      "path": "src/types/take-profit-strategies.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/take-profit-strategies.test.ts",
+      "size": 8866
+    },
+    {
+      "path": "src/types/trading-analytics-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/trading-analytics-types.test.ts",
+      "size": 7577
+    },
+    {
+      "path": "src/types/trading-display-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/trading-display-types.test.ts",
+      "size": 3295
+    },
+    {
+      "path": "src/types/validation-types.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/types/validation-types.test.ts",
+      "size": 3885
+    },
+    {
+      "path": "src/utils/optimized-date-fns.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/utils/optimized-date-fns.test.ts",
+      "size": 414
+    },
+    {
+      "path": "src/utils/trading-data-transformers.ts",
+      "category": "utility",
+      "priority": "medium",
+      "expectedTestPath": "tests/unit/utils/trading-data-transformers.test.ts",
+      "size": 1191
+    }
+  ]
+}

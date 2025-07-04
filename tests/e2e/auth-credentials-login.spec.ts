@@ -5,19 +5,36 @@ const EMAIL = process.env.AUTH_EMAIL || 'ryan@ryanlisse.com';
 const PASSWORD = process.env.AUTH_PASSWORD || 'Testing2025!';
 
 test.describe('Authentication with provided credentials', () => {
+  test.beforeEach(async ({ request }) => {
+    // Ensure test user exists
+    try {
+      await request.post(`${BASE_URL}/api/test-users`, {
+        data: {
+          email: EMAIL,
+          password: PASSWORD,
+        },
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    } catch (error) {
+      console.warn('Failed to create/ensure test user exists:', error);
+    }
+  });
+
   test('should sign in and reach dashboard', async ({ page }) => {
     await page.goto(`${BASE_URL}/auth`);
     await page.waitForLoadState('networkidle');
 
-    // ensure we are on login form
-    const loginToggle = page.locator('text=Sign in');
-    if (await loginToggle.count()) {
-      await loginToggle.first().click({ timeout: 2000 }).catch(() => {});
-    }
+    // Wait for Supabase Auth UI to load
+    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
 
-    await page.fill('input[name="email"], #email', EMAIL);
-    await page.fill('input[name="password"], #password', PASSWORD);
-    await page.click('button[type="submit"]');
+    // Fill in the credentials using proper Supabase Auth UI selectors
+    await page.fill('input[type="email"]', EMAIL);
+    await page.fill('input[type="password"]', PASSWORD);
+    
+    // Click the sign in button
+    await page.click('button:has-text("Sign In")');
 
     await page.waitForURL('**/dashboard', { timeout: 15000 });
     expect(page.url()).toMatch(/\/dashboard$/);

@@ -8,7 +8,7 @@ import {
   instrumentConnectionHealth,
   instrumentDatabase,
   instrumentDatabaseQuery,
-} from "@/src/lib/opentelemetry-database-instrumentation";
+} from "../lib/opentelemetry-database-instrumentation";
 import * as originalSchema from "./schemas";
 import { supabaseSchema } from "./schemas/supabase-schema";
 
@@ -404,9 +404,9 @@ export * from "./schemas";
 export { supabaseSchema } from "./schemas/supabase-schema";
 
 import { eq } from "drizzle-orm";
-import { databaseConnectionPool } from "@/src/lib/database-connection-pool";
+import { databaseConnectionPool } from "../lib/database-connection-pool";
 // Import optimization tools
-import { databaseOptimizationManager } from "@/src/lib/database-optimization-manager";
+import { databaseOptimizationManager } from "../lib/database-optimization-manager";
 import { queryPerformanceMonitor } from "../services/query-performance-monitor";
 // Import necessary schema elements for user preferences (conditional based on database type)
 import { userPreferences as originalUserPreferences } from "./schemas/auth";
@@ -477,11 +477,11 @@ export async function executeWithRetry<T>(
 
 // Health check with detailed status
 export async function healthCheck() {
-  return instrumentConnectionHealth();
+  return _internalHealthCheck();
 }
 
 // Internal health check implementation
-async function _internalHealthCheck() {
+export async function _internalHealthCheck() {
   try {
     const startTime = Date.now();
     await db.execute(sql`SELECT 1`);

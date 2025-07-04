@@ -86,10 +86,9 @@ export default defineConfig({
 
   // Enhanced projects configuration for authentication testing
   projects: [
-    // Authentication flow tests - Chrome
+    // E2E tests with browser-specific configurations
     {
-      name: 'auth-chrome',
-      testMatch: '**/auth-flow-validation.spec.ts',
+      name: 'chromium',
       use: { 
         ...devices['Desktop Chrome'],
         // Additional Chrome-specific settings for auth testing
@@ -101,11 +100,9 @@ export default defineConfig({
         }
       },
     },
-    
-    // Authentication flow tests - Firefox
+
     {
-      name: 'auth-firefox',
-      testMatch: '**/auth-flow-validation.spec.ts',
+      name: 'firefox',
       use: { 
         ...devices['Desktop Firefox'],
         // Firefox-specific settings
@@ -117,18 +114,14 @@ export default defineConfig({
         }
       },
     },
-    
-    // Authentication flow tests - Safari
+
     {
-      name: 'auth-webkit',
-      testMatch: '**/auth-flow-validation.spec.ts',
+      name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    
-    // Mobile authentication tests
+
     {
-      name: 'auth-mobile',
-      testMatch: '**/auth-flow-validation.spec.ts',
+      name: 'Mobile Chrome',
       use: { 
         ...devices['Pixel 5'],
         // Mobile-specific timeout adjustments
@@ -136,34 +129,8 @@ export default defineConfig({
         actionTimeout: 15 * 1000,
       },
     },
-    
-    // Existing general E2E tests
-    {
-      name: 'chromium',
-      testIgnore: '**/auth-flow-validation.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      testIgnore: '**/auth-flow-validation.spec.ts',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      testIgnore: '**/auth-flow-validation.spec.ts',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    {
-      name: 'Mobile Chrome',
-      testIgnore: '**/auth-flow-validation.spec.ts',
-      use: { ...devices['Pixel 5'] },
-    },
     {
       name: 'Mobile Safari',
-      testIgnore: '**/auth-flow-validation.spec.ts',
       use: { ...devices['iPhone 12'] },
     },
   ],
@@ -176,17 +143,25 @@ export default defineConfig({
     timeout: 120 * 1000, // 2 minutes to start
     env: {
       PLAYWRIGHT_TEST: 'true',
-      NODE_ENV: TEST_ENVIRONMENT,
+      NODE_ENV: 'test',
       PORT: '3008',
-      // Test environment variables for auth
-      KINDE_ISSUER_URL: 'https://test-mexcsniper.kinde.com',
-      KINDE_SITE_URL: 'http://localhost:3008',
-      KINDE_CLIENT_ID: 'test_client_id',
-      KINDE_CLIENT_SECRET: 'test_client_secret',
-      KINDE_POST_LOGIN_REDIRECT_URL: 'http://localhost:3008/dashboard',
-      KINDE_POST_LOGOUT_REDIRECT_URL: 'http://localhost:3008',
+      // Supabase test environment variables
+      SUPABASE_URL: 'https://wisobxvkyjzlvhipctrl.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indpc29ieHZreWp6bHZoaXBjdHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0NzE4NzcsImV4cCI6MjA1MTA0Nzg3N30.test-anon-key',
+      SUPABASE_SERVICE_ROLE_KEY: 'test-service-role-key-for-admin-operations',
+      NEXT_PUBLIC_SUPABASE_URL: 'https://wisobxvkyjzlvhipctrl.supabase.co',
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indpc29ieHZreWp6bHZoaXBjdHJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU0NzE4NzcsImV4cCI6MjA1MTA0Nzg3N30.test-anon-key',
       // Database
-      DATABASE_URL: 'postgresql://test:test@localhost:5432/mexc_test',
+      DATABASE_URL: 'postgresql://postgres.wisobxvkyjzlvhipctrl:CFIqXDseFZ4u5MfR@aws-0-us-east-2.pooler.supabase.com:6543/postgres',
+      // Test environment settings
+      ENABLE_SUPABASE_TESTING: 'true',
+      SUPABASE_TEST_MODE: 'true',
+      SKIP_AUTH_IN_TESTS: 'false',
+      // Test credentials
+      TEST_USER_EMAIL: 'ryan@ryanlisse.com',
+      TEST_USER_PASSWORD: 'Testing2025!',
+      AUTH_EMAIL: 'ryan@ryanlisse.com',
+      AUTH_PASSWORD: 'Testing2025!',
       // Disable external services for testing
       OPENAI_API_KEY: 'test-key',
       MEXC_API_KEY: 'test-key',

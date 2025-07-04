@@ -27,11 +27,11 @@ test.describe('Stagehand Pattern Discovery', () => {
     await withStagehandTimeout(() => page.goto(`${BASE_URL}/dashboard`));
 
     await withStagehandTimeout(() =>
-      stagehand.act('Open the Pattern Detection tab')
+      page.act('Open the Pattern Detection tab')
     );
 
     const result = await withStagehandTimeout(() =>
-      stagehand.extract({
+      page.extract({
         instruction: 'List any detected trading patterns',
         schema: z.object({
           patterns: z.array(z.string()).optional(),
