@@ -17,6 +17,8 @@ import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
+import { Label } from "@/src/components/ui/label";
+import { Switch } from "@/src/components/ui/switch";
 import {
   Tabs,
   TabsContent,
@@ -118,6 +120,11 @@ export default function SettingsPage() {
     autoSellEnabled: preferences?.autoSellEnabled ?? true,
   });
 
+  // Paper trading mode
+  const [paperTradingEnabled, setPaperTradingEnabled] = useState(
+    settingsStatus?.executionSettings.paperTradingMode ?? true
+  );
+
   // Initialize state from preferences
   useEffect(() => {
     if (preferences) {
@@ -137,6 +144,30 @@ export default function SettingsPage() {
       });
     }
   }, [preferences]);
+
+  // Initialize paper trading state from execution settings
+  useEffect(() => {
+    if (settingsStatus) {
+      setPaperTradingEnabled(settingsStatus.executionSettings.paperTradingMode);
+    }
+  }, [settingsStatus]);
+
+  const handlePaperTradingToggle = async (enabled: boolean) => {
+    setPaperTradingEnabled(enabled);
+    try {
+      await updateExecutionSettings({ paperTradingMode: enabled });
+      toast({
+        title: enabled ? "Paper trading enabled" : "Paper trading disabled",
+      });
+    } catch (error) {
+      toast({
+        title: "Error updating paper trading mode",
+        description:
+          error instanceof Error ? error.message : "Failed to update setting",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Handle saving editable take-profit table
   const _handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
@@ -399,6 +430,25 @@ export default function SettingsPage() {
                 System Check
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Paper Trading Toggle */}
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-1">
+              <Label htmlFor="paper-trading" className="font-medium">
+                Paper Trading Mode
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Simulate trades without real orders
+              </p>
+            </div>
+            <Switch
+              id="paper-trading"
+              checked={paperTradingEnabled}
+              onCheckedChange={handlePaperTradingToggle}
+            />
           </CardContent>
         </Card>
 

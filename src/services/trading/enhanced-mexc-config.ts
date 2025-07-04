@@ -150,7 +150,9 @@ export class EnhancedMexcConfig {
       orderTimeout: parseInt(process.env.MEXC_ORDER_TIMEOUT || "30000"),
       maxSlippage: parseFloat(process.env.MEXC_MAX_SLIPPAGE || "2"),
       retryAttempts: parseInt(process.env.MEXC_RETRY_ATTEMPTS || "3"),
-      paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+      paperTradingMode:
+        (process.env.MEXC_PAPER_TRADING ?? process.env.PAPER_TRADING_MODE) !==
+        "false",
 
       // Rate Limiting
       requestsPerSecond: parseInt(process.env.MEXC_REQUESTS_PER_SECOND || "10"),
@@ -637,7 +639,9 @@ export function getEnvironmentConfig(): Partial<MexcTradingConfig> {
       passphrase: process.env.MEXC_PASSPHRASE || "",
       sandbox: process.env.MEXC_SANDBOX === "true",
     },
-    paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+    paperTradingMode:
+      (process.env.MEXC_PAPER_TRADING ?? process.env.PAPER_TRADING_MODE) !==
+      "false",
     defaultPositionSize: parseFloat(
       process.env.MEXC_DEFAULT_POSITION_SIZE || "50"
     ),

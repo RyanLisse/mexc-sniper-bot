@@ -129,9 +129,15 @@ export class CoreTradingService extends BrowserCompatibleEventEmitter {
     super();
 
     // Validate and set configuration
+    const paperTradingFlag =
+      (process.env.MEXC_PAPER_TRADING ?? process.env.PAPER_TRADING_MODE) !==
+      "false";
+
     this.config = validateConfig({
       apiKey: process.env.MEXC_API_KEY || "",
       secretKey: process.env.MEXC_SECRET_KEY || "",
+      enablePaperTrading: paperTradingFlag,
+      paperTradingMode: paperTradingFlag,
       ...config,
     });
 

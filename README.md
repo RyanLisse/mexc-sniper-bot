@@ -128,6 +128,9 @@ MEXC_API_KEY=your_mexc_api_key
 MEXC_SECRET_KEY=your_mexc_secret_key
 MEXC_BASE_URL=https://api.mexc.com
 
+# Enable paper trading (no real orders)
+PAPER_TRADING_MODE=true
+
 # Database Configuration
 # Option 1: Local SQLite (default for development)
 DATABASE_URL=sqlite:///./mexc_sniper.db
