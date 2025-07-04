@@ -351,6 +351,7 @@ For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/d
 
 ### Core Documentation
 - [Agent Architecture](docs/architecture/AGENTS.md) - Quick setup guide for AI agents
+- [Architecture Review](docs/architecture/ARCHITECTURE_REVIEW.md) - Codebase analysis and refactoring plan
 - [Stagehand E2E Testing](docs/testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
 
 ### Deployment & Operations
