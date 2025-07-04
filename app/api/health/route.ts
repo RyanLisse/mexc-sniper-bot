@@ -6,6 +6,7 @@
  */
 
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 import { createResilientEndpoint } from "@/src/lib/enhanced-api-resilience-middleware";
 import { MexcConfigValidator } from "@/src/services/api/mexc-config-validator";
@@ -15,7 +16,7 @@ import { getSystemResilienceStatus } from "@/src/lib/enhanced-resilience-manager
  * GET /api/health
  * Comprehensive health check with enhanced resilience
  */
-export const GET = createResilientEndpoint(async (_request: NextRequest) => {
+export async function GET(_request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
 
   // Get resilience system status
@@ -101,16 +102,18 @@ export const GET = createResilientEndpoint(async (_request: NextRequest) => {
   } catch (error) {
     const responseTime = Date.now() - startTime;
 
-    // This will be caught by the resilience middleware and provide fallback response
-    throw new Error(`Health check failed: ${error instanceof Error ? error.message : String(error)}`);
+    return apiResponse.error(`Health check failed: ${error instanceof Error ? error.message : String(error)}`, 500, {
+      responseTime,
+      timestamp: new Date().toISOString()
+    });
   }
-}, 'health');
+}
 
 /**
  * HEAD /api/health
  * Lightweight health check with resilience protection
  */
-export const HEAD = createResilientEndpoint(async (_request: NextRequest) => {
+export async function HEAD(_request: NextRequest): Promise<Response> {
   const validator = MexcConfigValidator.getInstance();
   const healthCheck = await validator.quickHealthCheck();
   const resilienceStatus = getSystemResilienceStatus();
@@ -118,10 +121,10 @@ export const HEAD = createResilientEndpoint(async (_request: NextRequest) => {
   const systemHealthy = healthCheck.healthy && healthCheck.score >= 80;
   const resilienceHealthy = resilienceStatus.isHealthy;
   const isHealthy = systemHealthy && resilienceHealthy;
-  const statusCode = isHealthy ? 200 : 503;
 
+  // Return Response directly - HEAD requests need special handling
   return new Response(null, {
-    status: statusCode,
+    status: isHealthy ? 200 : 503,
     headers: {
       "X-Health-Score": healthCheck.score.toString(),
       "X-Health-Status": isHealthy ? "healthy" : "degraded",
@@ -131,4 +134,4 @@ export const HEAD = createResilientEndpoint(async (_request: NextRequest) => {
       "X-Open-Circuits": resilienceStatus.openCircuitCount.toString(),
     },
   });
-}, 'health');
+}

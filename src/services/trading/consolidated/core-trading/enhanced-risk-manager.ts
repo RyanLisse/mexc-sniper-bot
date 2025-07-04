@@ -836,12 +836,17 @@ export class EnhancedRiskManager {
               id: `pos-${balance.asset}`,
               symbol: `${balance.asset}USDT`,
               side: "BUY" as const,
+              orderId: `order-${balance.asset}`,
               quantity: parseFloat(balance.free) + parseFloat(balance.locked),
               entryPrice: 1, // Will be updated with current price
               currentPrice: 1, // Will be updated with current price
               unrealizedPnL: 0,
               realizedPnL: 0,
-              timestamp: Date.now(),
+              timestamp: new Date().toISOString(),
+              status: "open" as const,
+              openTime: new Date(),
+              strategy: "default",
+              tags: ["auto-generated"],
             }));
         }
       }

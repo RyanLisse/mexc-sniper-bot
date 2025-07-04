@@ -200,23 +200,41 @@ function createPostgresClient() {
 
 // Create mock database for testing
 function createMockDatabase() {
-  // Create a proper Promise-like mock that TypeScript recognizes
-  const createThenable = (result: any[] = []): any => {
-    const promise: any = Promise.resolve(result);
-
-    // Add Drizzle query builder methods that return new promises
-    (promise as any).where = () => createThenable(result);
-    (promise as any).orderBy = () => createThenable(result);
-    (promise as any).limit = () => createThenable(result);
-    (promise as any).select = () => createThenable(result);
-    (promise as any).from = () => createThenable(result);
-    (promise as any).set = () => createThenable(result);
-    (promise as any).values = () => createThenable(result);
-    (promise as any).returning = () => createThenable(result);
-    (promise as any).groupBy = () => createThenable(result);
-    (promise as any).execute = () => promise;
-
-    return promise;
+  // Create a proper query builder mock that implements the Drizzle interface
+  const createQueryBuilder = (result: any[] = []): any => {
+    const queryBuilder = {
+      // Make it a thenable/promise-like object
+      then: (onFulfilled?: any, onRejected?: any) => {
+        return Promise.resolve(result).then(onFulfilled, onRejected);
+      },
+      catch: (onRejected?: any) => {
+        return Promise.resolve(result).catch(onRejected);
+      },
+      finally: (onFinally?: any) => {
+        return Promise.resolve(result).finally(onFinally);
+      },
+      // Query builder methods
+      where: () => createQueryBuilder(result),
+      orderBy: () => createQueryBuilder(result),
+      limit: () => createQueryBuilder(result),
+      offset: () => createQueryBuilder(result),
+      select: () => createQueryBuilder(result),
+      from: () => createQueryBuilder(result),
+      set: () => createQueryBuilder(result),
+      values: () => createQueryBuilder(result),
+      returning: () => createQueryBuilder(result),
+      groupBy: () => createQueryBuilder(result),
+      having: () => createQueryBuilder(result),
+      innerJoin: () => createQueryBuilder(result),
+      leftJoin: () => createQueryBuilder(result),
+      rightJoin: () => createQueryBuilder(result),
+      fullJoin: () => createQueryBuilder(result),
+      execute: () => Promise.resolve(result),
+      // Make it behave like a Promise when awaited
+      [Symbol.toStringTag]: 'Promise',
+    };
+    
+    return queryBuilder;
   };
 
   return {
@@ -224,25 +242,19 @@ function createMockDatabase() {
     query: async () => [],
     insert: () => ({
       values: (data: any) => ({
-        returning: () => createThenable([{ id: "mock-id", ...data }]),
+        returning: () => createQueryBuilder([{ id: "mock-id", ...data }]),
       }),
     }),
-    select: (columns?: any): any => {
-      const selectQuery: any = createThenable([]);
-      selectQuery.from = () => createThenable([]);
-      return selectQuery;
+    select: (columns?: any) => {
+      return createQueryBuilder([]);
     },
-    update: (table: any): any => ({
-      set: (data: any): any => {
-        const updateQuery: any = createThenable([]);
-        updateQuery.where = () => createThenable([]);
-        return updateQuery;
+    update: (table: any) => ({
+      set: (data: any) => {
+        return createQueryBuilder([]);
       },
     }),
-    delete: (table: any): any => {
-      const deleteQuery: any = createThenable([]);
-      deleteQuery.where = () => createThenable([]);
-      return deleteQuery;
+    delete: (table: any) => {
+      return createQueryBuilder([]);
     },
     transaction: async (cb: any) => {
       const result = await cb(createMockDatabase());

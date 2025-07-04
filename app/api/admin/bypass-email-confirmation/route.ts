@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     if (targetUser.email_confirmed_at) {
       return apiResponse.success({
-        message: `User ${email} is already confirmed`,
+        message: `User ${targetUser.email} is already confirmed`,
         user: {
           id: targetUser.id,
           email: targetUser.email,

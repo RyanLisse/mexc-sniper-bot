@@ -20,12 +20,13 @@ export const GET = withApiErrorHandling(
     const userId = validateUserId(searchParams.get("userId"));
 
     const result = (await withDatabaseErrorHandling(
-      () =>
-        db
+      async () => {
+        return await db
           .select()
           .from(userPreferences)
           .where(eq(userPreferences.userId, userId))
-          .limit(1),
+          .limit(1);
+      },
       "fetch user preferences"
     )) as any[];
 
@@ -120,8 +121,7 @@ export const GET = withApiErrorHandling(
     };
 
     return apiResponse(createSuccessResponse(response));
-  },
-  { operation: "user-preferences-get" }
+  }
 );
 
 // POST /api/user-preferences
@@ -294,12 +294,13 @@ export const POST = withApiErrorHandling(
 
     // Try to update first
     const result = (await withDatabaseErrorHandling(
-      () =>
-        db
+      async () => {
+        return await db
           .update(userPreferences)
           .set(updateData)
           .where(eq(userPreferences.userId, validatedUserId))
-          .returning(),
+          .returning();
+      },
       "update user preferences"
     )) as any[];
 
@@ -338,7 +339,9 @@ export const POST = withApiErrorHandling(
       };
 
       await withDatabaseErrorHandling(
-        () => db.insert(userPreferences).values(newPrefs),
+        async () => {
+          return await db.insert(userPreferences).values(newPrefs);
+        },
         "insert user preferences"
       );
     }
@@ -348,6 +351,5 @@ export const POST = withApiErrorHandling(
         message: "User preferences updated successfully",
       })
     );
-  },
-  { operation: "user-preferences-post" }
+  }
 );

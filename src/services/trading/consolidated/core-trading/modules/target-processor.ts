@@ -118,7 +118,7 @@ export class TargetProcessor {
       await this.updateSnipeTargetStatus(
         target.id.toString(),
         newStatus,
-        result.error
+        result.error instanceof Error ? result.error.message : result.error
       );
 
       // Update statistics
@@ -138,7 +138,7 @@ export class TargetProcessor {
       return {
         success: result.success,
         data: result,
-        error: result.error,
+        error: result.error instanceof Error ? result.error.message : result.error,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
