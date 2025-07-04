@@ -14,8 +14,8 @@ import { supabaseSchema } from "./schemas/supabase-schema";
 
 // Supabase client configuration
 export const supabase = createClient(
-  process.env.SUPABASE_URL || "https://placeholder.supabase.co",
-  process.env.SUPABASE_ANON_KEY || "placeholder_key",
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder_key",
   {
     auth: {
       autoRefreshToken: true,
@@ -32,7 +32,7 @@ export const supabase = createClient(
 
 // Admin client for server-side operations
 export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL || "https://placeholder.supabase.co",
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
   process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder_service_role_key",
   {
     auth: {
@@ -117,7 +117,7 @@ const hasNeonConfig = () =>
 // Check if we have Supabase configuration
 export const hasSupabaseConfig = () =>
   !!process.env.DATABASE_URL?.includes("supabase.com") &&
-  !!process.env.SUPABASE_URL;
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 // Create PostgreSQL client with connection pooling
 function createPostgresClient() {

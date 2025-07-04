@@ -182,7 +182,7 @@ export class SystemReadinessValidator {
 
       // Critical environment variables
       // FIXED: Removed OPENAI_API_KEY from critical vars since auto-sniping should work without AI
-      const criticalVars = ["ENCRYPTION_MASTER_KEY", "KINDE_CLIENT_ID"];
+      const criticalVars = ["ENCRYPTION_MASTER_KEY", "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"];
       for (const varName of criticalVars) {
         const varResult = validation.results.find((r) => r.key === varName);
         checks.push({
@@ -345,7 +345,7 @@ export class SystemReadinessValidator {
         details: data.message || "No details available",
         required: true,
         fixable: true,
-        fix: "Check Kinde authentication configuration",
+        fix: "Check Supabase authentication configuration",
       });
     } catch (error) {
       checks.push({

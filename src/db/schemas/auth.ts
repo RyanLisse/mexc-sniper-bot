@@ -14,9 +14,9 @@ import {
 // AUTHENTICATION SCHEMA MODULE
 // ===========================================
 
-// Kinde Auth Compatible User Table
+// Auth Compatible User Table
 export const user = pgTable("user", {
-  id: text("id").primaryKey(), // Kinde user ID
+  id: text("id").primaryKey(), // User ID
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   username: text("username").unique(),

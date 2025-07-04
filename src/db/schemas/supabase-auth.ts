@@ -26,8 +26,6 @@ export const users = pgTable("users", {
   username: text("username"),
   emailVerified: boolean("email_verified").default(false),
   image: text("image"),
-  // Store mapping to old Kinde ID for migration compatibility
-  legacyKindeId: text("legacy_kinde_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

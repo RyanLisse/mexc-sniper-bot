@@ -171,10 +171,10 @@ export const enhancedAgentCache = new EnhancedAgentCache();
 export const globalEnhancedAgentCache = enhancedAgentCache;
 
 // Initialize agent cache function
-export function initializeAgentCache(config?: {
+export async function initializeAgentCache(config?: {
   maxSize?: number;
   defaultTtl?: number;
-}): EnhancedAgentCache {
+}): Promise<EnhancedAgentCache> {
   if (config?.maxSize) {
     enhancedAgentCache.setMaxSize(config.maxSize);
   }

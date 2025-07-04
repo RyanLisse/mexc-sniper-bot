@@ -9,7 +9,6 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth";
 
 // ===========================================
 // MULTI-PHASE TRADING STRATEGIES SCHEMA
@@ -67,9 +66,7 @@ export const tradingStrategies = pgTable(
   "trading_strategies",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     strategyTemplateId: integer("strategy_template_id").references(
       () => strategyTemplates.id,
       {
@@ -161,9 +158,7 @@ export const strategyPhaseExecutions = pgTable(
   "strategy_phase_executions",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     strategyId: integer("strategy_id")
       .notNull()
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),
@@ -239,9 +234,7 @@ export const strategyPerformanceMetrics = pgTable(
   "strategy_performance_metrics",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     strategyId: integer("strategy_id")
       .notNull()
       .references(() => tradingStrategies.id, { onDelete: "cascade" }),

@@ -295,6 +295,46 @@ test-emergency: ## Emergency test run with circuit breakers and forced terminati
 	@$(NODE) run test:emergency
 	@echo -e "${GREEN}✓ Emergency tests completed${NC}"
 
+# ==================== Authentication Commands ====================
+
+.PHONY: auth-verify
+auth-verify: ## Verify authentication setup and email confirmation
+	@echo -e "${BLUE}Verifying authentication setup...${NC}"
+	@$(NODE) run scripts/test-auth-verification.ts
+	@echo -e "${GREEN}✓ Authentication verification completed${NC}"
+
+.PHONY: auth-bypass-email
+auth-bypass-email: ## Bypass email confirmation for test user
+	@echo -e "${BLUE}Bypassing email confirmation...${NC}"
+	@$(NODE) run scripts/bypass-email-confirmation.ts --email $(EMAIL)
+	@echo -e "${GREEN}✓ Email confirmation bypassed${NC}"
+
+.PHONY: auth-bypass-all
+auth-bypass-all: ## Bypass email confirmation for all unconfirmed users
+	@echo -e "${BLUE}Bypassing email confirmation for all users...${NC}"
+	@$(NODE) run scripts/bypass-email-confirmation.ts --confirm-all
+	@echo -e "${GREEN}✓ All email confirmations bypassed${NC}"
+
+.PHONY: auth-check-status
+auth-check-status: ## Check email confirmation status
+	@echo -e "${BLUE}Checking email confirmation status...${NC}"
+	@$(NODE) run scripts/bypass-email-confirmation.ts --check-status
+	@echo -e "${GREEN}✓ Status check completed${NC}"
+
+.PHONY: auth-create-test-user
+auth-create-test-user: ## Create test user with bypassed email confirmation
+	@echo -e "${BLUE}Creating test user...${NC}"
+	@$(NODE) run scripts/bypass-email-confirmation.ts --create-test-user --email $(EMAIL)
+	@echo -e "${GREEN}✓ Test user created${NC}"
+
+.PHONY: auth-setup-testing
+auth-setup-testing: ## Complete authentication setup for testing
+	@echo -e "${BLUE}Setting up authentication for testing...${NC}"
+	@$(MAKE) auth-verify
+	@$(MAKE) auth-bypass-email EMAIL=ryan@ryanlisse.com
+	@$(MAKE) auth-check-status
+	@echo -e "${GREEN}✓ Authentication testing setup completed${NC}"
+
 # ==================== Build Commands ====================
 
 .PHONY: build

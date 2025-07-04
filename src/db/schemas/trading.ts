@@ -9,7 +9,6 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth";
 
 // ===========================================
 // TRADING SCHEMA MODULE
@@ -20,9 +19,7 @@ export const apiCredentials = pgTable(
   "api_credentials",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     provider: text("provider").notNull(), // "mexc", "binance", etc.
 
     // Encrypted credentials
@@ -55,9 +52,7 @@ export const snipeTargets = pgTable(
   "snipe_targets",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     vcoinId: text("vcoin_id").notNull(),
     symbolName: text("symbol_name").notNull(),
 
@@ -124,9 +119,7 @@ export const executionHistory = pgTable(
   "execution_history",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
     snipeTargetId: integer("snipe_target_id").references(
       () => snipeTargets.id,
       {
@@ -204,9 +197,7 @@ export const transactions = pgTable(
   "transactions",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
 
     // Transaction Details
     transactionType: text("transaction_type").notNull(), // "buy", "sell", "complete_trade"
@@ -418,9 +409,7 @@ export const balanceSnapshots = pgTable(
   "balance_snapshots",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
 
     // Balance Details
     asset: text("asset").notNull(), // e.g., "USDT", "BTC", "ETH"
@@ -479,9 +468,7 @@ export const portfolioSummary = pgTable(
   "portfolio_summary",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
 
     // Portfolio Metrics
     totalUsdValue: real("total_usd_value").notNull().default(0),

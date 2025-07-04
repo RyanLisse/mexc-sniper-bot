@@ -12,7 +12,6 @@ export interface SupabaseUser {
   username?: string;
   picture?: string;
   emailVerified?: boolean;
-  legacyKindeId?: string;
 }
 
 export interface SupabaseSession {
@@ -47,8 +46,8 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.SUPABASE_URL || "https://placeholder.supabase.co",
-    process.env.SUPABASE_ANON_KEY || "placeholder_key",
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder_key",
     {
       cookies: {
         get(name: string) {
@@ -242,7 +241,7 @@ export async function requireAuth(): Promise<SupabaseUser> {
  */
 export function createSupabaseAdminClient() {
   return createServerClient(
-    process.env.SUPABASE_URL || "https://placeholder.supabase.co",
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
     process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder_service_role_key",
     {
       cookies: {

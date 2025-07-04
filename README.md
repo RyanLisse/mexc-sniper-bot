@@ -13,7 +13,7 @@ An intelligent cryptocurrency trading bot powered by specialized AI agents that 
 - **🛡️ Robust Error Handling**: Multi-agent fallbacks and graceful degradation
 - **📈 Confidence Scoring**: 0-100% reliability metrics for every trading signal
 - **⚙️ User Configurable**: Customizable take profit levels and risk management
-- **🔐 Secure Authentication**: Kinde Auth integration with protected routes
+- **🔐 Secure Authentication**: Supabase Auth with email bypass and rate limit handling
 - **🧪 Comprehensive Testing**: 293 tests with 96%+ pass rate (Vitest, Playwright, Stagehand AI-powered testing)
 
 ## 🏗️ Multi-Agent Architecture
@@ -112,13 +112,16 @@ Create a `.env.local` file:
 # Required - Core AI Integration
 OPENAI_API_KEY=your_openai_api_key
 
-# Required - Kinde Authentication
-KINDE_CLIENT_ID=your_kinde_client_id
-KINDE_CLIENT_SECRET=your_kinde_client_secret
-KINDE_ISSUER_URL=https://your-domain.kinde.com
-KINDE_SITE_URL=http://localhost:3008
-KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3008
-KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3008/dashboard
+# Required - Supabase Authentication
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional - Custom SMTP (recommended for production)
+SUPABASE_SMTP_HOST=smtp.resend.com
+SUPABASE_SMTP_PORT=587
+SUPABASE_SMTP_USER=resend
+SUPABASE_SMTP_PASS=re_your-api-key
 
 # Optional - MEXC API Access
 MEXC_API_KEY=your_mexc_api_key
@@ -140,15 +143,16 @@ TEST_USER_EMAIL=your_test_email@example.com
 TEST_USER_PASSWORD=your_test_password
 ```
 
-### 2.1. Kinde Authentication Setup
+### 2.1. Supabase Authentication Setup
 
-1. **Create a Kinde account** at [https://kinde.com](https://kinde.com)
-2. **Create a new application** in your Kinde dashboard
-3. **Configure application settings**:
-   - Application type: Regular web application
-   - Allowed callback URLs: `http://localhost:3008/api/auth/kinde_callback`
-   - Allowed logout redirect URLs: `http://localhost:3008`
-4. **Copy credentials** to your `.env.local` file
+1. **Create a Supabase account** at [https://supabase.com](https://supabase.com)
+2. **Create a new project** in your Supabase dashboard
+3. **Configure authentication settings**:
+   - Site URL: `http://localhost:3008`
+   - Redirect URLs: `http://localhost:3008/auth/callback`
+   - Email confirmation: Can be bypassed in development
+4. **Copy credentials** from Settings → API to your `.env.local` file
+5. **Optional**: Configure custom SMTP for production (see SMTP Configuration Guide)
 
 ### 3. Setup Database
 
@@ -349,6 +353,14 @@ For detailed deployment instructions, see [docs/deployment/DEPLOYMENT.md](docs/d
 
 ## 📚 Documentation
 
+### Authentication System
+- [Developer Onboarding Guide](docs/DEVELOPER_AUTH_ONBOARDING_GUIDE.md) - Complete setup for new developers
+- [Supabase Migration Guide](docs/NEXTAUTH_TO_SUPABASE_MIGRATION_GUIDE.md) - Migration from NextAuth to Supabase
+- [SMTP Configuration Guide](docs/SMTP_CONFIGURATION_GUIDE.md) - Custom email setup for production
+- [Rate Limit Handling](docs/RATE_LIMIT_HANDLING_SYSTEM.md) - Rate limit management and UX
+- [Authentication Troubleshooting](docs/AUTH_TROUBLESHOOTING_GUIDE.md) - Common issues and solutions
+- [Supabase Rate Limit Fix](docs/SUPABASE_AUTH_RATE_LIMIT_FIX.md) - Email bypass and workarounds
+
 ### Core Documentation
 - [Agent Architecture](docs/architecture/AGENTS.md) - Quick setup guide for AI agents
 - [Stagehand E2E Testing](docs/testing/STAGEHAND_E2E_TESTING.md) - AI-powered testing framework
@@ -491,7 +503,7 @@ make deps-update
 - **Testing Required**: Write unit tests (Vitest), E2E tests (Playwright), and Stagehand tests for new features
 - **Code Quality**: Use Biome.js for formatting and linting, maintain 100% test pass rate
 - **Database**: Use Drizzle ORM for all database operations with safe migrations
-- **Authentication**: All protected routes must use Kinde Auth integration
+- **Authentication**: All protected routes must use Supabase Auth integration
 - **Error Handling**: Implement comprehensive error handling with proper logging
 - **Documentation**: Add JSDoc comments and update relevant documentation
 - **Performance**: Optimize for Vercel serverless deployment and global edge performance

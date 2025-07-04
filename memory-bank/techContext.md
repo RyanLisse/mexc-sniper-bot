@@ -7,7 +7,7 @@
 | **Language** | TypeScript 5.5 | Static typing, modern ECMAScript |
 | **Package Mgr** | **Bun** 1.x | Fast installs & script runner (see `CLAUDE.md`) |
 | **Database** | SQLite (dev) / NeonDB (prod) via **Drizzle ORM** | Flexible local dev & serverless Postgres prod |
-| **Auth** | Kinde | Hosted OAuth/OIDC flow |
+| **Auth** | Supabase | Complete auth system with rate limit handling, SMTP bypass |
 | **Background Jobs** | Inngest | Durable event-driven workflows |
 | **AI Integration** | OpenAI GPT-4 (agents) | Pattern recognition & strategy generation |
 | **Testing** | Vitest (unit), Playwright (E2E), Stagehand AI | 95 %+ coverage |
@@ -47,7 +47,7 @@
 - `@kinde-oss/kinde-auth-nextjs` 2.7.0 (authentication)
 - `@supabase/supabase-js` 2.50.2 (dual-auth support)
 
-**Authentication Stack**: Dual support for Kinde (primary) and Supabase (secondary/migration)
+**Authentication Stack**: Complete Supabase authentication with advanced rate limit handling, SMTP bypass, and production-ready configuration
 **AI Testing**: Stagehand v2.3.0 for autonomous browser testing with GPT-4
 **Package Manager**: Bun (primary) with npm fallback support
 

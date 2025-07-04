@@ -28,12 +28,12 @@ This document validates that the MEXC Sniper Bot integration architecture contai
 ### 2.1 Critical Security Variables (Required)
 ```typescript
 // All properly externalized - NO HARDCODED VALUES
-MEXC_API_KEY: string           // ✅ From environment
-MEXC_SECRET_KEY: string        // ✅ From environment  
-KINDE_CLIENT_ID: string        // ✅ From environment
-KINDE_CLIENT_SECRET: string    // ✅ From environment
-KINDE_ISSUER_URL: string       // ✅ From environment
-DATABASE_URL: string           // ✅ From environment
+MEXC_API_KEY: string                     // ✅ From environment
+MEXC_SECRET_KEY: string                  // ✅ From environment  
+NEXT_PUBLIC_SUPABASE_URL: string         // ✅ From environment
+NEXT_PUBLIC_SUPABASE_ANON_KEY: string    // ✅ From environment
+SUPABASE_SERVICE_ROLE_KEY: string        // ✅ From environment
+DATABASE_URL: string                     // ✅ From environment
 ```
 
 ### 2.2 Optional Service Integrations (Secure Defaults)
@@ -93,11 +93,11 @@ if (!connectionString) {
 
 ### 3.3 Authentication Configuration ✅ SECURE
 ```typescript
-// ✅ GOOD: Kinde configuration from environment
-const kindeConfig = {
-  clientId: process.env.KINDE_CLIENT_ID,         // From environment
-  clientSecret: process.env.KINDE_CLIENT_SECRET, // From environment
-  issuerUrl: process.env.KINDE_ISSUER_URL        // From environment
+// ✅ GOOD: Supabase configuration from environment
+const supabaseConfig = {
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL,         // From environment
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, // From environment
+  serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY // From environment
 };
 ```
 
@@ -164,11 +164,14 @@ export class SecureEncryptionService {
 
 ### 5.2 Session Security ✅ SECURE
 ```typescript
-// ✅ GOOD: Session secret from environment
-const sessionSecret = process.env.NEXTAUTH_SECRET || 'dev-secret-for-local-development';
-if (process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_SECRET === undefined) {
-  throw new Error('NEXTAUTH_SECRET must be set in production');
-}
+// ✅ GOOD: Supabase handles session security internally
+// SMTP configuration for bypassing rate limits
+const smtpConfig = {
+  host: process.env.SUPABASE_SMTP_HOST,
+  port: process.env.SUPABASE_SMTP_PORT,
+  user: process.env.SUPABASE_SMTP_USER,
+  pass: process.env.SUPABASE_SMTP_PASS
+};
 ```
 
 ## 6. WebSocket Configuration Security
@@ -190,8 +193,8 @@ const wsConfig = {
 // ✅ GOOD: No hardcoded auth tokens
 export const publicRoute = (handler: ApiHandler) => {
   return async (request: NextRequest) => {
-    // Authentication via Kinde service, no hardcoded values
-    const session = await getSession(request);  // From Kinde SDK
+    // Authentication via Supabase service, no hardcoded values
+    const session = await getSession(request);  // From Supabase SDK
     return handler(request, session);
   };
 };
@@ -256,10 +259,10 @@ const honeycombApiKey = process.env.HONEYCOMB_API_KEY;
 ```json
 {
   "env": {
-    "MEXC_API_KEY": "@mexc-api-key",           // ✅ From Vercel secrets
-    "MEXC_SECRET_KEY": "@mexc-secret-key",     // ✅ From Vercel secrets
-    "DATABASE_URL": "@neon-database-url",      // ✅ From Vercel secrets
-    "KINDE_CLIENT_SECRET": "@kinde-secret"     // ✅ From Vercel secrets
+    "MEXC_API_KEY": "@mexc-api-key",                     // ✅ From Vercel secrets
+    "MEXC_SECRET_KEY": "@mexc-secret-key",               // ✅ From Vercel secrets
+    "DATABASE_URL": "@neon-database-url",                // ✅ From Vercel secrets
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-key" // ✅ From Vercel secrets
   }
 }
 ```

@@ -9,7 +9,6 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth";
 
 // ===========================================
 // SAFETY SYSTEM SCHEMA MODULE
@@ -20,9 +19,7 @@ export const simulationSessions = pgTable(
   "simulation_sessions",
   {
     id: text("id").primaryKey(), // sim-{timestamp}-{random}
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
 
     // Session Configuration
     startTime: timestamp("start_time").notNull(),
@@ -168,9 +165,7 @@ export const positionSnapshots = pgTable(
   "position_snapshots",
   {
     id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
 
     // Snapshot Details
     snapshotId: text("snapshot_id").notNull().unique(), // UUID

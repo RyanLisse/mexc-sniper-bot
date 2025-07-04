@@ -13,7 +13,7 @@
 |----------|-----------|
 | **Bun** over npm/yarn | Faster installs & script execution; aligns with CLAUDE.md workflow |
 | **Drizzle ORM** | Type-safe schema & migrations; works with NeonDB & SQLite |
-| **Dual Auth** (Kinde + Supabase) | Kinde (primary, simple OAuth); Supabase (migration/secondary) |
+| **Supabase Auth** | Complete authentication with rate limit handling, SMTP bypass, circuit breakers |
 | **TanStack Query v5** | Declarative data fetching/state; avoids bespoke fetch logic |
 | **Stagehand v2** | AI-powered E2E testing; GPT-4 autonomous browser interaction |
 | **Memory Bank** | Cline pattern for persistent AI agent knowledge across sessions |

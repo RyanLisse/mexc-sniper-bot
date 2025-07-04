@@ -36,9 +36,9 @@ OPENAI_API_KEY="sk-your-openai-api-key"
 ENCRYPTION_MASTER_KEY="generate-with-openssl-rand-base64-32"
 
 # Authentication (Required for user access)
-KINDE_CLIENT_ID="your-kinde-client-id"
-KINDE_CLIENT_SECRET="your-kinde-client-secret"
-KINDE_ISSUER_URL="https://your-domain.kinde.com"
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
 ### 4. Verify Configuration

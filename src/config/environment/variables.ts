@@ -194,12 +194,33 @@ export const ENVIRONMENT_VARIABLES: EnvironmentVariable[] = [
     example: "your-32-character-encryption-key",
   },
   {
-    key: "NEXTAUTH_SECRET",
-    description: "NextAuth.js secret for session encryption",
+    key: "SUPABASE_SMTP_HOST",
+    description: "Custom SMTP host for bypassing Supabase email rate limits",
     required: false,
     category: "security",
-    defaultValue: "dev-secret-for-local-development",
-    example: "your-nextauth-secret",
+    example: "smtp.resend.com",
+    warningIfMissing: "Using Supabase's limited email service (2 emails/hour)",
+  },
+  {
+    key: "SUPABASE_SMTP_PORT",
+    description: "Custom SMTP port",
+    required: false,
+    category: "security",
+    example: "587",
+  },
+  {
+    key: "SUPABASE_SMTP_USER",
+    description: "Custom SMTP username",
+    required: false,
+    category: "security",
+    example: "resend",
+  },
+  {
+    key: "SUPABASE_SMTP_PASS",
+    description: "Custom SMTP password/API key",
+    required: false,
+    category: "security",
+    example: "re_your-api-key",
   },
 
   // Development & Testing

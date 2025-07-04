@@ -4,6 +4,24 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 ## 📖 Documentation Structure
 
+### 🔐 Authentication System Documentation
+
+#### Quick Start for New Developers
+- **[Developer Onboarding Guide](DEVELOPER_AUTH_ONBOARDING_GUIDE.md)** - Complete setup guide for new team members (30 minutes)
+
+#### Migration and Setup
+- **[NextAuth to Supabase Migration Guide](NEXTAUTH_TO_SUPABASE_MIGRATION_GUIDE.md)** - Complete migration documentation
+- **[SMTP Configuration Guide](SMTP_CONFIGURATION_GUIDE.md)** - Custom email setup for bypassing rate limits
+- **[Supabase Email Confirmation Setup](SUPABASE_EMAIL_CONFIRMATION_SETUP.md)** - Development email bypass setup
+
+#### Problem Solving
+- **[Authentication Troubleshooting Guide](AUTH_TROUBLESHOOTING_GUIDE.md)** - Common issues and step-by-step solutions
+- **[Supabase Rate Limit Fix](SUPABASE_AUTH_RATE_LIMIT_FIX.md)** - Rate limit solutions and workarounds
+
+#### Advanced Topics
+- **[Rate Limit Handling System](RATE_LIMIT_HANDLING_SYSTEM.md)** - System architecture and user experience
+- **[Email Bypass API Setup](../EMAIL_BYPASS_API_SETUP.md)** - Development bypass API documentation
+
 ### 🏗️ Architecture Documentation
 - [**Quick Agent Setup**](architecture/AGENTS.md) - Quick setup guide for AI agents (essential for developers)
 
@@ -24,9 +42,10 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 ## 🗺️ Quick Navigation
 
 ### For New Users
-1. Start with [Quick Start Guide](guides/QUICKSTART.md)
-2. Review [Quick Agent Setup](architecture/AGENTS.md)
-3. Configure using [Secure Encryption Guide](guides/SECURE_ENCRYPTION_QUICKSTART.md)
+1. Start with [Developer Onboarding Guide](DEVELOPER_AUTH_ONBOARDING_GUIDE.md) for complete authentication setup
+2. Then proceed to [Quick Start Guide](guides/QUICKSTART.md)
+3. Review [Quick Agent Setup](architecture/AGENTS.md)
+4. Configure using [Secure Encryption Guide](guides/SECURE_ENCRYPTION_QUICKSTART.md)
 
 ### For Developers
 1. **Essential**: Read [Quick Agent Setup](architecture/AGENTS.md) - contains troubleshooting for common issues
@@ -44,7 +63,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 - OpenAI GPT-4 integration for intelligent decision making
 - Event-driven workflows with Inngest for reliable background processing
 - Real-time MEXC pattern recognition (sts:2, st:2, tt:4)
-- Kinde Auth secure authentication system
+- Supabase Auth with rate limit handling and email bypass
 
 ### Database Architecture
 - NeonDB serverless PostgreSQL
@@ -59,7 +78,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 - Risk management controls
 
 ### Security & Testing Features
-- **Authentication**: Kinde Auth with secure session management
+- **Authentication**: Supabase Auth with session management and rate limit handling
 - **Encryption**: AES-256-GCM encryption for sensitive data
 - **Concurrency**: Transaction locking system for safe operations
 - **Protection**: Rate limiting and CSRF protection
@@ -98,12 +117,15 @@ See [Contributing Guide](development/CONTRIBUTING.md) for general contribution g
 
 This documentation is continuously updated to reflect the current system architecture.
 
-**Latest Updates (January 2025):**
-- ✅ Updated to reflect 16+ specialized TypeScript agents
-- ✅ Added comprehensive Stagehand E2E testing documentation
-- ✅ Documented Kinde Auth integration and security features
+**Latest Updates (July 2025):**
+- ✅ **Complete Supabase Authentication Migration**: Migrated from NextAuth to Supabase Auth
+- ✅ **Comprehensive Authentication Documentation**: Added 6 detailed authentication guides
+- ✅ **Rate Limit Handling System**: Implemented smart rate limit management and user experience
+- ✅ **Email Bypass for Development**: Created development-friendly email confirmation bypass
+- ✅ **SMTP Configuration Guide**: Detailed custom SMTP setup for production
+- ✅ **Developer Onboarding Guide**: 30-minute setup guide for new team members
+- ✅ **Troubleshooting Documentation**: Step-by-step solutions for common auth issues
 - ✅ Updated technology stack (Next.js 15, React 19, TanStack Query)
 - ✅ Added testing framework documentation (Vitest, Playwright, Stagehand)
-- ✅ Updated prerequisites and environment setup instructions
 
 For the latest updates, check the git history or release notes.

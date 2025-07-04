@@ -8,7 +8,6 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
-import { users } from "./supabase-auth";
 
 // ===========================================
 // SUPABASE TRADING SCHEMA MODULE
@@ -19,9 +18,7 @@ export const apiCredentials = pgTable(
   "api_credentials",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
     provider: text("provider").notNull(), // "mexc", "binance", etc.
 
     // Encrypted credentials
@@ -50,9 +47,7 @@ export const executionHistory = pgTable(
   "execution_history",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
     snipeTargetId: uuid("snipe_target_id"),
 
     // Execution Details
@@ -120,9 +115,7 @@ export const transactions = pgTable(
   "transactions",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
 
     // Transaction Details
     transactionType: text("transaction_type").notNull(), // "buy", "sell", "complete_trade"
@@ -252,9 +245,7 @@ export const balanceSnapshots = pgTable(
   "balance_snapshots",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
 
     // Balance Details
     asset: text("asset").notNull(), // e.g., "USDT", "BTC", "ETH"
@@ -311,9 +302,7 @@ export const portfolioSummary = pgTable(
   "portfolio_summary",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
 
     // Portfolio Metrics
     totalUsdValue: real("total_usd_value").notNull().default(0),
