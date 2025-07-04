@@ -32,6 +32,7 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 ### 📘 Development Guides
 - [**Quick Start Guide**](guides/QUICKSTART.md) - Get up and running quickly
 - [**Secure Encryption Guide**](guides/SECURE_ENCRYPTION_QUICKSTART.md) - API key encryption setup
+- [**Backtesting & Simulation Guide**](guides/BACKTESTING_AND_SIMULATION.md) - Validate strategies safely
 - [**Contributing Guide**](development/CONTRIBUTING.md) - Development guidelines and standards
 - [**OpenCode Development**](development/OpenCode.md) - Open source contribution guide
 

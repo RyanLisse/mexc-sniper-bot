@@ -15,6 +15,7 @@ An intelligent cryptocurrency trading bot powered by specialized AI agents that 
 - **⚙️ User Configurable**: Customizable take profit levels and risk management
 - **🔐 Secure Authentication**: Supabase Auth with email bypass and rate limit handling
 - **🧪 Comprehensive Testing**: 293 tests with 96%+ pass rate (Vitest, Playwright, Stagehand AI-powered testing)
+- **🧪 Strategy Backtesting & Simulation**: Validate strategies with historical data and realistic paper trading
 
 ## 🏗️ Multi-Agent Architecture
 
