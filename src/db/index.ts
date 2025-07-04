@@ -201,9 +201,9 @@ function createPostgresClient() {
 // Create mock database for testing
 function createMockDatabase() {
   // Create a proper Promise-like mock that TypeScript recognizes
-  const createThenable = (result: any[] = []): Promise<any[]> => {
-    const promise = Promise.resolve(result);
-    
+  const createThenable = (result: any[] = []): any => {
+    const promise: any = Promise.resolve(result);
+
     // Add Drizzle query builder methods that return new promises
     (promise as any).where = () => createThenable(result);
     (promise as any).orderBy = () => createThenable(result);
@@ -215,7 +215,7 @@ function createMockDatabase() {
     (promise as any).returning = () => createThenable(result);
     (promise as any).groupBy = () => createThenable(result);
     (promise as any).execute = () => promise;
-    
+
     return promise;
   };
 
@@ -227,21 +227,21 @@ function createMockDatabase() {
         returning: () => createThenable([{ id: "mock-id", ...data }]),
       }),
     }),
-    select: (columns?: any) => {
-      const selectQuery = createThenable([]);
-      (selectQuery as any).from = () => createThenable([]);
+    select: (columns?: any): any => {
+      const selectQuery: any = createThenable([]);
+      selectQuery.from = () => createThenable([]);
       return selectQuery;
     },
-    update: (table: any) => ({
-      set: (data: any) => {
-        const updateQuery = createThenable([]);
-        (updateQuery as any).where = () => createThenable([]);
+    update: (table: any): any => ({
+      set: (data: any): any => {
+        const updateQuery: any = createThenable([]);
+        updateQuery.where = () => createThenable([]);
         return updateQuery;
       },
     }),
-    delete: (table: any) => {
-      const deleteQuery = createThenable([]);
-      (deleteQuery as any).where = () => createThenable([]);
+    delete: (table: any): any => {
+      const deleteQuery: any = createThenable([]);
+      deleteQuery.where = () => createThenable([]);
       return deleteQuery;
     },
     transaction: async (cb: any) => {
@@ -389,12 +389,12 @@ export const db = new Proxy({} as ReturnType<typeof createDatabase>, {
   get(_target, prop: keyof ReturnType<typeof createDatabase>) {
     const instance = ensureDbInstance();
     const value = instance[prop];
-    
+
     // Bind methods to maintain correct context
-    if (typeof value === 'function') {
+    if (typeof value === "function") {
       return value.bind(instance);
     }
-    
+
     return value;
   },
 });
