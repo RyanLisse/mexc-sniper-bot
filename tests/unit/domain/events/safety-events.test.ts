@@ -18,6 +18,13 @@ import {
   SafetyEventFactory,
 } from '../../../../src/domain/events/safety-events';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Safety Domain Events', () => {
   let testTimestamp: Date;
   let testEmergencyStopId: string;

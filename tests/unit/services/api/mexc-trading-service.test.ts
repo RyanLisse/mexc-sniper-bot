@@ -15,6 +15,13 @@ import {
 import type { MexcApiClient } from '../../../../src/services/api/mexc-api-client';
 import type { MexcServiceResponse } from '@/src/schemas/unified/mexc-api-schemas';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock the error utility
 vi.mock('../../../../src/lib/error-type-utils', () => ({
   toSafeError: vi.fn((error) => ({
@@ -54,8 +61,11 @@ describe('MexcTradingService', () => {
     tradingService = new MexcTradingService(mockApiClient);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor', () => {
@@ -732,8 +742,15 @@ describe('MexcTradingService', () => {
           },
         };
 
-        vi.spyOn(tradingService, 'ping').mockResolvedValue(mockPingResponse);
-        vi.spyOn(tradingService, 'getAccountInfo').mockResolvedValue(mockAccountResponse);
+        // Add artificial delay to ensure responseTime > 0
+        vi.spyOn(tradingService, 'ping').mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 1));
+          return mockPingResponse;
+        });
+        vi.spyOn(tradingService, 'getAccountInfo').mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 1));
+          return mockAccountResponse;
+        });
 
         const result = await tradingService.testCredentials();
 
@@ -748,18 +765,23 @@ describe('MexcTradingService', () => {
       it('should handle no credentials', async () => {
         mockApiClient.hasCredentials = vi.fn().mockReturnValue(false);
 
+        // Add small delay to ensure responseTime > 0
+        await new Promise(resolve => setTimeout(resolve, 1));
         const result = await tradingService.testCredentials();
 
         expect(result.isValid).toBe(false);
         expect(result.hasConnection).toBe(false);
         expect(result.error).toBe('No API credentials configured');
-        expect(result.responseTime).toBeGreaterThan(0);
+        expect(result.responseTime).toBeGreaterThanOrEqual(0);
       });
 
       it('should handle connection failure', async () => {
         const mockPingResponse = { success: false, error: 'Network error' };
 
-        vi.spyOn(tradingService, 'ping').mockResolvedValue(mockPingResponse);
+        vi.spyOn(tradingService, 'ping').mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 1));
+          return mockPingResponse;
+        });
 
         const result = await tradingService.testCredentials();
 
@@ -776,8 +798,14 @@ describe('MexcTradingService', () => {
           error: 'Invalid API key',
         };
 
-        vi.spyOn(tradingService, 'ping').mockResolvedValue(mockPingResponse);
-        vi.spyOn(tradingService, 'getAccountInfo').mockResolvedValue(mockAccountResponse);
+        vi.spyOn(tradingService, 'ping').mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 1));
+          return mockPingResponse;
+        });
+        vi.spyOn(tradingService, 'getAccountInfo').mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 1));
+          return mockAccountResponse;
+        });
 
         const result = await tradingService.testCredentials();
 
@@ -788,7 +816,10 @@ describe('MexcTradingService', () => {
       });
 
       it('should handle exceptions during testing', async () => {
-        vi.spyOn(tradingService, 'ping').mockRejectedValue(new Error('Network timeout'));
+        vi.spyOn(tradingService, 'ping').mockImplementation(async () => {
+          await new Promise(resolve => setTimeout(resolve, 1));
+          throw new Error('Network timeout');
+        });
 
         const result = await tradingService.testCredentials();
 

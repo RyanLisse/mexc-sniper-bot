@@ -12,14 +12,21 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SecurityTestDataGenerator, SecurityTestHelpers, SecurityTestMatchers } from '../utils/security-test-utils'
-import { checkRateLimit } from '@/src/lib/rate-limiter'
-import { requireAuth } from '@/src/lib/supabase-auth'
-import { SECURITY_CONFIG } from '@/src/lib/security-config'
+import { checkRateLimit } from '../../src/lib/rate-limiter'
+import { requireAuth } from '../../src/lib/supabase-auth'
+import { SECURITY_CONFIG } from '../../src/lib/security-config'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 // Mock external dependencies
-vi.mock('@/src/lib/rate-limiter')
-vi.mock('@/src/lib/supabase-auth')
+vi.mock('../../src/lib/rate-limiter')
+vi.mock('../../src/lib/supabase-auth')
 vi.mock('next/server')
 
 const mockCheckRateLimit = vi.mocked(checkRateLimit)

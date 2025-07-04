@@ -69,6 +69,7 @@ export default defineConfig({
     
     // Disable coverage for performance
     coverage: {
+      provider: 'v8',
       enabled: false,
     },
     
@@ -143,11 +144,8 @@ export default defineConfig({
     silent: false,
     passWithNoTests: true,
     
-    // Test sharding for CI/CD
-    shard: process.env.TEST_SHARD ? {
-      index: parseInt(process.env.TEST_SHARD_INDEX || '1'),
-      count: parseInt(process.env.TEST_SHARD_COUNT || '1'),
-    } : undefined,
+    // Test sharding disabled for simplicity (sharding can be implemented at CI level)
+    // shard configuration removed for better compatibility
     
     // Performance-specific options
     diff: './test-results/performance-diff.json',
@@ -159,8 +157,8 @@ export default defineConfig({
     sourcemap: false, // Disable sourcemaps for speed
     jsx: 'automatic',
     jsxImportSource: 'react',
-    minify: false, // Disable minification for speed
-    treeShaking: false, // Disable tree shaking for speed
+    // minify: false removed - not supported in current version
+    // Tree shaking controlled by Vite, not esbuild
   },
   
   // Optimized constants

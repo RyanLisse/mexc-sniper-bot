@@ -66,22 +66,7 @@ export class MexcRetryService {
   classifyError(error: Error): ErrorClassification {
     const message = error.message.toLowerCase();
 
-    // Network errors - always retryable
-    if (
-      message.includes("timeout") ||
-      message.includes("econnreset") ||
-      message.includes("socket hang up") ||
-      message.includes("network")
-    ) {
-      return {
-        isRetryable: true,
-        category: "network",
-        severity: "medium",
-        suggestedDelay: this.retryConfig.baseDelay,
-      };
-    }
-
-    // Rate limiting - retryable with longer delay
+    // Rate limiting - retryable with longer delay (check first for priority)
     if (message.includes("rate limit") || message.includes("429")) {
       return {
         isRetryable: true,
@@ -92,18 +77,32 @@ export class MexcRetryService {
       };
     }
 
-    // Server errors - retryable
+    // Server errors - retryable (check before timeout to catch gateway timeout)
     if (
-      message.includes("500") ||
-      message.includes("502") ||
-      message.includes("503") ||
-      message.includes("504")
+      message.includes("http 500") ||
+      message.includes("http 502") ||
+      message.includes("http 503") ||
+      message.includes("http 504") ||
+      message.includes("internal server error") ||
+      message.includes("bad gateway") ||
+      message.includes("service unavailable") ||
+      message.includes("gateway timeout")
     ) {
       return {
         isRetryable: true,
         category: "server",
         severity: "high",
         suggestedDelay: this.retryConfig.baseDelay * 2,
+      };
+    }
+
+    // Timeout errors - retryable (exclude connection timeout which is network error, exclude gateway timeout which is server error)
+    if (message.includes("timeout") && !message.includes("connection timeout") && !message.includes("gateway timeout")) {
+      return {
+        isRetryable: true,
+        category: "timeout",
+        severity: "medium",
+        suggestedDelay: this.retryConfig.baseDelay * 1.5,
       };
     }
 
@@ -135,13 +134,18 @@ export class MexcRetryService {
       };
     }
 
-    // Timeout errors - retryable
-    if (message.includes("timeout")) {
+    // Network errors - always retryable (check after timeout to avoid conflicts)
+    if (
+      message.includes("connection timeout") ||
+      message.includes("econnreset") ||
+      message.includes("socket hang up") ||
+      message.includes("network")
+    ) {
       return {
         isRetryable: true,
-        category: "timeout",
+        category: "network",
         severity: "medium",
-        suggestedDelay: this.retryConfig.baseDelay * 1.5,
+        suggestedDelay: this.retryConfig.baseDelay,
       };
     }
 
@@ -165,15 +169,19 @@ export class MexcRetryService {
     // Exponential backoff: baseDelay * (multiplier ^ attempt)
     let delay = baseDelay * multiplier ** (attempt - 1);
 
-    // Cap at max delay
+    // Cap at max delay first
     delay = Math.min(delay, this.retryConfig.maxDelay);
 
-    // Add jitter to prevent thundering herd
-    const jitter = delay * jitterFactor * (Math.random() * 2 - 1);
+    // Add jitter to prevent thundering herd (within bounds)
+    const maxJitter = Math.min(delay * jitterFactor, this.retryConfig.maxDelay - delay);
+    const jitter = maxJitter * (Math.random() * 2 - 1);
     delay += jitter;
 
-    // Ensure minimum delay
-    return Math.max(delay, baseDelay);
+    // Ensure we stay within bounds
+    delay = Math.min(delay, this.retryConfig.maxDelay);
+    delay = Math.max(delay, baseDelay);
+
+    return delay;
   }
 
   /**
@@ -200,15 +208,19 @@ export class MexcRetryService {
         delay *= classification.suggestedBackoff ** (attempt - 1);
       }
 
-      // Cap at max delay
+      // Cap at max delay first
       delay = Math.min(delay, this.retryConfig.maxDelay);
 
-      // Add jitter
-      const jitter =
-        delay * this.retryConfig.jitterFactor * (Math.random() * 2 - 1);
+      // Add jitter (within bounds)
+      const maxJitter = Math.min(delay * this.retryConfig.jitterFactor, this.retryConfig.maxDelay - delay);
+      const jitter = maxJitter * (Math.random() * 2 - 1);
       delay += jitter;
 
-      return Math.max(delay, this.retryConfig.baseDelay);
+      // Ensure we stay within bounds
+      delay = Math.min(delay, this.retryConfig.maxDelay);
+      delay = Math.max(delay, this.retryConfig.baseDelay);
+
+      return delay;
     }
 
     return baseDelay;
@@ -276,7 +288,9 @@ export class MexcRetryService {
 
     // Track recent errors for adaptive retry
     if (!success) {
-      this.recentErrors.push(new Error("Request failed"));
+      const error = new Error("Request failed");
+      (error as any).timestamp = Date.now();
+      this.recentErrors.push(error);
 
       // Keep only last 100 errors
       if (this.recentErrors.length > 100) {
@@ -286,7 +300,7 @@ export class MexcRetryService {
 
     // Calculate success rate over recent requests
     const recentFailures = this.recentErrors.filter(
-      (error) => Date.now() - error.name.length < 300000 // Last 5 minutes
+      (error) => Date.now() - ((error as any).timestamp || 0) < 300000 // Last 5 minutes
     ).length;
 
     // Approximate success rate based on recent failures
@@ -332,7 +346,8 @@ export class MexcRetryService {
         lastError = error instanceof Error ? error : new Error(String(error));
         this.updateSuccessRate(false);
 
-        if (!this.shouldRetry(lastError, attempt, retries)) {
+        // Check if we should retry (don't retry on last attempt)
+        if (attempt > retries || !this.shouldRetry(lastError, attempt - 1, retries)) {
           throw lastError;
         }
 

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 describe('API Health Tests', () => {
   it('should pass basic API availability check', () => {
     // Always passes - minimal test for coverage

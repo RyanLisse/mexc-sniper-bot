@@ -58,10 +58,10 @@ export interface MexcServiceResponse<T = unknown> {
  * Used for new listing announcements and trading calendar
  */
 export const CalendarEntrySchema = z.object({
-  vcoinId: z.string(),
-  symbol: z.string(),
-  projectName: z.string(),
-  firstOpenTime: z.number(),
+  vcoinId: z.string().min(1, "vcoinId cannot be empty"),
+  symbol: z.string().min(1, "symbol cannot be empty"),
+  projectName: z.string().min(1, "projectName cannot be empty"),
+  firstOpenTime: z.number().positive("firstOpenTime must be a positive number"),
 });
 
 /**
@@ -69,8 +69,8 @@ export const CalendarEntrySchema = z.object({
  * Used for symbol data and trading pairs information
  */
 export const SymbolEntrySchema = z.object({
-  cd: z.string(),
-  symbol: z.string().optional(), // Add symbol property for compatibility
+  cd: z.string().min(1, "cd cannot be empty"),
+  symbol: z.string().min(1).optional(), // Add symbol property for compatibility
   sts: z.number(),
   st: z.number(),
   tt: z.number(),
@@ -85,11 +85,11 @@ export const SymbolEntrySchema = z.object({
  * Used for account balance information
  */
 export const BalanceEntrySchema = z.object({
-  asset: z.string(),
+  asset: z.string().min(1, "asset cannot be empty"),
   free: z.string(),
   locked: z.string(),
-  total: z.number(),
-  usdtValue: z.number().optional(),
+  total: z.number().nonnegative("total must be non-negative"),
+  usdtValue: z.number().nonnegative().optional(),
 });
 
 /**

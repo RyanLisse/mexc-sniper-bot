@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { AggregateRoot } from '../../../../src/domain/base/aggregate-root';
 import type { DomainEvent } from '../../../../src/domain/events/domain-event';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Test implementation of AggregateRoot for testing purposes
 class TestAggregateRoot extends AggregateRoot<string> {
   private _name: string;

@@ -14,6 +14,13 @@ import type {
 } from '../../../../src/services/api/mexc-client-types';
 import { MexcClientError } from '../../../../src/services/api/mexc-client-types';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock crypto module
 vi.mock('node:crypto', () => ({
   createHmac: vi.fn(() => ({
@@ -103,9 +110,12 @@ describe('MexcClientCore', () => {
     delete process.env.MEXC_BASE_URL;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor and Configuration', () => {

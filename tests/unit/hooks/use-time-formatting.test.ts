@@ -7,13 +7,23 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useTimeFormatting } from '../../../src/hooks/use-time-formatting';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('useTimeFormatting', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
+  
   });
 
   it('should return all formatting functions', () => {

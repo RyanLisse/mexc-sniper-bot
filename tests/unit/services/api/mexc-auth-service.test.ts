@@ -9,6 +9,13 @@ import { MexcAuthService } from '../../../../src/services/api/mexc-auth-service'
 import type { UnifiedMexcConfig } from '@/src/schemas/unified/mexc-api-schemas';
 import type { ApiParams, AuthenticationContext } from '../../../../src/services/api/mexc-api-types';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock crypto module
 vi.mock('node:crypto', () => ({
   createHmac: vi.fn(),
@@ -47,8 +54,11 @@ describe('MexcAuthService', () => {
     authService = new MexcAuthService(mockConfig);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor', () => {
@@ -406,9 +416,12 @@ describe('MexcAuthService', () => {
         vi.spyOn(Date, 'now').mockReturnValue(1640995200000);
       });
 
-      afterEach(() => {
+      afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
         vi.restoreAllMocks();
-      });
+      
+  });
 
       it('should generate authentication context successfully', () => {
         const params: ApiParams = {

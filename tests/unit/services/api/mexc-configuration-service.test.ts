@@ -18,6 +18,13 @@ import {
   type ConfigurationMetrics,
 } from '../../../../src/services/api/mexc-configuration-service';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('MEXC Configuration Service', () => {
   let mockConsole: any;
   let originalEnv: NodeJS.ProcessEnv;
@@ -52,13 +59,16 @@ describe('MEXC Configuration Service', () => {
     process.env.MEXC_MAX_RETRIES = '3';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     
     // Restore original environment
     process.env = originalEnv;
     
     resetGlobalConfigurationService();
+  
   });
 
   describe('MexcConfigurationService', () => {

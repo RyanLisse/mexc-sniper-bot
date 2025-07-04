@@ -3,6 +3,13 @@ import { ExecuteTradeUseCase } from '@/src/application/use-cases/trading/execute
 import { Trade } from '@/src/domain/entities/trading/trade'
 import type { NotificationService, TradingRepository, TradingService } from '@/src/application/interfaces/trading-repository'
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 const createMocks = () => {
   const repo: TradingRepository = {
     saveTrade: vi.fn(),

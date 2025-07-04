@@ -7,17 +7,37 @@
 
 import { vi } from "vitest";
 
+// Type definitions for database modules
+interface DbModule {
+  db: {
+    select: any;
+    insert: any;
+    update: any;
+    delete: any;
+  };
+}
+
+interface SchemaModule {
+  user?: any;
+  users?: any;
+  snipeTargets?: any;
+  userPreferences?: any;
+  transactions?: any;
+  executionHistory?: any;
+  [key: string]: any; // Allow additional properties
+}
+
 // Use dynamic imports to avoid initialization issues with mocks
-let dbModule: unknown = null;
-let schemaModule: unknown = null;
+let dbModule: DbModule | null = null;
+let schemaModule: SchemaModule | null = null;
 
 /**
  * Get database module with lazy loading to avoid initialization issues
  */
-async function getDbModule() {
+async function getDbModule(): Promise<DbModule> {
   if (!dbModule) {
     try {
-      dbModule = await import("../db");
+      dbModule = await import("../db") as DbModule;
     } catch (_error) {
       console.warn(
         "[Database Helpers] Failed to import db module, using mock fallback"
@@ -49,32 +69,54 @@ async function getDbModule() {
       };
     }
   }
-  return dbModule;
+  return dbModule!;
 }
 
 /**
  * Get schema module with lazy loading
  */
-async function getSchemaModule() {
+async function getSchemaModule(): Promise<SchemaModule> {
   if (!schemaModule) {
     try {
-      schemaModule = await import("../db/schema");
+      schemaModule = await import("../db/schema") as SchemaModule;
     } catch (_error) {
       console.warn(
         "[Database Helpers] Failed to import schema module, using mock fallback"
       );
-      // Return mock schema objects
+      // Return mock schema objects with proper mock properties
       schemaModule = {
-        user: { _: { name: "user" } },
-        users: { _: { name: "users" } },
-        snipeTargets: { _: { name: "snipe_targets" } },
-        userPreferences: { _: { name: "user_preferences" } },
+        user: { 
+          _: { name: "user" },
+          id: vi.fn(),
+          email: vi.fn(),
+          name: vi.fn()
+        },
+        users: { 
+          _: { name: "users" },
+          id: vi.fn(),
+          email: vi.fn(),
+          name: vi.fn()
+        },
+        snipeTargets: { 
+          _: { name: "snipe_targets" },
+          userId: vi.fn(),
+          symbolName: vi.fn(),
+          vcoinId: vi.fn(),
+          status: vi.fn()
+        },
+        userPreferences: { 
+          _: { name: "user_preferences" },
+          userId: vi.fn(),
+          defaultBuyAmountUsdt: vi.fn(),
+          defaultTakeProfitLevel: vi.fn(),
+          stopLossPercent: vi.fn()
+        },
         transactions: { _: { name: "transactions" } },
         executionHistory: { _: { name: "execution_history" } },
       };
     }
   }
-  return schemaModule;
+  return schemaModule!;
 }
 
 /**
@@ -111,6 +153,11 @@ export async function createTestUser(userId: string): Promise<void> {
     const { user, users } = schemaModule;
 
     // Check if user already exists (try both user and users tables for compatibility)
+    if (!user) {
+      console.warn("[Database Helpers] User table not available, skipping user creation");
+      return;
+    }
+    
     const existingUser = await db
       .select()
       .from(user)
@@ -224,6 +271,11 @@ export async function createTestUserPreferences(
     const { db } = dbModule;
     const { userPreferences } = schemaModule;
 
+    if (!userPreferences) {
+      console.warn("[Database Helpers] UserPreferences table not available, skipping preferences creation");
+      return;
+    }
+
     // Delete existing preferences first
     await db.delete(userPreferences).where(eq(userPreferences.userId, userId));
 
@@ -278,14 +330,22 @@ export async function cleanupTestData(userId: string): Promise<void> {
 
     // Clean up snipe targets
     if (snipeTargets) {
-      await db.delete(snipeTargets).where(eq(snipeTargets.userId, userId));
+      try {
+        await db.delete(snipeTargets).where(eq(snipeTargets.userId, userId));
+      } catch (_error) {
+        // Table might not exist, ignore
+      }
     }
 
     // Clean up user preferences
     if (userPreferences) {
-      await db
-        .delete(userPreferences)
-        .where(eq(userPreferences.userId, userId));
+      try {
+        await db
+          .delete(userPreferences)
+          .where(eq(userPreferences.userId, userId));
+      } catch (_error) {
+        // Table might not exist, ignore
+      }
     }
 
     // Clean up user (if exists)
@@ -324,6 +384,11 @@ export async function getTestUserSnipeTargets(userId: string) {
     const { db } = dbModule;
     const { snipeTargets } = schemaModule;
 
+    if (!snipeTargets) {
+      console.warn("[Database Helpers] SnipeTargets table not available");
+      return [];
+    }
+
     return await db
       .select()
       .from(snipeTargets)
@@ -357,6 +422,11 @@ export async function createTestSnipeTarget(
 
     const { db } = dbModule;
     const { snipeTargets } = schemaModule;
+
+    if (!snipeTargets) {
+      console.warn("[Database Helpers] SnipeTargets table not available");
+      return null;
+    }
 
     const target = await db
       .insert(snipeTargets)
@@ -396,7 +466,7 @@ export async function waitForDatabase(ms: number = 100): Promise<void> {
  */
 export async function countRecords(
   tableName: "snipe_targets" | "user_preferences" | "user",
-  whereClause?: unknown
+  whereClause?: any
 ): Promise<number> {
   try {
     const dbModule = await getDbModule();
@@ -405,7 +475,7 @@ export async function countRecords(
     const { db } = dbModule;
     const { snipeTargets, userPreferences, user } = schemaModule;
 
-    let query: unknown;
+    let query: any;
 
     switch (tableName) {
       case "snipe_targets":
@@ -426,7 +496,7 @@ export async function countRecords(
     }
 
     const results = await query;
-    return results.length;
+    return results?.length || 0;
   } catch (error) {
     console.warn(
       `Count records warning: ${error instanceof Error ? error.message : "Unknown error"}`
@@ -478,29 +548,29 @@ export function createTestPatterns(count: number, baseSymbol: string = "TEST") {
  * Verifies that a pattern was correctly converted to a database record
  */
 export function verifyPatternToRecordConversion(
-  pattern: unknown,
-  record: unknown,
-  userPrefs: unknown = null
+  pattern: any,
+  record: any,
+  userPrefs: any = null
 ): boolean {
   try {
     // Check basic mapping
-    if (record.symbolName !== pattern.symbol) return false;
-    if (record.vcoinId !== (pattern.vcoinId || pattern.symbol)) return false;
-    if (record.confidenceScore !== Math.round(pattern.confidence)) return false;
-    if (record.riskLevel !== pattern.riskLevel) return false;
+    if (record?.symbolName !== pattern?.symbol) return false;
+    if (record?.vcoinId !== (pattern?.vcoinId || pattern?.symbol)) return false;
+    if (record?.confidenceScore !== Math.round(pattern?.confidence || 0)) return false;
+    if (record?.riskLevel !== pattern?.riskLevel) return false;
 
     // Check status mapping
     const expectedStatus =
-      pattern.patternType === "ready_state" ? "ready" : "pending";
-    if (record.status !== expectedStatus) return false;
+      pattern?.patternType === "ready_state" ? "ready" : "pending";
+    if (record?.status !== expectedStatus) return false;
 
     // Check user preferences integration
     if (userPrefs) {
-      if (record.positionSizeUsdt !== userPrefs.defaultBuyAmountUsdt)
+      if (record?.positionSizeUsdt !== userPrefs?.defaultBuyAmountUsdt)
         return false;
-      if (record.takeProfitLevel !== userPrefs.defaultTakeProfitLevel)
+      if (record?.takeProfitLevel !== userPrefs?.defaultTakeProfitLevel)
         return false;
-      if (record.stopLossPercent !== userPrefs.stopLossPercent) return false;
+      if (record?.stopLossPercent !== userPrefs?.stopLossPercent) return false;
     }
 
     return true;

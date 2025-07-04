@@ -128,10 +128,10 @@ export class SupabaseRateLimitHandler {
   private static readonly DEFAULT_RETRY_CONFIG: RetryConfig = {
     maxRetries: 3,
     baseDelay: 1000,
-    maxDelay: 30000,
+    maxDelay: 32000,
     backoffMultiplier: 2,
-    enableJitter: true,
-    adaptiveRetry: true,
+    enableJitter: false,
+    adaptiveRetry: false,
     circuitBreakerEnabled: true,
   };
 
@@ -173,13 +173,13 @@ export class SupabaseRateLimitHandler {
 
     // Check for explicit rate limit errors
     const hasRateLimitError = SupabaseRateLimitHandler.RATE_LIMIT_ERRORS.some(
-      (pattern) => message.includes(pattern) || code.includes(pattern)
+      (pattern) => message.includes(pattern.toLowerCase()) || code.includes(pattern.toLowerCase())
     );
 
     // Check for HTTP status codes
     const hasRateLimitStatus = [429, 503, 502, 504].includes(status);
 
-    // Check for rate limit keywords
+    // Check for rate limit keywords (more comprehensive patterns)
     const hasRateLimitKeywords = [
       "rate",
       "limit",
@@ -194,13 +194,21 @@ export class SupabaseRateLimitHandler {
       "congestion",
     ].some((keyword) => message.includes(keyword));
 
-    // Check for network-level rate limiting
-    const _hasNetworkRateLimit = [
-      "network request failed",
-      "connection timeout",
-      "request timeout",
-      "server timeout",
-    ].some((keyword) => message.includes(keyword));
+    // Enhanced pattern matching for common rate limit messages
+    const rateLimitPatterns = [
+      /rate.*limit/i,
+      /too.*many.*requests/i,
+      /email.*rate.*limit/i,
+      /otp.*rate.*limit/i,
+      /mfa.*rate.*limit/i,
+      /anonymous.*rate.*limit/i,
+      /signup.*disabled/i,
+      /throttle/i,
+    ];
+
+    const hasPatternMatch = rateLimitPatterns.some(pattern => 
+      pattern.test(message) || pattern.test(code)
+    );
 
     // Check for Supabase specific patterns
     const hasSupabaseRateLimit =
@@ -209,7 +217,7 @@ export class SupabaseRateLimitHandler {
       ) && hasRateLimitKeywords;
 
     const isRateLimited =
-      hasRateLimitError || hasRateLimitStatus || hasSupabaseRateLimit;
+      hasRateLimitError || hasRateLimitStatus || hasSupabaseRateLimit || hasPatternMatch;
 
     if (isRateLimited) {
       SupabaseRateLimitHandler.metrics.rateLimitedRequests++;
@@ -229,7 +237,14 @@ export class SupabaseRateLimitHandler {
    * Enhanced rate limit error analysis with comprehensive metadata
    */
   static analyzeRateLimitError(error: any): RateLimitInfo {
-    if (!SupabaseRateLimitHandler.isRateLimitError(error)) {
+    const message = error.message?.toLowerCase() || "";
+    const code = error.code?.toLowerCase() || "";
+    const status = error.status || error.statusCode || 0;
+    
+    // First do a quick check if this is a rate limit error
+    const isRateLimit = SupabaseRateLimitHandler.isRateLimitError(error);
+    
+    if (!isRateLimit) {
       return {
         isRateLimited: false,
         message: error.message || "Unknown error",
@@ -237,9 +252,6 @@ export class SupabaseRateLimitHandler {
       };
     }
 
-    const message = error.message?.toLowerCase() || "";
-    const code = error.code?.toLowerCase() || "";
-    const status = error.status || error.statusCode || 0;
     const requestId = error.requestId || `req_${Date.now()}`;
 
     // Detect specific rate limit type with priority order
@@ -474,11 +486,8 @@ export class SupabaseRateLimitHandler {
     attempt: number,
     config: RetryConfig = SupabaseRateLimitHandler.DEFAULT_RETRY_CONFIG
   ): number {
-    // Base exponential backoff
-    const exponentialDelay = Math.min(
-      config.baseDelay * config.backoffMultiplier ** attempt,
-      config.maxDelay
-    );
+    // Base exponential backoff: baseDelay * (multiplier ^ attempt)
+    const exponentialDelay = config.baseDelay * Math.pow(config.backoffMultiplier, attempt);
 
     // Add jitter to prevent thundering herd
     const jitter = config.enableJitter
@@ -498,9 +507,9 @@ export class SupabaseRateLimitHandler {
       adaptiveMultiplier = 1 + failureRate * 0.5;
     }
 
-    const finalDelay = Math.floor(
-      (exponentialDelay + jitter) * adaptiveMultiplier
-    );
+    // Calculate final delay and ensure it's within bounds
+    const rawDelay = (exponentialDelay + jitter) * adaptiveMultiplier;
+    const finalDelay = Math.min(Math.max(Math.floor(rawDelay), config.baseDelay), config.maxDelay);
 
     SupabaseRateLimitHandler.logger.debug(
       `Calculated backoff delay: ${finalDelay}ms`,
@@ -510,6 +519,7 @@ export class SupabaseRateLimitHandler {
         jitter,
         adaptiveMultiplier,
         config,
+        rawDelay,
       }
     );
 
@@ -648,10 +658,10 @@ export class SupabaseRateLimitHandler {
       return false;
     }
 
-    // Don't retry if wait time is too long
+    // Don't retry if wait time is too long (only for very long waits > 10 minutes)
     if (
       rateLimitInfo.retryAfter &&
-      rateLimitInfo.retryAfter > config.maxDelay / 1000
+      rateLimitInfo.retryAfter > 600  // 10 minutes
     ) {
       SupabaseRateLimitHandler.logger.debug("Retry delay too long");
       return false;

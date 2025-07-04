@@ -8,6 +8,13 @@ import { ConfidenceCalculator } from '../../../../src/core/pattern-detection/con
 import type { SymbolEntry, CalendarEntry } from '../../../../src/services/api/mexc-unified-exports';
 import type { ActivityData } from '../../../../src/schemas/unified/mexc-api-schemas';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('../../../../src/lib/error-type-utils', () => ({
   toSafeError: (error: any) => ({

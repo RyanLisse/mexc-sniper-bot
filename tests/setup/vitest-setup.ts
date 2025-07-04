@@ -12,7 +12,61 @@ import { db } from '../../src/db'
 import '@testing-library/jest-dom'
 import * as React from 'react'
 import { globalTimeoutMonitor } from '../utils/timeout-utilities'
-// Removed unified-mock-system import due to type conflicts
+import { 
+  initializeUnifiedMockSystem, 
+  cleanupUnifiedMockSystem,
+  mockStore,
+  createTestUser,
+  createTestSession,
+  createTestApiCredentials 
+} from './unified-mock-system'
+import { 
+  initializeStabilityUtilities,
+  cleanupStabilityUtilities,
+  getStabilityMetrics
+} from '../utils/test-stability-utilities'
+import {
+  setupDeterministicTime,
+  cleanupDeterministicTime,
+  FIXED_TIMESTAMPS
+} from '../utils/date-time-utilities'
+
+// Setup stable test environment function
+function setupStableTestEnvironment() {
+  console.log('🛡️ Setting up stable test environment...')
+  
+  // Initialize stability utilities
+  initializeStabilityUtilities({
+    maxHeapUsed: 512 * 1024 * 1024, // 512MB
+    maxRSSUsed: 1024 * 1024 * 1024, // 1GB
+    gcThreshold: 256 * 1024 * 1024, // 256MB
+    warningThreshold: 128 * 1024 * 1024, // 128MB
+    monitoringInterval: 5000 // 5 seconds
+  })
+  
+  // Setup error boundary for stability
+  const errorBoundary = {
+    handleError: (error: Error, context: string) => {
+      console.error(`🚨 Error boundary caught error in ${context}:`, error)
+      // Don't throw in tests, just log
+      return true
+    },
+    
+    wrapAsync: async <T>(fn: () => Promise<T>, context: string): Promise<T> => {
+      try {
+        return await fn()
+      } catch (error) {
+        errorBoundary.handleError(error as Error, context)
+        throw error
+      }
+    }
+  }
+  
+  // Make error boundary globally available
+  global.errorBoundary = errorBoundary
+  
+  console.log('✅ Stable test environment setup complete')
+}
 
 // Make React globally available for JSX without imports
 globalThis.React = React
@@ -83,32 +137,99 @@ beforeAll(async () => {
   console.log('🚀 Initializing test environment...')
   
   try {
-    // Setup basic test globals
-    global.mockDataStore = {};
+    // Setup stable test environment first
+    setupStableTestEnvironment()
+    
+    // Initialize stability utilities first for maximum reliability
+    if (process.env.VITEST_STABILITY_MODE === 'true' || process.env.ENABLE_STABILITY_MONITORING === 'true') {
+      console.log('🛡️ Initializing test stability features...')
+      initializeStabilityUtilities({
+        maxHeapUsed: 512 * 1024 * 1024, // 512MB
+        maxRSSUsed: 1024 * 1024 * 1024, // 1GB
+        gcThreshold: 256 * 1024 * 1024, // 256MB
+        warningThreshold: 128 * 1024 * 1024, // 128MB
+        monitoringInterval: 10000 // 10 seconds for test environment
+      })
+    }
+    
+    // Setup deterministic time for consistent test results
+    if (process.env.ENABLE_DETERMINISTIC_TIME === 'true' || process.env.VITEST_STABILITY_MODE === 'true') {
+      console.log('🕐 Setting up deterministic time for consistent test results...')
+      setupDeterministicTime({
+        baseTime: FIXED_TIMESTAMPS.TEST_DATE_2024,
+        autoAdvance: false
+      })
+    }
+    
+    // Initialize the unified mock system based on test type
+    const testType = isIntegrationTest ? 'integration' : 'unit';
+    const mockSystem = initializeUnifiedMockSystem({
+      testType,
+      skipDatabase: isIntegrationTest, // Use real DB for integration tests
+      skipSupabase: false, // Always mock Supabase for consistent behavior
+      skipExternalAPIs: false, // Always mock external APIs for test isolation
+      skipBrowserAPIs: false, // Always mock browser APIs for consistent environment
+      skipReactTesting: false // Always provide React testing utilities
+    });
+
+    // Setup global test utilities with enhanced mock system
+    global.mockDataStore = mockSystem.mockStore;
     global.testCleanupFunctions = global.testCleanupFunctions || [];
     
-    console.log('✅ Test environment initialized successfully');
+    // Add unified mock system utilities to global test utils
+    global.testUtils.createTestUser = mockSystem.createTestUser;
+    global.testUtils.createTestSession = mockSystem.createTestSession;
+    global.testUtils.createTestApiCredentials = mockSystem.createTestApiCredentials;
+    
+    // Add stability utilities to global test utils
+    global.testUtils.getStabilityMetrics = getStabilityMetrics;
+    global.testUtils.fixedTimestamps = FIXED_TIMESTAMPS;
+    
+    console.log('✅ Test environment initialized successfully with unified mock system and stability features');
     
   } catch (error) {
     console.error('❌ Failed to initialize test environment:', error);
     throw error;
   }
 
-  // All external dependency mocks are now handled by the UNIFIED MOCK SYSTEM
-  // This eliminates 4500+ lines of redundant mock configurations ✅
-
-  // REDUNDANT MOCK CODE ELIMINATED - All mocks now handled by unified system
-  // Previously: 1000+ lines of redundant inline mock configurations
-  // Now: Centralized in unified-mock-system.ts (AGENT 4 SUCCESS ✅)
-
-  console.log('✅ AGENT 4 MISSION ACCOMPLISHED: 1000+ lines of redundant mocks eliminated!')
+  console.log('✅ UNIFIED MOCK SYSTEM ACTIVE: GoTrueClient singleton pattern enforced, mock redundancy eliminated!')
 })
 
 // Cleanup after all tests complete
 afterAll(async () => {
   console.log('🧹 Cleaning up test environment...')
   
-  // Clean up process event handlers first
+  // Clean up stability utilities first
+  try {
+    if (process.env.VITEST_STABILITY_MODE === 'true' || process.env.ENABLE_STABILITY_MONITORING === 'true') {
+      const finalMetrics = getStabilityMetrics()
+      console.log('📊 Final test stability metrics:', finalMetrics)
+      cleanupStabilityUtilities()
+      console.log('✅ Test stability utilities cleaned up')
+    }
+  } catch (error) {
+    console.warn('⚠️ Stability utilities cleanup warning:', error?.message || 'Unknown error')
+  }
+  
+  // Clean up deterministic time
+  try {
+    if (process.env.ENABLE_DETERMINISTIC_TIME === 'true' || process.env.VITEST_STABILITY_MODE === 'true') {
+      cleanupDeterministicTime()
+      console.log('✅ Deterministic time cleaned up')
+    }
+  } catch (error) {
+    console.warn('⚠️ Deterministic time cleanup warning:', error?.message || 'Unknown error')
+  }
+  
+  // Clean up unified mock system
+  try {
+    cleanupUnifiedMockSystem()
+    console.log('✅ Unified mock system cleaned up')
+  } catch (error) {
+    console.warn('⚠️ Unified mock system cleanup warning:', error?.message || 'Unknown error')
+  }
+  
+  // Clean up process event handlers
   try {
     processEventManager.unregisterHandler('vitest-setup-rejection')
     processEventManager.unregisterHandler('vitest-setup-exception')
@@ -128,11 +249,6 @@ afterAll(async () => {
     }
   }
 
-  // Reset mock data store
-  if (global.mockDataStore?.reset) {
-    global.mockDataStore.reset()
-  }
-
   // Clear database cache if available
   try {
     const dbModule = await import('../../src/db')
@@ -144,9 +260,6 @@ afterAll(async () => {
   } catch (error) {
     console.warn('⚠️ Database cache cleanup warning:', error?.message || 'Unknown error')
   }
-
-  // Restore all mocks
-  vi.restoreAllMocks()
 
   const testDuration = Date.now() - globalThis.__TEST_START_TIME__
   console.log(`✅ Vitest environment cleaned up (${testDuration}ms)`)

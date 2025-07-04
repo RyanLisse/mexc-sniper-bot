@@ -11,6 +11,13 @@ import {
   generateMasterKey,
 } from '../../../../src/services/api/secure-encryption-service';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Secure Encryption Service', () => {
   let mockConsole: any;
   let originalEnv: NodeJS.ProcessEnv;
@@ -38,11 +45,14 @@ describe('Secure Encryption Service', () => {
     process.env.ENCRYPTION_KEY_ID = 'test-key-id';
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     
     // Restore original environment
     process.env = originalEnv;
+  
   });
 
   describe('Constructor and Initialization', () => {

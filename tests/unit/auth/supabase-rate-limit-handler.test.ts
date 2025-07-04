@@ -8,6 +8,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SupabaseRateLimitHandler, withRateLimitHandling, bypassRateLimitInDev } from '../../../src/lib/supabase-rate-limit-handler';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('SupabaseRateLimitHandler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -222,11 +229,27 @@ describe('withRateLimitHandling', () => {
   });
 
   it('should use custom max retries', async () => {
-    const error = { message: 'otp rate limit exceeded' };
+    // Use a rate limit error with short retry time by including retry-after header
+    const error = { 
+      message: 'rate limit exceeded', 
+      status: 429,
+      headers: { 'retry-after': '0' }  // 0 seconds - no delay for testing
+    };
     const operation = vi.fn().mockRejectedValue(error);
     
-    await expect(withRateLimitHandling(operation, 1)).rejects.toEqual(error);
-    expect(operation).toHaveBeenCalledTimes(1);
+    // maxRetries: 2 means 2 total attempts (1 initial + 1 retry)
+    const config = {
+      maxRetries: 2,
+      config: {
+        baseDelay: 1,  // Minimal delay for testing
+        maxDelay: 1,
+        enableJitter: false,
+        adaptiveRetry: false
+      }
+    };
+    
+    await expect(withRateLimitHandling(operation, config)).rejects.toEqual(error);
+    expect(operation).toHaveBeenCalledTimes(2); // 2 total attempts
   });
 });
 
@@ -240,17 +263,22 @@ describe('bypassRateLimitInDev', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     if (originalEnv !== undefined) {
       process.env.NODE_ENV = originalEnv;
     } else {
       delete process.env.NODE_ENV;
     }
+    delete process.env.BYPASS_RATE_LIMITS;
     global.fetch = originalFetch;
+  
   });
 
   it('should bypass rate limit in development environment', async () => {
     process.env.NODE_ENV = 'development';
+    process.env.BYPASS_RATE_LIMITS = 'true';
     
     const mockFetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -282,6 +310,7 @@ describe('bypassRateLimitInDev', () => {
 
   it('should handle fetch errors gracefully', async () => {
     process.env.NODE_ENV = 'development';
+    process.env.BYPASS_RATE_LIMITS = 'true';
     
     const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'));
     global.fetch = mockFetch;
@@ -293,6 +322,7 @@ describe('bypassRateLimitInDev', () => {
 
   it('should handle non-ok responses gracefully', async () => {
     process.env.NODE_ENV = 'development';
+    process.env.BYPASS_RATE_LIMITS = 'true';
     
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,

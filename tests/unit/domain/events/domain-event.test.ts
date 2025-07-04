@@ -11,6 +11,13 @@ import type {
   EventDispatcher 
 } from '../../../../src/domain/events/domain-event';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Test implementations for interface testing
 class TestEvent implements DomainEvent {
   readonly type: string;

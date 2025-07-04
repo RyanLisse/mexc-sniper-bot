@@ -10,6 +10,13 @@ import {
   type SystemReadinessReport,
 } from '../../../../src/services/api/mexc-config-validator';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('@/src/core/pattern-detection', () => ({
   PatternDetectionCore: {
@@ -94,11 +101,14 @@ describe('MexcConfigValidator', () => {
     delete process.env.AUTO_SNIPING_ENABLED;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
     vi.restoreAllMocks();
     // Reset singleton instance
     (MexcConfigValidator as any).instance = undefined;
+  
   });
 
   describe('Singleton Pattern', () => {

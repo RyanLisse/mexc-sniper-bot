@@ -286,8 +286,52 @@ test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E 
 .PHONY: test-quick
 test-quick: ## Quick test run with maximum performance optimizations
 	@echo -e "${BLUE}Running quick tests with maximum performance optimizations...${NC}"
-	@$(NODE) run test:fast:parallel
+	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=3000 $(NODE) run test:fast:parallel
 	@echo -e "${GREEN}✓ Quick tests completed${NC}"
+
+.PHONY: test-timeout-optimized
+test-timeout-optimized: ## Run tests with optimized timeout configuration
+	@echo -e "${BLUE}Running tests with optimized timeouts...${NC}"
+	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=3000 TEST_TIMEOUT_INTEGRATION=20000 TEST_TIMEOUT_PERFORMANCE=2000 $(NODE) run test:fast
+	@echo -e "${GREEN}✓ Timeout-optimized tests completed${NC}"
+
+.PHONY: test-unit-fast
+test-unit-fast: ## Run unit tests with fast timeout configuration
+	@echo -e "${BLUE}Running unit tests with fast timeouts...${NC}"
+	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=3000 $(NODE) run test:fast:unit
+	@echo -e "${GREEN}✓ Fast unit tests completed${NC}"
+
+.PHONY: test-integration-optimized
+test-integration-optimized: ## Run integration tests with optimized timeout configuration
+	@echo -e "${BLUE}Running integration tests with optimized timeouts...${NC}"
+	@TEST_TYPE=integration TEST_TIMEOUT_INTEGRATION=20000 $(NODE) run test:fast:integration
+	@echo -e "${GREEN}✓ Optimized integration tests completed${NC}"
+
+.PHONY: test-retry-service
+test-retry-service: ## Run MexcRetryService tests with optimized timers
+	@echo -e "${BLUE}Running MexcRetryService tests with optimized configuration...${NC}"
+	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=5000 bunx vitest run tests/unit/services/api/mexc-retry-service.test.ts --reporter=basic
+	@echo -e "${GREEN}✓ MexcRetryService tests completed${NC}"
+
+.PHONY: test-value-object
+test-value-object: ## Run ValueObject tests with performance optimization
+	@echo -e "${BLUE}Running ValueObject tests with performance optimization...${NC}"
+	@TEST_TYPE=performance TEST_TIMEOUT_PERFORMANCE=2000 bunx vitest run tests/unit/domain/base/value-object.test.ts --reporter=basic
+	@echo -e "${GREEN}✓ ValueObject tests completed${NC}"
+
+.PHONY: test-performance-monitor
+test-performance-monitor: ## Run comprehensive test performance monitoring
+	@echo -e "${BLUE}Running comprehensive test performance monitoring...${NC}"
+	@bun run scripts/test-performance-monitor.ts
+	@echo -e "${GREEN}✓ Performance monitoring completed${NC}"
+
+.PHONY: validate-timeout-optimizations
+validate-timeout-optimizations: ## Validate all timeout optimizations are working
+	@echo -e "${BLUE}Validating timeout optimizations...${NC}"
+	@$(MAKE) test-retry-service
+	@$(MAKE) test-value-object
+	@$(MAKE) test-unit-fast
+	@echo -e "${GREEN}✓ All timeout optimizations validated${NC}"
 
 .PHONY: test-emergency
 test-emergency: ## Emergency test run with circuit breakers and forced termination

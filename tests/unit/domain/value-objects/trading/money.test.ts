@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Money } from '../../../../../src/domain/value-objects/trading/money';
 import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('Money Value Object', () => {
   describe('Money Creation', () => {
     it('should create money with valid amount and currency', () => {

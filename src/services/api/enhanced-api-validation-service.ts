@@ -9,9 +9,9 @@
  * - Security compliance checks
  */
 
-import { ErrorLoggingService } from "@/src/services/notification/error-logging-service";
-import { circuitBreakerRegistry } from "@/src/services/risk/circuit-breaker";
-import { getUnifiedMexcClient } from "./mexc-client-factory";
+import { ErrorLoggingService } from "../notification/error-logging-service";
+import { circuitBreakerRegistry } from "../risk/circuit-breaker";
+import { getUnifiedMexcClient } from "./mexc-unified-exports";
 
 export interface ApiValidationConfig {
   apiKey: string;
@@ -122,9 +122,11 @@ export class EnhancedApiValidationService {
       const formatValidation = this.validateCredentialFormat(config);
       result.details.credentialFormat = formatValidation.valid;
 
+      // Always add format validation recommendations (warnings and errors)
+      result.recommendations.push(...formatValidation.recommendations);
+
       if (!formatValidation.valid) {
         result.error = formatValidation.error;
-        result.recommendations.push(...formatValidation.recommendations);
         return this.cacheAndReturn(cacheKey, result);
       }
 
@@ -138,6 +140,15 @@ export class EnhancedApiValidationService {
         result.recommendations.push(
           "Check internet connection and firewall settings"
         );
+        
+        // Log connectivity errors
+        await this.errorLogger.logError(new Error(connectivityResult.error || 'Network connectivity failed'), {
+          context: "api_validation",
+          stage: result.stage,
+          hasApiKey: Boolean(config.apiKey),
+          hasSecretKey: Boolean(config.secretKey),
+        });
+        
         return this.cacheAndReturn(cacheKey, result);
       }
 
@@ -146,9 +157,11 @@ export class EnhancedApiValidationService {
       const authResult = await this.testApiAuthentication(config);
       result.details.apiAuthentication = authResult.success;
 
+      // Always add authentication recommendations (warnings and errors)
+      result.recommendations.push(...authResult.recommendations);
+
       if (!authResult.success) {
         result.error = authResult.error;
-        result.recommendations.push(...authResult.recommendations);
         return this.cacheAndReturn(cacheKey, result);
       }
 
@@ -157,9 +170,11 @@ export class EnhancedApiValidationService {
       const permissionResult = await this.validateApiPermissions(config);
       result.details.permissionChecks = permissionResult.success;
 
+      // Always add permission validation recommendations (warnings and errors)
+      result.recommendations.push(...permissionResult.recommendations);
+
       if (!permissionResult.success) {
         result.error = permissionResult.error;
-        result.recommendations.push(...permissionResult.recommendations);
         return this.cacheAndReturn(cacheKey, result);
       }
 
@@ -169,9 +184,11 @@ export class EnhancedApiValidationService {
         const ipResult = await this.validateIpAllowlisting(config);
         result.details.ipAllowlisting = ipResult.success;
 
+        // Always add IP allowlisting recommendations (warnings and errors)
+        result.recommendations.push(...ipResult.recommendations);
+
         if (!ipResult.success) {
           result.error = ipResult.error;
-          result.recommendations.push(...ipResult.recommendations);
         }
       } else {
         result.details.ipAllowlisting = true; // Skip if not requested
@@ -746,8 +763,8 @@ export class EnhancedApiValidationService {
     // Create a hash of the configuration for caching
     // Don't include actual keys for security
     const keyData = {
-      apiKeyLength: config.apiKey.length,
-      secretKeyLength: config.secretKey.length,
+      apiKeyLength: config.apiKey?.length || 0,
+      secretKeyLength: config.secretKey?.length || 0,
       hasPassphrase: Boolean(config.passphrase),
       testNetwork: config.testNetwork,
       validateIpAllowlist: config.validateIpAllowlist,
@@ -818,7 +835,10 @@ export class EnhancedApiValidationService {
       this.clearCache();
 
       // Test basic connectivity
-      await this.testNetworkConnectivity();
+      const connectivityResult = await this.testNetworkConnectivity();
+      if (!connectivityResult.success) {
+        throw new Error(connectivityResult.error || 'Network connectivity test failed');
+      }
 
       console.info(
         "[Enhanced API Validation] Service initialized successfully"

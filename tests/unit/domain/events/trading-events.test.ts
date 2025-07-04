@@ -23,6 +23,13 @@ import {
   TradingEventFactory,
 } from '../../../../src/domain/events/trading-events';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Trading Domain Events', () => {
   let testTimestamp: Date;
   let testTradeId: string;

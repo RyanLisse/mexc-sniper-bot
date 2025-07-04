@@ -16,6 +16,13 @@ import type {
   UnifiedMexcResponse,
 } from '../../../../src/services/api/mexc-client-types';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('../../../../src/services/risk/mexc-error-recovery-service', () => ({
   getGlobalErrorRecoveryService: vi.fn(() => ({
@@ -85,8 +92,11 @@ describe('MexcMarketDataClient', () => {
     (marketDataClient as any).makeRequest = vi.fn();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor', () => {

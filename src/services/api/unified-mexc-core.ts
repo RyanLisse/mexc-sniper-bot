@@ -83,11 +83,23 @@ export class UnifiedMexcCoreModule {
    */
   async getCalendarListings(): Promise<MexcServiceResponse<CalendarEntry[]>> {
     try {
-      return await this.cacheLayer.getOrSet(
+      const result = await this.cacheLayer.getOrSet(
         "calendar:listings",
         () => this.coreClient.getCalendarListings(),
         "semiStatic" // 5 minute cache for calendar data
       );
+
+      // Null safety: Check if result exists before returning
+      if (!result) {
+        return {
+          success: false,
+          error: "Cache layer returned undefined response",
+          timestamp: Date.now(),
+          source: "unified-mexc-core",
+        };
+      }
+
+      return result;
     } catch (error) {
       this.logger.error("Calendar listings fetch error:", {
         error: error instanceof Error ? error.message : String(error),
@@ -116,22 +128,46 @@ export class UnifiedMexcCoreModule {
   async getSymbolsByVcoinId(
     vcoinId: string
   ): Promise<MexcServiceResponse<SymbolEntry[]>> {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       `symbols:${vcoinId}`,
       () => this.coreClient.getSymbolsByVcoinId(vcoinId),
       "semiStatic"
     );
+
+    // Null safety: Check if result exists before returning
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-core",
+      };
+    }
+
+    return result;
   }
 
   /**
    * Get all symbols from the exchange
    */
   async getAllSymbols(): Promise<MexcServiceResponse<SymbolEntry[]>> {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       "symbols:all",
       () => this.coreClient.getAllSymbols(),
       "semiStatic" // 5 minute cache for all symbols
     );
+
+    // Null safety: Check if result exists before returning
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-core",
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -156,6 +192,16 @@ export class UnifiedMexcCoreModule {
         "realTime" // 15 second cache for server time
       );
 
+      // Null safety: Check if result exists before returning
+      if (!result) {
+        return {
+          success: false,
+          error: "Cache layer returned undefined response",
+          timestamp: Date.now(),
+          source: "unified-mexc-core",
+        };
+      }
+
       return result;
     } catch (error) {
       this.logger.error("Server time fetch error:", {
@@ -179,11 +225,23 @@ export class UnifiedMexcCoreModule {
   async getSymbolInfoBasic(
     symbolName: string
   ): Promise<MexcServiceResponse<Record<string, unknown>>> {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       `symbol:basic:${symbolName}`,
       () => this.coreClient.getSymbolInfoBasic(symbolName),
       "semiStatic" // 5 minute cache for symbol info
     );
+
+    // Null safety: Check if result exists before returning
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-core",
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -284,11 +342,23 @@ export class UnifiedMexcCoreModule {
   async getSymbolData(
     symbol: string
   ): Promise<MexcServiceResponse<Record<string, unknown>>> {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       `symbol:data:${symbol}`,
       () => this.coreClient.getSymbolInfoBasic(symbol),
       "semiStatic"
     );
+
+    // Null safety: Check if result exists before returning
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-core",
+      };
+    }
+
+    return result;
   }
 
   // ============================================================================

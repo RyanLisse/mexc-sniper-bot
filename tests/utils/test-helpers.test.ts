@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 describe('Test Helpers', () => {
   it('should validate environment variables access', () => {
     // Always passes - basic environment check

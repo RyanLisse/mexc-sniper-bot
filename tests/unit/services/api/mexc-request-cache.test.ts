@@ -12,6 +12,13 @@ import {
   CacheWarmer,
 } from '../../../../src/services/api/mexc-request-cache';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('MEXC Request Cache', () => {
   let mockConsole: any;
   let cache: MexcRequestCache;
@@ -36,10 +43,13 @@ describe('MEXC Request Cache', () => {
     resetGlobalCache();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     vi.useRealTimers();
     resetGlobalCache();
+  
   });
 
   describe('Constructor and Configuration', () => {
@@ -97,7 +107,7 @@ describe('MEXC Request Cache', () => {
       cache.set('number', 42, 60000);
       cache.set('boolean', true, 60000);
       cache.set('array', [1, 2, 3], 60000);
-      cache.set('object', { nested: { value: 'test' } }, 60000);
+      cache.set('object', { nested: { value: 'test' } }, TIMEOUT_CONFIG.STANDARD));
       cache.set('null', null, 60000);
       
       expect(cache.get('string')).toBe('hello world');

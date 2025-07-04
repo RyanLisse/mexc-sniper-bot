@@ -17,6 +17,13 @@ import {
 } from "../../src/db/schemas";
 import { eq, and, isNull, sql } from "drizzle-orm";
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 // Set environment for real database testing
 process.env.USE_REAL_DATABASE = "true";
 process.env.FORCE_MOCK_DB = "false";

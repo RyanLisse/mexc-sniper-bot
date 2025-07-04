@@ -16,6 +16,13 @@ import {
 } from '../../../../../src/domain/entities/safety/risk-profile.entity';
 import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('RiskProfile Domain Entity', () => {
   let validThresholds: RiskThresholds;
   let validExposures: RiskExposures;

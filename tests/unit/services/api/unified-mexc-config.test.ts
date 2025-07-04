@@ -12,6 +12,13 @@ import {
   hasValidCredentials,
 } from '../../../../src/services/api/unified-mexc-config';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Unified MEXC Configuration', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
@@ -22,11 +29,14 @@ describe('Unified MEXC Configuration', () => {
     originalEnv = { ...process.env };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     
     // Restore original environment
     process.env = originalEnv;
+  
   });
 
   describe('Default Configuration', () => {

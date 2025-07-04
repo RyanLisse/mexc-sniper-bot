@@ -12,80 +12,28 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
-import { spawn, ChildProcess } from "child_process";
+import { createServerTestSuite, testRateLimit } from "../utils/server-test-helper";
+import { safeFetch } from "../utils/async-test-helpers";
 
-const TEST_PORT = 3112;
-const BASE_URL = `http://localhost:${TEST_PORT}`;
-const TIMEOUT_MS = 30000;
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
 
 describe("Auto-Sniping System API Integration Tests", () => {
-  let serverProcess: ChildProcess;
-  let isServerReady = false;
+  const serverSuite = createServerTestSuite(
+    "Auto-Sniping System API Tests",
+    3112
+  );
 
   beforeAll(async () => {
-    console.log("🚀 Starting server for Auto-Sniping System API tests...");
-    
-    serverProcess = spawn("bun", ["run", "dev"], {
-      env: { 
-        ...process.env, 
-        PORT: TEST_PORT.toString(),
-        NODE_ENV: "test",
-        USE_REAL_DATABASE: "true"
-      },
-      stdio: "pipe"
-    });
-
-    // Wait for server readiness
-    await new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => {
-        console.log("❌ Server startup timeout");
-        isServerReady = false;
-        resolve();
-      }, TIMEOUT_MS);
-
-      let attempts = 0;
-      const maxAttempts = 30;
-
-      const checkReady = () => {
-        attempts++;
-        fetch(`${BASE_URL}/api/health`)
-          .then(response => {
-            if (response.ok) {
-              isServerReady = true;
-              clearTimeout(timeout);
-              console.log("✅ Server ready for Auto-Sniping System API tests");
-              resolve();
-            } else if (attempts < maxAttempts) {
-              setTimeout(checkReady, 1000);
-            } else {
-              isServerReady = false;
-              resolve();
-            }
-          })
-          .catch(() => {
-            if (attempts < maxAttempts) {
-              setTimeout(checkReady, 1000);
-            } else {
-              isServerReady = false;
-              resolve();
-            }
-          });
-      };
-
-      setTimeout(checkReady, 3000);
-    });
-  }, TIMEOUT_MS + 5000);
+    await serverSuite.beforeAllSetup();
+  }, TIMEOUT_CONFIG.STANDARD));
 
   afterAll(async () => {
-    if (serverProcess) {
-      console.log("🧹 Cleaning up server process...");
-      serverProcess.kill("SIGTERM");
-      setTimeout(() => {
-        if (!serverProcess.killed) {
-          serverProcess.kill("SIGKILL");
-        }
-      }, 5000);
-    }
+    await serverSuite.afterAllCleanup();
   });
 
   beforeEach(() => {
@@ -94,9 +42,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("GET /api/auto-sniping/status", () => {
     it("should return auto-sniping system status", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/status`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/status`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -121,9 +69,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include performance metrics", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/status`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/status`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -140,9 +88,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include safety status", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/status`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/status`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -161,9 +109,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("GET /api/auto-sniping/config", () => {
     it("should return auto-sniping configuration", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -188,9 +136,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include strategy configuration", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -205,9 +153,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include risk management settings", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -226,7 +174,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("POST /api/auto-sniping/config", () => {
     it("should update auto-sniping configuration", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const configData = {
         enabled: false,
@@ -249,7 +197,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
         }
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -271,7 +219,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should validate configuration parameters", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const invalidConfig = {
         enabled: "invalid", // Should be boolean
@@ -286,7 +234,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
         }
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -306,9 +254,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should handle malformed JSON", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -328,14 +276,14 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("POST /api/auto-sniping/control", () => {
     it("should start auto-sniping system", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const controlData = {
         action: "start",
         force: false
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/control`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/control`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -357,14 +305,14 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should stop auto-sniping system", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const controlData = {
         action: "stop",
         reason: "user-requested"
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/control`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/control`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -383,14 +331,14 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should pause auto-sniping system", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const controlData = {
         action: "pause",
         duration: 300000 // 5 minutes
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/control`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/control`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -410,13 +358,13 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should validate control actions", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const invalidControl = {
         action: "invalid-action"
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/control`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/control`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -436,9 +384,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("GET /api/auto-sniping/execution", () => {
     it("should return execution history", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/execution`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/execution`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -457,14 +405,14 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should support filtering by status", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const params = new URLSearchParams({
         status: "successful",
         limit: "10"
       });
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/execution?${params}`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/execution?${params}`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -479,14 +427,14 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should support date range filtering", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const params = new URLSearchParams({
         startDate: "2024-01-01",
         endDate: "2024-01-31"
       });
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/execution?${params}`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/execution?${params}`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -498,9 +446,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include execution statistics", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/execution`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/execution`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -525,9 +473,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("GET /api/auto-sniping/safety-monitoring", () => {
     it("should return safety monitoring data", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/safety-monitoring`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/safety-monitoring`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -550,9 +498,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include risk metrics", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/safety-monitoring`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/safety-monitoring`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -573,9 +521,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include active constraints", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/safety-monitoring`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/safety-monitoring`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -603,9 +551,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("GET /api/auto-sniping/pattern-monitoring", () => {
     it("should return pattern monitoring data", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/pattern-monitoring`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/pattern-monitoring`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -626,9 +574,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should include pattern statistics", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/pattern-monitoring`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/pattern-monitoring`);
       
       if (response.status === 200) {
         const data = await response.json();
@@ -649,9 +597,9 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("GET /api/auto-sniping/config-validation", () => {
     it("should validate current configuration", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config-validation`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config-validation`);
       
       expect(response.status).toBeOneOf([200, 401, 403]);
       
@@ -674,7 +622,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should validate specific configuration", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const configToValidate = {
         enabled: true,
@@ -690,7 +638,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
         }
       };
       
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config-validation`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/config-validation`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -711,17 +659,17 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("Error Handling", () => {
     it("should handle 404 for non-existent endpoints", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/nonexistent`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/nonexistent`);
       
       expect(response.status).toBe(404);
     });
 
     it("should handle invalid HTTP methods", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/status`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/status`, {
         method: "DELETE"
       });
       
@@ -729,10 +677,10 @@ describe("Auto-Sniping System API Integration Tests", () => {
     });
 
     it("should handle server errors gracefully", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Test with potentially error-inducing request
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/control`, {
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/control`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -754,7 +702,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("Authentication & Authorization", () => {
     it("should require authentication for protected endpoints", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       const protectedEndpoints = [
         "/api/auto-sniping/control",
@@ -762,7 +710,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
       ];
       
       for (const endpoint of protectedEndpoints) {
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+        const response = await safeFetch(`${serverSuite.baseUrl()}${endpoint}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -777,11 +725,11 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   describe("Rate Limiting", () => {
     it("should handle rate limiting", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Make multiple rapid requests to trigger rate limiting
       const promises = Array(10).fill(null).map(() => 
-        fetch(`${BASE_URL}/api/auto-sniping/status`)
+        safeFetch(`${serverSuite.baseUrl()}/api/auto-sniping/status`)
       );
       
       const responses = await Promise.all(promises);

@@ -12,6 +12,13 @@ import type {
   SymbolEntry,
 } from '../../../../../src/services/data/modules/mexc-api-types';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('MEXC Core Client', () => {
   let mockConfig: MexcApiConfig;
   let mockConsole: any;
@@ -80,8 +87,11 @@ describe('MEXC Core Client', () => {
     };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Basic Functionality Tests', () => {

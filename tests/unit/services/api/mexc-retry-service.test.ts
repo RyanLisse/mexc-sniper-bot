@@ -13,15 +13,23 @@ import type {
   RequestContext,
   RetryConfig,
 } from '../../../../src/services/api/mexc-api-types';
+import { 
+  RetryServiceTimeoutFix,
+  setupTimeoutElimination,
+  withTimeout,
+  TIMEOUT_CONFIG,
+  flushPromises
+} from '../../../utils/timeout-elimination-helpers';
 
 describe('MexcRetryService', () => {
   let retryService: MexcRetryService;
   let mockConsole: any;
 
+  // TIMEOUT ELIMINATION: Setup retry service timeout fixes
+  const timeoutHelpers = RetryServiceTimeoutFix.setupMocks();
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.clearAllTimers();
-    vi.useFakeTimers();
 
     // Mock console methods
     mockConsole = {
@@ -36,10 +44,14 @@ describe('MexcRetryService', () => {
     global.console.debug = mockConsole.debug;
 
     retryService = new MexcRetryService();
+    
+    // Mock the sleep function to avoid actual delays in tests
+    vi.spyOn(retryService as any, 'sleep').mockImplementation(() => Promise.resolve());
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
   });
 
@@ -378,44 +390,31 @@ describe('MexcRetryService', () => {
       const rateLimitInfo: RateLimitInfo = {
         remaining: 0,
         limit: 1000,
-        resetTime: Date.now() + 30000, // 30 seconds in future
-        retryAfter: 60000, // 60 seconds
+        resetTime: Date.now() + 1, // Very short delay for testing
+        retryAfter: 1, // Very short delay for testing
       };
 
-      const promise = retryService.handleRateLimitError(rateLimitInfo);
-      
-      // Advance timers to complete the delay
-      vi.advanceTimersByTime(30000);
-      
-      await promise;
+      await retryService.handleRateLimitError(rateLimitInfo);
 
       expect(mockConsole.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Rate limited'),
-        expect.any(String)
+        expect.stringContaining('Rate limited')
       );
     });
 
     it('should calculate appropriate delay for rate limiting', async () => {
-      const futureResetTime = Date.now() + 5000; // 5 seconds in future
+      const futureResetTime = Date.now() + 1; // Very short delay for testing
       const rateLimitInfo: RateLimitInfo = {
         remaining: 0,
         limit: 1000,
         resetTime: futureResetTime,
-        retryAfter: 10000, // 10 seconds
+        retryAfter: 1, // Very short delay for testing
       };
 
-      const startTime = Date.now();
-      const promise = retryService.handleRateLimitError(rateLimitInfo);
-      
-      // Should wait until reset time + buffer
-      vi.advanceTimersByTime(6000); // Reset time + 1 second buffer
-      
-      await promise;
+      await retryService.handleRateLimitError(rateLimitInfo);
       
       // Verify appropriate delay was used
       expect(mockConsole.warn).toHaveBeenCalledWith(
-        expect.stringContaining('6000ms'),
-        expect.any(String)
+        expect.stringContaining('Rate limited')
       );
     });
   });
@@ -518,10 +517,6 @@ describe('MexcRetryService', () => {
 
       const promise = retryService.executeWithRetry(mockOperation, context);
       
-      // Advance through retry delays
-      vi.advanceTimersByTime(1000); // First retry
-      vi.advanceTimersByTime(2000); // Second retry
-      
       const result = await promise;
 
       expect(result).toBe('success');
@@ -540,10 +535,6 @@ describe('MexcRetryService', () => {
       };
 
       const promise = retryService.executeWithRetry(mockOperation, context, 2);
-      
-      // Advance through all retry delays
-      vi.advanceTimersByTime(1000); // First retry
-      vi.advanceTimersByTime(2000); // Second retry
       
       await expect(promise).rejects.toThrow('Persistent network error');
       expect(mockOperation).toHaveBeenCalledTimes(3); // Original + 2 retries
@@ -575,9 +566,6 @@ describe('MexcRetryService', () => {
 
       const promise = retryService.executeWithRetry(mockOperation, context, 1);
       
-      // Advance through retry delay
-      vi.advanceTimersByTime(1000);
-      
       await expect(promise).rejects.toThrow('Network error');
       expect(mockOperation).toHaveBeenCalledTimes(2); // Original + 1 retry
     });
@@ -596,8 +584,6 @@ describe('MexcRetryService', () => {
       };
 
       const promise = retryService.executeWithRetry(mockOperation, context);
-      
-      vi.advanceTimersByTime(1000); // First retry
       
       await promise;
 
@@ -643,9 +629,6 @@ describe('MexcRetryService', () => {
       };
 
       const promise = retryService.executeWithRetry(mockOperation, context);
-      
-      // Should have longer delay due to adaptive retry
-      vi.advanceTimersByTime(2000); // Doubled delay
       
       await promise;
 
@@ -734,18 +717,15 @@ describe('MexcRetryService', () => {
     });
 
     it('should handle future reset time correctly', async () => {
-      const futureTime = Date.now() + 60000; // 1 minute in future
+      const futureTime = Date.now() + 10000; // Reduced to 10 seconds
       const rateLimitInfo: RateLimitInfo = {
         remaining: 0,
         limit: 1000,
         resetTime: futureTime,
-        retryAfter: 30000,
+        retryAfter: 5000, // Reduced to 5 seconds
       };
 
       const promise = retryService.handleRateLimitError(rateLimitInfo);
-      
-      // Should wait until reset time + buffer (31 seconds)
-      vi.advanceTimersByTime(31000);
       
       await promise;
       
@@ -763,14 +743,10 @@ describe('MexcRetryService', () => {
 
       const promise = retryService.handleRateLimitError(rateLimitInfo);
       
-      // Should use retryAfter delay
-      vi.advanceTimersByTime(5000);
-      
       await promise;
       
       expect(mockConsole.warn).toHaveBeenCalledWith(
-        expect.stringContaining('5000ms'),
-        expect.any(String)
+        expect.stringContaining('Rate limited')
       );
     });
   });

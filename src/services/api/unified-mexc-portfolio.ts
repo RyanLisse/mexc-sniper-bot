@@ -321,7 +321,7 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
   async getAccountBalanceInternal(): Promise<
     MexcServiceResponse<BalanceEntry[]>
   > {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       "account:balance",
       async () => {
         try {
@@ -380,6 +380,18 @@ export class UnifiedMexcPortfolioModule implements PortfolioService {
       },
       "user" // 10 minute cache for user data
     );
+
+    // Null safety: Check if result exists before returning
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-portfolio",
+      };
+    }
+
+    return result;
   }
 
   /**

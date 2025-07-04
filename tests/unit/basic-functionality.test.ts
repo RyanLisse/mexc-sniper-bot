@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 describe('Basic Functionality Tests', () => {
   it('should pass basic arithmetic test', () => {
     expect(1 + 1).toBe(2);

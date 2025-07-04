@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Price } from '../../../../../src/domain/value-objects/trading/price';
 import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('Price Value Object', () => {
   let validPrice: Price;
   let sameSymbolPrice: Price;

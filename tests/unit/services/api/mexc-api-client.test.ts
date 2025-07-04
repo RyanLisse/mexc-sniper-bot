@@ -13,6 +13,13 @@ import type { UnifiedMexcConfig } from '@/src/schemas/unified/mexc-api-schemas';
 import type { MexcRequestCache } from '../../../../src/services/api/mexc-request-cache';
 import type { CircuitBreaker } from '../../../../src/services/risk/circuit-breaker';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock the service dependencies
 vi.mock('../../../../src/services/api/mexc-auth-service');
 vi.mock('../../../../src/services/api/mexc-request-service');
@@ -116,8 +123,11 @@ describe('MexcApiClient', () => {
     client = new MexcApiClient(config, mockCache, mockReliabilityManager);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('MexcApiClient Construction', () => {

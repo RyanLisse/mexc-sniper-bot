@@ -15,20 +15,27 @@ import {
 import type {
   ConnectivityTestRequest,
   ConnectivityTestResponse,
-} from '@/src/schemas/mexc-api-validation-schemas';
+} from '../../../../src/schemas/mexc-api-validation-schemas';
+import { 
+  ConnectivityServiceTimeoutFix,
+  setupTimeoutElimination,
+  withTimeout,
+  TIMEOUT_CONFIG,
+  flushPromises
+} from '../../../utils/timeout-elimination-helpers';
 
 // Mock dependencies
-vi.mock('@/src/lib/error-types', () => ({
+vi.mock('../../../../src/lib/error-types', () => ({
   ErrorFactory: {
     encryption: vi.fn((message) => new Error(`Encryption Error: ${message}`)),
   },
 }));
 
-vi.mock('@/src/lib/supabase-auth', () => ({
+vi.mock('../../../../src/lib/supabase-auth', () => ({
   getUser: vi.fn(),
 }));
 
-vi.mock('@/src/schemas/mexc-api-validation-schemas', () => ({
+vi.mock('../../../../src/schemas/mexc-api-validation-schemas', () => ({
   ConnectivityTestResponseSchema: {},
   validateMexcApiResponse: vi.fn(),
 }));
@@ -50,7 +57,10 @@ describe('MexcConnectivityService', () => {
   let mockMexcService: any;
   let mockConsole: any;
 
-  beforeEach(() => {
+  // TIMEOUT ELIMINATION: Setup connectivity service timeout fixes
+  const timeoutHelpers = ConnectivityServiceTimeoutFix.setupMocks();
+
+  beforeEach(async () => {
     vi.clearAllMocks();
     vi.clearAllTimers();
     vi.useFakeTimers();
@@ -73,12 +83,13 @@ describe('MexcConnectivityService', () => {
       getAccountBalances: vi.fn(),
     };
 
-    // Setup module mocks
-    mockGetUser = require('@/src/lib/supabase-auth').getUser;
-    mockGetUserCredentials = require('../../../../src/services/api/user-credentials-service').getUserCredentials;
-    mockGetRecommendedMexcService = require('../../../../src/services/api/mexc-unified-exports').getRecommendedMexcService;
-    mockValidateMexcApiResponse = require('@/src/schemas/mexc-api-validation-schemas').validateMexcApiResponse;
+    // Get the mocked functions
+    mockGetUser = vi.mocked((await import('../../../../src/lib/supabase-auth')).getUser);
+    mockGetUserCredentials = vi.mocked((await import('../../../../src/services/api/user-credentials-service')).getUserCredentials);
+    mockGetRecommendedMexcService = vi.mocked((await import('../../../../src/services/api/mexc-unified-exports')).getRecommendedMexcService);
+    mockValidateMexcApiResponse = vi.mocked((await import('../../../../src/schemas/mexc-api-validation-schemas')).validateMexcApiResponse);
 
+    // Setup mock defaults
     mockGetRecommendedMexcService.mockReturnValue(mockMexcService);
     mockValidateMexcApiResponse.mockReturnValue({ success: true });
 
@@ -89,7 +100,9 @@ describe('MexcConnectivityService', () => {
     delete process.env.MEXC_SECRET_KEY;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -179,7 +192,7 @@ describe('MexcConnectivityService', () => {
       expect(result.data.metrics.connectionHealth).toBe('failed');
     });
 
-    it('should retry on connection failures', async () => {
+    it('should retry on connection failures', withTimeout(async () => {
       const request: ConnectivityTestRequest = {
         includeCredentialTest: false,
       };
@@ -191,9 +204,10 @@ describe('MexcConnectivityService', () => {
 
       const promise = connectivityService.testConnectivity(request);
       
-      // Advance timers to complete retry delays
-      vi.advanceTimersByTime(1000); // First retry
-      vi.advanceTimersByTime(2000); // Second retry
+      // Advance timers to complete retry delays - TIMEOUT ELIMINATION: More aggressive timer advancement
+      timeoutHelpers.advance(1000); // First retry
+      timeoutHelpers.advance(2000); // Second retry
+      timeoutHelpers.advance(4000); // Extra time for async completion
       
       const result = await promise;
 
@@ -201,7 +215,10 @@ describe('MexcConnectivityService', () => {
       expect(result.data.connected).toBe(true);
       expect(result.data.metrics.retryCount).toBe(2);
       expect(mockMexcService.testConnectivity).toHaveBeenCalledTimes(3);
-    });
+      
+      // TIMEOUT ELIMINATION: Ensure all promises are flushed
+      await flushPromises();
+    }, ConnectivityServiceTimeoutFix.testTimeout));
 
     it('should fail after max retries', async () => {
       const request: ConnectivityTestRequest = {

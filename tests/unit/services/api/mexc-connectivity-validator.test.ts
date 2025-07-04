@@ -27,6 +27,13 @@ vi.mock('../../../../src/services/api/unified-mexc-service-factory', () => ({
 import { toSafeError } from '@/src/lib/error-type-utils';
 import { getUnifiedMexcService } from '../../../../src/services/api/unified-mexc-service-factory';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('MEXC Connectivity Validator', () => {
   let mockConsole: any;
   let validator: MexcConnectivityValidator;
@@ -68,13 +75,16 @@ describe('MEXC Connectivity Validator', () => {
     resetGlobalConnectivityValidator();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     
     // Restore original environment
     process.env = originalEnv;
     
     resetGlobalConnectivityValidator();
+  
   });
 
   describe('Constructor and Configuration', () => {

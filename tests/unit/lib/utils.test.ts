@@ -6,6 +6,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { cn, logger } from '../../../src/lib/utils';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('cn (className utility)', () => {
   it('should merge class names correctly', () => {
     const result = cn('foo', 'bar');
@@ -71,8 +78,11 @@ describe('logger', () => {
     };
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('info', () => {

@@ -7,6 +7,13 @@ import { describe, it, expect } from 'vitest';
 import { Validators } from '../../../src/lib/validators';
 import { ValidationError } from '../../../src/lib/error-utils';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('Validators', () => {
   describe('takeProfitLevel', () => {
     it('should validate valid take profit levels', () => {

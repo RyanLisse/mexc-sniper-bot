@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { BaseMexcService } from '../../../../src/services/data/base-mexc-service';
 import type { UnifiedMexcConfig } from '../../../../src/schemas/unified/mexc-api-schemas';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Base MEXC Service', () => {
   let baseMexcService: BaseMexcService;
   let mockConsole: any;
@@ -50,8 +57,11 @@ describe('Base MEXC Service', () => {
     baseMexcService = new BaseMexcService(mockConfig);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor and Configuration', () => {

@@ -18,6 +18,13 @@ import {
 } from '../../../../src/services/api/mexc-client-factory';
 import type { UnifiedMexcConfig } from '../../../../src/services/api/mexc-client-types';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('../../../../src/services/api/mexc-trading-api', () => ({
   MexcTradingApiClient: class MockMexcTradingApiClient {
@@ -86,9 +93,12 @@ describe('MEXC Client Factory', () => {
     global.console.debug = mockConsole.debug;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     resetUnifiedMexcClient();
+  
   });
 
   describe('UnifiedMexcClient', () => {

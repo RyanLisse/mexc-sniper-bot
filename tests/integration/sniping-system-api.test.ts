@@ -6,6 +6,13 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 // Mock fetch for API calls
 const mockFetch = vi.fn();
 global.fetch = mockFetch;

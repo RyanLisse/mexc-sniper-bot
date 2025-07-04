@@ -130,6 +130,16 @@ export class UnifiedMexcTradingModule implements TradingService {
       "realTime" // Short cache for ticker data
     );
 
+    // Null safety: Check if result exists before accessing properties
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-trading",
+      };
+    }
+
     // Ensure both price and lastPrice are available for backward compatibility
     if (result.success && result.data) {
       const data = result.data as any;
@@ -165,11 +175,23 @@ export class UnifiedMexcTradingModule implements TradingService {
     symbol: string,
     limit: number = 20
   ): Promise<MexcServiceResponse<OrderBookData>> {
-    return this.cacheLayer.getOrSet(
+    const result = await this.cacheLayer.getOrSet(
       `orderbook:${symbol}:${limit}`,
       () => this.coreClient.getOrderBook(symbol, limit),
       "realTime" // 5 second cache for order book data
     );
+
+    // Null safety: Check if result exists before returning
+    if (!result) {
+      return {
+        success: false,
+        error: "Cache layer returned undefined response",
+        timestamp: Date.now(),
+        source: "unified-mexc-trading",
+      };
+    }
+
+    return result;
   }
 
   /**

@@ -13,6 +13,13 @@ import type {
 import type { MexcCacheLayer } from '../../../../src/services/data/modules/mexc-cache-layer';
 import type { MexcCoreClient } from '../../../../src/services/data/modules/mexc-core-client';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Unified MEXC Portfolio Module', () => {
   let mockConsole: any;
   let portfolioModule: UnifiedMexcPortfolioModule;
@@ -50,8 +57,11 @@ describe('Unified MEXC Portfolio Module', () => {
     portfolioModule = new UnifiedMexcPortfolioModule(mockCoreClient, mockCacheLayer);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor and Interface Compliance', () => {

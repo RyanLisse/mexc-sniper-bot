@@ -1,7 +1,7 @@
 import {
   isBrowserEnvironment,
   isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
+} from "../../lib/browser-compatible-events";
 /**
  * MEXC Connectivity Service
  *
@@ -9,15 +9,15 @@ import {
  * performance monitoring, error handling, and validation.
  */
 
-import { ErrorFactory } from "@/src/lib/error-types";
-import { getUser } from "@/src/lib/supabase-auth";
+import { ErrorFactory } from "../../lib/error-types";
+import { getUser } from "../../lib/supabase-auth";
 import {
   type ConnectivityMetrics,
   type ConnectivityTestRequest,
   type ConnectivityTestResponse,
   ConnectivityTestResponseSchema,
   validateMexcApiResponse,
-} from "@/src/schemas/mexc-api-validation-schemas";
+} from "../../schemas/mexc-api-validation-schemas";
 import { getRecommendedMexcService } from "./mexc-unified-exports";
 import { getUserCredentials } from "./user-credentials-service";
 

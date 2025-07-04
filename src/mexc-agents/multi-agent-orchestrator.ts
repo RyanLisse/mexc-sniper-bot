@@ -147,13 +147,18 @@ export class MultiAgentOrchestrator {
     );
 
     try {
+      // Validate workflow steps
+      if (!Array.isArray(workflow.steps)) {
+        throw new Error(`Invalid workflow steps for workflow: ${workflowId}`);
+      }
+
       // Log workflow start
       tradingAnalytics.logTradingEvent({
         eventType: "SYSTEM_ERROR", // Would be WORKFLOW_START in real implementation
         metadata: {
           workflowId,
           executionId,
-          workflowName: workflow.name,
+          workflowName: workflow.name || "Unknown",
           totalSteps: workflow.steps.length,
         },
         performance: {
@@ -252,14 +257,33 @@ export class MultiAgentOrchestrator {
     execution: WorkflowExecution,
     input: any
   ): Promise<void> {
-    const promises = workflow.steps.map(async (step) => {
+    // Enhanced validation
+    if (!Array.isArray(workflow.steps) || workflow.steps.length === 0) {
+      this.log("No valid steps to execute in parallel");
+      return;
+    }
+
+    // Filter out invalid steps
+    const validSteps = workflow.steps.filter(step => 
+      step && 
+      typeof step === 'object' && 
+      step.agentType && 
+      typeof step.agentType === 'string'
+    );
+
+    if (validSteps.length === 0) {
+      this.log("No valid steps found after filtering");
+      return;
+    }
+
+    const promises = validSteps.map(async (step) => {
       try {
         const result = await this.executeStep(step, input, execution);
         execution.results.set(step.agentType, result);
         return { step: step.agentType, result };
       } catch (error) {
         execution.errors.push({
-          step: step.agentType,
+          step: step.agentType || "unknown",
           error: error instanceof Error ? error.message : "Unknown error",
           timestamp: new Date(),
         });
@@ -407,12 +431,28 @@ export class MultiAgentOrchestrator {
   private async performHealthCheck(): Promise<void> {
     try {
       const statuses = await this.getAllAgentStatuses();
-      const unhealthyAgents = Array.from(statuses.entries())
-        .filter(([, status]) => status === "error" || status === "offline")
+      
+      // Enhanced null safety validation
+      if (!statuses || !(statuses instanceof Map)) {
+        this.log("Invalid statuses received from getAllAgentStatuses");
+        return;
+      }
+
+      const statusEntries = Array.from(statuses.entries());
+      const unhealthyAgents = statusEntries
+        .filter(([type, status]) => {
+          // Ensure we have valid type and status
+          return type && 
+                 typeof type === 'string' && 
+                 (status === "error" || status === "offline");
+        })
         .map(([type]) => type);
 
-      if (unhealthyAgents.length > 0) {
-        this.log("Unhealthy agents detected:", unhealthyAgents);
+      // Ensure unhealthyAgents is always an array
+      const safeUnhealthyAgents = Array.isArray(unhealthyAgents) ? unhealthyAgents : [];
+
+      if (safeUnhealthyAgents.length > 0) {
+        this.log("Unhealthy agents detected:", safeUnhealthyAgents);
 
         // Log health check results
         tradingAnalytics.logTradingEvent({
@@ -420,17 +460,17 @@ export class MultiAgentOrchestrator {
           metadata: {
             healthCheck: true,
             totalAgents: statuses.size,
-            unhealthyAgents,
-            unhealthyCount: unhealthyAgents.length,
+            unhealthyAgents: safeUnhealthyAgents,
+            unhealthyCount: safeUnhealthyAgents.length,
           },
           performance: {
             responseTimeMs: 0,
             retryCount: 0,
           },
-          success: unhealthyAgents.length === 0,
+          success: safeUnhealthyAgents.length === 0,
           error:
-            unhealthyAgents.length > 0
-              ? `${unhealthyAgents.length} unhealthy agents`
+            safeUnhealthyAgents.length > 0
+              ? `${safeUnhealthyAgents.length} unhealthy agents`
               : undefined,
         });
       }

@@ -11,6 +11,13 @@ import type {
   WebSocketConnectionHealth,
 } from '../../../../src/services/data/enhanced-mexc-websocket-service';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Enhanced MEXC WebSocket Service', () => {
   let mockConsole: any;
 
@@ -57,8 +64,11 @@ describe('Enhanced MEXC WebSocket Service', () => {
     global.console.debug = mockConsole.debug;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Real-Time Data Types', () => {

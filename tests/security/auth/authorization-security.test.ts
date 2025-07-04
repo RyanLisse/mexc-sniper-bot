@@ -11,11 +11,18 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SecurityTestDataGenerator, SecurityTestHelpers } from '../utils/security-test-utils'
-import { requireAuth } from '@/src/lib/supabase-auth'
+import { requireAuth } from '../../../src/lib/supabase-auth'
 import { NextResponse } from 'next/server'
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 // Mock external dependencies
-vi.mock('@/src/lib/supabase-auth')
+vi.mock('../../../src/lib/supabase-auth')
 vi.mock('next/server')
 
 const mockRequireAuth = vi.mocked(requireAuth)

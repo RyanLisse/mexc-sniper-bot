@@ -33,6 +33,13 @@ import {
   TradingErrorFactory,
 } from '../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Trading Domain Errors', () => {
   let testTimestamp: Date;
 

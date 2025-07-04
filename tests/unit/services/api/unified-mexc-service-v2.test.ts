@@ -11,6 +11,13 @@ import {
   resetUnifiedMexcServiceV2,
 } from '../../../../src/services/api/unified-mexc-service-v2';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('../../../data/modules/mexc-core-client', () => ({
   MexcCoreClient: vi.fn().mockImplementation(() => ({
@@ -122,9 +129,12 @@ describe('UnifiedMexcServiceV2', () => {
     service = new UnifiedMexcServiceV2();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     resetUnifiedMexcServiceV2();
+  
   });
 
   describe('Constructor', () => {

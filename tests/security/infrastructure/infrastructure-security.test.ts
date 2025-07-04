@@ -13,11 +13,18 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SecurityTestDataGenerator, SecurityTestHelpers, SecurityTestMatchers } from '../utils/security-test-utils'
-import { requireAuth } from '@/src/lib/supabase-auth'
+import { requireAuth } from '../../src/lib/supabase-auth'
 import crypto from 'crypto'
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 // Mock external dependencies
-vi.mock('@/src/lib/supabase-auth')
+vi.mock('../../src/lib/supabase-auth')
 vi.mock('node:crypto')
 
 const mockRequireAuth = vi.mocked(requireAuth)

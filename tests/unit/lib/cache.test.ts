@@ -14,6 +14,13 @@ import {
   type CacheOptions,
 } from '../../../src/lib/cache';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('Cache', () => {
   let cache: Cache<string>;
   let mockEvictCallback: ReturnType<typeof vi.fn>;
@@ -24,9 +31,12 @@ describe('Cache', () => {
     cache = new Cache<string>({ onEvict: mockEvictCallback });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
     vi.clearAllMocks();
+  
   });
 
   describe('constructor', () => {

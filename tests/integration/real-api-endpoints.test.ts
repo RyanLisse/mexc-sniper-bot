@@ -2,348 +2,214 @@
  * Real API Endpoints Integration Tests
  * 
  * Tests actual API endpoints without mocks to verify real system integrations
+ * Using enhanced server management infrastructure for 100% reliability
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { spawn, ChildProcess } from "child_process";
+import { describe, it, expect } from "vitest";
+import { 
+  createIntegrationTestSuite,
+  testApiEndpoint,
+  testDatabaseConnection,
+  testAuthEndpoints,
+  testMexcIntegration,
+  testMonitoringEndpoints,
+  testSafetyEndpoints,
+  testAutoSnipingEndpoints,
+  runComprehensiveHealthCheck,
+  IntegrationTestErrorHandler
+} from "../utils/integration-test-helpers";
 
-const TEST_PORT = 3109;
-const BASE_URL = `http://localhost:${TEST_PORT}`;
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
 
-describe("Real API Endpoints Integration", () => {
-  let serverProcess: ChildProcess;
-  let isServerReady = false;
-
-  beforeAll(async () => {
-    // Start development server for integration testing
-    console.log("🚀 Starting development server for integration tests...");
-    
-    serverProcess = spawn("bun", ["run", "dev"], {
-      env: { 
-        ...process.env, 
-        PORT: TEST_PORT.toString(),
-        NODE_ENV: "test",
-        USE_REAL_DATABASE: "true"
-      },
-      stdio: "pipe"
-    });
-
-    // Wait for server to be ready with better error handling
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        console.log("❌ Server startup timeout - skipping real API endpoint tests");
-        // Instead of rejecting, we'll resolve to skip tests gracefully
-        isServerReady = false;
-        resolve();
-      }, 60000); // Increased timeout to 60 seconds
-
-      let attempts = 0;
-      const maxAttempts = 60;
-
-      const checkReady = () => {
-        attempts++;
-        console.log(`⏳ Checking server readiness (attempt ${attempts}/${maxAttempts})...`);
-        
-        fetch(`${BASE_URL}/api/health`)
-          .then(response => {
-            if (response.ok) {
-              isServerReady = true;
-              clearTimeout(timeout);
-              console.log("✅ Development server ready for integration tests");
-              resolve();
-            } else {
-              console.log(`⚠️ Server responded with status ${response.status}, retrying...`);
-              if (attempts < maxAttempts) {
-                setTimeout(checkReady, 1000);
-              } else {
-                console.log("❌ Max attempts reached - skipping tests");
-                isServerReady = false;
-                resolve();
-              }
-            }
-          })
-          .catch((error) => {
-            console.log(`⚠️ Connection failed (${error.message}), retrying...`);
-            if (attempts < maxAttempts) {
-              setTimeout(checkReady, 1000);
-            } else {
-              console.log("❌ Max attempts reached - skipping tests");
-              isServerReady = false;
-              resolve();
-            }
-          });
-      };
-
-      setTimeout(checkReady, 3000); // Give server time to start
-    });
-  }, 75000); // Increased timeout to 75 seconds
-
-  afterAll(async () => {
-    // Cleanup server process
-    if (serverProcess) {
-      console.log("🧹 Cleaning up development server...");
-      serverProcess.kill("SIGTERM");
-      
-      // Force kill if still running after 5 seconds
-      setTimeout(() => {
-        if (!serverProcess.killed) {
-          serverProcess.kill("SIGKILL");
-        }
-      }, 5000);
-    }
-  });
+createIntegrationTestSuite("Real API Endpoints Integration", (context) => {
 
   describe("Health Check Endpoints", () => {
     it("should return healthy status from main health endpoint", async () => {
-      if (!isServerReady) {
-        console.log("⏭️ Skipping test - server not ready");
-        return;
-      }
-
-      const response = await fetch(`${BASE_URL}/api/health`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("status");
-      expect(data.status).toBe("healthy");
+      await testApiEndpoint('/api/health', {
+        hasProperty: ['status'],
+        customValidator: (data) => data.status === 'healthy'
+      })(context);
     });
 
     it("should check database connectivity", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/health/db`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("database");
-      expect(typeof data.database.connected).toBe("boolean");
+      const isConnected = await testDatabaseConnection(context);
+      expect(isConnected).toBe(true);
     });
 
     it("should verify environment health", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/health/environment`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("environment");
-      expect(data.environment).toHaveProperty("nodeEnv");
+      await testApiEndpoint('/api/health/environment', {
+        hasProperty: ['environment']
+      })(context);
     });
 
     it("should check system health", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/health/system`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("system");
-      expect(data.system).toHaveProperty("uptime");
-      expect(typeof data.system.uptime).toBe("number");
+      await testApiEndpoint('/api/health/system', {
+        hasProperty: ['system'],
+        customValidator: (data) => typeof data.system.uptime === 'number'
+      })(context);
     });
   });
 
   describe("Authentication Integration", () => {
-    it("should handle session endpoint", async () => {
-      if (!isServerReady) return;
+    it("should handle all auth endpoints correctly", async () => {
+      await testAuthEndpoints(context);
+    });
 
-      const response = await fetch(`${BASE_URL}/api/auth/session`);
-      // Should respond (even if no session)
-      expect(response.status).toBeOneOf([200, 401, 403]);
+    it("should handle session endpoint", async () => {
+      await testApiEndpoint('/api/auth/session', {
+        status: [200, 401, 403]
+      })(context);
     });
 
     it("should provide auth health status", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/health/auth`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("auth");
+      await testApiEndpoint('/api/health/auth', {
+        hasProperty: 'auth'
+      })(context);
     });
   });
 
   describe("MEXC API Integration", () => {
-    it("should check MEXC connectivity", async () => {
-      if (!isServerReady) return;
+    it("should handle all MEXC endpoints correctly", async () => {
+      await testMexcIntegration(context);
+    });
 
-      const response = await fetch(`${BASE_URL}/api/mexc/connectivity`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
-      expect(typeof data.success).toBe("boolean");
+    it("should check MEXC connectivity", async () => {
+      await testApiEndpoint('/api/mexc/connectivity', {
+        hasProperty: 'success',
+        customValidator: (data) => typeof data.success === 'boolean'
+      })(context);
     });
 
     it("should fetch MEXC server time", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/mexc/server-time`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("serverTime");
-      expect(typeof data.serverTime).toBe("number");
+      await testApiEndpoint('/api/mexc/server-time', {
+        hasProperty: 'serverTime',
+        customValidator: (data) => typeof data.serverTime === 'number'
+      })(context);
     });
 
     it("should get exchange info", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/mexc/exchange-info`);
-      expect(response.ok).toBe(true);
+      const result = await testApiEndpoint('/api/mexc/exchange-info', {
+        hasProperty: 'success'
+      })(context);
       
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
-      if (data.success && data.data) {
-        expect(data.data).toHaveProperty("symbols");
-        expect(Array.isArray(data.data.symbols)).toBe(true);
+      if (result?.data?.success && result.data.data) {
+        expect(result.data.data).toHaveProperty("symbols");
+        expect(Array.isArray(result.data.data.symbols)).toBe(true);
       }
     });
 
     it("should test enhanced connectivity", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/mexc/enhanced-connectivity`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
-      expect(data).toHaveProperty("connectivity");
+      await testApiEndpoint('/api/mexc/enhanced-connectivity', {
+        hasProperty: ['success', 'connectivity']
+      })(context);
     });
   });
 
   describe("Database Integration", () => {
     it("should check database quota status", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/database/quota-status`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
-      expect(data).toHaveProperty("quota");
+      await testApiEndpoint('/api/database/quota-status', {
+        hasProperty: ['success', 'quota']
+      })(context);
     });
 
     it("should handle database optimization checks", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/database/optimize`);
-      expect(response.status).toBeOneOf([200, 405, 503]); // Different methods may not be allowed
+      await testApiEndpoint('/api/database/optimize', {
+        status: [200, 405, 503] // Different methods may not be allowed
+      })(context);
     });
   });
 
   describe("Auto-Sniping System Integration", () => {
-    it("should get auto-sniping status", async () => {
-      if (!isServerReady) return;
+    it("should handle all auto-sniping endpoints correctly", async () => {
+      await testAutoSnipingEndpoints(context);
+    });
 
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/status`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
-      expect(data).toHaveProperty("status");
+    it("should get auto-sniping status", async () => {
+      await testApiEndpoint('/api/auto-sniping/status', {
+        hasProperty: ['success', 'status']
+      })(context);
     });
 
     it("should validate auto-sniping config", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/config-validation`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+      await testApiEndpoint('/api/auto-sniping/config-validation', {
+        hasProperty: 'success'
+      })(context);
     });
 
     it("should check safety monitoring", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/safety-monitoring`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+      await testApiEndpoint('/api/auto-sniping/safety-monitoring', {
+        hasProperty: 'success'
+      })(context);
     });
   });
 
   describe("Monitoring and Analytics", () => {
-    it("should provide system overview", async () => {
-      if (!isServerReady) return;
+    it("should handle all monitoring endpoints correctly", async () => {
+      await testMonitoringEndpoints(context);
+    });
 
-      const response = await fetch(`${BASE_URL}/api/monitoring/system-overview`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+    it("should provide system overview", async () => {
+      await testApiEndpoint('/api/monitoring/system-overview', {
+        hasProperty: 'success'
+      })(context);
     });
 
     it("should get performance metrics", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/monitoring/performance-metrics`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+      await testApiEndpoint('/api/monitoring/performance-metrics', {
+        hasProperty: 'success'
+      })(context);
     });
 
     it("should check trading analytics", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/analytics/trading`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+      await testApiEndpoint('/api/analytics/trading', {
+        hasProperty: 'success'
+      })(context);
     });
   });
 
   describe("Safety and Risk Management", () => {
-    it("should get safety system status", async () => {
-      if (!isServerReady) return;
+    it("should handle all safety endpoints correctly", async () => {
+      await testSafetyEndpoints(context);
+    });
 
-      const response = await fetch(`${BASE_URL}/api/safety/system-status`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+    it("should get safety system status", async () => {
+      await testApiEndpoint('/api/safety/system-status', {
+        hasProperty: 'success'
+      })(context);
     });
 
     it("should perform risk assessment", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/safety/risk-assessment`);
-      expect(response.ok).toBe(true);
-      
-      const data = await response.json();
-      expect(data).toHaveProperty("success");
+      await testApiEndpoint('/api/safety/risk-assessment', {
+        hasProperty: 'success'
+      })(context);
     });
   });
 
   describe("Error Handling and Edge Cases", () => {
     it("should handle invalid endpoints gracefully", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/nonexistent-endpoint`);
-      expect(response.status).toBe(404);
+      await testApiEndpoint('/api/nonexistent-endpoint', {
+        status: 404
+      })(context);
     });
 
     it("should handle malformed requests", async () => {
-      if (!isServerReady) return;
-
-      const response = await fetch(`${BASE_URL}/api/auto-sniping/control`, {
+      const response = await context.fetch('/api/auto-sniping/control', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "invalid-json"
       });
-      expect(response.status).toBeOneOf([400, 422, 500]);
+      expect([400, 422, 500]).toContain(response.status);
     });
 
     it("should implement rate limiting", async () => {
-      if (!isServerReady) return;
-
       // Make multiple rapid requests to test rate limiting
       const promises = Array(10).fill(null).map(() => 
-        fetch(`${BASE_URL}/api/health`)
+        context.fetch('/api/health')
       );
       
       const responses = await Promise.all(promises);
@@ -353,22 +219,66 @@ describe("Real API Endpoints Integration", () => {
       expect(statusCodes.every(code => code === 200 || code === 429)).toBe(true);
     });
   });
-});
 
-// Custom matcher for vitest
-expect.extend({
-  toBeOneOf(received: any, expected: any[]) {
-    const pass = expected.includes(received);
-    if (pass) {
-      return {
-        message: () => `expected ${received} not to be one of ${expected.join(', ')}`,
-        pass: true,
-      };
-    } else {
-      return {
-        message: () => `expected ${received} to be one of ${expected.join(', ')}`,
-        pass: false,
-      };
-    }
+  describe("Comprehensive System Health", () => {
+    it("should perform comprehensive health check of all systems", async () => {
+      try {
+        const healthReport = await runComprehensiveHealthCheck(context);
+        
+        console.log('🏥 Comprehensive Health Report:', healthReport);
+        
+        // Core systems must be healthy
+        expect(healthReport.server).toBe(true);
+        expect(healthReport.database).toBe(true);
+        expect(healthReport.overall).toBe(true);
+        
+        // Optional systems (may be down in test environment)
+        if (!healthReport.auth) {
+          console.warn('⚠️ Auth system health check failed');
+        }
+        if (!healthReport.mexc) {
+          console.warn('⚠️ MEXC integration health check failed');
+        }
+        if (!healthReport.monitoring) {
+          console.warn('⚠️ Monitoring system health check failed');
+        }
+        if (!healthReport.safety) {
+          console.warn('⚠️ Safety system health check failed');
+        }
+        if (!healthReport.autoSniping) {
+          console.warn('⚠️ Auto-sniping system health check failed');
+        }
+        
+      } catch (error) {
+        await IntegrationTestErrorHandler.handleServerError(context, error);
+        
+        // Try recovery
+        const recovered = await IntegrationTestErrorHandler.recoverFromError(context);
+        if (!recovered) {
+          throw error;
+        }
+        
+        // Retry health check after recovery
+        const healthReport = await runComprehensiveHealthCheck(context);
+        expect(healthReport.overall).toBe(true);
+      }
+    });
+  });
+
+}, {
+  serverConfig: {
+    port: 3109,
+    env: {
+      NODE_ENV: 'test',
+      USE_REAL_DATABASE: 'true',
+      FORCE_MOCK_DB: 'false',
+      MEXC_API_KEY: 'test-api-key',
+      MEXC_SECRET_KEY: 'test-secret-key'
+    },
+    logOutput: process.env.TEST_SERVER_LOGS === 'true',
+    enableDevMode: true
   },
+  testTimeout: 120000, // 2 minutes for comprehensive tests
+  enableServerLogs: process.env.TEST_SERVER_LOGS === 'true',
+  cleanupBetweenTests: true
 });

@@ -13,6 +13,13 @@ import {
 } from '../../../../../src/domain/value-objects/trading/order';
 import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('Order Value Object', () => {
   let validOrderProps: any;
   let validMarketOrderProps: any;

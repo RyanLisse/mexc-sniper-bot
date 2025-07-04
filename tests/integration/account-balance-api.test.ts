@@ -3,85 +3,37 @@
  * 
  * Tests account balance endpoint with authentication, error handling, 
  * MEXC API integration, and comprehensive request/response validation
+ * 
+ * FIXED: Promise resolution/rejection issues and timeout handling
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
-import { spawn, ChildProcess } from "child_process";
+import { createServerTestSuite, testRateLimit } from "../utils/server-test-helper";
+import { safeFetch } from "../utils/async-test-helpers";
 
-const TEST_PORT = 3110;
-const BASE_URL = `http://localhost:${TEST_PORT}`;
-const TIMEOUT_MS = 30000;
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
 
 describe("Account Balance API Integration Tests", () => {
-  let serverProcess: ChildProcess;
-  let isServerReady = false;
+  const serverSuite = createServerTestSuite(
+    "Account Balance API Tests",
+    3110,
+    {
+      MEXC_API_KEY: "test_api_key_12345",
+      MEXC_SECRET_KEY: "test_secret_key_67890"
+    }
+  );
 
   beforeAll(async () => {
-    console.log("🚀 Starting server for Account Balance API tests...");
-    
-    serverProcess = spawn("bun", ["run", "dev"], {
-      env: { 
-        ...process.env, 
-        PORT: TEST_PORT.toString(),
-        NODE_ENV: "test",
-        MEXC_API_KEY: "test_api_key_12345",
-        MEXC_SECRET_KEY: "test_secret_key_67890",
-        USE_REAL_DATABASE: "true"
-      },
-      stdio: "pipe"
-    });
-
-    // Wait for server readiness
-    await new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => {
-        console.log("❌ Server startup timeout");
-        isServerReady = false;
-        resolve();
-      }, TIMEOUT_MS);
-
-      let attempts = 0;
-      const maxAttempts = 30;
-
-      const checkReady = () => {
-        attempts++;
-        fetch(`${BASE_URL}/api/health`)
-          .then(response => {
-            if (response.ok) {
-              isServerReady = true;
-              clearTimeout(timeout);
-              console.log("✅ Server ready for Account Balance API tests");
-              resolve();
-            } else if (attempts < maxAttempts) {
-              setTimeout(checkReady, 1000);
-            } else {
-              isServerReady = false;
-              resolve();
-            }
-          })
-          .catch(() => {
-            if (attempts < maxAttempts) {
-              setTimeout(checkReady, 1000);
-            } else {
-              isServerReady = false;
-              resolve();
-            }
-          });
-      };
-
-      setTimeout(checkReady, 3000);
-    });
-  }, TIMEOUT_MS + 5000);
+    await serverSuite.beforeAllSetup();
+  }, TIMEOUT_CONFIG.STANDARD));
 
   afterAll(async () => {
-    if (serverProcess) {
-      console.log("🧹 Cleaning up server process...");
-      serverProcess.kill("SIGTERM");
-      setTimeout(() => {
-        if (!serverProcess.killed) {
-          serverProcess.kill("SIGKILL");
-        }
-      }, 5000);
-    }
+    await serverSuite.afterAllCleanup();
   });
 
   beforeEach(() => {
@@ -90,9 +42,9 @@ describe("Account Balance API Integration Tests", () => {
 
   describe("GET /api/account/balance", () => {
     it("should return account balance with environment fallback", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response.status).toBeOneOf([200, 401, 503]);
       
@@ -114,9 +66,9 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should return account balance with user-specific credentials", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance?userId=test-user-123`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance?userId=test-user-123`);
       
       expect(response.status).toBeOneOf([200, 401, 503]);
       
@@ -130,9 +82,9 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should handle invalid userId parameter", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance?userId=`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance?userId=`);
       
       expect(response.status).toBe(400);
       
@@ -143,10 +95,10 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should handle missing MEXC credentials gracefully", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // This would be tested with environment without MEXC credentials
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response.status).toBeOneOf([200, 503]);
       
@@ -161,10 +113,10 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should handle MEXC API authentication errors", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Test with invalid credentials would typically return 401
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response.status).toBeOneOf([200, 401, 503]);
       
@@ -178,25 +130,20 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should handle rate limiting", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      // Make multiple rapid requests to trigger rate limiting
-      const promises = Array(5).fill(null).map(() => 
-        fetch(`${BASE_URL}/api/account/balance`)
-      );
-      
-      const responses = await Promise.all(promises);
-      const statusCodes = responses.map(r => r.status);
+      // Use the proper rate limiting test utility
+      const result = await testRateLimit(serverSuite.baseUrl(), "/api/account/balance", 5);
       
       // Should either succeed or be rate limited
-      expect(statusCodes.every(code => [200, 401, 429, 503].includes(code))).toBe(true);
+      expect(result.statusCodes.every(code => [200, 401, 429, 503].includes(code))).toBe(true);
     });
 
     it("should handle timeout scenarios", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Test with potential timeout (would need to mock slow MEXC API)
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response.status).toBeOneOf([200, 401, 503, 504]);
       
@@ -208,9 +155,9 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should include proper response metadata", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       const data = await response.json();
       
@@ -226,9 +173,9 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should validate response schema", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       const data = await response.json();
       
       // Basic schema validation
@@ -259,9 +206,9 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should handle network errors gracefully", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response.status).toBeOneOf([200, 401, 503, 504]);
       
@@ -274,18 +221,18 @@ describe("Account Balance API Integration Tests", () => {
     });
 
     it("should enforce proper HTTP method", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Test unsupported HTTP methods
-      const postResponse = await fetch(`${BASE_URL}/api/account/balance`, {
+      const postResponse = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`, {
         method: "POST"
       });
       
-      const putResponse = await fetch(`${BASE_URL}/api/account/balance`, {
+      const putResponse = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`, {
         method: "PUT"
       });
       
-      const deleteResponse = await fetch(`${BASE_URL}/api/account/balance`, {
+      const deleteResponse = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`, {
         method: "DELETE"
       });
       
@@ -297,9 +244,9 @@ describe("Account Balance API Integration Tests", () => {
 
   describe("Cost Monitoring Integration", () => {
     it("should track API call costs", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       // Cost monitoring should be transparent to the response
       expect(response.status).toBeOneOf([200, 401, 503]);
@@ -316,10 +263,10 @@ describe("Account Balance API Integration Tests", () => {
 
   describe("Circuit Breaker Integration", () => {
     it("should handle circuit breaker states", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Circuit breaker should be transparent unless it's open
-      const response = await fetch(`${BASE_URL}/api/account/balance`);
+      const response = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response.status).toBeOneOf([200, 401, 503, 504]);
       
@@ -333,11 +280,11 @@ describe("Account Balance API Integration Tests", () => {
 
   describe("Database Query Cache Integration", () => {
     it("should handle cached responses", async () => {
-      if (!isServerReady) return;
+      if (serverSuite.skipIfServerNotReady()) return;
 
       // Make two requests to potentially test caching
-      const response1 = await fetch(`${BASE_URL}/api/account/balance`);
-      const response2 = await fetch(`${BASE_URL}/api/account/balance`);
+      const response1 = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
+      const response2 = await safeFetch(`${serverSuite.baseUrl()}/api/account/balance`);
       
       expect(response1.status).toBeOneOf([200, 401, 503]);
       expect(response2.status).toBeOneOf([200, 401, 503]);

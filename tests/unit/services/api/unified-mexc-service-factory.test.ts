@@ -56,6 +56,13 @@ import { db, apiCredentials } from '@/src/db';
 import { UnifiedMexcClient } from '../../../../src/services/api/mexc-client-factory';
 import { getEncryptionService } from '../../../../src/services/api/secure-encryption-service';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('Unified MEXC Service Factory', () => {
   let mockConsole: any;
   let serviceFactory: UnifiedMexcServiceFactory;
@@ -106,7 +113,9 @@ describe('Unified MEXC Service Factory', () => {
     resetGlobalMexcServiceFactory();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     
     // Restore original environment and global
@@ -114,6 +123,7 @@ describe('Unified MEXC Service Factory', () => {
     Object.assign(globalThis, originalGlobal);
     
     resetGlobalMexcServiceFactory();
+  
   });
 
   describe('Constructor and Configuration', () => {

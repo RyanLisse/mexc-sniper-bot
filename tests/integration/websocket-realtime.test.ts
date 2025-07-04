@@ -2,28 +2,29 @@
  * WebSocket and Real-time Integration Tests
  * 
  * Tests WebSocket connections, real-time data streaming, and service-to-service communication
+ * Using enhanced integration test infrastructure for reliable testing
  */
 
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect } from "vitest";
+import { 
+  createIntegrationTestSuite,
+  testApiEndpoint,
+  IntegrationTestErrorHandler
+} from "../utils/integration-test-helpers";
+import { withWebSocketTimeout, withRetryTimeout } from "../utils/timeout-utilities";
 
-// Test environment setup for real integrations
-process.env.USE_REAL_DATABASE = "true";
-process.env.FORCE_MOCK_DB = "false";
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
 
-describe("WebSocket and Real-time Integration", () => {
+createIntegrationTestSuite("WebSocket and Real-time Integration", (context) => {
   const testTimeout = 15000; // 15 seconds for WebSocket tests
 
-  beforeAll(async () => {
-    console.log("🔌 Starting WebSocket and real-time integration tests...");
-  });
-
-  afterAll(async () => {
-    console.log("✅ WebSocket and real-time integration tests completed");
-  });
-
   describe("WebSocket Connection Management", () => {
-    it("should establish WebSocket connection", async () => {
-      // Test basic WebSocket connection capability
+    it('should establish WebSocket connection', withTimeout(async () => {// Test basic WebSocket connection capability
       const isWebSocketSupported = typeof WebSocket !== "undefined";
       
       if (!isWebSocketSupported) {
@@ -41,7 +42,10 @@ describe("WebSocket and Real-time Integration", () => {
           const timeout = setTimeout(() => {
             ws.close();
             reject(new Error("WebSocket connection timeout"));
-          }, 5000);
+      
+      // TIMEOUT ELIMINATION: Ensure all promises are flushed
+      await flushPromises();
+    }, TIMEOUT_CONFIG.STANDARD));
 
           ws.onopen = () => {
             clearTimeout(timeout);
@@ -65,8 +69,7 @@ describe("WebSocket and Real-time Integration", () => {
       }
     }, testTimeout);
 
-    it("should handle WebSocket connection errors gracefully", async () => {
-      if (typeof WebSocket === "undefined") {
+    it('should handle WebSocket connection errors gracefully', withTimeout(async () => {if (typeof WebSocket === "undefined") {
         expect(true).toBe(true);
         return;
       }
@@ -78,7 +81,10 @@ describe("WebSocket and Real-time Integration", () => {
           const timeout = setTimeout(() => {
             ws.close();
             resolve("timeout");
-          }, 3000);
+      
+      // TIMEOUT ELIMINATION: Ensure all promises are flushed
+      await flushPromises();
+    }, TIMEOUT_CONFIG.STANDARD));
 
           ws.onerror = () => {
             clearTimeout(timeout);

@@ -13,6 +13,13 @@ import {
 } from '../../../../../src/domain/errors/trading-errors';
 import { OrderSide } from '../../../../../src/domain/value-objects/trading/order';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('Trade Domain Entity', () => {
   let validTradeProps: any;
 

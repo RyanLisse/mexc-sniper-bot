@@ -8,6 +8,13 @@ import { PatternValidator } from '../../../../src/core/pattern-detection/pattern
 import type { SymbolEntry, CalendarEntry } from '../../../../src/services/api/mexc-unified-exports';
 import type { PatternMatch, ValidationResult } from '../../../../src/core/pattern-detection/interfaces';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('../../../../src/lib/error-type-utils', () => ({
   toSafeError: (error: any) => ({

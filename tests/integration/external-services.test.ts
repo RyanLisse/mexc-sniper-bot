@@ -6,6 +6,13 @@
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 // Test environment setup
 process.env.USE_REAL_DATABASE = "true";
 process.env.FORCE_MOCK_DB = "false";

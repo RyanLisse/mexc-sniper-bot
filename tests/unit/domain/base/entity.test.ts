@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Entity } from '../../../../src/domain/base/entity';
 import type { DomainEvent } from '../../../../src/domain/events/domain-event';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Test implementation of Entity for testing purposes
 class TestEntity extends Entity<string> {
   private _name: string;

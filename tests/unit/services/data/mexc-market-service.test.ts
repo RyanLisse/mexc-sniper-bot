@@ -7,6 +7,13 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { MexcMarketService, getMexcMarketService, resetMexcMarketService } from '../../../../src/services/data/mexc-market-service';
 import type { UnifiedMexcConfig } from '../../../../src/schemas/unified/mexc-api-schemas';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('MEXC Market Service', () => {
   let marketService: MexcMarketService;
   let mockConsole: any;
@@ -129,9 +136,12 @@ describe('MEXC Market Service', () => {
     marketService = new MexcMarketService(mockConfig);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     resetMexcMarketService();
+  
   });
 
   describe('Constructor and Initialization', () => {

@@ -15,6 +15,13 @@ import type {
   TimeoutConfig,
 } from '../../../../src/services/api/mexc-api-types';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock crypto module
 vi.mock('node:crypto', () => ({
   randomUUID: vi.fn(() => 'test-uuid-123'),
@@ -76,9 +83,12 @@ describe('MexcRequestService', () => {
     requestService = new MexcRequestService(config);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor and Configuration', () => {

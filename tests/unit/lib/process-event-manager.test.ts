@@ -8,6 +8,13 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { ProcessEventManager, processEventManager, registerProcessEventHandler } from '../../../src/lib/process-event-manager';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('ProcessEventManager', () => {
   let manager: ProcessEventManager;
 
@@ -17,8 +24,11 @@ describe('ProcessEventManager', () => {
     manager.cleanup();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     manager.cleanup();
+  
   });
 
   describe('Handler Registration', () => {

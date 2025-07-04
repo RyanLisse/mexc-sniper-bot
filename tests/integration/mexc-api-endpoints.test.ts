@@ -16,6 +16,13 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { spawn, ChildProcess } from "child_process";
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 const TEST_PORT = 3113;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
 const TIMEOUT_MS = 30000;
@@ -88,7 +95,7 @@ describe("MEXC API Endpoints Integration Tests", () => {
         if (!serverProcess.killed) {
           serverProcess.kill("SIGKILL");
         }
-      }, 5000);
+      }, TIMEOUT_CONFIG.STANDARD));
     }
   });
 

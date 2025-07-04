@@ -14,6 +14,13 @@ import {
 } from '../../../../../src/domain/value-objects/safety/safety-rule';
 import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('SafetyRule Value Object', () => {
   let validRuleProps: any;
   let drawdownRuleProps: any;

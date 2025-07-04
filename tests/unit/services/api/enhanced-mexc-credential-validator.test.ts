@@ -16,6 +16,13 @@ import {
   type EnhancedCredentialValidatorConfig,
 } from '../../../../src/services/api/enhanced-mexc-credential-validator';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock crypto module
 vi.mock('node:crypto', () => ({
   createHmac: vi.fn(() => ({
@@ -68,9 +75,9 @@ describe('Enhanced MEXC Credential Validator', () => {
     // Reset global validator
     resetGlobalCredentialValidator();
 
-    // Create validator with test configuration
+    // Create validator with test configuration aligned with implementation defaults
     validator = new EnhancedCredentialValidator({
-      circuitBreakerThreshold: 3,
+      circuitBreakerThreshold: 5, // Match implementation default
       circuitBreakerResetTimeout: 10000,
       requestTimeout: 5000,
       maxRetries: 2,
@@ -91,13 +98,16 @@ describe('Enhanced MEXC Credential Validator', () => {
     } as any);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
     
     // Restore original environment
     process.env = originalEnv;
     
     resetGlobalCredentialValidator();
+  
   });
 
   describe('Constructor and Configuration', () => {
@@ -147,7 +157,7 @@ describe('Enhanced MEXC Credential Validator', () => {
   describe('Credential Detection and Format Validation', () => {
     it('should validate credentials successfully when available', async () => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       const result = await validator.validateCredentials();
 
@@ -191,12 +201,12 @@ describe('Enhanced MEXC Credential Validator', () => {
 
     it('should detect various test credential patterns', async () => {
       const testPatterns = [
-        { apiKey: 'test-api-key', secretKey: 'valid-secret-key' },
-        { apiKey: 'demo_key', secretKey: 'valid-secret-key' },
-        { apiKey: 'your_api_key', secretKey: 'valid-secret-key' },
-        { apiKey: 'valid-api-key', secretKey: 'placeholder_secret' },
-        { apiKey: '12345678901234567890', secretKey: 'valid-secret-key' },
-        { apiKey: 'valid-api-key', secretKey: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+        { apiKey: 'test-api-key', secretKey: 'abcdef1234567890abcdef1234567890abcdef12' },
+        { apiKey: 'demo_key', secretKey: 'abcdef1234567890abcdef1234567890abcdef12' },
+        { apiKey: 'your_api_key', secretKey: 'abcdef1234567890abcdef1234567890abcdef12' },
+        { apiKey: 'mx0validApiKeyButDetectedAsTest789', secretKey: 'placeholder_secret' },
+        { apiKey: '12345678901234567890', secretKey: 'abcdef1234567890abcdef1234567890abcdef12' },
+        { apiKey: 'mx0validApiKeyFormat123', secretKey: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
       ];
 
       for (const { apiKey, secretKey } of testPatterns) {
@@ -212,7 +222,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
     it('should validate API key format correctly', async () => {
       const validApiKey = 'mx0validApiKeyWithProperFormat123';
-      const validSecretKey = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      const validSecretKey = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       process.env.MEXC_API_KEY = validApiKey;
       process.env.MEXC_SECRET_KEY = validSecretKey;
@@ -235,7 +245,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
       for (const apiKey of invalidApiKeys) {
         process.env.MEXC_API_KEY = apiKey;
-        process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+        process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Valid hex format
 
         const formatResult = await validator.validateFormat();
 
@@ -249,7 +259,8 @@ describe('Enhanced MEXC Credential Validator', () => {
         '', // Empty
         'short', // Too short
         'not-hex-characters!@#$%^&*()', // Invalid characters
-        '12345678901234567890123456789012', // Too short (exactly 32 chars but no hex)
+        '1234567890123456789012345678901g', // Contains non-hex character 'g'
+        'abcdef123456789012345678901234567890abcdef123456789g', // Too long with invalid char
       ];
 
       for (const secretKey of invalidSecretKeys) {
@@ -267,7 +278,7 @@ describe('Enhanced MEXC Credential Validator', () => {
   describe('Authentication Testing', () => {
     beforeEach(() => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
     });
 
     it('should successfully authenticate with valid credentials', async () => {
@@ -340,7 +351,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
       expect(crypto.createHmac).toHaveBeenCalledWith(
         'sha256',
-        'a1b2c3d4e5f6789012345678901234567890abcdef'
+        'a1b2c3d4e5f6789012345678901234567890abcdef12'
       );
       expect(mockHmac.update).toHaveBeenCalledWith(expect.stringMatching(/^timestamp=\d+$/));
       expect(mockHmac.digest).toHaveBeenCalledWith('hex');
@@ -372,7 +383,7 @@ describe('Enhanced MEXC Credential Validator', () => {
   describe('Circuit Breaker Functionality', () => {
     beforeEach(() => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
     });
 
     it('should open circuit breaker after threshold failures', async () => {
@@ -383,7 +394,9 @@ describe('Enhanced MEXC Credential Validator', () => {
         text: vi.fn().mockResolvedValue('Server Error'),
       } as any);
 
-      // Trigger failures to reach threshold (3 in our test config)
+      // Trigger failures to reach threshold (5 in our test config)
+      await validator.testAuthentication();
+      await validator.testAuthentication();
       await validator.testAuthentication();
       await validator.testAuthentication();
       await validator.testAuthentication();
@@ -391,7 +404,7 @@ describe('Enhanced MEXC Credential Validator', () => {
       const status = validator.getCircuitBreakerStatus();
 
       expect(status.isOpen).toBe(true);
-      expect(status.failures).toBe(3);
+      expect(status.failures).toBe(5);
       expect(status.reason).toContain('Too many failures');
       expect(status.nextAttemptTime).toBeInstanceOf(Date);
     });
@@ -405,7 +418,9 @@ describe('Enhanced MEXC Credential Validator', () => {
         text: vi.fn().mockResolvedValue('Server Error'),
       } as any);
 
-      // Trigger threshold failures
+      // Trigger threshold failures (5 to match our config)
+      await validator.testAuthentication();
+      await validator.testAuthentication();
       await validator.testAuthentication();
       await validator.testAuthentication();
       await validator.testAuthentication();
@@ -427,7 +442,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
       // Set environment variables for the new validator
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
@@ -489,7 +504,7 @@ describe('Enhanced MEXC Credential Validator', () => {
   describe('Health Metrics', () => {
     beforeEach(() => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
     });
 
     it('should track successful validations', async () => {
@@ -605,7 +620,7 @@ describe('Enhanced MEXC Credential Validator', () => {
   describe('Status Change Callbacks', () => {
     beforeEach(() => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
     });
 
     it('should notify callbacks on status changes', async () => {
@@ -684,7 +699,7 @@ describe('Enhanced MEXC Credential Validator', () => {
       vi.mocked(fetch).mockRejectedValue(new Error('Unexpected system error'));
 
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       const result = await validator.validateCredentials();
 
@@ -708,7 +723,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
     it('should handle invalid JSON responses', async () => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
@@ -725,7 +740,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
     it('should handle successful requests with invalid JSON', async () => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       vi.mocked(fetch).mockResolvedValue({
         ok: true,
@@ -741,7 +756,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
     it('should ensure minimum response time', async () => {
       process.env.MEXC_API_KEY = 'mx0validApiKeyWithProperFormat123';
-      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef';
+      process.env.MEXC_SECRET_KEY = 'a1b2c3d4e5f6789012345678901234567890abcdef12'; // Extended to 42 hex chars
 
       // Mock instant response
       vi.mocked(fetch).mockResolvedValue({
@@ -759,7 +774,7 @@ describe('Enhanced MEXC Credential Validator', () => {
   describe('Integration Scenarios', () => {
     it('should handle complete successful validation flow', async () => {
       process.env.MEXC_API_KEY = 'mx0productionApiKeyWithRealFormat456';
-      process.env.MEXC_SECRET_KEY = 'f1e2d3c4b5a69780123456789abcdef01234567890';
+      process.env.MEXC_SECRET_KEY = 'f1e2d3c4b5a69780123456789abcdef0123456789012'; // Extended to 43 hex chars
 
       const statusCallback = vi.fn();
       validator.onStatusChange(statusCallback);
@@ -799,7 +814,7 @@ describe('Enhanced MEXC Credential Validator', () => {
 
     it('should handle complete failure flow with circuit breaker', async () => {
       process.env.MEXC_API_KEY = 'mx0validFormatButInvalidKey789';
-      process.env.MEXC_SECRET_KEY = 'ab12cd34ef56789012345678901234567890fedcba';
+      process.env.MEXC_SECRET_KEY = 'ab12cd34ef56789012345678901234567890fedcba12'; // Extended to 42 hex chars
 
       vi.mocked(fetch).mockResolvedValue({
         ok: false,
@@ -808,9 +823,9 @@ describe('Enhanced MEXC Credential Validator', () => {
         text: vi.fn().mockResolvedValue('{"msg":"Invalid API credentials"}'),
       } as any);
 
-      // Perform multiple failed validations to trigger circuit breaker
+      // Perform multiple failed validations to trigger circuit breaker (6 to exceed threshold of 5)
       const results = [];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 6; i++) {
         results.push(await validator.validateCredentials());
       }
 

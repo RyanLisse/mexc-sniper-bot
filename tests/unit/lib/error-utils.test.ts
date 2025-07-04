@@ -16,6 +16,13 @@ import {
   createSafeError,
 } from '../../../src/lib/error-utils';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('ValidationError', () => {
   it('should create validation error with message', () => {
     const error = new ValidationError('Invalid input');
@@ -260,8 +267,11 @@ describe('RetryHandler', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   it('should succeed on first attempt', async () => {

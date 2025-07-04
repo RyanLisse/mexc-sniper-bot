@@ -16,6 +16,13 @@ import {
 } from '../../../../../src/domain/entities/safety/emergency-stop.entity';
 import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../../utils/timeout-elimination-helpers';
+
 describe('EmergencyStop Domain Entity', () => {
   let validTriggerConditions: TriggerCondition[];
   let validEmergencyActions: EmergencyAction[];

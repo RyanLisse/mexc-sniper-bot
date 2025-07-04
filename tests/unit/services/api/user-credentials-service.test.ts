@@ -10,6 +10,13 @@ import {
   type DecryptedCredentials,
 } from '../../../../src/services/api/user-credentials-service';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock dependencies
 vi.mock('drizzle-orm', () => ({
   and: vi.fn(() => 'mocked-and-condition'),
@@ -94,8 +101,11 @@ describe('User Credentials Service', () => {
     dbModule.apiCredentials = mockApiCredentials;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('getUserCredentials', () => {

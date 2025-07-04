@@ -58,6 +58,13 @@ import {
   validateServiceResponse,
 } from '../../../../src/services/api/mexc-schemas';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('MEXC API Schemas and Type Definitions', () => {
   let mockConsole: any;
 
@@ -77,8 +84,11 @@ describe('MEXC API Schemas and Type Definitions', () => {
     global.console.debug = mockConsole.debug;
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Configuration Types', () => {

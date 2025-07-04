@@ -11,6 +11,13 @@ import {
   safeGetProperty,
 } from '../../../src/utils/trading-data-transformers';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('normalizeVcoinId', () => {
   it('should convert string to string', () => {
     expect(normalizeVcoinId('123')).toBe('123');

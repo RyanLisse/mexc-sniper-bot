@@ -8,6 +8,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { rateLimitScenarios, createRateLimitMockFetch, authTestData, setupRateLimitTestEnvironment } from '../utils/rate-limit-test-helpers';
 import { SupabaseRateLimitHandler, withRateLimitHandling } from '../../src/lib/supabase-rate-limit-handler';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../utils/timeout-elimination-helpers';
+
 const BASE_URL = 'http://localhost:3008';
 
 describe('Authentication Rate Limit Integration Tests', () => {
@@ -21,9 +28,12 @@ describe('Authentication Rate Limit Integration Tests', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     global.fetch = originalFetch;
     envSetup.cleanup();
+  
   });
 
   describe('Authentication Session Endpoint', () => {

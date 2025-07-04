@@ -75,15 +75,28 @@ export class DataFetcher {
     source: string;
     data?: unknown;
   }> {
+    // Handle null/undefined/invalid vcoinId
+    const safeVcoinId = vcoinId && typeof vcoinId === 'string' ? vcoinId.trim() : '';
+    
+    if (!safeVcoinId) {
+      this.logger.warn(`[DataFetcher] Invalid vcoinId provided: ${vcoinId}`);
+      return {
+        vcoinId: safeVcoinId,
+        symbol: "UNKNOWN",
+        success: false,
+        source: "invalid_input",
+      };
+    }
+
     try {
-      this.logger.info(`[DataFetcher] Fetching symbol data for: ${vcoinId}`);
+      this.logger.info(`[DataFetcher] Fetching symbol data for: ${safeVcoinId}`);
       const result = await this.mexcApiAgent.callMexcApi("/symbols", {
-        vcoinId,
+        vcoinId: safeVcoinId,
       });
 
       if (result && typeof result === "object") {
         return {
-          vcoinId,
+          vcoinId: safeVcoinId,
           symbol: (result as any).symbol || "UNKNOWN",
           success: true,
           source: "mexc-api",
@@ -92,7 +105,7 @@ export class DataFetcher {
       }
 
       return {
-        vcoinId,
+        vcoinId: safeVcoinId,
         symbol: "UNKNOWN",
         success: true,
         source: "mexc-api",
@@ -100,11 +113,11 @@ export class DataFetcher {
       };
     } catch (error) {
       this.logger.error(
-        `[DataFetcher] Symbol API call failed for ${vcoinId}:`,
+        `[DataFetcher] Symbol API call failed for ${safeVcoinId}:`,
         error instanceof Error ? error.message : String(error)
       );
       return {
-        vcoinId,
+        vcoinId: safeVcoinId,
         symbol: "UNKNOWN",
         success: false,
         source: "error_fallback",
@@ -120,14 +133,29 @@ export class DataFetcher {
     success: boolean;
     timestamp: string;
   }> {
+    // Handle null/undefined/invalid symbol
+    const safeSymbol = symbol && typeof symbol === 'string' ? symbol.trim() : '';
+    
+    if (!safeSymbol) {
+      this.logger.warn(`[DataFetcher] Invalid symbol provided: ${symbol}`);
+      return {
+        symbol: safeSymbol,
+        price: 0,
+        volume: 0,
+        change: 0,
+        success: false,
+        timestamp: new Date().toISOString(),
+      };
+    }
+
     try {
-      this.logger.info(`[DataFetcher] Fetching market data for: ${symbol}`);
-      const result = await this.mexcApiAgent.callMexcApi("/market", { symbol });
+      this.logger.info(`[DataFetcher] Fetching market data for: ${safeSymbol}`);
+      const result = await this.mexcApiAgent.callMexcApi("/market", { symbol: safeSymbol });
 
       if (result && typeof result === "object") {
         const marketData = result as any;
         return {
-          symbol,
+          symbol: safeSymbol,
           price: Number.parseFloat(marketData.price) || 0,
           volume: Number.parseFloat(marketData.volume) || 0,
           change: Number.parseFloat(marketData.change) || 0,
@@ -137,7 +165,7 @@ export class DataFetcher {
       }
 
       return {
-        symbol,
+        symbol: safeSymbol,
         price: 0,
         volume: 0,
         change: 0,
@@ -146,11 +174,11 @@ export class DataFetcher {
       };
     } catch (error) {
       this.logger.error(
-        `[DataFetcher] Market data fetch failed for ${symbol}:`,
+        `[DataFetcher] Market data fetch failed for ${safeSymbol}:`,
         error instanceof Error ? error.message : String(error)
       );
       return {
-        symbol,
+        symbol: safeSymbol,
         price: 0,
         volume: 0,
         change: 0,
@@ -168,11 +196,27 @@ export class DataFetcher {
       data?: unknown;
     }>
   > {
-    this.logger.info(
-      `[DataFetcher] Fetching data for ${vcoinIds.length} symbols`
+    // Handle null/undefined/non-array input
+    if (!Array.isArray(vcoinIds) || vcoinIds.length === 0) {
+      this.logger.warn("[DataFetcher] No valid vcoinIds provided");
+      return [];
+    }
+
+    // Filter out null/undefined/empty vcoinIds
+    const validVcoinIds = vcoinIds.filter(id => 
+      id && typeof id === 'string' && id.trim() !== ''
     );
 
-    const promises = vcoinIds.map((vcoinId) => this.fetchSymbolData(vcoinId));
+    if (validVcoinIds.length === 0) {
+      this.logger.warn("[DataFetcher] No valid vcoinIds after filtering");
+      return [];
+    }
+
+    this.logger.info(
+      `[DataFetcher] Fetching data for ${validVcoinIds.length} symbols`
+    );
+
+    const promises = validVcoinIds.map((vcoinId) => this.fetchSymbolData(vcoinId));
     const results = await Promise.allSettled(promises);
 
     return results.map((result, index) => {
@@ -180,11 +224,11 @@ export class DataFetcher {
         return result.value;
       }
       this.logger.error(
-        `[DataFetcher] Failed to fetch symbol ${vcoinIds[index]}:`,
+        `[DataFetcher] Failed to fetch symbol ${validVcoinIds[index]}:`,
         result.reason
       );
       return {
-        vcoinId: vcoinIds[index],
+        vcoinId: validVcoinIds[index] || "UNKNOWN",
         symbol: "UNKNOWN",
         success: false,
       };

@@ -42,6 +42,13 @@ import { getUnifiedMexcService, invalidateUserCredentialsCache } from '../../../
 import { getUserCredentials } from '../../../../src/services/api/user-credentials-service';
 import { validateMexcApiResponse } from '@/src/schemas/mexc-api-validation-schemas';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 describe('API Credentials Test Service', () => {
   let mockConsole: any;
   let testService: ApiCredentialsTestService;
@@ -64,8 +71,11 @@ describe('API Credentials Test Service', () => {
     testService = new ApiCredentialsTestService();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.restoreAllMocks();
+  
   });
 
   describe('Constructor and Singleton', () => {

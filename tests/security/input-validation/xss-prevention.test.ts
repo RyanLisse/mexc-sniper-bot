@@ -15,6 +15,13 @@ import { SecurityTestDataGenerator, SecurityTestHelpers, SecurityTestMatchers } 
 import { sanitizeInput, validateInput } from '@/src/lib/security-config'
 import { NextRequest } from 'next/server'
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 // Mock external dependencies
 vi.mock('next/server')
 

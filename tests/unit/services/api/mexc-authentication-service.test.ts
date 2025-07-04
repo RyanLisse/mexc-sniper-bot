@@ -18,6 +18,13 @@ import {
 } from '../../../../src/services/api/mexc-authentication-service';
 import type { MexcApiClient } from '../../../../src/services/api/mexc-api-client';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../../utils/timeout-elimination-helpers';
+
 // Mock crypto module
 vi.mock('node:crypto', () => ({
   randomBytes: vi.fn(),
@@ -75,7 +82,9 @@ describe('MexcAuthenticationService', () => {
     resetGlobalAuthenticationService();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
+    await flushPromises();
     vi.useRealTimers();
     vi.restoreAllMocks();
     
@@ -87,6 +96,7 @@ describe('MexcAuthenticationService', () => {
       authService.destroy();
     }
     resetGlobalAuthenticationService();
+  
   });
 
   describe('Constructor and Configuration', () => {

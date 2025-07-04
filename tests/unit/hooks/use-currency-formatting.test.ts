@@ -7,6 +7,13 @@ import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useCurrencyFormatting } from '../../../src/hooks/use-currency-formatting';
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 describe('useCurrencyFormatting', () => {
   it('should return all formatting functions', () => {
     const { result } = renderHook(() => useCurrencyFormatting());

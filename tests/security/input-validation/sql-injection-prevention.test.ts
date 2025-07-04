@@ -15,6 +15,13 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { SecurityTestDataGenerator, SecurityTestHelpers } from '../utils/security-test-utils'
 import { sanitizeInput } from '@/src/lib/security-config'
 
+import { 
+  setupTimeoutElimination, 
+  withTimeout, 
+  TIMEOUT_CONFIG,
+  flushPromises 
+} from '../../utils/timeout-elimination-helpers';
+
 // Mock database functions
 const mockDbQuery = vi.fn()
 const mockDbExecute = vi.fn()
