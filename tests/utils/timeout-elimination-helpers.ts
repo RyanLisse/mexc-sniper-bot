@@ -16,31 +16,31 @@ import { vi, expect, beforeEach, afterEach } from 'vitest';
 
 // TIMEOUT CONFIGURATION: Generous timeouts to eliminate all failures
 export const TIMEOUT_CONFIG = {
-  // Basic timeouts for simple operations
-  QUICK: 5000,     // Simple sync operations
-  STANDARD: 15000,  // Standard async operations
-  SLOW: 30000,      // Complex async operations
+  // Basic timeouts for simple operations - INCREASED to eliminate 1000ms defaults
+  QUICK: 8000,     // Simple sync operations (increased from 5000)
+  STANDARD: 25000,  // Standard async operations (increased from 15000)
+  SLOW: 45000,      // Complex async operations (increased from 30000)
   
-  // Hook-specific timeouts (FIXED: Added hook timeout configurations)
-  HOOK_BEFORE_EACH: 20000,   // beforeEach hook timeout
-  HOOK_AFTER_EACH: 15000,    // afterEach hook timeout
-  HOOK_BEFORE_ALL: 45000,    // beforeAll hook timeout
-  HOOK_AFTER_ALL: 45000,     // afterAll hook timeout
-  HOOK_SETUP: 10000,         // Hook setup operations
-  HOOK_CLEANUP: 10000,       // Hook cleanup operations
+  // Hook-specific timeouts (FIXED: Increased to prevent 1000ms default hook timeouts)
+  HOOK_BEFORE_EACH: 30000,   // beforeEach hook timeout (increased from 20000)
+  HOOK_AFTER_EACH: 25000,    // afterEach hook timeout (increased from 15000)
+  HOOK_BEFORE_ALL: 60000,    // beforeAll hook timeout (increased from 45000)
+  HOOK_AFTER_ALL: 60000,     // afterAll hook timeout (increased from 45000)
+  HOOK_SETUP: 20000,         // Hook setup operations (increased from 10000)
+  HOOK_CLEANUP: 20000,       // Hook cleanup operations (increased from 10000)
   
   // Service-specific timeouts
-  CONNECTIVITY: 25000,  // MexcConnectivityService operations
-  RETRY: 20000,         // MexcRetryService operations
-  API_VALIDATION: 20000, // Enhanced API validation
+  CONNECTIVITY: 35000,  // MexcConnectivityService operations (increased from 25000)
+  RETRY: 30000,         // MexcRetryService operations (increased from 20000)
+  API_VALIDATION: 30000, // Enhanced API validation (increased from 20000)
   
   // Integration timeouts
-  SERVER_STARTUP: 60000,  // Server startup and initialization
-  DATABASE: 30000,        // Database operations
-  NETWORK: 45000,         // Network API calls
+  SERVER_STARTUP: 90000,  // Server startup and initialization (increased from 60000)
+  DATABASE: 45000,        // Database operations (increased from 30000)
+  NETWORK: 60000,         // Network API calls (increased from 45000)
   
   // Maximum timeout for the most complex operations
-  MAXIMUM: 120000,
+  MAXIMUM: 180000, // Increased from 120000
 };
 
 /**

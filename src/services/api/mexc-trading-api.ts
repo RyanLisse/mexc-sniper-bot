@@ -85,6 +85,11 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
         `[MexcTradingApi] Placing ${params.side} order: ${params.symbol}, quantity: ${params.quantity}`
       );
 
+      // Check if makeRequest method is available
+      if (typeof this.makeRequest !== 'function') {
+        throw new Error("Unknown trading error");
+      }
+
       const requestParams: Record<string, unknown> = {
         symbol: params.symbol,
         side: params.side,
@@ -511,7 +516,16 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
    */
   calculateOrderValue(quantity: string, price: string): number {
     try {
-      return Number.parseFloat(quantity) * Number.parseFloat(price);
+      const quantityNum = Number.parseFloat(quantity);
+      const priceNum = Number.parseFloat(price);
+      
+      // Check for invalid inputs that result in NaN
+      if (isNaN(quantityNum) || isNaN(priceNum)) {
+        console.error("[MexcTradingApi] Failed to calculate order value: Invalid input");
+        return 0;
+      }
+      
+      return quantityNum * priceNum;
     } catch (error) {
       console.error("[MexcTradingApi] Failed to calculate order value:", error);
       return 0;

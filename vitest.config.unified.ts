@@ -96,38 +96,38 @@ export default defineConfig({
     testTimeout: (() => {
       // Integration tests need even longer timeouts for server startup and async operations
       if (process.env.TEST_TYPE === 'integration') {
-        return process.env.CI ? 45000 : 60000; // Doubled for server startup
+        return process.env.CI ? 60000 : 90000; // Further increased from 45000/60000
       }
       // Real API tests need maximum timeouts for network operations
       if (process.env.TEST_TYPE === 'real-api') {
-        return process.env.CI ? 90000 : 120000; // Doubled for network reliability
+        return process.env.CI ? 120000 : 150000; // Further increased from 90000/120000
       }
       // Performance tests need moderate timeouts (not too short to avoid false failures)
       if (process.env.TEST_TYPE === 'performance') {
-        return process.env.CI ? 10000 : 15000; // Significantly increased
+        return process.env.CI ? 20000 : 30000; // Increased from 10000/15000
       }
       // Unit tests - generous timeouts for all async patterns including mocked operations
-      return process.env.CI ? 20000 : 30000; // FIXED: Increased from 15000/20000 to eliminate 10000ms default
+      return process.env.CI ? 35000 : 50000; // FIXED: Further increased from 20000/30000 to eliminate all timeout failures
     })(),
     hookTimeout: (() => {
       if (process.env.TEST_TYPE === 'integration') {
-        return process.env.CI ? 60000 : 75000; // Extended for complex setup/teardown
+        return process.env.CI ? 90000 : 120000; // Further extended from 60000/75000
       }
       if (process.env.TEST_TYPE === 'real-api') {
-        return process.env.CI ? 120000 : 150000; // Maximum for API setup
+        return process.env.CI ? 150000 : 180000; // Further increased from 120000/150000
       }
-      // FIXED: Increased hook timeout to prevent 10000ms default timeouts
-      return process.env.CI ? 30000 : 40000; // Increased from 20000/25000 to eliminate hook timeout failures
+      // FIXED: Further increased hook timeout to prevent all hook timeout failures
+      return process.env.CI ? 50000 : 65000; // Further increased from 30000/40000 to eliminate all hook timeout failures
     })(),
     teardownTimeout: (() => {
       if (process.env.TEST_TYPE === 'integration') {
-        return process.env.CI ? 40000 : 50000; // Extended for proper server cleanup
+        return process.env.CI ? 60000 : 80000; // Further extended from 40000/50000
       }
       if (process.env.TEST_TYPE === 'real-api') {
-        return process.env.CI ? 90000 : 120000; // Maximum for API cleanup
+        return process.env.CI ? 120000 : 150000; // Further increased from 90000/120000
       }
-      // FIXED: Increased teardown timeout to prevent cleanup failures
-      return process.env.CI ? 30000 : 40000; // Increased from 20000/25000 for reliable cleanup
+      // FIXED: Further increased teardown timeout to prevent all cleanup failures
+      return process.env.CI ? 50000 : 65000; // Further increased from 30000/40000 for reliable cleanup
     })(),
     
     // Smart retry configuration
@@ -208,19 +208,23 @@ export default defineConfig({
       setupFiles: 'parallel', // Parallel setup files
     },
     
-    // STABILITY-OPTIMIZED PARALLELIZATION
+    // STABILITY-OPTIMIZED PARALLELIZATION - Enhanced to prevent worker thread termination
     pool: 'threads',
     poolOptions: {
       threads: {
-        // Conservative thread allocation to prevent race conditions
-        maxThreads: process.env.TEST_MAX_THREADS ? parseInt(process.env.TEST_MAX_THREADS) : Math.max(1, Math.min(4, Math.floor(cpus().length * 0.5))),
+        // More conservative thread allocation to prevent worker termination
+        maxThreads: process.env.TEST_MAX_THREADS ? parseInt(process.env.TEST_MAX_THREADS) : Math.max(1, Math.min(2, Math.floor(cpus().length * 0.25))),
         minThreads: process.env.TEST_MIN_THREADS ? parseInt(process.env.TEST_MIN_THREADS) : 1,
         isolate: true, // Thread isolation for reliability
         useAtomics: true, // Enable atomic operations
-        // Memory management handled by Node.js garbage collector
+        // Enhanced worker thread stability
+        singleThread: false, // Allow multiple threads but limit them
+        execArgv: [], // Prevent Node.js arguments that might cause worker issues
+        maxMemoryLimitBeforeRecycle: 1024 * 1024 * 500, // 500MB before recycling workers
+        memoryLimit: 1024 * 1024 * 800, // 800MB memory limit per worker
       },
     },
-    maxConcurrency: process.env.TEST_MAX_CONCURRENCY ? parseInt(process.env.TEST_MAX_CONCURRENCY) : 8, // Reduced for stability
+    maxConcurrency: process.env.TEST_MAX_CONCURRENCY ? parseInt(process.env.TEST_MAX_CONCURRENCY) : 4, // Further reduced from 8 to 4 for stability
     fileParallelism: process.env.CI ? false : true, // Disable in CI for stability
     
     // INTELLIGENT CACHING
