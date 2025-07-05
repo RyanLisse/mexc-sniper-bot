@@ -1,5 +1,5 @@
 [build]
-builder = "bun"
+builder = "NIXPACKS"
 buildCommand = "bun run build"
 
 [deploy]
