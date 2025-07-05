@@ -59,9 +59,10 @@ if (typeof setTimeout !== 'undefined') {
   // Increase Node.js default timeout for async operations
   const originalSetTimeout = setTimeout;
   globalThis.setTimeout = ((callback: (...args: any[]) => void, ms?: number, ...args: any[]) => {
-    // Ensure minimum timeout for test stability
+    // Ensure minimum timeout for test stability - FIXED: Prevent NaN values
     const minTimeout = 100; // 100ms minimum
-    const actualTimeout = Math.max(ms || 0, minTimeout);
+    const safeMsValue = typeof ms === 'number' && !isNaN(ms) && isFinite(ms) ? ms : minTimeout;
+    const actualTimeout = Math.max(safeMsValue, minTimeout);
     return originalSetTimeout(callback, actualTimeout, ...args);
   }) as typeof setTimeout;
 }
@@ -73,12 +74,17 @@ export function createTimeoutProof<T>(
   errorMessage?: string
 ): Promise<T> {
   return new Promise((resolve, reject) => {
+    // FIXED: Validate timeout value to prevent NaN
+    const safeTimeoutMs = typeof timeoutMs === 'number' && !isNaN(timeoutMs) && isFinite(timeoutMs) && timeoutMs > 0 
+      ? timeoutMs 
+      : GLOBAL_TIMEOUT_ELIMINATION.EMERGENCY_TIMEOUT;
+      
     const timeout = setTimeout(() => {
       reject(new Error(
         errorMessage || 
-        `TIMEOUT ELIMINATION: Operation timed out after ${timeoutMs}ms (using emergency timeout)`
+        `TIMEOUT ELIMINATION: Operation timed out after ${safeTimeoutMs}ms (using emergency timeout)`
       ));
-    }, timeoutMs);
+    }, safeTimeoutMs);
 
     promise
       .then(resolve)

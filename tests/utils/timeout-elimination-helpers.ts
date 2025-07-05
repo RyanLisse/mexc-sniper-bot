@@ -80,10 +80,10 @@ const createTimeoutConfig = () => {
     MAXIMUM: 300000, // EXTREME increase from 180000 - 5 FULL MINUTES
   };
   
-  // Validate all timeout values to prevent NaN
+  // Validate all timeout values to prevent NaN - ENHANCED VALIDATION
   Object.entries(config).forEach(([key, value]) => {
-    if (isNaN(value) || !isFinite(value) || value <= 0) {
-      console.error(`TIMEOUT_CONFIG: Invalid timeout value for ${key}: ${value}, using default 30000ms`);
+    if (typeof value !== 'number' || isNaN(value) || !isFinite(value) || value <= 0) {
+      console.error(`TIMEOUT_CONFIG: Invalid timeout value for ${key}: ${value} (type: ${typeof value}), using default 30000ms`);
       (config as any)[key] = 30000;
     }
   });

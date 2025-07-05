@@ -51,10 +51,13 @@ function wrapHookWithTimeout<T extends any[]>(
       });
     };
 
-    // Apply the timeout to the options if not already set
+    // Apply the timeout to the options if not already set - FIXED: Prevent NaN values
     const finalOptions = {
       ...options,
-      timeout: Math.max(options?.timeout || 0, timeoutMs)
+      timeout: Math.max(
+        typeof options?.timeout === 'number' && !isNaN(options.timeout) ? options.timeout : 0, 
+        typeof timeoutMs === 'number' && !isNaN(timeoutMs) ? timeoutMs : 30000
+      )
     };
 
     return originalHook(wrappedCallback, finalOptions);
