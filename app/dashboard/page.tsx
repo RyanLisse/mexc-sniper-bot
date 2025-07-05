@@ -3,6 +3,37 @@
 import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+
+// Type definitions for dashboard data
+interface SnipeTarget {
+  id: string;
+  vcoinId?: string;
+  symbolName?: string;
+  symbol?: string;
+  projectName?: string;
+  status: "pending" | "ready" | "executed" | "cancelled";
+  targetExecutionTime?: number;
+  hoursAdvanceNotice?: number;
+  priceDecimalPlaces?: number;
+  quantityDecimalPlaces?: number;
+  confidenceScore?: number;
+  positionSizeUsdt?: number;
+  entryStrategy?: string;
+  stopLossPercent?: number;
+  takeProfitCustom?: number;
+}
+
+interface CalendarEntry {
+  vcoinId: string;
+  symbol: string;
+  projectName?: string;
+  launchTime: Date;
+  hoursAdvanceNotice?: number;
+  priceDecimalPlaces?: number;
+  quantityDecimalPlaces?: number;
+  confidence?: number;
+}
+
 import { useAuth } from "@/src/components/auth/supabase-auth-provider";
 import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
 import { AIEnhancedPatternDisplay } from "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
@@ -40,7 +71,7 @@ import {
 } from "@/src/hooks/use-portfolio";
 
 export default function DashboardPage() {
-  const { user, isLoading: userLoading } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const { toast } = useToast();
 
@@ -99,7 +130,7 @@ export default function DashboardPage() {
       enabled: true, // Always enable the query
     }
   );
-  const { data: portfolio } = usePortfolio(userId || "");
+  usePortfolio(userId || ""); // Keep hook active for potential future use
   const { data: calendarData } = useMexcCalendar();
   const { data: readyLaunches } = useReadyLaunches();
   const { data: snipeTargets, isLoading: snipeTargetsLoading } =
@@ -112,7 +143,7 @@ export default function DashboardPage() {
     });
 
   // Handler functions for trading targets
-  const handleExecuteSnipe = async (target: any) => {
+  const handleExecuteSnipe = async (target: SnipeTarget) => {
     console.info("Executing snipe for target:", target);
 
     try {
@@ -284,10 +315,10 @@ export default function DashboardPage() {
 
     return snipeTargets
       .filter(
-        (target: any) =>
+        (target: SnipeTarget) =>
           target.status === "pending" || target.status === "ready"
       )
-      .map((target: any) => ({
+      .map((target: SnipeTarget) => ({
         vcoinId: target.vcoinId || target.id?.toString(),
         symbol: target.symbolName || target.symbol,
         projectName:
@@ -313,7 +344,7 @@ export default function DashboardPage() {
   const transformedCalendarTargets = useMemo(() => {
     if (!Array.isArray(calendarData)) return [];
 
-    return calendarData.map((entry: any) => ({
+    return calendarData.map((entry: CalendarEntry) => ({
       vcoinId: entry.vcoinId,
       symbol: entry.symbol,
       projectName: entry.projectName || "Unknown Project",

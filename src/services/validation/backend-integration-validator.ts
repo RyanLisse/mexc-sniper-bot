@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Backend Integration Validator
  *
@@ -51,13 +47,13 @@ export interface BackendValidationReport {
  */
 export class BackendIntegrationValidator {
   private logger = {
-    info: (message: string, context?: any) =>
+    info: (message: string, context?: Record<string, unknown>) =>
       console.info("[backend-validator]", message, context || ""),
-    warn: (message: string, context?: any) =>
+    warn: (message: string, context?: Record<string, unknown>) =>
       console.warn("[backend-validator]", message, context || ""),
-    error: (message: string, context?: any) =>
+    error: (message: string, context?: Record<string, unknown>) =>
       console.error("[backend-validator]", message, context || ""),
-    debug: (message: string, context?: any) =>
+    debug: (message: string, context?: Record<string, unknown>) =>
       console.debug("[backend-validator]", message, context || ""),
   };
 

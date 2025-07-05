@@ -346,7 +346,7 @@ export const PATCH = authenticatedHandler({
       console.debug("[websocket-api]", message, context || ""),
   };
   try {
-    const { operation, ...params } = context.body;
+    const { operation } = context.body;
 
     switch (operation) {
       case "health_check": {

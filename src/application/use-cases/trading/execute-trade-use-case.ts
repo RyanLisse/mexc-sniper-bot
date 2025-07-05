@@ -61,10 +61,10 @@ export class ExecuteTradeUseCase {
     private readonly tradingService: TradingService,
     private readonly notificationService: NotificationService,
     private readonly logger: {
-      info: (message: string, context?: any) => void;
-      warn: (message: string, context?: any) => void;
-      error: (message: string, context?: any) => void;
-      debug: (message: string, context?: any) => void;
+      info: (message: string, context?: Record<string, unknown>) => void;
+      warn: (message: string, context?: Record<string, unknown>) => void;
+      error: (message: string, context?: Record<string, unknown>) => void;
+      debug: (message: string, context?: Record<string, unknown>) => void;
     }
   ) {}
 

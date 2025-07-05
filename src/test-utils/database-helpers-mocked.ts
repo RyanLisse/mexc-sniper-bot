@@ -516,7 +516,7 @@ export function verifyPatternToRecordConversion(
  * Get mock data store if available (for testing)
  */
 export function getMockDataStore() {
-  return (globalThis as any).mockDataStore || null;
+  return (globalThis as { mockDataStore?: unknown }).mockDataStore || null;
 }
 
 /**

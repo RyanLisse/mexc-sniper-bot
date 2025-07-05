@@ -127,7 +127,7 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
    */
   subscribe(
     channel: string,
-    callback: (data: any) => void,
+    callback: (data: WebSocketMessage) => void,
     symbol?: string
   ): string {
     const id = `${channel}_${symbol || "all"}_${Date.now()}`;
@@ -191,7 +191,7 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
   /**
    * Handle incoming messages
    */
-  private handleMessage(data: any): void {
+  private handleMessage(data: WebSocketMessage): void {
     // Handle different message types
     if (data.stream) {
       // Market data message
@@ -206,7 +206,7 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
   } /**
    * Handle market data messages
    */
-  private handleMarketData(data: any): void {
+  private handleMarketData(data: WebSocketMessage): void {
     for (const [, subscription] of this.subscriptions) {
       if (subscription.isActive && data.stream.includes(subscription.channel)) {
         subscription.callback(data.data);
@@ -217,7 +217,7 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
   /**
    * Create mock WebSocket for Node.js environment
    */
-  private createMockWebSocket(): any {
+  private createMockWebSocket(): UniversalWebSocket {
     return {
       onopen: null,
       onmessage: null,
@@ -231,7 +231,7 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
   /**
    * Send message to WebSocket
    */
-  private send(message: any): void {
+  private send(message: WebSocketMessage): void {
     if (this.ws && this.state === "connected") {
       this.ws.send(JSON.stringify(message));
     }
@@ -338,10 +338,12 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
   /**
    * Handle subscription response
    */
-  private handleSubscriptionResponse(data: any): void {
+  private handleSubscriptionResponse(data: WebSocketMessage): void {
     if (data.id && this.subscriptions.has(data.id)) {
-      const subscription = this.subscriptions.get(data.id)!;
-      subscription.callback(data);
+      const subscription = this.subscriptions.get(data.id);
+      if (subscription) {
+        subscription.callback(data);
+      }
     } else {
       // Broadcast to all subscriptions if no specific ID
       for (const subscription of this.subscriptions.values()) {
