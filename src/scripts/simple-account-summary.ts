@@ -7,7 +7,7 @@
  */
 
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schemas/trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 
 async function main() {
   try {

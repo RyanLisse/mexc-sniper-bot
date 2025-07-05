@@ -11,8 +11,8 @@ import { db } from "@/src/db";
 import {
   balanceSnapshots,
   portfolioSummary,
-  snipeTargets,
-} from "@/src/db/schemas/trading";
+} from "@/src/db/schemas/supabase-trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 
 async function main() {
   try {

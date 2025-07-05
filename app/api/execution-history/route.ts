@@ -1,7 +1,7 @@
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { executionHistory } from "@/src/db/schemas/trading";
+import { executionHistory } from "@/src/db/schemas/supabase-trading";
 
 interface ExecutionRecord {
   action: string;

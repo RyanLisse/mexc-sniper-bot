@@ -1,7 +1,7 @@
 import { and, desc, eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schemas/trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 
 // Create snipe target endpoint
 export async function POST(request: NextRequest) {

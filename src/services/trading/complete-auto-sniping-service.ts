@@ -16,12 +16,12 @@ import {
 
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/src/db";
-import type { SnipeTarget } from "@/src/db/schemas/trading";
+import type { SnipeTarget } from "@/src/db/schemas/supabase-auth";
 import {
   executionHistory,
-  snipeTargets,
   transactions,
-} from "@/src/db/schemas/trading";
+} from "@/src/db/schemas/supabase-trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { UnifiedMexcServiceV2 } from "../api/unified-mexc-service-v2";

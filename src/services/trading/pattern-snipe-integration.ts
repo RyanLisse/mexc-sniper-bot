@@ -9,7 +9,7 @@
  */
 
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schemas/trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import {

@@ -22,6 +22,9 @@ export interface CoreTradingConfig {
   timeout?: number;
   maxRetries?: number;
 
+  // User Configuration
+  userId?: string;
+
   // Trading Configuration
   enablePaperTrading: boolean;
   paperTradingMode: boolean;
@@ -63,6 +66,7 @@ export const CoreTradingConfigSchema = z.object({
   baseUrl: z.string().url().optional(),
   timeout: z.number().positive().optional(),
   maxRetries: z.number().positive().optional(),
+  userId: z.string().optional(),
   enablePaperTrading: z.boolean().default(true),
   defaultStrategy: z.string().default("conservative"),
   maxConcurrentPositions: z.number().positive().default(5),
@@ -122,6 +126,10 @@ export interface TradeParameters {
   confidenceScore?: number;
   stopLossPercent?: number;
   takeProfitPercent?: number;
+
+  // Trade persistence parameters
+  snipeTargetId?: string;
+  vcoinId?: string;
 }
 
 export const TradeParametersSchema = z.object({
@@ -139,6 +147,8 @@ export const TradeParametersSchema = z.object({
   confidenceScore: z.number().min(0).max(100).optional(),
   stopLossPercent: z.number().positive().optional(),
   takeProfitPercent: z.number().positive().optional(),
+  snipeTargetId: z.string().optional(),
+  vcoinId: z.string().optional(),
 });
 
 // ============================================================================
@@ -434,7 +444,7 @@ export const ServiceStatusSchema = z.object({
 // ============================================================================
 
 // Use the database schema for AutoSnipeTarget with extended properties for processing
-import type { SnipeTarget } from "@/src/db/schemas/trading";
+import type { SnipeTarget } from "@/src/db/schemas/supabase-auth";
 
 export interface AutoSnipeTarget extends SnipeTarget {
   // Mapped properties for trading processing

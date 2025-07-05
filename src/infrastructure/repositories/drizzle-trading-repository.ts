@@ -6,7 +6,8 @@
 import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { TradingRepository } from "@/src/application/interfaces/trading-repository";
 import { db } from "@/src/db";
-import { snipeTargets, transactions } from "@/src/db/schemas/trading";
+import { transactions } from "@/src/db/schemas/supabase-trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 import { Trade, TradeStatus } from "@/src/domain/entities/trading/trade";
 import { toSafeError } from "@/src/lib/error-type-utils";
 

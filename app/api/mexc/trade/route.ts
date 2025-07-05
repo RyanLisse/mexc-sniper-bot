@@ -1,8 +1,8 @@
 import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/src/db";
-import type { NewExecutionHistory } from "@/src/db/schemas/trading";
-import { apiCredentials, executionHistory } from "@/src/db/schemas/trading";
+import type { NewExecutionHistory } from "@/src/db/schemas/supabase-trading";
+import { apiCredentials, executionHistory } from "@/src/db/schemas/supabase-trading";
 import {
   apiResponse,
   createErrorResponse,

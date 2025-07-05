@@ -9,7 +9,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import type { PatternMatch } from "@/src/core/pattern-detection/interfaces";
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schemas/trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 export interface PatternTargetConfig {
   // User configuration
   defaultUserId: string;

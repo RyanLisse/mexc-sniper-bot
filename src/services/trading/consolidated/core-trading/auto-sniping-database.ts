@@ -7,7 +7,7 @@
 
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/src/db";
-import { snipeTargets } from "@/src/db/schemas/trading";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { AutoSnipeTarget, ModuleContext } from "./auto-sniping-types";
 
