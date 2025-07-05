@@ -43,7 +43,7 @@ import {
 import type { TakeProfitStrategy } from "@/src/types/take-profit-strategies";
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { user, isLoading: userLoading } = useAuth();
+  const { user } = useAuth();
 
   // Use authenticated user ID
   const userId = user?.id;
@@ -62,12 +62,10 @@ export default function SettingsPage() {
   const {
     settingsStatus,
     syncToExecutionSystem,
-    updateExecutionSettings,
     isInSync,
     syncHealth,
     isUpdating: isSyncing,
     updateError: syncError,
-    forceRefresh: refreshSyncStatus,
     isExecutionSystemActive,
     isAutoSnipingActive,
   } = useTradingSettingsSync(userId);
@@ -170,7 +168,7 @@ export default function SettingsPage() {
   };
 
   // Handle saving editable take-profit table
-  const _handleSaveMultiLevelTakeProfit = async (levels: any[]) => {
+  const _handleSaveMultiLevelTakeProfit = async (levels: { level?: string; percentage?: number; [key: string]: unknown }[]) => {
     console.info("Saving multi-level take-profit levels:", levels);
 
     // Update the multi-level configuration
