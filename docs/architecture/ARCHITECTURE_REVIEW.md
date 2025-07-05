@@ -8,7 +8,7 @@ This document provides a high level overview of the current architecture, key in
 graph TD
   subgraph Web
     A[Next.js Frontend]
-    B[Kinde Auth]
+    B[Supabase Auth]
   end
   subgraph API
     C[Next.js API Routes]
@@ -32,7 +32,7 @@ graph TD
 ```
 
 **Key Integration Points**
-- **Authentication**: `Kinde` integrates with Next.js routes via middleware in `middleware.ts`.
+- **Authentication**: `Supabase` integrates with Next.js routes via middleware in `middleware.ts`.
 - **Workflows**: Inngest functions reside in `src/inngest` and trigger agent logic under `src/mexc-agents`.
 - **Database**: Drizzle models are defined in `src/db` and migrations under `src/db/migrations`.
 - **Monitoring**: OpenTelemetry setup in `monitoring/` with metrics exporters.

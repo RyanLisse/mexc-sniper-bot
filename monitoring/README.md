@@ -6,7 +6,7 @@ This directory contains comprehensive monitoring and alerting configurations for
 
 The authentication monitoring system includes:
 
-- **Real-time Health Monitoring**: Continuous monitoring of authentication endpoints and Kinde integration
+- **Real-time Health Monitoring**: Continuous monitoring of authentication endpoints and Supabase integration
 - **Performance Tracking**: Response time, throughput, and availability metrics
 - **Security Monitoring**: Failed login attempts, suspicious activities, and security violations
 - **Automated Alerting**: Multi-channel notifications with severity-based routing
@@ -118,7 +118,7 @@ curl https://your-app.com/api/monitoring/auth?format=prometheus
 
 ### Critical Alerts
 - Authentication system completely down
-- Kinde connectivity failure
+- Supabase connectivity failure
 - Invalid authentication configuration
 - Error rate > 5%
 
@@ -128,7 +128,7 @@ curl https://your-app.com/api/monitoring/auth?format=prometheus
 - Degraded response time (> 2s)
 - Reduced availability (< 99%)
 - Elevated error rate (> 1%)
-- Kinde SDK warnings
+- Supabase client warnings
 
 **Response**: Investigation within 15 minutes
 

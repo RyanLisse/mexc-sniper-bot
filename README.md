@@ -71,7 +71,7 @@ Revolutionary TypeScript-based system with specialized AI agents:
 
 - **Frontend**: Next.js 15 with TypeScript and React 19
 - **Agent System**: Pure TypeScript with OpenAI GPT-4 integration
-- **Authentication**: Kinde Auth with secure session management
+- **Authentication**: Supabase Auth with secure session management
 - **Workflows**: Inngest for reliable background task orchestration
 - **Database**: Drizzle ORM with Supabase (serverless PostgreSQL) for global edge performance
 - **Data Management**: TanStack Query v5.80.6 for real-time data fetching and caching
@@ -85,7 +85,7 @@ Revolutionary TypeScript-based system with specialized AI agents:
 
 - **Node.js 20.11.0+** and bun/npm (see package.json engines)
 - **OpenAI API key** (required for AI agents and Stagehand testing)
-- **Kinde Auth account** (required for authentication)
+- **Supabase project** (required for authentication)
 - **MEXC API credentials** (optional, for authenticated endpoints)
 - **Supabase account** (optional, for production database)
 
@@ -184,7 +184,7 @@ make dev-inngest # Inngest dev server on port 8288
 ### 5. Access the Application
 
 - **Homepage**: http://localhost:3008 (public landing page)
-- **Authentication**: http://localhost:3008/auth (Kinde Auth login)
+- **Authentication**: http://localhost:3008/auth (Supabase Auth login)
 - **Trading Dashboard**: http://localhost:3008/dashboard (authenticated users)
 - **Configuration**: http://localhost:3008/config (user settings)
 - **Safety Monitor**: http://localhost:3008/safety (risk management)

@@ -6,7 +6,7 @@ This document provides comprehensive guidance for using Stagehand for end-to-end
 
 Stagehand is an AI-powered browser automation framework that uses natural language instructions to interact with web applications. Our implementation provides comprehensive E2E testing coverage for the MEXC Sniper Bot's complex AI-driven features:
 
-- **Kinde Auth Integration**: Secure authentication flows and protected route access
+- **Supabase Auth Integration**: Secure authentication flows and protected route access
 - **Real-time Dashboard**: SWR data fetching, live metrics, and responsive design
 - **Pattern Discovery**: AI-powered MEXC ready state pattern detection (sts:2, st:2, tt:4)
 - **Agent Workflows**: Inngest workflow triggers and multi-agent coordination
@@ -162,7 +162,7 @@ npm run test:all
 **Location**: `tests/stagehand/auth/`
 
 **Coverage**:
-- Kinde Auth login/logout flow
+- Supabase Auth login/logout flow
 - Protected route access validation
 - Session persistence testing
 - Authentication error handling
@@ -343,7 +343,7 @@ class PatternTestHelper extends StagehandTestHelper {
 3. **Authentication Failures**
    ```
    Error: Could not find login button
-   Solution: Verify Kinde Auth configuration and test user setup
+   Solution: Verify Supabase Auth configuration and test user setup
    ```
 
 4. **API Mocking Issues**

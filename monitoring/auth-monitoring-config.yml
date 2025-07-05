@@ -24,8 +24,8 @@ health_checks:
       status: "healthy"
       auth_configured: true
     
-  kinde_connectivity:
-    url: "${KINDE_ISSUER_URL}/.well-known/jwks.json"
+  supabase_connectivity:
+    url: "${SUPABASE_URL}/auth/v1" # ping Supabase auth endpoint
     method: GET
     timeout: 5s
     interval: 60s
@@ -36,7 +36,7 @@ health_checks:
     method: GET
     timeout: 15s
     interval: 300s # 5 minutes
-    expected_status: [302, 307] # Redirect to Kinde
+    expected_status: [302, 307] # Redirect to Supabase
     follow_redirects: false
 
 # Performance monitoring thresholds
@@ -68,10 +68,10 @@ alerts:
       severity: critical
       escalation: immediate
       
-    kinde_connectivity_failure:
-      condition: "kinde_connectivity.status != 200"
+    supabase_connectivity_failure:
+      condition: "supabase_connectivity.status != 200"
       duration: 2m
-      description: "Cannot connect to Kinde authentication service"
+      description: "Cannot connect to Supabase authentication service"
       severity: critical
       escalation: immediate
       
@@ -112,10 +112,10 @@ alerts:
       severity: warning
       escalation: 20m
       
-    kinde_sdk_warnings:
-      condition: "auth_endpoint.response.kinde_sdk_status == 'warning'"
+    supabase_client_warnings:
+      condition: "auth_endpoint.response.supabase_client_status == 'warning'"
       duration: 2m
-      description: "Kinde SDK reporting warnings"
+      description: "Supabase client reporting warnings"
       severity: warning
       escalation: 30m
 
@@ -269,17 +269,17 @@ runbooks:
     steps:
       - check_deployment_status
       - verify_environment_variables
-      - check_kinde_service_status
+      - check_supabase_service_status
       - restart_application_if_needed
       - escalate_to_oncall
       
-  kinde_connectivity_failure:
+  supabase_connectivity_failure:
     steps:
       - check_dns_resolution
       - verify_network_connectivity
-      - check_kinde_status_page
+      - check_supabase_status_page
       - validate_api_credentials
-      - contact_kinde_support
+      - contact_supabase_support
       
   high_error_rate:
     steps:

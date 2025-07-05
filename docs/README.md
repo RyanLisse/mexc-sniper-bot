@@ -20,7 +20,6 @@ Welcome to the comprehensive documentation for the MEXC Sniper Bot project. This
 
 #### Advanced Topics
 - **[Rate Limit Handling System](RATE_LIMIT_HANDLING_SYSTEM.md)** - System architecture and user experience
-- **[Email Bypass API Setup](../EMAIL_BYPASS_API_SETUP.md)** - Development bypass API documentation
 
 ### 🏗️ Architecture Documentation
 - [**Quick Agent Setup**](architecture/AGENTS.md) - Quick setup guide for AI agents (essential for developers)
