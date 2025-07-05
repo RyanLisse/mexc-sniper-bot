@@ -313,15 +313,28 @@ export class EmergencyStop extends AggregateRoot<string> {
       }
     }
 
-    // Validate action priorities are unique
-    const priorities = props.emergencyActions.map((action) => action.priority);
-    const uniquePriorities = new Set(priorities);
-    if (priorities.length !== uniquePriorities.size) {
-      throw new DomainValidationError(
-        "emergencyActions.priority",
-        priorities,
-        "Emergency action priorities must be unique"
-      );
+    // Validate action priorities: duplicate priorities are only allowed for parallel-enabled actions
+    const priorityGroups = new Map<number, EmergencyAction[]>();
+    for (const action of props.emergencyActions) {
+      if (!priorityGroups.has(action.priority)) {
+        priorityGroups.set(action.priority, []);
+      }
+      priorityGroups.get(action.priority)!.push(action);
+    }
+    
+    // Check each priority group
+    for (const [priority, actions] of priorityGroups) {
+      if (actions.length > 1) {
+        // Multiple actions with same priority - all must support parallel execution
+        const nonParallelActions = actions.filter(action => !action.canRunInParallel);
+        if (nonParallelActions.length > 0) {
+          throw new DomainValidationError(
+            "emergencyActions.priority",
+            priority,
+            `Actions with priority ${priority} include non-parallel actions but multiple actions share the same priority. Either use unique priorities or enable parallel execution for all actions.`
+          );
+        }
+      }
     }
 
     // Validate action timeouts

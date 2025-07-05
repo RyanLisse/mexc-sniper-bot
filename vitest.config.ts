@@ -7,17 +7,12 @@ import { defineConfig } from 'vitest/config';
 
 // Safe parseInt function to prevent NaN in timeout configurations
 function safeParseInt(value: string | undefined, fallback: number): number {
-  if (!value || value.trim() === '') {
-    return fallback;
-  }
-  
+  if (!value || value.trim() === '') return fallback;
   const parsed = parseInt(value, 10);
-  
   if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) {
     console.warn(`VITEST_CONFIG: Invalid numeric value "${value}", using fallback ${fallback}`);
     return fallback;
   }
-  
   return parsed;
 }
 
@@ -31,9 +26,9 @@ config({ path: '.env.test', override: true })
 // Test type detection from environment
 const TEST_TYPE = process.env.TEST_TYPE || 'unit';
 const isCI = process.env.CI === 'true';
-const isPerformanceMode = TEST_TYPE === 'performance' || process.env.TEST_PERFORMANCE_MODE === 'true';
+const isPerformanceMode = TEST_TYPE === 'performance';
 const isIntegrationMode = TEST_TYPE === 'integration';
-const isStabilityMode = TEST_TYPE === 'stability' || process.env.VITEST_STABILITY_MODE === 'true';
+const isStabilityMode = TEST_TYPE === 'stability';
 const isSupabaseMode = TEST_TYPE === 'supabase';
 const isSyncMode = TEST_TYPE === 'sync';
 
@@ -49,31 +44,22 @@ if (!process.env.DATABASE_URL) {
 }
 
 /**
- * Master Vitest Configuration for MEXC Sniper Bot
- * MISSION: Test Configuration Alignment Agent - Unified Configuration System
+ * Unified Vitest Configuration for MEXC Sniper Bot
  * 
  * FEATURES:
  * - Single source of truth for all test configurations
  * - Dynamic adaptation based on TEST_TYPE environment variable
- * - Eliminated configuration conflicts and overlaps
- * - Standardized timeout, setup, and execution patterns
- * - Comprehensive environment variable management
  * - Optimized performance for each test scenario
+ * - Comprehensive environment variable management
+ * - Standardized timeout, setup, and execution patterns
  * 
  * SUPPORTED TEST TYPES:
- * - unit: Fast unit tests with React component support
- * - integration: Server and API integration tests
+ * - unit: Fast unit tests with React component support (default)
+ * - integration: Server and API integration tests  
  * - performance: High-performance parallel execution
  * - stability: Zero-flaky-test focused configuration
  * - supabase: Supabase-specific auth and database tests
  * - sync: Single-threaded synchronous execution
- * 
- * ALIGNMENT IMPROVEMENTS:
- * - Consistent timeout hierarchies across all test types
- * - Unified setup file loading order
- * - Standardized pool configurations
- * - Eliminated environment variable conflicts
- * - Optimized thread allocation per test type
  */
 
 // Dynamic timeout configuration based on test type
@@ -184,7 +170,7 @@ const getPoolConfig = () => {
           minThreads: Math.floor(cpuCount * 0.5),
           isolate: false,
           useAtomics: true,
-          execArgv: ['--max-old-space-size=2048'],
+          execArgv: [], // Empty to avoid worker conflicts
         },
       },
     };
@@ -251,13 +237,9 @@ const getPoolConfig = () => {
 const getSetupFiles = () => {
   const baseSetup = ['./tests/setup/vitest-setup.ts'];
   
-  if (isSyncMode) {
-    return [];
-  }
+  if (isSyncMode) return [];
 
-  if (isPerformanceMode) {
-    return baseSetup;
-  }
+  if (isPerformanceMode) return []; // Minimal setup for performance mode (Node environment)
 
   if (isIntegrationMode) {
     return [
@@ -373,7 +355,7 @@ const poolConfig = getPoolConfig();
 export default defineConfig({
   plugins: [tsconfigPaths()],
   
-  // Modern cache directory configuration based on test type
+  // Cache directory configuration for Vitest 3.x compatibility
   cacheDir: `./node_modules/.vite-${TEST_TYPE}`,
   
   test: {
@@ -470,11 +452,11 @@ export default defineConfig({
     
     // Dynamic reporters
     reporters: (() => {
-      if (isPerformanceMode) return [['basic']];
+      if (isPerformanceMode) return [['default', { summary: false }]];
       if (isIntegrationMode) return [['default', { summary: true }], ['json', { outputFile: './test-results/integration-results.json' }]];
       if (isStabilityMode) return [['default', { summary: true }], ['verbose']];
       if (isSupabaseMode) return isCI ? ['github-actions', 'json', 'junit'] : ['verbose'];
-      if (isSyncMode) return [['basic']];
+      if (isSyncMode) return [['default', { summary: false }]];
       return [['default', { summary: false }]];
     })(),
     
@@ -559,7 +541,7 @@ export default defineConfig({
     
     fileParallelism: !isIntegrationMode && !isStabilityMode && !isSyncMode && (isCI ? false : true),
     
-    // Enhanced caching - Modern cacheDir configured at root level
+    // Enhanced caching - using root-level cacheDir for Vitest 3.x compatibility
     
     // Benchmark configuration
     benchmark: {
@@ -571,10 +553,10 @@ export default defineConfig({
     silent: isPerformanceMode ? false : process.env.TEST_SILENT === 'true',
     passWithNoTests: !isIntegrationMode,
     
-    // Performance-specific options
-    ...(isPerformanceMode && {
-      diff: './test-results/performance-diff.json',
-    }),
+    // Performance-specific options (diff disabled to avoid file not found errors)
+    // ...(isPerformanceMode && {
+    //   diff: './test-results/performance-diff.json',
+    // }),
   },
   
   // Build configuration

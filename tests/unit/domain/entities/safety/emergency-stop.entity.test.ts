@@ -144,7 +144,7 @@ describe('EmergencyStop Domain Entity', () => {
       const events = emergencyStop.getUncommittedEvents();
 
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('EmergencyStopCreated');
+      expect(events[0].type).toBe('emergency_stop.created');
       expect(events[0].aggregateId).toBe(emergencyStop.id);
     });
   });
@@ -418,7 +418,7 @@ describe('EmergencyStop Domain Entity', () => {
 
       const events = triggeredStop.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('EmergencyStopTriggered');
+      expect(events[0].type).toBe('emergency_stop.triggered');
     });
 
     it('should reject triggering inactive emergency stop', () => {
@@ -522,7 +522,7 @@ describe('EmergencyStop Domain Entity', () => {
 
       const events = completedStop.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('EmergencyStopCompleted');
+      expect(events[0].type).toBe('emergency_stop.completed');
     });
 
     it('should complete from partial failure state', () => {
@@ -557,7 +557,7 @@ describe('EmergencyStop Domain Entity', () => {
 
       const events = failedStop.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('EmergencyStopFailed');
+      expect(events[0].type).toBe('emergency_stop.failed');
     });
 
     it('should reject marking already completed stop as failed', () => {
@@ -623,7 +623,7 @@ describe('EmergencyStop Domain Entity', () => {
       expect(plan.parallelGroups[0]).toHaveLength(2); // cancel_all_orders and notify_admin
       expect(plan.sequentialSteps).toHaveLength(2); // close_all_positions and send_alert
       expect(plan.totalEstimatedTime).toBe(10000); // 5000 + max(3000, 1000) + 2000
-      expect(plan.criticalPath).toHaveLength(2); // Priority 1 and 2 actions
+      expect(plan.criticalPath).toHaveLength(3); // Priority 1 and 2 actions (3 total: 1 action with priority 1, 2 actions with priority 2)
     });
 
     it('should prioritize actions correctly in coordination plan', () => {
@@ -937,7 +937,7 @@ describe('EmergencyStop Domain Entity', () => {
       expect(events).toHaveLength(1);
       
       const creationEvent = events[0];
-      expect(creationEvent.type).toBe('EmergencyStopCreated');
+      expect(creationEvent.type).toBe('emergency_stop.created');
       expect(creationEvent.aggregateId).toBe(emergencyStop.id);
       expect(creationEvent.userId).toBe('user-456');
       expect(creationEvent.data.emergencyStopId).toBe(emergencyStop.id);
@@ -956,7 +956,7 @@ describe('EmergencyStop Domain Entity', () => {
       expect(events).toHaveLength(1);
       
       const triggerEvent = events[0];
-      expect(triggerEvent.type).toBe('EmergencyStopTriggered');
+      expect(triggerEvent.type).toBe('emergency_stop.triggered');
       expect(triggerEvent.data.reason).toBe('Drawdown exceeded');
       expect(triggerEvent.data.triggerData).toEqual({ drawdown: 25 });
       expect(triggerEvent.data.scheduledActions).toHaveLength(3);
@@ -976,7 +976,7 @@ describe('EmergencyStop Domain Entity', () => {
       expect(events).toHaveLength(1);
       
       const completionEvent = events[0];
-      expect(completionEvent.type).toBe('EmergencyStopCompleted');
+      expect(completionEvent.type).toBe('emergency_stop.completed');
       expect(completionEvent.data.executionSummary).toBeDefined();
       expect(completionEvent.data.actionResults).toHaveLength(1);
     });
@@ -992,7 +992,7 @@ describe('EmergencyStop Domain Entity', () => {
       expect(events).toHaveLength(1);
       
       const failureEvent = events[0];
-      expect(failureEvent.type).toBe('EmergencyStopFailed');
+      expect(failureEvent.type).toBe('emergency_stop.failed');
       expect(failureEvent.data.failureReason).toBe('System failure');
       expect(failureEvent.data.failedActions).toBeDefined();
     });

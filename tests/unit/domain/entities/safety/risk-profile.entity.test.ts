@@ -119,7 +119,7 @@ describe('RiskProfile Domain Entity', () => {
       const events = riskProfile.getUncommittedEvents();
 
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('RiskProfileCreated');
+      expect(events[0].type).toBe('risk_profile.created');
       expect(events[0].aggregateId).toBe(riskProfile.id);
     });
   });
@@ -468,7 +468,7 @@ describe('RiskProfile Domain Entity', () => {
 
       const events = updatedProfile.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('RiskProfileUpdated');
+      expect(events[0].type).toBe('risk_profile.updated');
     });
 
     it('should reject threshold update for inactive profile', () => {
@@ -496,7 +496,7 @@ describe('RiskProfile Domain Entity', () => {
 
       const events = updatedProfile.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('RiskProfileUpdated');
+      expect(events[0].type).toBe('risk_profile.updated');
     });
 
     it('should change risk tolerance successfully', () => {
@@ -507,7 +507,7 @@ describe('RiskProfile Domain Entity', () => {
 
       const events = updatedProfile.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('RiskProfileUpdated');
+      expect(events[0].type).toBe('risk_profile.updated');
     });
 
     it('should activate inactive profile', () => {
@@ -521,7 +521,7 @@ describe('RiskProfile Domain Entity', () => {
 
       const events = activatedProfile.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('RiskProfileUpdated');
+      expect(events[0].type).toBe('risk_profile.updated');
     });
 
     it('should not change state when already active', () => {
@@ -539,7 +539,7 @@ describe('RiskProfile Domain Entity', () => {
 
       const events = deactivatedProfile.getUncommittedEvents();
       expect(events).toHaveLength(1);
-      expect(events[0].type).toBe('RiskProfileUpdated');
+      expect(events[0].type).toBe('risk_profile.updated');
     });
 
     it('should not change state when already inactive', () => {
@@ -734,7 +734,7 @@ describe('RiskProfile Domain Entity', () => {
       expect(events).toHaveLength(1);
       
       const creationEvent = events[0];
-      expect(creationEvent.type).toBe('RiskProfileCreated');
+      expect(creationEvent.type).toBe('risk_profile.created');
       expect(creationEvent.aggregateId).toBe(riskProfile.id);
       expect(creationEvent.userId).toBe('user-456');
       expect(creationEvent.data.riskProfileId).toBe(riskProfile.id);
@@ -758,7 +758,7 @@ describe('RiskProfile Domain Entity', () => {
       expect(events).toHaveLength(1);
       
       const updateEvent = events[0];
-      expect(updateEvent.type).toBe('RiskProfileUpdated');
+      expect(updateEvent.type).toBe('risk_profile.updated');
       expect(updateEvent.data.changeType).toBe('thresholds');
       expect(updateEvent.data.previousValues).toEqual(validThresholds);
       expect(updateEvent.data.newValues).toEqual(newThresholds);

@@ -5,6 +5,22 @@ import { fileURLToPath } from 'url';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
+// Safe parseInt function to prevent NaN in timeout configurations
+function safeParseInt(value: string | undefined, fallback: number): number {
+  if (!value || value.trim() === '') {
+    return fallback;
+  }
+  
+  const parsed = parseInt(value, 10);
+  
+  if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) {
+    console.warn(`VITEST_CONFIG: Invalid numeric value "${value}", using fallback ${fallback}`);
+    return fallback;
+  }
+  
+  return parsed;
+}
+
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -12,11 +28,14 @@ const __dirname = path.dirname(__filename)
 // Load test environment variables
 config({ path: '.env.test', override: true })
 
-// Verify critical environment variables are loaded
+// Verify critical environment variables are loaded for tests
 if (!process.env.DATABASE_URL) {
-  // Set fallback to use mock database for testing
+  // Set fallback for test environment - use mock database
   process.env.USE_MOCK_DATABASE = 'true'
-  process.env.DATABASE_URL = 'postgresql://postgres:password@localhost:5432/mexc_sniper_test'
+  process.env.FORCE_MOCK_DB = 'true'
+  // Provide a valid-looking URL to prevent undefined URL warnings
+  process.env.DATABASE_URL = 'postgresql://mock_user:mock_pass@localhost:5432/mock_test_db'
+  console.log('🧪 VITEST_CONFIG: Using mock database configuration for tests')
 }
 
 /**
@@ -45,6 +64,10 @@ if (!process.env.DATABASE_URL) {
  */
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  
+  // Modern cache directory configuration
+  cacheDir: './node_modules/.vite-unified',
+  
   test: {
     // Environment setup - Use jsdom for React component tests
     environment: 'jsdom',
@@ -208,29 +231,29 @@ export default defineConfig({
       setupFiles: 'parallel', // Parallel setup files
     },
     
-    // STABILITY-OPTIMIZED PARALLELIZATION - Enhanced to prevent worker thread termination
+    // PERFORMANCE-OPTIMIZED PARALLELIZATION - Enhanced with intelligent thread management
     pool: 'threads',
     poolOptions: {
       threads: {
-        // More conservative thread allocation to prevent worker termination
-        maxThreads: process.env.TEST_MAX_THREADS ? parseInt(process.env.TEST_MAX_THREADS) : Math.max(1, Math.min(2, Math.floor(cpus().length * 0.25))),
-        minThreads: process.env.TEST_MIN_THREADS ? parseInt(process.env.TEST_MIN_THREADS) : 1,
+        // OPTIMIZED: Intelligent thread allocation based on system capabilities (increased from 25% to 60%)
+        maxThreads: safeParseInt(process.env.TEST_MAX_THREADS, Math.max(2, Math.min(cpus().length - 1, Math.floor(cpus().length * 0.6)))),
+        minThreads: safeParseInt(process.env.TEST_MIN_THREADS, Math.max(1, Math.floor(cpus().length * 0.25))),
         isolate: true, // Thread isolation for reliability
         useAtomics: true, // Enable atomic operations
-        // Enhanced worker thread stability
-        singleThread: false, // Allow multiple threads but limit them
+        // Enhanced worker thread stability with performance optimizations
+        singleThread: false, // Allow multiple threads
         execArgv: [], // TIMEOUT ELIMINATION: Empty execArgv to prevent worker issues
-        maxMemoryLimitBeforeRecycle: 1024 * 1024 * 500, // 500MB before recycling workers
-        memoryLimit: 1024 * 1024 * 800, // 800MB memory limit per worker
+        maxMemoryLimitBeforeRecycle: 1024 * 1024 * 800, // OPTIMIZED: 800MB before recycling workers (increased from 500MB)
+        memoryLimit: 1024 * 1024 * 1200, // OPTIMIZED: 1.2GB memory limit per worker (increased from 800MB)
+        // Performance optimizations
+        terminateTimeout: 3000, // 3s termination timeout
+        maxInactiveTime: 30000, // 30s max inactive time before recycling
       },
     },
-    maxConcurrency: process.env.TEST_MAX_CONCURRENCY ? parseInt(process.env.TEST_MAX_CONCURRENCY) : 4, // Further reduced from 8 to 4 for stability
+    maxConcurrency: safeParseInt(process.env.TEST_MAX_CONCURRENCY, Math.min(16, cpus().length * 2)), // OPTIMIZED: Increased from 4 to 2x CPU cores
     fileParallelism: process.env.CI ? false : true, // Disable in CI for stability
     
-    // INTELLIGENT CACHING
-    cache: {
-      dir: './node_modules/.vitest',
-    },
+    // INTELLIGENT CACHING - Modern cacheDir configured at root level
     
     // PERFORMANCE MONITORING
     benchmark: {

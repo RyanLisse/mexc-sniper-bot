@@ -5,6 +5,22 @@ import { fileURLToPath } from 'url';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
+// Safe parseInt function to prevent NaN in timeout configurations
+function safeParseInt(value: string | undefined, fallback: number): number {
+  if (!value || value.trim() === '') {
+    return fallback;
+  }
+  
+  const parsed = parseInt(value, 10);
+  
+  if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) {
+    console.warn(`VITEST_CONFIG: Invalid numeric value "${value}", using fallback ${fallback}`);
+    return fallback;
+  }
+  
+  return parsed;
+}
+
 // ES module __dirname equivalent
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -35,6 +51,10 @@ if (!process.env.DATABASE_URL) {
  */
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  
+  // Modern cache directory configuration for stability testing
+  cacheDir: './node_modules/.vite-stability',
+  
   test: {
     // Environment setup with stability focus
     environment: 'jsdom',
@@ -159,13 +179,10 @@ export default defineConfig({
     },
     
     // Reduced concurrency to prevent race conditions
-    maxConcurrency: process.env.VITEST_MAX_CONCURRENCY ? parseInt(process.env.VITEST_MAX_CONCURRENCY) : 4,
+    maxConcurrency: safeParseInt(process.env.VITEST_MAX_CONCURRENCY, 4),
     fileParallelism: false, // Disable file parallelism for better stability
     
-    // ENHANCED CACHING WITH STABILITY FOCUS
-    cache: {
-      dir: './node_modules/.vitest-stability',
-    },
+    // ENHANCED CACHING WITH STABILITY FOCUS - Modern cacheDir configured at root level
     
     // STABILITY MONITORING
     benchmark: {

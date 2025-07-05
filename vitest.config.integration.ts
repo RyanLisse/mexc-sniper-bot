@@ -31,6 +31,10 @@ if (!process.env.DATABASE_URL) {
  */
 export default defineConfig({
   plugins: [tsconfigPaths()],
+  
+  // Modern cache directory configuration for integration tests
+  cacheDir: './node_modules/.vite-integration',
+  
   test: {
     // Environment setup for integration tests
     environment: 'node', // Use Node environment for server testing
@@ -159,10 +163,7 @@ export default defineConfig({
     maxConcurrency: 2,
     fileParallelism: false, // Disable file parallelism to prevent server conflicts
     
-    // ENHANCED CACHING FOR INTEGRATION TESTS
-    cache: {
-      dir: './node_modules/.vitest-integration',
-    },
+    // ENHANCED CACHING FOR INTEGRATION TESTS - Modern cacheDir configured at root level
     
     // PERFORMANCE MONITORING
     benchmark: {

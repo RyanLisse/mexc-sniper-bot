@@ -78,11 +78,9 @@ describe('logger', () => {
     };
   });
 
-  afterEach(async () => {
-    // TIMEOUT ELIMINATION: Ensure all promises are flushed before cleanup
-    await flushPromises();
+  afterEach(() => {
+    // TIMEOUT ELIMINATION: Simple cleanup without promise flushing
     vi.restoreAllMocks();
-  
   });
 
   describe('info', () => {

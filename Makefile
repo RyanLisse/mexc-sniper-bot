@@ -365,11 +365,11 @@ test-performance-analyze: ## Analyze test performance and generate optimization 
 	@$(NODE) run test:performance:analyze
 	@echo -e "${GREEN}✓ Performance analysis completed${NC}"
 
-.PHONY: test-performance-monitor
-test-performance-monitor: ## Monitor test performance with real-time metrics
-	@echo -e "${BLUE}Monitoring test performance...${NC}"
+.PHONY: test-performance-metrics
+test-performance-metrics: ## Monitor test performance with real-time metrics
+	@echo -e "${BLUE}Monitoring test performance with real-time metrics...${NC}"
 	@$(NODE) run test:performance:monitor
-	@echo -e "${GREEN}✓ Performance monitoring completed${NC}"
+	@echo -e "${GREEN}✓ Performance metrics monitoring completed${NC}"
 
 .PHONY: test-cache-optimize
 test-cache-optimize: ## Optimize test execution using intelligent caching
