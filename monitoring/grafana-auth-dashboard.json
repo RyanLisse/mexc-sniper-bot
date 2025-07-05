@@ -3,7 +3,7 @@
     "id": null,
     "title": "MEXC Sniper Bot - Authentication Monitoring",
     "description": "Comprehensive monitoring dashboard for authentication system health, performance, and security metrics",
-    "tags": ["authentication", "kinde", "monitoring", "mexc"],
+    "tags": ["authentication", "supabase", "monitoring", "mexc"],
     "style": "dark",
     "timezone": "UTC",
     "editable": true,
@@ -371,11 +371,11 @@
       },
       {
         "id": 10,
-        "title": "Kinde SDK Status",
+        "title": "Supabase Client Status",
         "type": "stat",
         "targets": [
           {
-            "expr": "kinde_sdk_status{environment=\"$environment\"}",
+            "expr": "supabase_client_status{environment=\"$environment\"}",
             "legendFormat": "SDK Status",
             "refId": "A"
           }

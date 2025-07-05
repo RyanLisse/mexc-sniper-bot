@@ -183,14 +183,11 @@ CACHE_WARMING_ENABLE_ACTIVITY_DATA="true"     # Activity warming
 - **Security**: CRITICAL - Loss of this key means loss of encrypted data
 - **Backup**: Store securely and separately from code
 
-#### **Kinde Authentication** (Required)
+#### **Supabase Authentication** (Required)
 ```bash
-KINDE_CLIENT_ID="your-kinde-client-id"
-KINDE_CLIENT_SECRET="your-kinde-client-secret"
-KINDE_ISSUER_URL="https://your-domain.kinde.com"
-KINDE_SITE_URL="http://localhost:3008"
-KINDE_POST_LOGOUT_REDIRECT_URL="http://localhost:3008"
-KINDE_POST_LOGIN_REDIRECT_URL="http://localhost:3008/dashboard"
+NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 ```
 
 #### **OAuth Providers** (Optional)

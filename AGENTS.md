@@ -30,7 +30,7 @@ make build                               # Production build
 - `CLAUDE.md` - Complete development guidelines
 
 ## 🔧 Environment
-Required: **Node.js 20.11+**, **OpenAI API key**, **Kinde Auth credentials**
+Required: **Node.js 20.11+**, **OpenAI API key**, **Supabase credentials**
 Optional: **MEXC API keys**, **NeonDB** (defaults to SQLite)
 
 ## 🧠 Architecture
