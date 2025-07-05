@@ -58,6 +58,11 @@ export {
   strategyPhaseExecutions,
   strategyTemplates,
 } from "./strategy-schema";
+// Additional trading tables from legacy trading.ts
+export {
+  balanceSnapshots,
+  portfolioSummary,
+} from "./trading";
 // Trading Operations
 export {
   coinActivities,
@@ -71,12 +76,6 @@ export {
   transactionQueue,
   transactions,
 } from "./trading-schema";
-
-// Additional trading tables from legacy trading.ts
-export { 
-  balanceSnapshots,
-  portfolioSummary 
-} from "./trading";
 // Workflow Management
 export {
   workflowActivity,
@@ -92,9 +91,9 @@ import * as mlTables from "./ml-schema";
 import * as monitoringTables from "./monitoring-schema";
 import * as riskTables from "./risk-schema";
 import * as strategyTables from "./strategy-schema";
+import * as legacyTradingTables from "./trading";
 import * as tradingTables from "./trading-schema";
 import * as workflowTables from "./workflow-schema";
-import * as legacyTradingTables from "./trading";
 
 // Common table aliases for backward compatibility
 export const users = authTables.user; // Plural alias for user table
@@ -140,7 +139,7 @@ export const allTables = {
   monitoredListings: tradingTables.monitoredListings,
   coinActivities: tradingTables.coinActivities,
   reconciliationReports: tradingTables.reconciliationReports,
-  
+
   // Legacy trading tables
   balanceSnapshots: legacyTradingTables.balanceSnapshots,
   portfolioSummary: legacyTradingTables.portfolioSummary,
