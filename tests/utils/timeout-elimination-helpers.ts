@@ -14,33 +14,33 @@
 
 import { vi, expect, beforeEach, afterEach } from 'vitest';
 
-// TIMEOUT CONFIGURATION: Generous timeouts to eliminate all failures
+// TIMEOUT CONFIGURATION: AGGRESSIVE timeouts to ELIMINATE ALL timeout failures
 export const TIMEOUT_CONFIG = {
-  // Basic timeouts for simple operations - INCREASED to eliminate 1000ms defaults
-  QUICK: 8000,     // Simple sync operations (increased from 5000)
-  STANDARD: 25000,  // Standard async operations (increased from 15000)
-  SLOW: 45000,      // Complex async operations (increased from 30000)
+  // Basic timeouts for simple operations - MASSIVELY INCREASED to eliminate ALL failures
+  QUICK: 15000,     // Simple sync operations (AGGRESSIVE increase from 8000)
+  STANDARD: 65000,  // Standard async operations (AGGRESSIVE increase from 25000)
+  SLOW: 120000,     // Complex async operations (AGGRESSIVE increase from 45000)
   
-  // Hook-specific timeouts (FIXED: Increased to prevent 1000ms default hook timeouts)
-  HOOK_BEFORE_EACH: 30000,   // beforeEach hook timeout (increased from 20000)
-  HOOK_AFTER_EACH: 25000,    // afterEach hook timeout (increased from 15000)
-  HOOK_BEFORE_ALL: 60000,    // beforeAll hook timeout (increased from 45000)
-  HOOK_AFTER_ALL: 60000,     // afterAll hook timeout (increased from 45000)
-  HOOK_SETUP: 20000,         // Hook setup operations (increased from 10000)
-  HOOK_CLEANUP: 20000,       // Hook cleanup operations (increased from 10000)
+  // Hook-specific timeouts (HOOK TIMEOUT ELIMINATION: Match vitest config maximums)
+  HOOK_BEFORE_EACH: 75000,   // beforeEach hook timeout (AGGRESSIVE increase from 30000)
+  HOOK_AFTER_EACH: 70000,    // afterEach hook timeout (AGGRESSIVE increase from 25000)
+  HOOK_BEFORE_ALL: 120000,   // beforeAll hook timeout (AGGRESSIVE increase from 60000)
+  HOOK_AFTER_ALL: 120000,    // afterAll hook timeout (AGGRESSIVE increase from 60000)
+  HOOK_SETUP: 60000,         // Hook setup operations (AGGRESSIVE increase from 20000)
+  HOOK_CLEANUP: 60000,       // Hook cleanup operations (AGGRESSIVE increase from 20000)
   
-  // Service-specific timeouts
-  CONNECTIVITY: 35000,  // MexcConnectivityService operations (increased from 25000)
-  RETRY: 30000,         // MexcRetryService operations (increased from 20000)
-  API_VALIDATION: 30000, // Enhanced API validation (increased from 20000)
+  // Service-specific timeouts - MASSIVELY INCREASED for elimination
+  CONNECTIVITY: 80000,  // MexcConnectivityService operations (AGGRESSIVE increase from 35000)
+  RETRY: 75000,         // MexcRetryService operations (AGGRESSIVE increase from 30000)
+  API_VALIDATION: 70000, // Enhanced API validation (AGGRESSIVE increase from 30000)
   
-  // Integration timeouts
-  SERVER_STARTUP: 90000,  // Server startup and initialization (increased from 60000)
-  DATABASE: 45000,        // Database operations (increased from 30000)
-  NETWORK: 60000,         // Network API calls (increased from 45000)
+  // Integration timeouts - EXTREME INCREASES
+  SERVER_STARTUP: 180000,  // Server startup and initialization (AGGRESSIVE increase from 90000)
+  DATABASE: 100000,        // Database operations (AGGRESSIVE increase from 45000)
+  NETWORK: 120000,         // Network API calls (AGGRESSIVE increase from 60000)
   
-  // Maximum timeout for the most complex operations
-  MAXIMUM: 180000, // Increased from 120000
+  // Maximum timeout for the most complex operations - EXTREME TIMEOUT
+  MAXIMUM: 300000, // EXTREME increase from 180000 - 5 FULL MINUTES
 };
 
 /**

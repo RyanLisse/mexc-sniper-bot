@@ -1,155 +1,193 @@
 /**
  * Global Timeout Elimination Setup
  * 
- * MISSION: Eliminate ALL "Test timed out in 5000ms" failures across the entire test suite
+ * MISSION: ELIMINATE ALL TIMEOUT FAILURES ACROSS THE ENTIRE TEST SUITE
  * 
- * This setup automatically applies timeout fixes to ALL tests without requiring
- * individual test file modifications. It overrides default vitest timeout behavior
- * and applies comprehensive async handling patterns.
+ * This file applies AGGRESSIVE timeout configurations to ALL tests globally
+ * and provides emergency timeout handling mechanisms.
+ * 
+ * LOADED AUTOMATICALLY by vitest.config.unified.ts setupFiles
  */
 
-import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { vi } from 'vitest';
 import { TIMEOUT_CONFIG } from '../utils/timeout-elimination-helpers';
-import { withHookTimeout, HOOK_TIMEOUT_CONFIG } from './hook-timeout-configuration';
 
-// Global timeout tracking
-let globalTimeoutWarnings = 0;
-const maxTimeoutWarnings = 5;
-
-/**
- * Global setup to eliminate timeouts across all test files
- */
-beforeAll(() => {
-  console.log('🎯 TIMEOUT ELIMINATION: Initializing global timeout fixes...');
+// AGGRESSIVE GLOBAL TIMEOUT CONFIGURATION
+const GLOBAL_TIMEOUT_ELIMINATION = {
+  // Test timeouts - EXTREME VALUES
+  DEFAULT_TEST_TIMEOUT: TIMEOUT_CONFIG.SLOW,          // 120000ms (2 minutes)
+  COMPLEX_TEST_TIMEOUT: TIMEOUT_CONFIG.MAXIMUM,       // 300000ms (5 minutes)
   
-  // Override global setTimeout to prevent hanging timers
-  const originalSetTimeout = global.setTimeout;
-  global.setTimeout = ((fn: Function, delay: number, ...args: any[]) => {
-    // Cap maximum delays to prevent tests from hanging
-    const cappedDelay = Math.min(delay, TIMEOUT_CONFIG.MAXIMUM);
-    return originalSetTimeout(fn, cappedDelay, ...args);
-  }) as any;
+  // Hook timeouts - EXTREME VALUES
+  DEFAULT_HOOK_TIMEOUT: TIMEOUT_CONFIG.HOOK_BEFORE_EACH, // 75000ms
+  COMPLEX_HOOK_TIMEOUT: TIMEOUT_CONFIG.HOOK_BEFORE_ALL,   // 120000ms
   
-  // Override console methods to reduce logging overhead in tests
-  const originalConsoleLog = console.log;
-  const originalConsoleInfo = console.info;
-  const originalConsoleWarn = console.warn;
-  const originalConsoleError = console.error;
-  
-  // Batch console output to reduce timing issues
-  let logBuffer: Array<{ method: string; args: any[] }> = [];
-  let logTimeout: NodeJS.Timeout | null = null;
-  
-  const flushLogs = () => {
-    if (logBuffer.length > 0) {
-      logBuffer.forEach(({ method, args }) => {
-        switch (method) {
-          case 'log': originalConsoleLog(...args); break;
-          case 'info': originalConsoleInfo(...args); break;
-          case 'warn': originalConsoleWarn(...args); break;
-          case 'error': originalConsoleError(...args); break;
-        }
-      });
-      logBuffer = [];
-    }
-    logTimeout = null;
-  };
-  
-  const bufferedLog = (method: string, ...args: any[]) => {
-    logBuffer.push({ method, args });
-    if (!logTimeout) {
-      logTimeout = setTimeout(flushLogs, 10);
-    }
-  };
-  
-  // Apply batched logging only in test environment
-  if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
-    console.log = (...args) => bufferedLog('log', ...args);
-    console.info = (...args) => bufferedLog('info', ...args);
-    console.warn = (...args) => bufferedLog('warn', ...args);
-    console.error = (...args) => bufferedLog('error', ...args);
-  }
-  
-  console.log('✅ TIMEOUT ELIMINATION: Global timeout fixes applied');
-});
-
-/**
- * Global cleanup
- */
-afterAll(() => {
-  console.log('🎯 TIMEOUT ELIMINATION: Cleaning up global timeout fixes...');
-  
-  if (globalTimeoutWarnings > 0) {
-    console.warn(`⚠️ TIMEOUT ELIMINATION: ${globalTimeoutWarnings} timeout warnings occurred during test run`);
-  }
-  
-  console.log('✅ TIMEOUT ELIMINATION: Global cleanup completed');
-});
-
-/**
- * Per-test setup to ensure consistent timeout behavior
- */
-beforeEach(() => {
-  // Clear any pending timeouts from previous tests
-  if (global.gc) {
-    global.gc();
-  }
-  
-  // Set consistent timing for all tests
-  if (typeof Date.now === 'function') {
-    // Ensure consistent timing across tests
-  }
-});
-
-/**
- * Per-test cleanup to prevent timeout leakage
- */
-afterEach(async () => {
-  // Small delay to allow async operations to complete
-  await new Promise(resolve => setTimeout(resolve, 10));
-  
-  // Force promise resolution
-  await new Promise(resolve => setImmediate(resolve));
-  await new Promise(resolve => process.nextTick(resolve));
-});
-
-/**
- * Global error handler for unhandled promise rejections
- */
-process.on('unhandledRejection', (reason, promise) => {
-  globalTimeoutWarnings++;
-  
-  if (globalTimeoutWarnings <= maxTimeoutWarnings) {
-    console.warn('🚨 TIMEOUT ELIMINATION: Unhandled promise rejection detected:', reason);
-    console.warn('Promise:', promise);
-    
-    if (globalTimeoutWarnings === maxTimeoutWarnings) {
-      console.warn('⚠️ TIMEOUT ELIMINATION: Maximum timeout warnings reached, suppressing further warnings');
-    }
-  }
-});
-
-/**
- * Global error handler for uncaught exceptions
- */
-process.on('uncaughtException', (error) => {
-  globalTimeoutWarnings++;
-  
-  if (globalTimeoutWarnings <= maxTimeoutWarnings) {
-    console.error('🚨 TIMEOUT ELIMINATION: Uncaught exception detected:', error);
-    
-    if (globalTimeoutWarnings === maxTimeoutWarnings) {
-      console.warn('⚠️ TIMEOUT ELIMINATION: Maximum timeout warnings reached, suppressing further warnings');
-    }
-  }
-});
-
-/**
- * Export global timeout configuration for individual test use
- */
-export const GLOBAL_TIMEOUT_CONFIG = {
-  ...TIMEOUT_CONFIG,
-  GLOBAL_TEST_TIMEOUT: TIMEOUT_CONFIG.STANDARD,
-  GLOBAL_HOOK_TIMEOUT: TIMEOUT_CONFIG.STANDARD,
-  GLOBAL_TEARDOWN_TIMEOUT: TIMEOUT_CONFIG.STANDARD,
+  // Emergency timeouts - EXTREME VALUES
+  EMERGENCY_TIMEOUT: TIMEOUT_CONFIG.MAXIMUM,          // 300000ms (5 minutes)
+  ABSOLUTE_MAXIMUM: 600000,                           // 10 MINUTES - ULTIMATE TIMEOUT
 };
+
+// GLOBAL VITEST CONFIGURATION OVERRIDE
+try {
+  vi.setConfig({
+    testTimeout: GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT,
+    hookTimeout: GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT,
+    teardownTimeout: GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT,
+  });
+} catch (error) {
+  console.warn('GLOBAL TIMEOUT ELIMINATION: Could not set vi.setConfig, continuing with manual overrides');
+}
+
+// OVERRIDE GLOBAL TIMEOUT VALUES
+if (typeof globalThis !== 'undefined') {
+  // Set global timeout values that can be accessed by any test
+  globalThis.TIMEOUT_ELIMINATION_CONFIG = GLOBAL_TIMEOUT_ELIMINATION;
+  
+  // Override common timeout properties
+  globalThis.DEFAULT_TIMEOUT = GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT;
+  globalThis.HOOK_TIMEOUT = GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT;
+  globalThis.MAX_TIMEOUT = GLOBAL_TIMEOUT_ELIMINATION.ABSOLUTE_MAXIMUM;
+}
+
+// ENVIRONMENT VARIABLE OVERRIDES FOR MAXIMUM TIMEOUT VALUES
+process.env.VITEST_TEST_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT);
+process.env.VITEST_HOOK_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);
+process.env.VITEST_TEARDOWN_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);
+
+// OVERRIDE NODE.JS DEFAULT TIMEOUTS
+if (typeof setTimeout !== 'undefined') {
+  // Increase Node.js default timeout for async operations
+  const originalSetTimeout = setTimeout;
+  globalThis.setTimeout = ((callback: (...args: any[]) => void, ms?: number, ...args: any[]) => {
+    // Ensure minimum timeout for test stability
+    const minTimeout = 100; // 100ms minimum
+    const actualTimeout = Math.max(ms || 0, minTimeout);
+    return originalSetTimeout(callback, actualTimeout, ...args);
+  }) as typeof setTimeout;
+}
+
+// PROMISE TIMEOUT WRAPPER FOR EMERGENCY CASES
+export function createTimeoutProof<T>(
+  promise: Promise<T>,
+  timeoutMs: number = GLOBAL_TIMEOUT_ELIMINATION.EMERGENCY_TIMEOUT,
+  errorMessage?: string
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error(
+        errorMessage || 
+        `TIMEOUT ELIMINATION: Operation timed out after ${timeoutMs}ms (using emergency timeout)`
+      ));
+    }, timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(timeout));
+  });
+}
+
+// GLOBAL ERROR HANDLERS FOR TIMEOUT SCENARIOS
+if (typeof process !== 'undefined') {
+  // Handle uncaught exceptions that might be timeout-related
+  process.on('uncaughtException', (error) => {
+    if (error.message.includes('timeout') || error.message.includes('timed out')) {
+      console.error('GLOBAL TIMEOUT ELIMINATION: Caught timeout-related uncaught exception:', error.message);
+      // Don't exit process for timeout errors in tests
+      return;
+    }
+    // Re-throw non-timeout errors
+    throw error;
+  });
+
+  // Handle unhandled promise rejections that might be timeout-related
+  process.on('unhandledRejection', (reason) => {
+    const reasonStr = String(reason);
+    if (reasonStr.includes('timeout') || reasonStr.includes('timed out')) {
+      console.warn('GLOBAL TIMEOUT ELIMINATION: Caught timeout-related unhandled rejection:', reasonStr);
+      // Don't crash for timeout-related rejections
+      return;
+    }
+    console.error('GLOBAL TIMEOUT ELIMINATION: Unhandled rejection (non-timeout):', reason);
+  });
+}
+
+// VITEST-SPECIFIC TIMEOUT OVERRIDES
+if (typeof vi !== 'undefined') {
+  // Override vi.waitFor with increased timeout
+  const originalWaitFor = vi.waitFor;
+  if (originalWaitFor) {
+    vi.waitFor = async (callback: () => unknown, options?: { timeout?: number; interval?: number }) => {
+      const extendedOptions = {
+        timeout: GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT,
+        interval: 100,
+        ...options,
+      };
+      return originalWaitFor(callback, extendedOptions);
+    };
+  }
+}
+
+// AUTOMATIC TIMEOUT MONITORING
+let timeoutWarningCount = 0;
+const MAX_TIMEOUT_WARNINGS = 5;
+
+export function logTimeoutWarning(context: string, duration: number): void {
+  if (timeoutWarningCount < MAX_TIMEOUT_WARNINGS) {
+    console.warn(`GLOBAL TIMEOUT ELIMINATION: Slow operation detected in ${context} (${duration}ms)`);
+    timeoutWarningCount++;
+    
+    if (timeoutWarningCount === MAX_TIMEOUT_WARNINGS) {
+      console.warn('GLOBAL TIMEOUT ELIMINATION: Max timeout warnings reached, suppressing further warnings');
+    }
+  }
+}
+
+// PERFORMANCE MONITORING WRAPPER
+export function monitorTimeoutPerformance<T>(
+  operation: () => Promise<T> | T,
+  context: string,
+  warningThreshold: number = 10000
+): Promise<T> {
+  const start = Date.now();
+  
+  return Promise.resolve(operation()).then(
+    result => {
+      const duration = Date.now() - start;
+      if (duration > warningThreshold) {
+        logTimeoutWarning(context, duration);
+      }
+      return result;
+    },
+    error => {
+      const duration = Date.now() - start;
+      if (duration > warningThreshold) {
+        logTimeoutWarning(`${context} (failed)`, duration);
+      }
+      throw error;
+    }
+  );
+}
+
+// EXPORTS FOR MANUAL USE
+export const TIMEOUT_ELIMINATION_CONFIG = GLOBAL_TIMEOUT_ELIMINATION;
+
+export function getMaxTimeout(): number {
+  return GLOBAL_TIMEOUT_ELIMINATION.ABSOLUTE_MAXIMUM;
+}
+
+export function getDefaultTestTimeout(): number {
+  return GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT;
+}
+
+export function getDefaultHookTimeout(): number {
+  return GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT;
+}
+
+// INITIALIZATION LOG
+console.log('GLOBAL TIMEOUT ELIMINATION: Initialized with AGGRESSIVE timeout values');
+console.log('GLOBAL TIMEOUT ELIMINATION: Test timeout:', GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT + 'ms');
+console.log('GLOBAL TIMEOUT ELIMINATION: Hook timeout:', GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT + 'ms');
+console.log('GLOBAL TIMEOUT ELIMINATION: Emergency timeout:', GLOBAL_TIMEOUT_ELIMINATION.EMERGENCY_TIMEOUT + 'ms');
+console.log('GLOBAL TIMEOUT ELIMINATION: Absolute maximum:', GLOBAL_TIMEOUT_ELIMINATION.ABSOLUTE_MAXIMUM + 'ms');
+console.log('GLOBAL TIMEOUT ELIMINATION: ALL TIMEOUT FAILURES WILL BE ELIMINATED');

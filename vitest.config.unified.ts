@@ -166,8 +166,8 @@ export default defineConfig({
       ENABLE_DEBUG_LOGGING: 'false',
       DISABLE_RATE_LIMITING: 'true',
       
-      // Performance and memory settings
-      NODE_OPTIONS: '--max-old-space-size=4096 --expose-gc',
+      // Performance and memory settings - TIMEOUT ELIMINATION: Removed NODE_OPTIONS causing worker issues
+      // NODE_OPTIONS: '--max-old-space-size=4096 --expose-gc', // DISABLED - causes worker execArgv conflicts
       UV_THREADPOOL_SIZE: '8',
       
       // Timing configuration for stability
@@ -219,7 +219,7 @@ export default defineConfig({
         useAtomics: true, // Enable atomic operations
         // Enhanced worker thread stability
         singleThread: false, // Allow multiple threads but limit them
-        execArgv: [], // Prevent Node.js arguments that might cause worker issues
+        execArgv: [], // TIMEOUT ELIMINATION: Empty execArgv to prevent worker issues
         maxMemoryLimitBeforeRecycle: 1024 * 1024 * 500, // 500MB before recycling workers
         memoryLimit: 1024 * 1024 * 800, // 800MB memory limit per worker
       },

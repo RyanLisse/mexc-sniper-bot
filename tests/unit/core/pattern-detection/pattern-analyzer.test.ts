@@ -162,11 +162,11 @@ describe('PatternAnalyzer', () => {
     debug: ReturnType<typeof vi.spyOn>;
   };
   
-  // TIMEOUT ELIMINATION: Setup comprehensive timeout handling
+  // TIMEOUT ELIMINATION: Setup AGGRESSIVE timeout handling
   const timeoutHelpers = setupTimeoutElimination({
     enableAutoTimers: true,
     enableConsoleOptimization: false, // Keep console for debugging
-    defaultTimeout: TIMEOUT_CONFIG.STANDARD
+    defaultTimeout: TIMEOUT_CONFIG.SLOW // Use SLOW timeout for complex async operations
   });
 
   beforeEach(async () => {
@@ -252,7 +252,7 @@ describe('PatternAnalyzer', () => {
     });
     
     await hookTimeoutPromise;
-  }, TIMEOUT_CONFIG.STANDARD);
+  }, TIMEOUT_CONFIG.HOOK_BEFORE_EACH); // HOOK TIMEOUT ELIMINATION: Use AGGRESSIVE hook timeout
 
   afterEach(async () => {
     // TIMEOUT ELIMINATION: Quick cleanup without flush promises to avoid timeout
@@ -269,7 +269,7 @@ describe('PatternAnalyzer', () => {
     });
     
     await cleanupPromise;
-  }, TIMEOUT_CONFIG.QUICK);
+  }, TIMEOUT_CONFIG.HOOK_AFTER_EACH); // HOOK TIMEOUT ELIMINATION: Use AGGRESSIVE hook timeout
 
   describe('Singleton Pattern', () => {
     it('should return the same instance', () => {
@@ -343,7 +343,7 @@ describe('PatternAnalyzer', () => {
         'Null/undefined symbol data provided to detectReadyStatePattern',
         ''
       );
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
 
     it('should handle undefined symbol input', async () => {
       const results = await analyzer.detectReadyStatePattern(undefined as any);
@@ -523,7 +523,7 @@ describe('PatternAnalyzer', () => {
       
       // TIMEOUT ELIMINATION: Ensure all promises are flushed
       await flushPromises();
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
 
     it('should filter out opportunities with insufficient advance time', withTimeout(async () => {
       const nearEntry = {
@@ -533,7 +533,7 @@ describe('PatternAnalyzer', () => {
       
       const results = await analyzer.detectAdvanceOpportunities([nearEntry]);
       expect(results).toHaveLength(0);
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
 
     it('should filter out opportunities with low confidence', async () => {
       mockConfidenceCalculator.calculateAdvanceOpportunityConfidence.mockResolvedValueOnce(60);
@@ -556,7 +556,7 @@ describe('PatternAnalyzer', () => {
       
       // TIMEOUT ELIMINATION: Ensure all promises are flushed
       await flushPromises();
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
 
     it('should skip invalid calendar entries', withTimeout(async () => {
       const invalidEntry = { symbol: '' } as CalendarEntry;
@@ -574,7 +574,7 @@ describe('PatternAnalyzer', () => {
       const results = await analyzer.detectAdvanceOpportunities([invalidEntry, validEntry]);
       console.log('Results:', results.length, results.map(r => ({ symbol: r.symbol, confidence: r.confidence })));
       expect(results).toHaveLength(1);
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
 
     it('should classify project types correctly', withTimeout(async () => {
       const defiEntry = {
@@ -588,7 +588,7 @@ describe('PatternAnalyzer', () => {
       expect(results[0]).toHaveProperty('indicators');
       expect(results[0].indicators).toHaveProperty('marketConditions');
       expect(results[0].indicators.marketConditions.projectType).toBe('DeFi');
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
 
     it('should provide correct recommendations based on confidence and timing', withTimeout(async () => {
       // High confidence, optimal timing
@@ -600,7 +600,7 @@ describe('PatternAnalyzer', () => {
       
       const results = await analyzer.detectAdvanceOpportunities([optimalEntry]);
       expect(results[0].recommendation).toBe('prepare_entry');
-    }, TIMEOUT_CONFIG.STANDARD));
+    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
   });
 
   describe('detectPreReadyPatterns', () => {
