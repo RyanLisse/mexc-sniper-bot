@@ -21,6 +21,14 @@ export const TIMEOUT_CONFIG = {
   STANDARD: 15000,  // Standard async operations
   SLOW: 30000,      // Complex async operations
   
+  // Hook-specific timeouts (FIXED: Added hook timeout configurations)
+  HOOK_BEFORE_EACH: 20000,   // beforeEach hook timeout
+  HOOK_AFTER_EACH: 15000,    // afterEach hook timeout
+  HOOK_BEFORE_ALL: 45000,    // beforeAll hook timeout
+  HOOK_AFTER_ALL: 45000,     // afterAll hook timeout
+  HOOK_SETUP: 10000,         // Hook setup operations
+  HOOK_CLEANUP: 10000,       // Hook cleanup operations
+  
   // Service-specific timeouts
   CONNECTIVITY: 25000,  // MexcConnectivityService operations
   RETRY: 20000,         // MexcRetryService operations

@@ -117,8 +117,26 @@ pre-commit: lint type-check ## Run all pre-commit checks
 .PHONY: test
 test: kill-ports ## Run all tests with performance optimizations
 	@echo -e "${BLUE}Running tests with performance optimizations...${NC}"
-	@$(NODE) run test:fast
+	@$(NODE) run test:optimized
 	@echo -e "${GREEN}✓ Tests completed${NC}"
+
+.PHONY: test-optimized
+test-optimized: kill-ports ## Run tests with intelligent performance optimization
+	@echo -e "${BLUE}Running tests with intelligent performance optimization...${NC}"
+	@$(NODE) run test:optimized
+	@echo -e "${GREEN}✓ Optimized tests completed${NC}"
+
+.PHONY: test-ultra-fast
+test-ultra-fast: kill-ports ## Ultra-fast test execution (< 15 seconds)
+	@echo -e "${BLUE}Running ultra-fast tests...${NC}"
+	@$(NODE) run test:ultra-fast
+	@echo -e "${GREEN}✓ Ultra-fast tests completed${NC}"
+
+.PHONY: test-cached
+test-cached: kill-ports ## Run tests with intelligent caching optimization
+	@echo -e "${BLUE}Running tests with intelligent caching...${NC}"
+	@$(NODE) run test:cached
+	@echo -e "${GREEN}✓ Cached tests completed${NC}"
 
 .PHONY: test-unit
 test-unit: ## Run unit tests with performance optimizations
@@ -338,6 +356,44 @@ test-emergency: ## Emergency test run with circuit breakers and forced terminati
 	@echo -e "${BLUE}Running emergency tests with circuit breakers...${NC}"
 	@$(NODE) run test:emergency
 	@echo -e "${GREEN}✓ Emergency tests completed${NC}"
+
+# ==================== Test Performance & Cache Management ====================
+
+.PHONY: test-performance-analyze
+test-performance-analyze: ## Analyze test performance and generate optimization report
+	@echo -e "${BLUE}Analyzing test performance...${NC}"
+	@$(NODE) run test:performance:analyze
+	@echo -e "${GREEN}✓ Performance analysis completed${NC}"
+
+.PHONY: test-performance-monitor
+test-performance-monitor: ## Monitor test performance with real-time metrics
+	@echo -e "${BLUE}Monitoring test performance...${NC}"
+	@$(NODE) run test:performance:monitor
+	@echo -e "${GREEN}✓ Performance monitoring completed${NC}"
+
+.PHONY: test-cache-optimize
+test-cache-optimize: ## Optimize test execution using intelligent caching
+	@echo -e "${BLUE}Optimizing test cache...${NC}"
+	@$(NODE) run test:cache:optimize
+	@echo -e "${GREEN}✓ Cache optimization completed${NC}"
+
+.PHONY: test-cache-prewarm
+test-cache-prewarm: ## Pre-warm test caches for faster execution
+	@echo -e "${BLUE}Pre-warming test caches...${NC}"
+	@$(NODE) run test:cache:prewarm
+	@echo -e "${GREEN}✓ Cache pre-warming completed${NC}"
+
+.PHONY: test-cache-clear
+test-cache-clear: ## Clear all test caches and start fresh
+	@echo -e "${BLUE}Clearing test caches...${NC}"
+	@$(NODE) run test:cache:clear
+	@echo -e "${GREEN}✓ Test caches cleared${NC}"
+
+.PHONY: test-cache-stats
+test-cache-stats: ## Show test cache statistics and performance metrics
+	@echo -e "${BLUE}Showing test cache statistics...${NC}"
+	@$(NODE) run test:cache:stats
+	@echo -e "${GREEN}✓ Cache statistics displayed${NC}"
 
 # ==================== Authentication Commands ====================
 

@@ -34,22 +34,28 @@ const MockInteractiveChart = ({
   annotations = [],
   indicators = []
 }: any) => {
-  const [chartData, setChartData] = vi.fn().mockReturnValue([
-    data.length > 0 ? data : [
-      { timestamp: '2024-01-01T00:00:00Z', value: 45230.50, volume: 1234 },
-      { timestamp: '2024-01-01T01:00:00Z', value: 45145.25, volume: 2341 },
-      { timestamp: '2024-01-01T02:00:00Z', value: 45289.75, volume: 1876 },
-      { timestamp: '2024-01-01T03:00:00Z', value: 45420.10, volume: 3456 },
-      { timestamp: '2024-01-01T04:00:00Z', value: 45356.80, volume: 2789 },
-      { timestamp: '2024-01-01T05:00:00Z', value: 45478.90, volume: 4123 }
-    ],
-    vi.fn()
-  ]);
+  // Fix: Properly mock React state hooks with actual values, not functions
+  const chartData = data.length > 0 ? data : [
+    { timestamp: '2024-01-01T00:00:00Z', value: 45230.50, volume: 1234 },
+    { timestamp: '2024-01-01T01:00:00Z', value: 45145.25, volume: 2341 },
+    { timestamp: '2024-01-01T02:00:00Z', value: 45289.75, volume: 1876 },
+    { timestamp: '2024-01-01T03:00:00Z', value: 45420.10, volume: 3456 },
+    { timestamp: '2024-01-01T04:00:00Z', value: 45356.80, volume: 2789 },
+    { timestamp: '2024-01-01T05:00:00Z', value: 45478.90, volume: 4123 }
+  ];
+  const setChartData = vi.fn();
 
-  const [isLoading, setIsLoading] = vi.fn().mockReturnValue([false, vi.fn()]);
-  const [zoomLevel, setZoomLevel] = vi.fn().mockReturnValue([1, vi.fn()]);
-  const [selectedDataPoint, setSelectedDataPoint] = vi.fn().mockReturnValue([null, vi.fn()]);
-  const [hoveredPoint, setHoveredPoint] = vi.fn().mockReturnValue([null, vi.fn()]);
+  const isLoading = false;
+  const setIsLoading = vi.fn();
+  
+  const zoomLevel = 1;
+  const setZoomLevel = vi.fn();
+  
+  const selectedDataPoint = null;
+  const setSelectedDataPoint = vi.fn();
+  
+  const hoveredPoint = null;
+  const setHoveredPoint = vi.fn();
 
   const currentData = chartData;
 

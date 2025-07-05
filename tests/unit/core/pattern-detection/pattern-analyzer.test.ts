@@ -170,90 +170,106 @@ describe('PatternAnalyzer', () => {
   });
 
   beforeEach(async () => {
-    analyzer = PatternAnalyzer.getInstance();
-    
-    consoleSpy = {
-      info: vi.spyOn(console, 'info').mockImplementation(() => {}),
-      warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
-      error: vi.spyOn(console, 'error').mockImplementation(() => {}),
-      debug: vi.spyOn(console, 'debug').mockImplementation(() => {}),
-    };
-    
-    // Mock symbol entry - not ready state
-    mockSymbolEntry = {
-      cd: 'TESTCOIN',
-      fn: 'Test Coin',
-      sn: 'TEST',
-      st: 1, // Not ready state
-      sts: 1,
-      tt: 1,
-      lt: Date.now(),
-      tags: ['new-listing'],
-    } as SymbolEntry;
+    // TIMEOUT ELIMINATION: Start hook with timeout configuration
+    const hookTimeoutPromise = new Promise((resolve) => {
+      setTimeout(() => {
+        analyzer = PatternAnalyzer.getInstance();
+        
+        consoleSpy = {
+          info: vi.spyOn(console, 'info').mockImplementation(() => {}),
+          warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
+          error: vi.spyOn(console, 'error').mockImplementation(() => {}),
+          debug: vi.spyOn(console, 'debug').mockImplementation(() => {}),
+        };
+        
+        // Mock symbol entry - not ready state
+        mockSymbolEntry = {
+          cd: 'TESTCOIN',
+          fn: 'Test Coin',
+          sn: 'TEST',
+          st: 1, // Not ready state
+          sts: 1,
+          tt: 1,
+          lt: Date.now(),
+          tags: ['new-listing'],
+        } as SymbolEntry;
 
-    // Mock ready state symbol entry (matches READY_STATE_PATTERN)
-    mockReadyStateSymbol = {
-      cd: 'READYCOIN',
-      fn: 'Ready Coin',
-      sn: 'READY',
-      st: 2, // Ready state
-      sts: 2,
-      tt: 4,
-      lt: Date.now(),
-      tags: ['ready'],
-      ca: 'test-ca',
-      ps: 1,
-      qs: 1,
-    } as SymbolEntry;
+        // Mock ready state symbol entry (matches READY_STATE_PATTERN)
+        mockReadyStateSymbol = {
+          cd: 'READYCOIN',
+          fn: 'Ready Coin',
+          sn: 'READY',
+          st: 2, // Ready state
+          sts: 2,
+          tt: 4,
+          lt: Date.now(),
+          tags: ['ready'],
+          ca: 'test-ca',
+          ps: 1,
+          qs: 1,
+        } as SymbolEntry;
 
-    // Mock calendar entry
-    mockCalendarEntry = {
-      id: 'test-calendar-1',
-      symbol: 'TESTCOIN',
-      firstOpenTime: Date.now() + 4 * 60 * 60 * 1000, // 4 hours from now
-      projectName: 'Test Project',
-      vcoinId: 'test-vcoin-id',
-    } as CalendarEntry;
+        // Mock calendar entry
+        mockCalendarEntry = {
+          id: 'test-calendar-1',
+          symbol: 'TESTCOIN',
+          firstOpenTime: Date.now() + 4 * 60 * 60 * 1000, // 4 hours from now
+          projectName: 'Test Project',
+          vcoinId: 'test-vcoin-id',
+        } as CalendarEntry;
 
-    // Reset mocks
-    vi.clearAllMocks();
-    
-    // Reset confidence calculator mocks with fresh implementations - FIXED: Remove createTestDelay
-    mockConfidenceCalculator.calculateReadyStateConfidence.mockImplementation(async (symbol: any) => {
-      // FIXED: Remove createTestDelay that's causing the error
-      if (symbol && symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4) {
-        return 90; // Above 85 threshold
-      }
-      return 70; // Below threshold
+        // Reset mocks
+        vi.clearAllMocks();
+        
+        // Reset confidence calculator mocks with fresh implementations - FIXED: Remove createTestDelay
+        mockConfidenceCalculator.calculateReadyStateConfidence.mockImplementation(async (symbol: any) => {
+          // FIXED: Remove createTestDelay that's causing the error
+          if (symbol && symbol.sts === 2 && symbol.st === 2 && symbol.tt === 4) {
+            return 90; // Above 85 threshold
+          }
+          return 70; // Below threshold
+        });
+        
+        mockConfidenceCalculator.calculateAdvanceOpportunityConfidence.mockImplementation(async (entry: any, advanceHours: number) => {
+          // FIXED: Remove createTestDelay that's causing the error
+          if (advanceHours >= 3.5) {
+            return 75; // Above 70 threshold
+          }
+          return 60; // Below threshold
+        });
+        
+        mockConfidenceCalculator.calculatePreReadyScore.mockImplementation(async () => {
+          // FIXED: Remove createTestDelay that's causing the error
+          return {
+            isPreReady: true,
+            confidence: 70,
+            estimatedTimeToReady: 2,
+          };
+        });
+        
+        resolve(void 0);
+      }, 0);
     });
     
-    mockConfidenceCalculator.calculateAdvanceOpportunityConfidence.mockImplementation(async (entry: any, advanceHours: number) => {
-      // FIXED: Remove createTestDelay that's causing the error
-      if (advanceHours >= 3.5) {
-        return 75; // Above 70 threshold
-      }
-      return 60; // Below threshold
-    });
-    
-    mockConfidenceCalculator.calculatePreReadyScore.mockImplementation(async () => {
-      // FIXED: Remove createTestDelay that's causing the error
-      return {
-        isPreReady: true,
-        confidence: 70,
-        estimatedTimeToReady: 2,
-      };
-    });
-  });
+    await hookTimeoutPromise;
+  }, TIMEOUT_CONFIG.STANDARD);
 
   afterEach(async () => {
     // TIMEOUT ELIMINATION: Quick cleanup without flush promises to avoid timeout
-    vi.restoreAllMocks();
-    try {
-      timeoutHelpers.cleanup();
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-  });
+    const cleanupPromise = new Promise<void>((resolve) => {
+      setTimeout(async () => {
+        vi.restoreAllMocks();
+        try {
+          timeoutHelpers.cleanup();
+        } catch (error) {
+          // Ignore cleanup errors
+        }
+        resolve();
+      }, 0);
+    });
+    
+    await cleanupPromise;
+  }, TIMEOUT_CONFIG.QUICK);
 
   describe('Singleton Pattern', () => {
     it('should return the same instance', () => {
@@ -316,7 +332,8 @@ describe('PatternAnalyzer', () => {
   });
 
   describe('detectReadyStatePattern', () => {
-    it('should handle null symbol input', withTimeout(async () => {const results = await analyzer.detectReadyStatePattern(null as any);
+    it('should handle null symbol input', withTimeout(async () => {
+      const results = await analyzer.detectReadyStatePattern(null as any);
 
       expect(results).toBeDefined();
       expect(Array.isArray(results)).toBe(true);
@@ -326,7 +343,7 @@ describe('PatternAnalyzer', () => {
         'Null/undefined symbol data provided to detectReadyStatePattern',
         ''
       );
-    });
+    }, TIMEOUT_CONFIG.STANDARD));
 
     it('should handle undefined symbol input', async () => {
       const results = await analyzer.detectReadyStatePattern(undefined as any);
@@ -506,16 +523,17 @@ describe('PatternAnalyzer', () => {
       
       // TIMEOUT ELIMINATION: Ensure all promises are flushed
       await flushPromises();
-    }, TIMEOUT_CONFIG.STANDARD));); // Increased timeout to 15 seconds
+    }, TIMEOUT_CONFIG.STANDARD));
 
-    it('should filter out opportunities with insufficient advance time', withTimeout(async () => {const nearEntry = {
+    it('should filter out opportunities with insufficient advance time', withTimeout(async () => {
+      const nearEntry = {
         ...mockCalendarEntry,
         firstOpenTime: Date.now() + 2 * 60 * 60 * 1000, // 2 hours from now (< 3.5 hours)
       };
       
       const results = await analyzer.detectAdvanceOpportunities([nearEntry]);
       expect(results).toHaveLength(0);
-    });
+    }, TIMEOUT_CONFIG.STANDARD));
 
     it('should filter out opportunities with low confidence', async () => {
       mockConfidenceCalculator.calculateAdvanceOpportunityConfidence.mockResolvedValueOnce(60);
@@ -538,7 +556,7 @@ describe('PatternAnalyzer', () => {
       
       // TIMEOUT ELIMINATION: Ensure all promises are flushed
       await flushPromises();
-    }, TIMEOUT_CONFIG.STANDARD));); // Increased timeout to 15 seconds
+    }, TIMEOUT_CONFIG.STANDARD));
 
     it('should skip invalid calendar entries', withTimeout(async () => {
       const invalidEntry = { symbol: '' } as CalendarEntry;
@@ -556,7 +574,7 @@ describe('PatternAnalyzer', () => {
       const results = await analyzer.detectAdvanceOpportunities([invalidEntry, validEntry]);
       console.log('Results:', results.length, results.map(r => ({ symbol: r.symbol, confidence: r.confidence })));
       expect(results).toHaveLength(1);
-    }, 15000)); // Increased timeout to 15 seconds
+    }, TIMEOUT_CONFIG.STANDARD));
 
     it('should classify project types correctly', withTimeout(async () => {
       const defiEntry = {
@@ -570,7 +588,7 @@ describe('PatternAnalyzer', () => {
       expect(results[0]).toHaveProperty('indicators');
       expect(results[0].indicators).toHaveProperty('marketConditions');
       expect(results[0].indicators.marketConditions.projectType).toBe('DeFi');
-    }, 15000)); // Increased timeout to 15 seconds
+    }, TIMEOUT_CONFIG.STANDARD));
 
     it('should provide correct recommendations based on confidence and timing', withTimeout(async () => {
       // High confidence, optimal timing
@@ -582,7 +600,7 @@ describe('PatternAnalyzer', () => {
       
       const results = await analyzer.detectAdvanceOpportunities([optimalEntry]);
       expect(results[0].recommendation).toBe('prepare_entry');
-    }, 15000)); // Increased timeout to 15 seconds
+    }, TIMEOUT_CONFIG.STANDARD));
   });
 
   describe('detectPreReadyPatterns', () => {

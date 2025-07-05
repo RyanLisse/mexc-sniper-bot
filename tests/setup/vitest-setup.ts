@@ -11,6 +11,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest'
 import { db } from '../../src/db'
 import '@testing-library/jest-dom'
 import * as React from 'react'
+import { cleanup } from '@testing-library/react'
 import { globalTimeoutMonitor } from '../utils/timeout-utilities'
 import { 
   initializeUnifiedMockSystem, 
@@ -20,6 +21,10 @@ import {
   createTestSession,
   createTestApiCredentials 
 } from './unified-mock-system'
+import {
+  initializeComprehensiveBrowserEnvironment,
+  cleanupComprehensiveBrowserEnvironment
+} from './comprehensive-browser-environment'
 import { 
   initializeStabilityUtilities,
   cleanupStabilityUtilities,
@@ -140,6 +145,9 @@ beforeAll(async () => {
     // Setup stable test environment first
     setupStableTestEnvironment()
     
+    // Initialize comprehensive browser environment FIRST
+    initializeComprehensiveBrowserEnvironment()
+    
     // Initialize stability utilities first for maximum reliability
     if (process.env.VITEST_STABILITY_MODE === 'true' || process.env.ENABLE_STABILITY_MONITORING === 'true') {
       console.log('🛡️ Initializing test stability features...')
@@ -168,7 +176,7 @@ beforeAll(async () => {
       skipDatabase: isIntegrationTest, // Use real DB for integration tests
       skipSupabase: false, // Always mock Supabase for consistent behavior
       skipExternalAPIs: false, // Always mock external APIs for test isolation
-      skipBrowserAPIs: false, // Always mock browser APIs for consistent environment
+      skipBrowserAPIs: true, // SKIP - using comprehensive browser environment instead
       skipReactTesting: false // Always provide React testing utilities
     });
 
@@ -229,6 +237,14 @@ afterAll(async () => {
     console.warn('⚠️ Unified mock system cleanup warning:', error?.message || 'Unknown error')
   }
   
+  // Clean up comprehensive browser environment
+  try {
+    cleanupComprehensiveBrowserEnvironment()
+    console.log('✅ Comprehensive browser environment cleaned up')
+  } catch (error) {
+    console.warn('⚠️ Browser environment cleanup warning:', error?.message || 'Unknown error')
+  }
+  
   // Clean up process event handlers
   try {
     processEventManager.unregisterHandler('vitest-setup-rejection')
@@ -267,10 +283,19 @@ afterAll(async () => {
 
 // Cleanup after each test
 afterEach(() => {
+  // Clean up React Testing Library's DOM state
+  cleanup()
+  
   // Reset mock data store for each test
   if (global.mockDataStore?.reset) {
     global.mockDataStore.reset()
   }
+  
+  // Clear all timers to prevent interference between tests
+  vi.clearAllTimers()
+  
+  // Reset all mocks to initial state
+  vi.clearAllMocks()
 })
 
 // AGENT 4 REDUNDANCY ELIMINATION COMPLETE ✅

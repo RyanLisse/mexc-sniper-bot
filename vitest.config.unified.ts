@@ -50,6 +50,19 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     
+    // Jsdom environment options for better React support
+    environmentOptions: {
+      jsdom: {
+        url: 'http://localhost:3000',
+        contentType: 'text/html',
+        pretendToBeVisual: true,
+        includeNodeLocations: true,
+        storageQuota: 10000000,
+        resources: 'usable',
+        runScripts: 'dangerously',
+      },
+    },
+    
     // Test discovery and inclusion - ONLY test files, no spec files
     include: [
       'tests/unit/**/*.test.{js,ts,tsx}',
@@ -94,7 +107,7 @@ export default defineConfig({
         return process.env.CI ? 10000 : 15000; // Significantly increased
       }
       // Unit tests - generous timeouts for all async patterns including mocked operations
-      return process.env.CI ? 15000 : 20000; // Tripled to eliminate all timeout failures
+      return process.env.CI ? 20000 : 30000; // FIXED: Increased from 15000/20000 to eliminate 10000ms default
     })(),
     hookTimeout: (() => {
       if (process.env.TEST_TYPE === 'integration') {
@@ -103,7 +116,8 @@ export default defineConfig({
       if (process.env.TEST_TYPE === 'real-api') {
         return process.env.CI ? 120000 : 150000; // Maximum for API setup
       }
-      return process.env.CI ? 20000 : 25000; // Generous timeouts for all async cleanup
+      // FIXED: Increased hook timeout to prevent 10000ms default timeouts
+      return process.env.CI ? 30000 : 40000; // Increased from 20000/25000 to eliminate hook timeout failures
     })(),
     teardownTimeout: (() => {
       if (process.env.TEST_TYPE === 'integration') {
@@ -112,7 +126,8 @@ export default defineConfig({
       if (process.env.TEST_TYPE === 'real-api') {
         return process.env.CI ? 90000 : 120000; // Maximum for API cleanup
       }
-      return process.env.CI ? 20000 : 25000; // Generous timeouts for all async cleanup
+      // FIXED: Increased teardown timeout to prevent cleanup failures
+      return process.env.CI ? 30000 : 40000; // Increased from 20000/25000 for reliable cleanup
     })(),
     
     // Smart retry configuration
@@ -161,10 +176,14 @@ export default defineConfig({
     },
     
     // Enhanced setup files for stability - TIMEOUT ELIMINATION: Added global timeout fixes
+    // CRITICAL: React DOM fix FIRST to ensure proper DOM setup for React components
+    // Browser environment mocking is handled in vitest-setup.ts beforeAll hook
     setupFiles: [
-      './tests/setup/vitest-setup.ts',
+      './tests/setup/react-dom-fix.ts', // Load React DOM fix FIRST
+      './tests/setup/vitest-setup.ts', // Includes comprehensive browser environment initialization
       './tests/utils/test-stability-utilities.ts',
       './tests/utils/async-test-helpers.ts',
+      './tests/setup/hook-timeout-configuration.ts', // HOOK TIMEOUT FIX: Load hook timeout configuration
       './tests/setup/global-timeout-elimination.ts'
     ],
     

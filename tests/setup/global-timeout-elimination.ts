@@ -10,6 +10,7 @@
 
 import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { TIMEOUT_CONFIG } from '../utils/timeout-elimination-helpers';
+import { withHookTimeout, HOOK_TIMEOUT_CONFIG } from './hook-timeout-configuration';
 
 // Global timeout tracking
 let globalTimeoutWarnings = 0;

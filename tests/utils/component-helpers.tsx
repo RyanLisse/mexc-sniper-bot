@@ -224,42 +224,14 @@ export const ErrorBoundaryTestComponent = ({ shouldThrow = false }: { shouldThro
   return <div>Test component</div>;
 };
 
-// Mock window methods
+// Mock window methods - LEGACY: Most browser APIs are now handled by comprehensive-browser-environment.ts
 export const mockWindowMethods = () => {
-  Object.defineProperty(window, 'localStorage', {
-    value: {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    },
-    writable: true,
-  });
-
-  Object.defineProperty(window, 'sessionStorage', {
-    value: {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    },
-    writable: true,
-  });
-
-  // Mock window.matchMedia
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation(query => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  });
+  console.log('📝 Component helpers: Using comprehensive browser environment (most methods already available)')
+  
+  // This function is kept for backwards compatibility but is mostly redundant
+  // The comprehensive browser environment handles localStorage, sessionStorage, matchMedia, etc.
+  
+  // Any component-specific overrides can be added here if needed
 };
 
 // Component performance testing helpers
@@ -275,16 +247,12 @@ export const expectFastRender = async (component: ReactElement, maxTime = 100) =
   expect(renderTime).toBeLessThan(maxTime);
 };
 
-// Mock intersection observer for components that use it
+// Mock intersection observer for components that use it - LEGACY: Now handled by comprehensive environment
 export const mockIntersectionObserver = () => {
-  const mockIntersectionObserver = vi.fn();
-  mockIntersectionObserver.mockReturnValue({
-    observe: () => null,
-    unobserve: () => null,
-    disconnect: () => null,
-  });
-  window.IntersectionObserver = mockIntersectionObserver;
-  window.IntersectionObserverEntry = vi.fn();
+  console.log('📝 Component helpers: IntersectionObserver already available via comprehensive environment')
+  
+  // This function is kept for backwards compatibility
+  // The comprehensive browser environment already provides IntersectionObserver
 };
 
 // Component state testing
@@ -294,13 +262,12 @@ export const expectComponentState = (component: any, expectedState: any) => {
   });
 };
 
-// Mock resize observer
+// Mock resize observer - LEGACY: Now handled by comprehensive environment
 export const mockResizeObserver = () => {
-  window.ResizeObserver = vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-  }));
+  console.log('📝 Component helpers: ResizeObserver already available via comprehensive environment')
+  
+  // This function is kept for backwards compatibility
+  // The comprehensive browser environment already provides ResizeObserver
 };
 
 // Testing utilities export
