@@ -88,11 +88,17 @@ function HomePage() {
           <div className="flex gap-2">
             <Button
               variant="ghost"
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
             >
               Sign In
             </Button>
-            <Button onClick={() => (window.location.href = "/auth")}>
+            <Button
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
+            >
               Get Started
             </Button>
           </div>
