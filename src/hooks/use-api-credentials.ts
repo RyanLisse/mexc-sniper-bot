@@ -1,8 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 import { useAuth } from "@/src/lib/supabase-auth-client";
 export interface ApiCredentials {
   id?: number;

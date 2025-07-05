@@ -319,14 +319,16 @@ export class EmergencyStop extends AggregateRoot<string> {
       if (!priorityGroups.has(action.priority)) {
         priorityGroups.set(action.priority, []);
       }
-      priorityGroups.get(action.priority)!.push(action);
+      priorityGroups.get(action.priority)?.push(action);
     }
-    
+
     // Check each priority group
     for (const [priority, actions] of priorityGroups) {
       if (actions.length > 1) {
         // Multiple actions with same priority - all must support parallel execution
-        const nonParallelActions = actions.filter(action => !action.canRunInParallel);
+        const nonParallelActions = actions.filter(
+          (action) => !action.canRunInParallel
+        );
         if (nonParallelActions.length > 0) {
           throw new DomainValidationError(
             "emergencyActions.priority",

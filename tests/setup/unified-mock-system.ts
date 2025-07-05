@@ -157,11 +157,64 @@ export const getMockSupabaseServerClient = () => {
 
 // UNIFIED MOCK IMPLEMENTATIONS
 
-// Supabase SSR Mocks
+// Supabase SSR Mocks - ENHANCED SINGLETON PATTERN FOR TESTS
 export const mockSupabaseSSR = () => {
   vi.doMock('@supabase/ssr', () => ({
     createBrowserClient: vi.fn(() => getMockSupabaseBrowserClient()),
     createServerClient: vi.fn(() => getMockSupabaseServerClient())
+  }))
+  
+  // Mock the centralized client manager to prevent conflicts
+  vi.doMock('@/src/lib/supabase-client-manager', () => ({
+    getSupabaseBrowserClient: vi.fn(() => getMockSupabaseBrowserClient()),
+    getSupabaseServerClient: vi.fn(() => Promise.resolve(getMockSupabaseServerClient())),
+    getSupabaseAdminClient: vi.fn(() => getMockSupabaseServerClient()),
+    getSupabaseMiddlewareClient: vi.fn(() => getMockSupabaseServerClient()),
+    cleanupSupabaseClients: vi.fn(),
+    validateSupabaseEnvironment: vi.fn(() => ({
+      isValid: true,
+      config: {
+        url: 'https://test.supabase.co',
+        hasAnonKey: true,
+        hasServiceRoleKey: true
+      }
+    })),
+    getSupabaseClientStatus: vi.fn(() => ({
+      browser: { exists: true, envSignature: 'test' },
+      server: { exists: true, cookieSignature: 'test' },
+      admin: { exists: true }
+    }))
+  }))
+  
+  // Mock the legacy browser client
+  vi.doMock('@/src/lib/supabase-browser-client', () => ({
+    getSupabaseBrowserClient: vi.fn(() => getMockSupabaseBrowserClient()),
+    createSupabaseBrowserClient: vi.fn(() => getMockSupabaseBrowserClient())
+  }))
+  
+  // Mock the auth client
+  vi.doMock('@/src/lib/supabase-auth', () => ({
+    createSupabaseServerClient: vi.fn(() => Promise.resolve(getMockSupabaseServerClient())),
+    createSupabaseAdminClient: vi.fn(() => getMockSupabaseServerClient()),
+    getSession: vi.fn().mockResolvedValue({
+      user: null,
+      isAuthenticated: false
+    }),
+    getUser: vi.fn().mockResolvedValue(null),
+    isAuthenticated: vi.fn().mockResolvedValue(false),
+    syncUserWithDatabase: vi.fn().mockResolvedValue(true),
+    getUserFromDatabase: vi.fn().mockResolvedValue(null),
+    requireAuth: vi.fn().mockRejectedValue(new Error('Authentication required'))
+  }))
+  
+  // Mock the middleware
+  vi.doMock('@/src/lib/supabase-middleware', () => ({
+    updateSession: vi.fn().mockImplementation((request) => {
+      return Promise.resolve(new Response(null, { status: 200 }))
+    }),
+    middleware: vi.fn().mockImplementation((request) => {
+      return Promise.resolve(new Response(null, { status: 200 }))
+    })
   }))
 }
 
@@ -516,13 +569,25 @@ export const initializeUnifiedMockSystem = (options: {
   }
 }
 
-// Cleanup function
+// Cleanup function - ENHANCED FOR CLIENT MANAGER
 export const cleanupUnifiedMockSystem = () => {
   console.log('🧹 Cleaning up unified mock system...')
   
   // Reset singleton clients
   mockSupabaseBrowserClient = null
   mockSupabaseServerClient = null
+  
+  // Clean up real client manager if available (for integration tests)
+  try {
+    const clientManager = require('@/src/lib/supabase-client-manager')
+    if (clientManager.cleanupSupabaseClients) {
+      clientManager.cleanupSupabaseClients()
+      console.log('🧹 Real Supabase client manager cleaned up')
+    }
+  } catch (error) {
+    // Expected in unit tests where real client manager is mocked
+    console.debug('Client manager cleanup skipped (using mocks)')
+  }
   
   // Reset mock store
   mockStore.reset()

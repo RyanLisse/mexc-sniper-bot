@@ -80,7 +80,7 @@ export function transformTradingTarget(
   return {
     vcoinId: normalizeVcoinId(target.vcoinId || target.id || ""),
     symbolName: target.symbolName || target.symbol || "",
-    listingDate: target.listingDate || target.listing_date,
+    listingDate: target.listingDate || target.listing_date || undefined,
     isReady: Boolean(target.isReady || target.is_ready),
   };
 }

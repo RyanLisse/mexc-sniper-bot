@@ -181,11 +181,11 @@ export const GET = apiAuthWrapper(async (request: NextRequest) => {
     }
 
     // Pass through specific error messages for test compatibility
-    const errorMessage = error.message || "Safety monitoring GET action failed";
+    const errorMessage = error instanceof Error ? error.message : "Safety monitoring GET action failed";
     return NextResponse.json(
       createErrorResponse(errorMessage, {
         code: "GET_ACTION_FAILED",
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
       }),
       { status: 500 }
     );
@@ -214,12 +214,13 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
       });
     }
 
-    body = parseResult.data;
-    const action = body?.action;
-    const configuration = body?.configuration;
-    const thresholds = body?.thresholds;
-    const alertId = body?.alertId;
-    const reason = body?.reason;
+    body = parseResult.data as any;
+    const parsedBody = body as Record<string, unknown>;
+    const action = parsedBody?.action;
+    const configuration = parsedBody?.configuration;
+    const thresholds = parsedBody?.thresholds;
+    const alertId = parsedBody?.alertId;
+    const reason = parsedBody?.reason;
 
     // Validate required action field
     const fieldValidation = validateRequiredFields(body, ["action"]);
@@ -362,7 +363,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           );
         }
 
-        const emergencyActions = await service.triggerEmergencyResponse(reason);
+        const emergencyActions = await service.triggerEmergencyResponse(String(reason || 'Unknown emergency reason'));
         return NextResponse.json(
           createSuccessResponse({
             message: "Emergency safety response triggered successfully",
@@ -383,7 +384,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           );
         }
 
-        const acknowledged = service.acknowledgeAlert(alertId);
+        const acknowledged = service.acknowledgeAlert(alertId as string);
         if (!acknowledged) {
           return NextResponse.json(
             createErrorResponse("Alert not found or already acknowledged", {
@@ -449,8 +450,7 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
   } catch (error: unknown) {
     console.error("[SafetyMonitoringAPI] POST action failed:", {
       error: error instanceof Error ? error.message : "Unknown error",
-      action:
-        typeof body === "object" && body ? body.action || "unknown" : "unknown",
+      action: "unknown",
       url: request.url,
     });
 
@@ -471,11 +471,11 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     }
 
     // Pass through specific error messages for test compatibility
-    const errorMessage = error.message || "Safety monitoring action failed";
+    const errorMessage = error instanceof Error ? error.message : "Safety monitoring action failed";
     return NextResponse.json(
       createErrorResponse(errorMessage, {
         code: "ACTION_FAILED",
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
       }),
       { status: 500 }
     );

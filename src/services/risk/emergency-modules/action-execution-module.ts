@@ -9,7 +9,6 @@ import type {
   EmergencyAction,
   EmergencyLevel,
 } from "./protocol-management-module";
-import type { EmergencySession } from "./session-management-module";
 
 export interface ActionExecutionResult {
   actionId: string;
@@ -247,9 +246,9 @@ export class ActionExecutionModule {
    * Execute specific action type
    */
   private async executeActionType(
-    sessionId: string,
+    _sessionId: string,
     action: EmergencyAction,
-    retryCount: number
+    _retryCount: number
   ): Promise<any> {
     const timeout = action.timeout || this.config.defaultTimeout;
 

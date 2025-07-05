@@ -257,7 +257,10 @@ export function EnhancedMetricsDashboard() {
                 </h4>
                 <ul className="space-y-1">
                   {metrics.health.issues.map((issue, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
+                    <li
+                      key={`health-issue-${issue.replace(/[^a-zA-Z0-9]/g, "")}-${index}`}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <AlertTriangle className="h-4 w-4 text-red-500" />
                       {issue}
                     </li>

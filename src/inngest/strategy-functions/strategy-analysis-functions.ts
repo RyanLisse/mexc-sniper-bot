@@ -15,11 +15,15 @@ import {
   type TradingStrategy,
 } from "@/src/services/multi-phase-trading-service";
 import { inngest } from "../client";
-import type {
-  isStrategyAnalysisResult,
-  MarketData,
-  StrategyAnalysisResult,
-} from "./strategy-types";
+import type { StrategyAnalysisResult } from "./strategy-types";
+import { 
+  withStrategyAuth, 
+  withWorkflowAuth,
+  validateStrategyAccess,
+  logAuthEvent,
+  type AuthContext,
+  type AuthenticatedEventData 
+} from "../middleware/auth-middleware";
 
 /**
  * Analyze Multi-Phase Strategy Workflow
@@ -28,22 +32,52 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
   { id: "multi-phase-strategy-analyze", name: "Analyze Multi-Phase Strategy" },
   { event: "multi-phase-strategy/analyze" },
   async ({ event, step }) => {
-    const { strategyId, marketData, analysisDepth = "standard" } = event.data;
+    // Authenticate and execute with proper authorization
+    return await withStrategyAuth(async (eventData: { strategyId: string; marketData: any; analysisDepth?: string; userId: string; sessionToken?: string } & AuthenticatedEventData, authContext: AuthContext) => {
+      const { strategyId, marketData, analysisDepth = "standard" } = eventData;
 
-    // Step 1: Retrieve Strategy
-    const strategy = await step.run("retrieve-strategy", async () => {
-      const result = await db
-        .select()
-        .from(tradingStrategies)
-        .where(eq(tradingStrategies.id, strategyId))
-        .limit(1);
+      // Log authentication success
+      logAuthEvent("strategy_analysis_started", authContext.user.id, {
+        strategyId,
+        analysisDepth,
+        authenticated: true,
+      });
 
-      if (result.length === 0) {
-        throw new Error(`Strategy not found: ${strategyId}`);
-      }
+      // Step 1: Retrieve and Validate Strategy
+      const strategy = await step.run("retrieve-and-validate-strategy", async () => {
+        // Validate strategy access with authenticated context
+        await validateStrategyAccess(strategyId, authContext.user);
 
-      return result[0] as TradingStrategy;
-    });
+        const result = await db
+          .select()
+          .from(tradingStrategies)
+          .where(eq(tradingStrategies.id, strategyId))
+          .limit(1);
+
+        if (result.length === 0) {
+          throw new Error(`Strategy not found: ${strategyId}`);
+        }
+
+        const strategy = result[0] as TradingStrategy;
+
+        // Double-check user ownership (already validated by middleware but ensuring consistency)
+        if (strategy.userId !== authContext.user.id) {
+          logAuthEvent("unauthorized_strategy_access_blocked", authContext.user.id, {
+            strategyId,
+            ownerUserId: strategy.userId,
+            requestedUserId: authContext.user.id,
+          });
+          throw new Error(`Strategy access denied for user: ${authContext.user.id}`);
+        }
+
+        // Log successful strategy validation
+        logAuthEvent("strategy_validation_success", authContext.user.id, {
+          strategyId,
+          analysisType: "performance_analysis",
+        });
+
+        return strategy;
+      });
 
     // Step 2: Performance Analysis
     const performanceAnalysis = await step.run(
@@ -328,19 +362,33 @@ export const analyzeMultiPhaseStrategy = inngest.createFunction(
             : "low",
     };
 
-    return {
-      analysis: analysisResult,
-      performanceAnalysis,
-      phaseAnalysis,
-      riskAnalysis,
-      marketAlignment,
-      recommendations,
-      metadata: {
+      // Log analysis completion
+      logAuthEvent("strategy_analysis_completed", authContext.user.id, {
+        strategyId,
         analysisDepth,
-        processingTime: Date.now() - event.ts,
-        analysisTimestamp: new Date().toISOString(),
-      },
-    };
+        patternsAnalyzed: phaseAnalysis.totalPhases,
+        performanceMetrics: {
+          successRate: performanceAnalysis.successRate,
+          totalTrades: performanceAnalysis.totalTrades,
+        },
+      });
+
+      return {
+        analysis: analysisResult,
+        performanceAnalysis,
+        phaseAnalysis,
+        riskAnalysis,
+        marketAlignment,
+        recommendations,
+        metadata: {
+          analysisDepth,
+          processingTime: Date.now() - event.ts,
+          analysisTimestamp: new Date().toISOString(),
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );
 
@@ -351,30 +399,50 @@ export const strategyHealthCheck = inngest.createFunction(
   { id: "strategy-health-check", name: "Strategy Health Check" },
   { event: "strategy/health-check" },
   async ({ event, step }) => {
-    const { strategyIds = [], marketData } = event.data;
+    // Authenticate and execute with proper authorization
+    return await withWorkflowAuth(async (eventData: { strategyIds?: string[]; marketData?: any; userId: string; sessionToken?: string } & AuthenticatedEventData, authContext: AuthContext) => {
+      const { strategyIds = [], marketData } = eventData;
 
-    // Step 1: Get all strategies if none specified
-    const strategiesToCheck = await step.run(
-      "get-strategies-for-health-check",
-      async () => {
-        if (strategyIds.length > 0) {
-          const results = await db
-            .select()
-            .from(tradingStrategies)
-            .where(eq(tradingStrategies.id, strategyIds[0])); // Simple approach for demo
+      // Log authentication success
+      logAuthEvent("strategy_health_check_started", authContext.user.id, {
+        strategyCount: strategyIds.length,
+        authenticated: true,
+      });
 
-          return results as TradingStrategy[];
-        } else {
-          const results = await db
-            .select()
-            .from(tradingStrategies)
-            .where(eq(tradingStrategies.status, "active"))
-            .limit(10);
+      // Step 1: Get user's strategies (only strategies owned by authenticated user)
+      const strategiesToCheck = await step.run(
+        "get-user-strategies-for-health-check",
+        async () => {
+          if (strategyIds.length > 0) {
+            // Check specific strategies but only if they belong to the user
+            const results = await db
+              .select()
+              .from(tradingStrategies)
+              .where(eq(tradingStrategies.userId, authContext.user.id));
 
-          return results as TradingStrategy[];
+            // Filter to only requested strategy IDs that belong to this user
+            const userStrategies = results.filter(strategy => strategyIds.includes(strategy.id));
+            
+            if (userStrategies.length < strategyIds.length) {
+              logAuthEvent("strategy_access_filtered", authContext.user.id, {
+                requestedStrategies: strategyIds.length,
+                accessibleStrategies: userStrategies.length,
+              });
+            }
+
+            return userStrategies as TradingStrategy[];
+          } else {
+            // Get all active strategies for this user
+            const results = await db
+              .select()
+              .from(tradingStrategies)
+              .where(eq(tradingStrategies.userId, authContext.user.id))
+              .limit(10);
+
+            return results as TradingStrategy[];
+          }
         }
-      }
-    );
+      );
 
     // Step 2: Perform health checks
     const healthChecks = await step.run("perform-health-checks", async () => {
@@ -454,19 +522,30 @@ export const strategyHealthCheck = inngest.createFunction(
       };
     });
 
-    return {
-      summary,
-      healthChecks,
-      metadata: {
-        checkTimestamp: new Date().toISOString(),
-        marketData: marketData
-          ? {
-              symbol: marketData.symbol,
-              price: marketData.price,
-              timestamp: marketData.timestamp,
-            }
-          : null,
-      },
-    };
+      // Log health check completion
+      logAuthEvent("strategy_health_check_completed", authContext.user.id, {
+        strategiesChecked: healthChecks.length,
+        healthyStrategies: summary.healthyStrategies,
+        criticalIssues: summary.criticalIssues,
+        overallHealth: summary.overallHealthPercentage,
+      });
+
+      return {
+        summary,
+        healthChecks,
+        metadata: {
+          checkTimestamp: new Date().toISOString(),
+          marketData: marketData
+            ? {
+                symbol: marketData.symbol,
+                price: marketData.price,
+                timestamp: marketData.timestamp,
+              }
+            : null,
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );

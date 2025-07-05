@@ -21,7 +21,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';
+} from '../utils/timeout-utilities';
 
 const TEST_PORT = 3113;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -95,7 +95,7 @@ describe("MEXC API Endpoints Integration Tests", () => {
         if (!serverProcess.killed) {
           serverProcess.kill("SIGKILL");
         }
-      }, TIMEOUT_CONFIG.STANDARD));
+      }, TIMEOUT_CONFIG.STANDARD);
     }
   });
 

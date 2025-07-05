@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Unified MEXC Trading Module
  *

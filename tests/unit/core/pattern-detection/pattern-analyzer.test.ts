@@ -4,26 +4,36 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { PatternAnalyzer } from '../../../../src/core/pattern-detection/pattern-analyzer';
-import type { SymbolEntry, CalendarEntry } from '../../../../src/services/api/mexc-unified-exports';
-import { expectAsyncNotToThrow, expectAsyncToThrow, createTestDelay } from '../../../utils/mock-async-helpers';
-import { setupTimerMocks } from '../../../utils/mock-async-helpers';
+import { PatternAnalyzer } from '@/core/pattern-detection/pattern-analyzer';
+import type { SymbolEntry, CalendarEntry } from '@/services/api/mexc-unified-exports';
+import { expectAsyncNotToThrow, expectAsyncToThrow } from '@utils/async-utilities';
+
+// Setup timer mocks function for compatibility
+const setupTimerMocks = () => {
+  vi.useFakeTimers();
+  return {
+    cleanup: () => vi.useRealTimers()
+  };
+};
 import { 
   setupTimeoutElimination, 
-  withTimeout, 
+  withTimeoutSimple, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
+
+// Alias for compatibility
+const withTimeout = withTimeoutSimple;
 
 // Mock dependencies with proper async handling
-vi.mock('../../../../src/lib/error-type-utils', () => ({
+vi.mock('@/lib/error-type-utils', () => ({
   toSafeError: (error: any) => ({
     message: error?.message || 'Unknown error',
     stack: error?.stack || '',
   }),
 }));
 
-vi.mock('../../../../src/services/data/pattern-detection/activity-integration', () => ({
+vi.mock('@/services/data/pattern-detection/activity-integration', () => ({
   getActivityDataForSymbol: vi.fn().mockResolvedValue([
     {
       activityId: 'test-activity-1',
@@ -65,7 +75,7 @@ const mockConfidenceCalculator = {
 
 // FIXED: Mock both static and dynamic imports for ConfidenceCalculator
 // Pre-mock the confidence calculator before any imports
-vi.mock('../../../../src/core/pattern-detection/confidence-calculator', async () => {
+vi.mock('@/core/pattern-detection/confidence-calculator', async () => {
   const mockConfidenceCalculator = {
     calculateReadyStateConfidence: vi.fn(async (symbol: any) => {
       console.log('Mock calculateReadyStateConfidence called with:', symbol);
@@ -111,14 +121,14 @@ vi.doMock('./confidence-calculator', () => ({
 }));
 
 // Mock the actual file path that gets dynamically imported
-vi.doMock('/Users/neo/Developer/mexc-sniper-bot/src/core/pattern-detection/confidence-calculator', () => ({
+vi.doMock('@/core/pattern-detection/confidence-calculator', () => ({
   ConfidenceCalculator: {
     getInstance: () => mockConfidenceCalculator,
   },
 }));
 
 // Mock additional dependencies that cause slow imports
-vi.mock('../../../../src/services/api/unified-mexc-service-v2', () => ({
+vi.mock('@/services/api/unified-mexc-service-v2', () => ({
   unifiedMexcService: {
     getRecentActivity: vi.fn().mockResolvedValue({
       success: true,
@@ -127,20 +137,20 @@ vi.mock('../../../../src/services/api/unified-mexc-service-v2', () => ({
   }
 }));
 
-vi.mock('../../../../src/services/ai/ai-intelligence-service', () => ({
+vi.mock('@/services/ai/ai-intelligence-service', () => ({
   aiIntelligenceService: {
     enhanceConfidence: vi.fn().mockResolvedValue({ confidenceAdjustment: 0 })
   }
 }));
 
-vi.mock('../../../../src/services/risk/advanced-risk-engine', () => ({
+vi.mock('@/services/risk/advanced-risk-engine', () => ({
   AdvancedRiskEngine: class MockRiskEngine {
     constructor() {}
     isEmergencyModeActive() { return false; }
   }
 }));
 
-vi.mock('../../../../src/services/trading/consolidated/core-trading/base-service', () => ({
+vi.mock('@/services/trading/consolidated/core-trading/base-service', () => ({
   getCoreTrading: vi.fn(() => ({
     getPerformanceMetrics: vi.fn().mockResolvedValue({
       totalTrades: 15,
@@ -343,7 +353,7 @@ describe('PatternAnalyzer', () => {
         'Null/undefined symbol data provided to detectReadyStatePattern',
         ''
       );
-    }, TIMEOUT_CONFIG.SLOW)); // TIMEOUT ELIMINATION: Use SLOW timeout for complex async operations
+    }, TIMEOUT_CONFIG.SLOW));
 
     it('should handle undefined symbol input', async () => {
       const results = await analyzer.detectReadyStatePattern(undefined as any);
@@ -366,11 +376,15 @@ describe('PatternAnalyzer', () => {
       
       expect(results).toHaveLength(1);
       expect(results[0]).toMatchObject({
+        id: expect.any(String),
         patternType: 'ready_state',
         symbol: 'READYCOIN',
         recommendation: 'immediate_action',
         advanceNoticeHours: 0,
         riskLevel: 'low',
+        timestamp: expect.any(Date),
+        source: expect.any(String),
+        indicators: expect.any(Object),
       });
       // Confidence should be at least 90 (could be higher due to activity boost)
       expect(results[0].confidence).toBeGreaterThanOrEqual(90);
@@ -660,7 +674,7 @@ describe('PatternAnalyzer', () => {
 
     it('should handle network errors in activity data', async () => {
       // Mock activity data service to throw error
-      const { getActivityDataForSymbol } = await import('../../../../src/services/data/pattern-detection/activity-integration');
+      const { getActivityDataForSymbol } = await import('@/services/data/pattern-detection/activity-integration');
       vi.mocked(getActivityDataForSymbol).mockRejectedValueOnce(new Error('Network timeout'));
 
       const results = await expectAsyncNotToThrow(async () => {

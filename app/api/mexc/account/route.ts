@@ -70,10 +70,10 @@ export async function GET(request: NextRequest) {
       mexcService = getRecommendedMexcService({
         apiKey: userCredentials.apiKey,
         secretKey: userCredentials.secretKey,
-      });
+      }) as unknown as MexcAccountService;
     } else {
       // Fallback to environment credentials if no user credentials
-      mexcService = getRecommendedMexcService();
+      mexcService = getRecommendedMexcService() as unknown as MexcAccountService;
     }
 
     // Check if service has credentials by testing if we have user credentials or environment credentials

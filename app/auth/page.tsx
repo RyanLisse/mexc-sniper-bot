@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Zap } from "lucide-react";
 import Link from "next/link";
-import { SupabaseAuthUI } from "@/src/components/auth/supabase-auth-ui";
+import { SupabaseAuthUI } from "../../src/components/auth/supabase-auth-ui";
 
 export default function AuthPage() {
   return (

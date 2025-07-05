@@ -349,7 +349,7 @@ export function OptimizedAgentsDashboard({
                           .slice(0, 3)
                           .map((capability, index) => (
                             <Badge
-                              key={index}
+                              key={`capability-${capability.replace(/[^a-zA-Z0-9]/g, "")}-${index}`}
                               variant="outline"
                               className="text-xs"
                             >

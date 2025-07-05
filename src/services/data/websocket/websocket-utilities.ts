@@ -13,10 +13,7 @@
 
 import type { IncomingMessage } from "node:http";
 import { WebSocket } from "ws";
-import type {
-  ConnectionMetrics,
-  ServerMetrics,
-} from "@/src/lib/websocket-types";
+import type { ServerMetrics } from "@/src/lib/websocket-types";
 import type { ServerConnectionManager } from "./server-connection-manager";
 
 export class WebSocketUtilities {

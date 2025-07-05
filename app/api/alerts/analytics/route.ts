@@ -128,7 +128,7 @@ export async function GET(request: NextRequest) {
         models: modelStats.map((model: ModelStatistic) => ({
           metricName: model.metricName,
           modelType: model.modelType,
-          sampleCount: model.sampleCount || 0,
+          sampleCount: model.sampleCount ?? 0,
           lastTrained: model.lastTraining,
           performance: {
             accuracy: model.accuracy,
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
             recall: model.recall,
             f1Score: model.f1Score,
           },
-          queuedSamples: model.queuedSamples || 0,
+          queuedSamples: model.queuedSamples ?? 0,
           accuracy: model.accuracy,
           falsePositiveRate: 1 - model.precision, // Approximation
         })),
@@ -148,8 +148,8 @@ export async function GET(request: NextRequest) {
         correlations: activeCorrelations.map((correlation) => ({
           id: correlation.id,
           title: correlation.title,
-          alertCount: correlation.alertCount,
-          confidence: correlation.confidence,
+          alertCount: correlation.alertCount ?? 0,
+          confidence: correlation.confidence ?? 0,
           severity: correlation.severity,
           firstAlert: new Date(correlation.firstAlertAt).toISOString(),
           lastAlert: new Date(correlation.lastAlertAt).toISOString(),
@@ -163,7 +163,11 @@ export async function GET(request: NextRequest) {
         ...additionalMetrics.trends,
       },
 
-      insights: generateInsights(analytics, modelStats, activeCorrelations),
+      insights: generateInsights(analytics, modelStats, activeCorrelations.map(correlation => ({
+        id: correlation.id,
+        alertCount: (correlation.alertCount as number) ?? 0,
+        confidence: (correlation.confidence as number) ?? 0,
+      }))),
     };
 
     return NextResponse.json({
@@ -201,11 +205,11 @@ function calculateAlertDistribution(
   };
 
   for (const item of analytics) {
-    distribution.critical += item.criticalAlerts || 0;
-    distribution.high += item.highAlerts || 0;
-    distribution.medium += item.mediumAlerts || 0;
-    distribution.low += item.lowAlerts || 0;
-    distribution.info += item.infoAlerts || 0;
+    distribution.critical += item.criticalAlerts ?? 0;
+    distribution.high += item.highAlerts ?? 0;
+    distribution.medium += item.mediumAlerts ?? 0;
+    distribution.low += item.lowAlerts ?? 0;
+    distribution.info += item.infoAlerts ?? 0;
   }
 
   return distribution;
@@ -224,12 +228,12 @@ function calculateNotificationStats(
   };
 
   for (const item of analytics) {
-    stats.email += item.emailNotifications || 0;
-    stats.slack += item.slackNotifications || 0;
-    stats.webhook += item.webhookNotifications || 0;
-    stats.sms += item.smsNotifications || 0;
-    stats.teams += item.teamsNotifications || 0;
-    stats.failed += item.failedNotifications || 0;
+    stats.email += item.emailNotifications ?? 0;
+    stats.slack += item.slackNotifications ?? 0;
+    stats.webhook += item.webhookNotifications ?? 0;
+    stats.sms += item.smsNotifications ?? 0;
+    stats.teams += item.teamsNotifications ?? 0;
+    stats.failed += item.failedNotifications ?? 0;
   }
 
   return stats;
@@ -254,11 +258,11 @@ function calculateOverallMLPerformance(modelStats: ModelStatistic[]): {
 
   const totals = modelStats.reduce(
     (acc, model) => {
-      acc.accuracy += model.accuracy || 0;
-      acc.precision += model.precision || 0;
-      acc.recall += model.recall || 0;
-      acc.f1Score += model.f1Score || 0;
-      acc.falsePositiveRate += 1 - model.precision || 0; // Approximation
+      acc.accuracy += model.accuracy ?? 0;
+      acc.precision += model.precision ?? 0;
+      acc.recall += model.recall ?? 0;
+      acc.f1Score += model.f1Score ?? 0;
+      acc.falsePositiveRate += 1 - (model.precision ?? 0); // Approximation
       return acc;
     },
     { accuracy: 0, precision: 0, recall: 0, f1Score: 0, falsePositiveRate: 0 }
@@ -355,7 +359,7 @@ function calculatePercentageChange(current: number, previous: number): number {
 function calculateSystemReliability(analytics: AlertAnalyticsItem[]): number {
   // Calculate based on critical alert frequency and resolution time
   const criticalAlerts = analytics.reduce(
-    (sum: number, item: AlertAnalyticsItem) => sum + (item.criticalAlerts || 0),
+    (sum: number, item: AlertAnalyticsItem) => sum + (item.criticalAlerts ?? 0),
     0
   );
   const totalAlerts = analytics.reduce(
@@ -383,7 +387,7 @@ function generateInsights(
     0
   );
   const criticalAlerts = analytics.reduce(
-    (sum: number, item: AlertAnalyticsItem) => sum + (item.criticalAlerts || 0),
+    (sum: number, item: AlertAnalyticsItem) => sum + (item.criticalAlerts ?? 0),
     0
   );
   const falsePositives = analytics.reduce(

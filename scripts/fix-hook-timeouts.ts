@@ -124,7 +124,7 @@ function fixTestFile(filePath: string): boolean {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';\n`;
+} from '../utils/timeout-utilities';\n`;
 
     // Find existing import section
     const importSectionMatch = content.match(/import.*from.*['"];?\n/g);
@@ -193,8 +193,8 @@ function fixTestFile(filePath: string): boolean {
   if (content.includes('timeoutSafeMockSetup') || content.includes('timeoutSafeCleanup')) {
     if (!content.includes('timeoutSafeMockSetup')) {
       content = content.replace(
-        /from ['"]\.\.\/utils\/timeout-elimination-helpers['"];?/,
-        `from '../utils/timeout-elimination-helpers';
+        /from ['"]\.\.\/utils\/timeout-utilities['"];?/,
+        `from '../utils/timeout-utilities';
 import { timeoutSafeMockSetup, timeoutSafeCleanup } from '../setup/hook-timeout-configuration';`
       );
       modified = true;

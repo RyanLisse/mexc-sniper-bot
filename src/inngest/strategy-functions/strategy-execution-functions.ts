@@ -3,6 +3,7 @@
  *
  * Inngest workflow functions for executing multi-phase trading strategies.
  * Extracted from multi-phase-strategy-functions.ts for better modularity.
+ * Enhanced with proper authentication and authorization.
  */
 
 import { eq } from "drizzle-orm";
@@ -11,18 +12,20 @@ import { tradingStrategies } from "@/src/db/schemas/strategies";
 import {
   createExecutorFromStrategy,
   type Strategy as ExecutorStrategy,
-  type StrategyExecutor,
 } from "@/src/services/multi-phase-executor";
 import {
   multiPhaseTradingService,
   type TradingStrategy,
 } from "@/src/services/multi-phase-trading-service";
 import { inngest } from "../client";
-import type {
-  MarketData,
-  StrategyExecutionInput,
-  StrategyExecutionStatus,
-} from "./strategy-types";
+import type { StrategyExecutionInput, StrategyExecutionStatus } from "./strategy-types";
+import { 
+  withStrategyAuth, 
+  validateStrategyAccess,
+  logAuthEvent,
+  type AuthContext,
+  type AuthenticatedEventData 
+} from "../middleware/auth-middleware";
 
 /**
  * Execute Multi-Phase Strategy Workflow
@@ -31,48 +34,73 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
   { id: "multi-phase-strategy-execute", name: "Execute Multi-Phase Strategy" },
   { event: "multi-phase-strategy/execute" },
   async ({ event, step }) => {
-    const {
-      strategyId,
-      userId,
-      symbol,
-      marketData,
-      executionParameters = {},
-    } = event.data as StrategyExecutionInput;
+    // Authenticate and execute with proper authorization
+    return await withStrategyAuth(async (eventData: StrategyExecutionInput & AuthenticatedEventData, authContext: AuthContext) => {
+      const {
+        strategyId,
+        userId,
+        symbol,
+        marketData,
+        executionParameters = {},
+      } = eventData;
 
-    // Step 1: Retrieve and Validate Strategy
-    const strategy = await step.run(
-      "retrieve-and-validate-strategy",
-      async () => {
-        const result = await db
-          .select()
-          .from(tradingStrategies)
-          .where(eq(tradingStrategies.id, strategyId))
-          .limit(1);
+      // Log authentication success
+      logAuthEvent("strategy_execution_started", authContext.user.id, {
+        strategyId,
+        symbol,
+        authenticated: true,
+      });
 
-        if (result.length === 0) {
-          throw new Error(`Strategy not found: ${strategyId}`);
+      // Step 1: Retrieve and Validate Strategy
+      const strategy = await step.run(
+        "retrieve-and-validate-strategy",
+        async () => {
+          // Additional validation with authenticated context
+          await validateStrategyAccess(strategyId, authContext.user);
+
+          const result = await db
+            .select()
+            .from(tradingStrategies)
+            .where(eq(tradingStrategies.id, strategyId))
+            .limit(1);
+
+          if (result.length === 0) {
+            throw new Error(`Strategy not found: ${strategyId}`);
+          }
+
+          const strategy = result[0] as TradingStrategy;
+
+          // Validate strategy is executable
+          if (strategy.status !== "active") {
+            throw new Error(`Strategy is not active: ${strategy.status}`);
+          }
+
+          // Double-check user ownership (already validated by middleware but ensuring consistency)
+          if (strategy.userId !== authContext.user.id) {
+            logAuthEvent("unauthorized_strategy_access_blocked", authContext.user.id, {
+              strategyId,
+              ownerUserId: strategy.userId,
+              requestedUserId: authContext.user.id,
+            });
+            throw new Error(`Strategy access denied for user: ${authContext.user.id}`);
+          }
+
+          if (strategy.symbol !== symbol) {
+            throw new Error(
+              `Strategy symbol mismatch: expected ${strategy.symbol}, got ${symbol}`
+            );
+          }
+
+          // Log successful strategy validation
+          logAuthEvent("strategy_validation_success", authContext.user.id, {
+            strategyId,
+            symbol: strategy.symbol,
+            status: strategy.status,
+          });
+
+          return strategy;
         }
-
-        const strategy = result[0] as TradingStrategy;
-
-        // Validate strategy is executable
-        if (strategy.status !== "active") {
-          throw new Error(`Strategy is not active: ${strategy.status}`);
-        }
-
-        if (strategy.userId !== userId) {
-          throw new Error(`Strategy does not belong to user: ${userId}`);
-        }
-
-        if (strategy.symbol !== symbol) {
-          throw new Error(
-            `Strategy symbol mismatch: expected ${strategy.symbol}, got ${symbol}`
-          );
-        }
-
-        return strategy;
-      }
-    );
+      );
 
     // Step 2: Create Strategy Executor
     const executor = await step.run("create-strategy-executor", async () => {
@@ -209,7 +237,7 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
             executionContext.currentPhase = index;
 
             // Execute phase through the executor
-            const phaseResult = await executor.executor!.executePhase(phase, {
+            const phaseResult = await executor.executor?.executePhase(phase, {
               marketData,
               context: executionContext,
               parameters: executionParameters,
@@ -390,15 +418,26 @@ export const executeMultiPhaseStrategy = inngest.createFunction(
       }
     );
 
-    return {
-      execution: executionSummary,
-      validation: preExecutionValidation,
-      strategyUpdate,
-      serviceReport,
-      metadata: {
-        workflowDuration: Date.now() - event.ts,
-        executionTimestamp: new Date().toISOString(),
-      },
-    };
+      // Log execution completion
+      logAuthEvent("strategy_execution_completed", authContext.user.id, {
+        strategyId,
+        symbol,
+        status: executionSummary.status,
+        performance: executionSummary.performance,
+      });
+
+      return {
+        execution: executionSummary,
+        validation: preExecutionValidation,
+        strategyUpdate,
+        serviceReport,
+        metadata: {
+          workflowDuration: Date.now() - event.ts,
+          executionTimestamp: new Date().toISOString(),
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );

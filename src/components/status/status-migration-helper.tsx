@@ -164,7 +164,9 @@ function MyCustomStatus() {
 
       <div className="space-y-4">
         {migrationSteps.map((step, index) => (
-          <Card key={`migration-step-${index}`}>
+          <Card
+            key={`migration-step-${step.title.replace(/\s+/g, "-").toLowerCase()}-${index}`}
+          >
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">

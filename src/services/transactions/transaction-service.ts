@@ -5,7 +5,10 @@
 
 import { and, desc, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/src/db";
-import { type NewTransaction, transactions } from "@/src/db/schemas/supabase-trading";
+import {
+  type NewTransaction,
+  transactions,
+} from "@/src/db/schemas/supabase-trading";
 import type {
   CreateTransactionData,
   QueryTransactionData,

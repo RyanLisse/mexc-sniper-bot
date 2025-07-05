@@ -91,26 +91,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Check authentication
-    let user: unknown;
+    let user: { id: string };
     try {
-      user = await requireAuth();
+      const authResult = await requireAuth();
+      if (!authResult || typeof authResult !== 'object' || !('id' in authResult)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Authentication required",
+            message: "Authentication required to access this endpoint",
+          },
+          { status: 401 }
+        );
+      }
+      user = authResult as { id: string };
     } catch (_error) {
       return NextResponse.json(
         {
           success: false,
           error: "Authentication required",
           message: "Authentication required to access this endpoint",
-        },
-        { status: 401 }
-      );
-    }
-
-    if (!user?.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Authentication required",
-          message: "You must be logged in to access trading analytics",
         },
         { status: 401 }
       );
@@ -296,26 +296,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Check authentication
-    let user: unknown;
+    let user: { id: string };
     try {
-      user = await requireAuth();
+      const authResult = await requireAuth();
+      if (!authResult || typeof authResult !== 'object' || !('id' in authResult)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Authentication required",
+            message: "Authentication required to access this endpoint",
+          },
+          { status: 401 }
+        );
+      }
+      user = authResult as { id: string };
     } catch (_error) {
       return NextResponse.json(
         {
           success: false,
           error: "Authentication required",
           message: "Authentication required to access this endpoint",
-        },
-        { status: 401 }
-      );
-    }
-
-    if (!user?.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Authentication required",
-          message: "You must be logged in to log trading events",
         },
         { status: 401 }
       );
@@ -412,26 +412,26 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check authentication
-    let user: unknown;
+    let user: { id: string };
     try {
-      user = await requireAuth();
+      const authResult = await requireAuth();
+      if (!authResult || typeof authResult !== 'object' || !('id' in authResult)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Authentication required",
+            message: "Authentication required to access this endpoint",
+          },
+          { status: 401 }
+        );
+      }
+      user = authResult as { id: string };
     } catch (_error) {
       return NextResponse.json(
         {
           success: false,
           error: "Authentication required",
           message: "Authentication required to access this endpoint",
-        },
-        { status: 401 }
-      );
-    }
-
-    if (!user?.id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Authentication required",
-          message: "You must be logged in to clear analytics data",
         },
         { status: 401 }
       );

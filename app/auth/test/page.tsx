@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { AuthStatusChecker } from "@/src/components/auth/auth-status-checker";
-import { useSupabaseAuth } from "@/src/components/auth/supabase-auth-provider-clean";
-import { Button } from "@/src/components/ui/button";
+import { AuthStatusChecker } from "../../../src/components/auth/auth-status-checker";
+import { useSupabaseAuth } from "../../../src/components/auth/supabase-auth-provider-clean";
+import { Button } from "../../../src/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
+} from "../../../src/components/ui/card";
+import { Input } from "../../../src/components/ui/input";
+import { Label } from "../../../src/components/ui/label";
 
 export default function AuthTestPage() {
   const {

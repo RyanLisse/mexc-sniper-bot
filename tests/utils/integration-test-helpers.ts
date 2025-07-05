@@ -97,11 +97,15 @@ export function createIntegrationTestSuite(
   });
 }
 
+interface IntegrationRequestInit extends RequestInit {
+  timeout?: number;
+}
+
 /**
  * Create a fetch function with proper error handling and timeouts
  */
 function createIntegrationFetch(baseUrl: string) {
-  return async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
+  return async (endpoint: string, options: IntegrationRequestInit = {}): Promise<Response> => {
     const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
     
     return withApiTimeout(

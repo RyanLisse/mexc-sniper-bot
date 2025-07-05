@@ -1,0 +1,70 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noArrayIndexKey": "error"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "warn",
+        "useLiteralKeys": "error",
+        "noForEach": "warn"
+      },
+      "correctness": {
+        "noUnusedFunctionParameters": "warn",
+        "useHookAtTopLevel": "error"
+      },
+      "style": {
+        "useTemplate": "error",
+        "useConst": "error",
+        "noNonNullAssertion": "warn"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "error"
+      },
+      "a11y": {
+        "noStaticElementInteractions": "error",
+        "noSvgWithoutTitle": "error",
+        "useButtonType": "error"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true,
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "es5"
+    }
+  },
+  "files": {
+    "includes": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "app/**/*.ts",
+      "app/**/*.tsx",
+      "components/**/*.ts",
+      "components/**/*.tsx",
+      "lib/**/*.ts",
+      "lib/**/*.tsx"
+    ],
+    "experimentalScannerIgnores": [
+      "**/node_modules/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/test-results/**",
+      "**/playwright-report/**",
+      "**/coverage/**",
+      "**/.turbo/**"
+    ]
+  }
+}

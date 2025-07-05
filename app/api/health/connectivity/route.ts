@@ -63,7 +63,7 @@ export async function GET() {
     let userId: unknown;
     try {
       user = await requireAuth();
-      userId = user?.id;
+      userId = user && typeof user === 'object' && 'id' in user ? (user as any).id : null;
     } catch (_error) {
       // Continue without user for anonymous health check
       user = null;
@@ -75,7 +75,7 @@ export async function GET() {
     let credentialSource: "database" | "environment" | "none" = "none";
 
     // Check for user credentials
-    if (userId) {
+    if (userId && typeof userId === 'string') {
       try {
         userCredentials = await getUserCredentials(userId, "mexc");
         hasCredentials = !!userCredentials;

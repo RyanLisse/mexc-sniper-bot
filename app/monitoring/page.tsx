@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, useEffect, useState } from "react";
+import { lazy, useCallback, useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import {
   AlertCenter,
@@ -79,57 +79,7 @@ export default function MonitoringPage() {
     setIsHydrated(true);
   }, []);
 
-  useEffect(() => {
-    if (isHydrated) {
-      fetchQuickMetrics();
-      const interval = setInterval(fetchQuickMetrics, 30000); // Update every 30 seconds
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [isHydrated, fetchQuickMetrics]);
-
-  // PHASE 6: Intelligent preloading for 70% faster load times
-  useEffect(() => {
-    if (isHydrated) {
-      // Preload monitoring components after initial load
-      const timer = setTimeout(() => {
-        preloadMonitoringComponents().catch(console.error);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [isHydrated]);
-
-  // Tab hover preloading for instant switching
-  const handleTabHover = (tabValue: string) => {
-    switch (tabValue) {
-      case "trading":
-        import("@/components/monitoring/trading-analytics-dashboard").catch(
-          console.error
-        );
-        break;
-      case "performance":
-        import("@/components/monitoring/real-time-performance").catch(
-          console.error
-        );
-        break;
-      case "alerts":
-        import("@/components/monitoring/alert-center").catch(console.error);
-        break;
-      case "safety":
-        import("@/components/auto-sniping/real-time-safety-dashboard").catch(
-          console.error
-        );
-        break;
-      case "overview":
-        import("@/components/monitoring/system-architecture-overview").catch(
-          console.error
-        );
-        break;
-    }
-  };
-
-  const fetchQuickMetrics = async () => {
+  const fetchQuickMetrics = useCallback(async () => {
     try {
       // Fetch quick overview data from multiple endpoints
       const [systemResponse, tradingResponse, alertsResponse] =
@@ -182,6 +132,56 @@ export default function MonitoringPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated) {
+      fetchQuickMetrics();
+      const interval = setInterval(fetchQuickMetrics, 30000); // Update every 30 seconds
+      return () => clearInterval(interval);
+    }
+    return undefined;
+  }, [isHydrated, fetchQuickMetrics]);
+
+  // PHASE 6: Intelligent preloading for 70% faster load times
+  useEffect(() => {
+    if (isHydrated) {
+      // Preload monitoring components after initial load
+      const timer = setTimeout(() => {
+        preloadMonitoringComponents().catch(console.error);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [isHydrated]);
+
+  // Tab hover preloading for instant switching
+  const handleTabHover = (tabValue: string) => {
+    switch (tabValue) {
+      case "trading":
+        import("@/components/monitoring/trading-analytics-dashboard").catch(
+          console.error
+        );
+        break;
+      case "performance":
+        import("@/components/monitoring/real-time-performance").catch(
+          console.error
+        );
+        break;
+      case "alerts":
+        import("@/components/monitoring/alert-center").catch(console.error);
+        break;
+      case "safety":
+        import("@/components/auto-sniping/real-time-safety-dashboard").catch(
+          console.error
+        );
+        break;
+      case "overview":
+        import("@/components/monitoring/system-architecture-overview").catch(
+          console.error
+        );
+        break;
+    }
   };
 
   const formatUptime = (seconds: number) => {
@@ -230,18 +230,20 @@ export default function MonitoringPage() {
             </div>
           </div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Loading...
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">...</div>
-                </CardContent>
-              </Card>
-            ))}
+            {Array.from({ length: 4 }, (_, i) => `loading-metric-${i}`).map(
+              (cardId) => (
+                <Card key={cardId}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Loading...
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">...</div>
+                  </CardContent>
+                </Card>
+              )
+            )}
           </div>
         </div>
       </DashboardLayout>

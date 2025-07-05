@@ -169,12 +169,22 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
           );
         }
 
+        // Transform MEXC symbol data to match SymbolEntry interface
+        const transformedSymbolData = Array.isArray(symbolsResponse.data) 
+          ? symbolsResponse.data.map((item: any) => ({
+              symbol: item.symbol || '',
+              ps: item.ps || 8, // Default price decimal places
+              qs: item.qs || 8, // Default quantity decimal places
+              ...item // Include any additional properties
+            }))
+          : [];
+
         // Run pattern detection workflow (this will auto-create snipe targets)
         const workflowResult =
           await patternStrategyOrchestrator.executePatternWorkflow({
             type: "monitoring",
             input: {
-              symbolData: symbolsResponse.data as unknown[],
+              symbolData: transformedSymbolData,
             },
             options: {
               confidenceThreshold: body.confidenceThreshold || 75,

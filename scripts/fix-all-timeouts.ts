@@ -31,13 +31,13 @@ const TIMEOUT_IMPORT = `import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../utils/timeout-elimination-helpers';`;
+} from '../../../utils/timeout-utilities';`;
 
 const RELATIVE_IMPORT_PATTERNS = [
-  '../../../utils/timeout-elimination-helpers',
-  '../../utils/timeout-elimination-helpers',
-  '../utils/timeout-elimination-helpers',
-  './utils/timeout-elimination-helpers',
+  '../../../utils/timeout-utilities',
+  '../../utils/timeout-utilities',
+  '../utils/timeout-utilities',
+  './utils/timeout-utilities',
 ];
 
 /**
@@ -72,11 +72,11 @@ function getRelativeImportPath(testFilePath: string): string {
   const relativePath = testFilePath.replace(TESTS_DIR, '');
   const depth = relativePath.split('/').length - 2; // -1 for file, -1 for base
   
-  if (depth <= 1) return '../utils/timeout-elimination-helpers';
-  if (depth === 2) return '../../utils/timeout-elimination-helpers';
-  if (depth === 3) return '../../../utils/timeout-elimination-helpers';
+  if (depth <= 1) return '../utils/timeout-utilities';
+  if (depth === 2) return '../../utils/timeout-utilities';
+  if (depth === 3) return '../../../utils/timeout-utilities';
   
-  return '../'.repeat(depth) + 'utils/timeout-elimination-helpers';
+  return '../'.repeat(depth) + 'utils/timeout-utilities';
 }
 
 /**

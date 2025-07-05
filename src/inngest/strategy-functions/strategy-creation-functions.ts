@@ -3,19 +3,17 @@
  *
  * Inngest workflow functions for creating and initializing multi-phase trading strategies.
  * Extracted from multi-phase-strategy-functions.ts for better modularity.
+ * Enhanced with proper authentication and authorization.
  */
 
-import { eq } from "drizzle-orm";
 import { db } from "@/src/db";
 import { tradingStrategies } from "@/src/db/schemas/strategies";
-import { CalendarAgent } from "@/src/mexc-agents/calendar-agent";
 import { RiskManagerAgent } from "@/src/mexc-agents/risk-manager-agent";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
 import {
   createExecutorFromStrategy,
   type Strategy as ExecutorStrategy,
-  type StrategyExecutor,
 } from "@/src/services/multi-phase-executor";
 import {
   MultiPhaseStrategyBuilder,
@@ -28,11 +26,14 @@ import {
   type TradingStrategy,
 } from "@/src/services/multi-phase-trading-service";
 import { inngest } from "../client";
-import type {
-  MarketData,
-  StrategyAnalysisResult,
-  StrategyCreationInput,
-} from "./strategy-types";
+import type { StrategyCreationInput } from "./strategy-types";
+import { 
+  withWorkflowAuth, 
+  withAdminAuth,
+  logAuthEvent,
+  type AuthContext,
+  type AuthenticatedEventData 
+} from "../middleware/auth-middleware";
 
 /**
  * Create Multi-Phase Strategy Workflow
@@ -41,15 +42,26 @@ export const createMultiPhaseStrategy = inngest.createFunction(
   { id: "multi-phase-strategy-create", name: "Create Multi-Phase Strategy" },
   { event: "multi-phase-strategy/create" },
   async ({ event, step }) => {
-    const {
-      userId,
-      symbol,
-      marketData,
-      riskTolerance,
-      timeframe,
-      capital,
-      preferences = {},
-    } = event.data as StrategyCreationInput;
+    // Authenticate and execute with proper authorization
+    return await withWorkflowAuth(async (eventData: StrategyCreationInput & AuthenticatedEventData, authContext: AuthContext) => {
+      const {
+        userId,
+        symbol,
+        marketData,
+        riskTolerance,
+        timeframe,
+        capital,
+        preferences = {},
+      } = eventData;
+
+      // Log strategy creation attempt
+      logAuthEvent("strategy_creation_started", authContext.user.id, {
+        symbol,
+        capital,
+        riskTolerance,
+        timeframe,
+        authenticated: true,
+      });
 
     // Step 1: Market Analysis
     const marketAnalysis = await step.run(
@@ -238,8 +250,9 @@ export const createMultiPhaseStrategy = inngest.createFunction(
           throw new Error("Cannot save invalid strategy");
         }
 
+        // Use authenticated user ID for security
         const strategyRecord = {
-          userId,
+          userId: authContext.user.id, // Use authenticated user ID
           name: `${selectedStrategy.pattern} - ${symbol}`,
           description: `Multi-phase ${selectedStrategy.pattern} strategy for ${symbol}`,
           symbol,
@@ -259,6 +272,13 @@ export const createMultiPhaseStrategy = inngest.createFunction(
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
+
+        // Log strategy creation success
+        logAuthEvent("strategy_record_created", authContext.user.id, {
+          strategyId: strategyRecord.name,
+          symbol,
+          pattern: selectedStrategy.pattern,
+        });
 
         const result = await db
           .insert(tradingStrategies)
@@ -293,33 +313,53 @@ export const createMultiPhaseStrategy = inngest.createFunction(
       }
     );
 
-    // Return comprehensive result
-    return {
-      strategyId: savedStrategy.id,
-      strategy: savedStrategy,
-      marketAnalysis,
-      riskAssessment,
-      selectedPattern: selectedStrategy.pattern,
-      validation,
-      initialization,
-      metadata: {
-        processingTime: Date.now() - event.ts,
-        phases: multiPhaseStrategy.phases.length,
-        riskScore: riskAssessment.riskScore,
-        confidence: validation.valid ? 0.8 : 0.3,
-      },
-    };
+      // Log strategy creation completion
+      logAuthEvent("strategy_creation_completed", authContext.user.id, {
+        strategyId: savedStrategy.id,
+        symbol,
+        pattern: selectedStrategy.pattern,
+        success: initialization.success,
+      });
+
+      // Return comprehensive result
+      return {
+        strategyId: savedStrategy.id,
+        strategy: savedStrategy,
+        marketAnalysis,
+        riskAssessment,
+        selectedPattern: selectedStrategy.pattern,
+        validation,
+        initialization,
+        metadata: {
+          processingTime: Date.now() - event.ts,
+          phases: multiPhaseStrategy.phases.length,
+          riskScore: riskAssessment.riskScore,
+          confidence: validation.valid ? 0.8 : 0.3,
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );
 
 /**
  * Initialize Strategy Templates Workflow
+ * Requires admin authentication for system-wide template initialization
  */
 export const initializeStrategyTemplates = inngest.createFunction(
   { id: "strategy-templates-init", name: "Initialize Strategy Templates" },
   { event: "strategy-templates/initialize" },
   async ({ event, step }) => {
-    const { templates = PREDEFINED_STRATEGIES } = event.data;
+    // Authenticate and require admin access for template initialization
+    return await withAdminAuth(async (eventData: { templates?: TradingStrategy[] } & AuthenticatedEventData, authContext: AuthContext) => {
+      const { templates = PREDEFINED_STRATEGIES } = eventData;
+
+      // Log admin template initialization
+      logAuthEvent("admin_template_initialization_started", authContext.user.id, {
+        templateCount: templates.length,
+        adminAccess: true,
+      });
 
     const initialization = await step.run(
       "initialize-predefined-templates",

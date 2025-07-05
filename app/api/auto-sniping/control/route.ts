@@ -17,6 +17,7 @@ import {
   createErrorResponse,
   createSuccessResponse,
 } from "@/src/lib/api-response";
+import { tradingSystemInitializer } from "@/src/services/startup/trading-system-initializer";
 import { getCoreTrading } from "@/src/services/trading/consolidated/core-trading/base-service";
 
 /**
@@ -48,6 +49,34 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
     switch (action) {
       case "start": {
         console.info("[Auto-Sniping Control] Starting auto-sniping...");
+
+        // Initialize trading system (bridge services) before starting auto-sniping
+        try {
+          await tradingSystemInitializer.initialize();
+          console.info(
+            "[Auto-Sniping Control] Trading system initialized successfully"
+          );
+        } catch (initError) {
+          console.error(
+            "[Auto-Sniping Control] Failed to initialize trading system:",
+            initError
+          );
+          return Response.json(
+            createErrorResponse(
+              "Failed to initialize trading system: " +
+                (initError instanceof Error
+                  ? initError.message
+                  : "Unknown error"),
+              {
+                action: "start",
+                timestamp: new Date().toISOString(),
+                initializationFailed: true,
+              }
+            ),
+            { status: 500 }
+          );
+        }
+
         const result = await coreTrading.startAutoSniping();
 
         if (result.success) {
@@ -56,6 +85,8 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
               message: result.message || "Auto-sniping started successfully",
               data: {
                 started: true,
+                tradingSystemInitialized:
+                  tradingSystemInitializer.isSystemInitialized(),
                 status: await coreTrading.getServiceStatus(),
                 timestamp: new Date().toISOString(),
               },
@@ -109,6 +140,8 @@ export const POST = apiAuthWrapper(async (request: NextRequest) => {
             message: "Status retrieved successfully",
             data: {
               status,
+              tradingSystemInitialized:
+                tradingSystemInitializer.isSystemInitialized(),
               timestamp: new Date().toISOString(),
             },
           })
@@ -211,6 +244,8 @@ export const GET = apiAuthWrapper(async (_request: NextRequest) => {
         message: "Auto-sniping status retrieved successfully",
         data: {
           status,
+          tradingSystemInitialized:
+            tradingSystemInitializer.isSystemInitialized(),
           timestamp: new Date().toISOString(),
           endpoints: {
             start: "POST /api/auto-sniping/control with action=start",

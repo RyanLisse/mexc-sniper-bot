@@ -13,7 +13,7 @@
  * - Performance optimization
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/src/lib/supabase-auth-client";
 import type {
   ConnectionMetrics,
@@ -112,19 +112,28 @@ export function useWebSocket(
   // Authentication
   const { isAuthenticated, getToken } = useAuth();
 
-  // Get auth token
-  const authToken = useMemo(async () => {
-    if (configAuthToken) return configAuthToken;
-    if (isAuthenticated) {
-      try {
-        const token = await getToken();
-        return token || "";
-      } catch (error) {
-        console.warn("[WebSocket Hook] Failed to get auth token:", error);
-        return "";
+  // Get auth token - Fixed: Use useState + useEffect instead of useMemo with async
+  const [authToken, setAuthToken] = useState<string>("");
+
+  useEffect(() => {
+    const getAuthToken = async () => {
+      if (configAuthToken) {
+        setAuthToken(configAuthToken);
+        return;
       }
-    }
-    return "";
+      if (isAuthenticated) {
+        try {
+          const token = await getToken();
+          setAuthToken(token || "");
+        } catch (error) {
+          console.warn("[WebSocket Hook] Failed to get auth token:", error);
+          setAuthToken("");
+        }
+      } else {
+        setAuthToken("");
+      }
+    };
+    getAuthToken();
   }, [configAuthToken, isAuthenticated, getToken]);
 
   // Connect function

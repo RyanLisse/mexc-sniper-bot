@@ -355,10 +355,25 @@ export class MultiAgentOrchestrator {
           this.log(
             `Step failed, retrying: ${step.agentType}, attempt ${attempt + 1}/${retries + 1}`
           );
-          // Wait before retry (exponential backoff)
-          await new Promise((resolve) =>
-            setTimeout(resolve, 2 ** attempt * 1000)
-          );
+          // CRITICAL FIX: Safe exponential backoff to prevent TimeoutNaNWarning
+          const safeAttempt =
+            typeof attempt === "number" &&
+            !Number.isNaN(attempt) &&
+            Number.isFinite(attempt)
+              ? Math.max(0, Math.min(attempt, 10)) // Cap exponent to prevent overflow
+              : 0;
+
+          const calculatedDelay = 2 ** safeAttempt * 1000;
+          const safeBackoffDelay =
+            typeof calculatedDelay === "number" &&
+            !Number.isNaN(calculatedDelay) &&
+            Number.isFinite(calculatedDelay) &&
+            calculatedDelay > 0
+              ? calculatedDelay
+              : 1000; // Safe fallback delay
+
+          // Wait before retry (exponential backoff with NaN prevention)
+          await new Promise((resolve) => setTimeout(resolve, safeBackoffDelay));
         }
       }
     }

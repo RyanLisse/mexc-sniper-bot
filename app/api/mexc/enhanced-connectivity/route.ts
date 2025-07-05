@@ -146,14 +146,14 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
   try {
     // Get authentication context
     let user: unknown;
-    let userId: unknown;
+    let userId: string | undefined;
     try {
       user = await requireAuth();
-      userId = user?.id;
+      userId = user && typeof user === 'object' && 'id' in user ? (user as any).id : undefined;
     } catch (_error) {
       // Continue without user for anonymous connectivity check
       user = null;
-      userId = null;
+      userId = undefined;
     }
 
     // Initialize services
@@ -180,7 +180,7 @@ export async function GET(_request: NextRequest): Promise<NextResponse> {
       healthMonitor.getConnectionQuality(),
       credentialValidator.getCircuitBreakerStatus(),
       realTimeMonitor.getCurrentStatus() || realTimeMonitor.checkStatus(),
-      getUserCredentialInfo(userId || undefined),
+      getUserCredentialInfo(userId),
     ]);
 
     // Extract results (handle any failures gracefully)

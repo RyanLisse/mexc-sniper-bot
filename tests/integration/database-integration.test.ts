@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
-import { db } from "../../src/db";
+import { db } from "@/db";
 import { 
   monitoredListings, 
   snipeTargets, 
@@ -14,7 +14,7 @@ import {
   balanceSnapshots,
   executionHistory,
   user
-} from "../../src/db/schemas";
+} from "@/db/schemas";
 import { eq, and, isNull, sql } from "drizzle-orm";
 
 import { 
@@ -22,7 +22,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 // Set environment for real database testing
 process.env.USE_REAL_DATABASE = "true";

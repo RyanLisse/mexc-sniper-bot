@@ -15,16 +15,20 @@ import { withWebSocketTimeout, withRetryTimeout } from "../utils/timeout-utiliti
 
 import { 
   setupTimeoutElimination, 
-  withTimeout, 
+  withTimeoutSimple, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';
+} from '../utils/timeout-utilities';
+
+// Alias for compatibility
+const withTimeout = withTimeoutSimple;
 
 createIntegrationTestSuite("WebSocket and Real-time Integration", (context) => {
   const testTimeout = 15000; // 15 seconds for WebSocket tests
 
   describe("WebSocket Connection Management", () => {
-    it('should establish WebSocket connection', withTimeout(async () => {// Test basic WebSocket connection capability
+    it('should establish WebSocket connection', withTimeout(async () => {
+      // Test basic WebSocket connection capability
       const isWebSocketSupported = typeof WebSocket !== "undefined";
       
       if (!isWebSocketSupported) {
@@ -42,12 +46,9 @@ createIntegrationTestSuite("WebSocket and Real-time Integration", (context) => {
           const timeout = setTimeout(() => {
             ws.close();
             reject(new Error("WebSocket connection timeout"));
-      
-      // TIMEOUT ELIMINATION: Ensure all promises are flushed
-      await flushPromises();
-    }, TIMEOUT_CONFIG.STANDARD));
+          }, TIMEOUT_CONFIG.STANDARD);
 
-          ws.onopen = () => {
+        ws.onopen = () => {
             clearTimeout(timeout);
             console.log("✅ WebSocket connection established");
             ws.close();
@@ -67,9 +68,13 @@ createIntegrationTestSuite("WebSocket and Real-time Integration", (context) => {
         // Don't fail the test if external WebSocket service is unavailable
         expect(true).toBe(true);
       }
-    }, testTimeout);
+      
+      // TIMEOUT ELIMINATION: Ensure all promises are flushed
+      await flushPromises();
+    }), testTimeout);
 
-    it('should handle WebSocket connection errors gracefully', withTimeout(async () => {if (typeof WebSocket === "undefined") {
+    it('should handle WebSocket connection errors gracefully', withTimeout(async () => {
+      if (typeof WebSocket === "undefined") {
         expect(true).toBe(true);
         return;
       }
@@ -82,9 +87,7 @@ createIntegrationTestSuite("WebSocket and Real-time Integration", (context) => {
             ws.close();
             resolve("timeout");
       
-      // TIMEOUT ELIMINATION: Ensure all promises are flushed
-      await flushPromises();
-    }, TIMEOUT_CONFIG.STANDARD));
+          }, TIMEOUT_CONFIG.STANDARD);
 
           ws.onerror = () => {
             clearTimeout(timeout);
@@ -105,7 +108,10 @@ createIntegrationTestSuite("WebSocket and Real-time Integration", (context) => {
         // Error handling is working
         expect(true).toBe(true);
       }
-    }, testTimeout);
+
+      // TIMEOUT ELIMINATION: Ensure all promises are flushed
+      await flushPromises();
+    }), testTimeout);
   });
 
   describe("Real-time Data Streaming Simulation", () => {

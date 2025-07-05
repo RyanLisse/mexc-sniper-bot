@@ -23,7 +23,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../utils/timeout-elimination-helpers';
+} from '../../../utils/timeout-utilities';
 
 // Mock crypto module
 vi.mock('node:crypto', () => ({

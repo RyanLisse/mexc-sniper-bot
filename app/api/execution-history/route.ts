@@ -12,6 +12,7 @@ interface ExecutionRecord {
   slippagePercent?: number;
   symbolName?: string;
   executedAt?: number;
+  requestedAt?: number;
   price?: number;
 }
 
@@ -168,9 +169,19 @@ export async function GET(request: NextRequest) {
       );
 
     // Group executions by symbol for analysis
+    interface SymbolStat {
+      symbol: string;
+      totalExecutions: number;
+      successfulExecutions: number;
+      totalVolume: number;
+      avgPrice: number;
+      lastExecution: number;
+    }
+    
     const symbolStats = (executions as ExecutionRecord[]).reduce(
-      (acc: Record<string, unknown>, exec: ExecutionRecord) => {
+      (acc: Record<string, SymbolStat>, exec: ExecutionRecord) => {
         const symbol = exec.symbolName;
+        if (!symbol) return acc; // Skip executions without symbol names
         if (!acc[symbol]) {
           acc[symbol] = {
             symbol,
@@ -187,10 +198,7 @@ export async function GET(request: NextRequest) {
           acc[symbol].successfulExecutions++;
           acc[symbol].totalVolume += exec.totalCost || 0;
         }
-        const executedAtTimestamp =
-          exec.executedAt instanceof Date
-            ? exec.executedAt.getTime() / 1000
-            : exec.executedAt || 0;
+        const executedAtTimestamp = typeof exec.executedAt === 'number' ? exec.executedAt : 0;
         acc[symbol].lastExecution = Math.max(
           acc[symbol].lastExecution,
           executedAtTimestamp
@@ -198,7 +206,7 @@ export async function GET(request: NextRequest) {
 
         return acc;
       },
-      {} as Record<string, unknown>
+      {} as Record<string, SymbolStat>
     );
 
     const response = {
@@ -207,14 +215,10 @@ export async function GET(request: NextRequest) {
           ...exec,
           // Add human-readable timestamps
           executedAtFormatted: exec.executedAt
-            ? exec.executedAt instanceof Date
-              ? exec.executedAt.toISOString()
-              : new Date((exec.executedAt as number) * 1000).toISOString()
+            ? new Date(exec.executedAt * 1000).toISOString()
             : null,
           requestedAtFormatted: exec.requestedAt
-            ? exec.requestedAt instanceof Date
-              ? exec.requestedAt.toISOString()
-              : new Date((exec.requestedAt as number) * 1000).toISOString()
+            ? new Date(exec.requestedAt * 1000).toISOString()
             : null,
           // Calculate profit/loss for matched buy/sell pairs
           profitLoss: null, // This would require more complex matching logic

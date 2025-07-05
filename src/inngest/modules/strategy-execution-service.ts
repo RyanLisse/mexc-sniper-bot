@@ -11,7 +11,6 @@ import {
   createExecutorFromStrategy,
   type StrategyExecutor,
 } from "../../services/multi-phase-executor";
-import { multiPhaseTradingService } from "../../services/multi-phase-trading-service";
 import type {
   MultiPhaseStrategyExecuteEvent,
   OptimizationRecommendation,
@@ -19,8 +18,6 @@ import type {
 } from "../types/multi-phase-strategy-types";
 
 export class StrategyExecutionService {
-  constructor() {}
-
   async executeStrategyWorkflow(
     data: MultiPhaseStrategyExecuteEvent["data"],
     step: any
@@ -400,7 +397,7 @@ export class StrategyExecutionService {
   }
 
   private async optimizePositionSizing(
-    strategyId: string,
+    _strategyId: string,
     parameters: Record<string, unknown>
   ) {
     // Implementation for position sizing optimization
@@ -412,7 +409,7 @@ export class StrategyExecutionService {
   }
 
   private async optimizeStopLoss(
-    strategyId: string,
+    _strategyId: string,
     parameters: Record<string, unknown>
   ) {
     // Implementation for stop loss optimization
@@ -424,7 +421,7 @@ export class StrategyExecutionService {
   }
 
   private async optimizeTakeProfit(
-    strategyId: string,
+    _strategyId: string,
     parameters: Record<string, unknown>
   ) {
     // Implementation for take profit optimization
@@ -436,7 +433,7 @@ export class StrategyExecutionService {
   }
 
   private async optimizePhaseTiming(
-    strategyId: string,
+    _strategyId: string,
     parameters: Record<string, unknown>
   ) {
     // Implementation for phase timing optimization

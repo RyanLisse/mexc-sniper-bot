@@ -163,15 +163,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    let user: unknown;
+    let user: { id: string };
     try {
-      user = await requireAuth();
-      if (!user) {
+      const authResult = await requireAuth();
+      if (!authResult || typeof authResult !== 'object' || !('id' in authResult)) {
         return NextResponse.json(
           { error: "Authentication required" },
           { status: 401 }
         );
       }
+      user = authResult as { id: string };
     } catch (_error) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -332,6 +333,14 @@ async function getSystemHealthScore(metrics: PerformanceMetric[]): Promise<{
   }
 
   const latest = metrics[metrics.length - 1];
+  if (!latest) {
+    return {
+      score: 0,
+      status: "critical",
+      factors: { noData: 0 },
+    };
+  }
+  
   const factors = {
     responseTime: Math.max(0, 100 - latest.metrics.responseTimeMs / 100), // 100ms = 0 points
     successRate: latest.metrics.successRate * 100,
@@ -387,6 +396,7 @@ function identifyBottlenecks(metrics: PerformanceMetric[]): Array<{
   if (metrics.length === 0) return bottlenecks;
 
   const latest = metrics[metrics.length - 1];
+  if (!latest) return bottlenecks;
 
   // High response time
   if (latest.metrics.responseTimeMs > 5000) {
@@ -435,6 +445,7 @@ function generatePerformanceRecommendations(
   }
 
   const latest = metrics[metrics.length - 1];
+  if (!latest) return recommendations;
 
   if (latest.metrics.responseTimeMs > 3000) {
     recommendations.push(

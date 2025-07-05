@@ -13,8 +13,6 @@ import type {
 } from "../types/multi-phase-strategy-types";
 
 export class WorkflowValidationService {
-  constructor() {}
-
   validateCreationInputs(
     data: MultiPhaseStrategyCreateEvent["data"]
   ): ValidationResult {
@@ -375,7 +373,7 @@ export class WorkflowValidationService {
     // Validate timestamp if present
     if (data.timestamp !== undefined) {
       const timestamp = new Date(data.timestamp as string);
-      if (isNaN(timestamp.getTime())) {
+      if (Number.isNaN(timestamp.getTime())) {
         errors.push("timestamp must be a valid date when provided");
       }
     }

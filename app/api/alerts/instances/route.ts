@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/src/db";
+import type { SelectAlertInstance } from "@/src/db/schemas";
 import { validateRequest } from "@/src/lib/api-auth";
 import { handleApiError } from "@/src/lib/api-response";
 import { AutomatedAlertingService } from "@/src/services/notification/automated-alerting-service";
@@ -24,28 +25,25 @@ export async function GET(request: NextRequest) {
     const hoursParam = searchParams.get("hours");
     const hours = hoursParam ? parseInt(hoursParam) : 24;
 
-    let alerts: Array<{
-      id: string;
-      severity: string;
-      source: string;
-      status: string;
-      labels?: string;
-      additionalData?: string;
-      firstTriggeredAt: Date | string;
-      lastTriggeredAt: Date | string;
-      resolvedAt?: Date | string;
-    }>;
+    let alerts: Array<SelectAlertInstance>;
 
     if (status === "active" || !status) {
       // Get active alerts
       const severityFilter = severity ? [severity] : undefined;
       const sourceFilter = source ? [source] : undefined;
 
-      alerts = await alertingService.getActiveAlerts({
-        severity: severityFilter,
-        source: sourceFilter,
+      const activeAlertsFilters: {
+        severity?: string[];
+        source?: string[];
+        limit: number;
+      } = {
         limit,
-      });
+      };
+
+      if (severityFilter) activeAlertsFilters.severity = severityFilter;
+      if (sourceFilter) activeAlertsFilters.source = sourceFilter;
+
+      alerts = await alertingService.getActiveAlerts(activeAlertsFilters);
     } else {
       // Get historical alerts
       alerts = await alertingService.getAlertHistory(hours);
@@ -67,11 +65,29 @@ export async function GET(request: NextRequest) {
 
     // Format alerts for client consumption
     const formattedAlerts = alerts.map((alert) => ({
-      ...alert,
+      id: alert.id,
+      ruleId: alert.ruleId,
+      severity: alert.severity,
+      source: alert.source,
+      status: alert.status,
+      message: alert.message,
+      description: alert.description,
+      metricValue: alert.metricValue,
+      threshold: alert.threshold,
+      anomalyScore: alert.anomalyScore,
+      sourceId: alert.sourceId,
+      environment: alert.environment,
+      correlationId: alert.correlationId,
+      escalationLevel: alert.escalationLevel,
       labels: alert.labels ? JSON.parse(alert.labels) : {},
       additionalData: alert.additionalData
         ? JSON.parse(alert.additionalData)
         : {},
+      firstTriggeredAt: alert.firstTriggeredAt,
+      lastTriggeredAt: alert.lastTriggeredAt,
+      resolvedAt: alert.resolvedAt,
+      resolvedBy: alert.resolvedBy,
+      resolutionNotes: alert.resolutionNotes,
       formattedTimestamp: new Date(alert.firstTriggeredAt).toISOString(),
       formattedLastTriggered: new Date(alert.lastTriggeredAt).toISOString(),
       isResolved: !!alert.resolvedAt,

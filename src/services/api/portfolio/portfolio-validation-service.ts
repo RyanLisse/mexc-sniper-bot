@@ -11,10 +11,7 @@
  * - Portfolio data validation
  */
 
-import type {
-  BalanceEntry,
-  MexcServiceResponse,
-} from "../../data/modules/mexc-api-types";
+import type { BalanceEntry } from "../../data/modules/mexc-api-types";
 import type { MexcCacheLayer } from "../../data/modules/mexc-cache-layer";
 import type { MexcCoreClient } from "../../data/modules/mexc-core-client";
 import type { PortfolioPriceCalculationService } from "./price-calculation-service";
@@ -363,13 +360,16 @@ export class PortfolioValidationService {
       }
 
       // Validate numeric string values
-      if (balanceEntry.free && isNaN(parseFloat(balanceEntry.free as string))) {
+      if (
+        balanceEntry.free &&
+        Number.isNaN(parseFloat(balanceEntry.free as string))
+      ) {
         errors.push(`Balance entry ${i} free field is not a valid number`);
       }
 
       if (
         balanceEntry.locked &&
-        isNaN(parseFloat(balanceEntry.locked as string))
+        Number.isNaN(parseFloat(balanceEntry.locked as string))
       ) {
         errors.push(`Balance entry ${i} locked field is not a valid number`);
       }

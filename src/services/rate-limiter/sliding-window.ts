@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Sliding Window Rate Limiting Algorithm
  */

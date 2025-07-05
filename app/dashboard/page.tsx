@@ -34,10 +34,10 @@ interface CalendarEntry {
   confidence?: number;
 }
 
-import { useAuth } from "@/src/components/auth/supabase-auth-provider";
-import { AutoSnipingControlPanel } from "@/src/components/auto-sniping-control-panel";
-import { AIEnhancedPatternDisplay } from "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
-import { DashboardLayout } from "@/src/components/dashboard-layout";
+import { useAuth } from "@/components/auth/supabase-auth-provider";
+import { AutoSnipingControlPanel } from "@/components/auto-sniping-control-panel";
+import { AIEnhancedPatternDisplay } from "@/components/dashboard/ai-intelligence/ai-enhanced-pattern-display";
+import { DashboardLayout } from "@/components/dashboard-layout";
 import {
   CoinListingsBoard,
   LazyChartWrapper,
@@ -51,24 +51,19 @@ import {
   RecentTradesTable,
   TradingChart,
   UpcomingCoinsSection,
-} from "@/src/components/dynamic-component-loader";
-import { ManualTradingPanel } from "@/src/components/manual-trading-panel";
-import { Button } from "@/src/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/src/components/ui/tabs";
-import { useToast } from "@/src/components/ui/use-toast";
-import { useAccountBalance } from "@/src/hooks/use-account-balance";
-import { useEnhancedPatterns } from "@/src/hooks/use-enhanced-patterns";
-import { useMexcCalendar, useReadyLaunches } from "@/src/hooks/use-mexc-data";
+} from "@/components/dynamic-component-loader";
+import { ManualTradingPanel } from "@/components/manual-trading-panel";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { useAccountBalance } from "@/hooks/use-account-balance";
+import { useEnhancedPatterns } from "@/hooks/use-enhanced-patterns";
+import { useMexcCalendar, useReadyLaunches } from "@/hooks/use-mexc-data";
 import {
   useDeleteSnipeTarget,
   usePortfolio,
   useSnipeTargets,
-} from "@/src/hooks/use-portfolio";
+} from "@/hooks/use-portfolio";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -95,30 +90,30 @@ export default function DashboardPage() {
   const handleTabHover = (tabValue: string) => {
     switch (tabValue) {
       case "listings":
-        import("@/src/components/dashboard/coin-listings-board").catch(
+        import("@/components/dashboard/coin-listings-board").catch(
           console.error
         );
         break;
       case "ai-performance":
         Promise.all([
           import(
-            "@/src/components/dashboard/ai-intelligence/ai-service-status-panel"
+            "@/components/dashboard/ai-intelligence/ai-service-status-panel"
           ),
           import(
-            "@/src/components/dashboard/ai-intelligence/ai-enhanced-pattern-display"
+            "@/components/dashboard/ai-intelligence/ai-enhanced-pattern-display"
           ),
           import(
-            "@/src/components/dashboard/cache-warming/cache-warming-control-panel"
+            "@/components/dashboard/cache-warming/cache-warming-control-panel"
           ),
-          import("@/src/components/dashboard/performance-monitoring-dashboard"),
+          import("@/components/dashboard/performance-monitoring-dashboard"),
           import(
-            "@/src/components/dashboard/phase3-config/phase3-configuration-panel"
+            "@/components/dashboard/phase3-config/phase3-configuration-panel"
           ),
-          import("@/src/components/dashboard/phase3-integration-summary"),
+          import("@/components/dashboard/phase3-integration-summary"),
         ]).catch(console.error);
         break;
       case "trades":
-        import("@/src/components/dashboard/recent-trades-table").catch(
+        import("@/components/dashboard/recent-trades-table").catch(
           console.error
         );
         break;

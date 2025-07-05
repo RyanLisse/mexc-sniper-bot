@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AlertsDashboard } from "@/src/components/alerts/alerts-dashboard";
+import { AlertsDashboard } from "@/components/alerts/alerts-dashboard";
 
 export const metadata: Metadata = {
   title: "Alerts Dashboard - MEXC Sniper Bot",

@@ -1,10 +1,4 @@
-import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { eq } from "drizzle-orm";
-import { cookies } from "next/headers";
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 
 // Build-time detection to prevent database access during Next.js build
 const isBuildTime = () => {
@@ -91,59 +85,14 @@ function getLogger() {
   return _logger;
 }
 
-// Singleton pattern for server Supabase client to prevent multiple GoTrueClient instances
-let supabaseServerClient: ReturnType<typeof createServerClient> | null = null;
-let lastCookieState: string | null = null;
-
 /**
- * Create Supabase server client with cookie handling (Singleton Pattern)
+ * Create Supabase server client with cookie handling (Centralized Manager)
  * This prevents the "Multiple GoTrueClient instances" error
  */
 export async function createSupabaseServerClient() {
-  const cookieStore = await cookies();
-
-  // Create a simple hash of cookie state to detect changes
-  const currentCookieState = JSON.stringify({
-    accessToken: cookieStore.get("sb-access-token")?.value,
-    refreshToken: cookieStore.get("sb-refresh-token")?.value,
-  });
-
-  // Only create new client if cookies changed or client doesn't exist
-  if (!supabaseServerClient || lastCookieState !== currentCookieState) {
-    lastCookieState = currentCookieState;
-
-    supabaseServerClient = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder_key",
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: CookieOptions) {
-            try {
-              cookieStore.set({ name, value, ...options });
-            } catch (_error) {
-              // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-          remove(name: string, options: CookieOptions) {
-            try {
-              cookieStore.set({ name, value: "", ...options });
-            } catch (_error) {
-              // The `delete` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    );
-  }
-
-  return supabaseServerClient;
+  // Import here to avoid circular dependencies
+  const { getSupabaseServerClient } = await import("./supabase-client-manager");
+  return await getSupabaseServerClient();
 }
 
 /**
@@ -223,6 +172,10 @@ export async function syncUserWithDatabase(supabaseUser: SupabaseUser) {
     const isSupabase = hasSupabaseConfig();
     const userTable = isSupabase ? supabaseUsers : originalUser;
 
+    getLogger().info(
+      `Starting user sync for: ${supabaseUser.email} (ID: ${supabaseUser.id})`
+    );
+
     // Check if user exists in our database
     const existingUser = await db
       .select()
@@ -250,8 +203,11 @@ export async function syncUserWithDatabase(supabaseUser: SupabaseUser) {
             }),
       };
 
+      getLogger().info(`Creating new user in database: ${supabaseUser.email}`);
       await db.insert(userTable).values(newUserData);
-      getLogger().info(`Created new user: ${supabaseUser.email}`);
+      getLogger().info(
+        `✅ Successfully created new user: ${supabaseUser.email}`
+      );
     } else {
       // Update existing user
       const updateData = {
@@ -263,17 +219,41 @@ export async function syncUserWithDatabase(supabaseUser: SupabaseUser) {
         updatedAt: new Date(),
       };
 
+      getLogger().info(
+        `Updating existing user in database: ${supabaseUser.email}`
+      );
       await db
         .update(userTable)
         .set(updateData)
         .where(eq(userTable.id, supabaseUser.id));
 
-      getLogger().info(`Updated user: ${supabaseUser.email}`);
+      getLogger().info(`✅ Successfully updated user: ${supabaseUser.email}`);
     }
 
     return true;
   } catch (error) {
-    getLogger().error("Error syncing user with database:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    const errorDetails = {
+      userId: supabaseUser.id,
+      userEmail: supabaseUser.email,
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    };
+
+    getLogger().error(
+      "❌ CRITICAL: Failed to sync user with database",
+      errorDetails,
+      error
+    );
+
+    // Log to console for immediate visibility
+    console.error("❌ CRITICAL USER SYNC FAILURE:", {
+      message:
+        "User authenticated but NOT saved to database - this will break user preferences!",
+      ...errorDetails,
+    });
+
     return false;
   }
 }
@@ -322,35 +302,14 @@ export async function requireAuth(): Promise<SupabaseUser> {
   return session.user;
 }
 
-// Singleton pattern for admin Supabase client
-let supabaseAdminClient: ReturnType<typeof createServerClient> | null = null;
-
 /**
- * Create admin client for server-side operations (Singleton Pattern)
+ * Create admin client for server-side operations (Centralized Manager)
  * This prevents the "Multiple GoTrueClient instances" error
  */
 export function createSupabaseAdminClient() {
-  if (!supabaseAdminClient) {
-    supabaseAdminClient = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder_service_role_key",
-      {
-        cookies: {
-          get() {
-            return undefined;
-          },
-          set() {},
-          remove() {},
-        },
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
-  }
-
-  return supabaseAdminClient;
+  // Import here to avoid circular dependencies
+  const { getSupabaseAdminClient } = require("./supabase-client-manager");
+  return getSupabaseAdminClient();
 }
 
 // Export types for use in other files

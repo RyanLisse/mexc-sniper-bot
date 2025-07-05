@@ -4,7 +4,7 @@
  * Handles multi-phase strategy performance analysis workflow logic
  */
 
-import { and, eq, gte } from "drizzle-orm";
+import { eq, gte } from "drizzle-orm";
 import { tradingStrategies } from "@/src/db/schemas/strategies";
 import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { db } from "../../db";
@@ -12,7 +12,6 @@ import type {
   OptimizationRecommendation,
   PerformanceAnalysisEvent,
   ServiceResponse,
-  StrategyAnalysisResult,
 } from "../types/multi-phase-strategy-types";
 
 export class StrategyAnalysisService {
@@ -92,9 +91,9 @@ export class StrategyAnalysisService {
   }
 
   async generateOptimizationRecommendations(
-    strategyId: string,
+    _strategyId: string,
     currentPerformance: any,
-    optimizationCriteria: any
+    _optimizationCriteria: any
   ): Promise<{ recommendations: OptimizationRecommendation[] }> {
     const { strategyData, performanceAnalysis } = currentPerformance;
     const recommendations: OptimizationRecommendation[] = [];
@@ -173,7 +172,7 @@ export class StrategyAnalysisService {
     };
   }
 
-  private async gatherStrategyData(strategyId: string, timeframe?: string) {
+  private async gatherStrategyData(strategyId: string, _timeframe?: string) {
     const strategies = await db
       .select()
       .from(tradingStrategies)

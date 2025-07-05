@@ -43,10 +43,10 @@ export async function GET(request: NextRequest) {
 
     // Use the getKlines method to get actual historical candlestick data
     const klinesResponse = await (
-      mexcService as MexcServiceWithKlines
+      mexcService as unknown as MexcServiceWithKlines
     ).getKlines?.(symbol, interval, limit);
 
-    if (klinesResponse?.success && klinesResponse.data?.length > 0) {
+    if (klinesResponse?.success && klinesResponse.data && klinesResponse.data.length > 0) {
       // Transform MEXC kline data to chart format
       const chartData = klinesResponse.data.map((kline: MexcKlineData) => {
         const [
@@ -87,14 +87,15 @@ export async function GET(request: NextRequest) {
       ) {
         const ticker = tickerResponse.data[0];
 
-        // Generate mock historical data based on current ticker
-        const mockData = Array.from({ length: limit }, (_, i) => {
-          const date = new Date();
-          date.setDate(date.getDate() - (limit - i));
+        if (ticker) {
+          // Generate mock historical data based on current ticker
+          const mockData = Array.from({ length: limit }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (limit - i));
 
-          const basePrice = parseFloat(
-            ticker.lastPrice || ticker.price || "100"
-          );
+            const basePrice = parseFloat(
+              ticker.lastPrice || ticker.price || "100"
+            );
           const variation = (Math.random() - 0.5) * 0.1; // ±5% variation
           const price = basePrice * (1 + variation);
 
@@ -117,6 +118,9 @@ export async function GET(request: NextRequest) {
           data: mockData,
           fallback: true,
         });
+        } else {
+          throw new Error("Ticker data is invalid");
+        }
       } else {
         throw new Error("Failed to fetch both klines and ticker data");
       }

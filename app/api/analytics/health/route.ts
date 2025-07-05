@@ -42,7 +42,7 @@ interface CacheHealthResult {
   efficiency?: string;
   error?: string;
   issues?: HealthCheckIssue[];
-  recommendations?: string[];
+  recommendations?: HealthCheckRecommendation[];
 }
 
 interface MexcHealthResult {
@@ -132,7 +132,24 @@ export async function GET(request: NextRequest) {
 
     // Return data in requested format
     if (format === "prometheus") {
-      const prometheusData = convertToPrometheusFormat(healthData);
+      const prometheusData = convertToPrometheusFormat({
+        overall: {
+          score: healthData.overall.score,
+        },
+        components: Object.fromEntries(
+          Object.entries(healthData.components).map(([name, component]) => [
+            name,
+            {
+              score: typeof component === 'object' && component !== null && 'score' in component 
+                ? component.score 
+                : 0,
+              ...Object.fromEntries(
+                Object.entries(component as Record<string, unknown>).filter(([key]) => key !== 'score')
+              ),
+            },
+          ])
+        ),
+      });
       return new NextResponse(prometheusData, {
         headers: {
           "Content-Type": "text/plain; version=0.0.4",
@@ -311,9 +328,15 @@ async function performComprehensiveHealthCheck(
     (check) => check.issues || []
   );
   const recommendations = includeRecommendations
-    ? Object.values(healthChecks).flatMap(
-        (check) => check.recommendations || []
-      )
+    ? Object.values(healthChecks).flatMap((check) => {
+        const recs = check.recommendations || [];
+        // Handle both string[] and HealthCheckRecommendation[] types
+        return recs.map(rec => 
+          typeof rec === 'string' 
+            ? { priority: 'medium' as const, message: rec, action: rec, component: 'system' }
+            : rec
+        );
+      })
     : [];
 
   const healthData = {
@@ -358,28 +381,33 @@ async function checkAnalyticsHealth(): Promise<HealthCheckResult> {
     const score = isHealthy ? 100 : 50;
     const status = isHealthy ? "healthy" : "degraded";
 
-    const issues = [];
-    const recommendations = [];
+    const issues: HealthCheckIssue[] = [];
+    const recommendations: HealthCheckRecommendation[] = [];
 
     if (!isHealthy) {
       issues.push({
-        severity: "warning",
+        severity: "warning" as const,
         message: "No analytics events recorded",
         component: "analytics",
       });
-      recommendations.push(
-        "Verify that analytics service is properly initialized and receiving events"
-      );
+      recommendations.push({
+        priority: "medium",
+        message: "Verify that analytics service is properly initialized and receiving events",
+        action: "Check analytics service initialization",
+        component: "analytics",
+      });
     }
 
     return {
       status,
       score,
-      lastUpdate: stats.newestEvent || "No events",
-      totalEvents: stats.totalEvents,
-      eventsLast24h: stats.eventsLast24h,
-      cacheSize: stats.cacheSize,
-      averageEventSize: Math.round(stats.averageEventSize),
+      metrics: {
+        lastUpdate: stats.newestEvent || "No events",
+        totalEvents: stats.totalEvents,
+        eventsLast24h: stats.eventsLast24h,
+        cacheSize: stats.cacheSize,
+        averageEventSize: Math.round(stats.averageEventSize),
+      },
       issues,
       recommendations,
     };
@@ -387,15 +415,22 @@ async function checkAnalyticsHealth(): Promise<HealthCheckResult> {
     return {
       status: "critical",
       score: 0,
-      error: error instanceof Error ? error.message : "Unknown error",
+      metrics: {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "Analytics service is not responding",
           component: "analytics",
         },
       ],
-      recommendations: ["Restart analytics service and check error logs"],
+      recommendations: [{
+        priority: "high",
+        message: "Restart analytics service and check error logs",
+        action: "Restart analytics service",
+        component: "analytics",
+      }],
     };
   }
 }
@@ -408,15 +443,15 @@ async function checkMemoryHealth(): Promise<HealthCheckResult> {
     const percentage = (usage.heapUsed / usage.heapTotal) * 100;
 
     let score = 100;
-    let status = "healthy";
-    const issues = [];
-    const recommendations = [];
+    let status: "healthy" | "degraded" | "critical" = "healthy";
+    const issues: HealthCheckIssue[] = [];
+    const recommendations: string[] = [];
 
     if (percentage > 90) {
       score = 20;
-      status = "critical";
+      status = "critical" as const;
       issues.push({
-        severity: "critical",
+        severity: "critical" as const,
         message: `Memory usage critically high: ${percentage.toFixed(1)}%`,
         component: "memory",
       });
@@ -425,9 +460,9 @@ async function checkMemoryHealth(): Promise<HealthCheckResult> {
       );
     } else if (percentage > 80) {
       score = 40;
-      status = "degraded";
+      status = "degraded" as const;
       issues.push({
-        severity: "warning",
+        severity: "warning" as const,
         message: `Memory usage high: ${percentage.toFixed(1)}%`,
         component: "memory",
       });
@@ -439,27 +474,41 @@ async function checkMemoryHealth(): Promise<HealthCheckResult> {
     return {
       status,
       score,
-      heapUsed: `${usedMB} MB`,
-      heapTotal: `${totalMB} MB`,
-      percentage: `${percentage.toFixed(1)}%`,
-      rss: `${Math.round(usage.rss / 1024 / 1024)} MB`,
-      external: `${Math.round(usage.external / 1024 / 1024)} MB`,
+      metrics: {
+        heapUsed: `${usedMB} MB`,
+        heapTotal: `${totalMB} MB`,
+        percentage: `${percentage.toFixed(1)}%`,
+        rss: `${Math.round(usage.rss / 1024 / 1024)} MB`,
+        external: `${Math.round(usage.external / 1024 / 1024)} MB`,
+      },
       issues,
-      recommendations,
+      recommendations: recommendations.map(rec => ({
+        priority: 'high' as const,
+        message: rec,
+        action: rec,
+        component: 'memory'
+      })),
     };
   } catch (error) {
     return {
-      status: "critical",
+      status: "critical" as const,
       score: 0,
-      error: error instanceof Error ? error.message : "Unknown error",
+      metrics: {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "Cannot access memory information",
           component: "memory",
         },
       ],
-      recommendations: ["Check system permissions and Node.js process health"],
+      recommendations: [{
+        priority: 'high' as const,
+        message: "Check system permissions and Node.js process health",
+        action: "Check system permissions and Node.js process health",
+        component: "memory"
+      }],
     };
   }
 }
@@ -470,38 +519,62 @@ async function checkPerformanceHealth(): Promise<HealthCheckResult> {
 
     if (metrics.length === 0) {
       return {
-        status: "degraded",
+        status: "degraded" as const,
         score: 60,
-        message: "No performance data available",
-        recommendations: [
-          "Generate some activity to collect performance metrics",
-        ],
+        metrics: {
+          message: "No performance data available",
+        },
+        recommendations: [{
+          priority: 'medium' as const,
+          message: "Generate some activity to collect performance metrics",
+          action: "Generate some activity to collect performance metrics",
+          component: "performance"
+        }],
       };
     }
 
     const latest = metrics[metrics.length - 1];
+    if (!latest) {
+      return {
+        status: "degraded" as const,
+        score: 60,
+        metrics: {
+          message: "No recent performance data available",
+        },
+        recommendations: [{
+          priority: 'medium' as const,
+          message: "Performance metrics collection may be inactive",
+          action: "Check performance monitoring service",
+          component: "performance"
+        }],
+      };
+    }
+
     let score = 100;
-    let status = "healthy";
-    const issues = [];
-    const recommendations = [];
+    let status: "healthy" | "degraded" | "critical" = "healthy";
+    const issues: HealthCheckIssue[] = [];
+    const recommendations: HealthCheckRecommendation[] = [];
 
     // Check response time
     if (latest.metrics.responseTimeMs > 5000) {
       score -= 40;
-      status = "critical";
+      status = "critical" as const;
       issues.push({
-        severity: "critical",
+        severity: "critical" as const,
         message: `High response time: ${latest.metrics.responseTimeMs}ms`,
         component: "performance",
       });
-      recommendations.push(
-        "Investigate slow operations and optimize database queries"
-      );
+      recommendations.push({
+        priority: 'high' as const,
+        message: "Investigate slow operations and optimize database queries",
+        action: "Investigate slow operations and optimize database queries",
+        component: "performance"
+      });
     } else if (latest.metrics.responseTimeMs > 2000) {
       score -= 20;
-      status = status === "healthy" ? "degraded" : status;
+      status = status === "healthy" ? "degraded" as const : status;
       issues.push({
-        severity: "warning",
+        severity: "warning" as const,
         message: `Elevated response time: ${latest.metrics.responseTimeMs}ms`,
         component: "performance",
       });
@@ -510,41 +583,53 @@ async function checkPerformanceHealth(): Promise<HealthCheckResult> {
     // Check error rate
     if (latest.metrics.errorRate > 0.1) {
       score -= 30;
-      status = "critical";
+      status = "critical" as const;
       issues.push({
-        severity: "critical",
+        severity: "critical" as const,
         message: `High error rate: ${(latest.metrics.errorRate * 100).toFixed(1)}%`,
         component: "performance",
       });
-      recommendations.push("Review error logs and fix failing operations");
+      recommendations.push({
+        priority: 'high' as const,
+        message: "Review error logs and fix failing operations",
+        action: "Review error logs and fix failing operations",
+        component: "performance"
+      });
     }
 
     return {
       status,
       score: Math.max(0, score),
-      responseTime: `${latest.metrics.responseTimeMs}ms`,
-      throughput: `${latest.metrics.throughputPerSecond.toFixed(2)} req/s`,
-      errorRate: `${(latest.metrics.errorRate * 100).toFixed(2)}%`,
-      successRate: `${(latest.metrics.successRate * 100).toFixed(2)}%`,
-      dataPoints: metrics.length,
+      metrics: {
+        responseTime: `${latest.metrics.responseTimeMs}ms`,
+        throughput: `${latest.metrics.throughputPerSecond.toFixed(2)} req/s`,
+        errorRate: `${(latest.metrics.errorRate * 100).toFixed(2)}%`,
+        successRate: `${(latest.metrics.successRate * 100).toFixed(2)}%`,
+        dataPoints: metrics.length,
+      },
       issues,
       recommendations,
     };
   } catch (error) {
     return {
-      status: "critical",
+      status: "critical" as const,
       score: 0,
-      error: error instanceof Error ? error.message : "Unknown error",
+      metrics: {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "Performance monitoring system failure",
           component: "performance",
         },
       ],
-      recommendations: [
-        "Restart performance monitoring and check system resources",
-      ],
+      recommendations: [{
+        priority: 'high' as const,
+        message: "Restart performance monitoring and check system resources",
+        action: "Restart performance monitoring and check system resources",
+        component: "performance"
+      }],
     };
   }
 }
@@ -557,21 +642,24 @@ async function checkCacheHealth(): Promise<CacheHealthResult> {
       stats.cacheSize > 0 ? stats.totalEvents / stats.cacheSize : 0;
 
     let score = 90;
-    let status = "healthy";
-    const issues = [];
-    const recommendations = [];
+    let status: "healthy" | "degraded" | "critical" = "healthy";
+    const issues: HealthCheckIssue[] = [];
+    const recommendations: HealthCheckRecommendation[] = [];
 
     if (cacheEfficiency > 100) {
       score -= 20;
-      status = "degraded";
+      status = "degraded" as const;
       issues.push({
-        severity: "warning",
+        severity: "warning" as const,
         message: "Cache efficiency may be suboptimal",
         component: "cache",
       });
-      recommendations.push(
-        "Consider increasing cache size or implementing better eviction policies"
-      );
+      recommendations.push({
+        priority: "medium" as const,
+        message: "Consider increasing cache size or implementing better eviction policies",
+        action: "Review cache configuration and sizing",
+        component: "cache"
+      });
     }
 
     return {
@@ -584,17 +672,22 @@ async function checkCacheHealth(): Promise<CacheHealthResult> {
     };
   } catch (error) {
     return {
-      status: "critical",
+      status: "critical" as const,
       score: 0,
       error: error instanceof Error ? error.message : "Unknown error",
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "Cache system not accessible",
           component: "cache",
         },
       ],
-      recommendations: ["Restart cache service and verify configuration"],
+      recommendations: [{
+        priority: "high" as const,
+        message: "Restart cache service and verify configuration",
+        action: "Restart cache service and verify configuration",
+        component: "cache"
+      }],
     };
   }
 }
@@ -627,7 +720,7 @@ async function checkMexcApiHealth(userId?: string): Promise<MexcHealthResult> {
       issues: !isHealthy
         ? [
             {
-              severity: "critical",
+              severity: "critical" as const,
               message: "MEXC API connectivity failed",
               component: "mexc",
             },
@@ -645,7 +738,7 @@ async function checkMexcApiHealth(userId?: string): Promise<MexcHealthResult> {
       credentialSource: userId ? "user-specific" : "environment",
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "MEXC service health check failed",
           component: "mexc",
         },
@@ -684,7 +777,7 @@ async function checkDatabaseHealth(): Promise<DatabaseHealthResult> {
       error: error instanceof Error ? error.message : "Unknown error",
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "Database connection failed",
           component: "database",
         },
@@ -724,7 +817,7 @@ async function checkAuthHealth(): Promise<AuthHealthResult> {
       error: error instanceof Error ? error.message : "Unknown error",
       issues: [
         {
-          severity: "critical",
+          severity: "critical" as const,
           message: "Authentication system check failed",
           component: "auth",
         },
@@ -758,18 +851,16 @@ function convertToPrometheusFormat(healthData: PrometheusHealthData): string {
     }
   }
 
-  // Summary metrics
+  // Summary metrics - calculate from components since summary isn't in PrometheusHealthData
+  const totalComponents = Object.keys(healthData.components).length;
+  
   metrics.push(
     `# HELP mexc_bot_total_components Total number of monitored components`
   );
   metrics.push(`# TYPE mexc_bot_total_components gauge`);
   metrics.push(
-    `mexc_bot_total_components ${healthData.summary.totalComponents}`
+    `mexc_bot_total_components ${totalComponents}`
   );
-
-  metrics.push(`# HELP mexc_bot_critical_issues Number of critical issues`);
-  metrics.push(`# TYPE mexc_bot_critical_issues gauge`);
-  metrics.push(`mexc_bot_critical_issues ${healthData.summary.criticalIssues}`);
 
   return `${metrics.join("\n")}\n`;
 }

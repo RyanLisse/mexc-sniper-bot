@@ -21,7 +21,6 @@ import {
 } from "@/src/services/multi-phase-trading-service";
 import { inngest } from "../client";
 import type {
-  MarketData,
   StrategyOptimizationInput,
   StrategyRecommendationResult,
 } from "./strategy-types";
@@ -80,7 +79,7 @@ export const optimizeMultiPhaseStrategy = inngest.createFunction(
             profitableTrades: performance.successfulTrades || 0,
             winLossRatio: performance.winLossRatio || 0,
           };
-        } catch (error) {
+        } catch (_error) {
           // Use provided performance data as fallback
           return {
             successRate: performanceData?.successRate || 0,
@@ -421,7 +420,7 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
             sentiment: analysis.sentiment || "neutral",
             technicalSignals: analysis.technicalIndicators || {},
           };
-        } catch (error) {
+        } catch (_error) {
           // Fallback analysis based on basic market data
           return {
             trend: marketData.change24h > 0 ? "bullish" : "bearish",
@@ -496,7 +495,7 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
             timeHorizon: assessment.timeHorizon || "medium",
             suitabilityScore: assessment.suitabilityScore || 70,
           };
-        } catch (error) {
+        } catch (_error) {
           // Fallback risk assessment
           const riskMultiplier =
             riskTolerance === "low" ? 0.5 : riskTolerance === "high" ? 2 : 1;
@@ -605,7 +604,7 @@ export const recommendMultiPhaseStrategy = inngest.createFunction(
               levels: altStrategy.phases,
               pattern,
             });
-          } catch (error) {}
+          } catch (_error) {}
         }
 
         return alternatives;

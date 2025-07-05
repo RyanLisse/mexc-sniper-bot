@@ -7,6 +7,8 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+// CRITICAL: Build isolation to prevent 61s build times
+import { withBuildIsolation } from "@/src/lib/build-isolation-manager";
 import { executeWithCircuitBreaker } from "@/src/lib/database-circuit-breaker";
 import { withDatabaseQueryCache } from "@/src/lib/database-query-cache-middleware";
 import { executeWithRateLimit } from "@/src/lib/database-rate-limiter";
@@ -19,6 +21,7 @@ import { AccountBalanceSchema } from "@/src/schemas/external-api-validation-sche
 import { getUnifiedMexcService } from "@/src/services/api/unified-mexc-service-factory";
 
 // Request validation schema - userId is optional for environment fallback
+// Note: Prefixed with underscore to indicate intentionally unused in current implementation
 const _BalanceRequestSchema = z.object({
   userId: z.string().min(1, "User ID is required").optional(),
 });
@@ -422,13 +425,15 @@ async function balanceHandler(request: NextRequest) {
   }
 }
 
-// Export the handler wrapped with cost monitoring and database query caching
-export const GET = withCostMonitoring(
-  withDatabaseQueryCache(balanceHandler, {
-    endpoint: "/api/account/balance",
-    cacheTtlSeconds: 60, // 1 minute cache
-    enableCompression: true,
-    enableStaleWhileRevalidate: false, // Financial data needs to be fresh
-  }),
-  "/api/account/balance"
+// Export the handler wrapped with build isolation, cost monitoring and database query caching
+export const GET = withBuildIsolation(
+  withCostMonitoring(
+    withDatabaseQueryCache(balanceHandler, {
+      endpoint: "/api/account/balance",
+      cacheTtlSeconds: 60, // 1 minute cache
+      enableCompression: true,
+      enableStaleWhileRevalidate: false, // Financial data needs to be fresh
+    }),
+    "/api/account/balance"
+  )
 );

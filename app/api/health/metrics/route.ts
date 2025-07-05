@@ -5,7 +5,8 @@
  * and monitoring data for production deployments.
  */
 
-import type { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
 
 // Metrics type interfaces
@@ -73,7 +74,7 @@ interface CompleteMetricsData {
  * GET /api/health/metrics
  * Comprehensive production metrics and monitoring data
  */
-export async function GET(request: NextRequest): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<Response> {
   const startTime = Date.now();
   const searchParams = request.nextUrl.searchParams;
   const format = searchParams.get("format") || "json";
@@ -560,15 +561,18 @@ function getThroughput(): number {
 }
 
 function getDatabaseHealth(): string {
-  return ["healthy", "degraded", "unhealthy"][Math.floor(Math.random() * 3)];
+  const options = ["healthy", "degraded", "unhealthy"];
+  return options[Math.floor(Math.random() * options.length)] || "unknown";
 }
 
 function getAPIHealth(): string {
-  return ["healthy", "degraded"][Math.floor(Math.random() * 2)];
+  const options = ["healthy", "degraded"];
+  return options[Math.floor(Math.random() * options.length)] || "unknown";
 }
 
 function getWebSocketHealth(): string {
-  return ["healthy", "degraded"][Math.floor(Math.random() * 2)];
+  const options = ["healthy", "degraded"];
+  return options[Math.floor(Math.random() * options.length)] || "unknown";
 }
 
 function getWebSocketUptime(): number {
@@ -576,7 +580,8 @@ function getWebSocketUptime(): number {
 }
 
 function getCacheHealth(): string {
-  return ["healthy", "degraded"][Math.floor(Math.random() * 2)];
+  const options = ["healthy", "degraded"];
+  return options[Math.floor(Math.random() * options.length)] || "unknown";
 }
 
 function getCacheSize(): number {
@@ -584,7 +589,8 @@ function getCacheSize(): number {
 }
 
 function getAIHealth(): string {
-  return ["healthy", "degraded"][Math.floor(Math.random() * 2)];
+  const options = ["healthy", "degraded"];
+  return options[Math.floor(Math.random() * options.length)] || "unknown";
 }
 
 function getAIUsage(): number {

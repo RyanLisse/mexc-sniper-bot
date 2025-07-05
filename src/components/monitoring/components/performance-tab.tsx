@@ -5,7 +5,6 @@
  * Extracted from the main dashboard component for better modularity.
  */
 
-import React from "react";
 import {
   Card,
   CardContent,

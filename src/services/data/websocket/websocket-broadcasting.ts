@@ -24,7 +24,6 @@ import type {
   PatternDiscoveryMessage,
   TradingPriceMessage,
   WebSocketChannel,
-  WebSocketConnection,
   WebSocketMessage,
 } from "@/src/lib/websocket-types";
 import type { ServerConnectionManager } from "./server-connection-manager";

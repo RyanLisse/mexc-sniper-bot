@@ -188,7 +188,7 @@ export class ValidationModule {
 
     // Check position size relative to account
     if (params.quoteOrderQty) {
-      const maxPositionPercent =
+      const _maxPositionPercent =
         this.context.config.maxPositionSizePercent || 10;
       // This would need account balance info to validate properly
       // For now, just check against a reasonable absolute maximum
@@ -351,12 +351,12 @@ export class ValidationModule {
     }
   }
 
-  private getMinOrderValue(symbol: string): number {
+  private getMinOrderValue(_symbol: string): number {
     // This could be configurable per symbol
     return 5; // USDT minimum
   }
 
-  private getMaxOrderValue(symbol: string): number {
+  private getMaxOrderValue(_symbol: string): number {
     // This could be configurable per symbol or account
     return 50000; // USDT maximum
   }
@@ -397,7 +397,7 @@ export class ValidationModule {
         }
       }
       return null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -447,7 +447,7 @@ export class ValidationModule {
       }
 
       return { sufficient: true };
-    } catch (error) {
+    } catch (_error) {
       return { sufficient: true }; // Assume sufficient on error
     }
   }
@@ -479,7 +479,7 @@ export class ValidationModule {
       const midPrice = (bestBid + bestAsk) / 2;
 
       return (spread / midPrice) * 100;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

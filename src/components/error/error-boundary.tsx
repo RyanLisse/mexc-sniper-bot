@@ -182,7 +182,10 @@ export class ErrorBoundary extends Component<
                 <h4 className="font-medium text-sm">What you can do:</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   {recoveryActions.map((action, index) => (
-                    <li key={index} className="flex items-start gap-2">
+                    <li
+                      key={`action-${action.substring(0, 20).replace(/\s+/g, "-")}-${index}`}
+                      className="flex items-start gap-2"
+                    >
                       <span className="text-blue-600">•</span>
                       {action}
                     </li>

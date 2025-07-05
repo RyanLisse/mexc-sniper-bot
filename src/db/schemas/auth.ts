@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -14,8 +13,8 @@ import {
 // AUTHENTICATION SCHEMA MODULE
 // ===========================================
 
-// Auth Compatible User Table
-export const user = pgTable("user", {
+// Auth Compatible User Table - Fixed naming to match application expectations
+export const user = pgTable("users", {
   id: text("id").primaryKey(), // User ID
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
@@ -24,8 +23,12 @@ export const user = pgTable("user", {
   image: text("image"),
   // Store mapping to old better-auth ID for migration compatibility
   legacyBetterAuthId: text("legacyBetterAuthId").unique(),
-  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("createdAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // Session Management
@@ -33,8 +36,12 @@ export const session = pgTable("session", {
   id: text("id").primaryKey(),
   expiresAt: integer("expiresAt").notNull(),
   token: text("token").notNull().unique(),
-  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("createdAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
   userId: text("userId")
@@ -57,8 +64,12 @@ export const account = pgTable("account", {
   refreshTokenExpiresAt: integer("refreshTokenExpiresAt"),
   scope: text("scope"),
   password: text("password"),
-  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("createdAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // Email/Phone Verification
@@ -67,8 +78,12 @@ export const verification = pgTable("verification", {
   identifier: text("identifier").notNull(),
   value: text("value").notNull(),
   expiresAt: integer("expiresAt").notNull(),
-  createdAt: timestamp("createdAt").notNull().default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp("updatedAt").notNull().default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp("createdAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updatedAt", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // User Preferences Table
@@ -136,12 +151,12 @@ export const userPreferences = pgTable(
       .default(30),
 
     // Timestamps
-    createdAt: timestamp("created_at")
+    createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
-    updatedAt: timestamp("updated_at")
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
+      .defaultNow(),
   },
   (table) => ({
     userIdIdx: index("user_preferences_user_id_idx").on(table.userId),

@@ -10,7 +10,7 @@
  */
 
 import { vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
-import { TIMEOUT_CONFIG } from '../utils/timeout-elimination-helpers';
+import { TIMEOUT_CONFIG } from '../utils/timeout-utilities';
 
 // AGGRESSIVE TIMEOUT ELIMINATION: Set global hook timeouts
 const GLOBAL_HOOK_TIMEOUTS = {
@@ -51,13 +51,16 @@ function wrapHookWithTimeout<T extends any[]>(
       });
     };
 
-    // Apply the timeout to the options if not already set - FIXED: Prevent NaN values
+    // Apply the timeout to the options if not already set - ENHANCED: More robust NaN prevention
+    const optionsTimeout = (typeof options?.timeout === 'number' && !isNaN(options.timeout) && isFinite(options.timeout) && options.timeout > 0) ? options.timeout : 0;
+    const safeTimeoutMs = (typeof timeoutMs === 'number' && !isNaN(timeoutMs) && isFinite(timeoutMs) && timeoutMs > 0) ? timeoutMs : 30000;
+    
+    // Ensure final timeout is always a positive number
+    const finalTimeout = Math.max(Math.max(optionsTimeout, safeTimeoutMs), 1000); // Minimum 1 second
+    
     const finalOptions = {
       ...options,
-      timeout: Math.max(
-        typeof options?.timeout === 'number' && !isNaN(options.timeout) ? options.timeout : 0, 
-        typeof timeoutMs === 'number' && !isNaN(timeoutMs) ? timeoutMs : 30000
-      )
+      timeout: finalTimeout
     };
 
     return originalHook(wrappedCallback, finalOptions);

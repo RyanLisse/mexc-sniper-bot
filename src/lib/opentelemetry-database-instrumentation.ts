@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * OpenTelemetry Database Instrumentation
  * Minimal implementation for build optimization

@@ -72,7 +72,7 @@ export class BrowserCompatibleEventEmitter extends EventTarget {
       this.listenerMap.set(eventName, new Set());
     }
 
-    this.listenerMap.get(eventName)!.add(listener);
+    this.listenerMap.get(eventName)?.add(listener);
     this.addEventListener(eventName, wrappedListener);
 
     // Update listener count
@@ -131,7 +131,7 @@ export class BrowserCompatibleEventEmitter extends EventTarget {
     if (!this.listenerMap.has(eventName)) {
       this.listenerMap.set(eventName, new Set());
     }
-    this.listenerMap.get(eventName)!.add(listener);
+    this.listenerMap.get(eventName)?.add(listener);
 
     // Use built-in once functionality
     this.addEventListener(eventName, wrappedListener, { once: true });
@@ -148,7 +148,7 @@ export class BrowserCompatibleEventEmitter extends EventTarget {
    */
   off(eventName: string, listener: (...args: any[]) => void): this {
     const listeners = this.listenerMap.get(eventName);
-    if (listeners && listeners.has(listener)) {
+    if (listeners?.has(listener)) {
       listeners.delete(listener);
       this.listenerCount.set(
         eventName,
@@ -365,7 +365,7 @@ export function getUniversalCrypto() {
       randomUUID: () => window.crypto.randomUUID(),
       getRandomValues: (array: Uint8Array) =>
         window.crypto.getRandomValues(array),
-      createHash: (algorithm: string) => ({
+      createHash: (_algorithm: string) => ({
         update: (data: string) => {
           // For browser compatibility, use a simple hash fallback
           // Note: This is not cryptographically secure - use only for non-security purposes
@@ -377,7 +377,7 @@ export function getUniversalCrypto() {
             hash = hash & hash; // Convert to 32bit integer
           }
           return {
-            digest: (encoding?: string) => Math.abs(hash).toString(16),
+            digest: (_encoding?: string) => Math.abs(hash).toString(16),
           };
         },
       }),
@@ -397,9 +397,9 @@ export function getUniversalCrypto() {
         }
         return array;
       },
-      createHash: (algorithm: string) => ({
+      createHash: (_algorithm: string) => ({
         update: (data: string) => ({
-          digest: (encoding?: string) => {
+          digest: (_encoding?: string) => {
             // Simple hash for browser compatibility
             let hash = 0;
             if (data.length === 0) return hash.toString();

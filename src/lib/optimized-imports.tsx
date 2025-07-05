@@ -1,12 +1,12 @@
 /**
  * OPTIMIZED IMPORTS MANAGER
- * 
+ *
  * PERFORMANCE OPTIMIZATION: Dynamic loading and tree-shaking for heavy components
  * Addresses Agent 6's finding of inefficient import statements and large bundle sizes
  */
 
-import React, { lazy, ComponentType, ReactElement } from 'react';
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
+import type { ComponentType } from "react";
 
 /**
  * PERFORMANCE: Lazy loading configuration for heavy components
@@ -37,52 +37,53 @@ export function createOptimizedLoader<P = {}>(
 export const OptimizedUIComponents = {
   // Heavy dashboard components - load only when needed
   TradingDashboard: createOptimizedLoader(
-    () => import('@/src/components/dashboard/simplified-trading-dashboard'),
+    () => import("@/src/components/dashboard/simplified-trading-dashboard"),
     { timeout: 5000 }
   ),
-  
+
   MonitoringDashboard: createOptimizedLoader(
-    () => import('@/src/components/monitoring/production-monitoring-dashboard'),
+    () => import("@/src/components/monitoring/production-monitoring-dashboard"),
     { timeout: 5000 }
   ),
 
   PerformanceDashboard: createOptimizedLoader(
-    () => import('@/src/components/dashboard/performance-monitoring-dashboard'),
+    () => import("@/src/components/dashboard/performance-monitoring-dashboard"),
     { timeout: 5000 }
   ),
 
   SafetyDashboard: createOptimizedLoader(
-    () => import('@/src/components/safety/comprehensive-safety-dashboard'),
+    () => import("@/src/components/safety/comprehensive-safety-dashboard"),
     { timeout: 5000 }
   ),
 
   // Heavy chart components
   TradingChart: createOptimizedLoader(
-    () => import('@/src/components/dashboard/trading-chart'),
+    () => import("@/src/components/dashboard/trading-chart"),
     { timeout: 3000 }
   ),
 
   // Heavy table components
   RecentTradesTable: createOptimizedLoader(
-    () => import('@/src/components/dashboard/recent-trades-table'),
+    () => import("@/src/components/dashboard/recent-trades-table"),
     { timeout: 3000 }
   ),
 
   // Agent dashboard
   AgentsDashboard: createOptimizedLoader(
-    () => import('@/src/components/optimized-agents-dashboard'),
+    () => import("@/src/components/optimized-agents-dashboard"),
     { timeout: 5000 }
   ),
 
   // Auto-sniping components
   AutoSnipingDashboard: createOptimizedLoader(
-    () => import('@/src/components/auto-sniping/enhanced-auto-sniping-dashboard'),
+    () =>
+      import("@/src/components/auto-sniping/enhanced-auto-sniping-dashboard"),
     { timeout: 5000 }
   ),
 
   // Tuning components
   ParameterOptimizationDashboard: createOptimizedLoader(
-    () => import('@/src/components/tuning/parameter-optimization-dashboard'),
+    () => import("@/src/components/tuning/parameter-optimization-dashboard"),
     { timeout: 5000 }
   ),
 };
@@ -92,17 +93,18 @@ export const OptimizedUIComponents = {
  */
 export const OptimizedUtils = {
   // Date utilities - only import what's needed
-  formatDate: () => import('date-fns/format').then(m => m.format),
-  formatDistanceToNow: () => import('date-fns/formatDistanceToNow').then(m => m.formatDistanceToNow),
-  parseISO: () => import('date-fns/parseISO').then(m => m.parseISO),
-  
+  formatDate: () => import("date-fns/format").then((m) => m.format),
+  formatDistanceToNow: () =>
+    import("date-fns/formatDistanceToNow").then((m) => m.formatDistanceToNow),
+  parseISO: () => import("date-fns/parseISO").then((m) => m.parseISO),
+
   // Lodash utilities - tree-shakable imports
-  debounce: () => import('lodash/debounce').then(m => m.default),
-  throttle: () => import('lodash/throttle').then(m => m.default),
-  merge: () => import('lodash/merge').then(m => m.default),
-  
+  debounce: () => import("lodash/debounce").then((m) => m.default),
+  throttle: () => import("lodash/throttle").then((m) => m.default),
+  merge: () => import("lodash/merge").then((m) => m.default),
+
   // Crypto utilities
-  randomUUID: () => import('crypto').then(m => m.randomUUID),
+  randomUUID: () => import("node:crypto").then((m) => m.randomUUID),
 };
 
 /**
@@ -110,18 +112,23 @@ export const OptimizedUtils = {
  */
 export const OptimizedServices = {
   // Heavy trading services
-  tradingService: () => import('@/src/services/trading/consolidated/core-trading/core-trading-service'),
-  patternDetection: () => import('@/src/core/pattern-detection/pattern-detection-core-enhanced'),
-  
+  tradingService: () =>
+    import(
+      "@/src/services/trading/consolidated/core-trading/core-trading-service"
+    ),
+  patternDetection: () =>
+    import("@/src/core/pattern-detection/pattern-detection-core-enhanced"),
+
   // Calendar services
-  calendarService: () => import('@/src/services/data/modules/calendar-listings.service'),
-  
+  calendarService: () =>
+    import("@/src/services/data/modules/calendar-listings.service"),
+
   // Agent services
-  simulationAgent: () => import('@/src/mexc-agents/simulation-agent'),
-  patternAgent: () => import('@/src/mexc-agents/pattern-discovery-agent'),
-  
+  simulationAgent: () => import("@/src/mexc-agents/simulation-agent"),
+  patternAgent: () => import("@/src/mexc-agents/pattern-discovery-agent"),
+
   // Performance monitoring
-  performanceMonitor: () => import('@/src/lib/real-time-performance-monitor'),
+  performanceMonitor: () => import("@/src/lib/real-time-performance-monitor"),
 };
 
 /**
@@ -129,14 +136,14 @@ export const OptimizedServices = {
  */
 export class BundleOptimizer {
   private static loadedModules = new Set<string>();
-  
+
   /**
    * PERFORMANCE: Track module loading for optimization
    */
   static trackModuleLoad(moduleName: string): void {
-    this.loadedModules.add(moduleName);
-    
-    if (process.env.NODE_ENV === 'development') {
+    BundleOptimizer.loadedModules.add(moduleName);
+
+    if (process.env.NODE_ENV === "development") {
       console.debug(`[BundleOptimizer] Loaded module: ${moduleName}`);
     }
   }
@@ -146,8 +153,8 @@ export class BundleOptimizer {
    */
   static getLoadingStats() {
     return {
-      totalModulesLoaded: this.loadedModules.size,
-      loadedModules: Array.from(this.loadedModules),
+      totalModulesLoaded: BundleOptimizer.loadedModules.size,
+      loadedModules: Array.from(BundleOptimizer.loadedModules),
       memoryUsage: process.memoryUsage(),
     };
   }
@@ -156,18 +163,21 @@ export class BundleOptimizer {
    * PERFORMANCE: Preload critical components
    */
   static async preloadCritical(): Promise<void> {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Only preload on client-side
       const criticalImports = [
-        import('@/src/components/dashboard/simplified-trading-dashboard'),
-        import('@/src/lib/real-time-performance-monitor'),
+        import("@/src/components/dashboard/simplified-trading-dashboard"),
+        import("@/src/lib/real-time-performance-monitor"),
       ];
 
       try {
         await Promise.all(criticalImports);
-        this.trackModuleLoad('critical-components');
+        BundleOptimizer.trackModuleLoad("critical-components");
       } catch (error) {
-        console.warn('[BundleOptimizer] Failed to preload critical components:', error);
+        console.warn(
+          "[BundleOptimizer] Failed to preload critical components:",
+          error
+        );
       }
     }
   }
@@ -184,11 +194,11 @@ export function createServiceProxy<T>(
   let loadingPromise: Promise<T> | null = null;
 
   const serviceProxy = new Proxy({} as T, {
-    get(target, prop: keyof T) {
+    get(_target, prop: keyof T) {
       // If service is already loaded, use it directly
       if (serviceInstance) {
         const value = serviceInstance[prop];
-        if (typeof value === 'function') {
+        if (typeof value === "function") {
           return (value as Function).bind(serviceInstance);
         }
         return value;
@@ -197,9 +207,9 @@ export function createServiceProxy<T>(
       // If loading is in progress, wait for it
       if (loadingPromise) {
         return (...args: any[]) => {
-          return loadingPromise!.then((service) => {
+          return loadingPromise?.then((service) => {
             const method = service[prop];
-            if (typeof method === 'function') {
+            if (typeof method === "function") {
               return (method as Function).apply(service, args);
             }
             return method;
@@ -210,11 +220,11 @@ export function createServiceProxy<T>(
       // Start loading the service
       loadingPromise = importFn().then((imported) => {
         let service: T;
-        
-        if (typeof imported === 'function') {
+
+        if (typeof imported === "function") {
           // Constructor function
           service = new (imported as any)();
-        } else if (imported.default && typeof imported.default === 'function') {
+        } else if (imported.default && typeof imported.default === "function") {
           // Default export constructor
           service = new imported.default();
         } else if (imported.default) {
@@ -232,15 +242,15 @@ export function createServiceProxy<T>(
 
       // Return a function that waits for loading to complete
       return (...args: any[]) => {
-        return loadingPromise!.then((service) => {
+        return loadingPromise?.then((service) => {
           const method = service[prop];
-          if (typeof method === 'function') {
+          if (typeof method === "function") {
             return (method as Function).apply(service, args);
           }
           return method;
         });
       };
-    }
+    },
   });
 
   return serviceProxy;
@@ -252,7 +262,7 @@ export function createServiceProxy<T>(
 export { BundleOptimizer };
 
 // Initialize bundle optimization on module load
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Client-side initialization
   BundleOptimizer.preloadCritical();
 }

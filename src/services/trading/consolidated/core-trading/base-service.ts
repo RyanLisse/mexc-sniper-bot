@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Core Trading Service - Base Service
  *
@@ -9,10 +5,7 @@ import {
  * This replaces the original monolithic core-trading.service.ts implementation.
  */
 
-import {
-  BrowserCompatibleEventEmitter,
-  createTypedEventEmitter,
-} from "@/src/lib/browser-compatible-events";
+import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
 import { ComprehensiveSafetyCoordinator } from "@/src/services/risk/comprehensive-safety-coordinator";
@@ -26,7 +19,6 @@ import { StrategyManager } from "./strategy-manager";
 // Import types
 import type {
   CoreTradingConfig,
-  CoreTradingEvents,
   ExtendedServiceStatus,
   ModuleContext,
   MultiPhaseConfig,
@@ -138,6 +130,7 @@ export class CoreTradingService extends BrowserCompatibleEventEmitter {
       secretKey: process.env.MEXC_SECRET_KEY || "",
       enablePaperTrading: paperTradingFlag,
       paperTradingMode: paperTradingFlag,
+      autoSnipingEnabled: process.env.AUTO_SNIPING_ENABLED !== "false", // Fixed: Read from environment
       ...config,
     });
 

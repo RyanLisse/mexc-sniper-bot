@@ -13,7 +13,7 @@ export async function GET() {
     console.info("[API] Auto-sniping status request received");
 
     // Get current execution report which includes unified status
-    let report: unknown;
+    let report: any;
     try {
       report = await coreTrading.getExtendedServiceStatus();
     } catch (error) {
@@ -32,14 +32,14 @@ export async function GET() {
     // Structure the status response to match frontend expectations
     const statusData = {
       enabled: true, // Auto-sniping is always enabled
-      status: report.status || "idle",
-      isActive: report.status === "active",
-      isIdle: report.status === "idle",
+      status: report?.status || "idle",
+      isActive: report?.status === "active",
+      isIdle: report?.status === "idle",
 
       // Enhanced target count information
-      activeTargets: report.targetCounts?.unified || report.activeTargets || 0,
-      readyTargets: report.readyTargets || 0,
-      targetCounts: report.targetCounts || {
+      activeTargets: report?.targetCounts?.unified || report?.activeTargets || 0,
+      readyTargets: report?.readyTargets || 0,
+      targetCounts: report?.targetCounts || {
         memory: 0,
         database: 0,
         unified: 0,
@@ -48,7 +48,7 @@ export async function GET() {
       },
 
       // State consistency information
-      stateConsistency: report.stateConsistency || {
+      stateConsistency: report?.stateConsistency || {
         isConsistent: true,
         inconsistencies: [],
         recommendedActions: [],
@@ -56,29 +56,29 @@ export async function GET() {
       },
 
       // Frontend-expected fields
-      executedToday: report.executedToday || 0,
-      successRate: report.successRate || 0,
-      totalProfit: report.totalProfit || 0,
-      lastExecution: report.lastExecution || new Date().toISOString(),
-      safetyStatus: report.safetyStatus || "safe",
-      patternDetectionActive: report.patternDetectionActive ?? true,
+      executedToday: report?.executedToday || 0,
+      successRate: report?.successRate || 0,
+      totalProfit: report?.totalProfit || 0,
+      lastExecution: report?.lastExecution || new Date().toISOString(),
+      safetyStatus: report?.safetyStatus || "safe",
+      patternDetectionActive: report?.patternDetectionActive ?? true,
 
       // Legacy fields for backward compatibility
-      executionCount: report.executionCount || 0,
-      successCount: report.successCount || 0,
-      errorCount: report.errorCount || 0,
-      uptime: report.uptime || 0,
+      executionCount: report?.executionCount || 0,
+      successCount: report?.successCount || 0,
+      errorCount: report?.errorCount || 0,
+      uptime: report?.uptime || 0,
       config: {
-        maxConcurrentTargets: report.config?.maxConcurrentTargets || 5,
-        retryAttempts: report.config?.retryAttempts || 3,
-        executionDelay: report.config?.executionDelay || 1000,
+        maxConcurrentTargets: report?.config?.maxConcurrentTargets || 5,
+        retryAttempts: report?.config?.retryAttempts || 3,
+        executionDelay: report?.config?.executionDelay || 1000,
       },
       health: {
-        isHealthy: report.stateConsistency?.isConsistent ?? true,
+        isHealthy: report?.stateConsistency?.isConsistent ?? true,
         lastHealthCheck: new Date().toISOString(),
         memoryUsage: process.memoryUsage().heapUsed,
-        stateConsistency: report.stateConsistency?.isConsistent ?? true,
-        targetCountWarning: report.targetCounts?.warning,
+        stateConsistency: report?.stateConsistency?.isConsistent ?? true,
+        targetCountWarning: report?.targetCounts?.warning,
       },
     };
 

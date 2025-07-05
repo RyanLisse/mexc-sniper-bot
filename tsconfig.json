@@ -11,26 +11,27 @@
     "checkJs": false,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "strict": false,
+    // STRICT MODE: Enabled incrementally for better type safety
+    "strict": true,
     "noEmit": true,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "noImplicitReturns": false,
-    "noImplicitThis": false,
-    "noFallthroughCasesInSwitch": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "alwaysStrict": false,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "alwaysStrict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "exactOptionalPropertyTypes": false,
-    "noUncheckedIndexedAccess": false,
-    "noImplicitOverride": false,
-    "useUnknownInCatchVariables": false,
-    "allowUnusedLabels": true,
-    "allowUnreachableCode": true,
-    "forceConsistentCasingInFileNames": false,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
     "noErrorTruncation": true,
     "preserveConstEnums": true,
     "removeComments": false,
@@ -43,9 +44,16 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "jsxImportSource": "react",
+    // PERFORMANCE OPTIMIZATION: Enhanced incremental compilation
     "incremental": true,
+    "tsBuildInfoFile": ".next/cache/tsconfig.tsbuildinfo",
+    "assumeChangesOnlyAffectDirectDependencies": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    // PERFORMANCE: Build speed optimizations
+    "importsNotUsedAsValues": "remove",
+    "preserveValueImports": false,
+    "moduleDetection": "force",
     "types": [
       "vitest/globals",
       "@vitest/ui",
@@ -61,32 +69,69 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "./"
+        "./*"
       ],
       "@/src/*": [
         "./src/*"
+      ],
+      "@/app/*": [
+        "./app/*"
       ],
       "@/components/*": [
         "./src/components/*"
       ],
       "@/hooks/*": [
         "./src/hooks/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/services/*": [
+        "./src/services/*"
+      ],
+      "@/db/*": [
+        "./src/db/*"
+      ],
+      "@/core/*": [
+        "./src/core/*"
+      ],
+      "@/domain/*": [
+        "./src/domain/*"
+      ],
+      "@/infrastructure/*": [
+        "./src/infrastructure/*"
+      ],
+      "@tests/*": [
+        "./tests/*"
+      ],
+      "@utils/*": [
+        "./tests/utils/*"
       ]
     }
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
+    "next-env.d.ts",
     "types/**/*.ts",
-    "types/react.d.ts"
+    "types/react.d.ts",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "tests",
     "playwright-report",
     "test-results",
+    // PERFORMANCE: Build optimization exclusions
+    ".next/cache",
+    "coverage",
+    "dist",
+    "build",
+    "logs",
+    "tmp",
+    "memory-bank",
+    "docs",
+    "deployment",
+    "monitoring",
     "app/api/alerts/instances/[id]/route.ts",
     "app/api/alerts/system/status/route.ts",
     "app/api/cost-monitoring/stats/route.ts",
@@ -124,9 +169,12 @@
   "ts-node": {
     "compilerOptions": {
       "module": "commonjs",
-      "strict": false,
+      "strict": true,
       "skipLibCheck": true,
-      "allowJs": true
+      "allowJs": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true,
+      "forceConsistentCasingInFileNames": true
     }
   }
 }

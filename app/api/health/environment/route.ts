@@ -19,9 +19,9 @@ export async function GET(_request: NextRequest) {
 
   try {
     // Get comprehensive environment validation with error handling
-    let validation: unknown;
-    let healthSummary: unknown;
-    let missingByCategory: unknown;
+    let validation: any;
+    let healthSummary: any;
+    let missingByCategory: any;
 
     try {
       validation = environmentValidation.validateEnvironment();
@@ -69,7 +69,7 @@ export async function GET(_request: NextRequest) {
     const statusCode = 200;
 
     const responseData = {
-      status: healthSummary.status,
+      status: healthSummary && typeof healthSummary === 'object' && 'status' in healthSummary ? healthSummary.status : 'unknown',
       timestamp: new Date().toISOString(),
       responseTime,
       environment: process.env.NODE_ENV || "development",
@@ -89,73 +89,73 @@ export async function GET(_request: NextRequest) {
       },
       categories: {
         core: {
-          total: validation.results.filter((r) => r.category === "core").length,
+          total: validation.results.filter((r: any) => r.category === "core").length,
           configured: validation.results.filter(
-            (r) =>
+            (r: any) =>
               r.category === "core" &&
               (r.status === "configured" || r.status === "default")
           ).length,
           missing: validation.results.filter(
-            (r) => r.category === "core" && r.status === "missing"
+            (r: any) => r.category === "core" && r.status === "missing"
           ).length,
         },
         api: {
-          total: validation.results.filter((r) => r.category === "api").length,
+          total: validation.results.filter((r: any) => r.category === "api").length,
           configured: validation.results.filter(
-            (r) =>
+            (r: any) =>
               r.category === "api" &&
               (r.status === "configured" || r.status === "default")
           ).length,
           missing: validation.results.filter(
-            (r) => r.category === "api" && r.status === "missing"
+            (r: any) => r.category === "api" && r.status === "missing"
           ).length,
         },
         database: {
-          total: validation.results.filter((r) => r.category === "database")
+          total: validation.results.filter((r: any) => r.category === "database")
             .length,
           configured: validation.results.filter(
-            (r) =>
+            (r: any) =>
               r.category === "database" &&
               (r.status === "configured" || r.status === "default")
           ).length,
           missing: validation.results.filter(
-            (r) => r.category === "database" && r.status === "missing"
+            (r: any) => r.category === "database" && r.status === "missing"
           ).length,
         },
         cache: {
-          total: validation.results.filter((r) => r.category === "cache")
+          total: validation.results.filter((r: any) => r.category === "cache")
             .length,
           configured: validation.results.filter(
-            (r) =>
+            (r: any) =>
               r.category === "cache" &&
               (r.status === "configured" || r.status === "default")
           ).length,
           missing: validation.results.filter(
-            (r) => r.category === "cache" && r.status === "missing"
+            (r: any) => r.category === "cache" && r.status === "missing"
           ).length,
         },
         monitoring: {
-          total: validation.results.filter((r) => r.category === "monitoring")
+          total: validation.results.filter((r: any) => r.category === "monitoring")
             .length,
           configured: validation.results.filter(
-            (r) =>
+            (r: any) =>
               r.category === "monitoring" &&
               (r.status === "configured" || r.status === "default")
           ).length,
           missing: validation.results.filter(
-            (r) => r.category === "monitoring" && r.status === "missing"
+            (r: any) => r.category === "monitoring" && r.status === "missing"
           ).length,
         },
         security: {
-          total: validation.results.filter((r) => r.category === "security")
+          total: validation.results.filter((r: any) => r.category === "security")
             .length,
           configured: validation.results.filter(
-            (r) =>
+            (r: any) =>
               r.category === "security" &&
               (r.status === "configured" || r.status === "default")
           ).length,
           missing: validation.results.filter(
-            (r) => r.category === "security" && r.status === "missing"
+            (r: any) => r.category === "security" && r.status === "missing"
           ).length,
         },
       },

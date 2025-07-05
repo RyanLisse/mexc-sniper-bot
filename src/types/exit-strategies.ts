@@ -87,9 +87,11 @@ export const validateExitStrategy = (strategy: ExitStrategy): string[] => {
 
   // Check if target multipliers are in ascending order
   for (let i = 1; i < strategy.levels.length; i++) {
+    const currentLevel = strategy.levels[i];
+    const previousLevel = strategy.levels[i - 1];
+
     if (
-      strategy.levels[i].targetMultiplier <=
-      strategy.levels[i - 1].targetMultiplier
+      currentLevel?.targetMultiplier <= (previousLevel?.targetMultiplier ?? 0)
     ) {
       errors.push("Target multipliers must be in ascending order");
       break;

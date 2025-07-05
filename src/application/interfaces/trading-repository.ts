@@ -6,14 +6,6 @@
 import type { Trade } from "../../domain/entities/trading/trade";
 
 // Base interface types
-type ServiceResponse<T> = {
-  success: boolean;
-  data?: T;
-  error?: string;
-  timestamp?: number | string;
-  source?: string;
-};
-
 export interface TradingRepository {
   /**
    * Save a trade to persistence

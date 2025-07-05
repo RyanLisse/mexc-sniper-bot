@@ -4,27 +4,27 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { MexcApiClient } from '../../../../src/services/api/mexc-api-client';
-import { MexcAuthService } from '../../../../src/services/api/mexc-auth-service';
-import { MexcRequestService } from '../../../../src/services/api/mexc-request-service';
-import { MexcRetryService } from '../../../../src/services/api/mexc-retry-service';
-import { MexcTradingService } from '../../../../src/services/api/mexc-trading-service';
-import type { UnifiedMexcConfig } from '@/src/schemas/unified/mexc-api-schemas';
-import type { MexcRequestCache } from '../../../../src/services/api/mexc-request-cache';
-import type { CircuitBreaker } from '../../../../src/services/risk/circuit-breaker';
+import { MexcApiClient } from '@/services/api/mexc-api-client';
+import { MexcAuthService } from '@/services/api/mexc-auth-service';
+import { MexcRequestService } from '@/services/api/mexc-request-service';
+import { MexcRetryService } from '@/services/api/mexc-retry-service';
+import { MexcTradingService } from '@/services/api/mexc-trading-service';
+import type { UnifiedMexcConfig } from '@/schemas/unified/mexc-api-schemas';
+import type { MexcRequestCache } from '@/services/api/mexc-request-cache';
+import type { CircuitBreaker } from '@/services/risk/circuit-breaker';
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 // Mock the service dependencies
-vi.mock('../../../../src/services/api/mexc-auth-service');
-vi.mock('../../../../src/services/api/mexc-request-service');
-vi.mock('../../../../src/services/api/mexc-retry-service');
-vi.mock('../../../../src/services/api/mexc-trading-service');
+vi.mock('@/services/api/mexc-auth-service');
+vi.mock('@/services/api/mexc-request-service');
+vi.mock('@/services/api/mexc-retry-service');
+vi.mock('@/services/api/mexc-trading-service');
 
 describe('MexcApiClient', () => {
   let config: Required<UnifiedMexcConfig>;

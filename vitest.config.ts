@@ -31,6 +31,7 @@ const isIntegrationMode = TEST_TYPE === 'integration';
 const isStabilityMode = TEST_TYPE === 'stability';
 const isSupabaseMode = TEST_TYPE === 'supabase';
 const isSyncMode = TEST_TYPE === 'sync';
+const isE2EMode = TEST_TYPE === 'e2e';
 
 // Database configuration
 if (!process.env.DATABASE_URL) {
@@ -60,6 +61,7 @@ if (!process.env.DATABASE_URL) {
  * - stability: Zero-flaky-test focused configuration
  * - supabase: Supabase-specific auth and database tests
  * - sync: Single-threaded synchronous execution
+ * - e2e: End-to-end workflow testing
  */
 
 // Dynamic timeout configuration based on test type
@@ -95,6 +97,12 @@ const getTimeoutConfig = () => {
         hookTimeout: 5000,
         teardownTimeout: 5000,
       };
+    case 'e2e':
+      return {
+        testTimeout: isCI ? 180000 : 240000, // 3-4 minutes for complex workflows
+        hookTimeout: isCI ? 120000 : 150000, // 2-2.5 minutes for setup/teardown
+        teardownTimeout: isCI ? 60000 : 90000, // 1-1.5 minutes for cleanup
+      };
     default: // unit tests
       return {
         testTimeout: isCI ? 20000 : 30000,
@@ -128,6 +136,12 @@ const getTestIncludes = () => {
       ];
     case 'sync':
       return ['tests/unit/user-preferences.test.ts'];
+    case 'e2e':
+      return [
+        'tests/e2e/**/*.test.{js,ts,tsx}',
+        'tests/integration/**/*.e2e.test.{js,ts,tsx}',
+        'tests/workflows/**/*.test.{js,ts,tsx}',
+      ];
     default:
       return [
         'tests/unit/**/*.test.{js,ts,tsx}',
@@ -140,7 +154,7 @@ const getTestIncludes = () => {
 
 // Dynamic environment selection
 const getEnvironment = () => {
-  if (isPerformanceMode || isIntegrationMode || isSyncMode) {
+  if (isPerformanceMode || isIntegrationMode || isSyncMode || isE2EMode) {
     return 'node';
   }
   return 'jsdom'; // Default for React component tests
@@ -219,6 +233,21 @@ const getPoolConfig = () => {
     };
   }
 
+  if (isE2EMode) {
+    return {
+      pool: 'threads' as const,
+      poolOptions: {
+        threads: {
+          maxThreads: 1, // Single thread for deterministic E2E execution
+          minThreads: 1,
+          isolate: true,
+          useAtomics: true,
+          execArgv: ['--max-old-space-size=4096'], // More memory for E2E
+        },
+      },
+    };
+  }
+
   // Default configuration (unit tests)
   return {
     pool: 'threads' as const,
@@ -255,12 +284,19 @@ const getSetupFiles = () => {
     ];
   }
 
+  if (isE2EMode) {
+    return [
+      ...baseSetup,
+      './tests/setup/e2e-setup.ts'
+    ];
+  }
+
   // Default setup for unit, stability tests
   return [
     './tests/setup/react-dom-fix.ts', // Load React DOM fix FIRST
     ...baseSetup,
     './tests/utils/test-stability-utilities.ts',
-    './tests/utils/async-test-helpers.ts',
+    './tests/utils/async-utilities.ts',
     './tests/setup/hook-timeout-configuration.ts',
     './tests/setup/global-timeout-elimination.ts'
   ];
@@ -269,7 +305,7 @@ const getSetupFiles = () => {
 // Dynamic environment variables
 const getTestEnvironmentVars = () => {
   const baseEnv = {
-    NODE_ENV: 'test',
+    NODE_ENV: 'test' as const,
     VITEST: 'true',
     TEST_TYPE,
     DATABASE_URL: process.env.DATABASE_URL,
@@ -327,6 +363,27 @@ const getTestEnvironmentVars = () => {
       NEXT_PUBLIC_BASE_URL: 'http://localhost:3008',
       NEXT_PUBLIC_SUPABASE_URL: process.env.SUPABASE_URL,
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    };
+  }
+
+  if (isE2EMode) {
+    return {
+      ...baseEnv,
+      USE_REAL_DATABASE: process.env.USE_REAL_DATABASE || 'false',
+      FORCE_MOCK_DB: process.env.FORCE_MOCK_DB || 'true',
+      SKIP_AUTH_IN_TESTS: 'false', // Allow real auth flows in E2E
+      ENABLE_DEBUG_LOGGING: process.env.TEST_DEBUG || 'false',
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY || mockApiKeys.OPENAI_API_KEY,
+      MEXC_API_KEY: process.env.MEXC_API_KEY || mockApiKeys.MEXC_API_KEY,
+      MEXC_SECRET_KEY: process.env.MEXC_SECRET_KEY || mockApiKeys.MEXC_SECRET_KEY,
+      MEXC_BASE_URL: mockApiKeys.MEXC_BASE_URL,
+      PORT: process.env.TEST_PORT || '3010',
+      TEST_PORT: process.env.TEST_PORT || '3010',
+      NEXT_PUBLIC_BASE_URL: 'http://localhost:3010',
+      TEST_E2E_MODE: 'true',
+      ENABLE_E2E_WORKFLOWS: 'true',
+      DISABLE_RATE_LIMITING: 'true',
+      E2E_TIMEOUT_MULTIPLIER: '2',
     };
   }
 
@@ -412,6 +469,7 @@ export default defineConfig({
       if (isStabilityMode) return isCI ? 2 : 1;
       if (isSupabaseMode) return isCI ? 3 : 1;
       if (isSyncMode) return 0;
+      if (isE2EMode) return isCI ? 3 : 2; // Enhanced retry for flaky E2E scenarios
       return isCI ? 1 : 0;
     })(),
     
@@ -512,6 +570,14 @@ export default defineConfig({
           setupFiles: 'list',
         };
       }
+      if (isE2EMode) {
+        return {
+          concurrent: false, // Sequential execution for E2E
+          shuffle: false, // Maintain deterministic order
+          hooks: 'stack', // Sequential hook execution
+          setupFiles: 'list', // Sequential setup files
+        };
+      }
       if (isSyncMode) {
         return {
           concurrent: false,
@@ -534,12 +600,17 @@ export default defineConfig({
     maxConcurrency: (() => {
       if (isPerformanceMode) return 32;
       if (isIntegrationMode) return 2;
-      if (isStabilityMode) return safeParseInt(process.env.VITEST_MAX_CONCURRENCY, 4);
+      if (isStabilityMode) {
+        // FIXED: Ensure environment variable exists with explicit fallback
+        const envValue = process.env.VITEST_MAX_CONCURRENCY;
+        return safeParseInt(envValue || '4', 4);
+      }
       if (isSyncMode) return 1;
+      if (isE2EMode) return 1; // Single concurrency for E2E determinism
       return 8;
     })(),
     
-    fileParallelism: !isIntegrationMode && !isStabilityMode && !isSyncMode && (isCI ? false : true),
+    fileParallelism: !isIntegrationMode && !isStabilityMode && !isSyncMode && !isE2EMode && (isCI ? false : true),
     
     // Enhanced caching - using root-level cacheDir for Vitest 3.x compatibility
     
@@ -577,6 +648,7 @@ export default defineConfig({
     __INTEGRATION_TEST__: isIntegrationMode,
     __STABILITY_MODE__: isStabilityMode,
     __SUPABASE_TEST__: isSupabaseMode,
+    __E2E_TEST__: isE2EMode,
     global: 'globalThis',
   },
   
@@ -584,6 +656,15 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@/app': path.resolve(__dirname, './app'),
+      '@/components': path.resolve(__dirname, './src/components'),
+      '@/hooks': path.resolve(__dirname, './src/hooks'),
+      '@/lib': path.resolve(__dirname, './src/lib'),
+      '@/services': path.resolve(__dirname, './src/services'),
+      '@/db': path.resolve(__dirname, './src/db'),
+      '@/core': path.resolve(__dirname, './src/core'),
+      '@/domain': path.resolve(__dirname, './src/domain'),
+      '@/infrastructure': path.resolve(__dirname, './src/infrastructure'),
       '@tests': path.resolve(__dirname, './tests'),
       '@utils': path.resolve(__dirname, './tests/utils')
     }

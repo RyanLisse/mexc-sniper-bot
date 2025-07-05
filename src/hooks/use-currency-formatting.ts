@@ -9,7 +9,7 @@ export function useCurrencyFormatting() {
   const formatCurrency = useCallback(
     (amount: number | null | undefined, decimals = 2) => {
       // Handle null/undefined/NaN values
-      if (amount == null || isNaN(amount) || !isFinite(amount)) {
+      if (amount == null || Number.isNaN(amount) || !Number.isFinite(amount)) {
         return "0.00";
       }
 
@@ -35,7 +35,7 @@ export function useCurrencyFormatting() {
   const formatTokenAmount = useCallback(
     (amount: number | null | undefined, _asset?: string) => {
       // Handle null/undefined values early
-      if (amount == null || isNaN(amount) || !isFinite(amount)) {
+      if (amount == null || Number.isNaN(amount) || !Number.isFinite(amount)) {
         return "0.00";
       }
 
@@ -47,7 +47,7 @@ export function useCurrencyFormatting() {
 
   const formatPercentage = useCallback((value: number | null | undefined) => {
     // Handle null/undefined/NaN values
-    if (value == null || isNaN(value) || !isFinite(value)) {
+    if (value == null || Number.isNaN(value) || !Number.isFinite(value)) {
       return "0.0%";
     }
 
@@ -62,7 +62,7 @@ export function useCurrencyFormatting() {
   const formatBytes = useCallback(
     (bytes: number | null | undefined): string => {
       // Handle null/undefined/NaN values
-      if (bytes == null || isNaN(bytes) || !isFinite(bytes)) {
+      if (bytes == null || Number.isNaN(bytes) || !Number.isFinite(bytes)) {
         return "0.00 MB";
       }
 
@@ -78,7 +78,7 @@ export function useCurrencyFormatting() {
 
   const formatGrowthRate = useCallback(
     (rate: number | null | undefined): string => {
-      if (rate == null || isNaN(rate) || !isFinite(rate)) {
+      if (rate == null || Number.isNaN(rate) || !Number.isFinite(rate)) {
         return "N/A";
       }
 

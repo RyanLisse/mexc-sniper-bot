@@ -118,6 +118,19 @@ export const useAuth = () => {
     } = supabase.auth.onAuthStateChange(async (event, _session) => {
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         await fetchSession();
+
+        // CRITICAL FIX: Sync user with database on client-side auth state changes
+        if (event === "SIGNED_IN" && _session?.user) {
+          try {
+            // Call the session API which now includes user sync
+            await fetch("/api/auth/session", {
+              method: "GET",
+              credentials: "include",
+            });
+          } catch (syncError) {
+            console.error("Failed to trigger user sync on client:", syncError);
+          }
+        }
       } else if (event === "SIGNED_OUT") {
         setSession({
           isAuthenticated: false,

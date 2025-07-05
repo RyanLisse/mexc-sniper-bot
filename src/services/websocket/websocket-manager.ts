@@ -320,7 +320,32 @@ export class WebSocketManager extends BrowserCompatibleEventEmitter {
   private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
+
+      // FIXED: Add NaN validation to prevent TimeoutNaNWarning
+      const baseDelay =
+        typeof this.reconnectDelay === "number" &&
+        !Number.isNaN(this.reconnectDelay) &&
+        Number.isFinite(this.reconnectDelay)
+          ? this.reconnectDelay
+          : 1000; // Default 1 second
+
+      const exponent =
+        typeof this.reconnectAttempts === "number" &&
+        !Number.isNaN(this.reconnectAttempts) &&
+        Number.isFinite(this.reconnectAttempts)
+          ? Math.max(0, Math.min(this.reconnectAttempts - 1, 10)) // Cap exponent to prevent overflow
+          : 0;
+
+      const calculatedDelay = baseDelay * 2 ** exponent;
+
+      // Ensure delay is a valid positive number with reasonable bounds
+      const delay =
+        typeof calculatedDelay === "number" &&
+        !Number.isNaN(calculatedDelay) &&
+        Number.isFinite(calculatedDelay) &&
+        calculatedDelay > 0
+          ? Math.min(calculatedDelay, 60000) // Cap at 60 seconds maximum
+          : 1000; // Fallback to 1 second
 
       console.log(
         `Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`

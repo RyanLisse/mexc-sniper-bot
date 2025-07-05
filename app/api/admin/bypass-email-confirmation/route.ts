@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const targetUser = users.users.find((u) => u.email === email);
+    const targetUser = users.users.find((u: any) => u.email === email);
 
     if (!targetUser) {
       return apiResponse.error(`User not found with email: ${email}`, 404);

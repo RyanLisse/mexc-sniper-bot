@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import {
   MexcMarketDataClient,
-} from '../../../../src/services/api/mexc-market-data';
+} from '@/services/api/mexc-market-data';
 import type {
   CalendarEntry,
   ExchangeSymbol,
@@ -14,17 +14,17 @@ import type {
   Ticker,
   UnifiedMexcConfig,
   UnifiedMexcResponse,
-} from '../../../../src/services/api/mexc-client-types';
+} from '@/services/api/mexc-client-types';
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 // Mock dependencies
-vi.mock('../../../../src/services/risk/mexc-error-recovery-service', () => ({
+vi.mock('@/services/risk/mexc-error-recovery-service', () => ({
   getGlobalErrorRecoveryService: vi.fn(() => ({
     executeWithRecovery: vi.fn(),
   })),

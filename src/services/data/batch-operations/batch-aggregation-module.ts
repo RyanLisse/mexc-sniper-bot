@@ -155,10 +155,10 @@ export class BatchAggregationModule {
   ): Promise<T[]> {
     if (conditions.length === 0) return [];
 
-    const cacheKey =
+    const _cacheKey =
       options.cacheKey ||
       `bulk_select_${tableName}_${JSON.stringify(conditions).slice(0, 50)}`;
-    const cacheTTL = options.cacheTTL || 60000; // 1 minute default
+    const _cacheTTL = options.cacheTTL || 60000; // 1 minute default
 
     return await monitoredQuery(
       `bulk_select_${tableName}`,
@@ -221,7 +221,7 @@ export class BatchAggregationModule {
       const dateRange = this.getDateRange(startDate, endDate, timeframe);
 
       // Build dynamic query
-      const groupByClause = groupBy ? groupBy.join(", ") + ", " : "";
+      const groupByClause = groupBy ? `${groupBy.join(", ")}, ` : "";
       const selectClause = [
         `${timeGrouping}(${dateColumn}) as time_bucket`,
         ...(groupBy || []),
@@ -235,12 +235,12 @@ export class BatchAggregationModule {
 
       if (filters && Object.keys(filters).length > 0) {
         const filterConditions = Object.entries(filters).map(
-          ([key, value], index) => {
+          ([key, value], _index) => {
             parameters.push(value);
             return `${key} = $${parameters.length}`;
           }
         );
-        whereClause += " AND " + filterConditions.join(" AND ");
+        whereClause += ` AND ${filterConditions.join(" AND ")}`;
       }
 
       const query = `

@@ -5,11 +5,6 @@
  * Verifies all 5 TypeScript agents are operational
  */
 
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
-
 import { CalendarAgent } from "./calendar-agent.js";
 import { MexcApiAgent } from "./mexc-api-agent.js";
 import { MexcOrchestrator } from "./orchestrator.js";

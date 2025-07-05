@@ -4,15 +4,15 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { Validators } from '../../../src/lib/validators';
-import { ValidationError } from '../../../src/lib/error-utils';
+import { Validators } from '@/lib/validators';
+import { ValidationError } from '@/lib/error-utils';
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 describe('Validators', () => {
   describe('takeProfitLevel', () => {

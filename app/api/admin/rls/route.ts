@@ -1,5 +1,7 @@
 import type { NextRequest } from "next/server";
 import { apiResponse } from "@/src/lib/api-response";
+// CRITICAL: Build isolation to prevent 61s build times
+import { withBuildIsolation } from "@/src/lib/build-isolation-manager";
 import { requireAuth } from "@/src/lib/supabase-auth";
 import {
   applyRLSMigration,
@@ -16,7 +18,7 @@ import {
  * POST /api/admin/rls - Apply RLS migration or run tests
  */
 
-export async function GET(request: NextRequest) {
+async function getHandler(request: NextRequest) {
   try {
     // Verify authentication
     const user = await requireAuth();
@@ -53,7 +55,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function postHandler(request: NextRequest) {
   try {
     // Verify authentication
     const user = await requireAuth();
@@ -187,3 +189,7 @@ export async function POST(request: NextRequest) {
     return apiResponse.error("Failed to execute RLS operation", 500);
   }
 }
+
+// Export handlers wrapped with build isolation
+export const GET = withBuildIsolation(getHandler);
+export const POST = withBuildIsolation(postHandler);

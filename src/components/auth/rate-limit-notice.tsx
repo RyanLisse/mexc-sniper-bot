@@ -3,10 +3,6 @@
 import { AlertTriangle, Clock, Mail, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
-import {
   type RateLimitInfo,
   SupabaseRateLimitHandler,
 } from "@/src/lib/supabase-rate-limit-handler";

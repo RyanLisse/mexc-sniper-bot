@@ -16,9 +16,10 @@ export {
   alertNotifications,
   alertRules,
   alertSuppressions,
+  anomalyModels,
   escalationPolicies,
   notificationChannels,
-} from "./alerts-schema";
+} from "./alerts";
 // API & Credentials
 export { apiCredentials } from "./api-schema";
 // Authentication & User Management
@@ -28,14 +29,12 @@ export {
   user,
   userPreferences,
   verification,
-} from "./auth-schema";
+} from "./auth";
 // Machine Learning & Pattern Detection
 export {
-  anomalyModels,
   patternEmbeddings,
   patternSimilarityCache,
 } from "./ml-schema";
-
 // Monitoring & Performance
 export {
   agentPerformanceMetrics,
@@ -58,6 +57,16 @@ export {
   strategyPhaseExecutions,
   strategyTemplates,
 } from "./strategy-schema";
+// Supabase Authentication
+export {
+  coinActivities as supabaseCoinActivities,
+  snipeTargets as supabaseSnipeTargets,
+  userPreferences as supabaseUserPreferences,
+  userRoles,
+  users as supabaseUsers,
+  workflowActivity as supabaseWorkflowActivity,
+  workflowSystemStatus as supabaseWorkflowSystemStatus,
+} from "./supabase-auth";
 // Additional trading tables from legacy trading.ts
 export {
   balanceSnapshots,
@@ -183,6 +192,10 @@ export type {
   InferSelectModel,
 } from "drizzle-orm";
 
+// ==========================================
+// TYPE EXPORTS
+// ==========================================
+
 export {
   and,
   asc,
@@ -207,3 +220,59 @@ export {
   relations,
   sql,
 } from "drizzle-orm";
+// Alert Types
+export type {
+  AlertAnalytics,
+  AlertCorrelation,
+  AlertInstance,
+  AlertNotification,
+  AlertRule,
+  AlertSuppression,
+  AnomalyModel,
+  EscalationPolicy,
+  InsertAlertCorrelation,
+  InsertAlertInstance,
+  NewAlertAnalytics,
+  NewAlertCorrelation,
+  NewAlertInstance,
+  NewAlertNotification,
+  NewAlertRule,
+  NewAlertSuppression,
+  NewAnomalyModel,
+  NewEscalationPolicy,
+  NewNotificationChannel,
+  NotificationChannel,
+  // Legacy types
+  SelectAlertCorrelation,
+  SelectAlertInstance,
+} from "./alerts";
+// Auth Types
+export type {
+  Account,
+  NewAccount,
+  NewSession,
+  NewUser,
+  NewUserPreferences,
+  NewVerification,
+  Session,
+  User,
+  UserPreferences,
+  Verification,
+} from "./auth";
+// Supabase Auth Types
+export type {
+  CoinActivity,
+  NewCoinActivity,
+  NewSnipeTarget,
+  NewUser as NewSupabaseUser,
+  NewUserPreferences as NewSupabaseUserPreferences,
+  NewUserRole,
+  NewWorkflowActivity,
+  NewWorkflowSystemStatus,
+  SnipeTarget,
+  User as SupabaseUser,
+  UserPreferences as SupabaseUserPreferences,
+  UserRole,
+  WorkflowActivity,
+  WorkflowSystemStatus,
+} from "./supabase-auth";

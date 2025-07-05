@@ -8,11 +8,11 @@
 
 import { and, eq, gte, lte } from "drizzle-orm";
 import { db } from "@/src/db";
+import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 import {
   balanceSnapshots,
   portfolioSummary,
 } from "@/src/db/schemas/supabase-trading";
-import { snipeTargets } from "@/src/db/schemas/supabase-auth";
 
 async function main() {
   try {

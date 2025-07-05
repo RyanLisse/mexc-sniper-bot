@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * MEXC Authentication Service
  *
@@ -444,10 +440,18 @@ export class MexcAuthenticationService {
     const metrics = this.getMetrics();
     const recommendations: string[] = [];
 
-    // Test credentials if not recently tested
+    // Test credentials if not recently tested - FIXED: Add NaN validation
+    const safeTestInterval =
+      typeof this.config.testIntervalMs === "number" &&
+      !Number.isNaN(this.config.testIntervalMs) &&
+      Number.isFinite(this.config.testIntervalMs) &&
+      this.config.testIntervalMs > 0
+        ? this.config.testIntervalMs
+        : 300000; // Default 5 minutes
+
     const testStale =
       !status.lastTestedAt ||
-      Date.now() - status.lastTestedAt.getTime() > this.config.testIntervalMs!;
+      Date.now() - status.lastTestedAt.getTime() > safeTestInterval;
 
     if (testStale && status.hasCredentials) {
       await this.testCredentials();
@@ -548,20 +552,36 @@ export class MexcAuthenticationService {
       this.status.failureCount++;
       this.metrics.failedTests++;
 
-      // Block authentication if too many failures
-      if (this.status.failureCount >= this.config.maxAuthFailures!) {
+      // Block authentication if too many failures - FIXED: Add NaN validation
+      const safeMaxAuthFailures =
+        typeof this.config.maxAuthFailures === "number" &&
+        !Number.isNaN(this.config.maxAuthFailures) &&
+        Number.isFinite(this.config.maxAuthFailures) &&
+        this.config.maxAuthFailures > 0
+          ? this.config.maxAuthFailures
+          : 5; // Default 5 failures
+
+      if (this.status.failureCount >= safeMaxAuthFailures) {
         this.status.isBlocked = true;
         this.status.blockReason = `Too many authentication failures (${this.status.failureCount})`;
         this.stopPeriodicTesting(); // Stop periodic testing when blocked
 
-        // Schedule automatic unblock
+        // Schedule automatic unblock - FIXED: Add NaN validation to prevent TimeoutNaNWarning
+        const safeAuthFailureResetMs =
+          typeof this.config.authFailureResetMs === "number" &&
+          !Number.isNaN(this.config.authFailureResetMs) &&
+          Number.isFinite(this.config.authFailureResetMs) &&
+          this.config.authFailureResetMs > 0
+            ? this.config.authFailureResetMs
+            : 600000; // Default 10 minutes
+
         setTimeout(() => {
           if (this.status.isBlocked) {
             this.status.isBlocked = false;
             this.status.blockReason = undefined;
             this.status.failureCount = 0;
           }
-        }, this.config.authFailureResetMs!);
+        }, safeAuthFailureResetMs);
       }
     }
 
@@ -590,11 +610,20 @@ export class MexcAuthenticationService {
       return;
     }
 
+    // FIXED: Add NaN validation to prevent TimeoutNaNWarning
+    const safeTestIntervalMs =
+      typeof this.config.testIntervalMs === "number" &&
+      !Number.isNaN(this.config.testIntervalMs) &&
+      Number.isFinite(this.config.testIntervalMs) &&
+      this.config.testIntervalMs > 0
+        ? this.config.testIntervalMs
+        : 300000; // Default 5 minutes
+
     this.testTimer = setInterval(async () => {
       if (this.status.hasCredentials && !this.status.isBlocked) {
         await this.testCredentials();
       }
-    }, this.config.testIntervalMs!);
+    }, safeTestIntervalMs);
   }
 
   /**

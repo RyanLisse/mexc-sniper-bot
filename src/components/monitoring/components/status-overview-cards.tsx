@@ -6,7 +6,6 @@
  */
 
 import { AlertTriangle, Clock, TrendingUp } from "lucide-react";
-import React from "react";
 import { Card, CardContent } from "@/src/components/ui/card";
 import type { ProductionMetrics } from "../types/monitoring-types";
 import {

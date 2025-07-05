@@ -6,10 +6,7 @@
 import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { UnifiedMexcServiceV2 } from "@/src/services/api/unified-mexc-service-v2";
-import type {
-  ServiceResponse,
-  TradeResult,
-} from "../consolidated/core-trading/types";
+import type { TradeResult } from "../consolidated/core-trading/types";
 
 export interface AutoSnipeTarget {
   id: string;

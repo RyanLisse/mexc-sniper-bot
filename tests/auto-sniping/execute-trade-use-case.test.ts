@@ -8,7 +8,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 const createMocks = () => {
   const repo: TradingRepository = {

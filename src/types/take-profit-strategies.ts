@@ -234,7 +234,7 @@ export function createCustomTakeProfitLevel(
     profitPercentage,
     sellQuantity,
     isActive: true,
-    description,
+    description: description ?? undefined,
   };
 }
 

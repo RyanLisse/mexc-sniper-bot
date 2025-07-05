@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Supabase Row Level Security (RLS) Management
  *
@@ -11,8 +7,8 @@ import {
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { createClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/src/db";
+import { getSupabaseBrowserClient } from "./supabase-client-manager";
 
 interface RLSPolicyCheck {
   tableName: string;
@@ -176,17 +172,17 @@ export async function testRLSPolicies(userId: string): Promise<{
   const errors: string[] = [];
 
   try {
-    // Create a client with the user's authentication
-    const userClient = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      }
-    );
+    // Use centralized client manager to prevent multiple GoTrueClient instances
+    const userClient = getSupabaseBrowserClient();
+
+    if (!userClient) {
+      errors.push("Cannot create user client in server environment");
+      return {
+        success: false,
+        results,
+        errors,
+      };
+    }
 
     // Test 1: User can access their own data
     try {

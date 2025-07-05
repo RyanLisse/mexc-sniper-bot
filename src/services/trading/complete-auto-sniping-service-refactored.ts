@@ -8,11 +8,8 @@
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { db } from "@/src/db";
 import type { SnipeTarget } from "@/src/db/schemas/supabase-auth";
-import {
-  executionHistory,
-  transactions,
-} from "@/src/db/schemas/supabase-trading";
 import { snipeTargets } from "@/src/db/schemas/supabase-auth";
+import { executionHistory } from "@/src/db/schemas/supabase-trading";
 
 import { BrowserCompatibleEventEmitter } from "@/src/lib/browser-compatible-events";
 import { toSafeError } from "@/src/lib/error-type-utils";
@@ -460,7 +457,7 @@ export class CompleteAutoSnipingServiceRefactored extends BrowserCompatibleEvent
         failedTargets: failed.length,
         totalExecutions: totalExecutions.length,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         pendingTargets: 0,
         executedTargets: 0,

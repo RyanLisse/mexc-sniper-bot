@@ -9,7 +9,7 @@
  */
 
 import { spawn, ChildProcess } from "child_process";
-import { startTestServer, cleanupWithTimeout, safeFetch, ServerConfig } from "./async-test-helpers";
+import { startTestServer, cleanupWithTimeout, safeFetch, ServerConfig } from "./async-utilities";
 
 export interface TestServerManager {
   isReady: boolean;

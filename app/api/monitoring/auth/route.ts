@@ -6,8 +6,8 @@
  * and external monitoring services.
  */
 
-import { createClient } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
+import { getSupabaseAdminClient } from "@/src/lib/supabase-client-manager";
 
 interface MonitoringMetrics {
   timestamp: string;
@@ -143,14 +143,8 @@ function generateMockMetrics(): AuthMonitoringData {
 
 async function validateAuthenticationState() {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !serviceRoleKey) {
-      throw new Error("Missing required Supabase environment variables");
-    }
-
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    // Use centralized admin client to prevent multiple GoTrueClient instances
+    const supabase = getSupabaseAdminClient();
 
     const startTime = Date.now();
     const {

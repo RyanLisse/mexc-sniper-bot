@@ -20,7 +20,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../utils/timeout-elimination-helpers';
+} from '../../utils/timeout-utilities';
 
 // Mock external dependencies
 vi.mock('../../src/lib/supabase-auth')

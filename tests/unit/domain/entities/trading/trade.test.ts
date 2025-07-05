@@ -18,7 +18,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../../utils/timeout-elimination-helpers';
+} from '../../../../utils/timeout-utilities';
 
 describe('Trade Domain Entity', () => {
   let validTradeProps: any;
@@ -44,7 +44,7 @@ describe('Trade Domain Entity', () => {
 
   describe('Trade Creation', () => {
     it('should create a valid trade with required props', () => {
-      const trade = new Trade(validTradeProps);
+      const trade = Trade.fromExisting(validTradeProps);
 
       expect(trade.id).toBe(validTradeProps.id);
       expect(trade.userId).toBe(validTradeProps.userId);
@@ -67,7 +67,7 @@ describe('Trade Domain Entity', () => {
         updatedAt: new Date(),
       };
 
-      const trade = new Trade(minimalProps);
+      const trade = Trade.fromExisting(minimalProps);
 
       expect(trade.id).toBe(minimalProps.id);
       expect(trade.userId).toBe(minimalProps.userId);
@@ -82,7 +82,7 @@ describe('Trade Domain Entity', () => {
         id: '', // Empty id - may be acceptable depending on business rules
       };
 
-      expect(() => new Trade(propsWithEmptyId)).not.toThrow();
+      expect(() => Trade.fromExisting(propsWithEmptyId)).not.toThrow();
     });
 
     it('should accept any string userId (validation delegated to business layer)', () => {
@@ -91,7 +91,7 @@ describe('Trade Domain Entity', () => {
         userId: '', // Empty userId - may be acceptable depending on business rules
       };
 
-      expect(() => new Trade(propsWithEmptyUserId)).not.toThrow();
+      expect(() => Trade.fromExisting(propsWithEmptyUserId)).not.toThrow();
     });
 
     it('should accept any string symbol (validation delegated to business layer)', () => {
@@ -100,7 +100,7 @@ describe('Trade Domain Entity', () => {
         symbol: '', // Empty symbol - may be acceptable depending on business rules
       };
 
-      expect(() => new Trade(propsWithEmptySymbol)).not.toThrow();
+      expect(() => Trade.fromExisting(propsWithEmptySymbol)).not.toThrow();
     });
 
     it('should reject trade with invalid confidence score', () => {
@@ -109,7 +109,7 @@ describe('Trade Domain Entity', () => {
         confidenceScore: 150, // > 100
       };
 
-      expect(() => new Trade(invalidProps)).toThrow(DomainValidationError);
+      expect(() => Trade.fromExisting(invalidProps)).toThrow(DomainValidationError);
     });
 
     it('should reject trade with negative confidence score', () => {
@@ -118,7 +118,7 @@ describe('Trade Domain Entity', () => {
         confidenceScore: -10, // < 0
       };
 
-      expect(() => new Trade(invalidProps)).toThrow(DomainValidationError);
+      expect(() => Trade.fromExisting(invalidProps)).toThrow(DomainValidationError);
     });
   });
 
@@ -126,7 +126,7 @@ describe('Trade Domain Entity', () => {
     let trade: Trade;
 
     beforeEach(() => {
-      trade = new Trade(validTradeProps);
+      trade = Trade.fromExisting(validTradeProps);
     });
 
     it('should start execution and change status', () => {
@@ -188,7 +188,7 @@ describe('Trade Domain Entity', () => {
     let mockOrder: any;
 
     beforeEach(() => {
-      trade = new Trade(validTradeProps);
+      trade = Trade.fromExisting(validTradeProps);
       mockOrder = {
         id: 'order-123',
         side: OrderSide.BUY,
@@ -243,7 +243,7 @@ describe('Trade Domain Entity', () => {
     let trade: Trade;
 
     beforeEach(() => {
-      trade = new Trade(validTradeProps);
+      trade = Trade.fromExisting(validTradeProps);
     });
 
     it('should validate stop loss percentage', () => {
@@ -289,7 +289,7 @@ describe('Trade Domain Entity', () => {
         totalCost: { amount: 1000, isZero: () => false } as any,
       };
       
-      const trade = new Trade(tradeWithPnL);
+      const trade = Trade.fromExisting(tradeWithPnL);
       const pnlPercentage = trade.calculatePnLPercentage();
 
       expect(pnlPercentage).toBe(10); // 100/1000 * 100 = 10%
@@ -304,7 +304,7 @@ describe('Trade Domain Entity', () => {
         confidenceScore: undefined, // Missing confidence score
       };
 
-      expect(() => new Trade(autoSnipeWithoutConfidence)).toThrow(BusinessRuleViolationError);
+      expect(() => Trade.fromExisting(autoSnipeWithoutConfidence)).toThrow(BusinessRuleViolationError);
     });
 
     it('should allow manual trades without confidence score', () => {
@@ -314,7 +314,7 @@ describe('Trade Domain Entity', () => {
         confidenceScore: undefined,
       };
 
-      expect(() => new Trade(manualTradeProps)).not.toThrow();
+      expect(() => Trade.fromExisting(manualTradeProps)).not.toThrow();
     });
 
     it('should validate stop loss percentage range', () => {
@@ -323,7 +323,7 @@ describe('Trade Domain Entity', () => {
         stopLossPercent: 150, // > 100%
       };
 
-      expect(() => new Trade(invalidStopLossProps)).toThrow(BusinessRuleViolationError);
+      expect(() => Trade.fromExisting(invalidStopLossProps)).toThrow(BusinessRuleViolationError);
     });
 
     it('should validate negative take profit percentage', () => {
@@ -332,7 +332,7 @@ describe('Trade Domain Entity', () => {
         takeProfitPercent: -10, // Negative
       };
 
-      expect(() => new Trade(invalidTakeProfitProps)).toThrow(BusinessRuleViolationError);
+      expect(() => Trade.fromExisting(invalidTakeProfitProps)).toThrow(BusinessRuleViolationError);
     });
 
     it('should validate status consistency for completed trades', () => {
@@ -342,7 +342,7 @@ describe('Trade Domain Entity', () => {
         executionCompletedAt: undefined, // Missing for completed status
       };
 
-      expect(() => new Trade(inconsistentProps)).toThrow(BusinessRuleViolationError);
+      expect(() => Trade.fromExisting(inconsistentProps)).toThrow(BusinessRuleViolationError);
     });
   });
 
@@ -350,7 +350,7 @@ describe('Trade Domain Entity', () => {
     let trade: Trade;
 
     beforeEach(() => {
-      trade = new Trade(validTradeProps);
+      trade = Trade.fromExisting(validTradeProps);
       trade.clearDomainEvents(); // Clear any creation events
     });
 
@@ -399,7 +399,7 @@ describe('Trade Domain Entity', () => {
     let trade: Trade;
 
     beforeEach(() => {
-      trade = new Trade(validTradeProps);
+      trade = Trade.fromExisting(validTradeProps);
     });
 
     it('should maintain immutable id', () => {
@@ -445,7 +445,7 @@ describe('Trade Domain Entity', () => {
     let trade: Trade;
 
     beforeEach(() => {
-      trade = new Trade(validTradeProps);
+      trade = Trade.fromExisting(validTradeProps);
     });
 
     it('should serialize to plain object', () => {
@@ -458,7 +458,7 @@ describe('Trade Domain Entity', () => {
     });
 
     it('should handle existing notes correctly', () => {
-      const tradeWithNotes = new Trade({
+      const tradeWithNotes = Trade.fromExisting({
         ...validTradeProps,
         notes: 'Existing notes',
       });
@@ -479,7 +479,7 @@ describe('Trade Domain Entity', () => {
       const startTime = Date.now();
       
       for (let i = 0; i < 100; i++) {
-        new Trade({
+        Trade.fromExisting({
           ...validTradeProps,
           id: `trade-${i}`,
         });
@@ -490,7 +490,7 @@ describe('Trade Domain Entity', () => {
     });
 
     it('should access trade properties efficiently', () => {
-      const trade = new Trade(validTradeProps);
+      const trade = Trade.fromExisting(validTradeProps);
       const startTime = Date.now();
       
       // Perform multiple property accesses

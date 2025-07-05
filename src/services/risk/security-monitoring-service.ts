@@ -1,8 +1,4 @@
 import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
-import {
   getSecurityEvents,
   isIPSuspicious,
   logSecurityEvent,

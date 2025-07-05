@@ -110,7 +110,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     const realtimeMetrics = tradingMetricsCollector.getRealtimeMetrics();
 
     // Calculate health score
-    const health = calculateSystemHealth(performanceReport, tradingPerformance);
+    const health = calculateSystemHealth(performanceReport as any, tradingPerformance as any);
 
     const metrics: MetricsResponse = {
       timestamp: new Date().toISOString(),

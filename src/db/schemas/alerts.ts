@@ -46,8 +46,12 @@ export const alertRules = pgTable("alert_rules", {
   customFields: text("custom_fields"), // JSON object
 
   // Timestamps
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   createdBy: text("created_by").notNull(),
 });
 
@@ -80,16 +84,20 @@ export const alertInstances = pgTable("alert_instances", {
 
   // Escalation
   escalationLevel: integer("escalation_level").default(0),
-  lastEscalatedAt: timestamp("last_escalated_at"),
+  lastEscalatedAt: timestamp("last_escalated_at", { withTimezone: true }),
 
   // Resolution
-  resolvedAt: timestamp("resolved_at"),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   resolvedBy: text("resolved_by"),
   resolutionNotes: text("resolution_notes"),
 
   // Timestamps
-  firstTriggeredAt: timestamp("first_triggered_at").notNull(),
-  lastTriggeredAt: timestamp("last_triggered_at").notNull(),
+  firstTriggeredAt: timestamp("first_triggered_at", {
+    withTimezone: true,
+  }).notNull(),
+  lastTriggeredAt: timestamp("last_triggered_at", {
+    withTimezone: true,
+  }).notNull(),
 
   // Metadata
   additionalData: text("additional_data"), // JSON object
@@ -121,8 +129,12 @@ export const notificationChannels = pgTable("notification_channels", {
   titleTemplate: text("title_template"),
 
   // Timestamps
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   createdBy: text("created_by").notNull(),
 });
 
@@ -139,8 +151,12 @@ export const escalationPolicies = pgTable("escalation_policies", {
   isEnabled: boolean("is_enabled").default(true),
 
   // Timestamps
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   createdBy: text("created_by").notNull(),
 });
 
@@ -191,9 +207,9 @@ export const alertCorrelations = pgTable("alert_correlations", {
   confidence: real("confidence"), // 0-1 confidence score
 
   // Timestamps
-  firstAlertAt: timestamp("first_alert_at").notNull(),
-  lastAlertAt: timestamp("last_alert_at").notNull(),
-  resolvedAt: timestamp("resolved_at"),
+  firstAlertAt: timestamp("first_alert_at", { withTimezone: true }).notNull(),
+  lastAlertAt: timestamp("last_alert_at", { withTimezone: true }).notNull(),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 });
 
 // Alert Suppressions (for planned maintenance, etc.)
@@ -210,14 +226,16 @@ export const alertSuppressions = pgTable("alert_suppressions", {
   tagFilter: text("tag_filter"), // JSON array of tags
 
   // Schedule
-  startsAt: timestamp("starts_at").notNull(),
-  endsAt: timestamp("ends_at").notNull(),
+  startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
+  endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
 
   // Status
   isActive: boolean("is_active").default(true),
 
   // Timestamps
-  createdAt: timestamp("created_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   createdBy: text("created_by").notNull(),
 });
 
@@ -231,8 +249,12 @@ export const anomalyModels = pgTable("anomaly_models", {
   parameters: text("parameters").notNull(), // JSON object
 
   // Training Data
-  trainingDataFrom: timestamp("training_data_from").notNull(),
-  trainingDataTo: timestamp("training_data_to").notNull(),
+  trainingDataFrom: timestamp("training_data_from", {
+    withTimezone: true,
+  }).notNull(),
+  trainingDataTo: timestamp("training_data_to", {
+    withTimezone: true,
+  }).notNull(),
   sampleCount: integer("sample_count").notNull(),
 
   // Performance Metrics
@@ -248,11 +270,15 @@ export const anomalyModels = pgTable("anomaly_models", {
 
   // Status
   isActive: boolean("is_active").default(true),
-  lastTrainedAt: timestamp("last_trained_at").notNull(),
+  lastTrainedAt: timestamp("last_trained_at", { withTimezone: true }).notNull(),
 
   // Timestamps
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 // Alert Analytics (for tracking performance and trends)
@@ -261,7 +287,7 @@ export const alertAnalytics = pgTable("alert_analytics", {
 
   // Time Bucket
   bucket: text("bucket").notNull(), // hourly, daily, weekly
-  timestamp: timestamp("timestamp").notNull(),
+  timestamp: timestamp("timestamp", { withTimezone: true }).notNull(),
 
   // Metrics
   totalAlerts: integer("total_alerts").default(0),
@@ -569,3 +595,34 @@ export type SelectAlertCorrelation = {
   lastAlertAt: Date;
   resolvedAt: Date | null;
 };
+
+// ==========================================
+// DRIZZLE TYPES (Inferred from Schema)
+// ==========================================
+
+export type AlertRule = typeof alertRules.$inferSelect;
+export type NewAlertRule = typeof alertRules.$inferInsert;
+
+export type AlertInstance = typeof alertInstances.$inferSelect;
+export type NewAlertInstance = typeof alertInstances.$inferInsert;
+
+export type NotificationChannel = typeof notificationChannels.$inferSelect;
+export type NewNotificationChannel = typeof notificationChannels.$inferInsert;
+
+export type EscalationPolicy = typeof escalationPolicies.$inferSelect;
+export type NewEscalationPolicy = typeof escalationPolicies.$inferInsert;
+
+export type AlertNotification = typeof alertNotifications.$inferSelect;
+export type NewAlertNotification = typeof alertNotifications.$inferInsert;
+
+export type AlertCorrelation = typeof alertCorrelations.$inferSelect;
+export type NewAlertCorrelation = typeof alertCorrelations.$inferInsert;
+
+export type AlertSuppression = typeof alertSuppressions.$inferSelect;
+export type NewAlertSuppression = typeof alertSuppressions.$inferInsert;
+
+export type AnomalyModel = typeof anomalyModels.$inferSelect;
+export type NewAnomalyModel = typeof anomalyModels.$inferInsert;
+
+export type AlertAnalytics = typeof alertAnalytics.$inferSelect;
+export type NewAlertAnalytics = typeof alertAnalytics.$inferInsert;

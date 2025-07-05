@@ -10,7 +10,7 @@
  */
 
 import { vi } from 'vitest';
-import { TIMEOUT_CONFIG } from '../utils/timeout-elimination-helpers';
+import { TIMEOUT_CONFIG } from '../utils/timeout-utilities';
 
 // AGGRESSIVE GLOBAL TIMEOUT CONFIGURATION
 const GLOBAL_TIMEOUT_ELIMINATION = {
@@ -49,19 +49,45 @@ if (typeof globalThis !== 'undefined') {
   globalThis.MAX_TIMEOUT = GLOBAL_TIMEOUT_ELIMINATION.ABSOLUTE_MAXIMUM;
 }
 
-// ENVIRONMENT VARIABLE OVERRIDES FOR MAXIMUM TIMEOUT VALUES
+// ENVIRONMENT VARIABLE OVERRIDES FOR MAXIMUM TIMEOUT VALUES - SET IMMEDIATELY
+// Set these BEFORE any timeout configuration to prevent NaN warnings
 process.env.VITEST_TEST_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT);
-process.env.VITEST_HOOK_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);
+process.env.VITEST_HOOK_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);  
 process.env.VITEST_TEARDOWN_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);
+
+// CRITICAL: Set any other timeout-related env vars that might be used
+process.env.TEST_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_TEST_TIMEOUT);
+process.env.HOOK_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);
+process.env.TEARDOWN_TIMEOUT = String(GLOBAL_TIMEOUT_ELIMINATION.DEFAULT_HOOK_TIMEOUT);
 
 // OVERRIDE NODE.JS DEFAULT TIMEOUTS
 if (typeof setTimeout !== 'undefined') {
   // Increase Node.js default timeout for async operations
   const originalSetTimeout = setTimeout;
   globalThis.setTimeout = ((callback: (...args: any[]) => void, ms?: number, ...args: any[]) => {
-    // Ensure minimum timeout for test stability - FIXED: Prevent NaN values
+    // Ensure minimum timeout for test stability - ENHANCED: More comprehensive NaN prevention
     const minTimeout = 100; // 100ms minimum
-    const safeMsValue = typeof ms === 'number' && !isNaN(ms) && isFinite(ms) ? ms : minTimeout;
+    
+    // More robust NaN prevention and validation with additional edge cases
+    let safeMsValue: number;
+    if (ms === null || ms === undefined || ms === '') {
+      safeMsValue = minTimeout;
+    } else if (typeof ms === 'string') {
+      // Handle string values that might be passed
+      const parsedMs = parseFloat(ms);
+      if (isNaN(parsedMs) || !isFinite(parsedMs) || parsedMs < 0) {
+        console.warn(`GLOBAL_TIMEOUT_ELIMINATION: Invalid string timeout value "${ms}", using ${minTimeout}ms`);
+        safeMsValue = minTimeout;
+      } else {
+        safeMsValue = parsedMs;
+      }
+    } else if (typeof ms === 'number' && !isNaN(ms) && isFinite(ms) && ms >= 0) {
+      safeMsValue = ms;
+    } else {
+      console.warn(`GLOBAL_TIMEOUT_ELIMINATION: Invalid timeout value ${ms} (type: ${typeof ms}), using ${minTimeout}ms`);
+      safeMsValue = minTimeout;
+    }
+    
     const actualTimeout = Math.max(safeMsValue, minTimeout);
     return originalSetTimeout(callback, actualTimeout, ...args);
   }) as typeof setTimeout;

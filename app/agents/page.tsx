@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { OptimizedAgentsDashboard } from "@/src/components/optimized-agents-dashboard";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { OptimizedAgentsDashboard } from "@/components/optimized-agents-dashboard";
 
 export default function AgentsPage() {
   return (

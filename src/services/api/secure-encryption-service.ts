@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Secure Encryption Service for API Credentials
  *
@@ -13,8 +9,6 @@ import {
  * - Key rotation capability
  * - Secure key storage patterns
  */
-
-import { UniversalCrypto } from "@/src/lib/browser-compatible-events";
 
 // Constants for cryptographic operations
 const ALGORITHM = "aes-256-gcm";

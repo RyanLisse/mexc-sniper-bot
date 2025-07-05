@@ -251,7 +251,7 @@ export class StrategyHealthService {
 
   private async performSingleHealthAssessment(
     strategy: any,
-    checkType: string
+    _checkType: string
   ) {
     const healthChecks = {
       performance: await this.checkPerformanceHealth(strategy),
@@ -496,7 +496,7 @@ export class StrategyHealthService {
 
   private async identifyRiskFactors(
     strategy: any,
-    assessmentType: string
+    _assessmentType: string
   ): Promise<RiskFactor[]> {
     const factors: RiskFactor[] = [];
 
@@ -588,7 +588,7 @@ export class StrategyHealthService {
     return recommendations;
   }
 
-  private async generateMitigationAction(factor: RiskFactor, strategy: any) {
+  private async generateMitigationAction(factor: RiskFactor, _strategy: any) {
     return {
       factorCategory: factor.category,
       action: this.getMitigationActionForCategory(factor.category),
@@ -644,7 +644,7 @@ export class StrategyHealthService {
   }
 
   private async reducePositionSizes(
-    strategyId: string,
+    _strategyId: string,
     reductionFactor: number
   ) {
     return {
@@ -655,7 +655,7 @@ export class StrategyHealthService {
     };
   }
 
-  private async enableEnhancedMonitoring(strategyId: string) {
+  private async enableEnhancedMonitoring(_strategyId: string) {
     return {
       action: "enhanced_monitoring",
       status: "enabled",
@@ -663,7 +663,7 @@ export class StrategyHealthService {
     };
   }
 
-  private async implementEmergencyStopLoss(strategyId: string) {
+  private async implementEmergencyStopLoss(_strategyId: string) {
     return {
       action: "emergency_stop_loss",
       status: "implemented",
@@ -672,8 +672,8 @@ export class StrategyHealthService {
   }
 
   private async notifyRiskManagementTeam(
-    strategyId: string,
-    riskAssessment: RiskAssessment
+    _strategyId: string,
+    _riskAssessment: RiskAssessment
   ) {
     return {
       action: "risk_team_notification",
@@ -707,7 +707,7 @@ export class StrategyHealthService {
     return Math.max(1, Math.min(10, baseScore + riskAdjustment));
   }
 
-  private calculateExecutionFrequency(strategy: any): string {
+  private calculateExecutionFrequency(_strategy: any): string {
     // Simplified frequency calculation
     return "daily"; // Would be calculated based on execution history
   }

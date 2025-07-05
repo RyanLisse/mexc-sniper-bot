@@ -2,7 +2,10 @@ import { and, eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { db } from "@/src/db";
 import type { NewExecutionHistory } from "@/src/db/schemas/supabase-trading";
-import { apiCredentials, executionHistory } from "@/src/db/schemas/supabase-trading";
+import {
+  apiCredentials,
+  executionHistory,
+} from "@/src/db/schemas/supabase-trading";
 import {
   apiResponse,
   createErrorResponse,
@@ -284,7 +287,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Execute with or without lock
-    let result: MexcOrderResponse;
+    let result: MexcOrderResponse | undefined;
     if (skipLock) {
       result = await executeTrade();
     } else {
@@ -319,7 +322,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      result = lockResult.result;
+      result = lockResult.result as unknown as MexcOrderResponse;
+    }
+
+    if (!result) {
+      return apiResponse(
+        createErrorResponse("Trade execution failed - no result", {
+          message: "Trade execution failed",
+        }),
+        HTTP_STATUS.INTERNAL_SERVER_ERROR
+      );
     }
 
     const orderResult = result as {
@@ -348,10 +360,10 @@ export async function POST(request: NextRequest) {
             ? parseFloat(orderData.executedQty)
             : parseFloat(quantity),
           executedPrice: orderData.price ? parseFloat(orderData.price) : null,
-          totalCost: orderData.cummulativeQuoteQty
-            ? parseFloat(orderData.cummulativeQuoteQty)
+          totalCost: (orderData as any).cummulativeQuoteQty
+            ? parseFloat((orderData as any).cummulativeQuoteQty)
             : null,
-          fees: orderData.fee ? parseFloat(orderData.fee) : null,
+          fees: (orderData as any).fee ? parseFloat((orderData as any).fee) : null,
           exchangeOrderId: orderData.orderId?.toString() || null,
           exchangeStatus: orderData.status || "filled",
           exchangeResponse: JSON.stringify(orderResult),

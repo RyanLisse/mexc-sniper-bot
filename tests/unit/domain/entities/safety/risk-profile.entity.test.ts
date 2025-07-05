@@ -21,7 +21,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../../utils/timeout-elimination-helpers';
+} from '../../../../utils/timeout-utilities';
 
 describe('RiskProfile Domain Entity', () => {
   let validThresholds: RiskThresholds;

@@ -107,7 +107,7 @@ agent-state.json
 .agentic-context/
 .remote-agent-state/
 
-# Additional agentic coding tool patterns  
+# Additional agentic coding tool patterns
 .cursor/
 .continue/
 .github-copilot-chat/
@@ -139,3 +139,35 @@ safety-report.json
 # SQLite temporary files
 *.db-shm
 *.db-wal
+
+# Temporary files and reports
+/tmp/
+*.tmp
+*_REPORT.md
+*_SUMMARY.md
+*_COMPLETION_REPORT.md
+*_VERIFICATION_REPORT.md
+*_ANALYSIS_REPORT.md
+*_OPTIMIZATION_REPORT.md
+*_IMPLEMENTATION_REPORT.md
+*_FIXES_SUMMARY.md
+*_FIXES_COMPLETE.md
+
+# MCP and AI coordination tools
+/ruv-swarm*
+/claude-flow*
+/claude-swarm*
+*.bat
+*.ps1
+
+# Test database files
+test-db.js
+test_*.db
+
+# Build and deployment artifacts
+/scripts/comprehensive-*
+/scripts/verify-*
+/scripts/test-*
+/scripts/create-*
+/scripts/fix-*
+/scripts/import-optimization-suggestions.md

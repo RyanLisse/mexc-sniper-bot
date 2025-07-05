@@ -55,6 +55,24 @@ export interface ExecuteTradeOutput {
   timestamp: string;
 }
 
+interface ExecutionResult {
+  success: boolean;
+  data?: {
+    orderId?: string;
+    status?: string;
+    executedQty?: string;
+    price?: string;
+    cummulativeQuoteQty?: string;
+    fills?: Array<{
+      price: string;
+      qty: string;
+      commission: string;
+      commissionAsset: string;
+    }>;
+  };
+  error?: string;
+}
+
 export class ExecuteTradeUseCase {
   constructor(
     private readonly tradingRepository: TradingRepository,
@@ -303,7 +321,10 @@ export class ExecuteTradeUseCase {
     });
   }
 
-  private updateOrderWithResults(order: Order, executionResult: any): Order {
+  private updateOrderWithResults(
+    order: Order,
+    executionResult: ExecutionResult
+  ): Order {
     if (executionResult.success && executionResult.data) {
       const data = executionResult.data;
 
@@ -333,7 +354,7 @@ export class ExecuteTradeUseCase {
   private async updateTradeWithResults(
     trade: Trade,
     order: Order,
-    executionResult: any
+    executionResult: ExecutionResult
   ): Promise<Trade> {
     // Update trade with order
     let updatedTrade = trade.updateOrder(order.id, order);

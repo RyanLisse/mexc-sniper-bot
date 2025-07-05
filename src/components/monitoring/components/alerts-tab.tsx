@@ -6,7 +6,6 @@
  */
 
 import { AlertCircle, AlertTriangle, CheckCircle } from "lucide-react";
-import React from "react";
 import { Badge } from "@/src/components/ui/badge";
 import {
   Card,

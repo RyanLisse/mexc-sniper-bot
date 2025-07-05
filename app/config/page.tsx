@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 import { RefreshCw } from "lucide-react";
 import { Suspense } from "react";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { UnifiedSystemCheck } from "@/src/components/unified-system-check";
-import { useAuth } from "@/src/lib/supabase-auth-client";
+import { UnifiedSystemCheck } from "@/components/unified-system-check";
+import { useAuth } from "@/lib/supabase-auth-client";
 
 export default function SystemCheckPage() {
   const { isLoading: authLoading } = useAuth();

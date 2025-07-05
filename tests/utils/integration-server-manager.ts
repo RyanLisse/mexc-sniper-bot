@@ -7,8 +7,8 @@
 
 import { spawn, ChildProcess } from 'child_process';
 import { withRetryTimeout, withApiTimeout, createTimeoutPromise, raceWithHealthTimeout } from './timeout-utilities';
-import fs from 'fs/promises';
-import path from 'path';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 
 export interface ServerConfig {
   port: number;
@@ -395,7 +395,7 @@ export class IntegrationServerManager {
   /**
    * Wait for server to be ready with progressive timeout
    */
-  private async waitForServerReady(): Promise<void> {
+  private async waitForServerReady(): Promise<boolean> {
     console.log(`⏳ Waiting for server readiness on port ${this.config.port}...`);
     
     let attempts = 0;
@@ -559,7 +559,7 @@ export class SharedServerManager {
   static getAllServerStatus(): Record<number, ServerStatus> {
     const status: Record<number, ServerStatus> = {};
     
-    for (const [port, server] of this.instances) {
+    for (const [port, server] of Array.from(this.instances.entries())) {
       status[port] = server.getStatus();
     }
     

@@ -59,7 +59,11 @@ interface TestCredentialsResponse {
 
 export function TestCredentialsWithSync() {
   const supabase = createClientComponentClient();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{
+    id: string;
+    email?: string;
+    [key: string]: unknown;
+  } | null>(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -71,8 +75,7 @@ export function TestCredentialsWithSync() {
     getUser();
   }, [supabase]);
   const _queryClient = useQueryClient();
-  const { handleStatusSync, invalidateStatusQueries, getCacheStatus } =
-    useStatusSync();
+  const { handleStatusSync, invalidateStatusQueries } = useStatusSync();
   const [showSyncDetails, setShowSyncDetails] = useState(false);
 
   // Test credentials mutation with status sync handling

@@ -10,7 +10,6 @@ import { StrategyAgent } from "@/src/mexc-agents/strategy-agent";
 import { SymbolAnalysisAgent } from "@/src/mexc-agents/symbol-analysis-agent";
 import {
   MultiPhaseStrategyBuilder,
-  type StrategyPattern,
   StrategyPatterns,
 } from "../../services/multi-phase-strategy-builder";
 import {
@@ -21,7 +20,6 @@ import {
 import type {
   MultiPhaseStrategyCreateEvent,
   ServiceResponse,
-  StrategyRecommendationResult,
 } from "../types/multi-phase-strategy-types";
 
 export class StrategyCreationService {

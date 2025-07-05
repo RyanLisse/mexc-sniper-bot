@@ -7,7 +7,6 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-COPY patches/ ./patches/
 
 # Install dependencies
 RUN npm ci --only=production && npm cache clean --force

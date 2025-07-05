@@ -45,7 +45,7 @@ export class BatchUpdateModule {
   ): Promise<number> {
     if (updates.length === 0) return 0;
 
-    const startTime = performance.now();
+    const _startTime = performance.now();
     this.logger.info("Starting batch pattern metrics update", {
       updateCount: updates.length,
     });
@@ -161,7 +161,7 @@ export class BatchUpdateModule {
     if (updates.length === 0) return 0;
 
     const batchSize = options.batchSize || 25;
-    const startTime = performance.now();
+    const _startTime = performance.now();
 
     this.logger.info("Starting bulk update", {
       tableName,
@@ -230,7 +230,7 @@ export class BatchUpdateModule {
     if (conditions.length === 0) return 0;
 
     const batchSize = options.batchSize || 50;
-    const startTime = performance.now();
+    const _startTime = performance.now();
 
     this.logger.info("Starting batch delete", {
       tableName,

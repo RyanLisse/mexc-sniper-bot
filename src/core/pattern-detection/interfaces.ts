@@ -100,6 +100,7 @@ export interface ReadyStatePattern {
 }
 
 export interface PatternMatch {
+  id: string; // Required unique identifier
   patternType:
     | "ready_state"
     | "pre_ready"
@@ -127,8 +128,9 @@ export interface PatternMatch {
     activityTypes: string[];
   };
 
-  // Analysis metadata
-  detectedAt: Date | number; // Support both Date objects and timestamps
+  // Analysis metadata - Fix timestamp type compatibility
+  detectedAt?: Date; // Optional for backward compatibility
+  timestamp: Date; // Primary timestamp field for consistency
   advanceNoticeHours: number;
   estimatedTimeToReady?: number; // Estimated time in hours until pattern becomes ready
   riskLevel: "low" | "medium" | "high";
@@ -138,6 +140,12 @@ export interface PatternMatch {
     | "prepare_entry"
     | "wait"
     | "avoid";
+
+  // Additional required fields for complete compatibility
+  targetPrice?: number;
+  entryPrice?: number;
+  source: string; // Data source identifier
+  metadata?: Record<string, unknown>; // Additional metadata
 
   // Historical context
   similarPatterns?: HistoricalPattern[];

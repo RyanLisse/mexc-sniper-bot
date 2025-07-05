@@ -1,6 +1,4 @@
-import { sql } from "drizzle-orm";
 import {
-  boolean,
   index,
   integer,
   pgTable,
@@ -33,13 +31,13 @@ export const workflowActivity = pgTable(
     retryCount: integer("retry_count").default(0),
     maxRetries: integer("max_retries").default(3),
     metadata: text(),
-    createdAt: timestamp("created_at", { mode: "string" })
-      .default(sql`CURRENT_TIMESTAMP`)
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" })
-      .default(sql`CURRENT_TIMESTAMP`)
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
       .notNull(),
-    completedAt: timestamp("completed_at", { mode: "string" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
   },
   (table) => [
     index("workflow_activity_user_status_idx").using(
@@ -61,7 +59,7 @@ export const workflowPerformanceMetrics = pgTable(
     id: serial().primaryKey().notNull(),
     workflowId: text("workflow_id").notNull(),
     workflowType: text("workflow_type").notNull(),
-    timestamp: timestamp({ mode: "string" }).notNull(),
+    timestamp: timestamp("timestamp", { withTimezone: true }).notNull(),
     executionTime: real("execution_time").notNull(),
     successRate: real("success_rate").notNull(),
     errorRate: real("error_rate").notNull(),
@@ -76,8 +74,8 @@ export const workflowPerformanceMetrics = pgTable(
     memoryUsage: real("memory_usage").notNull(),
     cpuUsage: real("cpu_usage").notNull(),
     metadata: text(),
-    createdAt: timestamp("created_at", { mode: "string" })
-      .default(sql`CURRENT_TIMESTAMP`)
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
       .notNull(),
   },
   (table) => [
@@ -96,7 +94,7 @@ export const workflowSystemStatus = pgTable(
     systemComponent: text("system_component").notNull(),
     status: text().default("operational").notNull(),
     lastHealthCheck: timestamp("last_health_check", {
-      mode: "string",
+      withTimezone: true,
     }).notNull(),
     uptime: real().notNull(),
     version: text().notNull(),
@@ -118,11 +116,11 @@ export const workflowSystemStatus = pgTable(
     dependencies: text(),
     alerts: text(),
     metadata: text(),
-    createdAt: timestamp("created_at", { mode: "string" })
-      .default(sql`CURRENT_TIMESTAMP`)
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
       .notNull(),
-    updatedAt: timestamp("updated_at", { mode: "string" })
-      .default(sql`CURRENT_TIMESTAMP`)
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
       .notNull(),
   },
   (table) => [

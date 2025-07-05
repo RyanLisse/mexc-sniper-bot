@@ -3,6 +3,7 @@ import {
   alertCorrelations,
   alertInstances,
   alertRules,
+  // Legacy types for backward compatibility
   type InsertAlertCorrelation,
   type InsertAlertInstance,
   type SelectAlertCorrelation,

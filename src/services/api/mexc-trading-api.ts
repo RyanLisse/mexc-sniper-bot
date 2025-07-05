@@ -520,7 +520,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       const priceNum = Number.parseFloat(price);
 
       // Check for invalid inputs that result in NaN
-      if (isNaN(quantityNum) || isNaN(priceNum)) {
+      if (Number.isNaN(quantityNum) || Number.isNaN(priceNum)) {
         console.error(
           "[MexcTradingApi] Failed to calculate order value: Invalid input"
         );

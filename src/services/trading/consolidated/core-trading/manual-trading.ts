@@ -7,6 +7,12 @@
 
 import { toSafeError } from "@/src/lib/error-type-utils";
 import type { TradingOrderData } from "@/src/services/api/unified-mexc-trading";
+import {
+  type BalanceSnapshotData,
+  type TradeExecutionData,
+  type TransactionData,
+  tradePersistenceService,
+} from "@/src/services/database/trade-persistence-service";
 import type {
   ModuleContext,
   ModuleState,
@@ -80,6 +86,11 @@ export class ManualTradingModule {
    * Execute a manual trade
    */
   async executeTrade(params: TradeParameters): Promise<TradeResult> {
+    const requestedAt = new Date();
+    let _balanceBeforeTrade: BalanceSnapshotData[] = [];
+    let executionHistoryId: string | null = null;
+    let transactionId: string | null = null;
+
     try {
       // Validate parameters
       const validatedParams = validateTradeParams(params);
@@ -105,14 +116,150 @@ export class ManualTradingModule {
         }
       }
 
+      // Get user ID for database operations
+      const userId = await this.getCurrentUserId();
+
+      // Capture balance snapshots before trade
+      try {
+        _balanceBeforeTrade = await this.captureBalanceSnapshots(
+          userId,
+          "before_trade"
+        );
+      } catch (balanceError) {
+        this.context.logger.warn(
+          "Failed to capture balance snapshots before trade",
+          {
+            error:
+              balanceError instanceof Error
+                ? balanceError.message
+                : "Unknown error",
+          }
+        );
+      }
+
       // Execute trade based on paper trading mode
       const result = this.context.config.enablePaperTrading
         ? await this.executePaperTrade(validatedParams)
         : await this.executeRealTrade(validatedParams);
 
+      // Save execution history to database
+      try {
+        const executionData: TradeExecutionData = {
+          userId,
+          snipeTargetId: validatedParams.snipeTargetId,
+          vcoinId: validatedParams.vcoinId || validatedParams.symbol,
+          symbolName: validatedParams.symbol,
+          action: validatedParams.side.toLowerCase() as "buy" | "sell",
+          orderType: validatedParams.type.toLowerCase() as "market" | "limit",
+          orderSide: validatedParams.side.toLowerCase() as "buy" | "sell",
+          requestedQuantity: validatedParams.quantity || 0,
+          requestedPrice: validatedParams.price,
+          executedQuantity: result.data?.executedQty
+            ? parseFloat(result.data.executedQty)
+            : undefined,
+          executedPrice: result.data?.price
+            ? parseFloat(result.data.price)
+            : undefined,
+          totalCost: result.data?.cummulativeQuoteQty
+            ? parseFloat(result.data.cummulativeQuoteQty)
+            : undefined,
+          fees: 0, // Would need to calculate from exchange response
+          exchangeOrderId: result.data?.orderId,
+          exchangeStatus: result.data?.status,
+          exchangeResponse: JSON.stringify(result.data),
+          executionLatencyMs: result.executionTime,
+          slippagePercent: this.calculateSlippage(validatedParams, result),
+          status: result.success ? "success" : "failed",
+          errorCode: result.success ? undefined : "EXECUTION_FAILED",
+          errorMessage: result.success ? undefined : result.error,
+          requestedAt,
+          executedAt: result.success ? new Date() : undefined,
+        };
+
+        const executionResult =
+          await tradePersistenceService.saveExecutionHistory(executionData);
+        executionHistoryId = executionResult.id;
+
+        this.context.logger.info("Trade execution history saved", {
+          executionHistoryId,
+          symbolName: validatedParams.symbol,
+        });
+      } catch (persistenceError) {
+        this.context.logger.error("Failed to save execution history", {
+          error:
+            persistenceError instanceof Error
+              ? persistenceError.message
+              : "Unknown error",
+        });
+      }
+
+      // Save transaction data for buy orders
+      if (result.success && validatedParams.side.toLowerCase() === "buy") {
+        try {
+          const transactionData: TransactionData = {
+            userId,
+            transactionType: "buy",
+            symbolName: validatedParams.symbol,
+            vcoinId: validatedParams.vcoinId || validatedParams.symbol,
+            buyPrice: result.data?.price
+              ? parseFloat(result.data.price)
+              : undefined,
+            buyQuantity: result.data?.executedQty
+              ? parseFloat(result.data.executedQty)
+              : undefined,
+            buyTotalCost: result.data?.cummulativeQuoteQty
+              ? parseFloat(result.data.cummulativeQuoteQty)
+              : undefined,
+            buyTimestamp: new Date(),
+            buyOrderId: result.data?.orderId,
+            fees: 0, // Would need to calculate from exchange response
+            status: "completed",
+            snipeTargetId: validatedParams.snipeTargetId,
+            notes: validatedParams.isAutoSnipe
+              ? "Auto-snipe execution"
+              : "Manual trade execution",
+          };
+
+          const transactionResult =
+            await tradePersistenceService.saveTransaction(transactionData);
+          transactionId = transactionResult.id;
+
+          this.context.logger.info("Transaction data saved", {
+            transactionId,
+            symbolName: validatedParams.symbol,
+          });
+        } catch (persistenceError) {
+          this.context.logger.error("Failed to save transaction data", {
+            error:
+              persistenceError instanceof Error
+                ? persistenceError.message
+                : "Unknown error",
+          });
+        }
+      }
+
+      // Capture balance snapshots after trade
+      try {
+        await this.captureBalanceSnapshots(userId, "after_trade");
+      } catch (balanceError) {
+        this.context.logger.warn(
+          "Failed to capture balance snapshots after trade",
+          {
+            error:
+              balanceError instanceof Error
+                ? balanceError.message
+                : "Unknown error",
+          }
+        );
+      }
+
       // Update metrics and emit events
       this.updateTradeMetrics(result, validatedParams);
-      this.context.eventEmitter.emit("trade_executed", result);
+      this.context.eventEmitter.emit("trade_executed", {
+        ...result,
+        executionHistoryId,
+        transactionId,
+      });
       this.state.lastActivity = new Date();
 
       return result;
@@ -122,6 +269,37 @@ export class ManualTradingModule {
         params,
         error: safeError,
       });
+
+      // Save failed execution history
+      if (!executionHistoryId) {
+        try {
+          const userId = await this.getCurrentUserId();
+          const executionData: TradeExecutionData = {
+            userId,
+            snipeTargetId: params.snipeTargetId,
+            vcoinId: params.vcoinId || params.symbol,
+            symbolName: params.symbol,
+            action: params.side.toLowerCase() as "buy" | "sell",
+            orderType: params.type.toLowerCase() as "market" | "limit",
+            orderSide: params.side.toLowerCase() as "buy" | "sell",
+            requestedQuantity: params.quantity || 0,
+            requestedPrice: params.price,
+            status: "failed",
+            errorCode: "EXECUTION_ERROR",
+            errorMessage: safeError.message,
+            requestedAt,
+          };
+
+          await tradePersistenceService.saveExecutionHistory(executionData);
+        } catch (persistenceError) {
+          this.context.logger.error("Failed to save failed execution history", {
+            error:
+              persistenceError instanceof Error
+                ? persistenceError.message
+                : "Unknown error",
+          });
+        }
+      }
 
       this.handleTradeFailure(safeError);
 
@@ -547,5 +725,112 @@ export class ManualTradingModule {
     this.circuitBreakerResetTime = null;
 
     this.context.logger.info("Circuit breaker reset");
+  }
+
+  /**
+   * Get current user ID for database operations
+   */
+  private async getCurrentUserId(): Promise<string> {
+    // For now, return a default user ID or get from config
+    // In a real implementation, this would come from authentication context
+    const userId = this.context.config.userId || "default-user-id";
+
+    if (!userId || userId === "default-user-id") {
+      this.context.logger.warn("Using default user ID for trade persistence", {
+        userId,
+      });
+    }
+
+    return userId;
+  }
+
+  /**
+   * Capture balance snapshots for trade tracking
+   */
+  private async captureBalanceSnapshots(
+    userId: string,
+    snapshotType: "before_trade" | "after_trade"
+  ): Promise<BalanceSnapshotData[]> {
+    try {
+      // Get account balance from MEXC API
+      const balanceResult = await this.context.mexcService.getAccountInfo();
+
+      if (!balanceResult.success || !balanceResult.data?.balances) {
+        this.context.logger.warn("Failed to get account balance for snapshot", {
+          error: balanceResult.error,
+        });
+        return [];
+      }
+
+      const snapshots: BalanceSnapshotData[] = [];
+      const _currentTime = new Date();
+
+      // Create snapshots for all non-zero balances
+      for (const balance of balanceResult.data.balances) {
+        const freeAmount = parseFloat(balance.free || "0");
+        const lockedAmount = parseFloat(balance.locked || "0");
+        const totalAmount = freeAmount + lockedAmount;
+
+        // Only snapshot assets with non-zero balances
+        if (totalAmount > 0) {
+          const snapshot: BalanceSnapshotData = {
+            userId,
+            asset: balance.asset,
+            freeAmount,
+            lockedAmount,
+            totalAmount,
+            usdValue: 0, // Would need price conversion
+            priceSource: "mexc",
+            snapshotType: "triggered",
+            dataSource: "api",
+          };
+
+          snapshots.push(snapshot);
+        }
+      }
+
+      // Save snapshots to database
+      if (snapshots.length > 0) {
+        await tradePersistenceService.saveBalanceSnapshots(snapshots);
+        this.context.logger.debug(
+          `Saved ${snapshots.length} balance snapshots`,
+          {
+            snapshotType,
+            assets: snapshots.map((s) => s.asset),
+          }
+        );
+      }
+
+      return snapshots;
+    } catch (error) {
+      this.context.logger.error("Failed to capture balance snapshots", {
+        error: error instanceof Error ? error.message : "Unknown error",
+        snapshotType,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Calculate slippage percentage
+   */
+  private calculateSlippage(
+    params: TradeParameters,
+    result: TradeResult
+  ): number | undefined {
+    if (!params.price || !result.data?.price) {
+      return undefined;
+    }
+
+    const requestedPrice = params.price;
+    const executedPrice = parseFloat(result.data.price);
+
+    if (requestedPrice === 0) {
+      return undefined;
+    }
+
+    const slippage =
+      Math.abs((executedPrice - requestedPrice) / requestedPrice) * 100;
+    return slippage;
   }
 }

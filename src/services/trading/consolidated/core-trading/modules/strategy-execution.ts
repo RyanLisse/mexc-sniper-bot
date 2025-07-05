@@ -275,7 +275,7 @@ export class StrategyExecutionModule {
    * Execute trade via manual module (delegated to manual trading module)
    */
   private async executeTradeViaManualModule(
-    params: TradeParameters
+    _params: TradeParameters
   ): Promise<TradeResult> {
     // This should be injected or use the manual trading module
     // For now, return a placeholder that maintains the interface

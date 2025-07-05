@@ -285,7 +285,7 @@ export class AdvancedEmergencyCoordinator extends BrowserCompatibleEventEmitter 
     protocolId: string,
     triggeredBy: string,
     reason: string,
-    context?: Record<string, any>
+    _context?: Record<string, any>
   ): Promise<string> {
     const timer = createTimer(
       "activate_emergency_protocol",
@@ -360,7 +360,7 @@ export class AdvancedEmergencyCoordinator extends BrowserCompatibleEventEmitter 
   async escalateEmergency(
     sessionId: string,
     reason: string,
-    targetLevel?: string
+    _targetLevel?: string
   ): Promise<void> {
     const timer = createTimer(
       "escalate_emergency",

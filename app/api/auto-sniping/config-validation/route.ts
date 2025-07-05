@@ -117,17 +117,17 @@ async function validateAutoSnipingConfig(config: AutoSnipingConfig): Promise<{
   }
 
   // Add warnings for potentially risky configurations
-  if (config.maxPositions > 20) {
+  if (config.maxPositions !== undefined && config.maxPositions > 20) {
     warnings.push("High maxPositions value may increase risk exposure");
   }
 
-  if (config.stopLossPercentage < 2) {
+  if (config.stopLossPercentage !== undefined && config.stopLossPercentage < 2) {
     warnings.push(
       "Low stop loss percentage may result in frequent small losses"
     );
   }
 
-  if (config.minConfidence < 60) {
+  if (config.minConfidence !== undefined && config.minConfidence < 60) {
     warnings.push("Low minimum confidence may result in lower quality trades");
   }
 

@@ -10,7 +10,7 @@
  */
 
 import { AlertCircle, RefreshCw } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -73,7 +73,7 @@ export function ProductionMonitoringDashboard({
       const interval = setInterval(fetchMetrics, autoRefreshInterval);
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, autoRefreshInterval]);
+  }, [autoRefresh, autoRefreshInterval, fetchMetrics]);
 
   // Loading state
   if (loading && !metrics) {

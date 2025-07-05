@@ -22,7 +22,11 @@ export interface ReadyStatePattern {
   tt: 4; // Trading Time: Live
 }
 
-export interface PatternMatch {
+// Re-export from core interfaces to maintain consistency
+export type { PatternMatch } from "@/src/core/pattern-detection/interfaces";
+
+// Legacy interface for backward compatibility
+export interface LegacyPatternMatch {
   patternType: "ready_state" | "pre_ready" | "launch_sequence" | "risk_warning";
   confidence: number; // 0-100 confidence score
   symbol: string;

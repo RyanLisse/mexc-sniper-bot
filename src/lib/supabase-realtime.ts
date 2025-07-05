@@ -13,7 +13,7 @@ import type {
   RealtimeChannel,
   RealtimePostgresChangesPayload,
 } from "@supabase/supabase-js";
-import { supabase } from "@/src/db";
+import { supabaseAdmin } from "@/src/db";
 
 // Type definitions for real-time events
 export interface TradingDataUpdate {
@@ -101,7 +101,7 @@ export class SupabaseRealtimeManager {
    */
   private async checkConnectionHealth() {
     try {
-      const testChannel = supabase
+      const testChannel = supabaseAdmin
         .channel("health_check")
         .subscribe((status) => {
           if (status === "SUBSCRIBED") {
@@ -131,7 +131,32 @@ export class SupabaseRealtimeManager {
     }
 
     this.reconnectAttempts++;
-    const delay = this.reconnectDelay * 2 ** (this.reconnectAttempts - 1);
+
+    // FIXED: Add NaN validation to prevent TimeoutNaNWarning
+    const safeReconnectDelay =
+      typeof this.reconnectDelay === "number" &&
+      !Number.isNaN(this.reconnectDelay) &&
+      Number.isFinite(this.reconnectDelay)
+        ? this.reconnectDelay
+        : 1000; // Default 1 second
+
+    const safeAttempts =
+      typeof this.reconnectAttempts === "number" &&
+      !Number.isNaN(this.reconnectAttempts) &&
+      Number.isFinite(this.reconnectAttempts)
+        ? Math.max(0, Math.min(this.reconnectAttempts - 1, 10)) // Cap exponent to prevent overflow
+        : 0;
+
+    const calculatedDelay = safeReconnectDelay * 2 ** safeAttempts;
+
+    // Ensure delay is a valid positive number with reasonable bounds
+    const delay =
+      typeof calculatedDelay === "number" &&
+      !Number.isNaN(calculatedDelay) &&
+      Number.isFinite(calculatedDelay) &&
+      calculatedDelay > 0
+        ? Math.min(calculatedDelay, 60000) // Cap at 60 seconds maximum
+        : 1000; // Fallback to 1 second
 
     console.log(
       `[Realtime] Attempting reconnect ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`
@@ -169,7 +194,7 @@ export class SupabaseRealtimeManager {
   ): () => void {
     const channelName = `transactions:${userId}`;
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel(channelName)
       .on(
         "postgres_changes",
@@ -211,7 +236,7 @@ export class SupabaseRealtimeManager {
   ): () => void {
     const channelName = `portfolio:${userId}`;
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel(channelName)
       .on(
         "postgres_changes",
@@ -256,7 +281,7 @@ export class SupabaseRealtimeManager {
   ): () => void {
     const channelName = `snipe_targets:${userId}`;
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel(channelName)
       .on(
         "postgres_changes",
@@ -301,7 +326,7 @@ export class SupabaseRealtimeManager {
   ): () => void {
     const channelName = `execution_history:${userId}`;
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel(channelName)
       .on(
         "postgres_changes",
@@ -346,7 +371,7 @@ export class SupabaseRealtimeManager {
   ): () => void {
     const channelName = `price_updates:${symbols.join(",")}`;
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel(channelName)
       .on("broadcast", { event: "price_update" }, (payload) => {
         const update: PriceUpdate = payload.payload;
@@ -375,7 +400,7 @@ export class SupabaseRealtimeManager {
   ): () => void {
     const channelName = `system_alerts:${userId}`;
 
-    const channel = supabase
+    const channel = supabaseAdmin
       .channel(channelName)
       .on("broadcast", { event: "system_alert" }, (payload) => {
         const alert: SystemAlert = payload.payload;
@@ -401,7 +426,7 @@ export class SupabaseRealtimeManager {
    */
   async broadcastPriceUpdate(priceUpdate: PriceUpdate): Promise<void> {
     try {
-      await supabase.channel("price_updates").send({
+      await supabaseAdmin.channel("price_updates").send({
         type: "broadcast",
         event: "price_update",
         payload: priceUpdate,
@@ -416,7 +441,7 @@ export class SupabaseRealtimeManager {
    */
   async broadcastSystemAlert(alert: SystemAlert): Promise<void> {
     try {
-      await supabase.channel("system_alerts").send({
+      await supabaseAdmin.channel("system_alerts").send({
         type: "broadcast",
         event: "system_alert",
         payload: alert,

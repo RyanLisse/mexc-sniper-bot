@@ -3,7 +3,33 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noArrayIndexKey": "warn"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off",
+        "useLiteralKeys": "warn",
+        "noForEach": "off"
+      },
+      "correctness": {
+        "noUnusedFunctionParameters": "off",
+        "useHookAtTopLevel": "warn"
+      },
+      "style": {
+        "useTemplate": "warn",
+        "useConst": "warn",
+        "noNonNullAssertion": "off"
+      },
+      "security": {
+        "noDangerouslySetInnerHtml": "error"
+      },
+      "a11y": {
+        "noStaticElementInteractions": "warn",
+        "noSvgWithoutTitle": "warn",
+        "useButtonType": "error"
+      }
     }
   },
   "formatter": {

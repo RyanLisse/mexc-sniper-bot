@@ -149,11 +149,20 @@ export class MexcConnectionManager extends BrowserCompatibleEventEmitter {
 
       // Wait for connection to be established with proper error handling
       await new Promise<void>((resolve, reject) => {
+        // CRITICAL FIX: Validate connectionTimeout to prevent NaN warnings
+        const safeConnectionTimeout =
+          typeof this.connectionTimeout === "number" &&
+          !Number.isNaN(this.connectionTimeout) &&
+          Number.isFinite(this.connectionTimeout) &&
+          this.connectionTimeout > 0
+            ? this.connectionTimeout
+            : 10000; // Safe fallback timeout
+
         const timeout = setTimeout(() => {
           this.cleanup();
           this.updateCircuitBreakerOnFailure();
           reject(new Error("WebSocket connection timeout"));
-        }, this.connectionTimeout);
+        }, safeConnectionTimeout);
 
         const cleanup = () => {
           clearTimeout(timeout);
@@ -382,6 +391,15 @@ export class MexcConnectionManager extends BrowserCompatibleEventEmitter {
       connectionId: this.connectionId,
     });
 
+    // CRITICAL FIX: Validate setTimeout delay to prevent NaN warnings
+    const safeReconnectDelay =
+      typeof this.reconnectDelay === "number" &&
+      !Number.isNaN(this.reconnectDelay) &&
+      Number.isFinite(this.reconnectDelay) &&
+      this.reconnectDelay > 0
+        ? this.reconnectDelay
+        : 1000; // Safe fallback delay
+
     setTimeout(() => {
       this.connect().catch((error) => {
         this.logger.error("Reconnection attempt failed", {
@@ -389,9 +407,25 @@ export class MexcConnectionManager extends BrowserCompatibleEventEmitter {
           attempt: this.reconnectAttempts,
         });
 
-        // Exponential backoff with jitter
+        // Exponential backoff with jitter and NaN validation
+        const currentDelay =
+          typeof this.reconnectDelay === "number" &&
+          !Number.isNaN(this.reconnectDelay) &&
+          Number.isFinite(this.reconnectDelay)
+            ? this.reconnectDelay
+            : 1000;
+
+        const exponentialDelay = currentDelay * 2;
+        const jitter = Math.random() * 1000;
+        const newDelay = exponentialDelay + jitter;
+
         this.reconnectDelay = Math.min(
-          this.reconnectDelay * 2 + Math.random() * 1000,
+          typeof newDelay === "number" &&
+            !Number.isNaN(newDelay) &&
+            Number.isFinite(newDelay) &&
+            newDelay > 0
+            ? newDelay
+            : currentDelay * 2, // Safe fallback
           this.maxReconnectDelay
         );
 
@@ -405,7 +439,7 @@ export class MexcConnectionManager extends BrowserCompatibleEventEmitter {
           this.onError(new Error("Max reconnection attempts reached"));
         }
       });
-    }, this.reconnectDelay);
+    }, safeReconnectDelay);
   }
 
   /**
@@ -773,14 +807,44 @@ export class MexcConnectionManager extends BrowserCompatibleEventEmitter {
       baseDelay *= 2;
     }
 
-    // Add exponential backoff with jitter
+    // FIXED: Add exponential backoff with jitter and comprehensive NaN validation
+    const safeBaseDelay =
+      typeof baseDelay === "number" &&
+      !Number.isNaN(baseDelay) &&
+      Number.isFinite(baseDelay)
+        ? baseDelay
+        : this.reconnectDelay || 1000;
+
+    const safeAttempts =
+      typeof this.reconnectAttempts === "number" &&
+      !Number.isNaN(this.reconnectAttempts) &&
+      Number.isFinite(this.reconnectAttempts)
+        ? Math.max(0, Math.min(this.reconnectAttempts - 1, 10)) // Cap exponent to prevent overflow
+        : 0;
+
+    const calculatedDelay = safeBaseDelay * 2 ** safeAttempts;
+
     const exponentialDelay = Math.min(
-      baseDelay * 2 ** (this.reconnectAttempts - 1),
-      this.maxReconnectDelay
+      typeof calculatedDelay === "number" &&
+        !Number.isNaN(calculatedDelay) &&
+        Number.isFinite(calculatedDelay) &&
+        calculatedDelay > 0
+        ? calculatedDelay
+        : safeBaseDelay,
+      this.maxReconnectDelay || 60000
     );
 
     const jitter = Math.random() * 1000;
-    const finalDelay = exponentialDelay + jitter;
+    const preliminaryDelay = exponentialDelay + jitter;
+
+    // CRITICAL FIX: Ensure finalDelay is never NaN for setTimeout
+    const finalDelay =
+      typeof preliminaryDelay === "number" &&
+      !Number.isNaN(preliminaryDelay) &&
+      Number.isFinite(preliminaryDelay) &&
+      preliminaryDelay > 0
+        ? preliminaryDelay
+        : 1000; // Safe fallback delay
 
     this.logger.info("Scheduling adaptive reconnection", {
       attempt: this.reconnectAttempts,

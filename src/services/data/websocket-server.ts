@@ -19,11 +19,6 @@ import {
   BrowserCompatibleEventEmitter,
   UniversalCrypto as crypto,
 } from "@/src/lib/browser-compatible-events";
-// OpenTelemetry WebSocket instrumentation
-import {
-  instrumentChannelOperation,
-  instrumentWebSocketSend,
-} from "@/src/lib/opentelemetry-websocket-instrumentation";
 import type {
   AgentStatusMessage,
   ConnectionMetrics,
@@ -33,7 +28,6 @@ import type {
   ServerMetrics,
   TradingPriceMessage,
   WebSocketChannel,
-  WebSocketConnection,
   WebSocketMessage,
   WebSocketServerConfig,
 } from "@/src/lib/websocket-types";

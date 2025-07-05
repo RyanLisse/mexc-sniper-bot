@@ -12,15 +12,15 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
-import { createServerTestSuite, testRateLimit } from "../utils/server-test-helper";
-import { safeFetch } from "../utils/async-test-helpers";
+import { createServerTestSuite, testRateLimit } from "@utils/server-test-helper";
+import { safeFetch } from "@utils/async-utilities";
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 describe("Auto-Sniping System API Integration Tests", () => {
   const serverSuite = createServerTestSuite(
@@ -30,7 +30,7 @@ describe("Auto-Sniping System API Integration Tests", () => {
 
   beforeAll(async () => {
     await serverSuite.beforeAllSetup();
-  }, TIMEOUT_CONFIG.STANDARD));
+  }, TIMEOUT_CONFIG.STANDARD);
 
   afterAll(async () => {
     await serverSuite.afterAllCleanup();

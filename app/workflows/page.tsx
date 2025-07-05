@@ -1,7 +1,7 @@
 "use client";
 
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { WorkflowManager } from "@/src/components/workflow-manager";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { WorkflowManager } from "@/components/workflow-manager";
 
 export default function WorkflowsPage() {
   return (

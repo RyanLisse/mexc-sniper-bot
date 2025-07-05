@@ -4,6 +4,13 @@ import { calendarSyncService } from "@/src/services/calendar-to-database-sync";
 import { inngest } from "./client";
 // Import safety functions
 import { safetyFunctions } from "./safety-functions";
+// Import authentication middleware
+import { 
+  withWorkflowAuth,
+  logAuthEvent,
+  type AuthContext,
+  type AuthenticatedEventData 
+} from "./middleware/auth-middleware";
 
 // Inngest step interface
 interface InngestStep {
@@ -179,7 +186,16 @@ export const pollMexcCalendar = inngest.createFunction(
     event: { data: MexcCalendarPollRequestedData };
     step: InngestStep;
   }) => {
-    const { trigger = "manual", force = false } = event.data;
+    // Authenticate and execute with proper authorization
+    return await withWorkflowAuth(async (eventData: MexcCalendarPollRequestedData & AuthenticatedEventData, authContext: AuthContext) => {
+      const { trigger = "manual", force = false } = eventData;
+
+      // Log authentication success
+      logAuthEvent("calendar_polling_started", authContext.user.id, {
+        trigger,
+        force,
+        authenticated: true,
+      });
 
     // Update status: Started calendar discovery
     await updateWorkflowStatus("addActivity", {
@@ -301,29 +317,47 @@ export const pollMexcCalendar = inngest.createFunction(
       }
     );
 
-    return {
-      status: "success",
-      trigger,
-      // Sync results (database as single source of truth)
-      sync: {
-        processed: syncResult.processed,
-        created: syncResult.created,
-        updated: syncResult.updated,
-        errors: syncResult.errors,
-      },
-      // Discovery results (additional intelligence)
-      discovery: {
-        newListingsFound: discoveryData?.newListings?.length || 0,
-        readyTargetsFound: discoveryData?.readyTargets?.length || 0,
-        followUpEventsSent: followUpEvents,
-      },
-      timestamp: new Date().toISOString(),
-      metadata: {
-        agentsUsed: ["calendar-sync", "calendar", "pattern-discovery", "api"],
-        analysisComplete: true,
-        databaseSynced: syncResult.success,
-      },
-    };
+      // Log calendar polling completion
+      logAuthEvent("calendar_polling_completed", authContext.user.id, {
+        trigger,
+        sync: {
+          processed: syncResult.processed,
+          created: syncResult.created,
+          updated: syncResult.updated,
+        },
+        discovery: {
+          newListingsFound: discoveryData?.newListings?.length || 0,
+          readyTargetsFound: discoveryData?.readyTargets?.length || 0,
+          followUpEventsSent: followUpEvents,
+        },
+      });
+
+      return {
+        status: "success",
+        trigger,
+        // Sync results (database as single source of truth)
+        sync: {
+          processed: syncResult.processed,
+          created: syncResult.created,
+          updated: syncResult.updated,
+          errors: syncResult.errors,
+        },
+        // Discovery results (additional intelligence)
+        discovery: {
+          newListingsFound: discoveryData?.newListings?.length || 0,
+          readyTargetsFound: discoveryData?.readyTargets?.length || 0,
+          followUpEventsSent: followUpEvents,
+        },
+        timestamp: new Date().toISOString(),
+        metadata: {
+          agentsUsed: ["calendar-sync", "calendar", "pattern-discovery", "api"],
+          analysisComplete: true,
+          databaseSynced: syncResult.success,
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );
 
@@ -338,17 +372,27 @@ export const watchMexcSymbol = inngest.createFunction(
     event: { data: MexcSymbolWatchRequestedData };
     step: InngestStep;
   }) => {
-    const {
-      vcoinId,
-      symbolName,
-      projectName,
-      launchTime,
-      attempt = 1,
-    } = event.data;
+    // Authenticate and execute with proper authorization
+    return await withWorkflowAuth(async (eventData: MexcSymbolWatchRequestedData & AuthenticatedEventData, authContext: AuthContext) => {
+      const {
+        vcoinId,
+        symbolName,
+        projectName,
+        launchTime,
+        attempt = 1,
+      } = eventData;
 
-    if (!vcoinId) {
-      throw new Error("Missing vcoinId in event data");
-    }
+      if (!vcoinId) {
+        throw new Error("Missing vcoinId in event data");
+      }
+
+      // Log authentication success
+      logAuthEvent("symbol_watching_started", authContext.user.id, {
+        vcoinId,
+        symbolName,
+        attempt,
+        authenticated: true,
+      });
 
     // Update status: Started symbol watching
     await updateWorkflowStatus("addActivity", {
@@ -447,6 +491,7 @@ export const watchMexcSymbol = inngest.createFunction(
         hasCompleteData: analysisData?.hasCompleteData || false,
       },
     };
+    })(event.data);
   }
 );
 
@@ -461,7 +506,17 @@ export const analyzeMexcPatterns = inngest.createFunction(
     event: { data: MexcPatternAnalysisRequestedData };
     step: InngestStep;
   }) => {
-    const { vcoinId, symbols, analysisType = "discovery" } = event.data;
+    // Authenticate and execute with proper authorization
+    return await withWorkflowAuth(async (eventData: MexcPatternAnalysisRequestedData & AuthenticatedEventData, authContext: AuthContext) => {
+      const { vcoinId, symbols, analysisType = "discovery" } = eventData;
+
+      // Log authentication success
+      logAuthEvent("pattern_analysis_started", authContext.user.id, {
+        vcoinId,
+        symbolCount: symbols?.length || 0,
+        analysisType,
+        authenticated: true,
+      });
 
     // Update status: Started pattern analysis
     await updateWorkflowStatus("addActivity", {
@@ -498,19 +553,31 @@ export const analyzeMexcPatterns = inngest.createFunction(
       ? patternResult.data
       : null;
 
-    return {
-      status: "success",
-      analysisType,
-      patternsFound: patternData?.patterns?.length || 0,
-      recommendations: patternData?.recommendations || [],
-      confidenceScore: patternData?.confidenceScore || 0,
-      timestamp: new Date().toISOString(),
-      metadata: {
-        agentsUsed: ["pattern-analysis", "market-analysis", "strategy"],
+      // Log pattern analysis completion
+      logAuthEvent("pattern_analysis_completed", authContext.user.id, {
         vcoinId,
-        symbols: symbols?.length || 0,
-      },
-    };
+        analysisType,
+        patternsFound: patternData?.patterns?.length || 0,
+        confidenceScore: patternData?.confidenceScore || 0,
+        symbolCount: symbols?.length || 0,
+      });
+
+      return {
+        status: "success",
+        analysisType,
+        patternsFound: patternData?.patterns?.length || 0,
+        recommendations: patternData?.recommendations || [],
+        confidenceScore: patternData?.confidenceScore || 0,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          agentsUsed: ["pattern-analysis", "market-analysis", "strategy"],
+          vcoinId,
+          symbols: symbols?.length || 0,
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );
 
@@ -525,11 +592,21 @@ export const createMexcTradingStrategy = inngest.createFunction(
     event: { data: MexcTradingStrategyRequestedData };
     step: InngestStep;
   }) => {
-    const { vcoinId, symbolData, riskLevel = "medium", capital } = event.data;
+    // Authenticate and execute with proper authorization
+    return await withWorkflowAuth(async (eventData: MexcTradingStrategyRequestedData & AuthenticatedEventData, authContext: AuthContext) => {
+      const { vcoinId, symbolData, riskLevel = "medium", capital } = eventData;
 
-    if (!vcoinId || !symbolData) {
-      throw new Error("Missing vcoinId or symbolData in event data");
-    }
+      if (!vcoinId || !symbolData) {
+        throw new Error("Missing vcoinId or symbolData in event data");
+      }
+
+      // Log authentication success
+      logAuthEvent("trading_strategy_creation_started", authContext.user.id, {
+        vcoinId,
+        symbol: symbolData.symbol,
+        riskLevel,
+        authenticated: true,
+      });
 
     // Update status: Started trading strategy creation
     await updateWorkflowStatus("addActivity", {
@@ -589,22 +666,35 @@ export const createMexcTradingStrategy = inngest.createFunction(
       },
     });
 
-    return {
-      status: "success",
-      vcoinId,
-      strategyCreated: true,
-      entryPrice: strategyData?.entryPrice,
-      stopLoss: strategyData?.stopLoss,
-      takeProfit: strategyData?.takeProfit,
-      positionSize: strategyData?.positionSize,
-      riskRewardRatio: strategyData?.riskRewardRatio,
-      timestamp: new Date().toISOString(),
-      metadata: {
-        agentsUsed: ["trading-strategy", "risk-management", "market-analysis"],
+      // Log trading strategy creation completion
+      logAuthEvent("trading_strategy_creation_completed", authContext.user.id, {
+        vcoinId,
+        symbol: symbolData.symbol,
         riskLevel,
+        strategyCreated: true,
+        entryPrice: strategyData?.entryPrice,
         capital,
-      },
-    };
+      });
+
+      return {
+        status: "success",
+        vcoinId,
+        strategyCreated: true,
+        entryPrice: strategyData?.entryPrice,
+        stopLoss: strategyData?.stopLoss,
+        takeProfit: strategyData?.takeProfit,
+        positionSize: strategyData?.positionSize,
+        riskRewardRatio: strategyData?.riskRewardRatio,
+        timestamp: new Date().toISOString(),
+        metadata: {
+          agentsUsed: ["trading-strategy", "risk-management", "market-analysis"],
+          riskLevel,
+          capital,
+          authenticatedUser: authContext.user.id,
+          sessionValidated: authContext.sessionValidated,
+        },
+      };
+    })(event.data);
   }
 );
 

@@ -41,10 +41,6 @@ export class PriceMonitor extends BrowserCompatibleEventEmitter {
   private isMonitoring = false;
   private updateInterval = 5000; // 5 seconds default
 
-  constructor() {
-    super();
-  }
-
   async initialize(): Promise<void> {
     await this.startMonitoring();
   }
@@ -238,7 +234,7 @@ export class PriceMonitor extends BrowserCompatibleEventEmitter {
 
     // Notify subscription callback
     const subscription = this.subscriptions.get(symbol);
-    if (subscription && subscription.callback) {
+    if (subscription?.callback) {
       try {
         subscription.callback(price);
       } catch (error) {
@@ -390,7 +386,7 @@ export class PriceMonitor extends BrowserCompatibleEventEmitter {
   }
 
   // Analysis methods
-  getPriceHistory(symbol: string, minutes: number = 60): MarketDataUpdate[] {
+  getPriceHistory(symbol: string, _minutes: number = 60): MarketDataUpdate[] {
     // This would return historical price data
     // For now, return current data only
     const current = this.priceCache.get(symbol);
@@ -399,7 +395,7 @@ export class PriceMonitor extends BrowserCompatibleEventEmitter {
 
   calculatePriceChange(
     symbol: string,
-    timeframeMinutes: number = 60
+    _timeframeMinutes: number = 60
   ): number | null {
     // This would calculate price change over timeframe
     // For now, use the cached 24h change

@@ -125,7 +125,7 @@ export class WebSocketAuthenticationService {
 
       // Try to get token from Authorization header
       const authHeader = request.headers.authorization;
-      if (authHeader && authHeader.startsWith("Bearer ")) {
+      if (authHeader?.startsWith("Bearer ")) {
         return authHeader.replace("Bearer ", "");
       }
 

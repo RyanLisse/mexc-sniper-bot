@@ -401,9 +401,14 @@ const RecentExecutions = ({ userId }: { userId: string }) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {Array.from({ length: 3 }, (_, i) => (
-              <div key={i} className="h-12 bg-muted rounded animate-pulse" />
-            ))}
+            {Array.from({ length: 3 }, (_, i) => `trade-skeleton-${i}`).map(
+              (skeletonId) => (
+                <div
+                  key={skeletonId}
+                  className="h-12 bg-muted rounded animate-pulse"
+                />
+              )
+            )}
           </div>
         </CardContent>
       </Card>

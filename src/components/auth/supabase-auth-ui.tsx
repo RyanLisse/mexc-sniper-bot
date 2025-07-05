@@ -157,6 +157,29 @@ export function SupabaseAuthUI() {
     }
   }, [mounted, user, isLoading, router]);
 
+  // Track email input for bypass functionality (replaces dangerouslySetInnerHTML)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const emailInput = document.querySelector(
+        'input[type="email"]'
+      ) as HTMLInputElement;
+      if (emailInput) {
+        const handleEmailInput = (e: Event) => {
+          const target = e.target as HTMLInputElement;
+          (window as any).lastAuthEmail = target.value;
+        };
+        emailInput.addEventListener("input", handleEmailInput);
+
+        // Cleanup function to remove event listener
+        return () => {
+          emailInput.removeEventListener("input", handleEmailInput);
+        };
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleSignOut = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
@@ -367,8 +390,8 @@ export function SupabaseAuthUI() {
           providers={isTestEnvironment ? [] : ["google", "github"]}
           redirectTo={
             typeof window !== "undefined"
-              ? `${window.location.origin}/dashboard`
-              : "/dashboard"
+              ? `${window.location.origin}/auth/reset-password`
+              : "/auth/reset-password"
           }
           onlyThirdPartyProviders={false}
           magicLink={true}
@@ -416,23 +439,6 @@ export function SupabaseAuthUI() {
                   "Check your email for the password reset link",
               },
             },
-          }}
-        />
-
-        {/* Add JavaScript to track email input for bypass functionality */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Track email input for bypass functionality
-              setTimeout(() => {
-                const emailInput = document.querySelector('input[type="email"]');
-                if (emailInput) {
-                  emailInput.addEventListener('input', function(e) {
-                    window.lastAuthEmail = e.target.value;
-                  });
-                }
-              }, 100);
-            `,
           }}
         />
       </CardContent>

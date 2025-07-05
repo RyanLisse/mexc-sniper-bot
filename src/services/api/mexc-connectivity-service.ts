@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "../../lib/browser-compatible-events";
 /**
  * MEXC Connectivity Service
  *

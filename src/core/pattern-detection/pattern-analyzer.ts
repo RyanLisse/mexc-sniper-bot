@@ -556,7 +556,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
       return false;
     }
 
-    if (isNaN(timestamp) || timestamp <= 0) {
+    if (Number.isNaN(timestamp) || timestamp <= 0) {
       this.logger.debug("Calendar entry has invalid timestamp", {
         symbol: entry.symbol,
         timestamp,

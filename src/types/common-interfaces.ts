@@ -170,7 +170,11 @@ export interface AccountInfo {
 // Pattern Detection Types
 // ============================================================================
 
-export interface PatternMatch {
+// Re-export core PatternMatch interface to prevent duplicates
+export type { PatternMatch } from "@/src/core/pattern-detection/interfaces";
+
+// Legacy pattern match interface for backward compatibility
+export interface LegacyPatternMatchData {
   id: string;
   symbol: string;
   patternType: PatternType;

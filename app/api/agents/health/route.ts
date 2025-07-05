@@ -77,7 +77,10 @@ export async function GET(request: NextRequest) {
     };
 
     for (const agent of allAgents) {
-      agentsByStatus[agent.health.status].push(agent);
+      const status = agent.health?.status ?? "unknown";
+      if (agentsByStatus[status as keyof typeof agentsByStatus]) {
+        agentsByStatus[status as keyof typeof agentsByStatus].push(agent);
+      }
     }
 
     // Calculate system-wide metrics
@@ -89,17 +92,24 @@ export async function GET(request: NextRequest) {
       unknownAgents: stats.unknownAgents,
       averageResponseTime: stats.averageResponseTime,
       averageHealthScore:
-        allAgents.reduce((sum, agent) => sum + agent.health.healthScore, 0) /
-          allAgents.length || 0,
+        allAgents.reduce(
+          (sum: number, agent: RegisteredAgent) =>
+            sum + (agent.health?.healthScore ?? 0),
+          0
+        ) / allAgents.length || 0,
       systemUptime:
-        allAgents.reduce((sum, agent) => sum + agent.health.uptime, 0) /
-          allAgents.length || 0,
+        allAgents.reduce(
+          (sum: number, agent: RegisteredAgent) =>
+            sum + (agent.health?.uptime ?? 0),
+          0
+        ) / allAgents.length || 0,
       totalRecoveryAttempts: allAgents.reduce(
-        (sum, agent) => sum + agent.health.recoveryAttempts,
+        (sum: number, agent: RegisteredAgent) =>
+          sum + (agent.health?.recoveryAttempts ?? 0),
         0
       ),
       agentsWithErrors: allAgents.filter(
-        (agent) => agent.health.consecutiveErrors > 0
+        (agent: RegisteredAgent) => (agent.health?.consecutiveErrors ?? 0) > 0
       ).length,
       lastFullHealthCheck: stats.lastFullHealthCheck,
     };
@@ -108,40 +118,43 @@ export async function GET(request: NextRequest) {
     const trendAnalysis = {
       responseTime: {
         improving: allAgents.filter(
-          (a) => a.health.trends.responseTime === "improving"
+          (a: RegisteredAgent) => a.health?.trends?.responseTime === "improving"
         ).length,
         degrading: allAgents.filter(
-          (a) => a.health.trends.responseTime === "degrading"
+          (a: RegisteredAgent) => a.health?.trends?.responseTime === "degrading"
         ).length,
         stable: allAgents.filter(
-          (a) => a.health.trends.responseTime === "stable"
+          (a: RegisteredAgent) => a.health?.trends?.responseTime === "stable"
         ).length,
       },
       errorRate: {
         improving: allAgents.filter(
-          (a) => a.health.trends.errorRate === "improving"
+          (a: RegisteredAgent) => a.health?.trends?.errorRate === "improving"
         ).length,
         degrading: allAgents.filter(
-          (a) => a.health.trends.errorRate === "degrading"
+          (a: RegisteredAgent) => a.health?.trends?.errorRate === "degrading"
         ).length,
-        stable: allAgents.filter((a) => a.health.trends.errorRate === "stable")
-          .length,
+        stable: allAgents.filter(
+          (a: RegisteredAgent) => a.health?.trends?.errorRate === "stable"
+        ).length,
       },
       throughput: {
         improving: allAgents.filter(
-          (a) => a.health.trends.throughput === "improving"
+          (a: RegisteredAgent) => a.health?.trends?.throughput === "improving"
         ).length,
         degrading: allAgents.filter(
-          (a) => a.health.trends.throughput === "degrading"
+          (a: RegisteredAgent) => a.health?.trends?.throughput === "degrading"
         ).length,
-        stable: allAgents.filter((a) => a.health.trends.throughput === "stable")
-          .length,
+        stable: allAgents.filter(
+          (a: RegisteredAgent) => a.health?.trends?.throughput === "stable"
+        ).length,
       },
     };
 
     // Top performing and struggling agents
     const sortedByHealth = [...allAgents].sort(
-      (a, b) => b.health.healthScore - a.health.healthScore
+      (a: RegisteredAgent, b: RegisteredAgent) =>
+        (b.health?.healthScore ?? 0) - (a.health?.healthScore ?? 0)
     );
     const topPerformers = sortedByHealth.slice(0, 5).map((agent) => ({
       id: agent.id,
@@ -171,32 +184,36 @@ export async function GET(request: NextRequest) {
       data: {
         systemMetrics,
         agentsByStatus: {
-          healthy: agentsByStatus.healthy.map((a) => ({
+          healthy:
+            agentsByStatus.healthy?.map((a: RegisteredAgent) => ({
+              id: a.id,
+              name: a.name,
+              healthScore: a.health?.healthScore ?? 0,
+            })) ?? [],
+          degraded:
+            agentsByStatus.degraded?.map((a: RegisteredAgent) => ({
+              id: a.id,
+              name: a.name,
+              healthScore: a.health?.healthScore ?? 0,
+              issues: getHealthIssues(a),
+            })) ?? [],
+          unhealthy: agentsByStatus.unhealthy?.map((a: RegisteredAgent) => ({
             id: a.id,
             name: a.name,
-            healthScore: a.health.healthScore,
-          })),
-          degraded: agentsByStatus.degraded.map((a) => ({
-            id: a.id,
-            name: a.name,
-            healthScore: a.health.healthScore,
+            healthScore: a.health?.healthScore ?? 0,
             issues: getHealthIssues(a),
           })),
-          unhealthy: agentsByStatus.unhealthy.map((a) => ({
-            id: a.id,
-            name: a.name,
-            healthScore: a.health.healthScore,
-            issues: getHealthIssues(a),
-          })),
-          unknown: agentsByStatus.unknown.map((a) => ({
-            id: a.id,
-            name: a.name,
-          })),
-          recovering: agentsByStatus.recovering.map((a) => ({
-            id: a.id,
-            name: a.name,
-            recoveryAttempts: a.health.recoveryAttempts,
-          })),
+          unknown:
+            agentsByStatus.unknown?.map((a: RegisteredAgent) => ({
+              id: a.id,
+              name: a.name,
+            })) ?? [],
+          recovering:
+            agentsByStatus.recovering?.map((a: RegisteredAgent) => ({
+              id: a.id,
+              name: a.name,
+              recoveryAttempts: a.health?.recoveryAttempts ?? 0,
+            })) ?? [],
         },
         trendAnalysis,
         topPerformers,

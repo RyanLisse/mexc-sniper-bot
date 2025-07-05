@@ -4,14 +4,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { cn, logger } from '../../../src/lib/utils';
+import { cn, logger } from '@/lib/utils';
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 describe('cn (className utility)', () => {
   it('should merge class names correctly', () => {

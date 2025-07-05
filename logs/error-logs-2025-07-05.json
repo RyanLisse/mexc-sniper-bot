@@ -1,6 +1,6 @@
 [
   {
-    "timestamp": "2025-07-05T07:26:50.850Z",
+    "timestamp": "2025-07-05T15:30:34.170Z",
     "level": "info",
     "message": "Auto-Sniping Module initialized with modular architecture",
     "context": {
@@ -21,7 +21,7 @@
     "environment": "production"
   },
   {
-    "timestamp": "2025-07-05T07:26:50.850Z",
+    "timestamp": "2025-07-05T15:30:34.170Z",
     "level": "info",
     "message": "Core Trading Service initialized",
     "context": {
@@ -37,7 +37,7 @@
     "environment": "production"
   },
   {
-    "timestamp": "2025-07-05T07:26:50.821Z",
+    "timestamp": "2025-07-05T15:30:34.448Z",
     "level": "info",
     "message": "Auto-Sniping Module initialized with modular architecture",
     "context": {
@@ -58,7 +58,7 @@
     "environment": "production"
   },
   {
-    "timestamp": "2025-07-05T07:26:50.821Z",
+    "timestamp": "2025-07-05T15:30:34.448Z",
     "level": "info",
     "message": "Core Trading Service initialized",
     "context": {
@@ -74,7 +74,7 @@
     "environment": "production"
   },
   {
-    "timestamp": "2025-07-05T07:26:50.778Z",
+    "timestamp": "2025-07-05T15:30:34.412Z",
     "level": "info",
     "message": "Auto-Sniping Module initialized with modular architecture",
     "context": {
@@ -95,7 +95,155 @@
     "environment": "production"
   },
   {
-    "timestamp": "2025-07-05T07:26:50.778Z",
+    "timestamp": "2025-07-05T15:30:34.412Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:14.102Z",
+    "level": "info",
+    "message": "Auto-Sniping Module initialized with modular architecture",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "modules": [
+        "AutoSnipingDatabase",
+        "TargetProcessor",
+        "OrderExecutionModule",
+        "PositionMonitoringModule",
+        "StatisticsModule",
+        "StrategyExecutionModule"
+      ]
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:14.102Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:14.313Z",
+    "level": "info",
+    "message": "Auto-Sniping Module initialized with modular architecture",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "modules": [
+        "AutoSnipingDatabase",
+        "TargetProcessor",
+        "OrderExecutionModule",
+        "PositionMonitoringModule",
+        "StatisticsModule",
+        "StrategyExecutionModule"
+      ]
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:14.313Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:21.953Z",
+    "level": "info",
+    "message": "Auto-Sniping Module initialized with modular architecture",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "modules": [
+        "AutoSnipingDatabase",
+        "TargetProcessor",
+        "OrderExecutionModule",
+        "PositionMonitoringModule",
+        "StatisticsModule",
+        "StrategyExecutionModule"
+      ]
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:21.953Z",
+    "level": "info",
+    "message": "Core Trading Service initialized",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "paperTrading": true,
+      "maxPositions": 5,
+      "strategy": "conservative"
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:21.842Z",
+    "level": "info",
+    "message": "Auto-Sniping Module initialized with modular architecture",
+    "context": {
+      "component": "CoreTradingService",
+      "operation": "info",
+      "modules": [
+        "AutoSnipingDatabase",
+        "TargetProcessor",
+        "OrderExecutionModule",
+        "PositionMonitoringModule",
+        "StatisticsModule",
+        "StrategyExecutionModule"
+      ]
+    },
+    "component": "CoreTradingService",
+    "operation": "info",
+    "service": "mexc-sniper-bot",
+    "environment": "production"
+  },
+  {
+    "timestamp": "2025-07-05T15:32:21.842Z",
     "level": "info",
     "message": "Core Trading Service initialized",
     "context": {

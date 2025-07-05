@@ -115,62 +115,22 @@ pre-commit: lint type-check ## Run all pre-commit checks
 # ==================== Testing Commands ====================
 
 .PHONY: test
-test: kill-ports ## Run all tests with performance optimizations
-	@echo -e "${BLUE}Running tests with performance optimizations...${NC}"
-	@$(NODE) run test:optimized
-	@echo -e "${GREEN}✓ Tests completed${NC}"
-
-.PHONY: test-optimized
-test-optimized: kill-ports ## Run tests with intelligent performance optimization
-	@echo -e "${BLUE}Running tests with intelligent performance optimization...${NC}"
-	@$(NODE) run test:optimized
-	@echo -e "${GREEN}✓ Optimized tests completed${NC}"
-
-.PHONY: test-ultra-fast
-test-ultra-fast: kill-ports ## Ultra-fast test execution (< 15 seconds)
-	@echo -e "${BLUE}Running ultra-fast tests...${NC}"
-	@$(NODE) run test:ultra-fast
-	@echo -e "${GREEN}✓ Ultra-fast tests completed${NC}"
-
-.PHONY: test-cached
-test-cached: kill-ports ## Run tests with intelligent caching optimization
-	@echo -e "${BLUE}Running tests with intelligent caching...${NC}"
-	@$(NODE) run test:cached
-	@echo -e "${GREEN}✓ Cached tests completed${NC}"
+test: kill-ports ## Run unit tests
+	@echo -e "${BLUE}Running unit tests...${NC}"
+	@$(NODE) run test
+	@echo -e "${GREEN}✓ Unit tests completed${NC}"
 
 .PHONY: test-unit
-test-unit: ## Run unit tests with performance optimizations
-	@echo -e "${BLUE}Running unit tests with performance optimizations...${NC}"
-	@$(NODE) run test:fast:unit
+test-unit: ## Run unit tests only
+	@echo -e "${BLUE}Running unit tests...${NC}"
+	@$(NODE) run test
 	@echo -e "${GREEN}✓ Unit tests completed${NC}"
 
 .PHONY: test-integration
-test-integration: ## Run integration tests with performance optimizations
-	@echo -e "${BLUE}Running integration tests with performance optimizations...${NC}"
-	@$(NODE) run test:fast:integration
+test-integration: ## Run integration tests only
+	@echo -e "${BLUE}Running integration tests...${NC}"
+	@$(NODE) run test:integration
 	@echo -e "${GREEN}✓ Integration tests completed${NC}"
-
-.PHONY: test-utils
-test-utils: ## Run utility/verification tests only
-	@echo -e "${BLUE}Running utility tests only...${NC}"
-	@bunx vitest run tests/unit/verification.test.ts
-	@echo -e "${GREEN}✓ Utility tests completed${NC}"
-
-.PHONY: test-watch
-test-watch: ## Run tests in watch mode
-	@echo -e "${BLUE}Running tests in watch mode...${NC}"
-	@$(NODE) run test:watch
-
-.PHONY: test-ui
-test-ui: kill-ports ## Run tests with UI interface
-	@echo -e "${BLUE}Running tests with UI...${NC}"
-	@$(NODE) run test:ui
-
-.PHONY: test-coverage
-test-coverage: kill-ports ## Run tests with coverage report
-	@echo -e "${BLUE}Running tests with coverage...${NC}"
-	@$(NODE) run test:coverage
-	@echo -e "${GREEN}✓ Coverage report generated${NC}"
 
 .PHONY: test-e2e
 test-e2e: kill-ports ## Run E2E tests (starts dev server)
@@ -178,31 +138,11 @@ test-e2e: kill-ports ## Run E2E tests (starts dev server)
 	@echo -e "${YELLOW}Starting development server for E2E tests...${NC}"
 	@$(NODE) run dev &
 	@sleep 5
-	@echo -e "${BLUE}Running Playwright tests...${NC}"
+	@echo -e "${BLUE}Running E2E tests...${NC}"
 	@$(NODE) run test:e2e || true
 	@echo -e "${YELLOW}Cleaning up development server...${NC}"
 	@$(MAKE) kill-ports
 	@echo -e "${GREEN}✓ E2E tests completed${NC}"
-
-.PHONY: test-e2e-ui
-test-e2e-ui: kill-ports ## Run E2E tests with UI
-	@echo -e "${BLUE}Running E2E tests with UI...${NC}"
-	@echo -e "${YELLOW}Starting development server for E2E tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:e2e:ui || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ E2E tests with UI completed${NC}"
-
-.PHONY: test-e2e-headed
-test-e2e-headed: kill-ports ## Run E2E tests in headed mode
-	@echo -e "${BLUE}Running E2E tests in headed mode...${NC}"
-	@echo -e "${YELLOW}Starting development server for E2E tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:e2e:headed || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ E2E tests in headed mode completed${NC}"
 
 .PHONY: test-stagehand
 test-stagehand: kill-ports ## Run Stagehand E2E tests
@@ -214,186 +154,46 @@ test-stagehand: kill-ports ## Run Stagehand E2E tests
 	@$(MAKE) kill-ports
 	@echo -e "${GREEN}✓ Stagehand E2E tests completed${NC}"
 
-.PHONY: test-stagehand-auth
-test-stagehand-auth: kill-ports ## Run Stagehand authentication tests
-	@echo -e "${BLUE}Running Stagehand authentication tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:auth || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand auth tests completed${NC}"
-
-.PHONY: test-stagehand-dashboard
-test-stagehand-dashboard: kill-ports ## Run Stagehand dashboard tests
-	@echo -e "${BLUE}Running Stagehand dashboard tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:dashboard || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand dashboard tests completed${NC}"
-
-.PHONY: test-stagehand-patterns
-test-stagehand-patterns: kill-ports ## Run Stagehand pattern discovery tests
-	@echo -e "${BLUE}Running Stagehand pattern discovery tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:patterns || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand pattern tests completed${NC}"
-
-.PHONY: test-stagehand-api
-test-stagehand-api: kill-ports ## Run Stagehand API integration tests
-	@echo -e "${BLUE}Running Stagehand API integration tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:api || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand API tests completed${NC}"
-
-.PHONY: test-stagehand-integration
-test-stagehand-integration: kill-ports ## Run Stagehand integration tests
-	@echo -e "${BLUE}Running Stagehand integration tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:integration || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand integration tests completed${NC}"
-
-.PHONY: test-stagehand-headed
-test-stagehand-headed: kill-ports ## Run Stagehand tests in headed mode
-	@echo -e "${BLUE}Running Stagehand tests in headed mode...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:headed || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand headed tests completed${NC}"
-
-.PHONY: test-stagehand-ui
-test-stagehand-ui: kill-ports ## Run Stagehand tests with UI
-	@echo -e "${BLUE}Running Stagehand tests with UI...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand:ui || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand UI tests completed${NC}"
-
 .PHONY: test-all
-test-all: kill-ports ## Run all tests in sequence (unit → integration → E2E → Stagehand)
-	@echo -e "${BLUE}Running complete test suite in sequence...${NC}"
-	@echo -e "${YELLOW}1/4: Running unit tests...${NC}"
-	@$(NODE) run test:unit
-	@echo -e "${GREEN}✓ Unit tests passed${NC}"
-	@echo -e "${YELLOW}2/4: Running integration tests...${NC}"
-	@bunx vitest run tests/integration/
-	@echo -e "${GREEN}✓ Integration tests passed${NC}"
-	@echo -e "${YELLOW}3/4: Running E2E tests...${NC}"
-	@echo -e "${BLUE}Starting development server for E2E tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:e2e || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ E2E tests completed${NC}"
-	@echo -e "${YELLOW}4/4: Running Stagehand E2E tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@$(NODE) run test:stagehand || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Stagehand tests completed${NC}"
+test-all: kill-ports ## Run complete test suite
+	@echo -e "${BLUE}Running complete test suite...${NC}"
+	@$(NODE) run test:all
 	@echo -e "${GREEN}✓ All tests completed successfully${NC}"
 
+.PHONY: test-watch
+test-watch: ## Run tests in watch mode
+	@echo -e "${BLUE}Running tests in watch mode...${NC}"
+	@$(NODE) run test:watch
+
+.PHONY: test-coverage
+test-coverage: kill-ports ## Run tests with coverage report
+	@echo -e "${BLUE}Running tests with coverage...${NC}"
+	@$(NODE) run test:coverage
+	@echo -e "${GREEN}✓ Coverage report generated${NC}"
+
+.PHONY: test-performance
+test-performance: ## Run performance tests
+	@echo -e "${BLUE}Running performance tests...${NC}"
+	@$(NODE) run test:performance
+	@echo -e "${GREEN}✓ Performance tests completed${NC}"
+
+.PHONY: test-security
+test-security: ## Run security tests
+	@echo -e "${BLUE}Running security tests...${NC}"
+	@$(NODE) run test:security
+	@echo -e "${GREEN}✓ Security tests completed${NC}"
+
 .PHONY: test-quick
-test-quick: ## Quick test run with maximum performance optimizations
-	@echo -e "${BLUE}Running quick tests with maximum performance optimizations...${NC}"
-	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=3000 $(NODE) run test:fast:parallel
+test-quick: ## Quick test run with optimizations
+	@echo -e "${BLUE}Running quick tests...${NC}"
+	@$(NODE) run test
 	@echo -e "${GREEN}✓ Quick tests completed${NC}"
 
-.PHONY: test-timeout-optimized
-test-timeout-optimized: ## Run tests with optimized timeout configuration
-	@echo -e "${BLUE}Running tests with optimized timeouts...${NC}"
-	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=3000 TEST_TIMEOUT_INTEGRATION=20000 TEST_TIMEOUT_PERFORMANCE=2000 $(NODE) run test:fast
-	@echo -e "${GREEN}✓ Timeout-optimized tests completed${NC}"
-
-.PHONY: test-unit-fast
-test-unit-fast: ## Run unit tests with fast timeout configuration
-	@echo -e "${BLUE}Running unit tests with fast timeouts...${NC}"
-	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=3000 $(NODE) run test:fast:unit
-	@echo -e "${GREEN}✓ Fast unit tests completed${NC}"
-
-.PHONY: test-integration-optimized
-test-integration-optimized: ## Run integration tests with optimized timeout configuration
-	@echo -e "${BLUE}Running integration tests with optimized timeouts...${NC}"
-	@TEST_TYPE=integration TEST_TIMEOUT_INTEGRATION=20000 $(NODE) run test:fast:integration
-	@echo -e "${GREEN}✓ Optimized integration tests completed${NC}"
-
-.PHONY: test-retry-service
-test-retry-service: ## Run MexcRetryService tests with optimized timers
-	@echo -e "${BLUE}Running MexcRetryService tests with optimized configuration...${NC}"
-	@TEST_TYPE=unit TEST_TIMEOUT_UNIT=5000 bunx vitest run tests/unit/services/api/mexc-retry-service.test.ts --reporter=basic
-	@echo -e "${GREEN}✓ MexcRetryService tests completed${NC}"
-
-.PHONY: test-value-object
-test-value-object: ## Run ValueObject tests with performance optimization
-	@echo -e "${BLUE}Running ValueObject tests with performance optimization...${NC}"
-	@TEST_TYPE=performance TEST_TIMEOUT_PERFORMANCE=2000 bunx vitest run tests/unit/domain/base/value-object.test.ts --reporter=basic
-	@echo -e "${GREEN}✓ ValueObject tests completed${NC}"
-
-.PHONY: test-performance-monitor
-test-performance-monitor: ## Run comprehensive test performance monitoring
-	@echo -e "${BLUE}Running comprehensive test performance monitoring...${NC}"
-	@bun run scripts/test-performance-monitor.ts
-	@echo -e "${GREEN}✓ Performance monitoring completed${NC}"
-
-.PHONY: validate-timeout-optimizations
-validate-timeout-optimizations: ## Validate all timeout optimizations are working
-	@echo -e "${BLUE}Validating timeout optimizations...${NC}"
-	@$(MAKE) test-retry-service
-	@$(MAKE) test-value-object
-	@$(MAKE) test-unit-fast
-	@echo -e "${GREEN}✓ All timeout optimizations validated${NC}"
-
-.PHONY: test-emergency
-test-emergency: ## Emergency test run with circuit breakers and forced termination
-	@echo -e "${BLUE}Running emergency tests with circuit breakers...${NC}"
-	@$(NODE) run test:emergency
-	@echo -e "${GREEN}✓ Emergency tests completed${NC}"
-
-# ==================== Test Performance & Cache Management ====================
-
-.PHONY: test-performance-analyze
-test-performance-analyze: ## Analyze test performance and generate optimization report
-	@echo -e "${BLUE}Analyzing test performance...${NC}"
-	@$(NODE) run test:performance:analyze
-	@echo -e "${GREEN}✓ Performance analysis completed${NC}"
-
-.PHONY: test-performance-metrics
-test-performance-metrics: ## Monitor test performance with real-time metrics
-	@echo -e "${BLUE}Monitoring test performance with real-time metrics...${NC}"
-	@$(NODE) run test:performance:monitor
-	@echo -e "${GREEN}✓ Performance metrics monitoring completed${NC}"
-
-.PHONY: test-cache-optimize
-test-cache-optimize: ## Optimize test execution using intelligent caching
-	@echo -e "${BLUE}Optimizing test cache...${NC}"
-	@$(NODE) run test:cache:optimize
-	@echo -e "${GREEN}✓ Cache optimization completed${NC}"
-
-.PHONY: test-cache-prewarm
-test-cache-prewarm: ## Pre-warm test caches for faster execution
-	@echo -e "${BLUE}Pre-warming test caches...${NC}"
-	@$(NODE) run test:cache:prewarm
-	@echo -e "${GREEN}✓ Cache pre-warming completed${NC}"
-
-.PHONY: test-cache-clear
-test-cache-clear: ## Clear all test caches and start fresh
-	@echo -e "${BLUE}Clearing test caches...${NC}"
-	@$(NODE) run test:cache:clear
-	@echo -e "${GREEN}✓ Test caches cleared${NC}"
-
-.PHONY: test-cache-stats
-test-cache-stats: ## Show test cache statistics and performance metrics
-	@echo -e "${BLUE}Showing test cache statistics...${NC}"
-	@$(NODE) run test:cache:stats
-	@echo -e "${GREEN}✓ Cache statistics displayed${NC}"
+.PHONY: test-build-verify
+test-build-verify: ## Pre-build verification tests
+	@echo -e "${BLUE}Running pre-build verification...${NC}"
+	@$(NODE) run test:build-verify
+	@echo -e "${GREEN}✓ Build verification completed${NC}"
 
 # ==================== Authentication Commands ====================
 
@@ -646,88 +446,7 @@ validate-config: ## Validate production configuration
 	@bun run scripts/production-config-validator.ts
 	@echo -e "${GREEN}✓ Configuration validation complete${NC}"
 
-# ==================== Production Testing Automation ====================
-
-.PHONY: test-production
-test-production: kill-ports ## Run comprehensive production testing automation
-	@echo -e "${BLUE}Running production testing automation...${NC}"
-	@echo -e "${YELLOW}Starting development server for production tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 10
-	@echo -e "${BLUE}Executing production test automation framework...${NC}"
-	@bun run scripts/production-testing-automation.ts production || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Production testing automation completed${NC}"
-
-.PHONY: test-production-autosniping
-test-production-autosniping: kill-ports ## Run auto-sniping workflow production tests
-	@echo -e "${BLUE}Running auto-sniping workflow production tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@npx playwright test tests/e2e/production-autosniping-workflow.spec.ts --timeout=300000 || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Auto-sniping production tests completed${NC}"
-
-.PHONY: test-production-monitoring
-test-production-monitoring: kill-ports ## Run real-time monitoring production tests
-	@echo -e "${BLUE}Running real-time monitoring production tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@npx playwright test tests/e2e/production-realtime-monitoring.spec.ts --timeout=240000 || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Monitoring production tests completed${NC}"
-
-.PHONY: test-production-deployment
-test-production-deployment: kill-ports ## Run deployment validation tests
-	@echo -e "${BLUE}Running deployment validation tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@npx playwright test tests/e2e/production-deployment-validation.spec.ts --timeout=180000 || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Deployment validation tests completed${NC}"
-
-.PHONY: test-production-websockets
-test-production-websockets: kill-ports ## Run WebSocket and real-time data tests
-	@echo -e "${BLUE}Running WebSocket and real-time data tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@echo -e "${BLUE}Testing WebSocket connections and data flows...${NC}"
-	@npx playwright test tests/e2e/production-realtime-monitoring.spec.ts --grep="WebSocket" || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ WebSocket tests completed${NC}"
-
-.PHONY: test-production-performance
-test-production-performance: kill-ports ## Run performance benchmarking tests
-	@echo -e "${BLUE}Running performance benchmarking tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@echo -e "${BLUE}Executing performance benchmarks...${NC}"
-	@npx playwright test tests/e2e/production-autosniping-workflow.spec.ts --grep="Performance" || true
-	@npx playwright test tests/e2e/production-deployment-validation.spec.ts --grep="Performance" || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Performance tests completed${NC}"
-
-.PHONY: test-production-security
-test-production-security: kill-ports ## Run security and compliance tests
-	@echo -e "${BLUE}Running security and compliance tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@echo -e "${BLUE}Validating security configurations...${NC}"
-	@npx playwright test tests/e2e/production-deployment-validation.spec.ts --grep="Security" || true
-	@npx playwright test tests/e2e/production-deployment-validation.spec.ts --grep="Compliance" || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Security tests completed${NC}"
-
-.PHONY: test-production-resilience
-test-production-resilience: kill-ports ## Run system resilience and recovery tests
-	@echo -e "${BLUE}Running system resilience tests...${NC}"
-	@$(NODE) run dev &
-	@sleep 5
-	@echo -e "${BLUE}Testing error handling and recovery...${NC}"
-	@npx playwright test tests/e2e/production-autosniping-workflow.spec.ts --grep="resilience" || true
-	@npx playwright test tests/e2e/production-realtime-monitoring.spec.ts --grep="failover" || true
-	@$(MAKE) kill-ports
-	@echo -e "${GREEN}✓ Resilience tests completed${NC}"
+# ==================== Production Commands ====================
 
 .PHONY: production-readiness-check
 production-readiness-check: ## Complete production readiness validation
@@ -745,8 +464,8 @@ production-readiness-check: ## Complete production readiness validation
 	@$(MAKE) test-e2e
 	@echo -e "${YELLOW}6/9: Stagehand user journey tests...${NC}"
 	@$(MAKE) test-stagehand
-	@echo -e "${YELLOW}7/9: Production testing automation...${NC}"
-	@$(MAKE) test-production
+	@echo -e "${YELLOW}7/9: Production security and performance tests...${NC}"
+	@$(MAKE) test-security test-performance
 	@echo -e "${YELLOW}8/9: Production readiness validation...${NC}"
 	@bun run scripts/production-readiness-validator.ts
 	@echo -e "${YELLOW}9/9: Generating final readiness report...${NC}"

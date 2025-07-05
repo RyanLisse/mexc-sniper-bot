@@ -45,21 +45,29 @@ export function createSuccessResult<T>(
   data: T,
   message?: string
 ): ValidationResult<T> {
-  return { success: true, data, message };
+  return {
+    success: true,
+    data,
+    message: message ?? undefined,
+  };
 }
 
 export function createErrorResult(
   error: string,
   code?: string
 ): ValidationResult {
-  return { success: false, error, code };
+  return {
+    success: false,
+    error,
+    code: code ?? undefined,
+  };
 }
 
 export function createApiSuccess<T>(data: T, message?: string): ApiResponse<T> {
   return {
     success: true,
     data,
-    message,
+    message: message ?? undefined,
     timestamp: new Date().toISOString(),
   };
 }
@@ -72,8 +80,8 @@ export function createApiError(
   return {
     success: false,
     error,
-    code,
-    statusCode,
+    code: code ?? undefined,
+    statusCode: statusCode ?? undefined,
     timestamp: new Date().toISOString(),
   };
 }

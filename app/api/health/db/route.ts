@@ -99,7 +99,7 @@ async function healthHandler(request: Request) {
       // Return cached result if available during rate limit
       const cached = getCachedHealthResult(cacheKey);
       if (cached) {
-        return apiResponse(cached, cached.status === "healthy" ? 200 : 503);
+        return apiResponse(createHealthResponse(cached), cached.status === "healthy" ? 200 : 503);
       }
 
       // Return rate limited response
@@ -120,7 +120,7 @@ async function healthHandler(request: Request) {
     if (cachedResult) {
       console.info("[Health Check] Returning cached result");
       return apiResponse(
-        cachedResult,
+        createHealthResponse(cachedResult),
         cachedResult.status === "healthy" ? 200 : 503
       );
     }

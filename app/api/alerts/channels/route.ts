@@ -17,16 +17,16 @@ export async function GET(request: NextRequest) {
     const alertConfigService = new AlertConfigurationService(db);
 
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get("type") || undefined;
-    const enabled =
-      searchParams.get("enabled") !== null
-        ? searchParams.get("enabled") === "true"
-        : undefined;
+    const type = searchParams.get("type");
+    const enabledParam = searchParams.get("enabled");
+    const enabled = enabledParam !== null ? enabledParam === "true" : undefined;
 
-    const channels = await alertConfigService.listNotificationChannels({
-      type,
-      enabled,
-    });
+    const channelFilters: { type?: string; enabled?: boolean } = {};
+    if (type) channelFilters.type = type;
+    if (enabled !== undefined) channelFilters.enabled = enabled;
+
+    const channels =
+      await alertConfigService.listNotificationChannels(channelFilters);
 
     // Format channels for client consumption (hide sensitive config data)
     const formattedChannels = channels.map((channel) => {
@@ -140,7 +140,7 @@ function getConfigSummary(
       return {
         smtpHost: config.smtpHost,
         fromAddress: config.fromAddress,
-        recipients: config.toAddresses?.length || 0,
+        recipients: config.toAddresses?.length ?? 0,
       };
 
     case "slack":
@@ -153,7 +153,7 @@ function getConfigSummary(
     case "webhook":
       return {
         url: config.url ? `${config.url.split("/")[2]}...` : null,
-        method: config.method || "POST",
+        method: config.method ?? "POST",
         hasAuth: !!config.authentication,
       };
 
@@ -161,15 +161,15 @@ function getConfigSummary(
       return {
         provider: config.provider,
         fromNumber: config.fromPhoneNumber,
-        recipients: config.toPhoneNumbers?.length || 0,
+        recipients: config.toPhoneNumbers?.length ?? 0,
       };
 
     case "teams":
       return {
         hasWebhook: !!config.webhookUrl,
         mentions:
-          (config.mentionUsers?.length || 0) +
-          (config.mentionTeams?.length || 0),
+          (config.mentionUsers?.length ?? 0) +
+          (config.mentionTeams?.length ?? 0),
       };
 
     default:

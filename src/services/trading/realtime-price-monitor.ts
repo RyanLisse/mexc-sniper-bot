@@ -934,9 +934,31 @@ export class RealtimePriceMonitor extends BrowserCompatibleEventEmitter {
     }
 
     this.connectionState.reconnectAttempts++;
+
+    // FIXED: Add NaN validation to prevent TimeoutNaNWarning
+    const safeReconnectDelay =
+      typeof this.config.reconnectDelay === "number" &&
+      !Number.isNaN(this.config.reconnectDelay) &&
+      Number.isFinite(this.config.reconnectDelay)
+        ? this.config.reconnectDelay
+        : 1000; // Default 1 second
+
+    const safeAttempts =
+      typeof this.connectionState.reconnectAttempts === "number" &&
+      !Number.isNaN(this.connectionState.reconnectAttempts) &&
+      Number.isFinite(this.connectionState.reconnectAttempts)
+        ? Math.max(0, Math.min(this.connectionState.reconnectAttempts - 1, 10)) // Cap exponent to prevent overflow
+        : 0;
+
+    const calculatedDelay = safeReconnectDelay * 2 ** safeAttempts;
+
     const delay = Math.min(
-      this.config.reconnectDelay *
-        2 ** (this.connectionState.reconnectAttempts - 1),
+      typeof calculatedDelay === "number" &&
+        !Number.isNaN(calculatedDelay) &&
+        Number.isFinite(calculatedDelay) &&
+        calculatedDelay > 0
+        ? calculatedDelay
+        : safeReconnectDelay,
       60000 // Max 1 minute delay
     );
 

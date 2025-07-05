@@ -21,15 +21,16 @@ const RealtimeQuerySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    let user: unknown;
+    let user: { id: string };
     try {
-      user = await requireAuth();
-      if (!user) {
+      const authResult = await requireAuth();
+      if (!authResult || typeof authResult !== 'object' || !('id' in authResult)) {
         return NextResponse.json(
           { error: "Authentication required" },
           { status: 401 }
         );
       }
+      user = authResult as { id: string };
     } catch (_error) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -140,15 +141,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    let user: unknown;
+    let user: { id: string };
     try {
-      user = await requireAuth();
-      if (!user) {
+      const authResult = await requireAuth();
+      if (!authResult || typeof authResult !== 'object' || !('id' in authResult)) {
         return NextResponse.json(
           { error: "Authentication required" },
           { status: 401 }
         );
       }
+      user = authResult as { id: string };
     } catch (_error) {
       return NextResponse.json(
         { error: "Authentication required" },
@@ -326,7 +328,7 @@ async function generateRealtimeData(
             }
           : null,
         trend: calculateShortTermTrend(metrics),
-        healthStatus: getOperationHealthStatus(latest),
+        healthStatus: latest ? getOperationHealthStatus(latest) : { status: "critical", score: 0 },
       };
     }),
     system: {
@@ -428,8 +430,10 @@ async function calculateSystemHealthScore(
   for (const { operation, metrics } of allMetrics) {
     if (metrics.length > 0) {
       const latest = metrics[metrics.length - 1];
-      const health = getOperationHealthStatus(latest);
-      componentScores[operation] = health.score;
+      if (latest) {
+        const health = getOperationHealthStatus(latest);
+        componentScores[operation] = health.score;
+      }
     }
   }
 
@@ -508,13 +512,15 @@ function getRecentEvents(limit: number): Array<{
     const type = eventTypes[Math.floor(Math.random() * eventTypes.length)];
     const severity = severities[Math.floor(Math.random() * severities.length)];
 
-    events.push({
-      id: `evt_${Date.now() - i * 1000}_${Math.random().toString(36).substring(7)}`,
-      type,
-      message: `${type.charAt(0).toUpperCase() + type.slice(1)} event occurred`,
-      timestamp: new Date(Date.now() - i * 1000).toISOString(),
-      severity,
-    });
+    if (type && severity) {
+      events.push({
+        id: `evt_${Date.now() - i * 1000}_${Math.random().toString(36).substring(7)}`,
+        type,
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} event occurred`,
+        timestamp: new Date(Date.now() - i * 1000).toISOString(),
+        severity,
+      });
+    }
   }
 
   return events;

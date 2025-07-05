@@ -362,7 +362,7 @@ export class PortfolioRiskMonitor extends BrowserCompatibleEventEmitter {
         const liquidityScore = this.calculateLiquidityScore(orderBook);
         totalLiquidityRisk +=
           (1 - liquidityScore) * position.entryPrice * position.quantity;
-      } catch (error) {
+      } catch (_error) {
         // Assume high liquidity risk if can't get order book
         totalLiquidityRisk += position.entryPrice * position.quantity * 0.5;
       }
@@ -393,7 +393,7 @@ export class PortfolioRiskMonitor extends BrowserCompatibleEventEmitter {
   }
 
   // Helper methods
-  private calculateUnrealizedPnL(position: Position): number {
+  private calculateUnrealizedPnL(_position: Position): number {
     // Simplified PnL calculation - would need current market price
     // For now, assume break-even
     return 0;

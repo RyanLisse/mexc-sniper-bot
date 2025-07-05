@@ -1,16 +1,10 @@
-import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 
-// Singleton pattern for middleware Supabase client to prevent multiple GoTrueClient instances
-let middlewareSupabaseClient: ReturnType<typeof createServerClient> | null =
-  null;
+// Import centralized client manager to prevent multiple GoTrueClient instances
+import { getSupabaseMiddlewareClient } from "./supabase-client-manager";
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -42,9 +36,9 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
-  // Check if Supabase is configured
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  // Check if Supabase is configured (using NEXT_PUBLIC_ variables for consistency)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn(
@@ -54,59 +48,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   try {
-    // Use singleton pattern to prevent multiple GoTrueClient instances
-    if (!middlewareSupabaseClient) {
-      middlewareSupabaseClient = createServerClient(
-        supabaseUrl,
-        supabaseAnonKey,
-        {
-          cookies: {
-            get(name: string) {
-              return request.cookies.get(name)?.value;
-            },
-            set(name: string, value: string, options: CookieOptions) {
-              request.cookies.set({
-                name,
-                value,
-                ...options,
-              });
-              response = NextResponse.next({
-                request: {
-                  headers: request.headers,
-                },
-              });
-              response.cookies.set({
-                name,
-                value,
-                ...options,
-              });
-            },
-            remove(name: string, options: CookieOptions) {
-              request.cookies.set({
-                name,
-                value: "",
-                ...options,
-              });
-              response = NextResponse.next({
-                request: {
-                  headers: request.headers,
-                },
-              });
-              response.cookies.set({
-                name,
-                value: "",
-                ...options,
-              });
-            },
-          },
-        }
-      );
-    }
-
-    const supabase = middlewareSupabaseClient;
-
-    // Refresh session if needed
-    await supabase.auth.getUser();
+    // Use centralized client manager to prevent multiple GoTrueClient instances
+    const supabase = getSupabaseMiddlewareClient(request);
 
     // Check if user is authenticated
     const {
@@ -118,8 +61,32 @@ export async function updateSession(request: NextRequest) {
     const protectedPaths = [
       "/dashboard",
       "/settings",
-      "/api/trading",
-      "/api/user",
+      "/agents",
+      "/alerts",
+      "/config",
+      "/monitoring",
+      "/safety",
+      "/strategies",
+      "/workflows",
+      "/api/account",
+      "/api/alerts",
+      "/api/analytics",
+      "/api/api-credentials",
+      "/api/auto-sniping",
+      "/api/configuration",
+      "/api/execution-history",
+      "/api/mexc/account",
+      "/api/mexc/trade",
+      "/api/monitoring",
+      "/api/portfolio",
+      "/api/snipe-targets",
+      "/api/strategies",
+      "/api/trading-settings",
+      "/api/transaction-locks",
+      "/api/transactions",
+      "/api/user-preferences",
+      "/api/workflow-executions",
+      "/api/workflow-status",
     ];
     const isProtectedPath = protectedPaths.some((path) =>
       request.nextUrl.pathname.startsWith(path)

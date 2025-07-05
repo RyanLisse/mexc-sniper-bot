@@ -5,14 +5,14 @@
 
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useCurrencyFormatting } from '../../../src/hooks/use-currency-formatting';
+import { useCurrencyFormatting } from '@/hooks/use-currency-formatting';
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 describe('useCurrencyFormatting', () => {
   it('should return all formatting functions', () => {

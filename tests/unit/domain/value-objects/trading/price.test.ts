@@ -3,16 +3,16 @@
  * Tests price creation, comparison, calculations, and business logic
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Price } from '../../../../../src/domain/value-objects/trading/price';
-import { DomainValidationError } from '../../../../../src/domain/errors/trading-errors';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { Price } from '@/domain/value-objects/trading/price';
+import { DomainValidationError } from '@/domain/errors/trading-errors';
 
 import { 
   setupTimeoutElimination, 
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../../../../utils/timeout-elimination-helpers';
+} from '@utils/timeout-utilities';
 
 describe('Price Value Object', () => {
   let validPrice: Price;
@@ -160,16 +160,30 @@ describe('Price Value Object', () => {
     });
 
     it('should reject percentage calculation with zero price', () => {
-      const zeroPrice = Price.fromExisting({
-        value: 1, // Can't create with zero, so we'll mock it
-        symbol: 'BTCUSDT',
-        timestamp: new Date(),
-        source: 'exchange',
-        precision: 2,
+      // Create a comprehensive mock Price object with internal props structure
+      const zeroPrice = Object.create(Price.prototype);
+      Object.defineProperty(zeroPrice, 'props', {
+        value: {
+          value: 0,
+          symbol: 'BTCUSDT',
+          timestamp: new Date(),
+          source: 'test',
+          precision: 2
+        },
+        configurable: true
       });
-      
-      // Manually set value to 0 for testing - this is a bit of a hack
-      (zeroPrice as any).props.value = 0;
+      Object.defineProperty(zeroPrice, 'value', {
+        get: () => 0,
+        configurable: true
+      });
+      Object.defineProperty(zeroPrice, 'symbol', {
+        get: () => 'BTCUSDT',
+        configurable: true
+      });
+      Object.defineProperty(zeroPrice, 'ensureSameSymbol', {
+        value: () => {}, // Mock method
+        configurable: true
+      });
       
       expect(() => validPrice.percentageDifferenceFrom(zeroPrice)).toThrow(DomainValidationError);
     });
@@ -220,15 +234,30 @@ describe('Price Value Object', () => {
     });
 
     it('should reject slippage calculation with zero expected price', () => {
-      const zeroPrice = Price.fromExisting({
-        value: 1,
-        symbol: 'BTCUSDT',
-        timestamp: new Date(),
-        source: 'exchange',
-        precision: 2,
+      // Create a comprehensive mock Price object with internal props structure
+      const zeroPrice = Object.create(Price.prototype);
+      Object.defineProperty(zeroPrice, 'props', {
+        value: {
+          value: 0,
+          symbol: 'BTCUSDT',
+          timestamp: new Date(),
+          source: 'test',
+          precision: 2
+        },
+        configurable: true
       });
-      
-      (zeroPrice as any).props.value = 0;
+      Object.defineProperty(zeroPrice, 'value', {
+        get: () => 0,
+        configurable: true
+      });
+      Object.defineProperty(zeroPrice, 'symbol', {
+        get: () => 'BTCUSDT',
+        configurable: true
+      });
+      Object.defineProperty(zeroPrice, 'ensureSameSymbol', {
+        value: () => {}, // Mock method
+        configurable: true
+      });
       
       expect(() => validPrice.calculateSlippage(zeroPrice)).toThrow(DomainValidationError);
     });

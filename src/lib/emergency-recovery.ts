@@ -1,8 +1,4 @@
 import { sql } from "drizzle-orm";
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 import { db } from "../db";
 import { executionHistory } from "../db/schema";
 import {

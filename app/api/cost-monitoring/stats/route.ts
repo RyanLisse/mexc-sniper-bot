@@ -199,51 +199,78 @@ function generateQuickRecommendations(
 }
 
 function isValidCostStats(data: unknown): data is CostStatsData {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "emergency" in data &&
-    typeof (data as Record<string, unknown>).emergency === "object" &&
-    (data as Record<string, unknown>).emergency !== null &&
-    "mode" in (data as Record<string, unknown>).emergency &&
-    "cost" in data &&
-    typeof (data as Record<string, unknown>).cost === "object" &&
-    (data as Record<string, unknown>).cost !== null &&
-    "hourlyRate" in (data as Record<string, unknown>).cost &&
-    "hourlyLimit" in (data as Record<string, unknown>).cost &&
-    "connections" in data &&
-    typeof (data as Record<string, unknown>).connections === "object" &&
-    (data as Record<string, unknown>).connections !== null &&
-    "current" in (data as Record<string, unknown>).connections &&
-    "limit" in (data as Record<string, unknown>).connections
-  );
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  
+  const obj = data as Record<string, unknown>;
+  
+  // Check emergency object
+  if (!("emergency" in obj) || typeof obj.emergency !== "object" || obj.emergency === null) {
+    return false;
+  }
+  const emergency = obj.emergency as Record<string, unknown>;
+  if (!("mode" in emergency)) {
+    return false;
+  }
+  
+  // Check cost object
+  if (!("cost" in obj) || typeof obj.cost !== "object" || obj.cost === null) {
+    return false;
+  }
+  const cost = obj.cost as Record<string, unknown>;
+  if (!("hourlyRate" in cost) || !("hourlyLimit" in cost)) {
+    return false;
+  }
+  
+  // Check connections object
+  if (!("connections" in obj) || typeof obj.connections !== "object" || obj.connections === null) {
+    return false;
+  }
+  const connections = obj.connections as Record<string, unknown>;
+  if (!("current" in connections) || !("limit" in connections)) {
+    return false;
+  }
+  
+  return true;
 }
 
 function isValidCacheStats(data: unknown): data is CacheStatsData {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "cache" in data &&
-    typeof (data as Record<string, unknown>).cache === "object" &&
-    (data as Record<string, unknown>).cache !== null &&
-    "hitRate" in (data as Record<string, unknown>).cache &&
-    typeof ((data as Record<string, unknown>).cache as Record<string, unknown>)
-      .hitRate === "number"
-  );
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  
+  const obj = data as Record<string, unknown>;
+  
+  // Check cache object
+  if (!("cache" in obj) || typeof obj.cache !== "object" || obj.cache === null) {
+    return false;
+  }
+  const cache = obj.cache as Record<string, unknown>;
+  if (!("hitRate" in cache) || typeof cache.hitRate !== "number") {
+    return false;
+  }
+  
+  return true;
 }
 
 function isValidBatchStats(data: unknown): data is BatchStatsData {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "metrics" in data &&
-    typeof (data as Record<string, unknown>).metrics === "object" &&
-    (data as Record<string, unknown>).metrics !== null &&
-    "batchingRate" in (data as Record<string, unknown>).metrics &&
-    typeof (
-      (data as Record<string, unknown>).metrics as Record<string, unknown>
-    ).batchingRate === "number"
-  );
+  if (typeof data !== "object" || data === null) {
+    return false;
+  }
+  
+  const obj = data as Record<string, unknown>;
+  
+  // Check metrics object
+  if (!("metrics" in obj) || typeof obj.metrics !== "object" || obj.metrics === null) {
+    return false;
+  }
+  const metrics = obj.metrics as Record<string, unknown>;
+  if (!("batchingRate" in metrics) || typeof metrics.batchingRate !== "number") {
+    return false;
+  }
+  
+  return true;
 }
 
 // Export with short cache time for frequently accessed stats

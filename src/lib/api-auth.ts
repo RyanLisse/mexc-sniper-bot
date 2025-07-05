@@ -1,8 +1,4 @@
 import type { NextRequest } from "next/server";
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 import { createErrorResponse, HTTP_STATUS } from "./api-response";
 import { shouldBypassRateLimit } from "./bypass-rate-limit";
 import { AuthorizationError } from "./errors";

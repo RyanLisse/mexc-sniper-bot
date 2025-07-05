@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * MEXC Client Core Infrastructure
  *
@@ -381,8 +377,42 @@ export class MexcClientCore {
               };
             }
 
-            // Exponential backoff with jitter for retryable errors
-            const delay = baseDelay * 2 ** (attempt - 1) + Math.random() * 1000;
+            // CRITICAL FIX: Exponential backoff with jitter and comprehensive NaN validation
+            const safeBaseDelay =
+              typeof baseDelay === "number" &&
+              !Number.isNaN(baseDelay) &&
+              Number.isFinite(baseDelay)
+                ? baseDelay
+                : 1000; // Default 1 second
+
+            const safeAttempt =
+              typeof attempt === "number" &&
+              !Number.isNaN(attempt) &&
+              Number.isFinite(attempt)
+                ? Math.max(0, Math.min(attempt - 1, 10)) // Cap exponent to prevent overflow
+                : 0;
+
+            const calculatedDelay = safeBaseDelay * 2 ** safeAttempt;
+            const exponentialDelay =
+              typeof calculatedDelay === "number" &&
+              !Number.isNaN(calculatedDelay) &&
+              Number.isFinite(calculatedDelay) &&
+              calculatedDelay > 0
+                ? calculatedDelay
+                : safeBaseDelay;
+
+            const jitter = Math.random() * 1000;
+            const preliminaryDelay = exponentialDelay + jitter;
+
+            // CRITICAL FIX: Ensure delay is never NaN for setTimeout
+            const delay =
+              typeof preliminaryDelay === "number" &&
+              !Number.isNaN(preliminaryDelay) &&
+              Number.isFinite(preliminaryDelay) &&
+              preliminaryDelay > 0
+                ? preliminaryDelay
+                : 1000; // Safe fallback delay
+
             this.logger.debug(
               `[MexcClientCore] Retrying in ${Math.round(delay)}ms... (${requestId})`
             );

@@ -160,8 +160,8 @@ function generateMockAlerts(count: number) {
       severity,
       category,
       source,
-      title: generateAlertTitle(severity, category, source),
-      message: generateAlertMessage(severity, category, source),
+      title: generateAlertTitle(severity!, category!, source!),
+      message: generateAlertMessage(severity!, category!, source!),
       timestamp: new Date(
         Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
       ).toISOString(),
@@ -181,16 +181,16 @@ function generateMockAlerts(count: number) {
             ).toISOString()
           : null,
       count: Math.floor(Math.random() * 10 + 1),
-      tags: generateAlertTags(category, source),
+      tags: generateAlertTags(category!, source!),
       metadata: {
-        affectedComponents: generateAffectedComponents(category),
+        affectedComponents: generateAffectedComponents(category!),
         impactLevel:
           severity === "critical"
             ? "high"
             : severity === "error"
               ? "medium"
               : "low",
-        estimatedResolution: generateResolutionTime(severity),
+        estimatedResolution: generateResolutionTime(severity!),
         relatedAlerts: Math.floor(Math.random() * 5),
       },
     });
@@ -267,7 +267,7 @@ function generateAlertMessage(
   const severityMessages = messages[severity as keyof typeof messages] || [
     `${source} event in ${category}`,
   ];
-  return severityMessages[Math.floor(Math.random() * severityMessages.length)];
+  return severityMessages[Math.floor(Math.random() * severityMessages.length)] || "Unknown event";
 }
 
 function generateAlertTags(category: string, source: string): string[] {
@@ -316,7 +316,7 @@ function generateResolutionTime(severity: string): string {
   };
 
   const severityTimes = times[severity as keyof typeof times] || ["unknown"];
-  return severityTimes[Math.floor(Math.random() * severityTimes.length)];
+  return severityTimes[Math.floor(Math.random() * severityTimes.length)] || "unknown";
 }
 
 async function getAlertSummary() {
@@ -353,7 +353,7 @@ async function getAlertTrends() {
     const hour = new Date();
     hour.setHours(hour.getHours() - i);
     return {
-      hour: hour.toISOString().split("T")[1].split(":")[0],
+      hour: hour.toISOString().split("T")[1]?.split(":")[0] || "00",
       count: Math.floor(Math.random() * 20 + 5),
       critical: Math.floor(Math.random() * 3),
       error: Math.floor(Math.random() * 8),

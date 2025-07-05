@@ -21,7 +21,7 @@ import {
   withTimeout, 
   TIMEOUT_CONFIG,
   flushPromises 
-} from '../utils/timeout-elimination-helpers';
+} from '../utils/timeout-utilities';
 
 const TEST_PORT = 3116;
 const BASE_URL = `http://localhost:${TEST_PORT}`;
@@ -93,7 +93,7 @@ describe("Trading & Safety Systems API Integration Tests", () => {
         if (!serverProcess.killed) {
           serverProcess.kill("SIGKILL");
         }
-      }, TIMEOUT_CONFIG.STANDARD));
+      }, TIMEOUT_CONFIG.STANDARD);
     }
   });
 

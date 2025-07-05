@@ -411,7 +411,7 @@ export function SystemValidationCard({
                     .slice(0, 3)
                     .map((rec, index) => (
                       <div
-                        key={index}
+                        key={`rec-${rec.substring(0, 20).replace(/\s+/g, "-")}-${index}`}
                         className="text-sm p-2 bg-blue-50 rounded border-l-2 border-blue-200"
                       >
                         {rec}
@@ -430,7 +430,7 @@ export function SystemValidationCard({
                 <div className="space-y-1">
                   {validationData.nextSteps.slice(0, 3).map((step, index) => (
                     <div
-                      key={index}
+                      key={`step-${step.substring(0, 20).replace(/\s+/g, "-")}-${index}`}
                       className="text-sm p-2 bg-gray-50 rounded flex items-start space-x-2"
                     >
                       <span className="text-gray-400 mt-0.5">{index + 1}.</span>

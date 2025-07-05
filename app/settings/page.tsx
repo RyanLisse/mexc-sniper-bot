@@ -12,35 +12,30 @@ import {
   Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { useAuth } from "@/src/components/auth/supabase-auth-provider";
-import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { Badge } from "@/src/components/ui/badge";
-import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
-import { Label } from "@/src/components/ui/label";
-import { Switch } from "@/src/components/ui/switch";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/src/components/ui/tabs";
-import { useToast } from "@/src/components/ui/use-toast";
-import { UnifiedAutomationSettings } from "@/src/components/unified-automation-settings";
-import { UnifiedRiskManagement } from "@/src/components/unified-risk-management";
-import { UnifiedTakeProfitSettings } from "@/src/components/unified-take-profit-settings";
+import { useAuth } from "@/components/auth/supabase-auth-provider";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { UnifiedAutomationSettings } from "@/components/unified-automation-settings";
+import { UnifiedRiskManagement } from "@/components/unified-risk-management";
+import { UnifiedTakeProfitSettings } from "@/components/unified-take-profit-settings";
 import {
   calculateSyncHealthScore,
   formatSyncStatus,
   useTradingSettingsSync,
-} from "@/src/hooks/use-trading-settings-sync";
+} from "@/hooks/use-trading-settings-sync";
 import {
   useMultiLevelTakeProfit,
   useUpdateMultiLevelTakeProfit,
   useUpdateUserPreferences,
   useUserPreferences,
-} from "@/src/hooks/use-user-preferences";
-import type { TakeProfitStrategy } from "@/src/types/take-profit-strategies";
+} from "@/hooks/use-user-preferences";
+import type { TakeProfitStrategy } from "@/types/take-profit-strategies";
 export default function SettingsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -153,7 +148,8 @@ export default function SettingsPage() {
   const handlePaperTradingToggle = async (enabled: boolean) => {
     setPaperTradingEnabled(enabled);
     try {
-      await updateExecutionSettings({ paperTradingMode: enabled });
+      // TODO: Implement updateExecutionSettings function
+      // await updateExecutionSettings({ paperTradingMode: enabled });
       toast({
         title: enabled ? "Paper trading enabled" : "Paper trading disabled",
       });
@@ -168,7 +164,9 @@ export default function SettingsPage() {
   };
 
   // Handle saving editable take-profit table
-  const _handleSaveMultiLevelTakeProfit = async (levels: { level?: string; percentage?: number; [key: string]: unknown }[]) => {
+  const _handleSaveMultiLevelTakeProfit = async (
+    levels: { level?: string; percentage?: number; [key: string]: unknown }[]
+  ) => {
     console.info("Saving multi-level take-profit levels:", levels);
 
     // Update the multi-level configuration

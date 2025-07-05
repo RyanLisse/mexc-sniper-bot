@@ -400,7 +400,7 @@ export class SessionManagementModule {
       .filter((session) => session.resolution)
       .reduce(
         (acc, session) => {
-          const method = session.resolution!.method;
+          const method = session.resolution?.method;
           acc[method] = (acc[method] || 0) + 1;
           return acc;
         },

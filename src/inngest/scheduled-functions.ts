@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 import { emergencyRecoveryService } from "@/src/lib/emergency-recovery";
 import {
   getConnectivityStatus,

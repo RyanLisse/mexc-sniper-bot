@@ -326,7 +326,7 @@ export const strategyPerformanceMonitoring = inngest.createFunction(
           try {
             const performance =
               await multiPhaseTradingService.getStrategyPerformance(
-                strategy!.id
+                strategy?.id
               );
 
             const alerts = [];
@@ -356,16 +356,16 @@ export const strategyPerformanceMonitoring = inngest.createFunction(
             }
 
             monitoringResults.push({
-              strategyId: strategy!.id,
-              name: strategy!.name,
+              strategyId: strategy?.id,
+              name: strategy?.name,
               performance,
               alerts,
               status: alerts.length > 0 ? "warning" : "healthy",
             });
           } catch (error) {
             monitoringResults.push({
-              strategyId: strategy!.id,
-              name: strategy!.name,
+              strategyId: strategy?.id,
+              name: strategy?.name,
               performance: null,
               alerts: ["Failed to get performance data"],
               status: "error",

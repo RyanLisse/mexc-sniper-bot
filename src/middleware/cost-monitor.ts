@@ -1,7 +1,3 @@
-import {
-  isBrowserEnvironment,
-  isNodeEnvironment,
-} from "@/src/lib/browser-compatible-events";
 /**
  * Cost Monitoring Middleware - Real-time Database Cost Tracking
  *
@@ -84,12 +80,28 @@ class CostMonitor {
     }, 30000);
 
     // Reset daily counters at midnight
-    const msUntilMidnight = new Date().setHours(24, 0, 0, 0) - Date.now();
+    const now = new Date();
+    const tomorrow = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1
+    );
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    // CRITICAL FIX: Safe timeout validation to prevent TimeoutNaNWarning
+    const safeMsUntilMidnight =
+      typeof msUntilMidnight === "number" &&
+      !Number.isNaN(msUntilMidnight) &&
+      Number.isFinite(msUntilMidnight) &&
+      msUntilMidnight > 0
+        ? msUntilMidnight
+        : 24 * 60 * 60 * 1000; // Default to 24 hours if calculation fails
+
     setTimeout(() => {
       this.resetDailyCounters();
       // Reset every 24 hours
       setInterval(() => this.resetDailyCounters(), 24 * 60 * 60 * 1000);
-    }, msUntilMidnight);
+    }, safeMsUntilMidnight);
   }
 
   private resetDailyCounters(): void {

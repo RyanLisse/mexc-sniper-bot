@@ -235,7 +235,7 @@ export class BatchInsertModule {
     const validatedOptions = BatchInsertOptionsSchema.parse(options);
     const { chunkSize, onConflictStrategy } = validatedOptions;
 
-    const startTime = performance.now();
+    const _startTime = performance.now();
     this.logger.info("Starting generic batch insert", {
       tableName,
       recordCount: records.length,

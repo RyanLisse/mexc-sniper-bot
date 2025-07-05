@@ -216,11 +216,13 @@ export async function DELETE(_request: NextRequest): Promise<Response> {
 
 async function handleCreateFlag(data: unknown): Promise<Response> {
   try {
+    // Ensure data is an object before spreading
+    const dataObj = data && typeof data === 'object' ? data as Record<string, unknown> : {};
     const config = EnhancedFeatureFlagConfigSchema.parse({
-      ...data,
+      ...dataObj,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      createdBy: data.createdBy || "api",
+      createdBy: dataObj.createdBy || "api",
     });
 
     enhancedFeatureFlagManager.registerFlag(config);
@@ -243,17 +245,20 @@ async function handleCreateFlag(data: unknown): Promise<Response> {
 
 async function handleEvaluateFlag(data: unknown): Promise<Response> {
   try {
-    const { flagName, userContext, defaultValue = false } = data;
+    // Ensure data is an object before destructuring
+    const dataObj = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+    const { flagName, userContext, defaultValue = false } = dataObj;
 
-    if (!flagName) {
-      return apiResponse(createErrorResponse("Flag name is required"), 400);
+    if (!flagName || typeof flagName !== 'string') {
+      return apiResponse(createErrorResponse("Flag name is required and must be a string"), 400);
     }
 
     const validatedUserContext = UserContextSchema.parse(userContext);
+    const safeDefaultValue = typeof defaultValue === 'boolean' ? defaultValue : false;
     const evaluation = await enhancedFeatureFlagManager.evaluateFlag(
       flagName,
       validatedUserContext,
-      defaultValue
+      safeDefaultValue
     );
 
     return apiResponse(
@@ -273,7 +278,9 @@ async function handleEvaluateFlag(data: unknown): Promise<Response> {
 
 async function handleBulkEvaluate(data: unknown): Promise<Response> {
   try {
-    const { flagNames, userContext, defaultValues = {} } = data;
+    // Ensure data is an object before destructuring
+    const dataObj = data && typeof data === 'object' ? data as Record<string, unknown> : {};
+    const { flagNames, userContext, defaultValues = {} } = dataObj;
 
     if (!Array.isArray(flagNames) || flagNames.length === 0) {
       return apiResponse(
@@ -283,11 +290,13 @@ async function handleBulkEvaluate(data: unknown): Promise<Response> {
     }
 
     const validatedUserContext = UserContextSchema.parse(userContext);
+    const safeDefaultValues = defaultValues && typeof defaultValues === 'object' ? defaultValues as Record<string, unknown> : {};
     const evaluations: Record<string, unknown> = {};
 
     // Evaluate all flags
     for (const flagName of flagNames) {
-      const defaultValue = defaultValues[flagName] || false;
+      const rawDefaultValue = safeDefaultValues[flagName];
+      const defaultValue = typeof rawDefaultValue === 'boolean' ? rawDefaultValue : false;
       try {
         evaluations[flagName] = await enhancedFeatureFlagManager.evaluateFlag(
           flagName,

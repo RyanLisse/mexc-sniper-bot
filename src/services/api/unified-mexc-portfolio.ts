@@ -13,15 +13,8 @@ import type {
 } from "../data/modules/mexc-api-types";
 import type { MexcCacheLayer } from "../data/modules/mexc-cache-layer";
 import type { MexcCoreClient } from "../data/modules/mexc-core-client";
-import {
-  type EnhancedPortfolioData,
-  type PortfolioAnalysis,
-  PortfolioAnalysisService,
-} from "./portfolio/portfolio-analysis-service";
-import {
-  type BalanceRetrievalTest,
-  PortfolioValidationService,
-} from "./portfolio/portfolio-validation-service";
+import { PortfolioAnalysisService } from "./portfolio/portfolio-analysis-service";
+import { PortfolioValidationService } from "./portfolio/portfolio-validation-service";
 import { PortfolioPriceCalculationService } from "./portfolio/price-calculation-service";
 
 // ============================================================================
