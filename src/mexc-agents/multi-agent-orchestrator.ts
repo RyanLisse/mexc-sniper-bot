@@ -264,11 +264,12 @@ export class MultiAgentOrchestrator {
     }
 
     // Filter out invalid steps
-    const validSteps = workflow.steps.filter(step => 
-      step && 
-      typeof step === 'object' && 
-      step.agentType && 
-      typeof step.agentType === 'string'
+    const validSteps = workflow.steps.filter(
+      (step) =>
+        step &&
+        typeof step === "object" &&
+        step.agentType &&
+        typeof step.agentType === "string"
     );
 
     if (validSteps.length === 0) {
@@ -431,7 +432,7 @@ export class MultiAgentOrchestrator {
   private async performHealthCheck(): Promise<void> {
     try {
       const statuses = await this.getAllAgentStatuses();
-      
+
       // Enhanced null safety validation
       if (!statuses || !(statuses instanceof Map)) {
         this.log("Invalid statuses received from getAllAgentStatuses");
@@ -442,14 +443,18 @@ export class MultiAgentOrchestrator {
       const unhealthyAgents = statusEntries
         .filter(([type, status]) => {
           // Ensure we have valid type and status
-          return type && 
-                 typeof type === 'string' && 
-                 (status === "error" || status === "offline");
+          return (
+            type &&
+            typeof type === "string" &&
+            (status === "error" || status === "offline")
+          );
         })
         .map(([type]) => type);
 
       // Ensure unhealthyAgents is always an array
-      const safeUnhealthyAgents = Array.isArray(unhealthyAgents) ? unhealthyAgents : [];
+      const safeUnhealthyAgents = Array.isArray(unhealthyAgents)
+        ? unhealthyAgents
+        : [];
 
       if (safeUnhealthyAgents.length > 0) {
         this.log("Unhealthy agents detected:", safeUnhealthyAgents);

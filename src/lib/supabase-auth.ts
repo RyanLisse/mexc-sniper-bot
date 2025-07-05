@@ -8,12 +8,14 @@ import {
 
 // Build-time detection to prevent database access during Next.js build
 const isBuildTime = () => {
-  return process.env.NEXT_PHASE === 'phase-production-build' || 
-         process.env.NEXT_PHASE === 'phase-development-server' ||
-         (process.env.NODE_ENV === 'production' && !process.env.VERCEL) ||
-         process.env.WEBPACK === 'true' ||
-         process.env.npm_lifecycle_event === 'build' ||
-         process.env.npm_lifecycle_script?.includes('next build');
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.NEXT_PHASE === "phase-development-server" ||
+    (process.env.NODE_ENV === "production" && !process.env.VERCEL) ||
+    process.env.WEBPACK === "true" ||
+    process.env.npm_lifecycle_event === "build" ||
+    process.env.npm_lifecycle_script?.includes("next build")
+  );
 };
 
 // Lazy imports to prevent build-time database access
@@ -28,24 +30,30 @@ async function getDbDependencies() {
     // During build time, return safe mocks
     if (isBuildTime()) {
       return {
-        db: { select: () => ({ from: () => ({ where: () => ({ limit: () => Promise.resolve([]) }) }) }) },
+        db: {
+          select: () => ({
+            from: () => ({
+              where: () => ({ limit: () => Promise.resolve([]) }),
+            }),
+          }),
+        },
         hasSupabaseConfig: () => false,
         originalUser: null,
-        supabaseUsers: null
+        supabaseUsers: null,
       };
     }
-    
+
     // Dynamic import during runtime
     const dbModule = await import("../db");
     const authSchema = await import("../db/schemas/auth");
     const supabaseSchema = await import("../db/schemas/supabase-auth");
-    
+
     db = dbModule.db;
     hasSupabaseConfig = dbModule.hasSupabaseConfig;
     originalUser = authSchema.user;
     supabaseUsers = supabaseSchema.users;
   }
-  
+
   return { db, hasSupabaseConfig, originalUser, supabaseUsers };
 }
 
@@ -93,17 +101,17 @@ let lastCookieState: string | null = null;
  */
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  
+
   // Create a simple hash of cookie state to detect changes
   const currentCookieState = JSON.stringify({
-    accessToken: cookieStore.get('sb-access-token')?.value,
-    refreshToken: cookieStore.get('sb-refresh-token')?.value
+    accessToken: cookieStore.get("sb-access-token")?.value,
+    refreshToken: cookieStore.get("sb-refresh-token")?.value,
   });
 
   // Only create new client if cookies changed or client doesn't exist
   if (!supabaseServerClient || lastCookieState !== currentCookieState) {
     lastCookieState = currentCookieState;
-    
+
     supabaseServerClient = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder_key",
@@ -206,11 +214,12 @@ export async function syncUserWithDatabase(supabaseUser: SupabaseUser) {
   try {
     // Skip during build time
     if (isBuildTime()) {
-      getLogger().info('Skipping user sync during build time');
+      getLogger().info("Skipping user sync during build time");
       return true;
     }
 
-    const { db, hasSupabaseConfig, originalUser, supabaseUsers } = await getDbDependencies();
+    const { db, hasSupabaseConfig, originalUser, supabaseUsers } =
+      await getDbDependencies();
     const isSupabase = hasSupabaseConfig();
     const userTable = isSupabase ? supabaseUsers : originalUser;
 
@@ -276,11 +285,12 @@ export async function getUserFromDatabase(supabaseId: string) {
   try {
     // Skip during build time
     if (isBuildTime()) {
-      getLogger().info('Skipping user database query during build time');
+      getLogger().info("Skipping user database query during build time");
       return null;
     }
 
-    const { db, hasSupabaseConfig, originalUser, supabaseUsers } = await getDbDependencies();
+    const { db, hasSupabaseConfig, originalUser, supabaseUsers } =
+      await getDbDependencies();
     const isSupabase = hasSupabaseConfig();
     const userTable = isSupabase ? supabaseUsers : originalUser;
 

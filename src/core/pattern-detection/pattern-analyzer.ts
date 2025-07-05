@@ -127,8 +127,8 @@ export class PatternAnalyzer implements IPatternAnalyzer {
               enhancedConfidence = Math.min(100, confidence + activityBoost);
 
               // Create activity info with null safety
-              const validActivities = activityData.filter(a => 
-                a && typeof a === 'object' && a.activityType
+              const validActivities = activityData.filter(
+                (a) => a && typeof a === "object" && a.activityType
               );
 
               activityInfo = {
@@ -137,7 +137,9 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 hasHighPriorityActivity:
                   this.hasHighPriorityActivity(validActivities),
                 activityTypes: Array.from(
-                  new Set(validActivities.map((a) => a.activityType).filter(Boolean))
+                  new Set(
+                    validActivities.map((a) => a.activityType).filter(Boolean)
+                  )
                 ),
               };
             }
@@ -248,7 +250,11 @@ export class PatternAnalyzer implements IPatternAnalyzer {
             );
             confidenceCalculator = ConfidenceCalculator.getInstance();
           } catch (importError) {
-            this.logger.error("Failed to import ConfidenceCalculator", "", importError as Error);
+            this.logger.error(
+              "Failed to import ConfidenceCalculator",
+              "",
+              importError as Error
+            );
             // Use fallback confidence calculation
             confidenceCalculator = {
               calculateAdvanceOpportunityConfidence: async () => 75, // Default confidence for testing
@@ -284,8 +290,8 @@ export class PatternAnalyzer implements IPatternAnalyzer {
               enhancedConfidence = Math.min(100, confidence + activityBoost);
 
               // Create activity info with null safety
-              const validActivities = activityData.filter(a => 
-                a && typeof a === 'object' && a.activityType
+              const validActivities = activityData.filter(
+                (a) => a && typeof a === "object" && a.activityType
               );
 
               activityInfo = {
@@ -294,7 +300,9 @@ export class PatternAnalyzer implements IPatternAnalyzer {
                 hasHighPriorityActivity:
                   this.hasHighPriorityActivity(validActivities),
                 activityTypes: Array.from(
-                  new Set(validActivities.map((a) => a.activityType).filter(Boolean))
+                  new Set(
+                    validActivities.map((a) => a.activityType).filter(Boolean)
+                  )
                 ),
               };
             }
@@ -508,13 +516,17 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   }
 
   private validateCalendarEntry(entry: CalendarEntry): boolean {
-    if (!entry || typeof entry !== 'object') {
+    if (!entry || typeof entry !== "object") {
       this.logger.debug("Calendar entry is null or not an object");
       return false;
     }
 
     // Check required fields with more detailed validation
-    if (!entry.symbol || typeof entry.symbol !== 'string' || entry.symbol.trim().length === 0) {
+    if (
+      !entry.symbol ||
+      typeof entry.symbol !== "string" ||
+      entry.symbol.trim().length === 0
+    ) {
       this.logger.debug("Calendar entry missing or invalid symbol", {
         symbol: entry.symbol,
         type: typeof entry.symbol,
@@ -532,9 +544,9 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
     // Validate firstOpenTime is a valid timestamp
     let timestamp: number;
-    if (typeof entry.firstOpenTime === 'number') {
+    if (typeof entry.firstOpenTime === "number") {
       timestamp = entry.firstOpenTime;
-    } else if (typeof entry.firstOpenTime === 'string') {
+    } else if (typeof entry.firstOpenTime === "string") {
       timestamp = new Date(entry.firstOpenTime).getTime();
     } else {
       this.logger.debug("Calendar entry has invalid firstOpenTime type", {
@@ -611,14 +623,14 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
   private classifyProject(projectName: string): string {
     // Handle null/undefined/empty input
-    if (!projectName || typeof projectName !== 'string') {
+    if (!projectName || typeof projectName !== "string") {
       return "Other";
     }
 
     const name = projectName.toLowerCase().trim();
-    
+
     // Handle empty string after trim
-    if (name === '') {
+    if (name === "") {
       return "Other";
     }
 
@@ -665,8 +677,8 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     // Filter valid symbols and calculate pattern with null safety
-    const validSymbols = symbols.filter(s => 
-      s && typeof s === 'object' && typeof s.sts === 'number'
+    const validSymbols = symbols.filter(
+      (s) => s && typeof s === "object" && typeof s.sts === "number"
     );
 
     if (validSymbols.length === 0) {
@@ -711,8 +723,8 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     // Filter valid symbols
-    const validSymbols = symbols.filter(s => 
-      s && typeof s === 'object' && s.cd
+    const validSymbols = symbols.filter(
+      (s) => s && typeof s === "object" && s.cd
     );
 
     if (validSymbols.length === 0) {
@@ -743,8 +755,11 @@ export class PatternAnalyzer implements IPatternAnalyzer {
   ): Promise<ActivityData[]> {
     try {
       // Validate input
-      if (!symbol || typeof symbol !== 'string' || symbol.trim() === '') {
-        this.logger.warn("Invalid symbol provided to getActivityDataForSymbol", { symbol });
+      if (!symbol || typeof symbol !== "string" || symbol.trim() === "") {
+        this.logger.warn(
+          "Invalid symbol provided to getActivityDataForSymbol",
+          { symbol }
+        );
         return [];
       }
 
@@ -753,7 +768,10 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
       // Ensure activityData is an array and has safe properties
       if (!Array.isArray(activityData)) {
-        this.logger.warn("Activity data is not an array", { symbol, type: typeof activityData });
+        this.logger.warn("Activity data is not an array", {
+          symbol,
+          type: typeof activityData,
+        });
         return [];
       }
 
@@ -761,7 +779,11 @@ export class PatternAnalyzer implements IPatternAnalyzer {
         symbol,
         count: activityData.length,
         activityTypes: Array.from(
-          new Set(activityData.filter(a => a?.activityType).map((a) => a.activityType))
+          new Set(
+            activityData
+              .filter((a) => a?.activityType)
+              .map((a) => a.activityType)
+          )
         ),
       });
 
@@ -786,11 +808,12 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     // Filter out null/undefined activities and validate structure
-    const validActivities = activities.filter(activity => 
-      activity && 
-      typeof activity === 'object' && 
-      activity.activityType && 
-      typeof activity.activityType === 'string'
+    const validActivities = activities.filter(
+      (activity) =>
+        activity &&
+        typeof activity === "object" &&
+        activity.activityType &&
+        typeof activity.activityType === "string"
     );
 
     if (validActivities.length === 0) {
@@ -807,7 +830,7 @@ export class PatternAnalyzer implements IPatternAnalyzer {
 
       const activityType = activity.activityType as keyof typeof activityBoosts;
       const boostValue = activityBoosts[activityType] || 2;
-      
+
       return totalBoost + boostValue;
     }, 0);
 
@@ -825,16 +848,18 @@ export class PatternAnalyzer implements IPatternAnalyzer {
     }
 
     const highPriorityTypes = ["SUN_SHINE", "LAUNCHPAD", "IEO"];
-    
+
     return activities.some((activity) => {
       // Ensure activity exists and has valid activityType
-      if (!activity || 
-          typeof activity !== 'object' || 
-          !activity.activityType || 
-          typeof activity.activityType !== 'string') {
+      if (
+        !activity ||
+        typeof activity !== "object" ||
+        !activity.activityType ||
+        typeof activity.activityType !== "string"
+      ) {
         return false;
       }
-      
+
       return highPriorityTypes.includes(activity.activityType);
     });
   }

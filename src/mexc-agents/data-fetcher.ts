@@ -76,8 +76,9 @@ export class DataFetcher {
     data?: unknown;
   }> {
     // Handle null/undefined/invalid vcoinId
-    const safeVcoinId = vcoinId && typeof vcoinId === 'string' ? vcoinId.trim() : '';
-    
+    const safeVcoinId =
+      vcoinId && typeof vcoinId === "string" ? vcoinId.trim() : "";
+
     if (!safeVcoinId) {
       this.logger.warn(`[DataFetcher] Invalid vcoinId provided: ${vcoinId}`);
       return {
@@ -89,7 +90,9 @@ export class DataFetcher {
     }
 
     try {
-      this.logger.info(`[DataFetcher] Fetching symbol data for: ${safeVcoinId}`);
+      this.logger.info(
+        `[DataFetcher] Fetching symbol data for: ${safeVcoinId}`
+      );
       const result = await this.mexcApiAgent.callMexcApi("/symbols", {
         vcoinId: safeVcoinId,
       });
@@ -134,8 +137,9 @@ export class DataFetcher {
     timestamp: string;
   }> {
     // Handle null/undefined/invalid symbol
-    const safeSymbol = symbol && typeof symbol === 'string' ? symbol.trim() : '';
-    
+    const safeSymbol =
+      symbol && typeof symbol === "string" ? symbol.trim() : "";
+
     if (!safeSymbol) {
       this.logger.warn(`[DataFetcher] Invalid symbol provided: ${symbol}`);
       return {
@@ -150,7 +154,9 @@ export class DataFetcher {
 
     try {
       this.logger.info(`[DataFetcher] Fetching market data for: ${safeSymbol}`);
-      const result = await this.mexcApiAgent.callMexcApi("/market", { symbol: safeSymbol });
+      const result = await this.mexcApiAgent.callMexcApi("/market", {
+        symbol: safeSymbol,
+      });
 
       if (result && typeof result === "object") {
         const marketData = result as any;
@@ -203,8 +209,8 @@ export class DataFetcher {
     }
 
     // Filter out null/undefined/empty vcoinIds
-    const validVcoinIds = vcoinIds.filter(id => 
-      id && typeof id === 'string' && id.trim() !== ''
+    const validVcoinIds = vcoinIds.filter(
+      (id) => id && typeof id === "string" && id.trim() !== ""
     );
 
     if (validVcoinIds.length === 0) {
@@ -216,7 +222,9 @@ export class DataFetcher {
       `[DataFetcher] Fetching data for ${validVcoinIds.length} symbols`
     );
 
-    const promises = validVcoinIds.map((vcoinId) => this.fetchSymbolData(vcoinId));
+    const promises = validVcoinIds.map((vcoinId) =>
+      this.fetchSymbolData(vcoinId)
+    );
     const results = await Promise.allSettled(promises);
 
     return results.map((result, index) => {

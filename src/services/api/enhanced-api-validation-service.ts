@@ -140,15 +140,18 @@ export class EnhancedApiValidationService {
         result.recommendations.push(
           "Check internet connection and firewall settings"
         );
-        
+
         // Log connectivity errors
-        await this.errorLogger.logError(new Error(connectivityResult.error || 'Network connectivity failed'), {
-          context: "api_validation",
-          stage: result.stage,
-          hasApiKey: Boolean(config.apiKey),
-          hasSecretKey: Boolean(config.secretKey),
-        });
-        
+        await this.errorLogger.logError(
+          new Error(connectivityResult.error || "Network connectivity failed"),
+          {
+            context: "api_validation",
+            stage: result.stage,
+            hasApiKey: Boolean(config.apiKey),
+            hasSecretKey: Boolean(config.secretKey),
+          }
+        );
+
         return this.cacheAndReturn(cacheKey, result);
       }
 
@@ -837,7 +840,9 @@ export class EnhancedApiValidationService {
       // Test basic connectivity
       const connectivityResult = await this.testNetworkConnectivity();
       if (!connectivityResult.success) {
-        throw new Error(connectivityResult.error || 'Network connectivity test failed');
+        throw new Error(
+          connectivityResult.error || "Network connectivity test failed"
+        );
       }
 
       console.info(

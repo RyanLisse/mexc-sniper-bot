@@ -7,24 +7,47 @@
 
 import { vi } from "vitest";
 
-// Type definitions for database modules
+// Type definitions for database operations
+interface QueryBuilder {
+  from: (table: unknown) => QueryBuilder;
+  where: (condition: unknown) => QueryBuilder;
+  limit: (count: number) => Promise<unknown[]>;
+  returning: (fields?: unknown) => Promise<unknown[]>;
+  set: (values: unknown) => QueryBuilder;
+}
+
 interface DbModule {
   db: {
-    select: any;
-    insert: any;
-    update: any;
-    delete: any;
+    select: (fields?: unknown) => QueryBuilder;
+    insert: (table: unknown) => {
+      values: (data: unknown) => {
+        returning: (fields?: unknown) => Promise<unknown[]>;
+      };
+    };
+    update: (table: unknown) => {
+      set: (values: unknown) => {
+        where: (condition: unknown) => Promise<unknown[]>;
+      };
+    };
+    delete: (table: unknown) => {
+      where: (condition: unknown) => Promise<{ rowCount: number }>;
+    };
   };
 }
 
+interface SchemaTable {
+  _?: { name: string };
+  [key: string]: unknown;
+}
+
 interface SchemaModule {
-  user?: any;
-  users?: any;
-  snipeTargets?: any;
-  userPreferences?: any;
-  transactions?: any;
-  executionHistory?: any;
-  [key: string]: any; // Allow additional properties
+  user?: SchemaTable;
+  users?: SchemaTable;
+  snipeTargets?: SchemaTable;
+  userPreferences?: SchemaTable;
+  transactions?: SchemaTable;
+  executionHistory?: SchemaTable;
+  [key: string]: SchemaTable | undefined;
 }
 
 // Use dynamic imports to avoid initialization issues with mocks
@@ -37,7 +60,7 @@ let schemaModule: SchemaModule | null = null;
 async function getDbModule(): Promise<DbModule> {
   if (!dbModule) {
     try {
-      dbModule = await import("../db") as DbModule;
+      dbModule = (await import("../db")) as DbModule;
     } catch (_error) {
       console.warn(
         "[Database Helpers] Failed to import db module, using mock fallback"
@@ -69,7 +92,10 @@ async function getDbModule(): Promise<DbModule> {
       };
     }
   }
-  return dbModule!;
+  if (!dbModule) {
+    throw new Error("Database module failed to initialize");
+  }
+  return dbModule;
 }
 
 /**
@@ -78,45 +104,48 @@ async function getDbModule(): Promise<DbModule> {
 async function getSchemaModule(): Promise<SchemaModule> {
   if (!schemaModule) {
     try {
-      schemaModule = await import("../db/schema") as SchemaModule;
+      schemaModule = (await import("../db/schema")) as SchemaModule;
     } catch (_error) {
       console.warn(
         "[Database Helpers] Failed to import schema module, using mock fallback"
       );
       // Return mock schema objects with proper mock properties
       schemaModule = {
-        user: { 
+        user: {
           _: { name: "user" },
           id: vi.fn(),
           email: vi.fn(),
-          name: vi.fn()
+          name: vi.fn(),
         },
-        users: { 
+        users: {
           _: { name: "users" },
           id: vi.fn(),
           email: vi.fn(),
-          name: vi.fn()
+          name: vi.fn(),
         },
-        snipeTargets: { 
+        snipeTargets: {
           _: { name: "snipe_targets" },
           userId: vi.fn(),
           symbolName: vi.fn(),
           vcoinId: vi.fn(),
-          status: vi.fn()
+          status: vi.fn(),
         },
-        userPreferences: { 
+        userPreferences: {
           _: { name: "user_preferences" },
           userId: vi.fn(),
           defaultBuyAmountUsdt: vi.fn(),
           defaultTakeProfitLevel: vi.fn(),
-          stopLossPercent: vi.fn()
+          stopLossPercent: vi.fn(),
         },
         transactions: { _: { name: "transactions" } },
         executionHistory: { _: { name: "execution_history" } },
       };
     }
   }
-  return schemaModule!;
+  if (!schemaModule) {
+    throw new Error("Schema module failed to initialize");
+  }
+  return schemaModule;
 }
 
 /**
@@ -154,10 +183,12 @@ export async function createTestUser(userId: string): Promise<void> {
 
     // Check if user already exists (try both user and users tables for compatibility)
     if (!user) {
-      console.warn("[Database Helpers] User table not available, skipping user creation");
+      console.warn(
+        "[Database Helpers] User table not available, skipping user creation"
+      );
       return;
     }
-    
+
     const existingUser = await db
       .select()
       .from(user)
@@ -272,7 +303,9 @@ export async function createTestUserPreferences(
     const { userPreferences } = schemaModule;
 
     if (!userPreferences) {
-      console.warn("[Database Helpers] UserPreferences table not available, skipping preferences creation");
+      console.warn(
+        "[Database Helpers] UserPreferences table not available, skipping preferences creation"
+      );
       return;
     }
 
@@ -466,7 +499,7 @@ export async function waitForDatabase(ms: number = 100): Promise<void> {
  */
 export async function countRecords(
   tableName: "snipe_targets" | "user_preferences" | "user",
-  whereClause?: any
+  whereClause?: unknown
 ): Promise<number> {
   try {
     const dbModule = await getDbModule();
@@ -475,7 +508,7 @@ export async function countRecords(
     const { db } = dbModule;
     const { snipeTargets, userPreferences, user } = schemaModule;
 
-    let query: any;
+    let query: QueryBuilder;
 
     switch (tableName) {
       case "snipe_targets":
@@ -548,15 +581,16 @@ export function createTestPatterns(count: number, baseSymbol: string = "TEST") {
  * Verifies that a pattern was correctly converted to a database record
  */
 export function verifyPatternToRecordConversion(
-  pattern: any,
-  record: any,
-  userPrefs: any = null
+  pattern: unknown,
+  record: unknown,
+  userPrefs: unknown = null
 ): boolean {
   try {
     // Check basic mapping
     if (record?.symbolName !== pattern?.symbol) return false;
     if (record?.vcoinId !== (pattern?.vcoinId || pattern?.symbol)) return false;
-    if (record?.confidenceScore !== Math.round(pattern?.confidence || 0)) return false;
+    if (record?.confidenceScore !== Math.round(pattern?.confidence || 0))
+      return false;
     if (record?.riskLevel !== pattern?.riskLevel) return false;
 
     // Check status mapping

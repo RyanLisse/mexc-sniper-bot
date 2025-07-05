@@ -2,8 +2,8 @@ import { createClient } from "@supabase/supabase-js";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
 import path from "path";
+import postgres from "postgres";
 import {
   isBrowserEnvironment,
   isNodeEnvironment,
@@ -126,29 +126,33 @@ export const hasSupabaseConfig = () =>
 // Detect if we're in a build-time environment
 const isBuildTime = () => {
   // Next.js build detection
-  if (process.env.NEXT_PHASE === 'phase-production-build' || 
-      process.env.NEXT_PHASE === 'phase-development-server') {
+  if (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.NEXT_PHASE === "phase-development-server"
+  ) {
     return true;
   }
-  
+
   // Additional build-time indicators
-  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+  if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
     // Local production build
     return true;
   }
-  
+
   // Webpack/build tool detection
-  if (process.env.WEBPACK === 'true' || 
-      process.env.npm_lifecycle_event === 'build' ||
-      process.env.npm_lifecycle_script?.includes('next build')) {
+  if (
+    process.env.WEBPACK === "true" ||
+    process.env.npm_lifecycle_event === "build" ||
+    process.env.npm_lifecycle_script?.includes("next build")
+  ) {
     return true;
   }
-  
+
   // Check if we're in a static generation context
-  if (typeof window === 'undefined' && process.env.NODE_ENV === 'production') {
+  if (typeof window === "undefined" && process.env.NODE_ENV === "production") {
     return true;
   }
-  
+
   return false;
 };
 
@@ -310,7 +314,9 @@ function createDatabase() {
 
   // CRITICAL: Prevent database access during build time
   if (isBuildTime()) {
-    getLogger().info("[Database] Build-time detected - using build-safe mock database");
+    getLogger().info(
+      "[Database] Build-time detected - using build-safe mock database"
+    );
     return createMockDatabase();
   }
 
@@ -460,7 +466,7 @@ import { userPreferences as supabaseUserPreferences } from "./schemas/supabase-a
 // Database migration utilities
 async function ensureMigrationsApplied(): Promise<void> {
   const isTest = process.env.NODE_ENV === "test" || process.env.VITEST;
-  const shouldSkipMigrations = 
+  const shouldSkipMigrations =
     process.env.FORCE_MOCK_DB === "true" ||
     process.env.USE_MOCK_DATABASE === "true" ||
     process.env.SKIP_DB_MIGRATIONS === "true";
@@ -472,7 +478,9 @@ async function ensureMigrationsApplied(): Promise<void> {
   }
 
   if (isTest && shouldSkipMigrations) {
-    getLogger().info("[Database] Skipping migrations in test environment with mocked database");
+    getLogger().info(
+      "[Database] Skipping migrations in test environment with mocked database"
+    );
     return;
   }
 
@@ -491,14 +499,16 @@ async function ensureMigrationsApplied(): Promise<void> {
     const exists = (tableExists as any)[0]?.exists;
 
     if (!exists) {
-      getLogger().info("[Database] error_logs table not found, running migrations...");
-      
+      getLogger().info(
+        "[Database] error_logs table not found, running migrations..."
+      );
+
       // Get migrations folder path (relative to this file)
       const migrationsFolder = path.resolve(__dirname, "./migrations");
-      
+
       // Run migrations using the existing database instance
       await migrate(db as any, { migrationsFolder });
-      
+
       getLogger().info("[Database] ✅ All migrations applied successfully");
 
       // Verify the error_logs table now exists
@@ -512,25 +522,27 @@ async function ensureMigrationsApplied(): Promise<void> {
 
       const verifyExists = (verifyResult as any)[0]?.exists;
       if (verifyExists) {
-        getLogger().info("[Database] ✅ error_logs table verification successful");
+        getLogger().info(
+          "[Database] ✅ error_logs table verification successful"
+        );
       } else {
         throw new Error("error_logs table still missing after migration");
       }
-
     } else {
       getLogger().info("[Database] ✅ Database schema is up to date");
     }
-
   } catch (error) {
     getLogger().error("[Database] Migration check/execution failed:", error);
-    
+
     // In production, we want to fail fast if migrations don't work
     if (process.env.NODE_ENV === "production") {
       throw error;
     }
-    
+
     // In development, log the error but continue (might be using mock db)
-    getLogger().warn("[Database] Continuing without migration verification (development mode)");
+    getLogger().warn(
+      "[Database] Continuing without migration verification (development mode)"
+    );
   }
 }
 
@@ -538,7 +550,9 @@ async function ensureMigrationsApplied(): Promise<void> {
 export async function initializeDatabase() {
   // CRITICAL: Skip database initialization during build time
   if (isBuildTime()) {
-    getLogger().info("[Database] Skipping database initialization during build time");
+    getLogger().info(
+      "[Database] Skipping database initialization during build time"
+    );
     return true;
   }
 

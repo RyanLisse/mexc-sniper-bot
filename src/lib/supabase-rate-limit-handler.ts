@@ -173,7 +173,9 @@ export class SupabaseRateLimitHandler {
 
     // Check for explicit rate limit errors
     const hasRateLimitError = SupabaseRateLimitHandler.RATE_LIMIT_ERRORS.some(
-      (pattern) => message.includes(pattern.toLowerCase()) || code.includes(pattern.toLowerCase())
+      (pattern) =>
+        message.includes(pattern.toLowerCase()) ||
+        code.includes(pattern.toLowerCase())
     );
 
     // Check for HTTP status codes
@@ -206,8 +208,8 @@ export class SupabaseRateLimitHandler {
       /throttle/i,
     ];
 
-    const hasPatternMatch = rateLimitPatterns.some(pattern => 
-      pattern.test(message) || pattern.test(code)
+    const hasPatternMatch = rateLimitPatterns.some(
+      (pattern) => pattern.test(message) || pattern.test(code)
     );
 
     // Check for Supabase specific patterns
@@ -217,7 +219,10 @@ export class SupabaseRateLimitHandler {
       ) && hasRateLimitKeywords;
 
     const isRateLimited =
-      hasRateLimitError || hasRateLimitStatus || hasSupabaseRateLimit || hasPatternMatch;
+      hasRateLimitError ||
+      hasRateLimitStatus ||
+      hasSupabaseRateLimit ||
+      hasPatternMatch;
 
     if (isRateLimited) {
       SupabaseRateLimitHandler.metrics.rateLimitedRequests++;
@@ -240,10 +245,10 @@ export class SupabaseRateLimitHandler {
     const message = error.message?.toLowerCase() || "";
     const code = error.code?.toLowerCase() || "";
     const status = error.status || error.statusCode || 0;
-    
+
     // First do a quick check if this is a rate limit error
     const isRateLimit = SupabaseRateLimitHandler.isRateLimitError(error);
-    
+
     if (!isRateLimit) {
       return {
         isRateLimited: false,
@@ -487,7 +492,8 @@ export class SupabaseRateLimitHandler {
     config: RetryConfig = SupabaseRateLimitHandler.DEFAULT_RETRY_CONFIG
   ): number {
     // Base exponential backoff: baseDelay * (multiplier ^ attempt)
-    const exponentialDelay = config.baseDelay * Math.pow(config.backoffMultiplier, attempt);
+    const exponentialDelay =
+      config.baseDelay * config.backoffMultiplier ** attempt;
 
     // Add jitter to prevent thundering herd
     const jitter = config.enableJitter
@@ -509,7 +515,10 @@ export class SupabaseRateLimitHandler {
 
     // Calculate final delay and ensure it's within bounds
     const rawDelay = (exponentialDelay + jitter) * adaptiveMultiplier;
-    const finalDelay = Math.min(Math.max(Math.floor(rawDelay), config.baseDelay), config.maxDelay);
+    const finalDelay = Math.min(
+      Math.max(Math.floor(rawDelay), config.baseDelay),
+      config.maxDelay
+    );
 
     SupabaseRateLimitHandler.logger.debug(
       `Calculated backoff delay: ${finalDelay}ms`,
@@ -661,7 +670,7 @@ export class SupabaseRateLimitHandler {
     // Don't retry if wait time is too long (only for very long waits > 10 minutes)
     if (
       rateLimitInfo.retryAfter &&
-      rateLimitInfo.retryAfter > 600  // 10 minutes
+      rateLimitInfo.retryAfter > 600 // 10 minutes
     ) {
       SupabaseRateLimitHandler.logger.debug("Retry delay too long");
       return false;

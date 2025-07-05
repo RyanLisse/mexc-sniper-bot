@@ -145,13 +145,17 @@ export class UnifiedAutoSnipingOrchestrator extends BrowserCompatibleEventEmitte
   constructor(config: Partial<OrchestratorConfig> = {}) {
     super();
 
+    const paperTradingFlag =
+      (process.env.MEXC_PAPER_TRADING ?? process.env.PAPER_TRADING_MODE) !==
+      "false";
+
     this.config = {
       enabled: true,
-      paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+      paperTradingMode: paperTradingFlag,
       autoInitialize: true,
 
       snipeConfig: {
-        paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+        paperTradingMode: paperTradingFlag,
         ...config.snipeConfig,
       },
       patternConfig: {
@@ -165,7 +169,7 @@ export class UnifiedAutoSnipingOrchestrator extends BrowserCompatibleEventEmitte
         ...config.monitorConfig,
       },
       mexcConfig: {
-        paperTradingMode: process.env.MEXC_PAPER_TRADING === "true",
+        paperTradingMode: paperTradingFlag,
         ...config.mexcConfig,
       },
 

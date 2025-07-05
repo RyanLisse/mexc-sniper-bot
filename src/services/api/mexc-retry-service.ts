@@ -97,7 +97,11 @@ export class MexcRetryService {
     }
 
     // Timeout errors - retryable (exclude connection timeout which is network error, exclude gateway timeout which is server error)
-    if (message.includes("timeout") && !message.includes("connection timeout") && !message.includes("gateway timeout")) {
+    if (
+      message.includes("timeout") &&
+      !message.includes("connection timeout") &&
+      !message.includes("gateway timeout")
+    ) {
       return {
         isRetryable: true,
         category: "timeout",
@@ -173,7 +177,10 @@ export class MexcRetryService {
     delay = Math.min(delay, this.retryConfig.maxDelay);
 
     // Add jitter to prevent thundering herd (within bounds)
-    const maxJitter = Math.min(delay * jitterFactor, this.retryConfig.maxDelay - delay);
+    const maxJitter = Math.min(
+      delay * jitterFactor,
+      this.retryConfig.maxDelay - delay
+    );
     const jitter = maxJitter * (Math.random() * 2 - 1);
     delay += jitter;
 
@@ -212,7 +219,10 @@ export class MexcRetryService {
       delay = Math.min(delay, this.retryConfig.maxDelay);
 
       // Add jitter (within bounds)
-      const maxJitter = Math.min(delay * this.retryConfig.jitterFactor, this.retryConfig.maxDelay - delay);
+      const maxJitter = Math.min(
+        delay * this.retryConfig.jitterFactor,
+        this.retryConfig.maxDelay - delay
+      );
       const jitter = maxJitter * (Math.random() * 2 - 1);
       delay += jitter;
 
@@ -347,7 +357,10 @@ export class MexcRetryService {
         this.updateSuccessRate(false);
 
         // Check if we should retry (don't retry on last attempt)
-        if (attempt > retries || !this.shouldRetry(lastError, attempt - 1, retries)) {
+        if (
+          attempt > retries ||
+          !this.shouldRetry(lastError, attempt - 1, retries)
+        ) {
           throw lastError;
         }
 

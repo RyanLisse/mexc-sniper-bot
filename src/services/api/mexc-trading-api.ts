@@ -86,7 +86,7 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
       );
 
       // Check if makeRequest method is available
-      if (typeof this.makeRequest !== 'function') {
+      if (typeof this.makeRequest !== "function") {
         throw new Error("Unknown trading error");
       }
 
@@ -518,13 +518,15 @@ export class MexcTradingApiClient extends MexcAccountApiClient {
     try {
       const quantityNum = Number.parseFloat(quantity);
       const priceNum = Number.parseFloat(price);
-      
+
       // Check for invalid inputs that result in NaN
       if (isNaN(quantityNum) || isNaN(priceNum)) {
-        console.error("[MexcTradingApi] Failed to calculate order value: Invalid input");
+        console.error(
+          "[MexcTradingApi] Failed to calculate order value: Invalid input"
+        );
         return 0;
       }
-      
+
       return quantityNum * priceNum;
     } catch (error) {
       console.error("[MexcTradingApi] Failed to calculate order value:", error);
