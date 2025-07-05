@@ -161,6 +161,9 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
+  // Move hook calls to top level to follow Rules of Hooks
+  const skeletonItems = useSkeletonItems(4, "h-32 bg-gray-100 rounded animate-pulse");
+
   // Memoize utility functions to prevent recreation on every render
   const getTrendIcon = useCallback((trend: string, change: number) => {
     if (trend === "improving" || change > 0) {
@@ -278,7 +281,7 @@ export const RealTimePerformance = memo(function RealTimePerformance() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {useSkeletonItems(4, "h-32 bg-gray-100 rounded animate-pulse").map(
+            {skeletonItems.map(
               (item) => (
                 <div key={item.key} className={item.className} />
               )

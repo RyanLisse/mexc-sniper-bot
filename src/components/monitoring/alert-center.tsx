@@ -150,6 +150,9 @@ export function AlertCenter() {
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
+  // Move hook calls to top level to follow Rules of Hooks
+  const skeletonItems = useSkeletonItems(4, "h-16 bg-gray-100 rounded animate-pulse");
+
   // Helper function to build API query parameters (memoized)
   const buildApiParams = useCallback(() => {
     const params = new URLSearchParams();
@@ -439,7 +442,7 @@ export function AlertCenter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {useSkeletonItems(4, "h-16 bg-gray-100 rounded animate-pulse").map(
+            {skeletonItems.map(
               (item) => (
                 <div key={item.key} className={item.className} />
               )

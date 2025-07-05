@@ -121,6 +121,9 @@ export function SystemArchitectureOverview() {
   const [error, setError] = useState<string | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
+  // Move hook calls to top level to follow Rules of Hooks
+  const skeletonItems = useSkeletonItems(3, "h-20 bg-gray-100 rounded animate-pulse");
+
   const fetchSystemOverview = async () => {
     try {
       const response = await fetch("/api/monitoring/system-overview");
@@ -210,7 +213,7 @@ export function SystemArchitectureOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {useSkeletonItems(3, "h-20 bg-gray-100 rounded animate-pulse").map(
+            {skeletonItems.map(
               (item) => (
                 <div key={item.key} className={item.className} />
               )

@@ -23,6 +23,12 @@ export const TradingAnalyticsDashboard = memo(
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Move hook calls to top level to follow Rules of Hooks
+    const skeletonItems = useSkeletonItems(
+      5,
+      "h-32 bg-gray-100 rounded animate-pulse"
+    );
+
     // Memoize utility functions to prevent recreation on every render
     const formatCurrency = useCallback((value: number) => {
       return new Intl.NumberFormat("en-US", {
@@ -74,10 +80,7 @@ export const TradingAnalyticsDashboard = memo(
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {useSkeletonItems(
-                5,
-                "h-32 bg-gray-100 rounded animate-pulse"
-              ).map((item) => (
+              {skeletonItems.map((item) => (
                 <div key={item.key} className={item.className} />
               ))}
             </div>
