@@ -73,7 +73,7 @@ interface RiskAlert {
   acknowledged: boolean;
 }
 
-interface StressTestResult {
+interface _StressTestResult {
   scenario: string;
   portfolioLoss: number;
   lossPercentage: number;
@@ -174,8 +174,8 @@ export function RealTimeRiskMonitor() {
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+          {["portfolio", "position", "exposure", "volatility"].map((type) => (
+            <Card key={`risk-loading-${type}`}>
               <CardHeader className="space-y-2">
                 <div className="h-4 bg-muted animate-pulse rounded" />
               </CardHeader>

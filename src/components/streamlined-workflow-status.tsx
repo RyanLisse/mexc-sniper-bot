@@ -428,7 +428,7 @@ export function StreamlinedWorkflowStatus({
                     .slice(0, 3)
                     .map((activity, index) => (
                       <div
-                        key={index}
+                        key={`activity-${activity.timestamp}-${index}`}
                         className="flex items-center space-x-2 p-2 text-xs border rounded"
                       >
                         {activity.status === "success" && (

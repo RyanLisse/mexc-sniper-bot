@@ -134,7 +134,7 @@ export function StrategyManager() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}>
+            <Card key={`strategy-loading-card-${i}`}>
               <CardContent className="p-6">
                 <div className="h-4 bg-muted animate-pulse rounded mb-2"></div>
                 <div className="h-8 bg-muted animate-pulse rounded"></div>
@@ -465,7 +465,7 @@ export function StrategyManager() {
                           index: number
                         ) => (
                           <div
-                            key={index}
+                            key={`strategy-level-${index}`}
                             className="flex justify-between text-xs text-muted-foreground"
                           >
                             <span>Level {index + 1}:</span>
@@ -509,7 +509,7 @@ export function StrategyManager() {
                 </TableHeader>
                 <TableBody>
                   {activeStrategy.levels.map((level, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={`strategy-level-row-${index}`}>
                       <TableCell className="font-medium">
                         Level {index + 1}
                       </TableCell>
@@ -557,7 +557,9 @@ export function StrategyManager() {
                 </TableHeader>
                 <TableBody>
                   {activePositions.map((position, index) => (
-                    <TableRow key={index}>
+                    <TableRow
+                      key={`active-position-${position.symbol}-${index}`}
+                    >
                       <TableCell className="font-medium">
                         {position.symbol}
                       </TableCell>

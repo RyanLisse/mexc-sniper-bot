@@ -89,7 +89,7 @@ export function AutoSnipingControlPanel({
   });
 
   // Fetch configuration
-  const { data: config, isLoading: configLoading } = useQuery({
+  const { data: config, isLoading: _configLoading } = useQuery({
     queryKey: queryKeys.autoSniping.config(),
     queryFn: async (): Promise<AutoSnipingConfig> => {
       const response = await fetch("/api/auto-sniping/config");

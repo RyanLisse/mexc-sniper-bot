@@ -331,7 +331,10 @@ export function StreamlinedCredentialStatus({
                 <AlertDescription>
                   <div className="space-y-2">
                     {status.recommendations.map((suggestion, index) => (
-                      <div key={index} className="flex items-start space-x-2">
+                      <div
+                        key={`recommendation-${suggestion.slice(0, 20)}-${index}`}
+                        className="flex items-start space-x-2"
+                      >
                         <div className="w-1 h-1 rounded-full bg-blue-500 mt-2 flex-shrink-0" />
                         <span className="text-sm text-blue-800 dark:text-blue-200">
                           {suggestion}

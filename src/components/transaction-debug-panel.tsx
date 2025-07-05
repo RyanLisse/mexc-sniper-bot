@@ -152,7 +152,10 @@ const ExecutionHistoryDisplay = ({
     return (
       <div className="space-y-2">
         {Array.from({ length: 3 }, (_, i) => (
-          <div key={i} className="h-16 bg-muted rounded animate-pulse" />
+          <div
+            key={`transaction-skeleton-${i}`}
+            className="h-16 bg-muted rounded animate-pulse"
+          />
         ))}
       </div>
     );
@@ -250,7 +253,10 @@ const TransactionRecordsDisplay = ({
     return (
       <div className="space-y-2">
         {Array.from({ length: 3 }, (_, i) => (
-          <div key={i} className="h-16 bg-muted rounded animate-pulse" />
+          <div
+            key={`transaction-skeleton-${i}`}
+            className="h-16 bg-muted rounded animate-pulse"
+          />
         ))}
       </div>
     );

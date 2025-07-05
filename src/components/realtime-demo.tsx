@@ -56,7 +56,8 @@ export function RealtimeDemo({ className = "" }: RealtimeDemoProps) {
   const tradingData = useRealtimeTradingData();
   const prices = useRealtimePrices(selectedSymbols);
   const connection = useRealtimeConnection();
-  const { broadcastAlert, broadcastPrice } = useRealtimeBroadcast();
+  const { broadcastAlert: _broadcastAlert, broadcastPrice: _broadcastPrice } =
+    useRealtimeBroadcast();
 
   // Test functions
   const handleTestConnection = async () => {
@@ -455,7 +456,7 @@ export function RealtimeDemo({ className = "" }: RealtimeDemoProps) {
                 .slice(0, 3)
                 .map((transaction, index) => (
                   <div
-                    key={index}
+                    key={`transaction-${transaction.eventType}-${transaction.timestamp}-${index}`}
                     className="flex items-center justify-between p-2 border rounded"
                   >
                     <div className="flex items-center space-x-2">
