@@ -88,11 +88,17 @@ function HomePage() {
           <div className="flex gap-2">
             <Button
               variant="ghost"
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
             >
               Sign In
             </Button>
-            <Button onClick={() => (window.location.href = "/auth")}>
+            <Button
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
+            >
               Get Started
             </Button>
           </div>
@@ -117,7 +123,9 @@ function HomePage() {
           <div className="flex gap-4 justify-center">
             <Button
               size="lg"
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
               className="px-8 py-3 text-lg"
             >
               <Zap className="w-5 h-5 mr-2" />
@@ -126,7 +134,9 @@ function HomePage() {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
               className="px-8 py-3 text-lg"
             >
               Sign In
@@ -270,7 +280,9 @@ function HomePage() {
             </p>
             <Button
               size="lg"
-              onClick={() => (window.location.href = "/auth")}
+              onClick={() => {
+                window.location.href = "/auth";
+              }}
               className="px-12 py-4 text-lg"
             >
               <Zap className="w-5 h-5 mr-2" />
