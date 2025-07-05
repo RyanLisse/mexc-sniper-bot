@@ -94,9 +94,11 @@ function HomePage() {
             >
               Sign In
             </Button>
-            <Button onClick={() => {
+            <Button
+              onClick={() => {
                 window.location.href = "/auth";
-              }}>
+              }}
+            >
               Get Started
             </Button>
           </div>
